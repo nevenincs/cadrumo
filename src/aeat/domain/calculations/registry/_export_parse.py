@@ -12,6 +12,7 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
+from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing._utils import _parse_bool as _core_parse_bool
 from ._errors import RegistryValidationError
 from ._schema import (
@@ -205,7 +206,7 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
     try:
         return body.decode("utf-8")
     except UnicodeDecodeError:
-        return body.decode("latin-1")
+        return body.decode(_LATIN_1_ENCODING)
 
 
 def _normalize_dictionary_casilla(value: str) -> str | None:

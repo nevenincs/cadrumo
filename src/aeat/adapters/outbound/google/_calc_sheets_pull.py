@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
+from enum import StrEnum
 from typing import Any, Final, Literal
 
 # google-api-python-client-stubs ships ``googleapiclient.discovery.Resource``
@@ -202,6 +203,14 @@ class PullMetadata(BaseModel):
         )
 
 
+class MetadataMatchState(StrEnum):
+    """Registry-SHA + stamp alignment result for a pulled Sheets workbook."""
+
+    MATCHES = "matches"
+    STALE = "stale"
+    MISSING = "missing"
+
+
 class PullResult(BaseModel):
     """Outcome of one pull cycle."""
 
@@ -213,7 +222,7 @@ class PullResult(BaseModel):
     relation_edits: tuple[RelationEdit, ...]
     row_set_edits: tuple[RowSetEdit, ...] = ()
     metadata: PullMetadata
-    metadata_match: Literal["matches", "stale", "missing"]
+    metadata_match: MetadataMatchState
     cells_read: int = Field(ge=0)
 
 
@@ -289,9 +298,9 @@ def _read_developer_metadata(
 def _classify_metadata_match(
     pairs: Mapping[str, str],
     snapshot: RegistrySnapshot,
-) -> tuple[Literal["matches", "stale", "missing"], PullMetadata]:
+) -> tuple[MetadataMatchState, PullMetadata]:
     if not pairs:
-        return "missing", PullMetadata(
+        return MetadataMatchState.MISSING, PullMetadata(
             modelo_id="",
             revision_id="",
             filing_year=0,
@@ -326,7 +335,7 @@ def _classify_metadata_match(
         and metadata.period == snapshot.period
         and metadata.registry_sha == _registry_sha(snapshot)
     )
-    return ("matches" if matches else "stale"), metadata
+    return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
 
 
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
@@ -879,7 +888,7 @@ def compute_from_pull(
 
 def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
     """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
-    if pull.metadata_match == "matches":
+    if pull.metadata_match is MetadataMatchState.MATCHES:
         return
     raise OutboundStorageConflictError(
         f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "

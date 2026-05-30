@@ -29,7 +29,9 @@ from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
+from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from ._browser_constants import (
+    PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
 from ._errors import (
@@ -244,7 +246,7 @@ async def capture_justificante(
         body = await pdf_response.body()
         if not body:
             raise JustificanteFetchError(f"empty PDF body for CSV={ref.csv!r}")
-        if "pdf" not in content_type.lower():
+        if _PDF_MIME_TYPE not in content_type.lower():
             raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={ref.csv!r}")
         sha256 = hashlib.sha256(body).hexdigest()
         log.info(
@@ -301,7 +303,7 @@ async def _snapshot_html(page: object) -> str:
     for _ in range(8):
         if wait_for_load_state is not None:
             try:
-                await wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=2_000)
+                await wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_TIMEOUT_SHORT_MS)
             except PlaywrightError as wait_exc:
                 log.debug(
                     "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc

@@ -94,12 +94,32 @@ class IvaCompensationSeedConflictError(AeatError, ValueError):
     """Raised when a seed is attempted for a period that already has a stored state."""
 
 
+class IvaCompensationYearRangeError(AeatError, ValueError):
+    """Raised when a filing_year or as_of_year falls outside the supported range [2000, 2099].
+
+    Replaces bare :exc:`ValueError` at the year-range guards in
+    :func:`iva_compensation_period_key` and
+    :func:`build_iva_compensation_carry_forward_report`.  Inherits from
+    :exc:`ValueError` to preserve compatibility with any existing ``except
+    ValueError`` guard at the call site.
+    """
+
+
+class IvaCompensationDecimalParseError(AeatError, ValueError):
+    """Raised when a casilla value cannot be coerced to :class:`~decimal.Decimal`.
+
+    Replaces the bare :exc:`ValueError` re-raised from :exc:`InvalidOperation`
+    inside :func:`_decimal_casilla_values`.  Inherits from :exc:`ValueError` to
+    preserve compatibility and chains the original :exc:`InvalidOperation` cause.
+    """
+
+
 def iva_compensation_period_key(filing_year: int, period: str) -> str:
     """Return the latest-state key for one Modelo 303 period."""
 
     safe_repository_id(period, context="period")
     if not 2000 <= filing_year <= 2099:
-        raise ValueError(f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]")
+        raise IvaCompensationYearRangeError(f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]")
     return f"303:{filing_year}:{period}"
 
 
@@ -130,7 +150,7 @@ def build_iva_compensation_carry_forward_report(
     """
 
     if not 2000 <= as_of_year <= 2099:
-        raise ValueError(f"IVA compensation as_of_year {as_of_year} out of supported range [2000, 2099]")
+        raise IvaCompensationYearRangeError(f"IVA compensation as_of_year {as_of_year} out of supported range [2000, 2099]")
     ordered = tuple(sorted(states, key=lambda item: (item.filing_year, _period_sort_key(item.period))))
     working: list[_WorkingCarryForwardLot] = []
     unallocated_applied = _ZERO
@@ -330,7 +350,7 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservation) -> dict[st
         try:
             values[casilla.casilla_id] = Decimal(casilla.value)
         except InvalidOperation as exc:
-            raise ValueError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
+            raise IvaCompensationDecimalParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
     return values
 
 

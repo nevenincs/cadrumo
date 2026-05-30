@@ -16,11 +16,9 @@ from __future__ import annotations
 
 from typing import Final
 
+from .....core.external_constants import PDF_EXTENSION, XLSX_EXTENSION
+
 CSV_EXTENSIONS: frozenset[str] = frozenset({".csv", ".txt"})
 """File extensions treated as CSV-compatible input by the CSV provider."""
 
-PDF_EXTENSION: Final[str] = ".pdf"
-"""The PDF file extension, used by the N26 PDF provider."""
-
-XLSX_EXTENSION: Final[str] = ".xlsx"
-"""The Excel/XLSX file extension, used by the XLSX provider."""
+__all__ = ["CSV_EXTENSIONS", "PDF_EXTENSION", "XLSX_EXTENSION"]

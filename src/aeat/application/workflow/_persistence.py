@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -37,6 +38,20 @@ from ._events import (
 from ._models import WorkflowResult, WorkflowState, utc_now
 
 _logger = get_logger(__name__)
+
+
+class WorkflowEnvelopeReasonClass(StrEnum):
+    """Classification of the workflow-state envelope's readability.
+
+    Carried in :attr:`~._events.WorkflowStateResetFingerprint.reason_class`
+    to distinguish a healthy envelope (``READABLE``), a row that cannot
+    be decrypted (``UNREADABLE``), and an absent row (``ABSENT``).
+    """
+
+    READABLE = "readable"
+    UNREADABLE = "unreadable"
+    ABSENT = "absent"
+
 
 _STATE_VERSION = WORKFLOW_STATE_STORAGE_NAMESPACE.schema_version
 _STATE_NAMESPACE = WORKFLOW_STATE_STORAGE_NAMESPACE.namespace
@@ -177,7 +192,7 @@ class WorkflowStateRepository:
                 schema_version=None,
                 written_at=None,
                 byte_length=None,
-                reason_class=reason_class or "absent",
+                reason_class=reason_class or WorkflowEnvelopeReasonClass.ABSENT,
                 recovered_bucket_id=None,
             )
         recovered_bucket_id: str | None = None
@@ -208,10 +223,10 @@ class WorkflowStateRepository:
                 schema_version=None,
                 written_at=None,
                 byte_length=None,
-                reason_class=reason_class or "absent",
+                reason_class=reason_class or WorkflowEnvelopeReasonClass.ABSENT,
                 recovered_bucket_id=recovered_bucket_id,
             )
-        derived_reason = "readable" if envelope_readable else "unreadable"
+        derived_reason = WorkflowEnvelopeReasonClass.READABLE if envelope_readable else WorkflowEnvelopeReasonClass.UNREADABLE
         return WorkflowStateResetFingerprint(
             schema_version=metadata.schema_version,
             written_at=metadata.written_at,

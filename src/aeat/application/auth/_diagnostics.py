@@ -13,7 +13,7 @@ from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import load_external_constants
-from ._errors import AuthDiagnosticPhoneStateError
+from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
@@ -216,14 +216,14 @@ def _payload(raw: bytes) -> _DiagnosticPayload:
     """Deserialize an encrypted auth diagnostic blob into a typed payload envelope."""
     data = json.loads(raw.decode("utf-8"))
     if not isinstance(data, dict):
-        raise ValueError("auth diagnostic payload is not a JSON object")
+        raise AuthDiagnosticPayloadError("auth diagnostic payload is not a JSON object")
     return _DiagnosticPayload.model_validate(data)
 
 
 def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
     captured_at = payload.captured_at
     if not captured_at:
-        raise ValueError("auth diagnostic payload is missing captured_at")
+        raise AuthDiagnosticPayloadError("auth diagnostic payload is missing captured_at")
     auth_attempt = payload.auth_attempt
     operator_report = payload.operator_report
     phone_state_reported_at = None

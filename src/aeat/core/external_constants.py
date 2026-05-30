@@ -282,6 +282,21 @@ class ExternalConstants(_Frozen):
     online_services: OnlineServicesSection
 
 
+#: IANA-registered MIME type for PDF document payloads.
+PDF_MIME_TYPE: Final[str] = "application/pdf"
+
+#: PDF file-extension string (lower-case, dot-prefixed).
+PDF_EXTENSION: Final[str] = ".pdf"
+
+#: Excel / Open-XML workbook file-extension string (lower-case, dot-prefixed).
+XLSX_EXTENSION: Final[str] = ".xlsx"
+
+#: Excel macro-enabled workbook file-extension string (lower-case, dot-prefixed).
+XLSM_EXTENSION: Final[str] = ".xlsm"
+
+#: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
+LATIN_1_ENCODING: Final[str] = "latin-1"
+
 CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
 """Canonical encoding probe order for CSV financial sources.
 
