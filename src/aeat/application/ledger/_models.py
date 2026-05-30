@@ -10,7 +10,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.modelos._ids import BucketId, CalculationRevisionId, WorkUnitId
+from ...domain.modelos._ids import BucketId, CalculationRevisionId, TransactionId, WorkUnitId
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...domain.transactions import (
     BucketTransactionRef,
@@ -270,7 +270,7 @@ class LedgerTransactionPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     date: str = Field(min_length=10, max_length=10)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
@@ -313,7 +313,7 @@ class LedgerTransactionReviewPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     date: str = Field(min_length=10, max_length=10)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
@@ -358,7 +358,7 @@ class LedgerTransactionResultPayload(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     review_status: str = Field(min_length=1)
     transaction: LedgerTransactionPayload
 
@@ -368,7 +368,7 @@ class LedgerTransactionTrackingPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     created_event_id: str = Field(min_length=1)
     evidence_provenance: tuple[TransactionEvidenceProvenanceEntry, ...]
     edit_lineage: tuple[TransactionEditLineageEntry, ...]
@@ -423,7 +423,7 @@ class SplitTransactionResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    parent_transaction_id: str = Field(min_length=64, max_length=64)
+    parent_transaction_id: TransactionId
     split_group_id: str = Field(min_length=64, max_length=64)
     child_transaction_ids: tuple[str, ...]
     parent_transaction: Transaction
@@ -438,8 +438,8 @@ class MergeTransactionsResult(BaseModel):
 
     bucket_id: BucketId
     split_group_id: str = Field(min_length=64, max_length=64)
-    parent_transaction_id: str = Field(min_length=64, max_length=64)
-    merged_transaction_id: str = Field(min_length=64, max_length=64)
+    parent_transaction_id: TransactionId
+    merged_transaction_id: TransactionId
     source_child_ids: tuple[str, ...]
     merged_transaction: Transaction
     parent_transaction: Transaction
@@ -624,7 +624,7 @@ class LedgerTransactionRemovalReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     removed: bool = False
     dry_run: bool = False
     actor: str = Field(min_length=1, max_length=64)
@@ -748,7 +748,7 @@ class LedgerExportRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     lifecycle_state: str = Field(min_length=1)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str = ""
