@@ -47,8 +47,8 @@ def register(app: typer.Typer) -> None:
             include_all=include_all,
             only_unreadable=only_unreadable,
         )
-        typer.echo(f"namespace\t{namespace}")
-        typer.echo(f"count\t{len(report.rows)}")
+        typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.namespace')}\t{namespace}")
+        typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.count')}\t{len(report.rows)}")
         for row in report.rows:
             typer.echo(f"{row.namespace}\t{row.object_key_digest}")
 

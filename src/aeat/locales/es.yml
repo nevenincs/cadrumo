@@ -32,13 +32,26 @@ adapters:
       errors:
         already_active: AeatAuthenticator ya tiene una sesion activa; llame a close()
           o reauthenticate() antes de autenticar de nuevo.
+        already_active_before_resume: 'AeatAuthenticator ya tiene una sesión activa; llame a close() antes de reanudar.'
         assertion_failed: La autenticacion AEAT no produjo una asercion de inicio
           de sesion valida.
+        capture_requires_active_session: 'capture_storage_state() requiere la sesión autenticada actualmente activa.'
+        capture_requires_certificate: 'capture_storage_state() requiere una sesión respaldada por certificado con metadatos de handshake.'
+        closing: 'El autenticador está cerrando; no se permiten nuevas operaciones verify_login.'
+        context_marker_missing: 'El contexto del navegador no está etiquetado con el marcador de certificado esperado.'
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
+        no_active_context: 'No hay contexto de navegador activo; llame a authenticate() primero.'
+        no_context_capture_storage: 'No hay contexto de navegador activo; no se puede capturar el estado de almacenamiento.'
+        persisted_session_verification_failed: 'La sesión persistida del navegador AEAT falló la verificación en vivo.'
         resume_failed: La reanudacion de la sesion AEAT persistida no produjo un contexto
           utilizable.
+        session_stale: 'La sesión AEAT ha caducado; el plazo de inactividad ha expirado.'
     clave_movil:
       errors:
+        already_active: 'Cl@ve Móvil ya tiene una sesión activa; llame a close() antes de autenticarse de nuevo.'
+        approval_timeout: 'La autenticación por navegador Cl@ve Móvil no se completó en el tiempo configurado.'
+        dni_nie_not_set: 'AEAT_CLAVE_MOVIL_DNI_NIE no está configurado; configure su DNI o NIE antes de autenticarse.'
+        metadata_invalid: 'Los metadatos de sesión de Cl@ve Móvil son inválidos o no pueden analizarse.'
         no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
           config auth status` primero.
         page_missing_click: La pagina de Playwright no expone click(); no se puede
@@ -46,6 +59,7 @@ adapters:
         session_expired: La sesion de Cl@ve Movil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
           Movil no coincide; los datos de sesion pueden estar corruptos.
+        verify_requires_active_context: 'Cl@ve Móvil verify() requiere un contexto de navegador activo; llame a authenticate() primero.'
   google:
     calc_sheets:
       errors:
@@ -150,10 +164,17 @@ adapters:
         ejecute primero `aeat config auth status`.
       parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
         estructura de la página puede haber cambiado.
+      playwright_alert_modal_failed: 'Error al continuar el modal de alerta de AEAT.'
+      playwright_buscar_click_failed: 'Error al hacer clic en el botón Buscar de la Sede.'
+      playwright_combobox_open_failed: 'Error al abrir el cuadro combinado de la Sede.'
+      playwright_combobox_select_failed: 'Error al seleccionar una opción del cuadro combinado en la Sede.'
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
 aggregation:
+  grouping:
+    errors:
+      unsupported_modelo: 'No hay contrato de agregación registrado para el modelo solicitado.'
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -181,6 +202,11 @@ aggregation:
           %{modelo}: %{provider}'
   period:
     parse_error: Formato de período no reconocido
+  prorrata:
+    errors:
+      current_year_not_after_prior: 'El año actual debe ser estrictamente mayor que el año anterior.'
+      invalid_provisional_period: 'El período provisional debe ser un token trimestral (Qn) o mensual (Mnn).'
+      year_out_of_range: 'El año de agregación de prorrata está fuera del rango admitido 2000-2100.'
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para la agregación del
@@ -347,6 +373,10 @@ application:
           test` antes de leer datos AEAT.
         verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
           auth test` antes de leer datos AEAT.
+  ledger:
+    errors:
+      evidence_attachment_requires_ids: 'El adjunto de evidencia del libro mayor requiere evidencia de compra o identificadores de adjunto.'
+      purchase_evidence_already_set: 'La transacción del libro mayor ya tiene un purchase_invoice_evidence_id; elimine o reemplace a través del flujo de adjuntos.'
   modelo:
     borrador_binding:
       errors:
@@ -358,6 +388,8 @@ application:
         source_trace_mismatch: La traza de origen del borrador debe coincidir con
           los identificadores de binding resueltos.
     errors:
+      amendment_verification_refused_missing_casillas: 'La enmienda está incompleta: faltan identificadores de casilla requeridos en el mapa corregido.'
+      amendment_verification_refused_no_snapshot: 'El registro no tiene una instantánea para el modelo, año y período solicitados.'
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
@@ -382,13 +414,16 @@ application:
         create NAME` antes de reconciliar una unidad de trabajo.
       verification_report_not_found: No existe ningún informe de verificación con
         id=%{verification_report_id}.
+      work_unit_already_discarded: 'La unidad de trabajo ya está descartada.'
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
         descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
         descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
+      work_unit_mutation_refused: 'La unidad de trabajo está descartada; cree una nueva unidad de trabajo para continuar.'
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
+      workflow_input_mismatch: 'La solicitud de entrada del flujo de trabajo no coincide con la revisión de cálculo.'
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -456,6 +491,7 @@ application:
         profile create NAME` para crearlo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' está eliminado y no
         puede seleccionarse.
+      unsupported_bundle_schema_version: 'La versión del esquema del paquete no es compatible con esta versión de la aplicación.'
   wizard:
     errors:
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
@@ -463,6 +499,8 @@ application:
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
+    next_hint:
+      modelo_work_create: 'aeat app modelo work create'
     status:
       errors:
         missing_tax_id: El perfil activo no tiene tax.id.
@@ -1674,6 +1712,9 @@ cli:
         conflicting_filters: --all y --unreadable no se pueden combinar; pasa uno
           o ninguno.
       help: Inventariar el índice de objetos seguros por espacio de nombres.
+      labels:
+        count: 'recuento'
+        namespace: 'namespace'
       list_help: Lista las claves de objetos seguros guardadas en un espacio de nombres.
       namespace_help: Espacio de nombres que se va a inventariar.
       unreadable_help: Limita el listado a filas no descifrables.
@@ -2642,6 +2683,7 @@ errors:
       necesario para esta operación de almacenamiento.
     auth_session_corrupt: Los metadatos de la sesión guardada no se pueden leer. Vuelve
       a autenticarte para crear una sesión nueva.
+    auth_session_deserialization: errors.auth.auth_session_deserialization
     auth_session_unavailable: No hay ninguna sesión activa verificada con la AEAT
       disponible. Autentícate antes de continuar.
     auth_storage_bucket_recovery_verification: El código de recuperación introducido
@@ -3016,9 +3058,11 @@ errors:
     stale_exchange_rate: El único tipo de cambio disponible está fuera del margen
       de frescura aceptable.
   financial:
+    source_file_is_symlink: 'La ruta del archivo origen es un enlace simbólico, lo
+      cual no está permitido para la ingesta de datos fiscales: {path}'
     source_file_not_found: 'El archivo de origen no existe: {path}'
-    source_file_too_large: 'El archivo origen es demasiado grande: {path} ({size_bytes} bytes; máximo {max_bytes} bytes)'
-    source_file_is_symlink: 'La ruta del archivo origen es un enlace simbólico, lo cual no está permitido para la ingesta de datos fiscales: {path}'
+    source_file_too_large: 'El archivo origen es demasiado grande: {path} ({size_bytes}
+      bytes; máximo {max_bytes} bytes)'
   identity:
     cif_check_char_mismatch_mixed: 'El carácter de control del CIF es incorrecto (tipo
       {kind}): se esperaba {expected} o {alt}, se obtuvo {got}.'
@@ -3042,7 +3086,6 @@ errors:
   integrity:
     integrity_aeat_core_validation: Una comprobación interna de integridad de datos
       no se superó.
-    integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo inesperado.
     integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
       mal configurado.
     integrity_filing_amendment_validation: La declaración complementaria infringe
@@ -3068,6 +3111,8 @@ errors:
       un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.
     integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
       una invariante estructural.
+    integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo
+      inesperado.
     integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
@@ -3120,6 +3165,7 @@ errors:
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
     internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
+    internal_profile_registration: errors.internal.internal_profile_registration
     internal_wizard_script_overflow: 'Error interno: el asistente se cerró con respuestas
       guionizadas sin consumir.'
     internal_wizard_script_underflow: 'Error interno: el asistente solicitó más respuestas
@@ -3204,6 +3250,7 @@ errors:
       puede ejecutar con los datos indicados.
     refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
       resuelve a un bucket registrado.
+    refused_auth_diagnostic_payload: errors.refused.refused_auth_diagnostic_payload
     refused_auth_diagnostic_phone_state: El valor de estado del teléfono proporcionado
       no se reconoce. Utilice uno de los valores válidos de estado de teléfono del
       operador.
@@ -3268,6 +3315,8 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
+    refused_iva_compensation_decimal_parse: errors.refused.refused_iva_compensation_decimal_parse
+    refused_iva_compensation_year_range: errors.refused.refused_iva_compensation_year_range
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.
@@ -3353,6 +3402,7 @@ errors:
     refused_sanitization_unknown_surface: Se detectó una superficie con datos personales
       que el saneador no sabe tratar. Requiere revisión humana.
     refused_sanitization_validation: Los parámetros del saneador no superaron la validación.
+    refused_source_mesh_invariant: errors.refused.refused_source_mesh_invariant
     refused_storage_bucket_already_present: La importación colisiona con un bucket
       de almacenamiento que ya existe.
     refused_storage_bucket_no_active: No se pudo determinar ningún bucket activo.
