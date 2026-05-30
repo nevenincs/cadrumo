@@ -669,9 +669,17 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
 
 
 def test_ledger_import_verify_source_rejects_missing_original_file(
-    monkeypatch: pytest.MonkeyPatch, isolated_user_cli: Path
+    isolated_user_cli: Path,
 ) -> None:
-    monkeypatch.chdir(isolated_user_cli)
+    """Use contextlib.chdir (stdlib, live-tests-friendly) instead of
+    monkeypatch.chdir per the project no-monkeypatch mandate (CLAUDE.md).
+    The CLI under test resolves the --source relative path against cwd;
+    pinning cwd to the isolated_user_cli dir is process-global isolation
+    just like a temp-dir context manager.
+    """
+
+    import contextlib
+
     statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
         "\n".join(
@@ -684,20 +692,21 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
     )
     missing_source = Path("missing.pdf")
 
-    imported = _invoke(
-        [
-            "app",
-            "ledger",
-            "import",
-            str(statement),
-            "--provider",
-            "n26",
-            "--dry-run",
-            "--verify",
-            "--source",
-            str(missing_source),
-        ]
-    )
+    with contextlib.chdir(isolated_user_cli):
+        imported = _invoke(
+            [
+                "app",
+                "ledger",
+                "import",
+                str(statement),
+                "--provider",
+                "n26",
+                "--dry-run",
+                "--verify",
+                "--source",
+                str(missing_source),
+            ]
+        )
 
     assert imported.exit_code != 0
     assert "missing.pdf" in imported.output
