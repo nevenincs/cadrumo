@@ -396,12 +396,85 @@ Close the 8 regressions surfaced by Wave 2. These prove the enrollment habit lea
 
 Establish master_key/_errors.py with MasterKeyReentrantError / MasterKeyTypeError / KeyDerivationError enrollment. Enroll bucket/ validators into BucketError. Close 6 application-layer enrolled-error survivors.
 
+- [ ] `W02.P11.S243` - establish src/aeat/adapters/persistence/storage/master_key/_errors.py with MasterKeyReentrantError(SecretStoreError), MasterKeyTypeError(StorageError); `src/aeat/adapters/persistence/storage/master_key/_errors.py`.
+- [ ] `W02.P11.S244` - migrate RuntimeError to MasterKeyReentrantError at _master_key.py:974 and :1294; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `W02.P11.S245` - add real-behavior test asserting MasterKeyReentrantError envelope round-trip; `src/aeat/adapters/persistence/storage/master_key/test_master_key.py`.
+- [ ] `W02.P11.S246` - migrate ValueError raises in _kdf.py:44,48 and _kdf_params.py:68 to KeyDerivationError; `src/aeat/adapters/persistence/storage/master_key/_kdf.py`.
+- [ ] `W02.P11.S247` - migrate TypeError in _kdf_params.py:82 to KeyDerivationError; `src/aeat/adapters/persistence/storage/master_key/_kdf_params.py`.
+- [ ] `W02.P11.S248` - add real-behavior test asserting KeyDerivationError envelope at every migrated raise; `src/aeat/adapters/persistence/storage/master_key/test_kdf.py`.
+- [ ] `W02.P11.S249` - migrate ValueError raises in _dek_wrap.py:49,74,76,105 to EncryptionError (or new KeyWrapError); `src/aeat/adapters/persistence/storage/master_key/_dek_wrap.py`.
+- [ ] `W02.P11.S250` - add real-behavior test asserting EncryptionError envelope at every dek_wrap raise; `src/aeat/adapters/persistence/storage/master_key/test_dek_wrap.py`.
+- [ ] `W02.P11.S251` - migrate ValueError raises in _bucket_session.py:97-103 and _idle_timeout.py:69 to StorageValidationError or KeyDerivationError; `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`.
+- [ ] `W02.P11.S252` - migrate TypeError in _zeroise.py:46 to MasterKeyTypeError or StorageValidationError; `src/aeat/adapters/persistence/storage/master_key/_zeroise.py`.
+- [ ] `W02.P11.S253` - migrate ValueError in _recovery_record.py:34 to RecoveryVerificationError or RecoveryRecordParseError; `src/aeat/adapters/persistence/storage/master_key/_recovery_record.py`.
+- [ ] `W02.P11.S254` - add real-behavior test asserting master_key cluster errors all envelope-round-trip; `src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py`.
+- [ ] `W02.P11.S255` - migrate ValueError raises in bucket/_manifest.py:58,72,147 to BucketError or BucketValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest.py`.
+- [ ] `W02.P11.S256` - migrate ValueError raises in bucket/_export_header.py:24-53 to BucketError or BucketExportHeaderError; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
+- [ ] `W02.P11.S257` - migrate TypeError in bucket/_manifest_io.py:45 to BucketError or StorageValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
+- [ ] `W02.P11.S258` - migrate ValueError raises in bucket/_layout.py:60,62 and bucket/_keystore_paths.py:40,42 to BucketError; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
+- [ ] `W02.P11.S259` - add real-behavior test asserting bucket cluster errors envelope-round-trip; `src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py`.
+- [ ] `W02.P11.S260` - replace ValueError at _namespace_registry.py:119 with NamespaceRegistryError survivor; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [ ] `W02.P11.S261` - replace ValueError at workflow/_engine.py:282 with WorkflowInputMismatchError survivor; `src/aeat/application/workflow/_engine.py`.
+- [ ] `W02.P11.S262` - replace ValueError at core/config.py:1249,1252 with ConfigBoundaryError survivor; `src/aeat/core/config.py`.
+- [ ] `W02.P11.S263` - replace ValueError at runtime.py:320 with StorageValidationError; `src/aeat/adapters/persistence/storage/runtime.py`.
+- [ ] `W02.P11.S264` - replace ValueError at application/modelo/_actions.py:2413 with ModeloApplicabilityFilterError(ModeloError); `src/aeat/application/modelo/_actions.py`.
+- [ ] `W02.P11.S265` - replace TypeError at application/diagnostics.py:416 with DiagnosticModelError survivor; `src/aeat/application/diagnostics.py`.
+- [ ] `W02.P11.S266` - replace TypeError at _secure_repository.py:105 with RepositorySetupError or StorageValidationError; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
+- [ ] `W02.P11.S267` - introduce ProfileLabelAmbiguousError(WorkflowError) and replace ValueError at workflow/_profile_bucket_scan.py:103; `src/aeat/application/workflow/_errors.py`.
+- [ ] `W02.P11.S268` - introduce src/aeat/application/repair_integrity/_errors.py with RepairIntegrityError and RepairDecisionNotFoundError; `replace 3 ValueError raises at repair_integrity.py:230,392,415; `src/aeat/application/repair_integrity.py`.
+- [ ] `W02.P11.S269` - change SnapshotNotFoundError base from KeyError to (AeatError, KeyError) at _snapshot_base.py:49; `src/aeat/application/live/_snapshot_base.py`.
+- [ ] `W02.P11.S270` - narrow except Exception swallows at _orchestration.py:143 and _profile_health.py:146,163,298 to specific AeatError subtypes; `src/aeat/application/user_profile/_orchestration.py`.
+- [ ] `W02.P11.S271` - add real-behavior test asserting application-layer survivor envelopes all enrolled; `src/aeat/application/test_survivor_envelope_enrollment.py`.
 
 ### Phase `W02.P12` - A3 locale survivor sweep
 
 Thread translated_message on every AeatLoginAssertionError raise across _authenticator.py and _clave_movil.py (9 sites). Close 9 SedeNavigationError navigation-flow raises in _declarations.py. Localize PortalNotFoundError.
 
+- [ ] `W02.P12.S272` - thread translated_message=adapters.auth.clave_movil.errors.no_persisted_session on AeatLoginAssertionError at _clave_movil.py:380 and :864; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W02.P12.S273` - thread translated_message=adapters.auth.clave_movil.errors.session_expired on AeatLoginAssertionError at _clave_movil.py:385 and :1049; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W02.P12.S274` - thread translated_message=adapters.auth.clave_movil.errors.storage_state_hash_mismatch on AeatLoginAssertionError at _clave_movil.py:1052; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W02.P12.S275` - thread translated_message=adapters.auth.clave_movil.errors.page_missing_click on AeatLoginAssertionError at _clave_movil.py:1144; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W02.P12.S276` - add real-behavior test asserting all Clave Movil AeatLoginAssertionError raises carry localized translated_message at CLI boundary; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil_locale.py`.
+- [ ] `W02.P12.S277` - thread translated_message=adapters.auth.authenticator.errors.already_active at _authenticator.py:496; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W02.P12.S278` - thread translated_message=adapters.auth.authenticator.errors.assertion_failed at _authenticator.py:573; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W02.P12.S279` - thread translated_message=adapters.auth.authenticator.errors.resume_failed at _authenticator.py:1083; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W02.P12.S280` - thread translated_message=adapters.auth.authenticator.errors.metadata_parse_failed at _authenticator.py:1157; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W02.P12.S281` - add real-behavior test asserting authenticator AeatLoginAssertionError raises carry localized translated_message; `src/aeat/adapters/outbound/aeat/auth/test_authenticator_locale.py`.
+- [ ] `W02.P12.S282` - thread translated_message=adapters.sede.errors.session_expired_nav_failed on SedeNavigationError at _declarations.py:463; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P12.S283` - thread translated_message=adapters.sede.errors.form_render_timeout on SedeNavigationError at _declarations.py:475; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P12.S284` - thread translated_message=adapters.sede.errors.cotejo_nav_failed on SedeNavigationError at _declarations.py:841; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P12.S285` - thread translated_message=adapters.sede.errors.ejercicio_unavailable on SedeNavigationError at _declarations.py:271 and :804; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P12.S286` - thread translated_message on SedeParseError at _declarations.py:626,630,642 (listbox missing / justificante column); `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P12.S287` - thread translated_message=adapters.sede.errors.listing_nav_failed on SedeNavigationError at _declarations.py:453; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P12.S288` - thread translated_message=adapters.sede.errors.no_auth_session on SedeNavigationError at _censo_live.py:80; `src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
+- [ ] `W02.P12.S289` - add real-behavior test asserting all _declarations.py navigation-flow raises localize at CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_declarations_locale.py`.
+- [ ] `W02.P12.S290` - thread translated_message on PortalNotFoundError at application/portals/_service.py:97; `src/aeat/application/portals/_service.py`.
+- [ ] `W02.P12.S291` - add real-behavior test asserting PortalNotFoundError envelope localized; `src/aeat/application/portals/test_service.py`.
 
 ### Phase `W02.P13` - A4 + A7 + A8 new drift cleanup
 
 Close A4 JSON-decode boundaries (crypto + master-key), A7 Playwright wait-state literals (15+ sites), browser timeout magic numbers, MIME constants, env-write doc comments, A8 missing CAST-RATIONALE markers.
+
+- [ ] `W02.P13.S292` - wrap json.loads at crypto/_encrypted_columns.py:185 in EncryptedPayload(BaseModel) or model_validate; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [ ] `W02.P13.S293` - add roundtrip test asserting EncryptedPayload validates and rejects malformed; `src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py`.
+- [ ] `W02.P13.S294` - define EnvelopeDocument(BaseModel) and use model_validate_json at master_key/_master_key.py:1117; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [ ] `W02.P13.S295` - add roundtrip test asserting EnvelopeDocument validates and rejects malformed; `src/aeat/adapters/persistence/storage/master_key/test_envelope_document.py`.
+- [ ] `W02.P13.S296` - introduce src/aeat/adapters/outbound/aeat/sede/_browser_constants.py with PLAYWRIGHT_WAIT_DOMCONTENTLOADED and PLAYWRIGHT_WAIT_NETWORKIDLE; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [ ] `W02.P13.S297` - migrate 15+ domcontentloaded/networkidle literals across _declarations.py, _iva_compensation_wallet.py, _groi_check.py, _nif_iva_check.py, _censo_live.py, _walker.py to use the constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P13.S298` - add real-behavior test asserting Playwright wait-state constants are the single source of truth across sede adapter; `src/aeat/adapters/outbound/aeat/sede/test_playwright_wait_constants.py`.
+- [ ] `W02.P13.S299` - extract browser timeout constants (_VISIBLE_PROBE_TIMEOUT_MS, _ELEMENT_WAIT_TIMEOUT_MS) at _renta_web_open.py:273,341 and _walker.py:301 or import _declarations.py canonicals if semantics match; `src/aeat/adapters/outbound/aeat/sede/_renta_web_open.py`.
+- [ ] `W02.P13.S300` - add real-behavior test asserting browser timeout literals are named constants; `src/aeat/adapters/outbound/aeat/sede/test_browser_timeouts.py`.
+- [ ] `W02.P13.S301` - introduce JSON_MIME_TYPE: Final[str] = application/json and CSV_MIME_TYPE: Final[str] = text/csv in aeat.core.external_constants; `src/aeat/core/external_constants.py`.
+- [ ] `W02.P13.S302` - migrate application/json literal at _declarations.py:1223 and text/csv literal at application/export/_tabular.py:69 to constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P13.S303` - add real-behavior test asserting MIME-type constants are sole source; `src/aeat/core/test_external_constants.py`.
+- [ ] `W02.P13.S304` - document intentional env-write at _replay.py:172,179 with # env-write: intentional scoped context-manager comment; `src/aeat/core/observability/_replay.py`.
+- [ ] `W02.P13.S305` - wrap _stdio.py:89 os.environ COLUMNS write in a context-manager to scope the mutation; `src/aeat/entrypoints/cli/_stdio.py`.
+- [ ] `W02.P13.S306` - add real-behavior test asserting _stdio.py COLUMNS write is scoped and reverted; `src/aeat/entrypoints/cli/test_stdio.py`.
+- [ ] `W02.P13.S307` - swap raw logging.getLogger and replace print() at sede/test_renta_web_open_explore_dom.py:57,175,208 to use get_logger and _log.debug; `src/aeat/adapters/outbound/aeat/sede/test_renta_web_open_explore_dom.py`.
+- [ ] `W02.P13.S308` - swap raw logging.getLogger at storage/test_google_drive_live.py:42 to get_logger; `src/aeat/adapters/outbound/storage/test_google_drive_live.py`.
+- [ ] `W02.P13.S309` - add CAST-RATIONALE-SANITIZER-PIKEPDF-OPERANDS marker at sanitizer/_streams.py:152; `src/aeat/adapters/inbound/sanitizer/_streams.py`.
+- [ ] `W02.P13.S310` - add CAST-RATIONALE-LEDGER-RULE-REPO-INJECT marker at ledger/_actions.py:3503 and :3547; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W02.P13.S311` - add CAST-RATIONALE-WIZARD-COMMAND-INJECT marker at wizard/_commands.py:928; `src/aeat/application/wizard/_commands.py`.
+- [ ] `W02.P13.S312` - add real-behavior test asserting all production cast() calls carry CAST-RATIONALE marker; `src/aeat/test_cast_rationale_inventory.py`.
+- [ ] `W02.P13.S313` - enroll _pdf_n26.py:287,288 to DEFAULT_CURRENCY (the 2 sites missed in Wave 1 currency sweep); `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
+- [ ] `W02.P13.S314` - add real-behavior test asserting financial provider DEFAULT_CURRENCY enrollment is complete; `src/aeat/adapters/inbound/financial/providers/test_pdf_n26.py`.
