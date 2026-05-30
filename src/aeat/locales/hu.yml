@@ -25,6 +25,19 @@ adapters:
         suggestions:
           shape_change: Futtassa újra az élő orákulumot, miután ellenőrizte, hogy
             az AEAT módosította-e a Renta WEB Open oldal szerkezetét.
+  auth:
+    authenticator:
+      errors:
+        already_active: 'Az AeatAuthenticator mar rendelkezik aktiv munkamenettel; hivja meg a close() vagy reauthenticate() metodust az ujabb hitelesites elott.'
+        assertion_failed: 'Az AEAT hitelesites nem hozott letre ervenyes bejelentkezesi allitast.'
+        metadata_parse_failed: 'A mentett metaadatok nem eredmenyeztek elemzett modellt.'
+        resume_failed: 'A mentett AEAT munkamenet folytatasa nem eredmenyezett hasznalhato kornyezetet.'
+    clave_movil:
+      errors:
+        no_persisted_session: 'Nem talalhato Cl@ve Movil munkamenet; futtassa eloszor az `aeat config auth status` parancsot.'
+        page_missing_click: 'A Playwright oldal nem teszi elerhetove a click() metodust; nem hajthat vegre Cl@ve Movil bejelentkezest.'
+        session_expired: 'A Cl@ve Movil munkamenet tullephte a tetlensegi hataridot.'
+        storage_state_hash_mismatch: 'A Cl@ve Movil tarolasi allapot hash nem egyezik; a munkamenet adatai serulhetnek.'
   google:
     calc_sheets:
       errors:
@@ -101,12 +114,20 @@ adapters:
         year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
   sede:
     errors:
+      cotejo_nav_failed: 'Az AEAT cotejo oldalra való navigáció sikertelen volt; a munkamenet lejárhatott. Futtassa az ''aeat config auth test'' parancsot és próbálja újra.'
+      ejercicio_unavailable: 'Az AEAT nyilatkozatnyilvántartó nem kínálja a kért adóévet ehhez a modellhez.'
       empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
         az élő benyújtási megfigyelést.
+      form_render_timeout: 'Az AEAT nyilatkozatnyilvántartó űrlapja nem renderelődött az időkorláton belül; a munkamenet lejárhatott, vagy az AEAT karbantartási oldalt szolgál ki.'
       iva_wallet_empty_amount_cell: Az IVA kompenzációs tárca összeg cellája üres.
       iva_wallet_empty_period_cell: Az IVA kompenzációs tárca időszak cellája üres.
+      justificante_column_missing: 'Az AEAT nyilatkozatválasz hiányzik a justificante oszlopból; a táblázat struktúrája megváltozhatott.'
+      listbox_missing: 'Az AEAT nyilatkozatválasz hiányzik a várt listázó tárolóból; az oldal struktúrája megváltozhatott.'
+      listing_nav_failed: 'Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizze a hálózati kapcsolatot és próbálja újra.'
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
         futtassa először az `aeat config auth status` parancsot.
+      parse_failed: 'Nem sikerült elemezni az AEAT nyilatkozatválaszt; az oldal struktúrája megváltozhatott.'
+      session_expired_nav_failed: 'Az AEAT nyilatkozatnyilvántartó nem töltött be; a munkamenet valószínűleg lejárt. Futtassa az ''aeat config auth test'' parancsot és próbálja újra.'
 aggregation:
   iva_ledger:
     errors:
@@ -374,6 +395,9 @@ application:
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
+  portals:
+    errors:
+      portal_not_found: 'A kért AEAT portál nincs regisztrálva. Futtassa az ''aeat app live portals list'' parancsot az elérhető portálok megtekintéséhez.'
   user_profile:
     errors:
       duplicate_tax_id: A(z) "%{tax_id}" adóazonosítót már a(z) "%{profile}" profil
@@ -3018,6 +3042,10 @@ errors:
       Ne importáljon archívumot nem megbízható forrásból.
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
+    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
+      close the active session before re-entering.'
+    internal_master_key_type: 'Internal error: master-key operation received a value
+      of the wrong type.'
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
       rögzítettek aktív futási kontextuson kívül.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan

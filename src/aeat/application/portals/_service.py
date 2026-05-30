@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
+from ...core.i18n import tr
 from ...domain.modelos import ModeloCode
 from ...domain.portals import (
     PORTAL_REGISTRY,
@@ -97,6 +98,7 @@ class PortalsService:
             raise PortalNotFoundError(
                 f"portal {portal!r} is not registered in PORTAL_REGISTRY",
                 suggestion="aeat app live portals list",
+                translated_message=tr("application.portals.errors.portal_not_found"),
             )
         return _portal_to_row(metadata)
 
