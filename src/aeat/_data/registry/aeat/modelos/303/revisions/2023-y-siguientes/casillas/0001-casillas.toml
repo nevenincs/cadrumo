@@ -258,15 +258,15 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.resultado"
 number = "69"
-label = "Resultado de la autoliquidacion"
+label = "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_resultado_autoliquidacion"
 required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 export_refs = ["modelo-303-page-03-casilla-69"]
 
 [[revisions.2023-y-siguientes.casillas]]
@@ -1409,9 +1409,10 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_64"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
+input_kind = "computed"
+formula = "modelo-303-iva-suma-resultados"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 export_refs = ["modelo-303-page-03-casilla-64"]
 
 [[revisions.2023-y-siguientes.casillas]]
@@ -1430,14 +1431,15 @@ export_refs = ["modelo-303-page-03-casilla-65"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "66"
 number = "66"
-label = "Resultado - Importe atribuible Administracion del Estado"
+label = "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_66"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
+input_kind = "computed"
+formula = "modelo-303-iva-atribuible-estado"
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 export_refs = ["modelo-303-page-03-casilla-66"]
 
 [[revisions.2023-y-siguientes.casillas]]
@@ -1500,9 +1502,10 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_71"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]
+input_kind = "computed"
+formula = "modelo-303-iva-resultado-final"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 export_refs = ["modelo-303-page-03-casilla-71"]
 
 [[revisions.2023-y-siguientes.casillas]]

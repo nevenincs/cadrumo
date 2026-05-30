@@ -130,7 +130,7 @@ Scoped discovery sweep of the AEAT Diseno corpus and casilla data for the numeri
 Author declaracion_pdf extraction profiles for modelos 303 and 180.
 
 - [x] `W03.P06.S19` - Author the declaracion_pdf extraction profile for Modelo 303 from the AEAT Diseno and instructions; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [x] `W03.P06.S20` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W03.P06.S20` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
 
 ### Phase `W03.P07` - modelo 190 stub repair and modelo 130 cross-check
 
@@ -190,18 +190,18 @@ Verification Wave. Adds real per-modelo round-trip parse tests against PDF corpu
 Add per-modelo round-trip parse tests and confirm the snapshot-build gate is green.
 
 - [x] `W05.P11.S33` - Add a real round-trip parse test for Modelo 303 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [x] `W05.P11.S34` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
-- [x] `W05.P11.S92` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W05.P11.S34` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W05.P11.S92` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
 - [x] `W05.P11.S35` - Add the Modelo 190 real round-trip parse test against the existing sanitized 2024 declaration fixture after W05.P11.S93 supplied a legally grounded 2024 registry revision; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W05.P11.S93` - Resolve the Modelo 190 fixture/revision mismatch by sourcing the 2024 registry slice from Orden HAC/1432/2024, AEAT DR 190-2024, and the existing sanitized 2024 fixture; `src/aeat/tests/fixtures/justificantes/190/ src/aeat/_data/registry/aeat/modelos/190.toml`.
 - [x] `W05.P11.S36` - Keep the Modelo 036 real round-trip parse test blocked by W05.P11.S94 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W05.P11.S94` - Acquire a real Modelo 036 printed-form PDF fixture to verify the provisional named_label patterns before implementing S36; `src/aeat/tests/fixtures/justificantes/036/`.
 - [x] `W05.P11.S37` - Descope current Modelo 037 real round-trip parse test after W04.P08.S86 legal suppression decision; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W05.P11.S95` - Convert Modelo 037 source and fixture acquisition into historical-slice backlog only; `src/aeat/_data/registry/aeat/modelos/037/ src/aeat/tests/fixtures/justificantes/037/`.
-- [x] `W05.P11.S38` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
-- [x] `W05.P11.S96` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
-- [x] `W05.P11.S39` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
-- [x] `W05.P11.S97` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
+- [x] `W05.P11.S38` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
+- [x] `W05.P11.S96` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
+- [x] `W05.P11.S39` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
+- [x] `W05.P11.S97` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
 - [x] `W05.P11.S40` - RESOLVED via task #42: M840 grounded from corpus form template, SANITIZED fixture authored, round-trip test passing, corpus_round_trip_verified=true; `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/tests/fixtures/justificantes/840/`.
 - [x] `W05.P11.S98` - RESOLVED via task #42: M840 grounded from corpus form template, SANITIZED fixture authored, round-trip test passing, corpus_round_trip_verified=true; `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/tests/fixtures/justificantes/840/`.
 - [x] `W05.P11.S41` - Confirm the snapshot-build gate is green and all 26 modelos validate; `src/aeat/domain/calculations/registry/test_committed_registry.py`.
@@ -228,11 +228,11 @@ Classify the broad `W05.P16.S101` acquisition row into legally grounded per-mode
 Status note 2026-05-26: `.vault/audit/2026-05-26-declaracion-extraction-auth-gated-acquisition-status.md` records that public AEAT pages found for the remaining acquisition rows describe electronic form, preview, or filed-declaration flows, not taxpayer-free static declaration PDFs. Rows `W05.P18.S105` through `W05.P18.S110` remain open until operator-provided authorised fixtures, taxpayer-free static printed-form layouts, or authenticated read-only filed declarations are available. Synthetic data must not be sent to Sede or AEAT-hosted form surfaces, even for preview/download flows. A later operator-approved read-only Sede listing found one Modelo 190 exercise-2024 filed row for the authenticated profile, but single-row capture failed before artifact download because the local Modelo 190 registry had no 2024 snapshot at that time. Follow-up `W05.P18.S121` closed Modelo 190 through legally grounded 2024 registry authority plus the existing sanitized fixture. The authenticated read returned zero rows for modelos 180, 036, 369, 720, and 840 across 2024-2026; `W05.P18.S122` records a per-modelo evidence matrix and keeps their rows open. Operator context added 2026-05-26: the active profile is not expected to include filed data for the remaining special/current forms, so future auth reads are opportunistic only; the primary unblocker is authorised fixtures or official taxpayer-free static layouts.
 
 - [x] `W05.P18.S104` - Classify the blocked current slices by required acquisition type and verified local authority; `.vault/plan/2026-05-21-declaracion-extraction-architecture-plan.md`.
-- [x] `W05.P18.S105` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W05.P18.S105` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
 - [x] `W05.P18.S106` - Legally source and implement the 2024 Modelo 190 registry revision before using the existing 2024 fixture; `src/aeat/_data/registry/aeat/modelos/190.toml src/aeat/tests/fixtures/justificantes/190/`.
 - [x] `W05.P18.S107` - Acquire an authorised Modelo 036 printed-form PDF/declaration fixture before promoting provisional `named_label` patterns; `src/aeat/_data/registry/aeat/modelos/036.toml src/aeat/tests/fixtures/justificantes/036/`.
-- [x] `W05.P18.S108` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
-- [x] `W05.P18.S109` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
+- [x] `W05.P18.S108` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
+- [x] `W05.P18.S109` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 - does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
 - [x] `W05.P18.S110` - RESOLVED via task #42: M840 grounded from corpus form template, SANITIZED fixture authored, round-trip test passing, corpus_round_trip_verified=true; `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/tests/fixtures/justificantes/840/`.
 - [x] `W05.P18.S111` - Import the verified AEAT Modelo 840 static printed-form PDF into the official corpus/source registry and re-ground declaration-PDF label patterns against printed labels (`14 Ejercicio`, `15 Declaración de`); `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/_data/registry/aeat/legal/iae.toml`.
 - [x] `W05.P18.S121` - Register reviewed 2024 legal/source authority for Modelo 190 from Orden HAC/1432/2024 and AEAT `DISENOS_LOGICOS_190-2024.pdf`, then implement the 2024 registry revision and sanitized-fixture round-trip parser verification; `src/aeat/_data/registry/aeat/legal/irpf.toml src/aeat/_data/registry/aeat/modelos/190.toml src/aeat/tests/fixtures/justificantes/190/`.
@@ -296,9 +296,9 @@ M390 IVA annual was ABSENT in W01 classification. Corpus PDFs exist at tests/fix
 - [x] `W07.P21.S135` - Author parametrized round-trip test for 2 Spanish-language corpus PDFs excluding the English 2021 specimen; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W07.P21.S136` - Expand Modelo 390 profile to 6 named_label targets adding box 49 IVA soportado total interiores corrientes; `src/aeat/_data/registry/aeat/modelos/390.toml`.
 
-### Phase `W07.P22` - M100 IRPF declaracion_pdf profile — closure casillas + apartado totals
+### Phase `W07.P22` - M100 IRPF declaracion_pdf profile - closure casillas + apartado totals
 
-M100 IRPF Renta annual was ABSENT — Kent's headline annual filing. Author multi-revision declaracion_pdf profile (2021/2022/2023) covering closure cuota-chain casillas + base-liquidable / saldo-neto apartado totals. Multi-chunk iterative work bounded by corpus content (kent persona has actividades-económicas income only; trabajo/capital sections empty).
+M100 IRPF Renta annual was ABSENT - Kent's headline annual filing. Author multi-revision declaracion_pdf profile (2021/2022/2023) covering closure cuota-chain casillas + base-liquidable / saldo-neto apartado totals. Multi-chunk iterative work bounded by corpus content (kent persona has actividades-económicas income only; trabajo/capital sections empty).
 
 - [x] `W07.P22.S137` - Author Modelo 100 declaracion_pdf profile first chunk 9 closure casillas across 3 revisions 2021 2022 2023; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
 - [x] `W07.P22.S138` - Wire Modelo 100 application_links to parse_declaracion consumer across all 3 revisions; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
@@ -315,7 +315,7 @@ Fix parser-level bugs surfaced during corpus-driven extraction. Fixes: _TAX_ID_R
 - [x] `W07.P23.S143` - Align ExtractedCasilla casilla_id field to canonical CasillaId type alias max_length 32 to 64; `src/aeat/adapters/inbound/pdf/_shared.py`.
 - [x] `W07.P23.S144` - Fix Modelo 190 revision range year_from 2024 plus retenciones-total label_pattern missing las token; `src/aeat/_data/registry/aeat/modelos/190.toml`.
 
-### Phase `W07.P24` - PROVISIONAL gate — silent-failure audit + first-class schema field + enforcement fix
+### Phase `W07.P24` - PROVISIONAL gate - silent-failure audit + first-class schema field + enforcement fix
 
 Audit 9 unverified named_label profiles for silent-failure risk (label_patterns derived circularly from registry self-reference, never validated against printed-form). Annotate silently-PROVISIONAL profiles. Promote PROVISIONAL to first-class typed field provisional_pending_specimen with validator gate: declaracion_pdf profiles without a corpus fixture MUST explicitly opt-in. Fix the production-path corpus-root derivation bug that silently disabled the gate.
 
@@ -350,7 +350,7 @@ Both modelos have substantial corpus collections (M111 4 PDFs 2024-1T..4T; M130 
 
 ### Phase `W07.P27` - Strengthen silent-failure gate plus broader silent-regression identification
 
-The current PROVISIONAL gate (#34) checks fixture EXISTENCE; the M111/M130 finding (#37) showed fixture-exists is insufficient — both modelos have corpus but real-corpus round-trip structurally fails on layout differences. Add corpus_round_trip_verified typed field to ExtractionProfileDefinition with build-time validator (profile has fixture AND not corpus_round_trip_verified AND not provisional_pending_specimen -> fail) plus pytest-collection-time check that verifies the field corresponds to a real parametrized test. Tag profiles by ground truth (M303/M390/M100/M190 verified; M111/M130 fixture-but-gap-blocked; M115/M123/M131 no-fixture-already-provisional). Author ADR amendment to W02. Survey broader codebase for analogous silent-failure classes outside extraction-profile surface.
+The current PROVISIONAL gate (#34) checks fixture EXISTENCE; the M111/M130 finding (#37) showed fixture-exists is insufficient - both modelos have corpus but real-corpus round-trip structurally fails on layout differences. Add corpus_round_trip_verified typed field to ExtractionProfileDefinition with build-time validator (profile has fixture AND not corpus_round_trip_verified AND not provisional_pending_specimen -> fail) plus pytest-collection-time check that verifies the field corresponds to a real parametrized test. Tag profiles by ground truth (M303/M390/M100/M190 verified; M111/M130 fixture-but-gap-blocked; M115/M123/M131 no-fixture-already-provisional). Author ADR amendment to W02. Survey broader codebase for analogous silent-failure classes outside extraction-profile surface.
 
 - [x] `W07.P27.S164` - Add corpus_round_trip_verified field to ExtractionProfileDefinition plus validate_declaracion_pdf_round_trip_gate validator with 4 unit tests in test_corpus_round_trip_gate.py; `update test_provisional_specimen_gate to match strengthened gate contract; `src/aeat/domain/calculations/registry/`.
 - [x] `W07.P27.S165` - Tag 8 verified profiles corpus_round_trip_verified=true (M100 x3, M190, M303 x2, M390) and 2 corpus-gap profiles provisional_pending_specimen=true (M111, M130); `all 26 modelos pass registry validation; `src/aeat/_data/registry/aeat/modelos/`.
@@ -423,7 +423,7 @@ cross-campaign sweeps audit + M193 reversal verify + M190 rename ADR amendment +
 - [x] `W08.P35.S186` - Re-audit M193 _total suffix conclusion against M180 real-corpus extraction behaviour or document remaining uncertainty inline; `src/aeat/_data/registry/aeat/modelos/193.toml`.
 - [x] `W08.P35.S187` - Audit select_revision callers for case-sensitive period expectations regressed by _temporal.py case-insensitive comparison fix; `src/aeat/domain/calculations/registry/_temporal.py`.
 - [x] `W08.P35.S188` - Author ADR amendment recording M190 revision rename rationale 2025-y-siguientes to 2024-y-siguientes year_from=2024; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
-- [x] `W08.P35.S189` - DOCUMENTED in audit .vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md M5 finding — plan-doc attribution scatter (#39 to secure-storage plan, #40 to schema-hardening plan, #36 bonus to schema-hardening) is operationally acceptable given factory-direct shared-worktree mode; `consolidation not warranted because the work is correctly tracked where the canonical step records live and cross-plan linking via wiki-links provides traceability; `.vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md`.
+- [x] `W08.P35.S189` - DOCUMENTED in audit .vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md M5 finding - plan-doc attribution scatter (#39 to secure-storage plan, #40 to schema-hardening plan, #36 bonus to schema-hardening) is operationally acceptable given factory-direct shared-worktree mode; `consolidation not warranted because the work is correctly tracked where the canonical step records live and cross-plan linking via wiki-links provides traceability; `.vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md`.
 - [x] `W08.P35.S195` - Add registry-author lint test asserting M036 period_selector.periods and filing_schedule.periods are lowercase canonical to catch ALTA/MODIFICACION/BAJA uppercase drift; `includes anti-evasion proof test; `src/aeat/domain/calculations/registry/test_census_modelo_registry_data.py`.
 
 ### Phase `W08.P36` - LOW-severity housekeeping
@@ -439,7 +439,7 @@ assert on typed exception attributes instead of message text
 
 - [x] `W08.P37.S192` - Restructure M111 M130 M131 gap tests to assert on typed exception attributes failure_mode missing tuple instead of message text; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 
-## Wave `W09` - PDF extraction hardening — bbox primitive + verification chain (2026-05-28 user-authorized)
+## Wave `W09` - PDF extraction hardening - bbox primitive + verification chain (2026-05-28 user-authorized)
 
 Complete PDF extraction hardening + verification chain per user directive 2026-05-28. Phase 1: bbox extraction primitive (W02 ADR named future-extension) unblocking M111/M130/M131 from the line-end-box-number structural gap documented in gap tests. Phase 2: verification chain parse_declaracion → ExtractedCasilla observations → calculation engine recompute → equality assertion, exercised across all GROUNDED profiles. MUST use centralized core: aeat.core.errors AeatError hierarchy via DeclaracionParseError structured attributes, aeat.core.config.Settings, aeat.core.i18n.tr() for user-facing messages, existing ExtractionProfileDefinition / ExtractionTargetDefinition / ExtractedCasilla schemas (strict pydantic v2 frozen extra=forbid), existing _parser.py + _label_regex.py modules, existing PROVISIONAL gates + verification_source enum. NO new top-level packages, NO duplicated infrastructure, NO shims, NO mocks/skips/xfail/tautology.
 
@@ -451,7 +451,7 @@ Implement bbox_anchored extraction strategy for M111/M130/M131 declaracion PDFs 
 
 ### Phase `W09.P39` - Phase 2 verification chain: parse → ExtractedCasilla → calculation engine recompute → diff
 
-User directive 2026-05-28 second half: complete the verification chain that turns GROUNDED extraction profiles into actual calculation-engine verification. For each GROUNDED modelo with corpus PDFs (M100×3, M111, M115, M123×2, M130, M131, M180, M184, M190, M193, M232×2, M303×2, M347, M349, M369, M390, M720, M840) where the corpus has closure-casilla values present: parse corpus PDF → ExtractedCasilla observations → registry calculation engine recomputes closure casillas from the formula DAG using extracted leaf casillas → assert engine-recomputed values match extracted closure values. This is the project mission: verify the calculation engine against AEAT-grounded printed forms. MUST use centralized infrastructure: aeat.core.errors.AeatError hierarchy, aeat.core.config.Settings, aeat.core.i18n.tr() for user messages, existing calculation engine surface (likely calculate_registry_snapshot per registry public API), existing DeclaracionFiling/ExtractedCasilla observation shape, existing RegistrySnapshot resolution. Real behaviour only — actual engine calls, actual PDFs, no mocks/skips/xfail/tautology.
+User directive 2026-05-28 second half: complete the verification chain that turns GROUNDED extraction profiles into actual calculation-engine verification. For each GROUNDED modelo with corpus PDFs (M100×3, M111, M115, M123×2, M130, M131, M180, M184, M190, M193, M232×2, M303×2, M347, M349, M369, M390, M720, M840) where the corpus has closure-casilla values present: parse corpus PDF → ExtractedCasilla observations → registry calculation engine recomputes closure casillas from the formula DAG using extracted leaf casillas → assert engine-recomputed values match extracted closure values. This is the project mission: verify the calculation engine against AEAT-grounded printed forms. MUST use centralized infrastructure: aeat.core.errors.AeatError hierarchy, aeat.core.config.Settings, aeat.core.i18n.tr() for user messages, existing calculation engine surface (likely calculate_registry_snapshot per registry public API), existing DeclaracionFiling/ExtractedCasilla observation shape, existing RegistrySnapshot resolution. Real behaviour only - actual engine calls, actual PDFs, no mocks/skips/xfail/tautology.
 
 
 ### Phase `W09.P40` - Phase 2 verification chain: parse → ExtractedCasilla → calculation engine recompute → diff
@@ -462,7 +462,7 @@ Implement the verification chain that turns GROUNDED extraction profiles into ac
 
 ## Wave `W10` - Discipline rollout across PDF surfaces + Phase 2 follow-ups (2026-05-28)
 
-Gradual rollout of the PDF extraction discipline (verification_source enum + PROVISIONAL gate + corpus_round_trip_verified + structured exception attributes + verification chain) across other PDF import surfaces beyond declaracion. Plus Phase 2 verification chain follow-ups for surfaced FORMULA-MISMATCH and BINDING-GAP findings (M130 corpus regen, M390 leaf inputs, M180 M115 relation, M111 negative filing edge). Per-surface phases: justificante (highest leverage, lowest risk — mirrors declaracion closely); bank PDF financial providers (high operational stakes — N26 first, extensible); borrador architectural audit (per-modelo class vs registry-profile decision); OCR/evidence path (deferred future research). Per-finding phases: M130 corpus regeneration, M390 leaf binding, M180 cross-modelo relation, M111 negative filing, verification chain extension as gaps close.
+Gradual rollout of the PDF extraction discipline (verification_source enum + PROVISIONAL gate + corpus_round_trip_verified + structured exception attributes + verification chain) across other PDF import surfaces beyond declaracion. Plus Phase 2 verification chain follow-ups for surfaced FORMULA-MISMATCH and BINDING-GAP findings (M130 corpus regen, M390 leaf inputs, M180 M115 relation, M111 negative filing edge). Per-surface phases: justificante (highest leverage, lowest risk - mirrors declaracion closely); bank PDF financial providers (high operational stakes - N26 first, extensible); borrador architectural audit (per-modelo class vs registry-profile decision); OCR/evidence path (deferred future research). Per-finding phases: M130 corpus regeneration, M390 leaf binding, M180 cross-modelo relation, M111 negative filing, verification chain extension as gaps close.
 
 ### Phase `W10.P41` - Justificante surface alignment with declaracion discipline
 
@@ -470,13 +470,13 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 - [x] `W10.P41.S198` - Audit justificante _parser + _extract for silent-failure parity with declaracion verification_source enum and PROVISIONAL gate (tasklist #67); `src/aeat/adapters/inbound/justificante/`.
 
-### Phase `W10.P42` - Bank PDF provider gate (financial.providers) — N26 first, extensible
+### Phase `W10.P42` - Bank PDF provider gate (financial.providers) - N26 first, extensible
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
 - [x] `W10.P42.S199` - Author bank-PDF provider gate discipline N26-first extensible to BBVA Santander Caixabank etc (tasklist #68); `src/aeat/adapters/inbound/financial/providers/`.
 
-### Phase `W10.P43` - Borrador architectural audit — per-modelo class vs registry-profile
+### Phase `W10.P43` - Borrador architectural audit - per-modelo class vs registry-profile
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
@@ -487,7 +487,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [x] `W10.P44.S201` - OCR evidence invoice path discipline research (tasklist #70) — research landed at `.vault/research/2026-05-30-declaracion-extraction-architecture-research.md`; `seven OCR-specific silent-failure classes documented; discipline analogue proposed (`InvoiceCorpusSource`, `InvoiceOcrExtractionError`, engine-version gate); verdict: separate ADR `purchase-invoice-ocr-extraction-discipline` warranted; follow-up phases: ADR authoring, model/error implementation, OCR pipeline, gate enforcement`.
+- [x] `W10.P44.S201` - OCR evidence invoice path discipline research (tasklist #70) - research landed at `.vault/research/2026-05-30-declaracion-extraction-architecture-research.md`; `seven OCR-specific silent-failure classes documented; discipline analogue proposed (`InvoiceCorpusSource`, `InvoiceOcrExtractionError`, engine-version gate); verdict: separate ADR `purchase-invoice-ocr-extraction-discipline` warranted; follow-up phases: ADR authoring, model/error implementation, OCR pipeline, gate enforcement`.
 
 ### Phase `W10.P45` - M130 corpus regeneration with formula-consistent values
 
@@ -521,13 +521,13 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 ### Phase `W10.P50` - M100 leaf-profile extension (W10.P49 follow-up)
 
-M100 verification chain currently EXTRACTION-ONLY because leaf inputs (017x family — base imponible general components) are absent from the declaracion_pdf profile target_casillas. M100 has full cuota-chain formulas in the registry but engine can't recompute without those leaves supplied as observations. Expand the M100 (2021/2022/2023) profiles target_casillas to include the leaf inputs via bbox_anchored where the printed form supports them. Transitions M100 ×3 revisions EXTRACTION-ONLY → VERIFIED across the 3 corpus PDFs.
+M100 verification chain currently EXTRACTION-ONLY because leaf inputs (017x family - base imponible general components) are absent from the declaracion_pdf profile target_casillas. M100 has full cuota-chain formulas in the registry but engine can't recompute without those leaves supplied as observations. Expand the M100 (2021/2022/2023) profiles target_casillas to include the leaf inputs via bbox_anchored where the printed form supports them. Transitions M100 ×3 revisions EXTRACTION-ONLY → VERIFIED across the 3 corpus PDFs.
 
 - [x] `W10.P50.S207` - Expand M100 (2021/2022/2023) declaracion_pdf profiles target_casillas to include leaf inputs so engine recomputes cuota-chain closure (tasklist #79); `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
 
-### Phase `W10.P51` - M303 formula coverage authoring (W10.P49 follow-up — headline IVA)
+### Phase `W10.P51` - M303 formula coverage authoring (W10.P49 follow-up - headline IVA)
 
-M303 verification chain currently EXTRACTION-ONLY because no closure formulas defined in the registry for M303. M303 has 16 named_label extraction targets across 2 template revisions and 15 corpus PDFs round-trip clean — but the engine can't recompute anything because formulas are absent. M303 IS the headline IVA quarterly modelo for autónomos. Author the closure formula DAG citing AEAT Orden HAC/819/2024 + LIVA/RD-Leg 1/1993 authority: cuota-resultado (box 71 = box 69 - box 70 + box 109), resultado-régimen-general (box 46 = box 27 - box 45), suma-resultados (box 64), apportionment estado/foral (box 66 / box 77). Largest mission-leverage follow-up — transitions M303 ×2 revisions EXTRACTION-ONLY → VERIFIED across 15 corpus PDFs once formulas land + corpus regen mirrors M130 task #71.
+M303 verification chain currently EXTRACTION-ONLY because no closure formulas defined in the registry for M303. M303 has 16 named_label extraction targets across 2 template revisions and 15 corpus PDFs round-trip clean - but the engine can't recompute anything because formulas are absent. M303 IS the headline IVA quarterly modelo for autónomos. Author the closure formula DAG citing AEAT Orden HAC/819/2024 + LIVA/RD-Leg 1/1993 authority: cuota-resultado (box 71 = box 69 - box 70 + box 109), resultado-régimen-general (box 46 = box 27 - box 45), suma-resultados (box 64), apportionment estado/foral (box 66 / box 77). Largest mission-leverage follow-up - transitions M303 ×2 revisions EXTRACTION-ONLY → VERIFIED across 15 corpus PDFs once formulas land + corpus regen mirrors M130 task #71.
 
 - [x] `W10.P51.S208` - Author M303 closure formula DAG citing Orden HAC/819/2024 + LIVA authority for cuota-resultado box 71 resultado-regimen-general box 46 suma-resultados box 64 apportionment box 66 (tasklist #81); `src/aeat/_data/registry/aeat/modelos/303/revisions/`.
 
@@ -546,13 +546,13 @@ Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classif
 
 ### Phase `W10.P54` - Justificante extractor regex generalisation (W10.P41 follow-up)
 
-32 failures in test_corpus_sidecar_roundtrip.py — newly-added justificante corpus PDFs across many modelos have receipt layouts unmatched by current justificante extractor regex tiers. These are EXTRACTOR REGEX GENERALISATION gaps (not discipline gaps — discipline was already aligned in W10.P41). Per-modelo extractor expansion: inspect failing corpus PDFs, identify receipt-layout variations, extend regex tiers to handle them. Real receipt-layout work, not architectural.
+32 failures in test_corpus_sidecar_roundtrip.py - newly-added justificante corpus PDFs across many modelos have receipt layouts unmatched by current justificante extractor regex tiers. These are EXTRACTOR REGEX GENERALISATION gaps (not discipline gaps - discipline was already aligned in W10.P41). Per-modelo extractor expansion: inspect failing corpus PDFs, identify receipt-layout variations, extend regex tiers to handle them. Real receipt-layout work, not architectural.
 
 - [x] `W10.P54.S213` - Extend justificante extractor regex tiers to cover 32 currently-failing corpus-sidecar-roundtrip cases across the modelos surfaced in W10.P41 (tasklist #76); `src/aeat/adapters/inbound/justificante/_extract.py src/aeat/adapters/inbound/justificante/_parsers/`.
 
 ### Phase `W10.P55` - test_parser.py fixture-test parity for 13 newly-added corpus modelos (W10.P54 surfaced)
 
-16 pre-existing failures in src/aeat/adapters/inbound/justificante/test_parser.py across M036/M115/M123/M131/M180/M184/M193/M232/M347/M349/M369/M720/M840. Fixtures were added by prior campaign steps (#42/#43/#44/#45/#56 etc.) without parallel test_parser.py support — only test_corpus_sidecar_roundtrip.py was extended. Add per-modelo test_parser.py entries mirroring the existing M111/M130/M303/M390 pattern. Lower priority than verification chain but warrants completeness.
+16 pre-existing failures in src/aeat/adapters/inbound/justificante/test_parser.py across M036/M115/M123/M131/M180/M184/M193/M232/M347/M349/M369/M720/M840. Fixtures were added by prior campaign steps (#42/#43/#44/#45/#56 etc.) without parallel test_parser.py support - only test_corpus_sidecar_roundtrip.py was extended. Add per-modelo test_parser.py entries mirroring the existing M111/M130/M303/M390 pattern. Lower priority than verification chain but warrants completeness.
 
 - [x] `W10.P55.S214` - Add per-modelo test_parser.py entries for 13 newly-added corpus modelos following the M111/M130/M303/M390 pattern (tasklist #84); `src/aeat/adapters/inbound/justificante/test_parser.py`.
 
@@ -561,3 +561,57 @@ Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classif
 Author and land the purchase-invoice-ocr-extraction-discipline ADR, ratifying the discipline analogue derived from the W10.P44 OCR evidence research closure. Supersedes the 2026-05-12 receipt-OCR ADR on OCR implementation contract.
 
 - [x] `W10.P56.S215` - Author and commit the purchase-invoice-ocr-extraction-discipline ADR; `.vault/adr/2026-05-30-purchase-invoice-ocr-extraction-discipline-adr.md`.
+
+## Wave `W11` - Forward-horizon follow-ups (tracked beyond campaign-close)
+
+Forward-looking work tracked beyond the 2026-05-30 campaign close per user directive. Each phase corresponds to a tasklist follow-up item. Includes the OCR new-campaign starting point (next-campaign per the 2026-05-30 ADR), within-campaign follow-ups (M303 closure DAG extension, M100 borrador chain extension, EXTRACTION-ONLY transitions where formulas can land), and ongoing discipline items (bank-PDF provider expansion, verification chain regression monitoring, justificante test parity recurring, full-suite baseline+delta discipline). Driven incrementally per priority - does not block campaign-complete status.
+
+### Phase `W11.P57` - M303 closure DAG extension - box 64/66/69/71 per LIVA + Orden HAC/819/2024 authority (tasklist #88)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P58` - M100 borrador-surface verification chain - VERIFIED via the per-año class dispatch (tasklist #87)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P59` - EXTRACTION-ONLY to VERIFIED transitions where AEAT-authored formulas exist for the modelo (tasklist #90)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P60` - Bank-PDF provider expansion BBVA Santander Caixabank ING per the W10.P42 ADR framework (tasklist #89)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P61` - Verification chain regression-monitoring discipline - recurring full-suite cadence (tasklist #91)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P62` - Justificante test_parser + sidecar parity recurring as new modelos enroll (tasklist #92)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P63` - Full-suite baseline+delta discipline per post-rush audit Finding F (tasklist #93)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+### Phase `W11.P64` - Purchase-invoice OCR implementation - next campaign starting point per 2026-05-30 ADR (tasklist #86)
+
+Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
+
+
+## Wave `W12` - m303-closure-dag-extension-boxes-64-66-69-71
+
+Extend M303 closure formula DAG with boxes 64, 66, 69 (corrected), and 71 per Orden HAC/819/2024 art. 1 §§4-6.
+
+### Phase `W12.P65` - closure-dag-boxes-64-66-69-71-verified
+
+Extend formula DAG: add boxes 64 (suma de resultados), 66 (atribuible Estado), correct box 69, add box 71 (resultado final); regenerate corpus PDFs; add 32 VERIFIED tests.
+
+- [x] `W12.P65.S216` - Extend M303 closure formula DAG with boxes 64 (suma de resultados), 66 (atribuible Estado), corrected 69 (66+77+68-78), and 71 (69-70+109) per Orden HAC/819/2024 art. 1; add legal ref and corpus HTML; update casillas input_kind to computed; regenerate 16 corpus PDFs; add 32 VERIFIED engine-recomputes tests for all 4 closure boxes (tasklist #88); `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/ src/aeat/_data/registry/aeat/legal/iva.toml src/aeat/_data/corpus/normatives/html/orden-hac-819-2024-art-1.html src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/tests/fixtures/justificantes/303/ src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.

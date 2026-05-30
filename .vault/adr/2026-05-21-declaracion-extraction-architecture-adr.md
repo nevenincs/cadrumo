@@ -726,3 +726,49 @@ A separate ADR titled `purchase-invoice-ocr-extraction-discipline` is the
 correct next-campaign vehicle. This ADR does not govern the OCR surface; it
 formally documents the research closure and points at the durable artefact.
 No changes to this ADR's existing decisions are required.
+
+---
+
+## Amendment W12.P65.S216 - M303 Closure DAG Extension (2026-05-30)
+
+### Context
+
+The M303 closure formula DAG previously computed only box 46 (resultado
+regimen general = 27 - 45) via `modelo-303-iva-resultado-regimen-general`,
+and box 69 with a simplified formula `c46 - c78` that was only correct when
+all intermediate boxes were zero. Boxes 64, 66, and 71 were classified as
+`input_kind = "manual"` in the casilla catalogue, meaning they could not be
+engine-verified against corpus PDF extractions.
+
+Orden HAC/819/2024 (BOE-A-2024-6840), Articulo 1 §§4-6, specifies the
+complete closure chain:
+
+- §4: box 64 = box 46 + box 58 + box 76 (suma de resultados)
+- §4: box 66 = (box 64 * box 65) / 100 (atribuible Administracion del Estado)
+- §5: box 69 = box 66 + box 77 + box 68 - box 78 (resultado autoliquidacion)
+- §6: box 71 = box 69 - box 70 + box 109 (resultado final)
+
+### Decisions
+
+1. Added three new formulas to the `2023-y-siguientes` revision TOML:
+   `modelo-303-iva-suma-resultados`, `modelo-303-iva-atribuible-estado`,
+   `modelo-303-iva-resultado-final`. All cite `orden-hac-819-2024:art-1`.
+
+2. Corrected `modelo-303-iva-resultado` (box 69) from the simplified
+   `c46 - c78` to the canonical `(c66 + c77 + c68) - c78`.
+
+3. Changed casillas 64, 66, and 71 from `input_kind = "manual"` to
+   `input_kind = "computed"` with explicit `formula` backlinks.
+
+4. Registered `orden-hac-819-2024:art-1` in the legal catalogue
+   (`iva.toml`) with evidence_tier `legal_authority`, BOE-A-2024-6840,
+   and the required corpus HTML file at
+   `corpus/normatives/html/orden-hac-819-2024-art-1.html`.
+
+5. Box 65 (porcentaje atribuible Estado) remains `input_kind = "manual"`;
+   for standard territorio-comun filers it is 100. Engine tests supply
+   `Decimal("100")` directly.
+
+6. All 16 M303 corpus PDFs regenerated with formula-consistent values.
+   32 new VERIFIED engine-recomputes tests added covering all 4 closure
+   boxes across 8 new-template specimens (2023-1T through 2024-4T).
