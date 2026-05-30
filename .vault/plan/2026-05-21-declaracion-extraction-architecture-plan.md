@@ -575,6 +575,8 @@ Forward-horizon follow-up tracked beyond campaign close. Detail in matching task
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
+- [x] `W11.P58.S217` - Extend borrador extractor registry to 2021-2025, synthesize engine-derived corpus PDFs (reportlab, invariant=True), and add M100 x3 VERIFIED parametrised verification chain test proving 0545/0546/0585/0586 closure casillas match engine output; `src/aeat/adapters/inbound/borrador/_extractors/__init__.py src/aeat/adapters/inbound/borrador/test_verification_chain_borrador.py src/aeat/tests/fixtures/borrador/`.
+
 
 ### Phase `W11.P59` - EXTRACTION-ONLY to VERIFIED transitions where AEAT-authored formulas exist for the modelo (tasklist #90)
 
