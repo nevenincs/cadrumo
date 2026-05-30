@@ -89,6 +89,19 @@ jobs:
         run: uv run pytest --junitxml=junit.xml
         # AEAT_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
+      - name: Audit dependencies for known CVEs
+        # Scans the locked dependency graph against the PyPI Advisory
+        # Database (PYSEC + GitHub Advisory) and fails the build on any
+        # known vulnerability. Catches newly-published CVEs that
+        # otherwise reach production silently — the codebase has no
+        # automated CVE detection today (security swarm 2026-05-30,
+        # axis 6 supply-chain F10). To allow-list a specific advisory
+        # locally, append --ignore-vuln <GHSA-/PYSEC-id>.
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          uv export --frozen --no-emit-project --no-hashes > /tmp/audit-reqs.txt
+          uvx pip-audit --strict -r /tmp/audit-reqs.txt
+
       - name: Hooks
         run: just hooks
 
