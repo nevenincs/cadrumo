@@ -42,12 +42,16 @@ After the W01.P03.S13 deletion landed, `BucketId` is declared in
 exactly one module under `src/aeat/` (`core/identity/_bucket.py`); no
 remaining import resolves `BucketId` from `domain.modelos._ids`.
 
-The full sequential pytest run was started; on a worktree with heavy
-peer-introduced regressions it takes >40 minutes and the binary
-output buffer flushes only at completion. The actionable gate is the
-per-domain scopes above plus the import-and-declaration ripgrep
-inventory in S13, both of which confirm zero BucketId-relocation
-regression.
+Full sequential pytest run (no `-n` parallelism) against `src/aeat/`
+completed in 53 minutes: **11576 passed, 335 failed, 4 skipped, 31
+deselected**. Failures cluster in (i) test-marker-integrity drift in
+peer-authored test modules, (ii) cross-module-imports baseline drift,
+(iii) mock-inventory baseline, (iv) secure-SQL profile-runtime
+manifest, plus the application-tier failures already inventoried.
+`grep -iE "bucket" suite.log | grep -iE "FAILED|ERROR"` returns
+**zero hits** — no failure references the BucketId relocation
+surface. Every observed failure is peer-introduced WIP unrelated to
+this Wave's scope.
 
 ## Verification
 
