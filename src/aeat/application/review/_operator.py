@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..aggregation._source_kinds import AggregationSourceKind
+from aeat.core.aggregation import AggregationSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...domain.modelos._ids import BucketId

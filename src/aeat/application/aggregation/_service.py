@@ -32,7 +32,7 @@ from ._retenciones import (
     aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
-from ._source_kinds import AggregationSourceKind
+from aeat.core.aggregation import AggregationSourceKind
 
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

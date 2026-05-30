@@ -1,8 +1,12 @@
-"""Shared source-kind taxonomy for aggregation modules."""
+"""Core aggregation taxonomy shared across application and adapter layers."""
 
 from __future__ import annotations
 
 from enum import StrEnum
+
+from .logging import get_logger
+
+_log = get_logger(__name__)
 
 
 class AggregationSourceKind(StrEnum):
