@@ -638,10 +638,10 @@ Close 9 non-pydantic raises in previously-unaudited modules (calculations, aggre
 
 Close A2 get_logger swap in core/profile_catalogue, A5 SetupAnswers duplicate-class collapse + CounterpartSourceKind canonicalisation + _parse_date wrapper consolidation, A6 ApoderadoService dead-code disposition + FinancialProvider @abstractmethod decorators.
 
-- [ ] `W04.P22.S422` - swap import logging+getLogger with get_logger at core/profile_catalogue.py:20-23; `src/aeat/core/profile_catalogue.py`.
-- [ ] `W04.P22.S423` - complete SetupAnswers duplicate-class collapse: delete application/wizard/_setup_answers.py SetupAnswers class, migrate _verifier.py + 4 test files to aeat.core.profile.SetupAnswers; `src/aeat/application/wizard/_setup_answers.py`.
-- [ ] `W04.P22.S424` - canonicalize CounterpartSourceKind to single domain definition; `align divergent Literal members between application/aggregation/_counterpart.py:28 and domain/calculations/registry/_bindings.py:1627; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W04.P22.S425` - consolidate 3 _parse_date wrapper survivors at sede/_notifications.py:316, sede/_censo.py:249, domain/deadlines/_profiles.py:195 into shared aeat.core.parsing._dates._parse_date with error-policy parameter; `src/aeat/core/parsing/_dates.py`.
-- [ ] `W04.P22.S426` - audit ApoderadoService + ApoderadoConfiguration in application/auth/_apoderado.py: if 0 callers in production, delete; `else integrate into auth operator flow with imports; `src/aeat/application/auth/_apoderado.py`.
-- [ ] `W04.P22.S427` - add @property @abstractmethod decorators on FinancialProvider corpus attributes (verification_source, provisional_pending_specimen) at _base.py for static enforcement; `src/aeat/adapters/inbound/financial/providers/_base.py`.
-- [ ] `W04.P22.S428` - add real-behavior test asserting small-axis cleanup landed; `src/aeat/test_w04_p22_cleanup.py`.
+- [x] `W04.P22.S422` - swap import logging+getLogger with get_logger at core/profile_catalogue.py:20-23; `src/aeat/core/profile_catalogue.py`.
+- [x] `W04.P22.S423` - complete SetupAnswers duplicate-class collapse: delete application/wizard/_setup_answers.py SetupAnswers class, migrate _verifier.py + 4 test files to aeat.core.profile.SetupAnswers; `src/aeat/application/wizard/_setup_answers.py`.
+- [x] `W04.P22.S424` - canonicalize CounterpartSourceKind to single domain definition; `align divergent Literal members between application/aggregation/_counterpart.py:28 and domain/calculations/registry/_bindings.py:1627; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W04.P22.S425` - consolidate 3 _parse_date wrapper survivors at sede/_notifications.py:316, sede/_censo.py:249, domain/deadlines/_profiles.py:195 into shared aeat.core.parsing._dates._parse_date with error-policy parameter; `src/aeat/core/parsing/_dates.py`.
+- [x] `W04.P22.S426` - audit ApoderadoService + ApoderadoConfiguration in application/auth/_apoderado.py: if 0 callers in production, delete; `else integrate into auth operator flow with imports; `src/aeat/application/auth/_apoderado.py`.
+- [x] `W04.P22.S427` - add @property @abstractmethod decorators on FinancialProvider corpus attributes (verification_source, provisional_pending_specimen) at _base.py for static enforcement; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [x] `W04.P22.S428` - add real-behavior test asserting small-axis cleanup landed; `src/aeat/test_w04_p22_cleanup.py`.
