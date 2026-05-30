@@ -522,14 +522,21 @@ _COMPUTED_CASILLAS_M303 = frozenset(
         "iva.cuota-devengada-total",
         "iva.cuota-deducible-total",
         "iva.resultado-regimen-general",
+        "64",   # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
+        "66",   # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
         "iva.compensacion-aplicada-periodo",
         "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",
+        "iva.resultado",   # resultado autoliquidación (66 + 77 + 68 - 78)
+        "71",   # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
         "iva.compensacion-generada-periodo",
         "iva.compensacion-disponible-fin-periodo",
     }
 )
-"""M303 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
+"""M303 casillas whose input_kind is 'computed' — must NOT appear in engine inputs.
+
+Boxes 64, 66, 71 extended from 'manual' to 'computed' per closure DAG extension
+(W11.P57, Orden HAC/819/2024 art. 1).
+"""
 
 
 @pytest.mark.parametrize(
@@ -593,6 +600,12 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
             continue
         inputs[casilla_id] = value
 
+    # Box 65 (porcentaje atribuible Estado) is a manual operator-input casilla not
+    # extracted by the declaracion_pdf profile. For standard territory-común filers
+    # the value is 100 (100%). Supply it directly so the engine can compute box 66.
+    # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
+    inputs["65"] = Decimal("100")
+
     # The previous_filing binding for compensacion-pendiente-anteriores is
     # required by the engine. Supply the extracted value from the corpus PDF
     # if available (box iva.compensacion-pendiente-periodos-anteriores), else zero.
@@ -651,6 +664,216 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
         f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
         f"{engine_resultado!r} != box27({input_27!r}) - box45({input_45!r}) = {expected_resultado!r}\n"
         f"  (internal formula consistency broken — registry formula defect)"
+    )
+
+
+# ---------------------------------------------------------------------------
+# M303 closure DAG verification — boxes 64, 66, 69, 71 (2023-y-siguientes)
+# Orden HAC/819/2024 art. 1 §§ 4-6
+# ---------------------------------------------------------------------------
+
+_M303_NEW_TEMPLATE_PARAMS = [
+    ("2023-1T", 2023, "1T"),
+    ("2023-2T", 2023, "2T"),
+    ("2023-3T", 2023, "3T"),
+    ("2023-4T", 2023, "4T"),
+    ("2024-1T", 2024, "1T"),
+    ("2024-2T", 2024, "2T"),
+    ("2024-3T", 2024, "3T"),
+    ("2024-4T", 2024, "4T"),
+]
+
+
+def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: ignore[return]
+    """Parse the corpus PDF and run the registry engine.  Returns (extracted, engine_values)."""
+    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="303",
+            año_override=year,
+            period_override=period,
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(
+            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}"
+        )
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+
+    inputs: dict[str, Decimal] = {}
+    for casilla_id, value in extracted.items():
+        if casilla_id in _COMPUTED_CASILLAS_M303:
+            continue
+        if not isinstance(value, Decimal):
+            continue
+        inputs[casilla_id] = value
+
+    # Box 65 — % atribuible Estado; 100 for territorio común.
+    # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
+    inputs["65"] = Decimal("100")
+
+    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
+    binding_values: dict[str, Decimal] = {
+        "modelo-303-compensacion-pendiente-anteriores": _comp,
+    }
+
+    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
+    snapshot = _registry_snapshot("303", year, period)
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            date_context={"filing_period": date(year, _period_month, 1)},
+            binding_values=binding_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised RegistryValidationError.\n"
+            f"  error: {exc}\n"
+            f"  inputs supplied: {sorted(inputs)}\n"
+            f"  binding_values supplied: {sorted(binding_values)}"
+        )
+    return extracted, dict(result.values), inputs
+
+
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine box 64 (suma de resultados) matches the extracted printed value.
+
+    GROUNDED authority: Orden HAC/819/2024 art. 1 §4 — box 64 = box 46 + box 58 + box 76.
+    For the synthetic corpus PDFs: c58 = 0, c76 = 0, so box 64 = box 46.
+
+    Verdict: VERIFIED — engine box 64 == extracted box 64 for all 8 new-template
+    specimens (2023-2024). Closure DAG extension W11.P57.
+    """
+    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+
+    engine_64 = engine_values.get("64")
+    assert engine_64 is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: '64' (suma de resultados) absent from engine result"
+    )
+    extracted_64 = extracted.get("64")
+    assert isinstance(extracted_64, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted '64' is not Decimal: {extracted_64!r}"
+    )
+    assert engine_64 == extracted_64, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 64 {engine_64!r} != extracted {extracted_64!r}\n"
+        f"  (Orden HAC/819/2024 art. 1 §4: box 64 = box 46 + box 58 + box 76)"
+    )
+    # Internal cross-check: for synthetic PDFs c58=0, c76=0 → box 64 == box 46.
+    box_46 = engine_values.get("iva.resultado-regimen-general", Decimal("0"))
+    assert engine_64 == box_46, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 64 {engine_64!r} != engine box 46 {box_46!r}\n"
+        f"  (c58=0, c76=0 in corpus PDFs — expected 64 == 46)"
+    )
+
+
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine box 66 (atribuible Administración del Estado) matches the extracted printed value.
+
+    GROUNDED authority: Orden HAC/819/2024 art. 1 §4 — box 66 = box 64 × box 65 / 100.
+    For territorio común: box 65 = 100 → box 66 = box 64.
+    Grounded in RD 1624/1992 art. 71 (régimen de tributación conjunta).
+
+    Verdict: VERIFIED — engine box 66 == extracted box 66 for all 8 new-template
+    specimens (2023-2024). Closure DAG extension W11.P57.
+    """
+    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+
+    engine_66 = engine_values.get("66")
+    assert engine_66 is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: '66' (atribuible Estado) absent from engine result"
+    )
+    extracted_66 = extracted.get("66")
+    assert isinstance(extracted_66, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted '66' is not Decimal: {extracted_66!r}"
+    )
+    assert engine_66 == extracted_66, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 66 {engine_66!r} != extracted {extracted_66!r}\n"
+        f"  (Orden HAC/819/2024 art. 1 §4: box 66 = box 64 × box 65 / 100)"
+    )
+    # Internal cross-check: box 65 = 100 → box 66 == box 64.
+    box_64 = engine_values.get("64", Decimal("0"))
+    assert engine_66 == box_64, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 66 {engine_66!r} != engine box 64 {box_64!r}\n"
+        f"  (box 65 = 100 in territorio común — expected 66 == 64)"
+    )
+
+
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidacion(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine box 69 (resultado autoliquidación) matches the extracted printed value.
+
+    GROUNDED authority: Orden HAC/819/2024 art. 1 §5 — box 69 = box 66 + box 77 + box 68 - box 78.
+    For the synthetic corpus PDFs: c77 = 0, c68 = 0, c78 = 0 → box 69 = box 66.
+    Grounded in LIVA arts. 99, 115, 116; RD 1624/1992 arts. 29, 30, 71.
+
+    Verdict: VERIFIED — engine box 69 == extracted box 69 for all 8 new-template
+    specimens (2023-2024). Closure DAG extension W11.P57.
+    """
+    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+
+    engine_69 = engine_values.get("iva.resultado")
+    assert engine_69 is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado' (box 69) absent from engine result"
+    )
+    extracted_69 = extracted.get("iva.resultado")
+    assert isinstance(extracted_69, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado' (box 69) is not Decimal: {extracted_69!r}"
+    )
+    assert engine_69 == extracted_69, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 69 {engine_69!r} != extracted {extracted_69!r}\n"
+        f"  (Orden HAC/819/2024 art. 1 §5: box 69 = box 66 + box 77 + box 68 − box 78)"
+    )
+    # Internal cross-check: c77=0, c68=0, c78=0 → box 69 == box 66.
+    box_66 = engine_values.get("66", Decimal("0"))
+    assert engine_69 == box_66, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 69 {engine_69!r} != engine box 66 {box_66!r}\n"
+        f"  (c77=0, c68=0, c78=0 in corpus PDFs — expected 69 == 66)"
+    )
+
+
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine box 71 (resultado final) matches the extracted printed value.
+
+    GROUNDED authority: Orden HAC/819/2024 art. 1 §6 — box 71 = box 69 − box 70 + box 109.
+    For the synthetic corpus PDFs: c70 = 0, c109 = 0 → box 71 = box 69.
+    Grounded in LIVA arts. 99, 115, 116; RD 1624/1992 arts. 29, 30, 71.
+
+    Verdict: VERIFIED — engine box 71 == extracted box 71 for all 8 new-template
+    specimens (2023-2024). Closure DAG extension W11.P57.
+    """
+    extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
+
+    engine_71 = engine_values.get("71")
+    assert engine_71 is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: '71' (resultado final) absent from engine result"
+    )
+    extracted_71 = extracted.get("71")
+    assert isinstance(extracted_71, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted '71' is not Decimal: {extracted_71!r}"
+    )
+    assert engine_71 == extracted_71, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 71 {engine_71!r} != extracted {extracted_71!r}\n"
+        f"  (Orden HAC/819/2024 art. 1 §6: box 71 = box 69 − box 70 + box 109)"
+    )
+    # Internal cross-check: c70=0, c109=0 → box 71 == box 69.
+    box_69 = engine_values.get("iva.resultado", Decimal("0"))
+    assert engine_71 == box_69, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine box 71 {engine_71!r} != engine box 69 {box_69!r}\n"
+        f"  (c70=0, c109=0 in corpus PDFs — expected 71 == 69)"
     )
 
 
