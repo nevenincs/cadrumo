@@ -29,7 +29,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from .errors import ProfileAnswerTypeError
+from .errors import CoreError, ProfileAnswerTypeError
 from .logging import get_logger
 
 _log = get_logger(__name__)
@@ -38,6 +38,16 @@ _log = get_logger(__name__)
 # ---------------------------------------------------------------------------
 # project_answers registration slot
 # ---------------------------------------------------------------------------
+
+
+class ProfileRegistrationError(CoreError):
+    """Raised when :func:`register_project_answers` is called a second time with a different callable.
+
+    A double-registration with the same callable is a safe no-op; a double-registration
+    with a *different* callable is a programming error that must be surfaced as a
+    typed, registry-bound exception so callers receive a structured error envelope
+    rather than a bare :exc:`RuntimeError`.
+    """
 
 
 class ProjectAnswersNotRegisteredError(RuntimeError):
@@ -79,7 +89,7 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     if _PROJECT_ANSWERS_SLOT:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
             return
-        raise RuntimeError(
+        raise ProfileRegistrationError(
             "register_project_answers() called a second time with a different callable. "
             "The implementation must be registered exactly once."
         )

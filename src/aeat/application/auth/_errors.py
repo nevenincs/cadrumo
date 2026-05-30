@@ -17,4 +17,17 @@ class AuthDiagnosticPhoneStateError(CoreValidationError):
     """
 
 
-__all__ = ["AuthDiagnosticPhoneStateError"]
+class AuthDiagnosticPayloadError(CoreValidationError):
+    """Raised when an encrypted auth diagnostic payload fails structural validation.
+
+    Replaces the bare :exc:`ValueError` raises in
+    :func:`~aeat.application.auth._diagnostics._payload` (non-object JSON body)
+    and :func:`~aeat.application.auth._diagnostics._summary_from_payload`
+    (missing ``captured_at`` field).  Inherits from
+    :class:`~aeat.core.errors.CoreValidationError` (which inherits from
+    :exc:`ValueError`) so any existing ``except ValueError`` guard continues
+    to match.
+    """
+
+
+__all__ = ["AuthDiagnosticPayloadError", "AuthDiagnosticPhoneStateError"]

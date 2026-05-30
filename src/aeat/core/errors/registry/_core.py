@@ -344,4 +344,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.core.profile.ProfileRegistrationError",
+        ErrorCode(
+            code="INTERNAL_PROFILE_REGISTRATION",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_profile_registration",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

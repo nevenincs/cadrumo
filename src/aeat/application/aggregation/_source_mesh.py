@@ -10,11 +10,24 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ...core.errors import CoreValidationError
 from ...core.i18n import tr
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
+
+
+class SourceMeshError(CoreValidationError):
+    """Raised when a :class:`CalculationSourceMesh` field validator rejects an invariant.
+
+    Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
+    guards and the ``source_transaction_ids`` uniqueness / blank guards so
+    callers receive a typed, registry-bound error.  Inherits from
+    :class:`~aeat.core.errors.CoreValidationError` (which inherits from
+    :exc:`ValueError`) so pydantic field validators surface it through
+    ``ValidationError`` without special handling.
+    """
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _log = get_logger(__name__)
@@ -86,9 +99,9 @@ class CalculationSourceResolution(BaseModel):
     def _owned_sources_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(source.strip() for source in value)
         if any(not source for source in normalized):
-            raise ValueError("owned_sources must not contain blank source kinds")
+            raise SourceMeshError("owned_sources must not contain blank source kinds")
         if len(normalized) != len(set(normalized)):
-            raise ValueError("owned_sources must be unique")
+            raise SourceMeshError("owned_sources must be unique")
         return tuple(sorted(normalized))
 
     @field_validator("binding_values")
@@ -116,9 +129,9 @@ class CalculationSourceResolution(BaseModel):
     def _freeze_source_transaction_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
         normalized = tuple(item.strip() for item in value)
         if any(not item for item in normalized):
-            raise ValueError("source_transaction_ids must not contain blanks")
+            raise SourceMeshError("source_transaction_ids must not contain blanks")
         if len(normalized) != len(set(normalized)):
-            raise ValueError("source_transaction_ids must be unique")
+            raise SourceMeshError("source_transaction_ids must be unique")
         return tuple(sorted(normalized))
 
     @field_serializer("binding_values")

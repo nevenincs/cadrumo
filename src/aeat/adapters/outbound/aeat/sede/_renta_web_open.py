@@ -26,6 +26,7 @@ from .....domain.calculations.registry import (
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._adapter_utils import registry_failure_message
+from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
@@ -179,7 +180,7 @@ async def _open_renta_web_open_session(browser_session, *, live_payload):  # typ
     )
     await browser_session.navigate(page, str(live_payload.app_url))
     await _playwright_stage(
-        page.wait_for_load_state("networkidle", timeout=live_payload.timeout_ms),
+        page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=live_payload.timeout_ms),
         stage="wait-app-networkidle",
         description="Renta WEB Open network idle after app navigation",
         timeout_ms=live_payload.timeout_ms,
