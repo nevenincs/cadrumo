@@ -623,16 +623,16 @@ Close 1 regression (Playwright wait-state literals in notifications + renta_web_
 
 Close 9 non-pydantic raises in previously-unaudited modules (calculations, aggregation/_source_mesh, auth/_diagnostics, auth/_sessions, wizard/_persistence, core/profile, ledger/_actions), plus 2 silent except Exception swallows in auth/_operator that mask errors without logging.
 
-- [ ] `W04.P21.S412` - introduce ProfileRegistrationError(CoreError) or use ConfigurationError; `replace RuntimeError at core/profile.py:82; `src/aeat/core/profile.py`.
-- [ ] `W04.P21.S413` - replace TypeError at auth/_sessions.py:408 with SessionDeserializationError(AuthSessionUnavailableError); `src/aeat/application/auth/_sessions.py`.
-- [ ] `W04.P21.S414` - introduce IvaCompensationError or use existing IvaCompensationModeloError; `replace ValueError at calculations/_iva_compensation_history.py:102,133,333; `src/aeat/application/calculations/_iva_compensation_history.py`.
-- [ ] `W04.P21.S415` - replace ValueError at calculations/_binding_prefill.py:347 with ModeloApplicabilityFilterError (W2 enrolled); `src/aeat/application/calculations/_binding_prefill.py`.
-- [ ] `W04.P21.S416` - introduce AuthDiagnosticPayloadError or use AuthDiagnosticPhoneStateError; `replace ValueError at auth/_diagnostics.py:219,226; `src/aeat/application/auth/_diagnostics.py`.
-- [ ] `W04.P21.S417` - replace ValueError at wizard/_persistence.py:141 with WorkflowInputMismatchError (W2 enrolled); `src/aeat/application/wizard/_persistence.py`.
-- [ ] `W04.P21.S418` - introduce SourceMeshError(CoreValidationError); `replace ValueError at aggregation/_source_mesh.py:89,91,119,121; `src/aeat/application/aggregation/_source_mesh.py`.
-- [ ] `W04.P21.S419` - narrow silent except Exception swallow at auth/_operator.py:900 (certificate load); `add log.debug + specific exception types; `src/aeat/application/auth/_operator.py`.
-- [ ] `W04.P21.S420` - narrow silent except Exception swallow at auth/_operator.py:647 (profile tax-id probe); `add log.debug + specific exception types; `src/aeat/application/auth/_operator.py`.
-- [ ] `W04.P21.S421` - add real-behavior test asserting all new error classes registered + envelope round-trip; `src/aeat/application/test_w04_p21_survivors.py`.
+- [x] `W04.P21.S412` - introduce ProfileRegistrationError(CoreError) or use ConfigurationError; `replace RuntimeError at core/profile.py:82; `src/aeat/core/profile.py`.
+- [x] `W04.P21.S413` - replace TypeError at auth/_sessions.py:408 with SessionDeserializationError(AuthSessionUnavailableError); `src/aeat/application/auth/_sessions.py`.
+- [x] `W04.P21.S414` - introduce IvaCompensationError or use existing IvaCompensationModeloError; `replace ValueError at calculations/_iva_compensation_history.py:102,133,333; `src/aeat/application/calculations/_iva_compensation_history.py`.
+- [x] `W04.P21.S415` - replace ValueError at calculations/_binding_prefill.py:347 with ModeloApplicabilityFilterError (W2 enrolled); `src/aeat/application/calculations/_binding_prefill.py`.
+- [x] `W04.P21.S416` - introduce AuthDiagnosticPayloadError or use AuthDiagnosticPhoneStateError; `replace ValueError at auth/_diagnostics.py:219,226; `src/aeat/application/auth/_diagnostics.py`.
+- [x] `W04.P21.S417` - replace ValueError at wizard/_persistence.py:141 with WorkflowInputMismatchError (W2 enrolled); `src/aeat/application/wizard/_persistence.py`.
+- [x] `W04.P21.S418` - introduce SourceMeshError(CoreValidationError); `replace ValueError at aggregation/_source_mesh.py:89,91,119,121; `src/aeat/application/aggregation/_source_mesh.py`.
+- [x] `W04.P21.S419` - narrow silent except Exception swallow at auth/_operator.py:900 (certificate load); `add log.debug + specific exception types; `src/aeat/application/auth/_operator.py`.
+- [x] `W04.P21.S420` - narrow silent except Exception swallow at auth/_operator.py:647 (profile tax-id probe); `add log.debug + specific exception types; `src/aeat/application/auth/_operator.py`.
+- [x] `W04.P21.S421` - add real-behavior test asserting all new error classes registered + envelope round-trip; `src/aeat/application/test_w04_p21_survivors.py`.
 
 ### Phase `W04.P22` - small-axis cleanup: A2, A5, A6
 
