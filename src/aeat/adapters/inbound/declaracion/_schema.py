@@ -16,6 +16,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....domain.calculations.registry._ids import CasillaId
 from ....domain.calculations.registry._schema import RegistrySnapshotRef
 from ..pdf._shared import ExtractedCasilla
 
@@ -68,7 +69,7 @@ class ExtractionWarning(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla_id: str | None
+    casilla_id: CasillaId | None
     code: str = Field(min_length=1)
     message: str
     primitive_attempted: Literal["acroform", "label_regex", "bbox", "ocr", "merged"]
