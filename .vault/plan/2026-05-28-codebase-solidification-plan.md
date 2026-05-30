@@ -373,14 +373,14 @@ Wave 2 closes the 8 regressions, 10 new drifts, and 54 survivor-missed findings 
 
 Close the 8 regressions surfaced by Wave 2. These prove the enrollment habit leaked despite Wave 1 closure; highest diagnostic priority.
 
-- [ ] `W02.P10.S225` - expose detach_run_sink(sink) in aeat.core.logging and route _context.py detach through it; `src/aeat/core/logging.py`.
-- [ ] `W02.P10.S226` - add real-behavior test asserting attach_run_sink and detach_run_sink are symmetric and both apply SecretScrubbingFilter teardown; `src/aeat/core/test_logging.py`.
-- [ ] `W02.P10.S227` - delete local _now_utc helper at inventory/_service.py:97; `import canonical _now from aeat.core.time; `src/aeat/application/inventory/_service.py`.
-- [ ] `W02.P10.S228` - add real-behavior test asserting inventory service uses canonical _now; `src/aeat/application/inventory/test_service.py`.
-- [ ] `W02.P10.S229` - delete local _utc_now helper at calc_sheets/_records.py:471; `import canonical _now from aeat.core.time; `src/aeat/application/storage/calc_sheets/_records.py`.
-- [ ] `W02.P10.S230` - add real-behavior test asserting calc_sheets records use canonical _now; `src/aeat/application/storage/calc_sheets/test_records.py`.
-- [ ] `W02.P10.S231` - delete _parse_boolean helper at registry/_export_parse.py:409; `import canonical _parse_bool and wrap with registry truthy/falsy sets; `src/aeat/domain/calculations/registry/_export_parse.py`.
-- [ ] `W02.P10.S232` - add real-behavior test asserting registry export parser delegates to canonical _parse_bool; `src/aeat/domain/calculations/registry/test_export_parse.py`.
+- [x] `W02.P10.S225` - expose detach_run_sink(sink) in aeat.core.logging and route _context.py detach through it; `src/aeat/core/logging.py`.
+- [x] `W02.P10.S226` - add real-behavior test asserting attach_run_sink and detach_run_sink are symmetric and both apply SecretScrubbingFilter teardown; `src/aeat/core/test_logging.py`.
+- [x] `W02.P10.S227` - delete local _now_utc helper at inventory/_service.py:97; `import canonical _now from aeat.core.time; `src/aeat/application/inventory/_service.py`.
+- [x] `W02.P10.S228` - add real-behavior test asserting inventory service uses canonical _now; `src/aeat/application/inventory/test_service.py`.
+- [x] `W02.P10.S229` - delete local _utc_now helper at calc_sheets/_records.py:471; `import canonical _now from aeat.core.time; `src/aeat/application/storage/calc_sheets/_records.py`.
+- [x] `W02.P10.S230` - add real-behavior test asserting calc_sheets records use canonical _now; `src/aeat/application/storage/calc_sheets/test_records.py`.
+- [x] `W02.P10.S231` - delete _parse_boolean helper at registry/_export_parse.py:409; `import canonical _parse_bool and wrap with registry truthy/falsy sets; `src/aeat/domain/calculations/registry/_export_parse.py`.
+- [x] `W02.P10.S232` - add real-behavior test asserting registry export parser delegates to canonical _parse_bool; `src/aeat/domain/calculations/registry/test_export_parse.py`.
 - [ ] `W02.P10.S233` - replace bare draft string with CasillaFieldKind.DRAFT at _declarations.py:1471; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [ ] `W02.P10.S234` - replace bare draft string with CasillaFieldKind.DRAFT at user_profile/_registry_contract.py:255; `src/aeat/domain/user_profile/_registry_contract.py`.
 - [ ] `W02.P10.S235` - replace bare draft string with CasillaFieldKind.DRAFT and convert match arm to enum case at _export.py:472; `src/aeat/application/filing/_export.py`.
@@ -389,8 +389,8 @@ Close the 8 regressions surfaced by Wave 2. These prove the enrollment habit lea
 - [ ] `W02.P10.S238` - relocate CLASSIFIED_BY_MANUAL from application/ledger/_models.py to aeat.core.external_constants so domain layer can import it; `src/aeat/core/external_constants.py`.
 - [ ] `W02.P10.S239` - delete _MANUAL_CLASSIFIED_BY shadow in domain/transactions/_service.py:24 and import CLASSIFIED_BY_MANUAL from aeat.core.external_constants; `src/aeat/domain/transactions/_service.py`.
 - [ ] `W02.P10.S240` - add real-behavior test asserting CLASSIFIED_BY_MANUAL is the single source of truth across application and domain layers; `src/aeat/core/test_external_constants.py`.
-- [ ] `W02.P10.S241` - import REPLAY_ACTIVE_ENV_VAR from observability._replay in observability/_context.py:51; `delete the private _REPLAY_ACTIVE_ENV_VAR literal; `src/aeat/core/observability/_context.py`.
-- [ ] `W02.P10.S242` - add real-behavior test asserting REPLAY_ACTIVE_ENV_VAR has exactly one canonical definition site across observability package; `src/aeat/core/observability/test_replay.py`.
+- [x] `W02.P10.S241` - import REPLAY_ACTIVE_ENV_VAR from observability._replay in observability/_context.py:51; `delete the private _REPLAY_ACTIVE_ENV_VAR literal; `src/aeat/core/observability/_context.py`.
+- [x] `W02.P10.S242` - add real-behavior test asserting REPLAY_ACTIVE_ENV_VAR has exactly one canonical definition site across observability package; `src/aeat/core/observability/test_replay.py`.
 
 ### Phase `W02.P11` - A1 exception survivor sweep
 

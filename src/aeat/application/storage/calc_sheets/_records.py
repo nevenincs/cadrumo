@@ -30,6 +30,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core.time import _now as _utc_now
 from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
 from ....domain.calculations.registry._schema import DecimalValue as _RegistryDecimalValue
 
@@ -466,10 +467,6 @@ class SheetExportPlan(BaseModel):
         for cell in self.formula_cells:
             seen.append(cell.address)
         return tuple(seen)
-
-
-def _utc_now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 __all__ = [
