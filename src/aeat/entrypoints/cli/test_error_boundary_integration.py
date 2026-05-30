@@ -82,7 +82,6 @@ def test_log_level_resolution_error_exits_refused(
     env_key: str | None,
     env_val: str | None,
     trigger_description: str,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """LogLevelResolutionError raised in the root callback exits with the REFUSED code.
 
@@ -93,19 +92,25 @@ def test_log_level_resolution_error_exits_refused(
     3. The captured output contains the ``REFUSED`` prefix that operators
        use to grep structured error payloads.
 
-    No mocks.  The error is raised through real business logic in
-    :func:`aeat.entrypoints.cli._log_levels.resolve_log_level` which is
-    called by the production root-app callback wrapped by
-    :func:`aeat.entrypoints.cli._errors.command_error_boundary`.
+    No mocks. No monkeypatch (per CLAUDE.md mandate). The env-var case
+    pins state via ``override_settings(aeat_log_level=env_val)`` so the
+    real production resolver sees the override; the flag-collision case
+    needs no override and runs against the default Settings.
 
     ``catch_exceptions=False`` ensures that if the boundary fails to catch
     the error, the runner re-raises it and the test fails with a traceback
     rather than a misleading wrong-exit-code assertion.
     """
-    if env_key is not None and env_val is not None:
-        monkeypatch.setenv(env_key, env_val)
+    from aeat.core.config import override_settings
 
-    result = invoke_cached_cli(args, catch_exceptions=False)
+    if env_key is not None and env_val is not None:
+        # Translate the env-var name to the Settings field name. The
+        # parametrise table currently only exercises AEAT_LOG_LEVEL.
+        field_name = env_key.lower()
+        with override_settings(**{field_name: env_val}):
+            result = invoke_cached_cli(args, catch_exceptions=False)
+    else:
+        result = invoke_cached_cli(args, catch_exceptions=False)
 
     assert result.exit_code == _REFUSED_EXIT, (
         f"CLI boundary did not produce the REFUSED exit for {trigger_description!r}: "
