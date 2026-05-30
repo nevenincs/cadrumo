@@ -17,21 +17,22 @@ Classification rules:
 - **Drift**: any ``monkeypatch.setattr`` / ``monkeypatch.setitem`` /
   ``monkeypatch.delattr`` call that is not in the documented set.
 
-S209 enumeration result:
-  Four production-state ``monkeypatch.setattr`` sites (targeting module-level
-  attributes, not process globals):
-  1. test_browser_errors.py (x2) -- injects ``_fake_browser_factory`` to
-     trigger ``BrowserAdapterTypeError`` without a real Playwright session.
-  2. test_verify.py (x1) -- injects ``_bad_factory`` to assert type guard fires.
-  3. test_recovery_facade.py (x1) -- injects ``_raise_key_error`` to assert
+Campaign #72 progress: ``test_browser_errors.py`` retired its two
+production-state ``monkeypatch.setattr`` calls in favour of a real
+``browser_session_factory`` DI parameter threaded through the
+production entry points. Remaining documented sites:
+
+  1. test_verify.py (x1) -- injects ``_bad_factory`` to assert type guard fires.
+  2. test_recovery_facade.py (x1) -- injects ``_raise_key_error`` to assert
      ``KeyError`` propagation through ``unwrap_recovery_envelope``.
-  4. test_config.py (x2) -- injects error-raising lambda into ``_read_profile_record``
+  3. test_config.py (x2) -- injects error-raising lambda into ``_read_profile_record``
      to test CLI error-boundary behaviour.
 
-  All four are classified as **legitimate boundary injection for third-party /
-  OS-interface surfaces** that cannot be exercised without live infra in unit
-  tests.  ``sys.*`` patches in ``test_stdio.py`` are unconditionally allowed
-  (process-global isolation).
+These three are classified as **legitimate boundary injection for
+third-party / OS-interface surfaces** that cannot be exercised
+without live infra in unit tests.  ``sys.*`` patches in
+``test_stdio.py`` are unconditionally allowed (process-global
+isolation).
 """
 
 from __future__ import annotations
@@ -63,13 +64,13 @@ _ALLOWED_SETATTR_TARGETS_PREFIXES = (
 # Format: (repo-relative path, target description).
 _DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset(
     {
-        # Playwright browser factory replaced with a synchronous fake to trigger
-        # BrowserAdapterTypeError without a live browser session.
-        (
-            "src/aeat/adapters/outbound/aeat/sede/test_browser_errors.py",
-            "default_browser_session_factory",
-        ),
-        # Same pattern for verify module — bad factory triggers type guard.
+        # Campaign #72: sede/test_browser_errors.py is retired — the
+        # production entry points now accept ``browser_session_factory``
+        # as a real DI parameter (see commit a7921f4de). No documented
+        # entry remains for that file.
+        #
+        # Same pattern still present for verify module — bad factory
+        # triggers type guard. Carries a DI seam follow-up.
         (
             "src/aeat/adapters/outbound/aeat/verify/test_verify.py",
             "default_browser_session_factory",
