@@ -331,3 +331,45 @@ def find_private_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
                         )
                     )
     return findings
+
+
+# --- Clause 3: ``_HEX_*_LENGTH`` constant outside owning ``_ids.py`` ------
+
+
+def _iter_module_assignments(tree: ast.Module) -> Iterator[tuple[str, int]]:
+    """Yield ``(name, lineno)`` for every module-level name assignment."""
+
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    yield target.id, node.lineno
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            yield node.target.id, node.lineno
+
+
+def find_misplaced_hex_length_constants(root: Path = AEAT_ROOT) -> list[Finding]:
+    """Detect ``_HEX_*_LENGTH`` constants declared outside an ``_ids.py``."""
+
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        if path.name == "_ids.py":
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for name, lineno in _iter_module_assignments(tree):
+            if _HEX_LENGTH_CONSTANT_RE.match(name):
+                findings.append(
+                    Finding(
+                        path,
+                        lineno,
+                        (
+                            f"misplaced shape constant {name!r}: hex-length constants "
+                            f"belong only in the owning _ids.py module"
+                        ),
+                    )
+                )
+    return findings
