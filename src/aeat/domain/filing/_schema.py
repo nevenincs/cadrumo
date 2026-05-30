@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
+from ..calculations.registry._ids import BindingId, CasillaId
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ..submission._protocols import ModeloDraftStatus
 
@@ -61,7 +62,7 @@ class ModeloValue(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: str
+    casilla_id: CasillaId
     value: ModeloScalar
     kind: ModeloValueKind
     source: str
@@ -73,7 +74,7 @@ class ModeloBindingValue(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    binding_id: str
+    binding_id: BindingId
     value: ModeloScalar
     kind: ModeloValueKind
     source: str
@@ -85,7 +86,7 @@ class ModeloCasillaProvenance(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: str = Field(min_length=1)
+    casilla_id: CasillaId
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
 
@@ -106,7 +107,7 @@ class ModeloValidationFinding(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: str | None
+    casilla_id: CasillaId | None
     severity: BaseSeverity
     code: str
     message: tr
