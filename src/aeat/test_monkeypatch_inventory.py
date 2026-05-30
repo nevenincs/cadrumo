@@ -17,21 +17,23 @@ Classification rules:
 - **Drift**: any ``monkeypatch.setattr`` / ``monkeypatch.setitem`` /
   ``monkeypatch.delattr`` call that is not in the documented set.
 
-Campaign #72 progress: both browser-factory swap files have been
-retired in favour of real DI seams threaded through their production
-entry points (``browser_session_factory`` / ``factory`` kwargs).
-Remaining documented sites:
+Campaign #72 progress: three of the four documented production-state
+``monkeypatch.setattr`` sites have been retired in favour of real DI
+seams threaded through their production entry points:
 
-  1. test_recovery_facade.py (x1) -- injects ``_raise_key_error`` to assert
-     ``KeyError`` propagation through ``unwrap_recovery_envelope``.
-  2. test_config.py (x2) -- injects error-raising lambda into ``_read_profile_record``
-     to test CLI error-boundary behaviour.
+  - sede/test_browser_errors.py (``browser_session_factory`` kwarg)
+  - verify/test_verify.py (``factory`` kwarg)
+  - master_key/test_recovery_facade.py (``decoder`` kwarg)
 
-These two are classified as **legitimate boundary injection for
-third-party / OS-interface surfaces** that cannot be exercised
-without live infra in unit tests.  ``sys.*`` patches in
-``test_stdio.py`` are unconditionally allowed (process-global
-isolation).
+Remaining documented site:
+
+  1. test_config.py (x2) -- injects error-raising lambda into
+     ``_read_profile_record`` to test CLI error-boundary behaviour.
+     The Typer-command surface makes the DI seam less mechanical than
+     the others; this last site is carrying a follow-up.
+
+``sys.*`` patches in ``test_stdio.py`` are unconditionally allowed
+(process-global isolation).
 """
 
 from __future__ import annotations
@@ -69,14 +71,10 @@ _DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset(
         #   ``browser_session_factory`` kwarg on the production entry.
         # - verify/test_verify.py — via ``factory`` kwarg on
         #   ``_build_default_browser_session``.
-        # decode_mnemonic replaced with a raising callable to assert that
-        # KeyError propagates through unwrap_recovery_envelope.
-        (
-            "src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py",
-            "decode_mnemonic",
-        ),
         # _read_profile_record replaced with error-raising lambda to exercise
-        # CLI error-boundary handling in unit context.
+        # CLI error-boundary handling in unit context. The last remaining
+        # documented site; carries a follow-up to thread a DI seam through
+        # the ``config profile show`` Typer command.
         (
             "src/aeat/entrypoints/cli/_config/test_config.py",
             "_read_profile_record",

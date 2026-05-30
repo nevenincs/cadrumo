@@ -27,6 +27,7 @@ session the wizard can re-wrap under a fresh passphrase-derived KEK.
 from __future__ import annotations
 
 import base64
+from collections.abc import Callable
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -105,7 +106,12 @@ def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecover
     return MintedRecovery(envelope=envelope, mnemonic=recovery_key.mnemonic)
 
 
-def unwrap_recovery_envelope(*, envelope: RecoveryRecord, mnemonic: str) -> bytes:
+def unwrap_recovery_envelope(
+    *,
+    envelope: RecoveryRecord,
+    mnemonic: str,
+    decoder: Callable[[str], bytes] | None = None,
+) -> bytes:
     """Decode `mnemonic` and unwrap `envelope` to recover the 32-byte DEK.
 
     Raises:
@@ -113,10 +119,16 @@ def unwrap_recovery_envelope(*, envelope: RecoveryRecord, mnemonic: str) -> byte
             the AEAD tag check fails. The error never echoes the typed
             words; only the position of any decoding failure surfaces
             (per the `decode_mnemonic` contract).
+
+    The ``decoder`` parameter is a DI seam for the narrowed-except
+    test that asserts a non-``StorageValidationError`` exception
+    propagates unchanged; production callers omit it and the central
+    ``decode_mnemonic`` is used.
     """
 
+    resolved_decoder = decoder or decode_mnemonic
     try:
-        entropy = decode_mnemonic(mnemonic)
+        entropy = resolved_decoder(mnemonic)
     except StorageValidationError as exc:
         raise RecoveryVerificationError(str(exc)) from exc
 

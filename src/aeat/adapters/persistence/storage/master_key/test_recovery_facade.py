@@ -19,7 +19,6 @@ from datetime import UTC, datetime
 import pytest
 
 from aeat.adapters.persistence.storage.bucket._errors import RecoveryVerificationError
-from aeat.adapters.persistence.storage.master_key import _recovery_facade as _facade_module
 from aeat.adapters.persistence.storage.master_key._recovery import (
     decode_mnemonic,
     encode_mnemonic,
@@ -187,15 +186,14 @@ def test_storage_validation_error_from_decode_mnemonic_is_reclassified() -> None
         unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=tampered)
 
 
-def test_unexpected_exception_from_decode_mnemonic_propagates_unchanged(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_unexpected_exception_from_decode_mnemonic_propagates_unchanged() -> None:
     """An exception NOT in the documented set propagates as-is, not as RecoveryVerificationError.
 
     This guards the narrowed ``except StorageValidationError`` clause: a
-    ``KeyError`` injected into ``decode_mnemonic`` via monkeypatch must surface
-    unchanged so the top-level CLI error handler sees a real unexpected
-    exception rather than a silently reclassified recovery-verification failure.
+    ``KeyError`` raised by a decoder passed via the production ``decoder``
+    DI parameter must surface unchanged so the top-level CLI error
+    handler sees a real unexpected exception rather than a silently
+    reclassified recovery-verification failure.
     """
 
     minted = mint_recovery_envelope(dek=bytes(range(32)), created_at=_NOW)
@@ -203,7 +201,9 @@ def test_unexpected_exception_from_decode_mnemonic_propagates_unchanged(
     def _raise_key_error(_mnemonic: str) -> bytes:
         raise KeyError("unexpected internal error")
 
-    monkeypatch.setattr(_facade_module, "decode_mnemonic", _raise_key_error)
-
     with pytest.raises(KeyError):
-        unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=minted.mnemonic)
+        unwrap_recovery_envelope(
+            envelope=minted.envelope,
+            mnemonic=minted.mnemonic,
+            decoder=_raise_key_error,
+        )
