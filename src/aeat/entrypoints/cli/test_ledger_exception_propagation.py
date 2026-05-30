@@ -55,14 +55,18 @@ def _english_output() -> Iterator[None]:
 
 
 @pytest.fixture
-def _no_pointer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Storage root with no active-profile pointer — clean cold-start state."""
+def _no_pointer_root(tmp_path: Path) -> Iterator[Path]:
+    """Storage root with no active-profile pointer — clean cold-start state.
+
+    Zombie monkeypatch parameter removed per the project no-monkeypatch
+    mandate (CLAUDE.md); the fixture body never used it.
+    """
     with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
         yield storage_root
 
 
 @pytest.fixture
-def _corrupt_pointer_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
     """Storage root whose active-profile pointer file contains a partial TOML payload.
 
     The file is valid TOML but is missing the required ``bucket_id`` field, so
