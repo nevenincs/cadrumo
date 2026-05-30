@@ -543,3 +543,9 @@ Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classif
 
 - [x] `W10.P53.S211` - Rename fixture 2025-0A.pdf to 2025-alta.pdf and add EXTRACTION-ONLY chain test for M036 period=alta (tasklist #80); `src/aeat/tests/fixtures/justificantes/036/ src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
 - [x] `W10.P53.S212` - Regenerate 2 M390 corpus fixtures with formula-consistent values so resultado-regimen-general transitions FORMULA-MISMATCH to VERIFIED (tasklist #78); `src/aeat/tests/fixtures/justificantes/390/ src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/_data/registry/aeat/modelos/390/revisions/ src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+
+### Phase `W10.P54` - Justificante extractor regex generalisation (W10.P41 follow-up)
+
+32 failures in test_corpus_sidecar_roundtrip.py — newly-added justificante corpus PDFs across many modelos have receipt layouts unmatched by current justificante extractor regex tiers. These are EXTRACTOR REGEX GENERALISATION gaps (not discipline gaps — discipline was already aligned in W10.P41). Per-modelo extractor expansion: inspect failing corpus PDFs, identify receipt-layout variations, extend regex tiers to handle them. Real receipt-layout work, not architectural.
+
+- [x] `W10.P54.S213` - Extend justificante extractor regex tiers to cover 32 currently-failing corpus-sidecar-roundtrip cases across the modelos surfaced in W10.P41 (tasklist #76); `src/aeat/adapters/inbound/justificante/_extract.py src/aeat/adapters/inbound/justificante/_parsers/`.
