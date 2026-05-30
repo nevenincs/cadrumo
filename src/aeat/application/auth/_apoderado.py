@@ -38,7 +38,7 @@ from ...domain.auth.apoderamientos import (
     load_default_catalogue,
     parse_scope_tokens,
 )
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 
 
 class ApoderadoConfigurationNotSetError(AeatError):

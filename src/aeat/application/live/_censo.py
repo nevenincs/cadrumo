@@ -33,7 +33,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SnapshotLifecycleState,

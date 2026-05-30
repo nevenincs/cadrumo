@@ -35,7 +35,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from .._storage_paths import storage_path
 
 _PDF_EXTENSIONS = frozenset({".pdf"})

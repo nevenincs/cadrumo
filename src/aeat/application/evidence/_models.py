@@ -9,9 +9,9 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.errors import AeatError
+from ...core.identity import BucketId
 from ...domain.buckets._event import BucketEventObjectType
 from ...domain.modelos._ids import (
-    BucketId,
     CalculationRevisionId,
     FilingRecordId,
     WorkUnitId,

@@ -39,8 +39,9 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,
 )
+from ...core.identity import BucketId
 from ...domain.modelos._errors import ModeloError, ModeloExportError
-from ...domain.modelos._ids import BucketId, CalculationRevisionId, WorkUnitId
+from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (

@@ -26,8 +26,9 @@ from ...domain.buckets import (
     BucketEventType,
 )
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...core.identity import BucketId
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from ...domain.modelos._ids import BucketId, WorkUnitId
+from ...domain.modelos._ids import WorkUnitId
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ._actions import WorkUnitNotFoundError

@@ -8,7 +8,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,

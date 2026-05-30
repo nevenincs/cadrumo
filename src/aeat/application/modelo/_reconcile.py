@@ -24,7 +24,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
 from ...core.i18n import tr
-from ...domain.modelos._ids import BucketId, WorkUnitId
+from ...core.identity import BucketId
+from ...domain.modelos._ids import WorkUnitId
 from ._actions import WorkUnitNotFoundError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
