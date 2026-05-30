@@ -38,6 +38,16 @@ _DEFAULT_VIEWPORT: ViewportSize = {
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
+
+#: Timeout (ms) for the "element visible" fast-path probe when locating
+#: casilla inputs. Deliberately short: fall through to the XPath fallback
+#: immediately rather than block the caller loop.
+_VISIBLE_PROBE_TIMEOUT_MS: int = 2_000
+
+#: Timeout (ms) for individual element interactions (wait_for, click) in
+#: the Renta WEB Open casilla navigation flow. Matches the Settings default
+#: for form-interaction interactions across the sede adapter.
+_ELEMENT_WAIT_TIMEOUT_MS: int = 10_000
 _playwright_stage = build_playwright_stage_runner(
     surface_label="Renta WEB Open",
     log_prefix="renta web open",
@@ -270,7 +280,7 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
     # the contract we need to gate on visibility first.
     mostrar = page.locator('button[title="Mostrar opciones"]').first
     try:
-        await mostrar.wait_for(state="visible", timeout=10_000)
+        await mostrar.wait_for(state="visible", timeout=_ELEMENT_WAIT_TIMEOUT_MS)
     except Exception as exc:
         logger.debug("mostrar opciones already expanded or unavailable: %s", exc, exc_info=True)
     else:
@@ -278,7 +288,7 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
             mostrar,
             stage=f"navigate-to-casilla:{casilla_number}:mostrar-opciones",
             description="Mostrar opciones toolbar expander",
-            timeout_ms=10_000,
+            timeout_ms=_ELEMENT_WAIT_TIMEOUT_MS,
         )
     await _click_expected(
         page.locator('button[title="Buscar casilla"]').first,
@@ -338,7 +348,7 @@ async def _locate_casilla_input(page: Page, casilla_number: str, *, timeout_ms: 
     # Fast path: the navigation auto-focuses the casilla input.
     focused_input = page.locator("input:focus").first
     try:
-        await focused_input.wait_for(state="visible", timeout=2_000)
+        await focused_input.wait_for(state="visible", timeout=_VISIBLE_PROBE_TIMEOUT_MS)
         return focused_input
     except Exception as exc:
         logger.debug("focused-input fast path unavailable for %s: %s", casilla_number, exc, exc_info=True)

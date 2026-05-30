@@ -739,3 +739,133 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
         "import CLASSIFIED_BY_MANUAL from aeat.core.external_constants instead:\n"
         + "\n".join(offenders)
     )
+
+
+# ---------------------------------------------------------------------------
+# S301 / S302 / S303 — JSON_MIME_TYPE and CSV_MIME_TYPE centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_json_mime_type_value() -> None:
+    """``JSON_MIME_TYPE`` equals the IANA-registered JSON MIME type."""
+
+    from aeat.core.external_constants import JSON_MIME_TYPE
+
+    assert JSON_MIME_TYPE == "application/json"
+
+
+def test_csv_mime_type_value() -> None:
+    """``CSV_MIME_TYPE`` equals the IANA-registered CSV MIME type."""
+
+    from aeat.core.external_constants import CSV_MIME_TYPE
+
+    assert CSV_MIME_TYPE == "text/csv"
+
+
+def test_json_mime_type_is_final_str() -> None:
+    """``JSON_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import JSON_MIME_TYPE
+
+    assert isinstance(JSON_MIME_TYPE, str)
+
+
+def test_csv_mime_type_is_final_str() -> None:
+    """``CSV_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import CSV_MIME_TYPE
+
+    assert isinstance(CSV_MIME_TYPE, str)
+
+
+def test_declarations_uses_json_mime_constant() -> None:
+    """``_declarations.py`` imports ``JSON_MIME_TYPE`` rather than a bare literal.
+
+    The module must expose ``_JSON_MIME_TYPE`` and its value must equal
+    ``JSON_MIME_TYPE`` from ``aeat.core.external_constants``, giving an
+    identity guarantee without executing the live AEAT browser path.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import JSON_MIME_TYPE
+
+    mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
+
+    assert hasattr(mod, "_JSON_MIME_TYPE"), (
+        "_declarations must import JSON_MIME_TYPE from aeat.core.external_constants "
+        "under the alias _JSON_MIME_TYPE"
+    )
+    assert mod._JSON_MIME_TYPE is JSON_MIME_TYPE
+    assert mod._JSON_MIME_TYPE == "application/json"
+
+
+def test_tabular_export_uses_csv_mime_constant() -> None:
+    """``_tabular.py`` imports ``CSV_MIME_TYPE`` rather than a bare ``"text/csv"`` literal.
+
+    The module must expose ``_CSV_MIME_TYPE`` and its value must equal
+    ``CSV_MIME_TYPE`` from ``aeat.core.external_constants``.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import CSV_MIME_TYPE
+
+    mod = importlib.import_module("aeat.application.export._tabular")
+
+    assert hasattr(mod, "_CSV_MIME_TYPE"), (
+        "_tabular must import CSV_MIME_TYPE from aeat.core.external_constants "
+        "under the alias _CSV_MIME_TYPE"
+    )
+    assert mod._CSV_MIME_TYPE is CSV_MIME_TYPE
+    assert mod._CSV_MIME_TYPE == "text/csv"
+
+
+def test_no_bare_json_mime_literal_in_declarations() -> None:
+    """No bare ``"application/json"`` literal in ``_declarations.py`` argument positions.
+
+    Anti-tautology: parses the real AST so any future re-introduction of
+    the literal triggers immediate failure.
+    """
+
+    repo_root = Path(__file__).parents[3]
+    source = (
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or node.value != "application/json":
+            continue
+        offenders.append(f"_declarations.py:{node.lineno}: bare 'application/json' literal")
+
+    assert offenders == [], (
+        "Bare 'application/json' literals found; use _JSON_MIME_TYPE instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_no_bare_csv_mime_literal_in_tabular() -> None:
+    """No bare ``"text/csv"`` literal in ``_tabular.py`` argument positions.
+
+    Anti-tautology: parses the real AST so any future re-introduction of
+    the literal triggers immediate failure.
+    """
+
+    repo_root = Path(__file__).parents[3]
+    source = (
+        repo_root / "src/aeat/application/export/_tabular.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or node.value != "text/csv":
+            continue
+        offenders.append(f"_tabular.py:{node.lineno}: bare 'text/csv' literal")
+
+    assert offenders == [], (
+        "Bare 'text/csv' literals found; use _CSV_MIME_TYPE instead:\n"
+        + "\n".join(offenders)
+    )

@@ -26,6 +26,12 @@ DEFAULT_CURRENCY: Final[str] = "EUR"
 #: Standard binary MIME type for opaque byte-stream payloads (Drive uploads, blob store, fichero).
 BINARY_MIME_TYPE: Final[str] = "application/octet-stream"
 
+#: IANA-registered MIME type for JSON document payloads.
+JSON_MIME_TYPE: Final[str] = "application/json"
+
+#: IANA-registered MIME type for comma-separated value exports.
+CSV_MIME_TYPE: Final[str] = "text/csv"
+
 #: Sentinel written to ``classified_by`` when the operator provides a classification directly
 #: (no rule engine involved).  The field also accepts ``"rule:<id>"`` payloads; this named
 #: constant prevents the literal from drifting across the application and domain layers.

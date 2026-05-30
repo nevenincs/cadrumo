@@ -30,6 +30,10 @@ from .._playwright import PlaywrightError
 from ..browser import DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
+from ._browser_constants import (
+    PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
+    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+)
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
@@ -268,7 +272,7 @@ async def _open_authenticated_surface(
 
     _assert_read_http("GET", selector_url)
     await browser_session.navigate(page, selector_url)
-    await page.wait_for_load_state("domcontentloaded")
+    await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     current_url = getattr(page, "url", "") or ""
     selector_marker = _EXTERNAL.aeat.clave_movil.selector_access_path_marker
     if selector_marker in current_url:
@@ -291,7 +295,7 @@ async def _open_authenticated_surface(
                 getattr(page, "url", None),
                 exc_info=True,
             )
-        await page.wait_for_load_state("domcontentloaded")
+        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     current_url = getattr(page, "url", "") or ""
     if _is_representation_gate_url(current_url):
         await _continue_own_name_representation(
@@ -302,7 +306,7 @@ async def _open_authenticated_surface(
             surface=surface,
         )
     try:
-        await page.wait_for_load_state("networkidle", timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
     except PlaywrightError:
         log.debug(
             "IVA wallet surface did not reach networkidle surface=%s current_url=%s",
@@ -352,7 +356,7 @@ async def _continue_own_name_representation(
             lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
             timeout=settings.aeat_browser_navigation_timeout_ms,
         )
-        await page.wait_for_load_state("domcontentloaded")
+        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     except PlaywrightError as exc:
         raise SedeNavigationError(
             "AEAT representation gate did not expose the own-name continuation expected for the "
@@ -424,9 +428,9 @@ async def _submit_wallet_execute_gate_if_present(
         _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
         try:
             await page.click(_PRE303.wallet_execute_submit_selector)
-            await page.wait_for_load_state("domcontentloaded", timeout=settings.aeat_browser_navigation_timeout_ms)
+            await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
             try:
-                await page.wait_for_load_state("networkidle", timeout=settings.aeat_browser_navigation_timeout_ms)
+                await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
             except PlaywrightError:
                 log.debug(
                     "IVA wallet execute read query did not reach networkidle current_url=%s",

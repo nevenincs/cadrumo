@@ -169,14 +169,14 @@ def replay_run(
     # run_context can label the new trace's ``replay_of`` field with
     # the source run. This lets ``aeat run show`` distinguish replay
     # traces from fresh runs and chain them back to their original.
-    os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id
+    os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id  # env-write: intentional — scoped context-manager
     try:
         invoke(argv)
     finally:
         if previous is None:
             os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
         else:
-            os.environ[REPLAY_ACTIVE_ENV_VAR] = previous
+            os.environ[REPLAY_ACTIVE_ENV_VAR] = previous  # env-write: intentional — restore prior state
     return original
 
 
