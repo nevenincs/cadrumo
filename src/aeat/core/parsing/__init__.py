@@ -12,7 +12,7 @@ Public surface
 
 from __future__ import annotations
 
-from ._dates import _parse_ddmmyyyy_date, _parse_iso8601_date
+from ._dates import _parse_date, _parse_ddmmyyyy_date, _parse_iso8601_date
 from ._utils import _parse_bool
 
-__all__ = ["_parse_bool", "_parse_ddmmyyyy_date", "_parse_iso8601_date"]
+__all__ = ["_parse_bool", "_parse_date", "_parse_ddmmyyyy_date", "_parse_iso8601_date"]

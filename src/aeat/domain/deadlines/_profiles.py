@@ -14,7 +14,8 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from aeat.core.parsing import _parse_bool, _parse_iso8601_date
+from aeat.core.parsing import _parse_bool
+from aeat.core.parsing._dates import _parse_date as _parse_date_canonical
 from aeat.core.profile import SetupAnswers, project_answers
 from aeat.core.profile_catalogue import get_setup_flow
 
@@ -194,7 +195,7 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
 
 def _parse_date(raw: str | None) -> date | None:
     try:
-        return _parse_iso8601_date(raw)
+        return _parse_date_canonical(raw, fmt="iso8601", on_error="raise")
     except ValueError as exc:
         raise ProfileError(f"invalid census date {raw!r}; expected ISO-8601") from exc
 

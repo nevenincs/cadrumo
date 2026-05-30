@@ -33,7 +33,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.parsing import _parse_bool, _parse_ddmmyyyy_date
+from aeat.core.parsing import _parse_bool
+from aeat.core.parsing._dates import _parse_date as _parse_date_canonical
 
 from ._errors import SedeError, SedeFailureMode
 
@@ -248,7 +249,7 @@ def _parse_cadastral(raw: str | None) -> str | None:
 
 def _parse_date(raw: str | None, *, field: str) -> date | None:
     try:
-        return _parse_ddmmyyyy_date(raw)
+        return _parse_date_canonical(raw, fmt="ddmmyyyy", on_error="raise")
     except ValueError as exc:
         raise CensoParseError(
             f"{field} value {raw!r}: {exc}",
