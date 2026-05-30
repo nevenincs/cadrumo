@@ -46,6 +46,16 @@ _MANIFEST_VERSION = 1
 _MANIFEST_FILENAME = "corpus.manifest.json"
 """Canonical filename for the manifest sidecar inside each corpus root."""
 
+# Sha-256 content-fingerprint shape shared by the per-entry file digest and
+# the self-attesting manifest digest. Stays bare-str under ADR Rule 7
+# (fingerprint, not identity); factored to a single module-local constraint
+# kwargs mapping to remove the duplication of the shape literal.
+_CORPUS_SHA256_KWARGS: dict[str, object] = {
+    "min_length": 64,
+    "max_length": 64,
+    "pattern": r"^[0-9a-f]{64}$",
+}
+
 
 class CorpusEntry(BaseModel):
     """One file's integrity record under a corpus root.
@@ -61,7 +71,7 @@ class CorpusEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     relative_path: str = Field(min_length=1, max_length=4096)
-    sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    sha256: str = Field(**_CORPUS_SHA256_KWARGS)
     content_length: int = Field(ge=0)
 
     @field_validator("relative_path")
@@ -111,7 +121,7 @@ class CorpusManifest(BaseModel):
     corpus_root_name: str = Field(min_length=1, max_length=64)
     generated_at: datetime
     entries: tuple[CorpusEntry, ...]
-    manifest_sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_sha256: str = Field(**_CORPUS_SHA256_KWARGS)
 
     @field_validator("generated_at")
     @classmethod
