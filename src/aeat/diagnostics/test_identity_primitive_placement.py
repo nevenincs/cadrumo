@@ -14,6 +14,7 @@ import pytest
 
 from aeat.diagnostics._identity_placement import (
     Finding,
+    find_private_id_imports,
     find_sibling_domain_id_imports,
 )
 
@@ -34,3 +35,16 @@ def test_no_sibling_domain_id_imports() -> None:
 
     findings = find_sibling_domain_id_imports()
     assert findings == [], "sibling-domain _ids imports detected:\n" + _render(findings)
+
+
+def test_no_private_id_imports() -> None:
+    """No adapter / application / entrypoint module imports a private name from an ``_ids.py``.
+
+    Consumers consume the typed alias names directly. Reaching for the
+    underlying regex constants, length constants, or private
+    re-aliases is a type-system escape under the calculation-grounding
+    rule.
+    """
+
+    findings = find_private_id_imports()
+    assert findings == [], "private-name imports from _ids modules detected:\n" + _render(findings)
