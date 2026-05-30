@@ -413,12 +413,12 @@ Establish master_key/_errors.py with MasterKeyReentrantError / MasterKeyTypeErro
 - [x] `W02.P11.S257` - migrate TypeError in bucket/_manifest_io.py:45 to BucketError or StorageValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
 - [x] `W02.P11.S258` - migrate ValueError raises in bucket/_layout.py:60,62 and bucket/_keystore_paths.py:40,42 to BucketError; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
 - [x] `W02.P11.S259` - add real-behavior test asserting bucket cluster errors envelope-round-trip; `src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py`.
-- [ ] `W02.P11.S260` - replace ValueError at _namespace_registry.py:119 with NamespaceRegistryError survivor; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `W02.P11.S261` - replace ValueError at workflow/_engine.py:282 with WorkflowInputMismatchError survivor; `src/aeat/application/workflow/_engine.py`.
-- [ ] `W02.P11.S262` - replace ValueError at core/config.py:1249,1252 with ConfigBoundaryError survivor; `src/aeat/core/config.py`.
-- [ ] `W02.P11.S263` - replace ValueError at runtime.py:320 with StorageValidationError; `src/aeat/adapters/persistence/storage/runtime.py`.
-- [ ] `W02.P11.S264` - replace ValueError at application/modelo/_actions.py:2413 with ModeloApplicabilityFilterError(ModeloError); `src/aeat/application/modelo/_actions.py`.
-- [ ] `W02.P11.S265` - replace TypeError at application/diagnostics.py:416 with DiagnosticModelError survivor; `src/aeat/application/diagnostics.py`.
+- [x] `W02.P11.S260` - replace ValueError at _namespace_registry.py:119 with NamespaceRegistryError survivor; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `W02.P11.S261` - replace ValueError at workflow/_engine.py:282 with WorkflowInputMismatchError survivor; `src/aeat/application/workflow/_engine.py`.
+- [x] `W02.P11.S262` - replace ValueError at core/config.py:1249,1252 with ConfigBoundaryError survivor; `src/aeat/core/config.py`.
+- [x] `W02.P11.S263` - replace ValueError at runtime.py:320 with StorageValidationError; `src/aeat/adapters/persistence/storage/runtime.py`.
+- [x] `W02.P11.S264` - replace ValueError at application/modelo/_actions.py:2413 with ModeloApplicabilityFilterError(ModeloError); `src/aeat/application/modelo/_actions.py`.
+- [x] `W02.P11.S265` - replace TypeError at application/diagnostics.py:416 with DiagnosticModelError survivor; `src/aeat/application/diagnostics.py`.
 - [x] `W02.P11.S266` - replace TypeError at _secure_repository.py:105 with RepositorySetupError or StorageValidationError; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
 - [x] `W02.P11.S267` - introduce ProfileLabelAmbiguousError(WorkflowError) and replace ValueError at workflow/_profile_bucket_scan.py:103; `src/aeat/application/workflow/_errors.py`.
 - [x] `W02.P11.S268` - introduce src/aeat/application/repair_integrity/_errors.py with RepairIntegrityError and RepairDecisionNotFoundError; `replace 3 ValueError raises at repair_integrity.py:230,392,415; `src/aeat/application/repair_integrity.py`.
