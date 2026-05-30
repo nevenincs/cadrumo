@@ -31,20 +31,30 @@ def _json_output(result: Result) -> str:
     return match.group(0) if match else result.output
 
 
-def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
+def _isolate(tmp_path: Path) -> None:
+    """Test-isolation hook (no-op today).
+
+    Historically used ``monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE")`` to
+    scrub ambient env-var leakage. That defence is unnecessary now that
+    every test pins language via ``override_settings(...)`` or the
+    ``--output-language`` CLI flag; an ambient env value would be
+    shadowed by both surfaces. Kept as a marker so future env-isolation
+    concerns can re-thread the helper without churning every call site.
+    """
+
+    _ = tmp_path  # reserved for future per-test isolation hooks
 
 
 
 def test_config_profile_create_writes_profile_output_language(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    tmp_path: Path,
 ) -> None:
     from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.workflow._persistence import workflow_state_repository
     from aeat.core._bucket_pointer_io import resolve_active_bucket_id
     from aeat.core.config import override_settings
 
-    _isolate(monkeypatch, tmp_path)
+    _isolate(tmp_path)
 
     init_result = _invoke(
         [
@@ -93,13 +103,12 @@ def test_config_profile_create_writes_profile_output_language(
 
 
 def test_config_profile_create_validates_profile_output_language(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.workflow._persistence import workflow_state_repository
 
-    _isolate(monkeypatch, tmp_path)
+    _isolate(tmp_path)
     valid_result = _invoke(
         [
             "config",
@@ -152,7 +161,6 @@ def test_config_profile_create_validates_profile_output_language(
 
 
 def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     """`profile edit --quiet` writes only the supplied flags.
@@ -169,7 +177,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
     from aeat.application.user_profile._orchestration import fact_value
     from aeat.application.workflow._persistence import workflow_state_repository
 
-    _isolate(monkeypatch, tmp_path)
+    _isolate(tmp_path)
 
     create_result = _invoke(
         [
@@ -220,10 +228,9 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
 
 
 def test_global_language_flag_overrides_profile_for_invocation(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    _isolate(monkeypatch, tmp_path)
+    _isolate(tmp_path)
 
     # Seed a profile with output-language "ca" via the canonical CLI path.
     create_result = _invoke(
@@ -260,7 +267,7 @@ def test_global_language_flag_overrides_profile_for_invocation(
 
 
 def test_create_error_renders_in_command_line_output_language(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    tmp_path: Path,
 ) -> None:
     """A creation-time error renders in the ``--output-language`` given on create.
 
@@ -275,7 +282,7 @@ def test_create_error_renders_in_command_line_output_language(
     must localise to the supplied ``--output-language``.
     """
 
-    _isolate(monkeypatch, tmp_path)
+    _isolate(tmp_path)
 
     english = _invoke(
         [
@@ -309,7 +316,7 @@ def test_create_error_renders_in_command_line_output_language(
 
 
 def test_config_repair_labels_render_in_profile_output_language(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    tmp_path: Path,
 ) -> None:
     """``config repair`` renders its labels in the active profile's language.
 
@@ -321,7 +328,7 @@ def test_config_repair_labels_render_in_profile_output_language(
     language through the active-profile resolver.
     """
 
-    _isolate(monkeypatch, tmp_path)
+    _isolate(tmp_path)
 
     # Seed a profile with output-language "en" via the canonical CLI path.
     create_result = _invoke(
