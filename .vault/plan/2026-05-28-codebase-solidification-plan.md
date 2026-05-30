@@ -419,12 +419,12 @@ Establish master_key/_errors.py with MasterKeyReentrantError / MasterKeyTypeErro
 - [ ] `W02.P11.S263` - replace ValueError at runtime.py:320 with StorageValidationError; `src/aeat/adapters/persistence/storage/runtime.py`.
 - [ ] `W02.P11.S264` - replace ValueError at application/modelo/_actions.py:2413 with ModeloApplicabilityFilterError(ModeloError); `src/aeat/application/modelo/_actions.py`.
 - [ ] `W02.P11.S265` - replace TypeError at application/diagnostics.py:416 with DiagnosticModelError survivor; `src/aeat/application/diagnostics.py`.
-- [ ] `W02.P11.S266` - replace TypeError at _secure_repository.py:105 with RepositorySetupError or StorageValidationError; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `W02.P11.S267` - introduce ProfileLabelAmbiguousError(WorkflowError) and replace ValueError at workflow/_profile_bucket_scan.py:103; `src/aeat/application/workflow/_errors.py`.
-- [ ] `W02.P11.S268` - introduce src/aeat/application/repair_integrity/_errors.py with RepairIntegrityError and RepairDecisionNotFoundError; `replace 3 ValueError raises at repair_integrity.py:230,392,415; `src/aeat/application/repair_integrity.py`.
-- [ ] `W02.P11.S269` - change SnapshotNotFoundError base from KeyError to (AeatError, KeyError) at _snapshot_base.py:49; `src/aeat/application/live/_snapshot_base.py`.
-- [ ] `W02.P11.S270` - narrow except Exception swallows at _orchestration.py:143 and _profile_health.py:146,163,298 to specific AeatError subtypes; `src/aeat/application/user_profile/_orchestration.py`.
-- [ ] `W02.P11.S271` - add real-behavior test asserting application-layer survivor envelopes all enrolled; `src/aeat/application/test_survivor_envelope_enrollment.py`.
+- [x] `W02.P11.S266` - replace TypeError at _secure_repository.py:105 with RepositorySetupError or StorageValidationError; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
+- [x] `W02.P11.S267` - introduce ProfileLabelAmbiguousError(WorkflowError) and replace ValueError at workflow/_profile_bucket_scan.py:103; `src/aeat/application/workflow/_errors.py`.
+- [x] `W02.P11.S268` - introduce src/aeat/application/repair_integrity/_errors.py with RepairIntegrityError and RepairDecisionNotFoundError; `replace 3 ValueError raises at repair_integrity.py:230,392,415; `src/aeat/application/repair_integrity.py`.
+- [x] `W02.P11.S269` - change SnapshotNotFoundError base from KeyError to (AeatError, KeyError) at _snapshot_base.py:49; `src/aeat/application/live/_snapshot_base.py`.
+- [x] `W02.P11.S270` - narrow except Exception swallows at _orchestration.py:143 and _profile_health.py:146,163,298 to specific AeatError subtypes; `src/aeat/application/user_profile/_orchestration.py`.
+- [x] `W02.P11.S271` - add real-behavior test asserting application-layer survivor envelopes all enrolled; `src/aeat/application/test_survivor_envelope_enrollment.py`.
 
 ### Phase `W02.P12` - A3 locale survivor sweep
 
