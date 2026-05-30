@@ -68,14 +68,14 @@ Promote the six new aliases the ADR Rule 6 approves: ProfileId, SnapshotId, Invo
 
 Declare the UUIDv4 ProfileId alias in core/identity per Rule 1 clause (a) and Rule 6, re-export through core/identity, and lift the eighteen bare-string profile_id field sites in application/user_profile, application/state_projection, core/_bucket_pointer, core/config, and adapters/persistence/storage/runtime onto the typed alias.
 
-- [ ] `W02.P04.S15` - declare the ProfileId alias with the UUIDv4 constraint shape established by the profile-uuid identity ADR and an __all__ export per ADR Rule 6; `src/aeat/core/identity/_profile.py`.
-- [ ] `W02.P04.S16` - re-export ProfileId through the core.identity package __all__ per ADR Rule 4; `src/aeat/core/identity/__init__.py`.
-- [ ] `W02.P04.S17` - lift the eighteen bare-string profile_id field declarations onto ProfileId per ADR Rule 6 and confirm pydantic shape enforcement at construction; `src/aeat/application/user_profile/__init__.py`.
-- [ ] `W02.P04.S18` - lift the profile_id bare-string declarations onto ProfileId per ADR Rule 6 across the censo-sync and state-projection modules and the bucket-pointer and config modules under core; `src/aeat/application/user_profile/_censo_sync.py`.
-- [ ] `W02.P04.S19` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the state-projection module; `src/aeat/application/state_projection.py`.
+- [x] `W02.P04.S15` - declare the ProfileId alias with the UUIDv4 constraint shape established by the profile-uuid identity ADR and an __all__ export per ADR Rule 6; `src/aeat/core/identity/_profile.py`.
+- [x] `W02.P04.S16` - re-export ProfileId through the core.identity package __all__ per ADR Rule 4; `src/aeat/core/identity/__init__.py`.
+- [x] `W02.P04.S17` - lift the eighteen bare-string profile_id field declarations onto ProfileId per ADR Rule 6 and confirm pydantic shape enforcement at construction; `src/aeat/application/user_profile/__init__.py`.
+- [x] `W02.P04.S18` - lift the profile_id bare-string declarations onto ProfileId per ADR Rule 6 across the censo-sync and state-projection modules and the bucket-pointer and config modules under core; `src/aeat/application/user_profile/_censo_sync.py`.
+- [x] `W02.P04.S19` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the state-projection module; `src/aeat/application/state_projection.py`.
 - [ ] `W02.P04.S20` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the bucket-pointer module; `src/aeat/core/_bucket_pointer.py`.
 - [ ] `W02.P04.S21` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the settings module; `src/aeat/core/config.py`.
-- [ ] `W02.P04.S22` - lift the profile_id bare-string declarations onto ProfileId per ADR Rule 6 across the storage runtime and runtime-repository modules; `src/aeat/adapters/persistence/storage/runtime.py`.
+- [x] `W02.P04.S22` - lift the profile_id bare-string declarations onto ProfileId per ADR Rule 6 across the storage runtime and runtime-repository modules; `src/aeat/adapters/persistence/storage/runtime.py`.
 - [ ] `W02.P04.S23` - add a real-behavior roundtrip test that populates a UserProfile with a non-default ProfileId, persists through the real SecureObjectRepository against the real SQLite engine, reloads, and asserts strict pydantic equality across the boundary; `src/aeat/application/user_profile/test_profile_roundtrip.py`.
 
 ### Phase `W02.P05` - promote SnapshotId in core/identity/_snapshot.py
