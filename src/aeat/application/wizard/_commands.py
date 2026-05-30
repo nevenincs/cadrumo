@@ -925,6 +925,13 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
                 _typer.echo(f"active_profile\t{profile_name}")
             _typer.echo("next\taeat app modelo work create")
 
+    # CAST-RATIONALE-WIZARD-COMMAND-INJECT: Typer resolves CLI parameters
+    # from ``__signature__`` at decoration time; the cast to ``Any`` is the
+    # only way to assign a dynamically-built ``inspect.Signature`` without
+    # mypy complaining about the ``Callable`` type being immutable.  The
+    # runtime object is always the real ``_command`` function — the cast
+    # only widens the static view so the attribute assignments below are
+    # accepted by the type checker.
     typed = typing.cast(typing.Any, _command)
     typed.__signature__ = inspect.Signature(parameters=list(parameters))
     typed.__annotations__ = {param.name: param.annotation for param in parameters}

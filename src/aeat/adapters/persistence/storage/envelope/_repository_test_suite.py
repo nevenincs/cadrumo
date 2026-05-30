@@ -234,9 +234,11 @@ def _foreign_class_object_refused[T: BaseModel](
     foreign = _FOREIGN_CLASS_MAP[repo.sensitivity]
     identifier = repo.extract_identifier(case.first_payload)
     payload_cls = type(case.first_payload)
-    # Envelope[T] is parameterised via PEP-695 generic syntax; the
-    # subscription is a runtime concrete-class build, but ty cannot
-    # narrow ``payload_cls`` to a static type.
+    # CAST-RATIONALE-ENVELOPE-REPO-SUITE-CLASS-GETITEM: ``Envelope[T]`` is
+    # parameterised via PEP-695 generic syntax; the subscription is a runtime
+    # concrete-class build, but the type checker cannot narrow ``payload_cls``
+    # to a static ``type[T]`` here, so the cast to ``Any`` is required to
+    # call the resulting parameterised factory without a spurious type error.
     envelope_factory = cast(Any, Envelope.__class_getitem__(payload_cls))
     written_at = datetime.now(UTC)
     bad = envelope_factory(
@@ -352,6 +354,10 @@ def assert_secure_repository_contract[T: BaseModel](
 
     executed = 0
 
+    # CAST-RATIONALE-ENVELOPE-REPO-SUITE-CONTRACT-ERASE: ``case`` is typed
+    # as ``SecureRepositoryContractCase[T]`` where ``T`` is a bound TypeVar;
+    # the type-erased ``BaseModel`` form is needed to satisfy the untyped
+    # ``_PARAM_CHECKS`` dispatch table without widening every check signature.
     erased = cast(SecureRepositoryContractCase[BaseModel], case)
     for index, (label, check) in enumerate(_PARAM_CHECKS):
         db_path = tmp_path / f"contract-{index:02d}-{label}.db"

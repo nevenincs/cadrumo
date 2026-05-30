@@ -146,9 +146,12 @@ def _rewrite_page(
             continue
 
         new_operands = _rewrite_text_show_operands(
-            # pikepdf's ``ContentStreamInstruction.operands`` is the
-            # private QPDF ``_ObjectList``; it is sequence-like but not
-            # statically a ``Sequence``.
+            # CAST-RATIONALE-SANITIZER-PIKEPDF-OPERANDS: pikepdf's
+            # ``ContentStreamInstruction.operands`` is the private QPDF
+            # ``_ObjectList`` type; it is a runtime sequence but is not
+            # statically typed as ``Sequence[...]``, so the cast is
+            # required to satisfy the type checker without any loss of
+            # safety — the actual runtime object is already sequence-like.
             cast("Sequence[PikepdfObject | int | float]", instruction.operands),
             operator=operator,
             triples=triples,
@@ -248,8 +251,10 @@ def _rewrite_array_string_elements(
     instruction_index: int,
     edits: list[Replacement],
 ) -> list[PikepdfObject | int | float] | None:
-    # operands[0] is a pikepdf ``Array`` of String + numeric kerning
-    # entries; the static operand union cannot express that narrowing.
+    # CAST-RATIONALE-SANITIZER-PIKEPDF-ARRAY-ELEMENT: operands[0] is a
+    # pikepdf ``Array`` of String + numeric kerning entries; the static
+    # operand union ``PikepdfObject | int | float`` cannot express that
+    # narrowing, so the cast is required at this third-party type boundary.
     array = cast("pikepdf.Array", operands[0])
     new_array_elements: list[PikepdfObject] = []
     local_hits: list[Replacement] = []

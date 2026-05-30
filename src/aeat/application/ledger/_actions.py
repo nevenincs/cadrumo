@@ -3499,6 +3499,9 @@ def add_classification_rule(
     from ._rule_repository import LedgerClassificationRuleRepository
 
     repo: LedgerClassificationRuleRepository = (
+        # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: ``rule_repository`` is typed
+        # ``object | None`` to keep the public signature injection-friendly;
+        # the non-None guard ensures narrowing is safe here.
         cast(LedgerClassificationRuleRepository, rule_repository)
         if rule_repository is not None
         else LedgerClassificationRuleRepository()
@@ -3543,6 +3546,9 @@ def apply_classification_rules(
     tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = bucket_event_repository or BucketEventHistoryRepository()
     rule_repo: LedgerClassificationRuleRepository = (
+        # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: same injection-friendly
+        # ``object | None`` pattern as ``add_classification_rule``; the
+        # non-None guard ensures the cast is safe at this point.
         cast(LedgerClassificationRuleRepository, rule_repository)
         if rule_repository is not None
         else LedgerClassificationRuleRepository()

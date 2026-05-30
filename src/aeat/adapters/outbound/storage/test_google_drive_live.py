@@ -23,7 +23,6 @@ substrate namespaces.
 from __future__ import annotations
 
 import hashlib
-import logging
 import os
 
 import pytest
@@ -33,13 +32,14 @@ from aeat.adapters.outbound.storage import (
     StorageProvider,
     get_storage_provider,
 )
+from aeat.core.logging import get_logger
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 
 _PROBE_HMAC = "00000000live-storage-probe"
 _PROBE_NAMESPACE = "_probe"
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 def _live_profile() -> str:
