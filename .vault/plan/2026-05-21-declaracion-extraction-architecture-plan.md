@@ -606,6 +606,11 @@ Forward-horizon follow-up tracked beyond campaign close. Detail in matching task
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
 
+### Phase `W11.P66` - M100 borrador-surface verification chain
+
+Extend borrador extractor registry for años 2021/2022/2023, synthesize formula-consistent corpus, and add verification chain test proving M100 ×3 revisions VERIFIED via borrador parse surface
+
+
 ## Wave `W12` - m303-closure-dag-extension-boxes-64-66-69-71
 
 Extend M303 closure formula DAG with boxes 64, 66, 69 (corrected), and 71 per Orden HAC/819/2024 art. 1 §§4-6.
@@ -614,4 +619,4 @@ Extend M303 closure formula DAG with boxes 64, 66, 69 (corrected), and 71 per Or
 
 Extend formula DAG: add boxes 64 (suma de resultados), 66 (atribuible Estado), correct box 69, add box 71 (resultado final); regenerate corpus PDFs; add 32 VERIFIED tests.
 
-- [x] `W12.P65.S216` - Extend M303 closure formula DAG with boxes 64 (suma de resultados), 66 (atribuible Estado), corrected 69 (66+77+68-78), and 71 (69-70+109) per Orden HAC/819/2024 art. 1; add legal ref and corpus HTML; update casillas input_kind to computed; regenerate 16 corpus PDFs; add 32 VERIFIED engine-recomputes tests for all 4 closure boxes (tasklist #88); `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/ src/aeat/_data/registry/aeat/legal/iva.toml src/aeat/_data/corpus/normatives/html/orden-hac-819-2024-art-1.html src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/tests/fixtures/justificantes/303/ src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+- [x] `W12.P65.S216` - Extend M303 closure formula DAG with boxes 64 (suma de resultados), 66 (atribuible Estado), corrected 69 (66+77+68-78), and 71 (69-70+109) per Orden HAC/819/2024 art. 1; `add legal ref and corpus HTML; update casillas input_kind to computed; regenerate 16 corpus PDFs; add 32 VERIFIED engine-recomputes tests for all 4 closure boxes (tasklist #88); `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/ src/aeat/_data/registry/aeat/legal/iva.toml src/aeat/_data/corpus/normatives/html/orden-hac-819-2024-art-1.html src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/tests/fixtures/justificantes/303/ src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
