@@ -19,6 +19,7 @@ from ...iva import (
     TransactionKind,
 )
 from ._errors import RegistryValidationError
+from ._ids import CasillaId, FormulaId, OracleId
 from ._schema import DataBindingDefinition, InputKind, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
@@ -88,9 +89,9 @@ class CasillaObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: str = Field(min_length=1)
+    casilla_id: CasillaId
     value: Decimal
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     # ``op`` is the formula's top-level operator label (``add``, ``multiply``,
     # ``lookup_bracket_by_ccaa`` …). Carried alongside ``formula_id`` so the
     # full :class:`RegistryCalculationEntry` shape projects back from a typed
@@ -163,7 +164,7 @@ class OracleModeloObservation(RegistryModeloObservation):
     every other invariant is inherited unchanged.
     """
 
-    oracle_id: str = Field(min_length=1, max_length=128)
+    oracle_id: OracleId
 
 
 class RegistryModeloObservationRequirement(BaseModel):

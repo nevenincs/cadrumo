@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
+from ._ids import CasillaId
 
 __all__ = [
     "RegistryFiledStateComparison",
@@ -24,7 +25,7 @@ class RegistryFiledStateDrift(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: str = Field(min_length=1)
+    casilla_id: CasillaId
     local_value: Decimal
     filed_value: Decimal
     delta: Decimal

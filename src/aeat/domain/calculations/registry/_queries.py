@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
+from ._ids import BindingId, CasillaId, FormulaId
 from ._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -86,7 +87,7 @@ class ModeloDescribeReport(BaseModel):
 class ModeloCasillaRow(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    casilla_id: str
+    casilla_id: CasillaId
     number: str
     label: str
     section: tuple[str, ...]
@@ -113,7 +114,7 @@ class ModeloCasillasReport(BaseModel):
 class ModeloBindingRow(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    binding_id: str
+    binding_id: BindingId
     source: str
     typed_enum: str | None
     input_channel: Literal["decimal", "enum"]
@@ -149,7 +150,7 @@ class ModeloBindingsReport(BaseModel):
 class ModeloFormulaRow(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    formula_id: str
+    formula_id: FormulaId
     target: str
     input_casillas: tuple[str, ...]
     input_bindings: tuple[str, ...]
