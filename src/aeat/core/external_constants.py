@@ -14,7 +14,7 @@ import tomllib
 from functools import cached_property, lru_cache
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -288,16 +288,22 @@ PDF_MIME_TYPE: Final[str] = "application/pdf"
 #: PDF file-extension string (lower-case, dot-prefixed).
 PDF_EXTENSION: Final[str] = ".pdf"
 
+#: Legacy binary Excel workbook file-extension string (lower-case, dot-prefixed).
+XLS_EXTENSION: Final[Literal[".xls"]] = ".xls"
+
 #: Excel / Open-XML workbook file-extension string (lower-case, dot-prefixed).
-XLSX_EXTENSION: Final[str] = ".xlsx"
+XLSX_EXTENSION: Final[Literal[".xlsx"]] = ".xlsx"
 
 #: Excel macro-enabled workbook file-extension string (lower-case, dot-prefixed).
-XLSM_EXTENSION: Final[str] = ".xlsm"
+XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
 
 CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
+
+#: Provenance source identifier for facts entered interactively via the CLI.
+PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
 """Canonical encoding probe order for CSV financial sources.
 
 The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`

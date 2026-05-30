@@ -24,6 +24,7 @@ from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
+OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
 DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
@@ -118,7 +119,7 @@ def clear_output_language_cache() -> None:
 
 
 _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
-    "AEAT_OUTPUT_LANGUAGE",
+    OUTPUT_LANGUAGE_ENV_VAR,
     "AEAT_DATABASE_URL",
     "AEAT_SECRET_STORE_BACKEND",
     "AEAT_ALLOW_UNENCRYPTED",

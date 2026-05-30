@@ -2,6 +2,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.i18n import OUTPUT_LANGUAGE_ENV_VAR
+
 
 @pytest.fixture(autouse=True)
 def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -10,7 +12,7 @@ def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
     The production default is ``es``; this fixture only affects test
     output, not runtime behaviour.
     """
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
+    monkeypatch.setenv(OUTPUT_LANGUAGE_ENV_VAR, "en")
 
 
 @pytest.fixture(autouse=True)

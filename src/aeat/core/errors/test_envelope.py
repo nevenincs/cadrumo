@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 import pytest
 
+from ..i18n import OUTPUT_LANGUAGE_ENV_VAR
 from ..locks_errors import LockAcquisitionError
 from . import build_error_envelope, render_error_json, render_error_text
 
@@ -17,15 +18,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 @contextmanager
 def _output_language(language: str) -> Iterator[None]:
-    previous = os.environ.get("AEAT_OUTPUT_LANGUAGE")
-    os.environ["AEAT_OUTPUT_LANGUAGE"] = language
+    previous = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
+    os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language
     try:
         yield
     finally:
         if previous is None:
-            os.environ.pop("AEAT_OUTPUT_LANGUAGE", None)
+            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
         else:
-            os.environ["AEAT_OUTPUT_LANGUAGE"] = previous
+            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = previous
 
 
 def test_error_envelope_serializes_deterministically() -> None:

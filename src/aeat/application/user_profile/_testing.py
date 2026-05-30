@@ -14,6 +14,8 @@ import hashlib
 from collections.abc import Mapping
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...domain.deadlines._models import IVARegime
 from ...domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
 from ..workflow._models import WorkflowState
 from ._orchestration import register_active_profile, select_profile, set_active_fields
@@ -41,8 +43,8 @@ _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
     "identity.name": "Test Operator",
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "provenance.source": "manual_cli",
+    "iva.regime": IVARegime.GENERAL,
+    "provenance.source": _PROVENANCE_SOURCE_MANUAL_CLI,
     # A minimal profile declares a minimal taxpayer model: an autónomo
     # en estimación directa (a natural person with rendimientos de
     # actividades económicas). Modelo applicability is derived from this

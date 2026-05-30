@@ -239,7 +239,7 @@ def test_help_invocation_below_floor_widens_columns() -> None:
         _patched_env("COLUMNS", "80"),
     ):
         with _ensure_help_render_width():
-            assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
+            assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
 
 def test_help_invocation_keeps_wider_columns() -> None:
@@ -250,7 +250,7 @@ def test_help_invocation_keeps_wider_columns() -> None:
         _patched_env("COLUMNS", "300"),
     ):
         with _ensure_help_render_width():
-            assert os.environ["COLUMNS"] == "300"
+            assert os.environ[_COLUMNS_ENV_VAR] == "300"
 
 
 def test_non_help_invocation_leaves_columns_untouched() -> None:
@@ -265,7 +265,7 @@ def test_non_help_invocation_leaves_columns_untouched() -> None:
         _patched_env("COLUMNS", "80"),
     ):
         with _ensure_help_render_width():
-            assert os.environ["COLUMNS"] == "80"
+            assert os.environ[_COLUMNS_ENV_VAR] == "80"
 
 
 def test_non_help_invocation_without_columns_set() -> None:
