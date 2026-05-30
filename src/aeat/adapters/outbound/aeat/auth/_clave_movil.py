@@ -377,12 +377,18 @@ class ClaveMovilAuthProvider:
                 )
             storage_state_path = self._storage_state_path()
             if not _session_store.exists(storage_state_path):
-                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat config auth status` first")
+                raise AeatLoginAssertionError(
+                    "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
+                    translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
+                )
 
             persisted = self._load_persisted(storage_state_path)
             metadata = self._load_metadata(storage_state_path, persisted)
             if metadata.idle_deadline <= datetime.now(UTC):
-                raise AeatLoginAssertionError("Cl@ve Móvil session past idle deadline")
+                raise AeatLoginAssertionError(
+                    "Cl@ve Móvil session past idle deadline",
+                    translated_message="adapters.auth.clave_movil.errors.session_expired",
+                )
 
             session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
             context: BrowserContextLike | None = None
@@ -861,7 +867,10 @@ class ClaveMovilAuthProvider:
     def _load_persisted(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         persisted = _session_store.load(storage_state_path)
         if persisted is None:
-            raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat config auth status` first")
+            raise AeatLoginAssertionError(
+                "no persisted Cl@ve Móvil session; run `aeat config auth status` first",
+                translated_message="adapters.auth.clave_movil.errors.no_persisted_session",
+            )
         return persisted
 
     @staticmethod
@@ -1046,10 +1055,16 @@ class ClaveMovilAuthProvider:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
         if metadata.idle_deadline <= datetime.now(UTC):
-            raise AeatLoginAssertionError("Cl@ve Móvil session past idle deadline")
+            raise AeatLoginAssertionError(
+                "Cl@ve Móvil session past idle deadline",
+                translated_message="adapters.auth.clave_movil.errors.session_expired",
+            )
         observed_sha256 = persisted.storage_state_sha256
         if observed_sha256 != metadata.storage_state_sha256:
-            raise AeatLoginAssertionError("Cl@ve Móvil storage-state hash mismatch")
+            raise AeatLoginAssertionError(
+                "Cl@ve Móvil storage-state hash mismatch",
+                translated_message="adapters.auth.clave_movil.errors.storage_state_hash_mismatch",
+            )
 
         session_like, owns_session = await self._resolve_browser_session(browser_session=browser_session)
         context: BrowserContextLike | None = None
@@ -1141,7 +1156,10 @@ class ClaveMovilAuthProvider:
     async def _click_clave_movil_button(self, page: BrowserPageLike) -> None:
         click = getattr(page, "click", None)
         if click is None:
-            raise AeatLoginAssertionError("Playwright page does not expose click(); cannot drive Cl@ve Móvil entry")
+            raise AeatLoginAssertionError(
+                "Playwright page does not expose click(); cannot drive Cl@ve Móvil entry",
+                translated_message="adapters.auth.clave_movil.errors.page_missing_click",
+            )
         await click(self._clave_surface().authorize_button_selector)
 
     async def _extract_verification_code(self, page: BrowserPageLike) -> str | None:
