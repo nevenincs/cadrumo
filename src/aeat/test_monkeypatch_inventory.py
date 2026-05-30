@@ -17,20 +17,20 @@ Classification rules:
 - **Drift**: any ``monkeypatch.setattr`` / ``monkeypatch.setitem`` /
   ``monkeypatch.delattr`` call that is not in the documented set.
 
-Campaign #72 progress: three of the four documented production-state
-``monkeypatch.setattr`` sites have been retired in favour of real DI
-seams threaded through their production entry points:
+Campaign #72 closed every documented production-state
+``monkeypatch.setattr`` site from the source tree:
 
   - sede/test_browser_errors.py (``browser_session_factory`` kwarg)
   - verify/test_verify.py (``factory`` kwarg)
   - master_key/test_recovery_facade.py (``decoder`` kwarg)
+  - cli/_config/test_config.py (real on-disk DB corruption triggers
+    SQLAlchemy ``DatabaseError`` — the same catch-all branch the
+    prior synthetic ``RuntimeError`` injection exercised)
 
-Remaining documented site:
-
-  1. test_config.py (x2) -- injects error-raising lambda into
-     ``_read_profile_record`` to test CLI error-boundary behaviour.
-     The Typer-command surface makes the DI seam less mechanical than
-     the others; this last site is carrying a follow-up.
+The drift gate (``test_monkeypatch_setattr_sites_are_documented``)
+now enforces an empty baseline: any new ``monkeypatch.setattr``
+landing in production tests fails the gate until added with an
+explicit justification.
 
 ``sys.*`` patches in ``test_stdio.py`` are unconditionally allowed
 (process-global isolation).
@@ -63,24 +63,18 @@ _ALLOWED_SETATTR_TARGETS_PREFIXES = (
 
 # Documented production-state setattr sites.
 # Format: (repo-relative path, target description).
-_DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset(
-    {
-        # Campaign #72: the two browser-factory swap files have been
-        # retired in favour of real DI seams:
-        # - sede/test_browser_errors.py (commit a7921f4de) — via
-        #   ``browser_session_factory`` kwarg on the production entry.
-        # - verify/test_verify.py — via ``factory`` kwarg on
-        #   ``_build_default_browser_session``.
-        # _read_profile_record replaced with error-raising lambda to exercise
-        # CLI error-boundary handling in unit context. The last remaining
-        # documented site; carries a follow-up to thread a DI seam through
-        # the ``config profile show`` Typer command.
-        (
-            "src/aeat/entrypoints/cli/_config/test_config.py",
-            "_read_profile_record",
-        ),
-    }
-)
+#
+# Campaign #72 cleared every production-state ``monkeypatch.setattr``
+# site from the source tree:
+#  - sede/test_browser_errors.py — replaced by ``browser_session_factory`` DI parameter
+#  - verify/test_verify.py — replaced by ``factory`` DI parameter on _build_default_browser_session
+#  - master_key/test_recovery_facade.py — replaced by ``decoder`` DI parameter on unwrap_recovery_envelope
+#  - cli/_config/test_config.py — replaced by real on-disk DB corruption triggering SQLAlchemy DatabaseError
+#
+# The empty set is the standing baseline — any new entry must justify
+# itself, and ``test_monkeypatch_setattr_sites_are_documented`` enforces
+# that no undocumented sites can slip in.
+_DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset()
 
 # Mutating monkeypatch verbs to track (beyond setenv/delenv which are always OK).
 _MUTATION_VERBS = frozenset({"setattr", "setitem", "delattr"})
