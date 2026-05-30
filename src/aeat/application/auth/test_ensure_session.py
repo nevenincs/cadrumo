@@ -101,7 +101,7 @@ def test_provider_stub_satisfies_auth_provider_protocol() -> None:
 @pytest.fixture(autouse=True)
 def _active_profile(tmp_path: Path) -> Iterator[None]:
     with override_settings(
-        aeat_clave_movil_dni_nie="12345678Z",
+        aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
         aeat_local_storage_root=tmp_path,
         aeat_secret_store_backend=SecretStoreBackend.FILE,
         aeat_secret_passphrase=SecretStr(dev_test_database_password()),
@@ -124,7 +124,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
 def _settings(tmp_path: Path) -> Settings:
     return Settings().model_copy(
         update={
-            "aeat_clave_movil_dni_nie": "12345678Z",
+            "aeat_clave_movil_dni_nie": SecretStr("12345678Z"),
             "aeat_token_dir": tmp_path / "tokens",
         }
     )

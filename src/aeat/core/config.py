@@ -64,6 +64,20 @@ DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"  # noqa: 
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
 
 
+def unwrap_optional_secret(value: SecretStr | None) -> str:
+    """Return the cleartext of an optional :class:`SecretStr`, or ``""`` if unset.
+
+    Bridge helper for the AEAT-regulated identity fields on
+    :class:`Settings` that are typed as ``SecretStr | None`` for leak
+    safety but consumed downstream as plain text (for forms, fingerprints,
+    profile binding, etc.). Centralising the unwrap pattern keeps the
+    ``.get_secret_value() if X is not None else ""`` boilerplate out of
+    every call site and ensures any future None / SecretStr edge case is
+    handled identically across consumers.
+    """
+    return value.get_secret_value() if value is not None else ""
+
+
 class LLMProviderSetting(StrEnum):
     """Closed set of provider names accepted by Settings."""
 
@@ -713,14 +727,14 @@ class Settings(BaseSettings):
     )
 
     # ── Cl@ve Móvil ─────────────────────────────────────────────────────────
-    aeat_clave_movil_dni_nie: str | None = Field(
+    aeat_clave_movil_dni_nie: SecretStr | None = Field(
         default=None,
         description=(
             "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
-            "identity and to pre-fill the non-QR fallback form. Not a "
-            "secret on its own — the Cl@ve app on the operator's phone is "
-            "the actual second factor."
+            "identity and to pre-fill the non-QR fallback form. AEAT-regulated "
+            "personal identifier under Spanish tax law; typed as SecretStr to "
+            "prevent leakage through repr / model_dump / ValidationError."
         ),
     )
     aeat_clave_movil_dni_fecha: str | None = Field(
@@ -731,12 +745,13 @@ class Settings(BaseSettings):
             "configured identity is a DNI."
         ),
     )
-    aeat_clave_movil_nie_soporte: str | None = Field(
+    aeat_clave_movil_nie_soporte: SecretStr | None = Field(
         default=None,
         description=(
             "NIE support number (número de soporte) used by the "
             "non-QR Cl@ve Móvil fallback form. Applies when the "
-            "configured identity is a NIE."
+            "configured identity is a NIE. AEAT-regulated personal "
+            "identifier; typed as SecretStr to prevent leakage."
         ),
     )
     aeat_clave_prefer_non_qr: bool = Field(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -10,8 +11,9 @@ from pydantic import BaseModel, ConfigDict
 from ...core.config import Settings, load_settings, unwrap_optional_secret
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from . import AuthProviderKind
-from ._acquisition_lock import clear_auth_acquisition_lock
+from ._acquisition_lock import AuthAcquisitionLockState, clear_auth_acquisition_lock
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
 from ._models import AuthState
@@ -22,6 +24,7 @@ from ._sessions import (
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth.certificate import LoadedCertificate
@@ -644,7 +647,8 @@ def _live_auth_identity_state(
         record = workflow_state_repository().load().active_profile_record()
         values = record_to_path_values(record) if record is not None else {}
         profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
-    except Exception:
+    except (OSError, AeatError, AttributeError, LookupError) as exc:
+        _log.debug("profile tax-id probe failed; treating as empty", exc_info=True)
         profile_tax_id = ""
     provider_identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip().upper()
     if not profile_tax_id and not provider_identity:
@@ -736,12 +740,27 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
     )
 
 
+class ProviderProbeResult(StrEnum):
+    """Canonical result codes returned by the per-provider local probe."""
+
+    NO_PROVIDER = "no_provider"
+    NO_PATH_SET = "no_path_set"
+    FILE_MISSING = "file_missing"
+    UNREADABLE = "unreadable"
+    CORRUPT = "corrupt"
+    EXPIRED = "expired"
+    EXPIRING = "expiring"
+    OK = "ok"
+    IDENTITY_UNSET = "identity_unset"
+    INVALID_IDENTITY = "invalid_identity"
+
+
 class _ProviderProbeOutcome(BaseModel):
     """Verdict of the per-provider local probe run by ``auth test``."""
 
     model_config = _STRICT_FROZEN
 
-    result: str = ""
+    result: ProviderProbeResult | str = ""
     summary: str = ""
 
 
@@ -757,14 +776,14 @@ def _probe_configured_provider(provider: str, certificate_path: str) -> _Provide
 
     if not provider:
         return _ProviderProbeOutcome(
-            result="no_provider",
+            result=ProviderProbeResult.NO_PROVIDER,
             summary=tr("application.auth.operator.probe.no_provider"),
         )
     try:
         kind = AuthProviderKind(provider)
     except ValueError:
         return _ProviderProbeOutcome(
-            result="no_provider",
+            result=ProviderProbeResult.NO_PROVIDER,
             summary=tr("application.auth.operator.probe.no_provider"),
         )
 
@@ -798,13 +817,13 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
     )
     if not raw:
         return _ProviderProbeOutcome(
-            result="no_path_set",
+            result=ProviderProbeResult.NO_PATH_SET,
             summary=tr("application.auth.operator.probe.certificate_path_unset"),
         )
     path = Path(raw)
     if not path.is_file():
         return _ProviderProbeOutcome(
-            result="file_missing",
+            result=ProviderProbeResult.FILE_MISSING,
             summary=tr(
                 "application.auth.operator.probe.certificate_file_missing",
                 path=str(path),
@@ -818,7 +837,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         bundle_bytes = path.read_bytes()
     except OSError as exc:
         return _ProviderProbeOutcome(
-            result="unreadable",
+            result=ProviderProbeResult.UNREADABLE,
             summary=tr(
                 "application.auth.operator.probe.certificate_unreadable",
                 error=type(exc).__name__,
@@ -827,7 +846,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
     loaded = _try_load_certificate_metadata(path, bundle_bytes, settings)
     if loaded is None:
         return _ProviderProbeOutcome(
-            result="corrupt",
+            result=ProviderProbeResult.CORRUPT,
             summary=tr("application.auth.operator.probe.certificate_corrupt"),
         )
     try:
@@ -838,7 +857,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         )
     except CertificateError as exc:
         return _ProviderProbeOutcome(
-            result="corrupt",
+            result=ProviderProbeResult.CORRUPT,
             summary=tr(
                 "application.auth.operator.probe.certificate_corrupt_detail",
                 error=str(exc),
@@ -847,7 +866,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
     severity = health.severity
     if severity is CertificateHealthSeverity.EXPIRED:
         return _ProviderProbeOutcome(
-            result="expired",
+            result=ProviderProbeResult.EXPIRED,
             summary=tr(
                 "application.auth.operator.probe.certificate_expired",
                 days=abs(health.days_until_expiry),
@@ -855,14 +874,14 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         )
     if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
         return _ProviderProbeOutcome(
-            result="expiring",
+            result=ProviderProbeResult.EXPIRING,
             summary=tr(
                 "application.auth.operator.probe.certificate_expiring",
                 days=health.days_until_expiry,
             ),
         )
     return _ProviderProbeOutcome(
-        result="ok",
+        result=ProviderProbeResult.OK,
         summary=tr(
             "application.auth.operator.probe.certificate_ok",
             days=health.days_until_expiry,
@@ -897,7 +916,8 @@ def _try_load_certificate_metadata(
             backend=settings.aeat_certificate_backend,
         )
         return load_certificate(bundle)
-    except Exception:
+    except (OSError, ValueError, AeatError) as exc:
+        _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
         return None
 
 
@@ -917,21 +937,21 @@ def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
     raw = unwrap_optional_secret(load_settings().aeat_clave_movil_dni_nie).strip()
     if not raw:
         return _ProviderProbeOutcome(
-            result="identity_unset",
+            result=ProviderProbeResult.IDENTITY_UNSET,
             summary=tr("application.auth.operator.probe.clave_movil_identity_unset"),
         )
     try:
         _classify_identity(raw)
     except ClaveMovilConfigurationError as exc:
         return _ProviderProbeOutcome(
-            result="invalid_identity",
+            result=ProviderProbeResult.INVALID_IDENTITY,
             summary=tr(
                 "application.auth.operator.probe.clave_movil_identity_invalid",
                 error=str(exc),
             ),
         )
     return _ProviderProbeOutcome(
-        result="ok",
+        result=ProviderProbeResult.OK,
         summary=tr("application.auth.operator.probe.clave_movil_identity_ok"),
     )
 
@@ -1099,7 +1119,7 @@ def _clear_acquisition_locks(
     cleared = 0
     for kind in lock_kinds:
         status = clear_auth_acquisition_lock(settings, kind, reason="operator-clear")
-        if status.state.value != "absent":
+        if status.state is not AuthAcquisitionLockState.ABSENT:
             cleared += 1
     return cleared
 
