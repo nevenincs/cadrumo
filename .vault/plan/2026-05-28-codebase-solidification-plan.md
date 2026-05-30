@@ -493,10 +493,10 @@ Relocate SETUP_FLOW/WIZARD_FLOWS and project_answers/SetupAnswers from aeat.appl
 - [x] `W03.P14.S318` - update aeat.domain.profile._keys to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/profile/_keys.py`.
 - [x] `W03.P14.S319` - update aeat.entrypoints.cli._config to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `W03.P14.S320` - add real-behavior test asserting SETUP_FLOW/WIZARD_FLOWS canonical home is aeat.core and no deferred lazy upward imports survive; `src/aeat/core/test_profile_catalogue.py`.
-- [ ] `W03.P14.S321` - introduce SetupAnswers model in aeat.core (or a Protocol it satisfies) so domain can consume the typed projection without reaching into application.wizard; `src/aeat/core/profile.py`.
-- [ ] `W03.P14.S322` - relocate project_answers function to aeat.core.profile or expose its result type via Protocol; `aeat.application.wizard._persistence keeps the implementation but routes through the core interface; `src/aeat/core/profile.py`.
-- [ ] `W03.P14.S323` - update aeat.domain.deadlines._profiles to import project_answers/SetupAnswers from aeat.core.profile and remove deferred upward imports; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `W03.P14.S324` - add real-behavior test asserting project_answers/SetupAnswers canonical home and domain importer purity; `src/aeat/core/test_profile.py`.
+- [x] `W03.P14.S321` - introduce SetupAnswers model in aeat.core (or a Protocol it satisfies) so domain can consume the typed projection without reaching into application.wizard; `src/aeat/core/profile.py`.
+- [x] `W03.P14.S322` - relocate project_answers function to aeat.core.profile or expose its result type via Protocol; `aeat.application.wizard._persistence keeps the implementation but routes through the core interface; `src/aeat/core/profile.py`.
+- [x] `W03.P14.S323` - update aeat.domain.deadlines._profiles to import project_answers/SetupAnswers from aeat.core.profile and remove deferred upward imports; `src/aeat/domain/deadlines/_profiles.py`.
+- [x] `W03.P14.S324` - add real-behavior test asserting project_answers/SetupAnswers canonical home and domain importer purity; `src/aeat/core/test_profile.py`.
 - [ ] `W03.P14.S325` - proactively relocate AggregationSourceKind from aeat.application.aggregation._source_kinds to aeat.core (or a domain-reachable home) before a domain consumer materialises the deferred Wave 1 finding; `src/aeat/core/aggregation.py`.
 - [ ] `W03.P14.S326` - migrate 5 application-layer importers of AggregationSourceKind to the new canonical home; `src/aeat/application/aggregation/_service.py`.
 - [ ] `W03.P14.S327` - add real-behavior test asserting AggregationSourceKind canonical home and importer enrollment; `src/aeat/core/test_aggregation.py`.
