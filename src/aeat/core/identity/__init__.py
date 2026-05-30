@@ -27,6 +27,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
+from ._bucket import BucketId
 from ._documents import (
     IdentityDocument,
     IdentityError,
@@ -64,6 +65,7 @@ malformed identifier fails fast at the model boundary with an
 """
 
 __all__ = [
+    "BucketId",
     "IdentityDocument",
     "IdentityError",
     "SubjectTaxId",
