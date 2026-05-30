@@ -122,21 +122,20 @@ def test_open_renta_web_open_session_raises_browser_adapter_type_error_on_wrong_
 # ---------------------------------------------------------------------------
 
 
-def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on_wrong_page_type(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on_wrong_page_type() -> None:
     """collect_nif_iva_check_observations must raise BrowserAdapterTypeError when
-    the injected BrowserContext.new_page() returns a non-Page object."""
+    the injected BrowserContext.new_page() returns a non-Page object.
 
-    import aeat.adapters.outbound.aeat.sede._nif_iva_check as _mod
-
-    monkeypatch.setattr(_mod, "default_browser_session_factory", _fake_browser_factory)
+    Uses the production ``browser_session_factory`` DI parameter rather
+    than a monkeypatch attribute swap.
+    """
 
     with pytest.raises(BrowserAdapterTypeError) as exc_info:
         asyncio.run(
             collect_nif_iva_check_observations(
                 b"",
                 expected={"ES12345678A": None},
+                browser_session_factory=_fake_browser_factory,
             )
         )
 
@@ -149,21 +148,20 @@ def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on
 # ---------------------------------------------------------------------------
 
 
-def test_collect_groi_observations_raises_browser_adapter_type_error_on_wrong_page_type(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_collect_groi_observations_raises_browser_adapter_type_error_on_wrong_page_type() -> None:
     """collect_groi_observations must raise BrowserAdapterTypeError when
-    the injected BrowserContext.new_page() returns a non-Page object."""
+    the injected BrowserContext.new_page() returns a non-Page object.
 
-    import aeat.adapters.outbound.aeat.sede._groi_check as _mod
-
-    monkeypatch.setattr(_mod, "default_browser_session_factory", _fake_browser_factory)
+    Uses the production ``browser_session_factory`` DI parameter rather
+    than a monkeypatch attribute swap.
+    """
 
     with pytest.raises(BrowserAdapterTypeError) as exc_info:
         asyncio.run(
             collect_groi_observations(
                 b"",
                 expected={"B12345678": None},
+                browser_session_factory=_fake_browser_factory,
             )
         )
 

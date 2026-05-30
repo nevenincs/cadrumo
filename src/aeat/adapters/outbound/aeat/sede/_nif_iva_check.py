@@ -23,7 +23,7 @@ sede entry subdomain and the www1 form-servlet subdomain.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
@@ -278,6 +278,7 @@ async def collect_nif_iva_check_observations(
     expected: Mapping[str, object],
     settings: Settings | None = None,
     timeout_ms: int = DEFAULT_NIF_IVA_TIMEOUT_MS,
+    browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
 ) -> NifIvaCheckResult:
     """Open the NIF-IVA form, query each declared NIF, scrape the verdicts.
 
@@ -292,7 +293,8 @@ async def collect_nif_iva_check_observations(
         raise RegistryValidationError("collect_nif_iva_check_observations requires at least one expected NIF")
     nifs = tuple(sorted(str(key) for key in expected))
 
-    browser_session = await default_browser_session_factory(settings or Settings())
+    factory = browser_session_factory or default_browser_session_factory
+    browser_session = await factory(settings or Settings())
     context = None
     try:
         context = await browser_session.create_context(storage_state={})
