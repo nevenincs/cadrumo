@@ -11,12 +11,12 @@ filing-record id field). Keeping them as separate aliases preserves
 that distinction for downstream call sites; collapsing them to a
 single hex-64 alias would lose the role separation.
 
-``TransactionId`` is declared here because the modelo boundary records
-reference it, and pulling the constraint from a single home avoids
-per-module redeclaration drift. The cross-cutting bucket identity
-lives in :mod:`aeat.core.identity` because it is a per-profile
-storage-container identity owned by the persistence boundary, not by
-any record domain.
+The cross-cutting bucket identity lives in :mod:`aeat.core.identity`
+because it is a per-profile storage-container identity owned by the
+persistence boundary, not by any record domain. The ledger-transaction
+identity lives in :mod:`aeat.domain.transactions._ids` under
+owner-domain placement; the modelo records never reference the
+transaction identity directly so no sibling-domain import is required.
 """
 
 from __future__ import annotations
@@ -45,12 +45,6 @@ FilingRecordId = Annotated[
 ]
 """Hex-64 identity of one filing record bound to a calculation revision."""
 
-TransactionId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-"""Hex-64 identity of one ledger transaction."""
-
 VerificationReportId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
@@ -60,7 +54,6 @@ VerificationReportId = Annotated[
 __all__ = (
     "CalculationRevisionId",
     "FilingRecordId",
-    "TransactionId",
     "VerificationReportId",
     "WorkUnitId",
 )

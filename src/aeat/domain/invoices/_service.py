@@ -17,7 +17,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ...core.logging import get_logger
-from ..modelos._ids import TransactionId
+from ...core.identity import TransactionId
 from ..transactions import (
     TransactionCatalogue,
 )

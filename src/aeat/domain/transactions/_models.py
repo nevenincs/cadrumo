@@ -34,7 +34,7 @@ from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
-from ..modelos._ids import TransactionId
+from ._ids import TransactionId
 from ...core.errors import CoreValidationError
 from ...core.time._utc import _validate_utc_aware
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
