@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.config import override_settings
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import isolated_sessionless_storage_root
 
@@ -48,8 +49,9 @@ _PROFILE_CREATE_GUIDANCE = "profile create"
 
 
 @pytest.fixture(autouse=True)
-def _english_output(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
+def _english_output() -> Iterator[None]:
+    with override_settings(aeat_output_language="en"):
+        yield
 
 
 @pytest.fixture
