@@ -69,6 +69,18 @@ _PERIOD_EQUALS_EJERCICIO: frozenset[tuple[str, str]] = frozenset(
         ("390", "2021-0A"),
         # M100 2023: newer layout omits labelled Período token.
         ("100", "2023-0A"),
+        # M036: censal declaracion with event codes (alta/modificacion/baja),
+        # no calendar Periodo label; parser falls back to ejercicio year.
+        ("036", "2025-0A"),
+        ("036", "2025-alta"),
+        # M184, M232, M347, M720, M840: annual informativas with no Periodo
+        # label; parser fallback returns the ejercicio year.
+        ("184", "2024-0A"),
+        ("232", "2016-0A"),
+        ("232", "2018-0A"),
+        ("347", "2024-0A"),
+        ("720", "2024-0A"),
+        ("840", "2024-0A"),
     }
 )
 
@@ -236,7 +248,7 @@ class TestCorpusSidecarRoundtrip:
         accidentally deleted) this test fails loudly rather than silently
         reducing coverage.  Update the minimum when new fixtures are added.
         """
-        assert len(_CORPUS_PAIRS) >= 40, (
-            f"Expected at least 40 corpus pairs; found {len(_CORPUS_PAIRS)}. "
+        assert len(_CORPUS_PAIRS) >= 55, (
+            f"Expected at least 55 corpus pairs; found {len(_CORPUS_PAIRS)}. "
             "Was a fixture directory deleted or a sidecar removed?"
         )
