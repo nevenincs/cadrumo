@@ -14,6 +14,7 @@ import pytest
 
 from aeat.diagnostics._identity_placement import (
     Finding,
+    find_misplaced_hex_length_constants,
     find_private_id_imports,
     find_sibling_domain_id_imports,
 )
@@ -48,3 +49,10 @@ def test_no_private_id_imports() -> None:
 
     findings = find_private_id_imports()
     assert findings == [], "private-name imports from _ids modules detected:\n" + _render(findings)
+
+
+def test_no_misplaced_hex_length_constants() -> None:
+    """No ``_HEX_*_LENGTH`` constant lives outside the owning ``_ids.py`` module."""
+
+    findings = find_misplaced_hex_length_constants()
+    assert findings == [], "misplaced _HEX_*_LENGTH constants detected:\n" + _render(findings)
