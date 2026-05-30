@@ -603,21 +603,21 @@ Close 5 W2-Step-scope gaps in _clave_movil.py (3 sites), _authenticator.py (6 si
 
 Close 1 regression (Playwright wait-state literals in notifications + renta_web_open despite W3 _browser_constants existing) and 11 new bypasses including provider_id dispatch enum, _ProviderProbeOutcome.result enum, MetadataMatchState StrEnum, PDF_MIME_TYPE constant, WorkbookScanStatus, sede latin-1 encoding constant.
 
-- [ ] `W04.P20.S397` - enroll bare domcontentloaded/networkidle literals at _notifications.py:450,459 and _renta_web_open.py:182 to PLAYWRIGHT_WAIT_* constants from _browser_constants.py; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `W04.P20.S398` - introduce PLAYWRIGHT_TIMEOUT_SHORT_MS=2_000 in _browser_constants.py and enroll _walker.py:304; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
-- [ ] `W04.P20.S399` - introduce LedgerProviderID(StrEnum) covering auto/csv/ofx/qfx/xlsx/excel/n26/pdf/pdf-n26 and replace provider_id dispatch chain at ledger/_actions.py:2056-2072; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W04.P20.S400` - add real-behavior test asserting LedgerProviderID covers every dispatch literal in the codebase; `src/aeat/application/ledger/test_provider_id_enum.py`.
-- [ ] `W04.P20.S401` - introduce SEDE_BODY_ENCODING=latin-1 constant and enroll _declarations.py:1399 and _export_parse.py:208,213; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
-- [ ] `W04.P20.S402` - introduce PDF_MIME_TYPE=application/pdf in external_constants and enroll _declarations.py:892,1684 + _walker.py:247 substring sniffs; `src/aeat/core/external_constants.py`.
-- [ ] `W04.P20.S403` - use AuthAcquisitionLockState.ABSENT identity comparison at _operator.py:1102 instead of .value string check; `src/aeat/application/auth/_operator.py`.
-- [ ] `W04.P20.S404` - introduce ProviderProbeResult(StrEnum) with 11 members (no_provider, no_path_set, file_missing, unreadable, corrupt, expired, expiring, ok, identity_unset, invalid_identity, plus any missed) and migrate _operator.py:760-927 free-form result string field; `src/aeat/application/auth/_operator.py`.
-- [ ] `W04.P20.S405` - introduce DeadlineRole(StrEnum) with INFORMATIONAL plus other workflow roles and migrate _engine.py:625,662; `src/aeat/application/workflow/_engine.py`.
-- [ ] `W04.P20.S406` - introduce FilingWindowState(StrEnum) covering absent + other states and migrate _engine.py:661; `src/aeat/application/workflow/_engine.py`.
-- [ ] `W04.P20.S407` - introduce WorkflowEnvelopeReasonClass(StrEnum) and WorkbookScanStatus(StrEnum) and migrate _persistence.py:180,211,214 + _workbook_parity.py:42,116,1133,1162; `src/aeat/application/workflow/_persistence.py`.
-- [ ] `W04.P20.S408` - promote PDF_EXTENSION + XLSX_EXTENSION + XLSM_EXTENSION from financial providers _constants.py to external_constants (cross-layer shared file extensions); `src/aeat/core/external_constants.py`.
-- [ ] `W04.P20.S409` - migrate domain/calculations/registry/_record_design.py:91,93 and _workbook_parity.py:501,851 to use the promoted extension constants; `src/aeat/domain/calculations/registry/_record_design.py`.
-- [ ] `W04.P20.S410` - introduce MetadataMatchState(StrEnum) and migrate _calc_sheets_pull.py:216,292,329 Literal-inline to StrEnum; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
-- [ ] `W04.P20.S411` - add real-behavior inventory test asserting zero bare domcontentloaded/networkidle/pdf-mime/latin-1 literals survive in production; `src/aeat/test_hardcoded_constants_inventory.py`.
+- [x] `W04.P20.S397` - enroll bare domcontentloaded/networkidle literals at _notifications.py:450,459 and _renta_web_open.py:182 to PLAYWRIGHT_WAIT_* constants from _browser_constants.py; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
+- [x] `W04.P20.S398` - introduce PLAYWRIGHT_TIMEOUT_SHORT_MS=2_000 in _browser_constants.py and enroll _walker.py:304; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [x] `W04.P20.S399` - introduce LedgerProviderID(StrEnum) covering auto/csv/ofx/qfx/xlsx/excel/n26/pdf/pdf-n26 and replace provider_id dispatch chain at ledger/_actions.py:2056-2072; `src/aeat/application/ledger/_actions.py`.
+- [x] `W04.P20.S400` - add real-behavior test asserting LedgerProviderID covers every dispatch literal in the codebase; `src/aeat/application/ledger/test_provider_id_enum.py`.
+- [x] `W04.P20.S401` - introduce SEDE_BODY_ENCODING=latin-1 constant and enroll _declarations.py:1399 and _export_parse.py:208,213; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [x] `W04.P20.S402` - introduce PDF_MIME_TYPE=application/pdf in external_constants and enroll _declarations.py:892,1684 + _walker.py:247 substring sniffs; `src/aeat/core/external_constants.py`.
+- [x] `W04.P20.S403` - use AuthAcquisitionLockState.ABSENT identity comparison at _operator.py:1102 instead of .value string check; `src/aeat/application/auth/_operator.py`.
+- [x] `W04.P20.S404` - introduce ProviderProbeResult(StrEnum) with 11 members (no_provider, no_path_set, file_missing, unreadable, corrupt, expired, expiring, ok, identity_unset, invalid_identity, plus any missed) and migrate _operator.py:760-927 free-form result string field; `src/aeat/application/auth/_operator.py`.
+- [x] `W04.P20.S405` - introduce DeadlineRole(StrEnum) with INFORMATIONAL plus other workflow roles and migrate _engine.py:625,662; `src/aeat/application/workflow/_engine.py`.
+- [x] `W04.P20.S406` - introduce FilingWindowState(StrEnum) covering absent + other states and migrate _engine.py:661; `src/aeat/application/workflow/_engine.py`.
+- [x] `W04.P20.S407` - introduce WorkflowEnvelopeReasonClass(StrEnum) and WorkbookScanStatus(StrEnum) and migrate _persistence.py:180,211,214 + _workbook_parity.py:42,116,1133,1162; `src/aeat/application/workflow/_persistence.py`.
+- [x] `W04.P20.S408` - promote PDF_EXTENSION + XLSX_EXTENSION + XLSM_EXTENSION from financial providers _constants.py to external_constants (cross-layer shared file extensions); `src/aeat/core/external_constants.py`.
+- [x] `W04.P20.S409` - migrate domain/calculations/registry/_record_design.py:91,93 and _workbook_parity.py:501,851 to use the promoted extension constants; `src/aeat/domain/calculations/registry/_record_design.py`.
+- [x] `W04.P20.S410` - introduce MetadataMatchState(StrEnum) and migrate _calc_sheets_pull.py:216,292,329 Literal-inline to StrEnum; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
+- [x] `W04.P20.S411` - add real-behavior inventory test asserting zero bare domcontentloaded/networkidle/pdf-mime/latin-1 literals survive in production; `src/aeat/test_hardcoded_constants_inventory.py`.
 
 ### Phase `W04.P21` - A1 exception survivor sweep
 
