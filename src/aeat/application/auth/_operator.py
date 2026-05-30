@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.config import Settings, load_settings
+from ...core.config import Settings, load_settings, unwrap_optional_secret
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from . import AuthProviderKind
@@ -388,10 +388,10 @@ def _auth_configure_result(
     record = state.active_profile_record()
     values = record_to_path_values(record)
     profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
-    settings = Settings()
+    settings = load_settings()
     provider_identity = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
-        provider_identity = (settings.aeat_clave_movil_dni_nie or "").strip().upper()
+        provider_identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip().upper()
     alignment = "not_applicable"
     alignment_detail = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
@@ -615,7 +615,7 @@ def build_live_auth_preflight_report(
         dni_fecha_configured=bool((resolved_settings.aeat_clave_movil_dni_fecha or "").strip())
         if provider_kind is AuthProviderKind.CLAVE_MOVIL
         else None,
-        nie_soporte_configured=bool((resolved_settings.aeat_clave_movil_nie_soporte or "").strip())
+        nie_soporte_configured=bool(unwrap_optional_secret(resolved_settings.aeat_clave_movil_nie_soporte).strip())
         if provider_kind is AuthProviderKind.CLAVE_MOVIL
         else None,
         certificate_path_configured=resolved_settings.aeat_certificate_path is not None,
@@ -646,7 +646,7 @@ def _live_auth_identity_state(
         profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
     except Exception:
         profile_tax_id = ""
-    provider_identity = (settings.aeat_clave_movil_dni_nie or "").strip().upper()
+    provider_identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip().upper()
     if not profile_tax_id and not provider_identity:
         alignment = "profile_tax_id_missing_and_clave_identity_missing"
     elif not profile_tax_id:
@@ -668,7 +668,7 @@ def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings
         _classify_identity,
     )
 
-    identity = (settings.aeat_clave_movil_dni_nie or "").strip()
+    identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip()
     try:
         return _classify_identity(identity)
     except ClaveMovilConfigurationError:
@@ -717,7 +717,7 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
         )
     from datetime import UTC, datetime
 
-    session = load_persisted_session(Settings(), kind)
+    session = load_persisted_session(load_settings(), kind)
     if session is None:
         return _LocalSessionProbe(
             present=False,
@@ -790,9 +790,9 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         CertificateHealthSeverity,
         evaluate_loaded_certificate_health,
     )
-    from ...core.config import Settings, load_settings
+    from ...core.config import load_settings, unwrap_optional_secret
 
-    settings = Settings()
+    settings = load_settings()
     raw = (certificate_path or "").strip() or (
         str(settings.aeat_certificate_path) if settings.aeat_certificate_path is not None else ""
     )
@@ -914,7 +914,7 @@ def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
         _classify_identity,
     )
 
-    raw = (Settings().aeat_clave_movil_dni_nie or "").strip()
+    raw = unwrap_optional_secret(load_settings().aeat_clave_movil_dni_nie).strip()
     if not raw:
         return _ProviderProbeOutcome(
             result="identity_unset",
@@ -1181,8 +1181,8 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
                     path=str(cert_path),
                 )
             )
-    if provider_kind is AuthProviderKind.CLAVE_MOVIL and not (
-        settings.aeat_clave_movil_dni_nie or ""
+    if provider_kind is AuthProviderKind.CLAVE_MOVIL and not unwrap_optional_secret(
+        settings.aeat_clave_movil_dni_nie
     ).strip():
         raise AuthLoginPreconditionError(
             tr("application.auth.operator.login.refused_clave_movil_identity_unset")

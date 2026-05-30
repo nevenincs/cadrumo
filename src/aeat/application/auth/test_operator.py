@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.user_profile._orchestration import profile_create_storage_span
@@ -228,7 +229,7 @@ def test_inspect_operator_auth_configured_is_false_without_certificate_path() ->
 
 
 def test_inspect_operator_auth_configured_is_true_with_certificate_path(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
     """``inspect_operator_auth`` reports ``configured: True`` when the
     certificate provider is selected, a ``--file`` path is recorded in
@@ -244,11 +245,11 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
     cert_path = tmp_path / "operator.p12"
     cert_path.write_bytes(b"placeholder cert")
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(cert_path))
 
-    configure_operator_auth("certificate", certificate_path=cert_path)
+    with override_settings(aeat_certificate_path=cert_path):
+        configure_operator_auth("certificate", certificate_path=cert_path)
 
-    result = inspect_operator_auth()
+        result = inspect_operator_auth()
 
     assert result.provider == "certificate"
     assert result.configured is True, (
@@ -455,8 +456,8 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
     )
     settings = Settings().model_copy(
         update={
-            "aeat_clave_movil_dni_nie": "12345678Z",
-            "aeat_clave_movil_nie_soporte": "support-present",
+            "aeat_clave_movil_dni_nie": SecretStr("12345678Z"),
+            "aeat_clave_movil_nie_soporte": SecretStr("support-present"),
             "aeat_clave_prefer_non_qr": True,
             "aeat_clave_movil_timeout_ms": 120_000,
         }
@@ -508,9 +509,7 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     assert probe.probe_summary != ""
 
 
-def test_configure_clave_movil_mismatch_carries_an_explanatory_detail(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     """An ``identity_alignment: mismatch`` must explain what mismatches.
 
     A bare ``mismatch`` token tells the operator nothing (persona-fleet
@@ -527,9 +526,8 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail(
             overrides={"identity.tax_id": "00000000T"},
         )
     )
-    monkeypatch.setenv("AEAT_CLAVE_MOVIL_DNI_NIE", "00000001R")
-
-    result = configure_operator_auth("clave_movil")
+    with override_settings(aeat_clave_movil_dni_nie="00000001R"):
+        result = configure_operator_auth("clave_movil")
 
     assert result.identity_alignment == "mismatch"
     assert result.identity_alignment_detail != ""
@@ -541,9 +539,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail(
     )
 
 
-def test_configure_clave_movil_match_carries_no_alignment_detail(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
     """When the Cl@ve identity matches the profile there is nothing to explain."""
 
     workflow_state_repository().update(
@@ -553,9 +549,8 @@ def test_configure_clave_movil_match_carries_no_alignment_detail(
             overrides={"identity.tax_id": "12345678Z"},
         )
     )
-    monkeypatch.setenv("AEAT_CLAVE_MOVIL_DNI_NIE", "12345678Z")
-
-    result = configure_operator_auth("clave_movil")
+    with override_settings(aeat_clave_movil_dni_nie="12345678Z"):
+        result = configure_operator_auth("clave_movil")
 
     assert result.identity_alignment == "matches"
     assert result.identity_alignment_detail == ""
@@ -571,7 +566,7 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
             overrides={"identity.tax_id": "12345678Z"},
         )
     )
-    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": "12345678Z"})
+    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": SecretStr("12345678Z")})
 
     assert _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL) == "12345678Z"
 
@@ -586,7 +581,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
             overrides={"identity.tax_id": "00000000T"},
         )
     )
-    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": "00000001R"})
+    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": SecretStr("00000001R")})
 
     with pytest.raises(AuthProfileIdentityMismatchError) as raised:
         _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
