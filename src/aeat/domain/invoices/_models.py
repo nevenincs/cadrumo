@@ -29,6 +29,7 @@ from .._identifiers import canonical_decimal_string
 from ..iva import EUMemberState, IvaCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
+from ._ids import InvoiceId
 
 if TYPE_CHECKING:
     from ..iva._invoice_classification import IvaInvoiceClassification
@@ -318,7 +319,7 @@ class Invoice(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str = Field(min_length=_HEX_INVOICE_ID_LENGTH, max_length=_HEX_INVOICE_ID_LENGTH)
+    invoice_id: InvoiceId
     bucket_id: BucketId | None = Field(default=None)
     kind: InvoiceKind
     invoice_number: str = Field(min_length=1)

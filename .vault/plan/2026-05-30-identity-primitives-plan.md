@@ -93,10 +93,10 @@ Declare the hex-64 SnapshotId alias in core/identity per Rule 1 clause (a) and R
 
 Declare the hex-64 InvoiceId alias in the invoice domain identity module per Rule 6 owner-domain placement, re-export, and lift the bare-string invoice_id field sites in domain/invoices/_models, application/ledger, and application/invoices onto the alias.
 
-- [ ] `W02.P06.S30` - declare the InvoiceId alias with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 owner-domain placement; `src/aeat/domain/invoices/_ids.py`.
-- [ ] `W02.P06.S31` - lift the invoice_id bare-string field declarations onto InvoiceId per ADR Rule 6 in the invoice records module; `src/aeat/domain/invoices/_models.py`.
-- [ ] `W02.P06.S32` - lift the invoice_id bare-string field declarations onto InvoiceId per ADR Rule 6 across the ledger application service; `src/aeat/application/ledger/_models.py`.
-- [ ] `W02.P06.S33` - add a real-behavior roundtrip test that populates an invoice record with a non-default InvoiceId, persists through the real SecureObjectRepository, reloads, and asserts strict pydantic equality; `src/aeat/domain/invoices/test_invoice_roundtrip.py`.
+- [x] `W02.P06.S30` - declare the InvoiceId alias with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 owner-domain placement; `src/aeat/domain/invoices/_ids.py`.
+- [x] `W02.P06.S31` - lift the invoice_id bare-string field declarations onto InvoiceId per ADR Rule 6 in the invoice records module; `src/aeat/domain/invoices/_models.py`.
+- [x] `W02.P06.S32` - lift the invoice_id bare-string field declarations onto InvoiceId per ADR Rule 6 across the ledger application service; `src/aeat/application/ledger/_models.py`.
+- [x] `W02.P06.S33` - add a real-behavior roundtrip test that populates an invoice record with a non-default InvoiceId, persists through the real SecureObjectRepository, reloads, and asserts strict pydantic equality; `src/aeat/domain/invoices/test_invoice_roundtrip.py`.
 
 ### Phase `W02.P07` - promote AttachmentId in domain/attachments/_ids.py
 
