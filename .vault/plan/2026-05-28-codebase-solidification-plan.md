@@ -674,17 +674,17 @@ Close 1 regression (WorkflowError tr-positional at _persistence.py:105), thread 
 
 Rebase WizardCatalogueNotRegisteredError + ProjectAnswersNotRegisteredError from RuntimeError to CoreError (W3-introduced classes that bypassed registry). Narrow 8 except Exception swallows in _actions.py, _result_summary.py, state_projection.py, live/__init__.py, ledger/_actions.py, review/_adapters.py, _profile_repository.py.
 
-- [ ] `W05.P24.S444` - rebase WizardCatalogueNotRegisteredError from RuntimeError to CoreError (with registry entry + locale key); `src/aeat/core/profile_catalogue.py`.
-- [ ] `W05.P24.S445` - rebase ProjectAnswersNotRegisteredError from RuntimeError to CoreError (with registry entry + locale key); `src/aeat/core/profile.py`.
-- [ ] `W05.P24.S446` - introduce WizardCatalogueAlreadyRegisteredError(CoreError) and migrate raise RuntimeError at profile_catalogue.py:76; `src/aeat/core/profile_catalogue.py`.
-- [ ] `W05.P24.S447` - narrow except Exception swallow at application/modelo/_actions.py:2743 to decimal.InvalidOperation; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W05.P24.S448` - fix missing raise after rollback at user_profile/_profile_repository.py:308 + narrow except Exception to (StorageError, OSError, ValidationError); `src/aeat/application/user_profile/_profile_repository.py`.
-- [ ] `W05.P24.S449` - narrow except Exception swallows at modelo/_result_summary.py:73,81 to (LookupError, KeyError, AttributeError, AeatError) and add warning-level logging; `src/aeat/application/modelo/_result_summary.py`.
-- [ ] `W05.P24.S450` - narrow except Exception swallows at state_projection.py:357,499 to typed sets; `src/aeat/application/state_projection.py`.
-- [ ] `W05.P24.S451` - narrow 3 except Exception swallows at application/live/__init__.py:1390,1419,1435 to (AeatError, OSError, asyncio.TimeoutError); `src/aeat/application/live/__init__.py`.
-- [ ] `W05.P24.S452` - narrow except Exception swallows at ledger/_actions.py:3439,3476 (parse + apply loops) to (ValidationError, ValueError, KeyError) and (AeatError, ValidationError); `src/aeat/application/ledger/_actions.py`.
-- [ ] `W05.P24.S453` - split except Exception silent import guard at review/_adapters.py:317,323 into ImportError and (AeatError, AttributeError); `src/aeat/application/review/_adapters.py`.
-- [ ] `W05.P24.S454` - add aggregate real-behavior test asserting W05.P24 new error classes registered + narrowed except clauses honestly propagate non-typed exceptions; `src/aeat/test_w05_p24_exceptions.py`.
+- [x] `W05.P24.S444` - rebase WizardCatalogueNotRegisteredError from RuntimeError to CoreError (with registry entry + locale key); `src/aeat/core/profile_catalogue.py`.
+- [x] `W05.P24.S445` - rebase ProjectAnswersNotRegisteredError from RuntimeError to CoreError (with registry entry + locale key); `src/aeat/core/profile.py`.
+- [x] `W05.P24.S446` - introduce WizardCatalogueAlreadyRegisteredError(CoreError) and migrate raise RuntimeError at profile_catalogue.py:76; `src/aeat/core/profile_catalogue.py`.
+- [x] `W05.P24.S447` - narrow except Exception swallow at application/modelo/_actions.py:2743 to decimal.InvalidOperation; `src/aeat/application/modelo/_actions.py`.
+- [x] `W05.P24.S448` - fix missing raise after rollback at user_profile/_profile_repository.py:308 + narrow except Exception to (StorageError, OSError, ValidationError); `src/aeat/application/user_profile/_profile_repository.py`.
+- [x] `W05.P24.S449` - narrow except Exception swallows at modelo/_result_summary.py:73,81 to (LookupError, KeyError, AttributeError, AeatError) and add warning-level logging; `src/aeat/application/modelo/_result_summary.py`.
+- [x] `W05.P24.S450` - narrow except Exception swallows at state_projection.py:357,499 to typed sets; `src/aeat/application/state_projection.py`.
+- [x] `W05.P24.S451` - narrow 3 except Exception swallows at application/live/__init__.py:1390,1419,1435 to (AeatError, OSError, asyncio.TimeoutError); `src/aeat/application/live/__init__.py`.
+- [x] `W05.P24.S452` - narrow except Exception swallows at ledger/_actions.py:3439,3476 (parse + apply loops) to (ValidationError, ValueError, KeyError) and (AeatError, ValidationError); `src/aeat/application/ledger/_actions.py`.
+- [x] `W05.P24.S453` - split except Exception silent import guard at review/_adapters.py:317,323 into ImportError and (AeatError, AttributeError); `src/aeat/application/review/_adapters.py`.
+- [x] `W05.P24.S454` - add aggregate real-behavior test asserting W05.P24 new error classes registered + narrowed except clauses honestly propagate non-typed exceptions; `src/aeat/test_w05_p24_exceptions.py`.
 
 ### Phase `W05.P25` - A7 hardcoded: test regression + enum+constant survivors + new drifts
 
