@@ -561,3 +561,87 @@ Replace 5 inline value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) with _r
 - [x] `W03.P18.S366` - replace bare Decimal(str(...)) in adapters/inbound/financial/providers/_base.py:393 with coerce_decimal; `src/aeat/adapters/inbound/financial/providers/_base.py`.
 - [x] `W03.P18.S367` - replace bare Decimal(str(...)) in application/overview/__init__.py:795 with coerce_decimal; `src/aeat/application/overview/__init__.py`.
 - [x] `W03.P18.S368` - add real-behavior test asserting zero inline value.quantize(Decimal(0.01),ROUND_HALF_UP) and bare Decimal(str()) coercion survive in production; `src/aeat/test_decimal_enrollment_inventory.py`.
+
+## Wave `W04` - close Wave 4 audit findings + tighten W2/W3 scope gaps
+
+Wave 4 closes the 53 findings from the 2026-05-30 re-audit: 5 W2 locale-Step scope gaps in clave_movil/authenticator/declarations (sibling raises the original Step did not touch), 1 A7 Playwright wait-state regression in notifications/renta_web_open, 1 A5 SetupAnswers duplicate class hygiene, 11 new A1 raises in previously-unaudited modules (calculations, aggregation, auth/operator, core/profile), 11 new A7 enum/constant bypasses (provider_id dispatch chain, _ProviderProbeOutcome.result free-form string, MetadataMatchState Literal inline, etc.). Three consecutive zero-strict-file:line-regression waves now achieved; this wave must also tighten the Step-scope discipline to prevent W2-style partial-fix completions. Authorising audit findings: Wave 4 task #16.
+
+### Phase `W04.P19` - A3 locale W2-scope-completions + survivor sweep
+
+Close 5 W2-Step-scope gaps in _clave_movil.py (3 sites), _authenticator.py (6 sites including 4 originally-flagged), _declarations.py (4 Playwright interaction failures). Plus 11 locale survivors (WorkUnit errors, TransactionValidationError, AmendmentVerificationRefusedError, etc) and 4 f-string-as-locale-key in aggregation errors.
+
+- [ ] `W04.P19.S369` - thread translated_message=adapters.auth.clave_movil.errors.already_active on AeatLoginAssertionError at _clave_movil.py:334; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W04.P19.S370` - thread translated_message=adapters.auth.clave_movil.errors.verify_requires_active_context at _clave_movil.py:488; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W04.P19.S371` - thread translated_message=adapters.auth.clave_movil.errors.metadata_invalid at _clave_movil.py:885; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W04.P19.S372` - thread translated_message=adapters.auth.authenticator.errors.closing at _authenticator.py:698; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S373` - thread translated_message=adapters.auth.authenticator.errors.no_active_context at _authenticator.py:701; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S374` - thread translated_message=adapters.auth.authenticator.errors.capture_requires_active_session at _authenticator.py:729; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S375` - thread translated_message=adapters.auth.authenticator.errors.no_context_capture_storage at _authenticator.py:953; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S376` - thread translated_message=adapters.auth.authenticator.errors.session_stale at _authenticator.py:685; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S377` - thread translated_message=adapters.auth.authenticator.errors.already_active_before_resume at _authenticator.py:744 (AuthValidationError); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S378` - thread translated_message=adapters.auth.authenticator.errors.capture_requires_certificate at _authenticator.py:962; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S379` - thread translated_message=adapters.auth.authenticator.errors.context_marker_missing at _authenticator.py:1115; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S380` - thread translated_message=adapters.auth.authenticator.errors.persisted_session_verification_failed at _authenticator.py:1043 (_PersistedSessionInvalidError); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W04.P19.S381` - thread translated_message=adapters.auth.clave_movil.errors.approval_timeout at _clave_movil.py:953; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W04.P19.S382` - thread translated_message=adapters.auth.clave_movil.errors.dni_nie_not_set at _clave_movil.py:618; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W04.P19.S383` - thread translated_message on 4 SedeNavigationError Playwright interaction sites at _declarations.py:521,540,558,591; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W04.P19.S384` - thread translated_message on WorkUnitMutationRefusedError at _actions.py:721; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S385` - thread translated_message on WorkUnitAlreadyDiscardedError at _actions.py:782; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S386` - thread translated_message on AmendmentVerificationRefusedError at _actions.py:2074 and 2081; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S387` - thread translated_message on WorkflowInputMismatchError at _actions.py:404; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S388` - thread translated_message on TransactionValidationError at ledger/_actions.py:232 and 238; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W04.P19.S389` - thread translated_message on UnsupportedBundleSchemaVersionError at _config/__init__.py:705; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `W04.P19.S390` - replace f-string-as-locale-key in AggregationPeriodError at _prorrata.py:156 with dotted key + context vars; `src/aeat/application/aggregation/_prorrata.py`.
+- [ ] `W04.P19.S391` - replace f-string-as-locale-key in AggregationUnsupportedModeloError at _grouping.py:105 with dotted key + context vars; `src/aeat/application/aggregation/_grouping.py`.
+- [ ] `W04.P19.S392` - replace f-string-as-locale-key in AggregationValidationError at _prorrata.py:223 with dotted key; `src/aeat/application/aggregation/_prorrata.py`.
+- [ ] `W04.P19.S393` - replace f-string-as-locale-key in AggregationValidationError at _prorrata.py:231 with dotted key; `src/aeat/application/aggregation/_prorrata.py`.
+- [ ] `W04.P19.S394` - wrap _typer.echo next-hint label at wizard/_commands.py:926 in tr; `src/aeat/application/wizard/_commands.py`.
+- [ ] `W04.P19.S395` - wrap typer.echo namespace+count labels at diagnostics/secure_objects.py:50-51 in tr; `src/aeat/diagnostics/secure_objects.py`.
+- [ ] `W04.P19.S396` - add real-behavior test asserting all auth + sede + modelo + aggregation locale Steps localize at the operator surface; `src/aeat/test_locale_coverage_inventory.py`.
+
+### Phase `W04.P20` - A7 hardcoded + enum bypass cleanup
+
+Close 1 regression (Playwright wait-state literals in notifications + renta_web_open despite W3 _browser_constants existing) and 11 new bypasses including provider_id dispatch enum, _ProviderProbeOutcome.result enum, MetadataMatchState StrEnum, PDF_MIME_TYPE constant, WorkbookScanStatus, sede latin-1 encoding constant.
+
+- [ ] `W04.P20.S397` - enroll bare domcontentloaded/networkidle literals at _notifications.py:450,459 and _renta_web_open.py:182 to PLAYWRIGHT_WAIT_* constants from _browser_constants.py; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
+- [ ] `W04.P20.S398` - introduce PLAYWRIGHT_TIMEOUT_SHORT_MS=2_000 in _browser_constants.py and enroll _walker.py:304; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [ ] `W04.P20.S399` - introduce LedgerProviderID(StrEnum) covering auto/csv/ofx/qfx/xlsx/excel/n26/pdf/pdf-n26 and replace provider_id dispatch chain at ledger/_actions.py:2056-2072; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W04.P20.S400` - add real-behavior test asserting LedgerProviderID covers every dispatch literal in the codebase; `src/aeat/application/ledger/test_provider_id_enum.py`.
+- [ ] `W04.P20.S401` - introduce SEDE_BODY_ENCODING=latin-1 constant and enroll _declarations.py:1399 and _export_parse.py:208,213; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [ ] `W04.P20.S402` - introduce PDF_MIME_TYPE=application/pdf in external_constants and enroll _declarations.py:892,1684 + _walker.py:247 substring sniffs; `src/aeat/core/external_constants.py`.
+- [ ] `W04.P20.S403` - use AuthAcquisitionLockState.ABSENT identity comparison at _operator.py:1102 instead of .value string check; `src/aeat/application/auth/_operator.py`.
+- [ ] `W04.P20.S404` - introduce ProviderProbeResult(StrEnum) with 11 members (no_provider, no_path_set, file_missing, unreadable, corrupt, expired, expiring, ok, identity_unset, invalid_identity, plus any missed) and migrate _operator.py:760-927 free-form result string field; `src/aeat/application/auth/_operator.py`.
+- [ ] `W04.P20.S405` - introduce DeadlineRole(StrEnum) with INFORMATIONAL plus other workflow roles and migrate _engine.py:625,662; `src/aeat/application/workflow/_engine.py`.
+- [ ] `W04.P20.S406` - introduce FilingWindowState(StrEnum) covering absent + other states and migrate _engine.py:661; `src/aeat/application/workflow/_engine.py`.
+- [ ] `W04.P20.S407` - introduce WorkflowEnvelopeReasonClass(StrEnum) and WorkbookScanStatus(StrEnum) and migrate _persistence.py:180,211,214 + _workbook_parity.py:42,116,1133,1162; `src/aeat/application/workflow/_persistence.py`.
+- [ ] `W04.P20.S408` - promote PDF_EXTENSION + XLSX_EXTENSION + XLSM_EXTENSION from financial providers _constants.py to external_constants (cross-layer shared file extensions); `src/aeat/core/external_constants.py`.
+- [ ] `W04.P20.S409` - migrate domain/calculations/registry/_record_design.py:91,93 and _workbook_parity.py:501,851 to use the promoted extension constants; `src/aeat/domain/calculations/registry/_record_design.py`.
+- [ ] `W04.P20.S410` - introduce MetadataMatchState(StrEnum) and migrate _calc_sheets_pull.py:216,292,329 Literal-inline to StrEnum; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
+- [ ] `W04.P20.S411` - add real-behavior inventory test asserting zero bare domcontentloaded/networkidle/pdf-mime/latin-1 literals survive in production; `src/aeat/test_hardcoded_constants_inventory.py`.
+
+### Phase `W04.P21` - A1 exception survivor sweep
+
+Close 9 non-pydantic raises in previously-unaudited modules (calculations, aggregation/_source_mesh, auth/_diagnostics, auth/_sessions, wizard/_persistence, core/profile, ledger/_actions), plus 2 silent except Exception swallows in auth/_operator that mask errors without logging.
+
+- [ ] `W04.P21.S412` - introduce ProfileRegistrationError(CoreError) or use ConfigurationError; `replace RuntimeError at core/profile.py:82; `src/aeat/core/profile.py`.
+- [ ] `W04.P21.S413` - replace TypeError at auth/_sessions.py:408 with SessionDeserializationError(AuthSessionUnavailableError); `src/aeat/application/auth/_sessions.py`.
+- [ ] `W04.P21.S414` - introduce IvaCompensationError or use existing IvaCompensationModeloError; `replace ValueError at calculations/_iva_compensation_history.py:102,133,333; `src/aeat/application/calculations/_iva_compensation_history.py`.
+- [ ] `W04.P21.S415` - replace ValueError at calculations/_binding_prefill.py:347 with ModeloApplicabilityFilterError (W2 enrolled); `src/aeat/application/calculations/_binding_prefill.py`.
+- [ ] `W04.P21.S416` - introduce AuthDiagnosticPayloadError or use AuthDiagnosticPhoneStateError; `replace ValueError at auth/_diagnostics.py:219,226; `src/aeat/application/auth/_diagnostics.py`.
+- [ ] `W04.P21.S417` - replace ValueError at wizard/_persistence.py:141 with WorkflowInputMismatchError (W2 enrolled); `src/aeat/application/wizard/_persistence.py`.
+- [ ] `W04.P21.S418` - introduce SourceMeshError(CoreValidationError); `replace ValueError at aggregation/_source_mesh.py:89,91,119,121; `src/aeat/application/aggregation/_source_mesh.py`.
+- [ ] `W04.P21.S419` - narrow silent except Exception swallow at auth/_operator.py:900 (certificate load); `add log.debug + specific exception types; `src/aeat/application/auth/_operator.py`.
+- [ ] `W04.P21.S420` - narrow silent except Exception swallow at auth/_operator.py:647 (profile tax-id probe); `add log.debug + specific exception types; `src/aeat/application/auth/_operator.py`.
+- [ ] `W04.P21.S421` - add real-behavior test asserting all new error classes registered + envelope round-trip; `src/aeat/application/test_w04_p21_survivors.py`.
+
+### Phase `W04.P22` - small-axis cleanup: A2, A5, A6
+
+Close A2 get_logger swap in core/profile_catalogue, A5 SetupAnswers duplicate-class collapse + CounterpartSourceKind canonicalisation + _parse_date wrapper consolidation, A6 ApoderadoService dead-code disposition + FinancialProvider @abstractmethod decorators.
+
+- [ ] `W04.P22.S422` - swap import logging+getLogger with get_logger at core/profile_catalogue.py:20-23; `src/aeat/core/profile_catalogue.py`.
+- [ ] `W04.P22.S423` - complete SetupAnswers duplicate-class collapse: delete application/wizard/_setup_answers.py SetupAnswers class, migrate _verifier.py + 4 test files to aeat.core.profile.SetupAnswers; `src/aeat/application/wizard/_setup_answers.py`.
+- [ ] `W04.P22.S424` - canonicalize CounterpartSourceKind to single domain definition; `align divergent Literal members between application/aggregation/_counterpart.py:28 and domain/calculations/registry/_bindings.py:1627; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W04.P22.S425` - consolidate 3 _parse_date wrapper survivors at sede/_notifications.py:316, sede/_censo.py:249, domain/deadlines/_profiles.py:195 into shared aeat.core.parsing._dates._parse_date with error-policy parameter; `src/aeat/core/parsing/_dates.py`.
+- [ ] `W04.P22.S426` - audit ApoderadoService + ApoderadoConfiguration in application/auth/_apoderado.py: if 0 callers in production, delete; `else integrate into auth operator flow with imports; `src/aeat/application/auth/_apoderado.py`.
+- [ ] `W04.P22.S427` - add @property @abstractmethod decorators on FinancialProvider corpus attributes (verification_source, provisional_pending_specimen) at _base.py for static enforcement; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [ ] `W04.P22.S428` - add real-behavior test asserting small-axis cleanup landed; `src/aeat/test_w04_p22_cleanup.py`.
