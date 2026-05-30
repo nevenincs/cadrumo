@@ -645,3 +645,63 @@ Close A2 get_logger swap in core/profile_catalogue, A5 SetupAnswers duplicate-cl
 - [x] `W04.P22.S426` - audit ApoderadoService + ApoderadoConfiguration in application/auth/_apoderado.py: if 0 callers in production, delete; `else integrate into auth operator flow with imports; `src/aeat/application/auth/_apoderado.py`.
 - [x] `W04.P22.S427` - add @property @abstractmethod decorators on FinancialProvider corpus attributes (verification_source, provisional_pending_specimen) at _base.py for static enforcement; `src/aeat/adapters/inbound/financial/providers/_base.py`.
 - [x] `W04.P22.S428` - add real-behavior test asserting small-axis cleanup landed; `src/aeat/test_w04_p22_cleanup.py`.
+
+## Wave `W05` - close Wave 5 audit findings: 2 regressions + 38 new/survivor
+
+Wave 5 audit broke the four-consecutive-zero-regression streak with 2 strict file:line regressions: A3 WorkflowError passes tr() as positional message instead of translated_message= (workflow/_persistence.py:105-106), and A7 test_stdio bare os.environ['COLUMNS'] despite _COLUMNS_ENV_VAR import in same file. Plus 38 new/survivor findings to close. The recurring-epic counter resets; we need zero-regression Wave 6 audit to restart the close-condition path.
+
+### Phase `W05.P23` - A3 locale: regression fix + workflow translated_message sweep
+
+Close 1 regression (WorkflowError tr-positional at _persistence.py:105), thread translated_message on 3 W4-introduced classes (SessionDeserializationError, ProfileRegistrationError, AuthProviderReservedError), and 11 new workflow-engine + persistence + adapters + resume bare-string raises.
+
+- [ ] `W05.P23.S429` - fix regression: route WorkflowError at workflow/_persistence.py:105-106 through translated_message= instead of positional tr() arg; `src/aeat/application/workflow/_persistence.py`.
+- [ ] `W05.P23.S430` - thread translated_message on SessionDeserializationError at auth/_sessions.py:419; `src/aeat/application/auth/_sessions.py`.
+- [ ] `W05.P23.S431` - thread translated_message on AuthProviderReservedError at auth/_operator.py:1215; `src/aeat/application/auth/_operator.py`.
+- [ ] `W05.P23.S432` - thread translated_message on ProfileRegistrationError at core/profile.py:92; `src/aeat/core/profile.py`.
+- [ ] `W05.P23.S433` - thread translated_message on ProfileLabelAmbiguousError at workflow/_profile_bucket_scan.py:104; `src/aeat/application/workflow/_profile_bucket_scan.py`.
+- [ ] `W05.P23.S434` - thread translated_message on 4 WorkflowResumeRefusedError sites at workflow/_resume.py:80,84,88,94; `src/aeat/application/workflow/_resume.py`.
+- [ ] `W05.P23.S435` - thread translated_message on WorkflowError at workflow/_persistence.py:141 (state-write-invalid-payload); `src/aeat/application/workflow/_persistence.py`.
+- [ ] `W05.P23.S436` - thread translated_message on WorkflowError at workflow/_persistence.py:311 (run-not-found); `src/aeat/application/workflow/_persistence.py`.
+- [ ] `W05.P23.S437` - thread translated_message on WorkflowError at workflow/_engine.py:97,111 (period-registry-year-unresolvable); `src/aeat/application/workflow/_engine.py`.
+- [ ] `W05.P23.S438` - thread translated_message on WorkflowError at workflow/_resume.py:139 (no-run-for-period); `src/aeat/application/workflow/_resume.py`.
+- [ ] `W05.P23.S439` - thread translated_message on 3 WorkflowError adapter-missing raises at workflow/_adapters.py:194,196,198; `src/aeat/application/workflow/_adapters.py`.
+- [ ] `W05.P23.S440` - thread translated_message on WorkflowError run-id-invalid raises at workflow/_persistence.py:389,392; `src/aeat/application/workflow/_persistence.py`.
+- [ ] `W05.P23.S441` - convert tr-f-string-as-key positional at cli/_config/_google.py:164 to translated_message= with static key + context; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `W05.P23.S442` - assert wizard flow.id description keys exist statically at cli/_commands.py:939 module-init via inventory test; `src/aeat/application/wizard/_commands.py`.
+- [ ] `W05.P23.S443` - add aggregate test asserting all W05.P23 raises envelope-localize at operator surface; `src/aeat/test_w05_p23_locale_coverage.py`.
+
+### Phase `W05.P24` - A1 exceptions: W3 class registry binding + except-narrowing sweep
+
+Rebase WizardCatalogueNotRegisteredError + ProjectAnswersNotRegisteredError from RuntimeError to CoreError (W3-introduced classes that bypassed registry). Narrow 8 except Exception swallows in _actions.py, _result_summary.py, state_projection.py, live/__init__.py, ledger/_actions.py, review/_adapters.py, _profile_repository.py.
+
+- [ ] `W05.P24.S444` - rebase WizardCatalogueNotRegisteredError from RuntimeError to CoreError (with registry entry + locale key); `src/aeat/core/profile_catalogue.py`.
+- [ ] `W05.P24.S445` - rebase ProjectAnswersNotRegisteredError from RuntimeError to CoreError (with registry entry + locale key); `src/aeat/core/profile.py`.
+- [ ] `W05.P24.S446` - introduce WizardCatalogueAlreadyRegisteredError(CoreError) and migrate raise RuntimeError at profile_catalogue.py:76; `src/aeat/core/profile_catalogue.py`.
+- [ ] `W05.P24.S447` - narrow except Exception swallow at application/modelo/_actions.py:2743 to decimal.InvalidOperation; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W05.P24.S448` - fix missing raise after rollback at user_profile/_profile_repository.py:308 + narrow except Exception to (StorageError, OSError, ValidationError); `src/aeat/application/user_profile/_profile_repository.py`.
+- [ ] `W05.P24.S449` - narrow except Exception swallows at modelo/_result_summary.py:73,81 to (LookupError, KeyError, AttributeError, AeatError) and add warning-level logging; `src/aeat/application/modelo/_result_summary.py`.
+- [ ] `W05.P24.S450` - narrow except Exception swallows at state_projection.py:357,499 to typed sets; `src/aeat/application/state_projection.py`.
+- [ ] `W05.P24.S451` - narrow 3 except Exception swallows at application/live/__init__.py:1390,1419,1435 to (AeatError, OSError, asyncio.TimeoutError); `src/aeat/application/live/__init__.py`.
+- [ ] `W05.P24.S452` - narrow except Exception swallows at ledger/_actions.py:3439,3476 (parse + apply loops) to (ValidationError, ValueError, KeyError) and (AeatError, ValidationError); `src/aeat/application/ledger/_actions.py`.
+- [ ] `W05.P24.S453` - split except Exception silent import guard at review/_adapters.py:317,323 into ImportError and (AeatError, AttributeError); `src/aeat/application/review/_adapters.py`.
+- [ ] `W05.P24.S454` - add aggregate real-behavior test asserting W05.P24 new error classes registered + narrowed except clauses honestly propagate non-typed exceptions; `src/aeat/test_w05_p24_exceptions.py`.
+
+### Phase `W05.P25` - A7 hardcoded: test regression + enum+constant survivors + new drifts
+
+Fix test_stdio.py bare os.environ['COLUMNS'] regression. Enroll _PDF_EXTENSIONS clone, .xlsx cluster in _workbook_parity.py, AEAT_OUTPUT_LANGUAGE env-var constant. Migrate ledger_transaction bare defaults, GENERAL IVARegime fixture bypass, utf-8 fallback literal, manual_cli provenance literal.
+
+- [ ] `W05.P25.S455` - fix regression: replace bare os.environ['COLUMNS'] with _COLUMNS_ENV_VAR at cli/test_stdio.py:242,253,268 (constant already imported); `src/aeat/entrypoints/cli/test_stdio.py`.
+- [ ] `W05.P25.S456` - enroll _PDF_EXTENSIONS local frozenset at application/ledger/_evidence.py:41 to use PDF_EXTENSION from external_constants; `src/aeat/application/ledger/_evidence.py`.
+- [ ] `W05.P25.S457` - introduce XLS_EXTENSION constant and migrate _workbook_parity.py:64,306,323,335,609 .xlsx cluster + .xls literal; `src/aeat/core/external_constants.py`.
+- [ ] `W05.P25.S458` - introduce OUTPUT_LANGUAGE_ENV_VAR='AEAT_OUTPUT_LANGUAGE' constant in aeat.core.i18n and migrate _render.py:121 + test fixtures; `src/aeat/core/i18n/__init__.py`.
+- [ ] `W05.P25.S459` - migrate ledger_transaction bare default at ledger/_actions.py:3143 and bindings.py:1629,1648 + schema.py:1787 to AggregationSourceKind.LEDGER_TRANSACTION; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W05.P25.S460` - migrate GENERAL bare string at user_profile/_testing.py:44 to IVARegime.GENERAL; `src/aeat/application/user_profile/_testing.py`.
+- [ ] `W05.P25.S461` - remove redundant utf-8 fallback at providers/_csv.py:304 (CSV_ENCODING_FALLBACK_CHAIN already covers it); `src/aeat/adapters/inbound/financial/providers/_csv.py`.
+- [ ] `W05.P25.S462` - introduce PROVENANCE_SOURCE_MANUAL_CLI constant and migrate user_profile/__init__.py:92,103, _values.py:134, _testing.py:45; `src/aeat/core/external_constants.py`.
+
+### Phase `W05.P26` - A4 pydantic + small cleanup
+
+Fix CLI wire-boundary type mismatch in _modelo_payloads.py:84 (dict[str, object] should align with domain dict[str, str] for inputs_snapshot). Defer RevisionValidationContext 17-field cascade to Wave 7 architectural review.
+
+- [ ] `W05.P26.S463` - align CalculationRevisionPayload.inputs_snapshot type at cli/_modelo_payloads.py:84 from dict[str,object] to dict[str,str] (matching domain Mapping[str,str] contract); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [ ] `W05.P26.S464` - add real-behavior test asserting CalculationRevisionPayload inputs_snapshot roundtrips dict[str,str] through CLI JSON channel; `src/aeat/entrypoints/cli/test_modelo_payloads.py`.
