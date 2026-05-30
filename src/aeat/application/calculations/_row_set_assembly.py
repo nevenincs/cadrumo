@@ -31,6 +31,7 @@ from typing import Protocol
 from pydantic import ValidationError
 
 from ...core.decimal import coerce_decimal
+from ...core.parsing._dates import _parse_iso8601_date
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.calculations.registry._bindings import (
     AtributionMemberObservation,
@@ -184,7 +185,7 @@ def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
         return default
     if isinstance(value, str):
         try:
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value) or default
         except ValueError:
             return default
     return default

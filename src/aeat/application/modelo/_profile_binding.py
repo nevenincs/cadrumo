@@ -30,6 +30,9 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing._utils import _parse_bool
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...domain.calculations.registry import (
@@ -185,7 +188,7 @@ def _inject_derived_family_facts(
         convive = str(convivencia_raw).lower() not in ("false", "0")
         if convive:
             try:
-                birth = date.fromisoformat(str(birth_raw))
+                birth = _parse_iso8601_date(str(birth_raw))
                 age_at_year_end = filing_year - birth.year
                 if age_at_year_end < 3:
                     count_menores += 1
@@ -212,10 +215,9 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         # Legacy path: tolerate string-encoded booleans and numeric strings
         # that may arrive from older serialised records or direct callers.
         stripped = value.strip()
-        if stripped.lower() == "true":
-            return Decimal("1")
-        if stripped.lower() == "false":
-            return Decimal("0")
+        _bool_candidate = _parse_bool(stripped)
+        if isinstance(_bool_candidate, bool):
+            return Decimal("1") if _bool_candidate else Decimal("0")
         try:
             return Decimal(stripped)
         except (InvalidOperation, ValueError) as exc:
