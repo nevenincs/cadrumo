@@ -82,12 +82,12 @@ Declare the UUIDv4 ProfileId alias in core/identity per Rule 1 clause (a) and Ru
 
 Declare the hex-64 SnapshotId alias in core/identity per Rule 1 clause (a) and Rule 6, re-export, and lift the bare-string snapshot_id field sites in application/live/_notifications, application/live/_expedientes, and application/user_profile/_censo_sync onto the alias.
 
-- [ ] `W02.P05.S24` - declare the SnapshotId alias with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 clause (a); `src/aeat/core/identity/_snapshot.py`.
-- [ ] `W02.P05.S25` - re-export SnapshotId through the core.identity package __all__ per ADR Rule 4; `src/aeat/core/identity/__init__.py`.
-- [ ] `W02.P05.S26` - lift the snapshot_id bare-string field onto SnapshotId per ADR Rule 6 in the live notifications surface; `src/aeat/application/live/_notifications.py`.
-- [ ] `W02.P05.S27` - lift the snapshot_id bare-string field onto SnapshotId per ADR Rule 6 in the live expedientes surface; `src/aeat/application/live/_expedientes.py`.
-- [ ] `W02.P05.S28` - lift the snapshot_id bare-string declarations onto SnapshotId per ADR Rule 6 in the censo-sync surface; `src/aeat/application/user_profile/_censo_sync.py`.
-- [ ] `W02.P05.S29` - add a real-behavior roundtrip test that populates a snapshot record with a non-default SnapshotId, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/application/live/test_snapshot_roundtrip.py`.
+- [x] `W02.P05.S24` - declare the SnapshotId alias with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 clause (a); `src/aeat/core/identity/_snapshot.py`.
+- [x] `W02.P05.S25` - re-export SnapshotId through the core.identity package __all__ per ADR Rule 4; `src/aeat/core/identity/__init__.py`.
+- [x] `W02.P05.S26` - lift the snapshot_id bare-string field onto SnapshotId per ADR Rule 6 in the live notifications surface; `src/aeat/application/live/_notifications.py`.
+- [x] `W02.P05.S27` - lift the snapshot_id bare-string field onto SnapshotId per ADR Rule 6 in the live expedientes surface; `src/aeat/application/live/_expedientes.py`.
+- [x] `W02.P05.S28` - lift the snapshot_id bare-string declarations onto SnapshotId per ADR Rule 6 in the censo-sync surface; `src/aeat/application/user_profile/_censo_sync.py`.
+- [x] `W02.P05.S29` - add a real-behavior roundtrip test that populates a snapshot record with a non-default SnapshotId, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/application/live/test_snapshot_roundtrip.py`.
 
 ### Phase `W02.P06` - promote InvoiceId in domain/invoices/_ids.py
 
