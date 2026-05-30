@@ -16,6 +16,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-research]]"
   - "[[2026-05-21-declaracion-extraction-architecture-plan]]"
+  - "[[2026-05-30-purchase-invoice-ocr-extraction-discipline-adr]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
