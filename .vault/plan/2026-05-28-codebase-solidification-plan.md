@@ -690,14 +690,14 @@ Rebase WizardCatalogueNotRegisteredError + ProjectAnswersNotRegisteredError from
 
 Fix test_stdio.py bare os.environ['COLUMNS'] regression. Enroll _PDF_EXTENSIONS clone, .xlsx cluster in _workbook_parity.py, AEAT_OUTPUT_LANGUAGE env-var constant. Migrate ledger_transaction bare defaults, GENERAL IVARegime fixture bypass, utf-8 fallback literal, manual_cli provenance literal.
 
-- [ ] `W05.P25.S455` - fix regression: replace bare os.environ['COLUMNS'] with _COLUMNS_ENV_VAR at cli/test_stdio.py:242,253,268 (constant already imported); `src/aeat/entrypoints/cli/test_stdio.py`.
-- [ ] `W05.P25.S456` - enroll _PDF_EXTENSIONS local frozenset at application/ledger/_evidence.py:41 to use PDF_EXTENSION from external_constants; `src/aeat/application/ledger/_evidence.py`.
-- [ ] `W05.P25.S457` - introduce XLS_EXTENSION constant and migrate _workbook_parity.py:64,306,323,335,609 .xlsx cluster + .xls literal; `src/aeat/core/external_constants.py`.
-- [ ] `W05.P25.S458` - introduce OUTPUT_LANGUAGE_ENV_VAR='AEAT_OUTPUT_LANGUAGE' constant in aeat.core.i18n and migrate _render.py:121 + test fixtures; `src/aeat/core/i18n/__init__.py`.
-- [ ] `W05.P25.S459` - migrate ledger_transaction bare default at ledger/_actions.py:3143 and bindings.py:1629,1648 + schema.py:1787 to AggregationSourceKind.LEDGER_TRANSACTION; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W05.P25.S460` - migrate GENERAL bare string at user_profile/_testing.py:44 to IVARegime.GENERAL; `src/aeat/application/user_profile/_testing.py`.
-- [ ] `W05.P25.S461` - remove redundant utf-8 fallback at providers/_csv.py:304 (CSV_ENCODING_FALLBACK_CHAIN already covers it); `src/aeat/adapters/inbound/financial/providers/_csv.py`.
-- [ ] `W05.P25.S462` - introduce PROVENANCE_SOURCE_MANUAL_CLI constant and migrate user_profile/__init__.py:92,103, _values.py:134, _testing.py:45; `src/aeat/core/external_constants.py`.
+- [x] `W05.P25.S455` - fix regression: replace bare os.environ['COLUMNS'] with _COLUMNS_ENV_VAR at cli/test_stdio.py:242,253,268 (constant already imported); `src/aeat/entrypoints/cli/test_stdio.py`.
+- [x] `W05.P25.S456` - enroll _PDF_EXTENSIONS local frozenset at application/ledger/_evidence.py:41 to use PDF_EXTENSION from external_constants; `src/aeat/application/ledger/_evidence.py`.
+- [x] `W05.P25.S457` - introduce XLS_EXTENSION constant and migrate _workbook_parity.py:64,306,323,335,609 .xlsx cluster + .xls literal; `src/aeat/core/external_constants.py`.
+- [x] `W05.P25.S458` - introduce OUTPUT_LANGUAGE_ENV_VAR='AEAT_OUTPUT_LANGUAGE' constant in aeat.core.i18n and migrate _render.py:121 + test fixtures; `src/aeat/core/i18n/__init__.py`.
+- [x] `W05.P25.S459` - migrate ledger_transaction bare default at ledger/_actions.py:3143 and bindings.py:1629,1648 + schema.py:1787 to AggregationSourceKind.LEDGER_TRANSACTION; `src/aeat/application/ledger/_actions.py`.
+- [x] `W05.P25.S460` - migrate GENERAL bare string at user_profile/_testing.py:44 to IVARegime.GENERAL; `src/aeat/application/user_profile/_testing.py`.
+- [x] `W05.P25.S461` - remove redundant utf-8 fallback at providers/_csv.py:304 (CSV_ENCODING_FALLBACK_CHAIN already covers it); `src/aeat/adapters/inbound/financial/providers/_csv.py`.
+- [x] `W05.P25.S462` - introduce PROVENANCE_SOURCE_MANUAL_CLI constant and migrate user_profile/__init__.py:92,103, _values.py:134, _testing.py:45; `src/aeat/core/external_constants.py`.
 
 ### Phase `W05.P26` - A4 pydantic + small cleanup
 

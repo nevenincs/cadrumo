@@ -26,6 +26,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.external_constants import PDF_EXTENSION
+from ...core.identity import BucketId
 from ...core.time import _now
 from ...domain.buckets import (
     BucketEvent,
@@ -35,10 +37,9 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...core.identity import BucketId
 from .._storage_paths import storage_path
 
-_PDF_EXTENSIONS = frozenset({".pdf"})
+_PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
 _DEFERRED_ADR_REF = "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"

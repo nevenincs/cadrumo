@@ -25,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.config import Settings as _Settings
 from ....core.errors import CoreError
+from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
@@ -61,7 +62,7 @@ EvidenceTier = Literal[
     "layout_authority",
 ]
 
-_WORKBOOK_SUFFIXES = {".xlsx", ".xls"}
+_WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
@@ -288,7 +289,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     suffix = resolved_path.suffix.lower()
     modelo = _infer_modelo(relative)
 
-    if suffix == ".xls":
+    if suffix == _XLS_EXTENSION:
         return _unsupported_binary_xls_report(
             relative=relative,
             modelo=modelo,
@@ -303,7 +304,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         return _failed_report(
             relative=relative,
             modelo=modelo,
-            suffix=".xlsx",
+            suffix=_XLSX_EXTENSION,
             byte_count=byte_count,
             digest=digest,
             status=WorkbookScanStatus.TIMEOUT,
@@ -320,7 +321,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         return _failed_report(
             relative=relative,
             modelo=modelo,
-            suffix=".xlsx",
+            suffix=_XLSX_EXTENSION,
             byte_count=byte_count,
             digest=digest,
             status=WorkbookScanStatus.FAILED,
@@ -332,7 +333,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     return WorkbookArtefactReport(
         path=relative,
         modelo=modelo,
-        extension=".xlsx",
+        extension=_XLSX_EXTENSION,
         bytes=byte_count,
         sha256=digest,
         sheets=tuple(sheets),
@@ -606,7 +607,7 @@ def convert_binary_xls_with_libreoffice(
         modelo=context.modelo,
         bytes=context.byte_count,
         sha256=context.digest,
-        converted_extension=".xlsx",
+        converted_extension=_XLSX_EXTENSION,
         sheets=sheets,
         formula_cells=len(formulas),
         input_candidates=tuple(_dedupe_cells(references)),
