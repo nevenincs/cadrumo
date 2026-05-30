@@ -11,11 +11,11 @@ suggestion or inconsistency record and silently fail to round-trip
 into the catalogue.
 
 The constraint is encoded by the
-:data:`aeat.domain.invoices._service._HEX_TRANSACTION_ID_LENGTH`
-constant so future drift is a one-line change. These tests pin the
-constraint to that constant so the field cannot be silently widened
-without also widening the constant — which would still fail the
-:func:`link_transaction` runtime check on the same value.
+:data:`aeat.domain.modelos._ids.TransactionId` typed alias so future
+drift is a one-line change at the alias declaration. These tests pin
+the constraint at the model boundary so the field cannot be silently
+widened — which would still fail the :func:`link_transaction` runtime
+check on the same value.
 """
 
 from __future__ import annotations
@@ -26,7 +26,6 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.domain.invoices._service import (
-    _HEX_TRANSACTION_ID_LENGTH,
     LinkInconsistency,
     ReconciliationSuggestion,
 )
@@ -34,7 +33,7 @@ from aeat.domain.invoices._service import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-_SAMPLE_HEX_64 = "a" * _HEX_TRANSACTION_ID_LENGTH
+_SAMPLE_HEX_64 = "a" * 64
 
 
 # ---------------------------------------------------------------------------

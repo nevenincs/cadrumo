@@ -17,6 +17,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ...core.logging import get_logger
+from ..modelos._ids import TransactionId
 from ..transactions import (
     TransactionCatalogue,
 )
@@ -31,7 +32,6 @@ from ._models import Invoice, InvoiceCatalogue
 _LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_AMOUNT_TOLERANCE = Decimal("0.01")
-_HEX_TRANSACTION_ID_LENGTH = 64
 
 
 class ReconciliationSuggestion(BaseModel):
@@ -49,7 +49,7 @@ class ReconciliationSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=_HEX_TRANSACTION_ID_LENGTH, max_length=_HEX_TRANSACTION_ID_LENGTH)
+    transaction_id: TransactionId
     amount_match: bool
     counterparty_match: bool
     score: Decimal
@@ -74,7 +74,7 @@ class LinkInconsistency(BaseModel):
     model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=_HEX_TRANSACTION_ID_LENGTH, max_length=_HEX_TRANSACTION_ID_LENGTH)
+    transaction_id: TransactionId
     direction: Literal["invoice-only", "transaction-only"]
 
 
@@ -140,7 +140,7 @@ def link_transaction(
     """
     invoice = _require_invoice(catalogue, invoice_id)
     normalized_tx = transaction_id.strip().lower()
-    if len(normalized_tx) != _HEX_TRANSACTION_ID_LENGTH or any(
+    if len(normalized_tx) != 64 or any(
         char not in "0123456789abcdef" for char in normalized_tx
     ):
         raise InvoiceLinkError(f"transaction_id must be a 64-character lowercase hex digest: {transaction_id!r}")
