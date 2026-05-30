@@ -49,6 +49,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import (
+    CasillaFieldKind,
     CasillaObservation,
     ExportFieldDefinition,
     ParsedExportFieldValue,
@@ -1468,7 +1469,7 @@ def _verify_submitted_file_context(
     }
     for parsed in parsed_fields:
         field = fields_by_id.get(parsed.field_id)
-        if field is None or field.kind != "draft" or field.draft_attribute not in expected:
+        if field is None or field.kind != CasillaFieldKind.DRAFT or field.draft_attribute not in expected:
             continue
         observed = "" if parsed.value is None else str(parsed.value)
         if observed != expected[field.draft_attribute]:

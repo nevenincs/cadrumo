@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from aeat.domain.calculations.registry import CasillaFieldKind
+
 from ._schema import ProfileSchemaDefinition
 
 if TYPE_CHECKING:
@@ -252,7 +254,7 @@ def _export_issues(
         for record in layout.records:
             for field in record.fields:
                 if (
-                    field.kind == "draft"
+                    field.kind == CasillaFieldKind.DRAFT
                     and field.draft_attribute == "profile_tax_id"
                     and "profile_tax_id" not in index.export_headers
                 ):

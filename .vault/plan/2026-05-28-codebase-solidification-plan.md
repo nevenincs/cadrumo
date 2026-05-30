@@ -381,11 +381,11 @@ Close the 8 regressions surfaced by Wave 2. These prove the enrollment habit lea
 - [x] `W02.P10.S230` - add real-behavior test asserting calc_sheets records use canonical _now; `src/aeat/application/storage/calc_sheets/test_records.py`.
 - [x] `W02.P10.S231` - delete _parse_boolean helper at registry/_export_parse.py:409; `import canonical _parse_bool and wrap with registry truthy/falsy sets; `src/aeat/domain/calculations/registry/_export_parse.py`.
 - [x] `W02.P10.S232` - add real-behavior test asserting registry export parser delegates to canonical _parse_bool; `src/aeat/domain/calculations/registry/test_export_parse.py`.
-- [ ] `W02.P10.S233` - replace bare draft string with CasillaFieldKind.DRAFT at _declarations.py:1471; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W02.P10.S234` - replace bare draft string with CasillaFieldKind.DRAFT at user_profile/_registry_contract.py:255; `src/aeat/domain/user_profile/_registry_contract.py`.
-- [ ] `W02.P10.S235` - replace bare draft string with CasillaFieldKind.DRAFT and convert match arm to enum case at _export.py:472; `src/aeat/application/filing/_export.py`.
-- [ ] `W02.P10.S236` - replace bare binding/casilla strings with CasillaFieldKind members at registry/_export.py lines 151,156,167,186; `src/aeat/domain/calculations/registry/_export.py`.
-- [ ] `W02.P10.S237` - add real-behavior test asserting CasillaFieldKind enum-bypass survivors are closed across all 5 sites; `src/aeat/domain/calculations/registry/test_casilla_field_kind_enrollment.py`.
+- [x] `W02.P10.S233` - replace bare draft string with CasillaFieldKind.DRAFT at _declarations.py:1471; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W02.P10.S234` - replace bare draft string with CasillaFieldKind.DRAFT at user_profile/_registry_contract.py:255; `src/aeat/domain/user_profile/_registry_contract.py`.
+- [x] `W02.P10.S235` - replace bare draft string with CasillaFieldKind.DRAFT and convert match arm to enum case at _export.py:472; `src/aeat/application/filing/_export.py`.
+- [x] `W02.P10.S236` - replace bare binding/casilla strings with CasillaFieldKind members at registry/_export.py lines 151,156,167,186; `src/aeat/domain/calculations/registry/_export.py`.
+- [x] `W02.P10.S237` - add real-behavior test asserting CasillaFieldKind enum-bypass survivors are closed across all 5 sites; `src/aeat/domain/calculations/registry/test_casilla_field_kind_enrollment.py`.
 - [x] `W02.P10.S238` - relocate CLASSIFIED_BY_MANUAL from application/ledger/_models.py to aeat.core.external_constants so domain layer can import it; `src/aeat/core/external_constants.py`.
 - [x] `W02.P10.S239` - delete _MANUAL_CLASSIFIED_BY shadow in domain/transactions/_service.py:24 and import CLASSIFIED_BY_MANUAL from aeat.core.external_constants; `src/aeat/domain/transactions/_service.py`.
 - [x] `W02.P10.S240` - add real-behavior test asserting CLASSIFIED_BY_MANUAL is the single source of truth across application and domain layers; `src/aeat/core/test_external_constants.py`.
