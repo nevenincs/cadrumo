@@ -758,7 +758,7 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 
 
 @pytest.mark.asyncio
-async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_authenticator_synchronous_surface(tmp_path: Path) -> None:
     """Synchronous helpers work under the async context manager.
 
     ``authenticate()`` is not exercised here because
@@ -776,7 +776,7 @@ async def test_authenticator_synchronous_surface(tmp_path: Path, monkeypatch: py
         assert nif == "12345678Z"
 
 
-def test_describe_warns_when_password_missing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_describe_warns_when_password_missing(tmp_path: Path) -> None:
     bundle_path = _build_bundle(tmp_path)
     from .....core.config import Settings
 
@@ -790,7 +790,7 @@ def test_describe_warns_when_password_missing(tmp_path: Path, monkeypatch: pytes
     assert description.health_summary == "AEAT_CERTIFICATE_PASSWORD_SECRET not set"
 
 
-def test_describe_preserves_expired_certificate_severity(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_describe_preserves_expired_certificate_severity(tmp_path: Path) -> None:
     bundle_path = _build_bundle(
         tmp_path,
         not_valid_after=datetime.now(UTC) - timedelta(hours=12),
@@ -883,7 +883,7 @@ def test_describe_does_not_touch_os_environ(
 
 
 @pytest.mark.asyncio
-async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_verify_login_raises_on_stale_session(tmp_path: Path) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
     async with AeatAuthenticator(settings) as auth:
@@ -899,7 +899,7 @@ async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch:
 
 
 @pytest.mark.asyncio
-async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_verify_login_raises_without_context(tmp_path: Path) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
     async with AeatAuthenticator(settings) as auth:
@@ -965,7 +965,7 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_reauthenticate_does_not_deadlock(tmp_path: Path) -> None:
     """Regression test: reauthenticate must not deadlock on self._lock.
 
     The method was rewritten to delegate teardown to ``close()``
@@ -1000,7 +1000,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
 
 
 @pytest.mark.asyncio
-async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path) -> None:
     """Regression test for the close()/verify_login TOCTOU race.
 
     The fix uses a one-way ``_closing`` latch checked inside
@@ -1048,7 +1048,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, monkey
 
 
 @pytest.mark.asyncio
-async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_concurrent_close_and_verify_login_race(tmp_path: Path) -> None:
     """True interleaved race: start verify_login + close concurrently.
 
     Uses an ``asyncio.Event`` inside the recording page's ``goto`` to
@@ -1122,7 +1122,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path, monkeypatc
 
 
 @pytest.mark.asyncio
-async def test_close_is_idempotent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_close_is_idempotent(tmp_path: Path) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
     auth = AeatAuthenticator(settings)
@@ -1180,7 +1180,7 @@ def test_auth_provider_protocol_conformance() -> None:
     assert isinstance(provider, AuthProvider)
 
 
-def test_select_provider_returns_certificate_provider(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_select_provider_returns_certificate_provider(tmp_path: Path) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
 
