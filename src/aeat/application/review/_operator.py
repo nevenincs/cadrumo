@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..aggregation._source_kinds import AggregationSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
+from ...domain.modelos._ids import BucketId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
@@ -27,7 +28,7 @@ class ReviewQueueRow(BaseModel):
     kind: str = Field(min_length=1)
     source_kind: str | None = None
     affected_object_id: str = Field(min_length=1)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     modelo: str | None = None
     period: str | None = None
     severity: ReviewSeverity

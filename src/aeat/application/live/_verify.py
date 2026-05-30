@@ -33,6 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...domain.modelos._ids import BucketId
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
@@ -63,7 +64,7 @@ class VerifyObservation(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     observation_id: str = Field(min_length=64, max_length=64)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     surface: VerifySurface
     nif: str = Field(min_length=1, max_length=32)
     verdict: VerifyVerdict
