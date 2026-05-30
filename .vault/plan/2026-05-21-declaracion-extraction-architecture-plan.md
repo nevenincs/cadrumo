@@ -549,3 +549,9 @@ Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classif
 32 failures in test_corpus_sidecar_roundtrip.py — newly-added justificante corpus PDFs across many modelos have receipt layouts unmatched by current justificante extractor regex tiers. These are EXTRACTOR REGEX GENERALISATION gaps (not discipline gaps — discipline was already aligned in W10.P41). Per-modelo extractor expansion: inspect failing corpus PDFs, identify receipt-layout variations, extend regex tiers to handle them. Real receipt-layout work, not architectural.
 
 - [x] `W10.P54.S213` - Extend justificante extractor regex tiers to cover 32 currently-failing corpus-sidecar-roundtrip cases across the modelos surfaced in W10.P41 (tasklist #76); `src/aeat/adapters/inbound/justificante/_extract.py src/aeat/adapters/inbound/justificante/_parsers/`.
+
+### Phase `W10.P55` - test_parser.py fixture-test parity for 13 newly-added corpus modelos (W10.P54 surfaced)
+
+16 pre-existing failures in src/aeat/adapters/inbound/justificante/test_parser.py across M036/M115/M123/M131/M180/M184/M193/M232/M347/M349/M369/M720/M840. Fixtures were added by prior campaign steps (#42/#43/#44/#45/#56 etc.) without parallel test_parser.py support — only test_corpus_sidecar_roundtrip.py was extended. Add per-modelo test_parser.py entries mirroring the existing M111/M130/M303/M390 pattern. Lower priority than verification chain but warrants completeness.
+
+- [x] `W10.P55.S214` - Add per-modelo test_parser.py entries for 13 newly-added corpus modelos following the M111/M130/M303/M390 pattern (tasklist #84); `src/aeat/adapters/inbound/justificante/test_parser.py`.
