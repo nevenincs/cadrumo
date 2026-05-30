@@ -50,6 +50,12 @@ FilingRecordId = Annotated[
 ]
 """Hex-64 identity of one filing record bound to a calculation revision."""
 
+TransactionId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
+]
+"""Hex-64 identity of one ledger transaction."""
+
 BucketId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -60,5 +66,6 @@ __all__ = (
     "BucketId",
     "CalculationRevisionId",
     "FilingRecordId",
+    "TransactionId",
     "WorkUnitId",
 )

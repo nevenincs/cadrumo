@@ -33,7 +33,7 @@ from pydantic_core import core_schema
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
 from ...core.external_constants import DEFAULT_CURRENCY
-from ..modelos._ids import BucketId
+from ..modelos._ids import BucketId, TransactionId
 from ...core.errors import CoreValidationError
 from ...core.time._utc import _validate_utc_aware
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
@@ -482,7 +482,7 @@ class TransactionEditLineageEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    previous_transaction_id: str = Field(min_length=64, max_length=64)
+    previous_transaction_id: TransactionId
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
     edited_at: datetime
@@ -772,7 +772,7 @@ class Transaction(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     raw: RawTransaction
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
@@ -953,7 +953,7 @@ class BucketTransactionRef(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
 
     @field_validator("bucket_id", "transaction_id")
     @classmethod
