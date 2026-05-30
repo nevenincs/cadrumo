@@ -171,10 +171,15 @@ def test_aggregation_inputs_are_correctly_carried_into_the_result() -> None:
 
 
 def test_aggregate_rejects_year_outside_supported_range() -> None:
-    with pytest.raises(AggregationPeriodError, match=r"year|1999|range"):
+    with pytest.raises(AggregationPeriodError) as exc_info:
         aggregate_prorrata_inputs((), year=1999)
-    with pytest.raises(AggregationPeriodError, match=r"year|2101|range"):
+    assert exc_info.value.translated_message == "aggregation.prorrata.errors.year_out_of_range"
+    assert exc_info.value.context is not None and exc_info.value.context["year"] == 1999
+
+    with pytest.raises(AggregationPeriodError) as exc_info2:
         aggregate_prorrata_inputs((), year=2101)
+    assert exc_info2.value.translated_message == "aggregation.prorrata.errors.year_out_of_range"
+    assert exc_info2.value.context is not None and exc_info2.value.context["year"] == 2101
 
 
 # ---------------------------------------------------------------------------
@@ -211,10 +216,14 @@ def test_provisional_orchestrator_rejects_non_advancing_year_pair() -> None:
     """current_year must be strictly greater than prior_year."""
 
     ops = (_op("p", year=2024, base_amount="10000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),)
-    with pytest.raises(AggregationValidationError, match=r"prior_year|current_year|advance"):
+    with pytest.raises(AggregationValidationError) as exc_info:
         aggregate_provisional_prorrata(ops, prior_year=2024, current_year=2024, period="Q1")
-    with pytest.raises(AggregationValidationError, match=r"prior_year|current_year|advance"):
+    assert exc_info.value.translated_message == "aggregation.prorrata.errors.current_year_not_after_prior"
+    assert exc_info.value.context is not None and "prior_year" in exc_info.value.context
+
+    with pytest.raises(AggregationValidationError) as exc_info2:
         aggregate_provisional_prorrata(ops, prior_year=2025, current_year=2024, period="Q1")
+    assert exc_info2.value.translated_message == "aggregation.prorrata.errors.current_year_not_after_prior"
 
 
 def test_provisional_orchestrator_rejects_annual_period_token() -> None:
@@ -222,8 +231,10 @@ def test_provisional_orchestrator_rejects_annual_period_token() -> None:
     quarterly (Qn) or monthly (Mnn)."""
 
     ops = (_op("p", year=2024, base_amount="10000.00", kind=IvaOperationKind.GRANTS_DEDUCTION),)
-    with pytest.raises(AggregationValidationError, match=r"period|annual|provisional|monthly|quarterly"):
+    with pytest.raises(AggregationValidationError) as exc_info:
         aggregate_provisional_prorrata(ops, prior_year=2024, current_year=2025, period="annual")
+    assert exc_info.value.translated_message == "aggregation.prorrata.errors.invalid_provisional_period"
+    assert exc_info.value.context is not None and "period" in exc_info.value.context
 
 
 # ---------------------------------------------------------------------------

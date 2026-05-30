@@ -403,6 +403,7 @@ class _RevisionInputsProvider:
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(
                 "workflow input request does not match calculation revision",
+                translated_message="application.modelo.errors.workflow_input_mismatch",
                 context={
                     "expected_modelo": self._modelo,
                     "expected_period": self._period,
@@ -720,7 +721,8 @@ def rename_work_unit(
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
             f"work unit {work_unit_id!r} is discarded; "
-            "create a fresh work unit on the same modelo / year / period to continue"
+            "create a fresh work unit on the same modelo / year / period to continue",
+            translated_message="application.modelo.errors.work_unit_mutation_refused",
         )
     now = clock or datetime.now(UTC)
     cleaned_name = new_name.strip()
@@ -781,7 +783,8 @@ def discard_work_unit(
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitAlreadyDiscardedError(
             f"work unit {work_unit_id!r} is already discarded "
-            f"(by {existing.discarded_by!r} at {existing.discarded_at!s})"
+            f"(by {existing.discarded_by!r} at {existing.discarded_at!s})",
+            translated_message="application.modelo.errors.work_unit_already_discarded",
         )
     now = clock or datetime.now(UTC)
     discarded = existing.model_copy(
@@ -2073,14 +2076,16 @@ def _reject_incomplete_amendment_casillas(
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
             f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period!r}; cannot verify amendment completeness"
+            f"period={period!r}; cannot verify amendment completeness",
+            translated_message="application.modelo.errors.amendment_verification_refused_no_snapshot",
         )
     required, _ = required_optional
     missing = sorted(casilla_id for casilla_id in required if casilla_id not in casilla_values)
     if missing:
         raise AmendmentVerificationRefusedError(
             f"amendment is incomplete: required casilla id(s) {missing!r} are not present "
-            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} period={period!r}"
+            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} period={period!r}",
+            translated_message="application.modelo.errors.amendment_verification_refused_missing_casillas",
         )
 
 
