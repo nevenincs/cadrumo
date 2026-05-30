@@ -90,9 +90,17 @@ def parse_spanish_decimal(raw: str) -> Decimal | None:
     elif "," in cleaned:
         cleaned = cleaned.replace(",", ".")
     try:
-        return Decimal(cleaned)
+        parsed = Decimal(cleaned)
     except InvalidOperation:
         return None
+    # Reject non-finite poison values (NaN, sNaN, ±Infinity). Decimal accepts
+    # these literals without raising InvalidOperation, but they cannot feed
+    # the AEAT decimal pipeline (arithmetic propagates the special value,
+    # comparisons silently fail, and serialised filing payloads would emit
+    # invalid digits).
+    if not parsed.is_finite():
+        return None
+    return parsed
 
 
 @dataclass(frozen=True)

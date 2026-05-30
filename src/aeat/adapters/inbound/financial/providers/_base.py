@@ -428,6 +428,12 @@ def parse_amount_value(
         amount = Decimal(normalized)
     except InvalidOperation as exc:
         raise FinancialValidationError(f"unsupported amount value: {raw!r}") from exc
+    if not amount.is_finite():
+        # Defence-in-depth: _sanitise_amount_text already strips letters,
+        # so NaN / Infinity literals cannot reach Decimal() through normal
+        # flow. This guard catches any future sanitiser regression that
+        # would otherwise admit non-finite values into the ledger.
+        raise FinancialValidationError(f"non-finite amount value: {raw!r}")
     return -amount if negative else amount
 
 
