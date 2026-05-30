@@ -630,8 +630,8 @@ class Settings(BaseSettings):
         default="",
         description="Username for proxy authentication",
     )
-    aeat_proxy_password_secret: str = Field(
-        default="",
+    aeat_proxy_password_secret: SecretStr | None = Field(
+        default=None,
         description="Password for proxy authentication",
     )
     aeat_proxy_bypass: str = Field(
