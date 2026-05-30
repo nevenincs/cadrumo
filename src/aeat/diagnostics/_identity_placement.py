@@ -47,6 +47,8 @@ __all__ = (
     "iter_aeat_modules",
 )
 
+_CONSUMER_LAYER_ROOTS = ("aeat.adapters", "aeat.application", "aeat.entrypoints")
+
 AEAT_ROOT = Path(__file__).resolve().parent.parent
 """Filesystem root of the :mod:`aeat` package (``src/aeat``)."""
 
@@ -279,4 +281,53 @@ def find_sibling_domain_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
                     ),
                 )
             )
+    return findings
+
+
+# --- Clause 2: private-name import from any ``_ids.py`` -------------------
+
+
+def _is_consumer_layer(dotted: str) -> bool:
+    return any(dotted == root or dotted.startswith(root + ".") for root in _CONSUMER_LAYER_ROOTS)
+
+
+def find_private_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
+    """Detect leading-underscore imports from any ``_ids.py`` module.
+
+    An adapter, application, or entrypoint module may consume the public
+    typed-id aliases exported by an ``_ids.py`` module. It MUST NOT
+    reach into the underlying regex constants, length constants, or
+    private re-aliases that the ``_ids.py`` module uses to construct
+    them. The public alias names are the cross-layer contract; the
+    private constants are an implementation detail.
+    """
+
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        dotted = _module_dotted_path(path)
+        if not _is_consumer_layer(dotted):
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for node in _iter_import_from(tree):
+            target = _resolve_relative_import(dotted, node.module, node.level)
+            if target is None:
+                continue
+            if not target.endswith("._ids"):
+                continue
+            for alias in node.names:
+                if alias.name.startswith("_"):
+                    findings.append(
+                        Finding(
+                            path,
+                            node.lineno,
+                            (
+                                f"private-name import from {target}: {alias.name!r} "
+                                f"is an internal constant; consume the public alias instead"
+                            ),
+                        )
+                    )
     return findings
