@@ -415,31 +415,64 @@ def _certificate_assertion() -> AeatLoginAssertion:
     )
 
 
-def _settings_for(
-    path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    *,
-    verify_url: str = "https://127.0.0.1:1/",
-):
-    from .....core.config import Settings
+@pytest.fixture
+def _settings_factory():
+    """Yield a callable that pins Settings via the ContextVar override.
 
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(path))
-    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", SECRET_PASSPHRASE)
-    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", CertificateBackend.HTTPX_FALLBACK.value)
-    monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", verify_url)
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(path.parent / ".tokens"))
-    return Settings()
+    Replaces the historical ``monkeypatch.setenv`` shim per the project
+    no-monkeypatch mandate (CLAUDE.md). The ContextVar is set directly
+    rather than via ``override_settings``-as-contextmanager because
+    asyncio tasks copy the context; a token-based ``reset`` from the
+    fixture teardown raises ``ValueError`` if the test body that called
+    ``set`` ran in a child context. Capturing the prior value and
+    restoring it with a plain ``set`` is async-context-safe.
+    """
+    from .....core.config import Settings, _settings_override, load_settings
+
+    saved_prior = _settings_override.get()
+    applied = False
+
+    def factory(
+        path: Path,
+        *,
+        verify_url: str = "https://127.0.0.1:1/",
+        **extra_overrides: object,
+    ) -> Settings:
+        nonlocal applied
+        overrides: dict[str, object] = {
+            "aeat_certificate_path": path,
+            "aeat_certificate_password_secret": SECRET_PASSPHRASE,
+            "aeat_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
+            "aeat_certificate_verify_url": verify_url,
+            "aeat_token_dir": path.parent / ".tokens",
+        }
+        overrides.update(extra_overrides)
+        current = load_settings()
+        merged = current.model_dump()
+        merged.update(overrides)
+        new_settings = Settings.model_validate(merged)
+        explicit_fields = current.model_fields_set | set(overrides.keys())
+        object.__setattr__(new_settings, "__pydantic_fields_set__", explicit_fields)
+        _settings_override.set(new_settings)
+        applied = True
+        return new_settings
+
+    try:
+        yield factory
+    finally:
+        if applied:
+            _settings_override.set(saved_prior)
 
 
 async def _seed_persisted_session(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    settings_factory,
     *,
     storage_state_path: Path | None = None,
 ) -> tuple[Settings, Path, LoadedCertificate]:
     """Create a valid persisted storage-state pair for resume-path tests."""
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = settings_factory(bundle_path)
     persisted_path = storage_state_path or (tmp_path / "persisted-storage.json")
 
     seed_auth = AeatAuthenticator(settings)
@@ -469,10 +502,10 @@ async def _seed_persisted_session(
 @pytest.mark.asyncio
 async def test_capture_storage_state_writes_storage_and_metadata(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     storage_state_path = tmp_path / "captured-storage.json"
     auth = AeatAuthenticator(settings)
     cert = auth.load_certificate()
@@ -517,9 +550,9 @@ async def test_capture_storage_state_writes_storage_and_metadata(
 @pytest.mark.asyncio
 async def test_resume_from_storage_state_reuses_persisted_session_without_handshake(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
 ) -> None:
-    settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, monkeypatch)
+    settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, _settings_factory)
 
     verifier = _HandshakeVerifier()
     browser_session = _RecordingBrowserSession(cert_ok=True)
@@ -673,11 +706,11 @@ def _store_raw_session_payload(path: Path, payload: bytes) -> None:
 )
 async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
     mutator,
     case_id: str,
 ) -> None:
-    settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, monkeypatch)
+    settings, storage_state_path, cert = await _seed_persisted_session(tmp_path, _settings_factory)
     mutator(storage_state_path, cert)
 
     auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
@@ -697,9 +730,9 @@ async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
 @pytest.mark.asyncio
 async def test_resume_from_storage_state_invalidates_failed_live_probe(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
 ) -> None:
-    settings, storage_state_path, _cert = await _seed_persisted_session(tmp_path, monkeypatch)
+    settings, storage_state_path, _cert = await _seed_persisted_session(tmp_path, _settings_factory)
 
     auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
     browser_session = _RecordingBrowserSession(cert_ok=False)
@@ -718,10 +751,10 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
 @pytest.mark.asyncio
 async def test_authenticate_falls_back_after_stale_persisted_session(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     storage_state_path = settings.aeat_token_dir / f"{_BUCKET_ID}-storage.json"
     stale_storage_state: dict[str, object] = {"cookies": [], "origins": []}
     _session_store.save(
@@ -758,7 +791,7 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 
 
 @pytest.mark.asyncio
-async def test_authenticator_synchronous_surface(tmp_path: Path) -> None:
+async def test_authenticator_synchronous_surface(tmp_path: Path, _settings_factory) -> None:
     """Synchronous helpers work under the async context manager.
 
     ``authenticate()`` is not exercised here because
@@ -769,20 +802,16 @@ async def test_authenticator_synchronous_surface(tmp_path: Path) -> None:
     authenticator instance.
     """
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
         cert = auth.load_certificate()
         nif = auth.extract_nif_from_subject(cert)
         assert nif == "12345678Z"
 
 
-def test_describe_warns_when_password_missing(tmp_path: Path) -> None:
+def test_describe_warns_when_password_missing(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    from .....core.config import Settings
-
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(bundle_path))
-    monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
-    settings = Settings()
+    settings = _settings_factory(bundle_path, aeat_certificate_password_secret=None)
     description = AeatAuthenticator(settings).describe()
 
     assert description.configured is True
@@ -790,12 +819,12 @@ def test_describe_warns_when_password_missing(tmp_path: Path) -> None:
     assert description.health_summary == "AEAT_CERTIFICATE_PASSWORD_SECRET not set"
 
 
-def test_describe_preserves_expired_certificate_severity(tmp_path: Path) -> None:
+def test_describe_preserves_expired_certificate_severity(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(
         tmp_path,
         not_valid_after=datetime.now(UTC) - timedelta(hours=12),
     )
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     description = AeatAuthenticator(settings).describe()
 
     assert description.available is True
@@ -806,13 +835,12 @@ def test_describe_preserves_expired_certificate_severity(tmp_path: Path) -> None
 
 def test_describe_forwards_bundle_backend_and_friendly_name(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "operator cert")
     from pydantic import SecretStr
 
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path, aeat_certificate_friendly_name="operator cert")
 
     captured: dict[str, object] = {}
     real_certificate_health = authenticator_module.certificate_health
@@ -859,20 +887,23 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
 
 def test_describe_does_not_touch_os_environ(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    _settings_factory,
 ) -> None:
     """``AeatAuthenticator.describe()`` carries the passphrase as a
     SecretStr directly to ``certificate_health`` via the
     :class:`CertificateBundle.password` field. It never writes the
     secret into ``os.environ``, so a pre-call snapshot of the
     relevant env vars must equal the post-call snapshot exactly.
+
+    The Settings passphrase is injected via ContextVar-backed
+    ``override_settings`` rather than env, so the os.environ delta
+    is the only thing under test.
     """
 
     import os as _os
 
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
-    monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
+    settings = _settings_factory(bundle_path)
     before = dict(_os.environ)
 
     description = AeatAuthenticator(settings).describe()
@@ -883,9 +914,9 @@ def test_describe_does_not_touch_os_environ(
 
 
 @pytest.mark.asyncio
-async def test_verify_login_raises_on_stale_session(tmp_path: Path) -> None:
+async def test_verify_login_raises_on_stale_session(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
         now = datetime.now(UTC)
         stale = _certificate_session(
@@ -899,9 +930,9 @@ async def test_verify_login_raises_on_stale_session(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_verify_login_raises_without_context(tmp_path: Path) -> None:
+async def test_verify_login_raises_without_context(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     async with AeatAuthenticator(settings) as auth:
         now = datetime.now(UTC)
         session = _certificate_session(
@@ -965,7 +996,7 @@ def test_aeat_session_is_stale_with_naive_datetime(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_reauthenticate_does_not_deadlock(tmp_path: Path) -> None:
+async def test_reauthenticate_does_not_deadlock(tmp_path: Path, _settings_factory) -> None:
     """Regression test: reauthenticate must not deadlock on self._lock.
 
     The method was rewritten to delegate teardown to ``close()``
@@ -977,7 +1008,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path) -> None:
     test suite in ``test_authenticator_live.py``.
     """
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     verifier = _HandshakeVerifier()
     async with AeatAuthenticator(settings, handshake_verifier=verifier) as auth:
         # Build a session to pass to reauthenticate. The call will fail
@@ -1000,7 +1031,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path) -> None:
+async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path, _settings_factory) -> None:
     """Regression test for the close()/verify_login TOCTOU race.
 
     The fix uses a one-way ``_closing`` latch checked inside
@@ -1015,7 +1046,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path) -> Non
     confirms ``verify_login`` refuses.
     """
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     authenticator = AeatAuthenticator(settings)
 
     # Install a recording context so the lock-protected snapshot would
@@ -1048,7 +1079,7 @@ async def test_close_latch_blocks_concurrent_verify_login(tmp_path: Path) -> Non
 
 
 @pytest.mark.asyncio
-async def test_concurrent_close_and_verify_login_race(tmp_path: Path) -> None:
+async def test_concurrent_close_and_verify_login_race(tmp_path: Path, _settings_factory) -> None:
     """True interleaved race: start verify_login + close concurrently.
 
     Uses an ``asyncio.Event`` inside the recording page's ``goto`` to
@@ -1062,7 +1093,7 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path) -> None:
     from . import BrowserContextLike
 
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     authenticator = AeatAuthenticator(settings)
 
     proceed = asyncio.Event()
@@ -1122,9 +1153,9 @@ async def test_concurrent_close_and_verify_login_race(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_close_is_idempotent(tmp_path: Path) -> None:
+async def test_close_is_idempotent(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
     auth = AeatAuthenticator(settings)
     await auth.close()
     await auth.close()  # must not raise
@@ -1180,9 +1211,9 @@ def test_auth_provider_protocol_conformance() -> None:
     assert isinstance(provider, AuthProvider)
 
 
-def test_select_provider_returns_certificate_provider(tmp_path: Path) -> None:
+def test_select_provider_returns_certificate_provider(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_factory(bundle_path)
 
     provider = select_provider(AuthProviderKind.CERTIFICATE, settings=settings)
 
