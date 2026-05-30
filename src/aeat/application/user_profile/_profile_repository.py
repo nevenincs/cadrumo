@@ -52,6 +52,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
 from ...core.config import load_settings
 from ...core.i18n import tr
+from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -126,7 +127,7 @@ class ProfileSummary(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     label: str = Field(min_length=1, max_length=160)
     status: UserProfileStatus
 

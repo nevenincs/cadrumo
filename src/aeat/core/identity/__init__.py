@@ -33,6 +33,7 @@ from ._documents import (
     IdentityError,
     validate_identity,
 )
+from ._profile import ProfileId
 from ._tax_id import validate_spanish_tax_id
 
 
@@ -68,6 +69,7 @@ __all__ = [
     "BucketId",
     "IdentityDocument",
     "IdentityError",
+    "ProfileId",
     "SubjectTaxId",
     "validate_identity",
     "validate_spanish_tax_id",

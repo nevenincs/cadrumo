@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core.config import Settings
 from ..core.errors import AeatError
+from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..domain.deadlines import (
     DeadlineEngine,
@@ -536,7 +537,7 @@ class ProjectionModeloReadiness(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)

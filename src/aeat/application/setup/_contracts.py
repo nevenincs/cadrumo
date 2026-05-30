@@ -7,7 +7,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ProfileId
 
 
 class InitializeWorkspaceCommand(BaseModel):
@@ -67,6 +67,6 @@ class InitializeWorkspaceResult(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    profile_id: str
+    profile_id: ProfileId
     bucket_id: BucketId
     auth_configured: bool
