@@ -15,6 +15,11 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...core.identity import BucketId
+from ...domain.calculations.registry._ids import (
+    CasillaId,
+    FormulaId,
+    RevisionId,
+)
 from ...domain.modelos._ids import (
     CalculationRevisionId,
     FilingRecordId,
@@ -36,7 +41,7 @@ class WorkUnitPayload(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -50,9 +55,9 @@ class WorkUnitPayload(OutputSchema):
 class ObservationPayload(OutputSchema):
     """One typed casilla observation with full provenance."""
 
-    casilla_id: str
+    casilla_id: CasillaId
     value: str  # serialised Decimal
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     operand_refs: tuple[str, ...] = ()
     operand_values: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
@@ -63,7 +68,7 @@ class ResultSummaryRowPayload(OutputSchema):
     """One headline-result summary row (registry-declared lead figure)."""
 
     role: str
-    casilla_id: str
+    casilla_id: CasillaId
     value: str  # serialised Decimal
     label: str
 
@@ -97,7 +102,7 @@ class FindingPayload(OutputSchema):
 
     kind: str
     severity: str
-    casilla_id: str | None = None
+    casilla_id: CasillaId | None = None
     expectation_id: str | None = None
     message: str
     next_action: str | None = None
@@ -153,7 +158,7 @@ class ModeloRecordPayload(OutputSchema):
 class FormulaPayload(OutputSchema):
     """One formula row in the formulas command output."""
 
-    formula_id: str
+    formula_id: FormulaId
     target: str
     input_casillas: tuple[str, ...]
     input_bindings: tuple[str, ...]
@@ -186,7 +191,7 @@ class WorkCreateResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -213,7 +218,7 @@ class WorkStatusResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -231,7 +236,7 @@ class WorkRenameResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -249,7 +254,7 @@ class WorkDiscardResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
