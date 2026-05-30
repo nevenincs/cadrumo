@@ -10,7 +10,10 @@ environment variable the application reads.  These tests enforce that:
 
 from __future__ import annotations
 
+import os
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from types import UnionType
 from typing import Union, get_args, get_origin
@@ -24,6 +27,35 @@ from aeat.core.external_constants import load_external_constants
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
+
+
+@contextmanager
+def _isolated_aeat_env(**overrides: str) -> Iterator[None]:
+    """Clear every AEAT_* env var, apply explicit overrides, restore on exit.
+
+    Replaces the historical ``for name in Settings.env_var_names():
+    monkeypatch.delenv(name, ...)`` loop plus follow-up ``monkeypatch.setenv``
+    calls per the project no-monkeypatch mandate (CLAUDE.md). These tests
+    exercise the pydantic-settings env-reading contract itself, so a
+    ContextVar-based ``override_settings`` does not apply — the validators
+    must see real env values. The helper saves both the upper-case and
+    lower-case slot for each Settings field name, since pydantic-settings
+    consults both, and restores on exit including on exception.
+    """
+    saved: dict[str, str | None] = {}
+    for name in Settings.env_var_names():
+        saved[name] = os.environ.pop(name, None)
+        saved[name.lower()] = os.environ.pop(name.lower(), None)
+    for name, value in overrides.items():
+        os.environ[name] = value
+    try:
+        yield
+    finally:
+        for name in overrides:
+            os.environ.pop(name, None)
+        for name, value in saved.items():
+            if value is not None:
+                os.environ[name] = value
 
 
 def _parse_env_example_vars() -> set[str]:
@@ -67,18 +99,16 @@ class TestEnvExampleAlignment:
             "Add a corresponding field to Settings in config.py."
         )
 
-    def test_settings_instantiate_without_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_settings_instantiate_without_env(self) -> None:
         """Settings must load with all defaults when no env file and no env vars are present."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-            monkeypatch.delenv(name.lower(), raising=False)
 
         class IsolatedSettings(Settings):
             """Settings variant that skips the on-disk env file for test isolation."""
 
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        settings = IsolatedSettings()
+        with _isolated_aeat_env():
+            settings = IsolatedSettings()
         assert settings.aeat_base_url == load_external_constants().aeat.domains.sede
         assert settings.aeat_output_language == "es"
 
@@ -86,70 +116,55 @@ class TestEnvExampleAlignment:
 class TestAuthProviderEnum:
     """#285 — ``AEAT_AUTH_PROVIDER`` coerces to the settings enum strictly."""
 
-    def test_env_value_coerces_to_enum(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_env_value_coerces_to_enum(self) -> None:
         from aeat.core.config import AuthProviderKindSetting
-
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-        monkeypatch.setenv("AEAT_AUTH_PROVIDER", "clave_movil")
 
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        settings = IsolatedSettings()
+        with _isolated_aeat_env(AEAT_AUTH_PROVIDER="clave_movil"):
+            settings = IsolatedSettings()
         assert settings.aeat_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
 
-    def test_blank_env_value_treated_as_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-        monkeypatch.setenv("AEAT_AUTH_PROVIDER", "")
-
+    def test_blank_env_value_treated_as_unset(self) -> None:
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
 
-        settings = IsolatedSettings()
+        with _isolated_aeat_env(AEAT_AUTH_PROVIDER=""):
+            settings = IsolatedSettings()
         assert settings.aeat_auth_provider is None
 
-    def test_invalid_value_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_invalid_value_rejected(self) -> None:
         import pydantic
-
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-        monkeypatch.setenv("AEAT_AUTH_PROVIDER", "not_a_provider_kind")
 
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        with pytest.raises(pydantic.ValidationError):
-            IsolatedSettings()
+        with _isolated_aeat_env(AEAT_AUTH_PROVIDER="not_a_provider_kind"):
+            with pytest.raises(pydantic.ValidationError):
+                IsolatedSettings()
 
 
 class TestCertificateBackendEnum:
     """Certificate backend settings accept canonical values only."""
 
-    def test_lowercase_setting_value_is_accepted(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-        monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "playwright_context")
-
+    def test_lowercase_setting_value_is_accepted(self) -> None:
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        settings = IsolatedSettings()
+        with _isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="playwright_context"):
+            settings = IsolatedSettings()
         assert settings.aeat_certificate_backend is CertificateBackend.PLAYWRIGHT_CONTEXT
 
-    def test_uppercase_enum_name_is_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_uppercase_enum_name_is_rejected(self) -> None:
         import pydantic
-
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-        monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "PLAYWRIGHT_CONTEXT")
 
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        with pytest.raises(pydantic.ValidationError):
-            IsolatedSettings()
+        with _isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="PLAYWRIGHT_CONTEXT"):
+            with pytest.raises(pydantic.ValidationError):
+                IsolatedSettings()
 
 
 class TestStatusDetailUrlTemplate:
@@ -173,11 +188,8 @@ class TestStatusDetailUrlTemplate:
         with pytest.raises(pydantic.ValidationError):
             Settings(aeat_status_detail_url_template="/x/no-placeholder/y")
 
-    def test_blank_env_values_are_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_blank_env_values_are_ignored(self, tmp_path: Path) -> None:
         """Blank values in env/.env must not coerce optional settings into live values."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
         env_path = tmp_path / ".env"
         env_path.write_text(
             "\n".join(
@@ -199,19 +211,13 @@ class TestStatusDetailUrlTemplate:
                 env_ignore_empty=True,
             )
 
-        settings = BlankEnvSettings()
+        with _isolated_aeat_env():
+            settings = BlankEnvSettings()
         assert settings.aeat_certificate_path is None
         assert settings.aeat_certificate_password_secret is None
 
-    def test_relative_env_paths_resolve_from_project_root(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
         """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
         env_path = tmp_path / ".env"
         env_path.write_text(
             "AEAT_WORKFLOW_RUNS_DIR=env/workflow/runs\n",
@@ -227,38 +233,32 @@ class TestStatusDetailUrlTemplate:
                 env_ignore_empty=True,
             )
 
-        settings = RelativeEnvSettings()
+        with _isolated_aeat_env():
+            settings = RelativeEnvSettings()
         assert settings.aeat_workflow_runs_dir == PROJECT_ROOT / "env" / "workflow" / "runs"
 
-    def test_blank_optional_path_env_vars_are_treated_as_unset(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
-        monkeypatch.setenv("AEAT_CERTIFICATE_PATH", "")
 
         class IsolatedSettings(Settings):
             """Settings variant that skips the on-disk env file for test isolation."""
 
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        settings = IsolatedSettings()
+        with _isolated_aeat_env(AEAT_CERTIFICATE_PATH=""):
+            settings = IsolatedSettings()
         assert settings.aeat_certificate_path is None
 
-    def test_blank_optional_secret_env_vars_are_treated_as_unset(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_blank_optional_secret_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional secret env vars must normalize to ``None``."""
-        monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "")
-        monkeypatch.setenv("AEAT_LLM_OPENAI_API_KEY", "")
 
         class IsolatedSettings(Settings):
             """Settings variant that skips the on-disk env file for test isolation."""
 
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
-        settings = IsolatedSettings()
+        with _isolated_aeat_env(AEAT_CERTIFICATE_PASSWORD_SECRET="", AEAT_LLM_OPENAI_API_KEY=""):
+            settings = IsolatedSettings()
         assert settings.aeat_certificate_password_secret is None
         assert settings.aeat_llm_openai_api_key is None
 
@@ -330,16 +330,9 @@ class TestRepoRelativePathNormalisationCoverage:
                 "Re-add it to the field tuple in src/aeat/config.py."
             )
 
-    def test_relative_audit_flagged_paths_resolve_under_project_root(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_relative_audit_flagged_paths_resolve_under_project_root(self, tmp_path: Path) -> None:
         """End-to-end: relative env values for the three audit-flagged paths anchor to
         ``PROJECT_ROOT`` (not the process cwd)."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
         env_path = tmp_path / ".env"
         env_path.write_text(
             "\n".join(
@@ -362,7 +355,8 @@ class TestRepoRelativePathNormalisationCoverage:
                 env_ignore_empty=True,
             )
 
-        settings = RelativeAuditSettings()
+        with _isolated_aeat_env():
+            settings = RelativeAuditSettings()
         assert settings.aeat_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
         assert settings.aeat_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
         assert settings.aeat_runs_dir == PROJECT_ROOT / "var" / "runs"
@@ -391,16 +385,9 @@ class TestDatabaseUrlDerivation:
 
         return IsolatedSettings
 
-    def test_storage_root_alone_derives_root_level_fallback_url(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_storage_root_alone_derives_root_level_fallback_url(self, tmp_path: Path) -> None:
         """Storage root without an explicit URL or active profile derives the
         ``sqlite:///<root>/aeat.db`` fallback rather than staying empty."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
         storage_root = tmp_path / "aeat-state"
         env_path = tmp_path / ".env"
         env_path.write_text(
@@ -408,21 +395,15 @@ class TestDatabaseUrlDerivation:
             encoding="utf-8",
         )
 
-        settings = self._isolated(env_path)()
+        with _isolated_aeat_env():
+            settings = self._isolated(env_path)()
 
         expected = f"sqlite:///{(storage_root / 'aeat.db').as_posix()}"
         assert settings.aeat_database_url == expected
         assert settings.aeat_database_url, "URL must never be empty when the storage root is set"
 
-    def test_explicit_database_url_overrides_storage_root_derivation(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_explicit_database_url_overrides_storage_root_derivation(self, tmp_path: Path) -> None:
         """An explicit ``AEAT_DATABASE_URL`` wins over the derived fallback."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
         explicit_url = f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}"
         env_path = tmp_path / ".env"
         env_path.write_text(
@@ -436,20 +417,14 @@ class TestDatabaseUrlDerivation:
             encoding="utf-8",
         )
 
-        settings = self._isolated(env_path)()
+        with _isolated_aeat_env():
+            settings = self._isolated(env_path)()
 
         assert settings.aeat_database_url == explicit_url
 
-    def test_active_profile_derives_per_bucket_url(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_active_profile_derives_per_bucket_url(self, tmp_path: Path) -> None:
         """An active profile still derives the per-bucket SQLite URL; the
         root-level fallback only applies when no bucket resolves."""
-        for name in Settings.env_var_names():
-            monkeypatch.delenv(name, raising=False)
-
         storage_root = tmp_path / "aeat-state"
         env_path = tmp_path / ".env"
         env_path.write_text(
@@ -463,7 +438,8 @@ class TestDatabaseUrlDerivation:
             encoding="utf-8",
         )
 
-        settings = self._isolated(env_path)()
+        with _isolated_aeat_env():
+            settings = self._isolated(env_path)()
 
         expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'aeat.db').as_posix()}"
         assert settings.aeat_database_url == expected
