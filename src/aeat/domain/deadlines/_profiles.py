@@ -15,6 +15,8 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from aeat.core.parsing import _parse_bool, _parse_iso8601_date
+from aeat.core.profile import SetupAnswers, project_answers
+from aeat.core.profile_catalogue import get_setup_flow
 
 from ._errors import ProfileError
 from ._models import (
@@ -52,9 +54,7 @@ def taxpayer_profile_from_mapping(
     if canonical.get("iva.regime"):
         canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
 
-    from ...application.wizard._catalogue import SETUP_FLOW
-    from ...application.wizard._persistence import project_answers
-    from ...application.wizard._setup_answers import SetupAnswers
+    SETUP_FLOW = get_setup_flow()
 
     # SetupAnswers requires identity.tax_id and activities.description;
     # the deadline engine supplies a tax_id default so it can render

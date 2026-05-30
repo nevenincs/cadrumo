@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
+from ...core.profile_catalogue import get_wizard_flows
 from ._errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
 
@@ -133,10 +134,9 @@ def _build_profile_keys() -> tuple[ProfileKey, ...]:
     load time. The result is cached for the lifetime of the process.
     """
 
-    from ...application.wizard._catalogue import WIZARD_FLOWS
     from ...application.wizard._compiler import compile_profile_keys
 
-    return compile_profile_keys(WIZARD_FLOWS)
+    return compile_profile_keys(get_wizard_flows())
 
 
 def _profile_keys() -> tuple[ProfileKey, ...]:
