@@ -7,6 +7,9 @@ SecretStr / PrivateAttr non-leakage.
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -36,6 +39,29 @@ from .certificate import _select_backend
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
+
+
+@contextmanager
+def _env_overrides(**overrides: str) -> Iterator[None]:
+    """Scoped env overrides for the with-block.
+
+    Replaces ``monkeypatch.setenv`` per the project no-monkeypatch
+    mandate (CLAUDE.md). These tests exercise the pydantic-settings
+    env-reading contract, so a ContextVar-based ``override_settings``
+    does not apply — validators must see real env values.
+    """
+    saved: dict[str, str | None] = {}
+    for name, value in overrides.items():
+        saved[name] = os.environ.get(name)
+        os.environ[name] = value
+    try:
+        yield
+    finally:
+        for name, prior in saved.items():
+            if prior is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = prior
 
 
 def _build_pkcs12_bundle(
@@ -381,10 +407,7 @@ def test_httpx_fallback_preload_rejects_browser_path(
 # ── Settings integration ────────────────────────────────────────────────────
 
 
-def test_settings_loads_cert_env_vars(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
     from pydantic_settings import SettingsConfigDict
 
     from .....core.config import Settings
@@ -394,13 +417,14 @@ def test_settings_loads_cert_env_vars(
 
     placeholder_p12 = tmp_path / "op.p12"
     placeholder_p12.write_bytes(b"placeholder")
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(placeholder_p12))
-    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", SECRET_PASSPHRASE)
-    monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "op-cert")
-    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "httpx_fallback")
-    monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", "https://example.test/")
-
-    settings = IsolatedSettings()
+    with _env_overrides(
+        AEAT_CERTIFICATE_PATH=str(placeholder_p12),
+        AEAT_CERTIFICATE_PASSWORD_SECRET=SECRET_PASSPHRASE,
+        AEAT_CERTIFICATE_FRIENDLY_NAME="op-cert",
+        AEAT_CERTIFICATE_BACKEND="httpx_fallback",
+        AEAT_CERTIFICATE_VERIFY_URL="https://example.test/",
+    ):
+        settings = IsolatedSettings()
     assert settings.aeat_certificate_path == placeholder_p12
     assert settings.aeat_certificate_password_secret is not None
     assert settings.aeat_certificate_password_secret.get_secret_value() == SECRET_PASSPHRASE
@@ -452,7 +476,7 @@ def test_load_certificate_not_after_is_utc_aware(tmp_path: Path) -> None:
     assert loaded.not_after.utcoffset() is not None
 
 
-def test_settings_rejects_removed_certificate_backends(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_rejects_removed_certificate_backends() -> None:
     import pydantic
     from pydantic_settings import SettingsConfigDict
 
@@ -461,6 +485,6 @@ def test_settings_rejects_removed_certificate_backends(monkeypatch: pytest.Monke
     class IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None)
 
-    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "MTLS_PROXY")
-    with pytest.raises(pydantic.ValidationError, match=r"aeat_certificate_backend|MTLS_PROXY|Input should be"):
-        IsolatedSettings()
+    with _env_overrides(AEAT_CERTIFICATE_BACKEND="MTLS_PROXY"):
+        with pytest.raises(pydantic.ValidationError, match=r"aeat_certificate_backend|MTLS_PROXY|Input should be"):
+            IsolatedSettings()
