@@ -102,11 +102,11 @@ Declare the hex-64 InvoiceId alias in the invoice domain identity module per Rul
 
 Declare the hex-64 AttachmentId alias in the attachment domain identity module per Rule 6 owner-domain placement, re-export, and lift the bare-string attachment_id field sites in domain/attachments/_models, application/evidence, and application/ledger onto the alias.
 
-- [ ] `W02.P07.S34` - declare the AttachmentId alias with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 owner-domain placement; `src/aeat/domain/attachments/_ids.py`.
-- [ ] `W02.P07.S35` - lift the attachment_id bare-string field declaration onto AttachmentId per ADR Rule 6 in the attachment records module; `src/aeat/domain/attachments/_models.py`.
-- [ ] `W02.P07.S36` - lift the attachment_id bare-string field declarations onto AttachmentId per ADR Rule 6 across the evidence application service; `src/aeat/application/evidence/_models.py`.
-- [ ] `W02.P07.S37` - lift the attachment_id bare-string field declarations onto AttachmentId per ADR Rule 6 across the ledger application service; `src/aeat/application/ledger/_models.py`.
-- [ ] `W02.P07.S38` - add a real-behavior roundtrip test that populates an attachment record with a non-default AttachmentId, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/domain/attachments/test_attachment_roundtrip.py`.
+- [x] `W02.P07.S34` - declare the AttachmentId alias with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 owner-domain placement; `src/aeat/domain/attachments/_ids.py`.
+- [x] `W02.P07.S35` - lift the attachment_id bare-string field declaration onto AttachmentId per ADR Rule 6 in the attachment records module; `src/aeat/domain/attachments/_models.py`.
+- [x] `W02.P07.S36` - lift the attachment_id bare-string field declarations onto AttachmentId per ADR Rule 6 across the evidence application service; `src/aeat/application/evidence/_models.py`.
+- [x] `W02.P07.S37` - lift the attachment_id bare-string field declarations onto AttachmentId per ADR Rule 6 across the ledger application service; `src/aeat/application/ledger/_models.py`.
+- [x] `W02.P07.S38` - add a real-behavior roundtrip test that populates an attachment record with a non-default AttachmentId, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/domain/attachments/test_attachment_roundtrip.py`.
 
 ### Phase `W02.P08` - promote BundleId and EvidenceId in application/evidence/_ids.py
 
