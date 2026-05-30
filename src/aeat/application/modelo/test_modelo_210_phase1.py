@@ -34,6 +34,7 @@ from decimal import Decimal
 import pytest
 
 from aeat.application.modelo._actions import (
+    ModeloApplicabilityFilterError,
     _evaluate_applicability_filter,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,
@@ -531,5 +532,5 @@ def test_applicability_filter_unknown_name_raises_value_error() -> None:
     """
 
     profile = _irnr_profile("AR")
-    with pytest.raises(ValueError, match="Unknown applicability filter"):
+    with pytest.raises(ModeloApplicabilityFilterError, match="Unknown applicability filter"):
         _evaluate_applicability_filter("non_resident_irnr_eea_only", profile)

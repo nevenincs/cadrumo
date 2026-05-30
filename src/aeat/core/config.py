@@ -1246,10 +1246,10 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
 
     trimmed = bucket_id.strip()
     if not trimmed:
-        raise ValueError("bucket_id must not be blank")
+        raise CoreValidationError("bucket_id must not be blank")
     base = source or load_settings()
     if "aeat_database_url" in base.model_fields_set:
-        raise ValueError("cannot derive an active profile bucket route from an explicit database URL")
+        raise CoreValidationError("cannot derive an active profile bucket route from an explicit database URL")
     values = base.model_dump()
     values.pop("aeat_database_url", None)
     values["aeat_active_profile"] = trimmed

@@ -67,7 +67,6 @@ from ...domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ...domain.modelos._codes import ModeloCode
-from ...core.errors import CoreValidationError
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
@@ -192,15 +191,7 @@ def _emit_bucket_event(
     return event
 
 
-class WorkflowInputMismatchError(CoreValidationError):
-    """Raised when a workflow input request does not match the calculation revision.
-
-    The :class:`_RevisionInputsProvider` gate enforces that the modelo code
-    and period supplied by the workflow engine at runtime equal the values
-    baked into the revision when it was created.  Any deviation signals a
-    programming error or a stale work-unit reference and must be rejected
-    before the inputs are handed to the engine.
-    """
+from ..workflow._errors import WorkflowInputMismatchError  # re-exported for callers
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -866,6 +857,17 @@ class CasillaProvenanceMissingError(ModeloError):
     silently emit empty ``legal_refs`` / ``source_refs`` and erase the
     legal provenance the audit surface depends on. The observation
     build hard-fails instead of persisting a provenance-stripped row.
+    """
+
+
+class ModeloApplicabilityFilterError(ModeloError):
+    """Raised when an unknown applicability filter name is encountered.
+
+    The ``_evaluate_applicability_filter`` dispatch table is the single
+    source of truth for named profile-field applicability filters.  An
+    unrecognised filter name is always a registry-authoring error, not a
+    runtime data problem, so it hard-fails with this typed exception
+    rather than silently passing.
     """
 
 
@@ -2410,7 +2412,7 @@ def _evaluate_applicability_filter(
             profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
             and not profile.ue_eee_status
         )
-    raise ValueError(f"Unknown applicability filter: {filter_name!r}")
+    raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
 
 
 def _evaluate_predicate_expression(
