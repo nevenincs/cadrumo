@@ -28,7 +28,6 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core.errors import AeatError
 from ...domain.modelos._ids import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -46,12 +45,14 @@ _BORRADOR_100_SNAPSHOT_SENSITIVITY = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.sen
 type _BorradorValue = Decimal | str
 
 
-class BorradorSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
+class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 100 borrador snapshot lookup misses by id.
 
-    Inherits ``AeatError`` first so MRO routes ``__init__`` through the
-    structured constructor (accepts ``suggestion=`` / ``context=`` kwargs)
-    rather than :class:`KeyError`'s C-level constructor.
+    :class:`SnapshotNotFoundError` inherits ``AeatError`` first, so MRO
+    routes ``__init__`` through the structured constructor (accepts
+    ``suggestion=`` / ``context=`` kwargs) rather than
+    :class:`KeyError`'s C-level constructor. Listing ``AeatError``
+    explicitly here would violate C3 linearization.
     """
 
 

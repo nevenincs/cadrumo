@@ -34,6 +34,16 @@ class RepositoryError(StorageError):
     """Raised when a repository operation fails (not-found, integrity, etc.)."""
 
 
+class RepositorySetupError(RepositoryError):
+    """Raised when a concrete repository subclass is missing a required class attribute.
+
+    Programming-contract guard: the attribute must be declared on the subclass
+    before instantiation. Unlike a plain :class:`TypeError`, this error is
+    enrolled in the AEAT error registry so it produces a structured envelope
+    rather than an opaque interpreter-level exception.
+    """
+
+
 class SecureObjectRevisionConflictError(RepositoryError):
     """Raised when a revision-aware secure-object write sees a stale revision."""
 

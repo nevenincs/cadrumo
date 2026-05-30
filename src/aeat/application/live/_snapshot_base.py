@@ -43,21 +43,27 @@ from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefin
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
 
 
-class SnapshotNotFoundError(KeyError):
+class SnapshotNotFoundError(AeatError, KeyError):
     """Shared base for per-service snapshot-lookup-miss errors.
+
+    Inherits from both :class:`aeat.core.errors.AeatError` and
+    :class:`KeyError` so the class is enrolled in the ``ERROR_REGISTRY``
+    via the ``AeatError.__init_subclass__`` hook, and callers that catch
+    the broad ``KeyError`` family remain unaffected. ``AeatError`` is
+    listed first so MRO routes ``__init__`` through
+    :meth:`AeatError.__init__` (which accepts the structured
+    ``suggestion=`` / ``context=`` kwargs) rather than ``KeyError``'s
+    C-level constructor.
 
     Per-service subclasses (BorradorSnapshotNotFoundError,
     ExpedientesSnapshotNotFoundError, NotificationsSnapshotNotFoundError,
     and future siblings) inherit from this base alongside
     :class:`aeat.core.errors.AeatError` so callers can either catch the
-    domain-specific class name or the shared parent. The per-service
-    classes list ``AeatError`` first in their bases so MRO routes
-    ``__init__`` through :meth:`AeatError.__init__` (which accepts the
-    structured ``suggestion=`` / ``context=`` kwargs) rather than
-    :class:`KeyError`'s C-level constructor.
+    domain-specific class name or the shared parent.
     """
 
 

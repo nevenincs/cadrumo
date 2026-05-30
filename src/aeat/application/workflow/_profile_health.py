@@ -13,6 +13,7 @@ from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, w
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core._bucket_pointer_io import pointer_path, read_pointer
 from ...core.config import load_settings
+from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileRecord
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
@@ -143,7 +144,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
 
     try:
         resolved_state = state or workflow_state_repository().load()
-    except Exception as exc:
+    except (AeatError, OSError) as exc:
+        # AeatError: decryption, session, or domain failures loading the workflow state row.
+        # OSError: filesystem I/O failure reading the encrypted database file.
         return ActiveProfileHealth(
             active_profile=active_profile,
             source=source,
@@ -160,7 +163,9 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
     try:
         record = resolved_state.active_profile_record()
-    except Exception as exc:
+    except (AeatError, ValueError) as exc:
+        # AeatError: domain or registry failures resolving the profile record.
+        # ValueError (including pydantic ValidationError): stored record fails strict validation.
         return ActiveProfileHealth(
             active_profile=active_profile,
             source=source,
@@ -295,7 +300,10 @@ def _assess_with_best_effort_session() -> ActiveProfileHealth:
             return before
         with get_master_key_provider():
             return assess_active_profile_health()
-    except Exception as exc:
+    except (AeatError, OSError, ImportError) as exc:
+        # AeatError: keyring/master-key domain failures.
+        # OSError: filesystem-backed secret-store I/O failures.
+        # ImportError: defensive guard; the dynamic import of storage internals may fail.
         return before.model_copy(update={"profile_record_error": _compact_error(exc)})
 
 
