@@ -121,10 +121,10 @@ Declare the hex-64 BundleId and EvidenceId aliases in the evidence application s
 
 Declare the hex-64 VerificationReportId alias in the modelo records identity module per Rule 6 owner-domain placement (verification reports are part of the modelo-record family by lifecycle and reference), re-export, and lift the bare-string verification_report_id field sites in entrypoints/cli/_modelo_payloads and application/modelo/_actions onto the alias.
 
-- [ ] `W02.P09.S43` - declare the VerificationReportId alias with the hex-64 StringConstraints shape and add it to __all__ in the modelo records identity module per ADR Rule 6 owner-domain placement; `src/aeat/domain/modelos/_ids.py`.
-- [ ] `W02.P09.S44` - lift the verification_report_id bare-string field declarations onto VerificationReportId per ADR Rule 6 in the CLI modelo payload module; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W02.P09.S45` - lift the verification_report_id bare-string parameters onto VerificationReportId per ADR Rule 6 in the modelo application actions module; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W02.P09.S46` - add a real-behavior roundtrip test that populates a verification-report record with a non-default VerificationReportId, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/domain/modelos/test_verification_report_roundtrip.py`.
+- [x] `W02.P09.S43` - declare the VerificationReportId alias with the hex-64 StringConstraints shape and add it to __all__ in the modelo records identity module per ADR Rule 6 owner-domain placement; `src/aeat/domain/modelos/_ids.py`.
+- [x] `W02.P09.S44` - lift the verification_report_id bare-string field declarations onto VerificationReportId per ADR Rule 6 in the CLI modelo payload module; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W02.P09.S45` - lift the verification_report_id bare-string parameters onto VerificationReportId per ADR Rule 6 in the modelo application actions module; `src/aeat/application/modelo/_actions.py`.
+- [x] `W02.P09.S46` - add a real-behavior roundtrip test that populates a verification-report record with a non-default VerificationReportId, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/domain/modelos/test_verification_report_roundtrip.py`.
 
 ## Wave `W03` - collapse shadow declarations
 

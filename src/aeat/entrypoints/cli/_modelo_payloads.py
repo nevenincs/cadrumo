@@ -18,6 +18,7 @@ from ...core.identity import BucketId
 from ...domain.modelos._ids import (
     CalculationRevisionId,
     FilingRecordId,
+    VerificationReportId,
     WorkUnitId,
 )
 from ._schemas import OutputSchema, register_schema
@@ -107,7 +108,7 @@ class FindingPayload(OutputSchema):
 class VerificationReportPayload(OutputSchema):
     """Verification report fields returned by verify / verification-report commands."""
 
-    verification_report_id: str
+    verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
@@ -329,7 +330,7 @@ class WorkRevisionResult(OutputSchema):
 @register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
-    verification_report_id: str
+    verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
@@ -427,7 +428,7 @@ class VerificationReportListResult(OutputSchema):
 @register_schema("modelo.verification_report.show")
 class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
-    verification_report_id: str
+    verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
