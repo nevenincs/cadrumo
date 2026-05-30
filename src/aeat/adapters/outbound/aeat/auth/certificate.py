@@ -448,9 +448,7 @@ def evaluate_loaded_certificate_health(
         raise AuthValidationError(
             f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})"
         )
-    evaluated_at = now if now is not None else datetime.now(UTC)
-    if evaluated_at.tzinfo is None:
-        evaluated_at = evaluated_at.replace(tzinfo=UTC)
+    evaluated_at = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     delta_seconds = (cert.not_after - evaluated_at).total_seconds()
     # Floor division keeps "one second before expiry" at 0 days → EXPIRED.
     days_until_expiry = int(delta_seconds // 86400)
@@ -538,9 +536,7 @@ def health(
         x509_cert = parsed.cert.certificate
         not_before = _coerce_utc_aware(x509_cert.not_valid_before_utc)
         not_after = _coerce_utc_aware(x509_cert.not_valid_after_utc)
-        evaluated_at = now if now is not None else datetime.now(UTC)
-        if evaluated_at.tzinfo is None:
-            evaluated_at = evaluated_at.replace(tzinfo=UTC)
+        evaluated_at = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
         delta_seconds = (not_after - evaluated_at).total_seconds()
         days_until_expiry = int(delta_seconds // 86400)
         return CertificateHealth(

@@ -29,6 +29,7 @@ from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.errors import resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.time._utc import _coerce_utc_aware
 from ...core.i18n import tr
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -3155,9 +3156,7 @@ def _decimal_to_string(value: Decimal) -> str:
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
     timestamp = value or datetime.now(UTC)
-    if timestamp.tzinfo is None or timestamp.utcoffset() is None:
-        return timestamp.replace(tzinfo=UTC)
-    return timestamp.astimezone(UTC)
+    return _coerce_utc_aware(timestamp)
 
 
 def _upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:

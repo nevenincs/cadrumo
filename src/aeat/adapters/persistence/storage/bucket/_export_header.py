@@ -10,24 +10,18 @@ timestamp.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .....core.errors import CoreValidationError
+from .....core.time._utc import _validate_utc_aware
 from .....domain.modelos._ids import BucketId
 from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _SHA256_HEX_LEN = 64
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        raise BucketValidationError("datetime must be timezone-aware UTC")
-    if value.utcoffset() != UTC.utcoffset(value):
-        raise BucketValidationError("datetime must be in UTC")
-    return value
 
 
 class ExportArchiveHeader(BaseModel):
@@ -59,7 +53,10 @@ class ExportArchiveHeader(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _ensure_utc(value)
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise BucketValidationError(str(exc)) from exc
 
 
 __all__ = ["ExportArchiveHeader"]
