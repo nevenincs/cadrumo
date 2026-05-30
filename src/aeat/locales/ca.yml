@@ -25,6 +25,19 @@ adapters:
         suggestions:
           shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
             ha canviat la pàgina Renta WEB Open.
+  auth:
+    authenticator:
+      errors:
+        already_active: 'AeatAuthenticator ja te una sessio activa; crideu close() o reauthenticate() abans d''autenticar de nou.'
+        assertion_failed: 'L''autenticacio AEAT no ha produit una assercio d''inici de sessio valida.'
+        metadata_parse_failed: 'Les metadades persistides no han produit un model analitzat.'
+        resume_failed: 'La represa de la sessio AEAT persistida no ha produit un context utilitzable.'
+    clave_movil:
+      errors:
+        no_persisted_session: 'No s''ha trobat cap sessio de Cl@ve Movil; executeu `aeat config auth status` primer.'
+        page_missing_click: 'La pagina de Playwright no exposa click(); no es pot operar l''entrada de Cl@ve Movil.'
+        session_expired: 'La sessio de Cl@ve Movil ha superat el seu termini d''inactivitat.'
+        storage_state_hash_mismatch: 'El hash de l''estat d''emmagatzematge de Cl@ve Movil no coincideix; les dades de sessio poden estar corrompudes.'
   google:
     calc_sheets:
       errors:
@@ -106,14 +119,22 @@ adapters:
         year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
   sede:
     errors:
+      cotejo_nav_failed: 'La navegació a la pàgina de cotejo d''AEAT ha fallat; la sessió pot haver caducat. Executeu ''aeat config auth test'' i torneu-ho a intentar.'
+      ejercicio_unavailable: 'El registre de declaracions d''AEAT no ofereix l''exercici sol·licitat per a aquest model.'
       empty_identity_nif: El NIF d'identitat de la sessió AEAT és buit; no es pot
         vincular l'observació de presentació.
+      form_render_timeout: 'El formulari del registre de declaracions d''AEAT no s''ha renderitzat en el temps establert; la sessió pot haver caducat o l''AEAT està en manteniment.'
       iva_wallet_empty_amount_cell: La cel·la d'import de la cartera de compensació
         d'IVA és buida.
       iva_wallet_empty_period_cell: La cel·la de període de la cartera de compensació
         d'IVA és buida.
+      justificante_column_missing: 'La resposta de declaracions d''AEAT no conté la columna de justificant; l''estructura de la taula pot haver canviat.'
+      listbox_missing: 'La resposta de declaracions d''AEAT no conté el contenidor de llista esperat; l''estructura de la pàgina pot haver canviat.'
+      listing_nav_failed: 'La navegació al llistat de declaracions d''AEAT ha fallat. Comproveu la connectivitat de xarxa i torneu-ho a intentar.'
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
         executeu primer `aeat config auth status`.
+      parse_failed: 'No s''ha pogut analitzar la resposta de declaracions d''AEAT; l''estructura de la pàgina pot haver canviat.'
+      session_expired_nav_failed: 'El registre de declaracions d''AEAT no s''ha carregat; la sessió probablement ha caducat. Executeu ''aeat config auth test'' i torneu-ho a intentar.'
 aggregation:
   iva_ledger:
     errors:
@@ -395,6 +416,9 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
+  portals:
+    errors:
+      portal_not_found: 'El portal AEAT sol·licitat no està registrat. Executeu ''aeat app live portals list'' per veure els portals disponibles.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -3032,6 +3056,10 @@ errors:
       o integritat. No importis arxius d'origen no fiable.
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
+    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
+      close the active session before re-entering.'
+    internal_master_key_type: 'Internal error: master-key operation received a value
+      of the wrong type.'
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut

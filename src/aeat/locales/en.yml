@@ -25,6 +25,24 @@ adapters:
         suggestions:
           shape_change: Re-run the live oracle after checking whether AEAT changed
             the Renta WEB Open page shape.
+  auth:
+    authenticator:
+      errors:
+        already_active: AeatAuthenticator already has an active session; call close()
+          or reauthenticate() before authenticating again.
+        assertion_failed: Fresh AEAT authentication did not produce a valid login
+          assertion.
+        metadata_parse_failed: Persisted metadata did not produce a parsed model.
+        resume_failed: Persisted AEAT session resume did not produce a usable context.
+    clave_movil:
+      errors:
+        no_persisted_session: No persisted Cl@ve Movil session found; run `aeat config
+          auth status` first.
+        page_missing_click: Playwright page does not expose click(); cannot drive
+          Cl@ve Movil entry.
+        session_expired: Cl@ve Movil session has passed its idle deadline.
+        storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
+          data may be corrupt.
   google:
     calc_sheets:
       errors:
@@ -96,12 +114,20 @@ adapters:
         year_conflict: --año {year} conflicts with detected {detected}.
   sede:
     errors:
+      cotejo_nav_failed: 'Navigation to the AEAT cotejo page failed; session may have expired mid-walk. Run ''aeat config auth test'' and retry.'
+      ejercicio_unavailable: 'The AEAT declarations register does not offer the requested tax year for this modelo.'
       empty_identity_nif: AEAT session identity NIF is empty; cannot bind live filing
         observation.
+      form_render_timeout: 'The AEAT declarations register form did not render within the timeout; session may have expired or AEAT is serving a maintenance page.'
       iva_wallet_empty_amount_cell: IVA compensation wallet amount cell is empty.
       iva_wallet_empty_period_cell: IVA compensation wallet period cell is empty.
+      justificante_column_missing: 'The AEAT declarations response is missing the justificante column; the table structure may have changed.'
+      listbox_missing: 'The AEAT declarations response is missing the expected listing container; the page structure may have changed.'
+      listing_nav_failed: 'Navigation to the AEAT declarations listing failed. Check network connectivity and retry.'
       no_auth_session: AEAT auth session is missing or not persisted; run `aeat config
         auth status` first.
+      parse_failed: 'Failed to parse the AEAT declarations response; the page structure may have changed.'
+      session_expired_nav_failed: 'The AEAT declarations register did not load; your session has likely expired. Run ''aeat config auth test'' and retry.'
 aggregation:
   iva_ledger:
     errors:
@@ -359,6 +385,9 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+  portals:
+    errors:
+      portal_not_found: 'The requested AEAT portal is not registered. Run ''aeat app live portals list'' to see available portals.'
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -2894,6 +2923,10 @@ errors:
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
+    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
+      close the active session before re-entering.'
+    internal_master_key_type: 'Internal error: master-key operation received a value
+      of the wrong type.'
     internal_observability_run_context_missing: 'Internal error: a telemetry event
       was recorded outside an active run context.'
     internal_output_rendering: 'Internal error: the command output could not be rendered

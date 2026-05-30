@@ -27,6 +27,22 @@ adapters:
         suggestions:
           shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
             si la AEAT ha cambiado la página Renta WEB Open.
+  auth:
+    authenticator:
+      errors:
+        already_active: 'AeatAuthenticator ya tiene una sesion activa; llame a close() o reauthenticate() antes de autenticar de nuevo.'
+        assertion_failed: 'La autenticacion AEAT no produjo una asercion de inicio de sesion valida.'
+        metadata_parse_failed: 'Los metadatos persistidos no produjeron un modelo analizado.'
+        resume_failed: 'La reanudacion de la sesion AEAT persistida no produjo un contexto utilizable.'
+    clave_movil:
+      errors:
+        no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
+          config auth status` primero.
+        page_missing_click: La pagina de Playwright no expone click(); no se puede
+          operar la entrada de Cl@ve Movil.
+        session_expired: La sesion de Cl@ve Movil ha superado su plazo de inactividad.
+        storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
+          Movil no coincide; los datos de sesion pueden estar corruptos.
   google:
     calc_sheets:
       errors:
@@ -108,14 +124,22 @@ adapters:
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
   sede:
     errors:
+      cotejo_nav_failed: 'La navegación a la página de cotejo de AEAT falló; la sesión puede haber expirado. Ejecute ''aeat config auth test'' y vuelva a intentarlo.'
+      ejercicio_unavailable: 'El registro de declaraciones de AEAT no ofrece el ejercicio solicitado para este modelo.'
       empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se
         puede vincular la observación de presentación.
+      form_render_timeout: 'El formulario del registro de declaraciones de AEAT no se renderizó en el tiempo establecido; la sesión puede haber expirado o AEAT está en mantenimiento.'
       iva_wallet_empty_amount_cell: La celda de importe de la cartera de compensación
         de IVA está vacía.
       iva_wallet_empty_period_cell: La celda de periodo de la cartera de compensación
         de IVA está vacía.
+      justificante_column_missing: 'La respuesta de declaraciones de AEAT no contiene la columna de justificante; la estructura de la tabla puede haber cambiado.'
+      listbox_missing: 'La respuesta de declaraciones de AEAT no contiene el contenedor de listado esperado; la estructura de la página puede haber cambiado.'
+      listing_nav_failed: 'La navegación al listado de declaraciones de AEAT falló. Compruebe la conectividad de red y vuelva a intentarlo.'
       no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
         ejecute primero `aeat config auth status`.
+      parse_failed: 'No se pudo analizar la respuesta de declaraciones de AEAT; la estructura de la página puede haber cambiado.'
+      session_expired_nav_failed: 'El registro de declaraciones de AEAT no se cargó; la sesión probablemente ha expirado. Ejecute ''aeat config auth test'' y vuelva a intentarlo.'
 aggregation:
   iva_ledger:
     errors:
@@ -397,6 +421,9 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+  portals:
+    errors:
+      portal_not_found: 'El portal AEAT solicitado no está registrado. Ejecute ''aeat app live portals list'' para ver los portales disponibles.'
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -3061,6 +3088,10 @@ errors:
       o integridad. No importes archivos de origen no fiable.
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
+    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
+      close the active session before re-entering.'
+    internal_master_key_type: 'Internal error: master-key operation received a value
+      of the wrong type.'
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
