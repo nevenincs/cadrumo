@@ -375,3 +375,44 @@ class TestArgvReconstruction:
         )
         argv = _argv_from_arguments("aeat run show", args)
         assert argv == ["run", "show", "abc"]
+
+
+class TestReplayActiveEnvVarCanonicity:
+    """Assert that REPLAY_ACTIVE_ENV_VAR has exactly one definition site.
+
+    The literal string ``"AEAT_REPLAY_ACTIVE"`` must appear only in
+    ``_replay.py`` at line 26 (the canonical assignment).  Any duplicate
+    definition in another module is an authoring error that this test
+    catches at the source level.
+    """
+
+    def test_literal_defined_exactly_once_in_replay_module(self) -> None:
+        from pathlib import Path
+
+        pkg_root = Path(__file__).parent
+        # Split the search token so this test file does not self-match.
+        literal = "AEAT_REPLAY" + "_ACTIVE"
+
+        hits: list[tuple[Path, int, str]] = []
+        for py_file in sorted(pkg_root.glob("*.py")):
+            if py_file.name.startswith("test_"):
+                continue
+            for lineno, line in enumerate(py_file.read_text(encoding="utf-8").splitlines(), start=1):
+                if f'"{literal}"' in line:
+                    hits.append((py_file, lineno, line.strip()))
+
+        assert hits, "literal not found anywhere — canonical definition missing"
+
+        # Exactly one hit, and it must be the assignment in _replay.py:26.
+        assert len(hits) == 1, (
+            f"Expected exactly one occurrence of the literal across non-test package files; "
+            f"found {len(hits)}:\n"
+            + "\n".join(f"  {f.name}:{ln}  {src}" for f, ln, src in hits)
+        )
+        canonical_file, canonical_line, _ = hits[0]
+        assert canonical_file.name == "_replay.py", (
+            f"Canonical definition must be in _replay.py, found in {canonical_file.name}"
+        )
+        assert canonical_line == 26, (
+            f"Canonical definition must be at line 26, found at line {canonical_line}"
+        )

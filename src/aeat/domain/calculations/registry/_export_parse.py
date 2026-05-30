@@ -12,6 +12,7 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
+from ....core.parsing._utils import _parse_bool as _core_parse_bool
 from ._errors import RegistryValidationError
 from ._schema import (
     ExportFieldDefinition,
@@ -406,14 +407,34 @@ def _parse_decimal(field: ExportFieldDefinition, raw: str) -> Decimal:
         raise RegistryValidationError(f"decimal export field {field.id!r} contains invalid decimal data") from exc
 
 
+_REGISTRY_TRUTHY = frozenset({"x", "1", "s", "si", "true"})
+_REGISTRY_FALSY = frozenset({"0", "n", "no", "false"})
+
+
 def _parse_boolean(raw: str) -> bool | None:
-    text = raw.strip().upper()
-    if not text:
+    """Thin wrapper around :func:`aeat.core.parsing._utils._parse_bool`.
+
+    The registry export format uses uppercase affirmative tokens ("X", "S",
+    "SI") that extend the core truthy set.  This wrapper normalises the raw
+    string to lowercase before delegating so the core helper can match them.
+    The local registry-specific sets are passed implicitly through the
+    module-level constants; the core helper's generic sets are bypassed in
+    favour of these registry-aware ones so that unrecognised tokens raise a
+    typed :class:`RegistryValidationError` rather than silently returning
+    ``None``.
+    """
+    if not raw or not raw.strip():
         return None
-    if text in {"X", "1", "S", "SI", "TRUE"}:
+    token = raw.strip().lower()
+    if token in _REGISTRY_TRUTHY:
         return True
-    if text in {"0", "N", "NO", "FALSE"}:
+    if token in _REGISTRY_FALSY:
         return False
+    # Delegate to core for any token the registry sets don't cover so the
+    # core helper's debug logging fires before we raise.
+    result = _core_parse_bool(raw)
+    if result is not None:
+        return result
     raise RegistryValidationError("boolean export field contains invalid data")
 
 
