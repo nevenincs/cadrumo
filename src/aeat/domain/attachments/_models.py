@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from ...core.errors import CoreValidationError
 from ...core.time._utc import _validate_utc_aware
+from ..modelos._ids import BucketId
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
 
@@ -113,7 +114,7 @@ class Attachment(BaseModel):
     captured_at: datetime
     linked_transaction_ids: tuple[str, ...] = ()
     linked_invoice_ids: tuple[str, ...] = ()
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     captured_by: str | None = None
     source_command: str | None = None
     metadata: Mapping[str, str] = Field(default_factory=dict)
