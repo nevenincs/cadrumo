@@ -364,3 +364,44 @@ strengthens the test, never weakens or skips it.
 - [x] `W01.P09.S222` - add real-behavior test asserting zero bare-except shapes survive in the test surface; `src/aeat/test_no_bare_except.py`.
 - [x] `W01.P09.S223` - enumerate every test that constructs a pydantic model with only the required fields populated (per `aeat-roundtrip-discipline.md`'s "populate every defaultable field" rule); `record each as a follow-up Step; `src/aeat`.
 - [x] `W01.P09.S224` - add real-behavior test asserting roundtrip-fixture builders saturate every defaultable field; `src/aeat/test_roundtrip_fixture_saturation.py`.
+
+## Wave `W02` - close Wave 2 swarm re-audit findings
+
+Wave 2 closes the 8 regressions, 10 new drifts, and 54 survivor-missed findings surfaced by the 2026-05-30 swarm re-audit. Regressions land in P10 first (highest diagnostic priority). Survivor sweeps follow per-axis. Cross-layer constants relocate to aeat.core to prevent the application-vs-domain shadowing pattern. Authorising audit: 2026-05-30-codebase-solidification-audit.
+
+### Phase `W02.P10` - regression fixes
+
+Close the 8 regressions surfaced by Wave 2. These prove the enrollment habit leaked despite Wave 1 closure; highest diagnostic priority.
+
+- [ ] `W02.P10.S225` - expose detach_run_sink(sink) in aeat.core.logging and route _context.py detach through it; `src/aeat/core/logging.py`.
+- [ ] `W02.P10.S226` - add real-behavior test asserting attach_run_sink and detach_run_sink are symmetric and both apply SecretScrubbingFilter teardown; `src/aeat/core/test_logging.py`.
+- [ ] `W02.P10.S227` - delete local _now_utc helper at inventory/_service.py:97; `import canonical _now from aeat.core.time; `src/aeat/application/inventory/_service.py`.
+- [ ] `W02.P10.S228` - add real-behavior test asserting inventory service uses canonical _now; `src/aeat/application/inventory/test_service.py`.
+- [ ] `W02.P10.S229` - delete local _utc_now helper at calc_sheets/_records.py:471; `import canonical _now from aeat.core.time; `src/aeat/application/storage/calc_sheets/_records.py`.
+- [ ] `W02.P10.S230` - add real-behavior test asserting calc_sheets records use canonical _now; `src/aeat/application/storage/calc_sheets/test_records.py`.
+- [ ] `W02.P10.S231` - delete _parse_boolean helper at registry/_export_parse.py:409; `import canonical _parse_bool and wrap with registry truthy/falsy sets; `src/aeat/domain/calculations/registry/_export_parse.py`.
+- [ ] `W02.P10.S232` - add real-behavior test asserting registry export parser delegates to canonical _parse_bool; `src/aeat/domain/calculations/registry/test_export_parse.py`.
+- [ ] `W02.P10.S233` - replace bare draft string with CasillaFieldKind.DRAFT at _declarations.py:1471; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W02.P10.S234` - replace bare draft string with CasillaFieldKind.DRAFT at user_profile/_registry_contract.py:255; `src/aeat/domain/user_profile/_registry_contract.py`.
+- [ ] `W02.P10.S235` - replace bare draft string with CasillaFieldKind.DRAFT and convert match arm to enum case at _export.py:472; `src/aeat/application/filing/_export.py`.
+- [ ] `W02.P10.S236` - replace bare binding/casilla strings with CasillaFieldKind members at registry/_export.py lines 151,156,167,186; `src/aeat/domain/calculations/registry/_export.py`.
+- [ ] `W02.P10.S237` - add real-behavior test asserting CasillaFieldKind enum-bypass survivors are closed across all 5 sites; `src/aeat/domain/calculations/registry/test_casilla_field_kind_enrollment.py`.
+- [ ] `W02.P10.S238` - relocate CLASSIFIED_BY_MANUAL from application/ledger/_models.py to aeat.core.external_constants so domain layer can import it; `src/aeat/core/external_constants.py`.
+- [ ] `W02.P10.S239` - delete _MANUAL_CLASSIFIED_BY shadow in domain/transactions/_service.py:24 and import CLASSIFIED_BY_MANUAL from aeat.core.external_constants; `src/aeat/domain/transactions/_service.py`.
+- [ ] `W02.P10.S240` - add real-behavior test asserting CLASSIFIED_BY_MANUAL is the single source of truth across application and domain layers; `src/aeat/core/test_external_constants.py`.
+- [ ] `W02.P10.S241` - import REPLAY_ACTIVE_ENV_VAR from observability._replay in observability/_context.py:51; `delete the private _REPLAY_ACTIVE_ENV_VAR literal; `src/aeat/core/observability/_context.py`.
+- [ ] `W02.P10.S242` - add real-behavior test asserting REPLAY_ACTIVE_ENV_VAR has exactly one canonical definition site across observability package; `src/aeat/core/observability/test_replay.py`.
+
+### Phase `W02.P11` - A1 exception survivor sweep
+
+Establish master_key/_errors.py with MasterKeyReentrantError / MasterKeyTypeError / KeyDerivationError enrollment. Enroll bucket/ validators into BucketError. Close 6 application-layer enrolled-error survivors.
+
+
+### Phase `W02.P12` - A3 locale survivor sweep
+
+Thread translated_message on every AeatLoginAssertionError raise across _authenticator.py and _clave_movil.py (9 sites). Close 9 SedeNavigationError navigation-flow raises in _declarations.py. Localize PortalNotFoundError.
+
+
+### Phase `W02.P13` - A4 + A7 + A8 new drift cleanup
+
+Close A4 JSON-decode boundaries (crypto + master-key), A7 Playwright wait-state literals (15+ sites), browser timeout magic numbers, MIME constants, env-write doc comments, A8 missing CAST-RATIONALE markers.
