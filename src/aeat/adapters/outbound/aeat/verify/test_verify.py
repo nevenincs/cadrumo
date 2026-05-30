@@ -186,18 +186,16 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
 
 
 @pytest.mark.asyncio
-async def test_build_default_browser_session_raises_browser_adapter_type_error_on_wrong_type(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_build_default_browser_session_raises_browser_adapter_type_error_on_wrong_type() -> None:
     """When default_browser_session_factory returns a non-VerifyBrowserSessionLike
     object, _build_default_browser_session must raise BrowserAdapterTypeError —
     a typed, registered envelope — not the bare built-in TypeError.
 
     A hand-rolled sentinel that is not a VerifyBrowserSessionLike is returned
-    by the factory; the raised exception class is asserted directly so any
-    regression to bare TypeError fails this test.
+    by a factory passed via the production DI seam; the raised exception
+    class is asserted directly so any regression to bare TypeError fails
+    this test.
     """
-    import aeat.adapters.outbound.aeat.browser as browser_module
     from aeat.core.config import Settings
 
     class _NotASession:
@@ -208,10 +206,8 @@ async def test_build_default_browser_session_raises_browser_adapter_type_error_o
     async def _bad_factory(settings: Settings) -> object:
         return sentinel
 
-    monkeypatch.setattr(browser_module, "default_browser_session_factory", _bad_factory)
-
     with pytest.raises(verify_module._BrowserAdapterTypeError) as exc_info:
-        await verify_module._build_default_browser_session()
+        await verify_module._build_default_browser_session(factory=_bad_factory)
 
     assert "_NotASession" in str(exc_info.value)
 
