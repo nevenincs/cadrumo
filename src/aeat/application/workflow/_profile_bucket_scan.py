@@ -102,7 +102,8 @@ def read_profile_bucket(
         if len(live) == 1:
             return live[0]
         raise ProfileLabelAmbiguousError(
-            f"profile label {label!r} is ambiguous: {len(matches)} buckets carry it"
+            translated_message="application.workflow.errors.profile_label_ambiguous",
+            context={"label": label, "count": str(len(matches))},
         )
     return matches[0]
 
