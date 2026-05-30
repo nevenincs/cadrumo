@@ -128,58 +128,67 @@ def test_aeat_error_envelope_is_well_formed_in_json_mode() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_non_aeat_error_in_profile_show_read_wraps_to_config_boundary_error(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A RuntimeError escaping _read_profile_record is wrapped as ConfigBoundaryError.
+def _corrupt_bucket_db(tmp_path: Path) -> None:
+    """Overwrite the per-bucket SQLite DB file with garbage bytes.
+
+    A real on-disk corruption is the authentic trigger for a non-
+    ``AeatError`` failure in ``_read_profile_record`` — SQLAlchemy
+    raises ``DatabaseError`` / ``OperationalError`` when it tries to
+    open the corrupted file. This drives the same catch-all branch
+    the prior ``monkeypatch.setattr`` test exercised, without
+    patching a module attribute (per the project no-monkeypatch
+    mandate, CLAUDE.md).
+
+    Layout per ``_bucket_session.py``:
+    ``<storage_root>/buckets/<bucket_id>/db/aeat.db``.
+    """
+    dispose_engine()  # flush cached connections so the rewrite is observed
+    storage_root = tmp_path / "aeat-storage"
+    db_paths = list(storage_root.glob("buckets/*/db/aeat.db"))
+    assert db_paths, f"no per-bucket DB found under {storage_root}"
+    for db_path in db_paths:
+        db_path.write_bytes(b"\x00" * 1024)  # SQLite header is 16 bytes; 1 KiB of NULs is enough
+
+
+def test_non_aeat_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_path: Path) -> None:
+    """A non-AeatError escaping _read_profile_record is wrapped as ConfigBoundaryError.
 
     The config_profile_show handler (catch 3) splits the except arm:
     AeatError propagates verbatim; any other exception is wrapped in
     ConfigBoundaryError before the custom "profile_record_unreadable" payload
     is emitted.
 
-    This test injects a RuntimeError via monkeypatch to assert:
-    (a) exit code is 2 (unreadable profile path), and
-    (b) the output describes an unreadable profile record.
+    The non-AeatError is triggered by a real on-disk corruption of the
+    per-bucket SQLite database (SQLAlchemy raises DatabaseError, not an
+    AeatError subclass). This exercises the same catch arm as the prior
+    ``monkeypatch.setattr`` shim without patching a module attribute.
     """
-    import aeat.entrypoints.cli._config as _config_mod
-
     _create_profile("boundary-probe")
-
-    injected = RuntimeError("synthetic storage failure for boundary test")
-    monkeypatch.setattr(_config_mod, "_read_profile_record", lambda **_kw: (_ for _ in ()).throw(injected))
+    _corrupt_bucket_db(tmp_path)
 
     result = invoke_cached_cli(["config", "profile", "show", "boundary-probe"])
 
-    assert result.exit_code == 2
+    assert result.exit_code == 2, result.output
     output_text = result.output
     assert "profile_record_unreadable" in output_text or "unreadable" in output_text
 
 
-def test_non_aeat_error_cause_chain_reaches_config_boundary_error(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_non_aeat_error_cause_chain_reaches_config_boundary_error(tmp_path: Path) -> None:
     """ConfigBoundaryError wraps the raw exception and is chained from typer.Exit.
 
     After catch 3 wraps a non-AeatError into ConfigBoundaryError, the
-    `raise typer.Exit(code=2) from boundary` statement chains the
+    ``raise typer.Exit(code=2) from boundary`` statement chains the
     ConfigBoundaryError as the __cause__ of the SystemExit.
 
-    We verify that the exception recorded by CliRunner has ConfigBoundaryError
-    in its cause chain when a raw RuntimeError escapes _read_profile_record.
+    Verifies the cause-chain shape when a real DB corruption (not a
+    monkeypatch attribute swap) causes the boundary to fire.
     """
-    import aeat.entrypoints.cli._config as _config_mod
-
     _create_profile("chain-probe")
-
-    injected = RuntimeError("chained cause probe")
-    monkeypatch.setattr(_config_mod, "_read_profile_record", lambda **_kw: (_ for _ in ()).throw(injected))
+    _corrupt_bucket_db(tmp_path)
 
     result = invoke_cached_cli(["config", "profile", "show", "chain-probe"])
 
-    assert result.exit_code == 2
+    assert result.exit_code == 2, result.output
     # CliRunner captures the exception that propagated out of the callback.
     # typer.Exit propagates from the handler; its __cause__ is ConfigBoundaryError.
     exc = result.exception
@@ -193,7 +202,10 @@ def test_non_aeat_error_cause_chain_reaches_config_boundary_error(
         # If CliRunner swallowed the exception, the output check is sufficient.
         if cause is not None:
             assert isinstance(cause, ConfigBoundaryError)
-            assert isinstance(cause.original_exception, RuntimeError)
+            # Real-failure trigger raises a SQLAlchemy DatabaseError or
+            # similar; the wrapped original_exception is non-AeatError.
+            from aeat.core.errors import AeatError
+            assert not isinstance(cause.original_exception, AeatError)
 
 
 # ---------------------------------------------------------------------------
