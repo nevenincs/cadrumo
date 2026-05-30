@@ -41,9 +41,9 @@ from ._id_resolution import (
     compute_display_id_width,
     resolve_transaction_id,
 )
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
-    CLASSIFIED_BY_MANUAL,
     ApplyRulesAppliedRow,
     ApplyRulesResult,
     BulkClassifyFailure,
