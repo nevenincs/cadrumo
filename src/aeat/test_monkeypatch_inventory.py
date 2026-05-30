@@ -17,18 +17,17 @@ Classification rules:
 - **Drift**: any ``monkeypatch.setattr`` / ``monkeypatch.setitem`` /
   ``monkeypatch.delattr`` call that is not in the documented set.
 
-Campaign #72 progress: ``test_browser_errors.py`` retired its two
-production-state ``monkeypatch.setattr`` calls in favour of a real
-``browser_session_factory`` DI parameter threaded through the
-production entry points. Remaining documented sites:
+Campaign #72 progress: both browser-factory swap files have been
+retired in favour of real DI seams threaded through their production
+entry points (``browser_session_factory`` / ``factory`` kwargs).
+Remaining documented sites:
 
-  1. test_verify.py (x1) -- injects ``_bad_factory`` to assert type guard fires.
-  2. test_recovery_facade.py (x1) -- injects ``_raise_key_error`` to assert
+  1. test_recovery_facade.py (x1) -- injects ``_raise_key_error`` to assert
      ``KeyError`` propagation through ``unwrap_recovery_envelope``.
-  3. test_config.py (x2) -- injects error-raising lambda into ``_read_profile_record``
+  2. test_config.py (x2) -- injects error-raising lambda into ``_read_profile_record``
      to test CLI error-boundary behaviour.
 
-These three are classified as **legitimate boundary injection for
+These two are classified as **legitimate boundary injection for
 third-party / OS-interface surfaces** that cannot be exercised
 without live infra in unit tests.  ``sys.*`` patches in
 ``test_stdio.py`` are unconditionally allowed (process-global
@@ -64,17 +63,12 @@ _ALLOWED_SETATTR_TARGETS_PREFIXES = (
 # Format: (repo-relative path, target description).
 _DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset(
     {
-        # Campaign #72: sede/test_browser_errors.py is retired — the
-        # production entry points now accept ``browser_session_factory``
-        # as a real DI parameter (see commit a7921f4de). No documented
-        # entry remains for that file.
-        #
-        # Same pattern still present for verify module — bad factory
-        # triggers type guard. Carries a DI seam follow-up.
-        (
-            "src/aeat/adapters/outbound/aeat/verify/test_verify.py",
-            "default_browser_session_factory",
-        ),
+        # Campaign #72: the two browser-factory swap files have been
+        # retired in favour of real DI seams:
+        # - sede/test_browser_errors.py (commit a7921f4de) — via
+        #   ``browser_session_factory`` kwarg on the production entry.
+        # - verify/test_verify.py — via ``factory`` kwarg on
+        #   ``_build_default_browser_session``.
         # decode_mnemonic replaced with a raising callable to assert that
         # KeyError propagates through unwrap_recovery_envelope.
         (
