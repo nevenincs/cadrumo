@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ...domain.modelos._ids import BucketId
 from ._actions import WorkUnitNotFoundError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -90,7 +91,7 @@ class ModeloReconciliationReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     work_unit_id: str = Field(min_length=1, max_length=128)
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     source_kind: ModeloReconciliationSourceKind
     source_path: str
     verdict: ModeloReconciliationVerdict

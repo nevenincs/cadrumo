@@ -27,6 +27,7 @@ from ...domain.buckets import (
 )
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ...domain.modelos._ids import BucketId
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ._actions import WorkUnitNotFoundError
@@ -51,7 +52,7 @@ class WorkUnitHistory(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     work_unit_id: str = Field(min_length=1)
     events: tuple[WorkUnitHistoryEvent, ...] = Field(default_factory=tuple)
 
