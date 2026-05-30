@@ -37,6 +37,7 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.parsing._dates import _parse_ddmmyyyy_date
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
@@ -62,8 +63,7 @@ _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
 
 # Número de certificado: 13 digits. Captured: 2699101808461 / 2596230606502.
 _CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10,16}$")
-# Spanish DD-MM-YYYY date format used on notification rows.
-_DATE_RE: Final[re.Pattern[str]] = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
+# _DATE_RE removed — date parsing delegated to core.parsing._dates._parse_ddmmyyyy_date
 
 
 class RemoteNotification(BaseModel):
@@ -315,13 +315,8 @@ def _safe_cell(cells: list[str], idx: int | None) -> str | None:
 
 def _parse_date(raw: str | None) -> date | None:
     """Parse a Spanish ``DD-MM-YYYY`` date string, returning ``None`` on any failure."""
-    if not raw:
-        return None
-    match = _DATE_RE.match(raw)
-    if match is None:
-        return None
     try:
-        return date(int(match.group(3)), int(match.group(2)), int(match.group(1)))
+        return _parse_ddmmyyyy_date(raw)
     except ValueError:
         return None
 

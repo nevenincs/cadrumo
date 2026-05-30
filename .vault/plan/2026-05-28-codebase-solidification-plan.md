@@ -487,12 +487,12 @@ Wave 3 closes the architectural pattern that produced Wave 2 regressions: every 
 
 Relocate SETUP_FLOW/WIZARD_FLOWS and project_answers/SetupAnswers from aeat.application.wizard to aeat.core so domain modules stop reaching upward via deferred lazy imports. Same structural fix as the W02 CLASSIFIED_BY_MANUAL relocation. Plus proactive AggregationSourceKind relocation.
 
-- [ ] `W03.P14.S315` - introduce aeat.core.profile_catalogue with SETUP_FLOW and WIZARD_FLOWS Protocol or move the descriptors themselves; `src/aeat/core/profile_catalogue.py`.
-- [ ] `W03.P14.S316` - migrate aeat.application.wizard._catalogue to import canonical from aeat.core.profile_catalogue; `relocate SETUP_FLOW/WIZARD_FLOWS definitions; `src/aeat/application/wizard/_catalogue.py`.
-- [ ] `W03.P14.S317` - update aeat.domain.deadlines._profiles to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/deadlines/_profiles.py`.
-- [ ] `W03.P14.S318` - update aeat.domain.profile._keys to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/profile/_keys.py`.
-- [ ] `W03.P14.S319` - update aeat.entrypoints.cli._config to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W03.P14.S320` - add real-behavior test asserting SETUP_FLOW/WIZARD_FLOWS canonical home is aeat.core and no deferred lazy upward imports survive; `src/aeat/core/test_profile_catalogue.py`.
+- [x] `W03.P14.S315` - introduce aeat.core.profile_catalogue with SETUP_FLOW and WIZARD_FLOWS Protocol or move the descriptors themselves; `src/aeat/core/profile_catalogue.py`.
+- [x] `W03.P14.S316` - migrate aeat.application.wizard._catalogue to import canonical from aeat.core.profile_catalogue; `relocate SETUP_FLOW/WIZARD_FLOWS definitions; `src/aeat/application/wizard/_catalogue.py`.
+- [x] `W03.P14.S317` - update aeat.domain.deadlines._profiles to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/deadlines/_profiles.py`.
+- [x] `W03.P14.S318` - update aeat.domain.profile._keys to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/profile/_keys.py`.
+- [x] `W03.P14.S319` - update aeat.entrypoints.cli._config to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W03.P14.S320` - add real-behavior test asserting SETUP_FLOW/WIZARD_FLOWS canonical home is aeat.core and no deferred lazy upward imports survive; `src/aeat/core/test_profile_catalogue.py`.
 - [ ] `W03.P14.S321` - introduce SetupAnswers model in aeat.core (or a Protocol it satisfies) so domain can consume the typed projection without reaching into application.wizard; `src/aeat/core/profile.py`.
 - [ ] `W03.P14.S322` - relocate project_answers function to aeat.core.profile or expose its result type via Protocol; `aeat.application.wizard._persistence keeps the implementation but routes through the core interface; `src/aeat/core/profile.py`.
 - [ ] `W03.P14.S323` - update aeat.domain.deadlines._profiles to import project_answers/SetupAnswers from aeat.core.profile and remove deferred upward imports; `src/aeat/domain/deadlines/_profiles.py`.
@@ -536,15 +536,15 @@ Replace 9 inline 'if tzinfo is None or utcoffset is None' guards across persiste
 
 Replace 10+ date.fromisoformat() inline + _parse_date reimpl in _notifications.py + 3 inline bool-string parsing sites with the aeat.core.parsing canonicals (_parse_iso8601_date, _parse_ddmmyyyy_date, _parse_bool).
 
-- [ ] `W03.P17.S349` - replace _parse_date full reimpl in sede/_notifications.py:316 with _parse_ddmmyyyy_date from aeat.core.parsing._dates; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `W03.P17.S350` - replace bare date.fromisoformat in application/calculations/_row_set_assembly.py:187 with _parse_iso8601_date; `src/aeat/application/calculations/_row_set_assembly.py`.
-- [ ] `W03.P17.S351` - replace bare date.fromisoformat in domain/profile/_marriage_facts.py:88,99 with _parse_iso8601_date; `src/aeat/domain/profile/_marriage_facts.py`.
-- [ ] `W03.P17.S352` - replace bare date.fromisoformat in domain/profile/_descendant_facts.py:99,101,159,164 with _parse_iso8601_date; `src/aeat/domain/profile/_descendant_facts.py`.
-- [ ] `W03.P17.S353` - replace bare date.fromisoformat in domain/profile/family.py:83,181,211 with _parse_iso8601_date; `src/aeat/domain/profile/family.py`.
-- [ ] `W03.P17.S354` - replace shadow truthy frozenset in registry/_export_parse.py:414 with _parse_bool delegation (no shadow set); `src/aeat/domain/calculations/registry/_export_parse.py`.
-- [ ] `W03.P17.S355` - replace inline value.lower() truthy check in wizard/_setup_answers.py:242 with _parse_bool; `src/aeat/application/wizard/_setup_answers.py`.
-- [ ] `W03.P17.S356` - replace inline value.lower() truthy check in domain/user_profile/_values.py:82 with _parse_bool; `src/aeat/domain/user_profile/_values.py`.
-- [ ] `W03.P17.S357` - add real-behavior test asserting zero inline date.fromisoformat / bool-string-coerce survive in production; `src/aeat/test_parsing_enrollment_inventory.py`.
+- [x] `W03.P17.S349` - replace _parse_date full reimpl in sede/_notifications.py:316 with _parse_ddmmyyyy_date from aeat.core.parsing._dates; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
+- [x] `W03.P17.S350` - replace bare date.fromisoformat in application/calculations/_row_set_assembly.py:187 with _parse_iso8601_date; `src/aeat/application/calculations/_row_set_assembly.py`.
+- [x] `W03.P17.S351` - replace bare date.fromisoformat in domain/profile/_marriage_facts.py:88,99 with _parse_iso8601_date; `src/aeat/domain/profile/_marriage_facts.py`.
+- [x] `W03.P17.S352` - replace bare date.fromisoformat in domain/profile/_descendant_facts.py:99,101,159,164 with _parse_iso8601_date; `src/aeat/domain/profile/_descendant_facts.py`.
+- [x] `W03.P17.S353` - replace bare date.fromisoformat in domain/profile/family.py:83,181,211 with _parse_iso8601_date; `src/aeat/domain/profile/family.py`.
+- [x] `W03.P17.S354` - replace shadow truthy frozenset in registry/_export_parse.py:414 with _parse_bool delegation (no shadow set); `src/aeat/domain/calculations/registry/_export_parse.py`.
+- [x] `W03.P17.S355` - replace inline value.lower() truthy check in wizard/_setup_answers.py:242 with _parse_bool; `src/aeat/application/wizard/_setup_answers.py`.
+- [x] `W03.P17.S356` - replace inline value.lower() truthy check in domain/user_profile/_values.py:82 with _parse_bool; `src/aeat/domain/user_profile/_values.py`.
+- [x] `W03.P17.S357` - add real-behavior test asserting zero inline date.fromisoformat / bool-string-coerce survive in production; `src/aeat/test_parsing_enrollment_inventory.py`.
 
 ### Phase `W03.P18` - decimal canonical enrollment
 

@@ -9,6 +9,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ...core.parsing._dates import _parse_iso8601_date
+
 from ...domain.calculations.registry import (
     CounterpartAggregationObservation as RegistryCounterpartObservation,
 )
@@ -155,7 +157,7 @@ def _counterpart_registry_observations(
         if clave is None:
             continue
         try:
-            transaction_date = date.fromisoformat(observation.accrued_on)
+            transaction_date = _parse_iso8601_date(observation.accrued_on)
         except ValueError as exc:
             raise AggregationValidationError(
                 t("aggregation.per_modelo.registry.errors.invalid_accrued_on"),

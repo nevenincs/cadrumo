@@ -13,6 +13,7 @@ from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.parsing._dates import _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
@@ -92,7 +93,7 @@ class ResidenceChange(BaseModel, frozen=True, strict=True):
     @classmethod
     def _parse_effective_from(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value)
         return value
 
 
@@ -131,7 +132,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     @classmethod
     def _parse_since(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value)
         return value
 
 
