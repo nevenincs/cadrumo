@@ -413,7 +413,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
             status = exc.status
             if not isinstance(status, SiteHealthStatus):
-                raise TypeError(
+                raise DiagnosticModelError(
                     "SiteHealthError carried a non-SiteHealthStatus payload"
                 ) from exc
             return status

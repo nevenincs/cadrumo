@@ -17,6 +17,7 @@ from ._errors import (
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
+    WorkflowInputMismatchError,
 )
 
 # ---- core models first (no application-layer deps) -------------------------
@@ -97,6 +98,7 @@ __all__ = [
     "WorkflowEngine",
     "WorkflowError",
     "WorkflowEvent",
+    "WorkflowInputMismatchError",
     "WorkflowPurpose",
     "WorkflowResult",
     "WorkflowResumeContext",

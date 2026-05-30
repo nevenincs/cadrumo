@@ -317,7 +317,7 @@ def inspect_bucket_storage_runtime(
 
     trimmed = bucket_id.strip()
     if not trimmed:
-        raise ValueError("bucket_id must not be blank")
+        raise StorageValidationError("bucket_id must not be blank")
     resolved = settings or load_settings()
     current_route = classify_storage_route(resolved)
     if (
