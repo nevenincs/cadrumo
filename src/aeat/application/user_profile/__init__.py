@@ -65,6 +65,17 @@ if TYPE_CHECKING:
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+# Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
+# hash, the stored-hash snapshot pointer, and the current-hash recompute
+# result. Stays bare-str under ADR Rule 7 (fingerprint, not identity);
+# factored to a single module-local constraint kwargs mapping to remove
+# the three-way duplication of the shape literal.
+_PROFILE_SNAPSHOT_HASH_KWARGS: dict[str, object] = {
+    "min_length": 64,
+    "max_length": 64,
+    "pattern": r"^[0-9a-f]{64}$",
+}
+
 
 # ---------------------------------------------------------------------------
 # Lifecycle commands
@@ -253,7 +264,7 @@ class ProfileSnapshot(BaseModel):
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: str = Field(min_length=1, max_length=8)
-    canonical_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    canonical_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
     created_at: datetime
     facts: tuple[UserProfileFact, ...]
 
@@ -265,8 +276,8 @@ class ProfileStaleCheckReport(BaseModel):
 
     snapshot_id: str = Field(min_length=1, max_length=128)
     profile_id: ProfileId
-    stored_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
-    current_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    stored_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
+    current_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
     stale: bool
 
 
