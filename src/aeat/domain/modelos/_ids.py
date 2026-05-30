@@ -1,27 +1,21 @@
-"""Shared typed-ID aliases for the modelo persistence boundary.
+"""Typed-id aliases for modelo records.
 
-Centralises the four identity types previously redeclared independently
-across ``_work_unit.py``, ``_calculation_revision.py``, ``_filing_record.py``,
-and the per-bucket binding modules. Single-sourced here so every domain
-record (and every application-layer record that crosses the modelo
-boundary) imports the same constraint shape.
+Each modelo record (work unit, calculation revision, filing record)
+carries a content-addressed SHA-256 identity. The aliases here pin the
+hex-64 shape at the pydantic boundary so a malformed identifier is
+rejected on construction rather than leaking into persisted records.
 
-Per the persistence-identity inventory swarm finding
-(`.vault/audit/2026-05-28-typed-id-enrollment-audit.md` — task #567):
+The five identities share the same string-level shape but carry
+distinct semantic roles (a work-unit id is not assignable to a
+filing-record id field). Keeping them as separate aliases preserves
+that distinction for downstream call sites; collapsing them to a
+single hex-64 alias would lose the role separation.
 
-- ``_filing_record.py`` previously declared ``_WorkUnitId =
-  _FilingRecordId`` and ``_CalculationRevisionId = _FilingRecordId``,
-  structurally collapsing three distinct domain identities to the same
-  alias. They share the same string shape (SHA-256 hex) but carry
-  different semantic roles; the type-system should be able to tell them
-  apart for downstream callers.
-- ``_calculation_revision.py`` declared its own ``_WorkUnitId`` with
-  the identical constraint, independent of ``_work_unit.py``.
-
-The four aliases here are the canonical declarations; the per-file
-underscore-prefixed names remain as backward-compatible aliases via
-``from ._ids import ... as _Xxx`` in the consuming modules until those
-modules are migrated to import the public names directly.
+BucketId and TransactionId are declared here because the modelo
+boundary records reference both, and pulling the constraint from a
+single home avoids per-module redeclaration drift. Cross-domain
+consumers (transactions, ledger, evidence, live snapshots) import
+the same aliases from this module.
 """
 
 from __future__ import annotations
