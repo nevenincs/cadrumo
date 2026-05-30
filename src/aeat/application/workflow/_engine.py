@@ -94,7 +94,10 @@ def _period_to_year(period: str) -> int | None:
 def _registry_period_token(period: str) -> tuple[int, str]:
     year = _period_to_year(period)
     if year is None:
-        raise WorkflowError(f"cannot derive registry year from workflow period {period!r}")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.period_registry_year_unresolvable",
+            context={"period": period},
+        )
     if period == str(year) or period == f"{year}A":
         return year, "0A"
     if len(period) == 6 and period.startswith(f"{year}Q") and period[-1] in "1234":
@@ -108,7 +111,10 @@ def _registry_period_token(period: str) -> tuple[int, str]:
     # Pago-fraccionado: ``"2026P1"`` / ``"2026P2"`` / ``"2026P3"`` → ``(2026, "1P")`` etc.
     if len(period) == 6 and period.startswith(f"{year}P") and period[-1] in "123":
         return year, f"{period[-1]}P"
-    raise WorkflowError(f"cannot map workflow period {period!r} to a registry period")
+    raise WorkflowError(
+        translated_message="application.workflow.errors.period_registry_unmappable",
+        context={"period": period},
+    )
 
 
 _logger = get_logger(__name__)

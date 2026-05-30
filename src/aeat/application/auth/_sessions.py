@@ -15,8 +15,8 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Va
 from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
 from ...core.i18n import tr
-from ...core.time._utc import _validate_utc_aware
 from ...core.logging import get_logger
+from ...core.time._utc import _validate_utc_aware
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
@@ -416,7 +416,10 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
         parsed = datetime.fromisoformat(text)
         _validate_utc_aware(parsed)
         return parsed
-    raise SessionDeserializationError(f"persisted session {field} must be a datetime or ISO-8601 string")
+    raise SessionDeserializationError(
+        translated_message="application.auth.errors.session_field_not_datetime",
+        context={"field": field},
+    )
 
 
 def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:

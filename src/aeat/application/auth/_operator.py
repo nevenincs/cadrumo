@@ -1212,7 +1212,10 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
 def _implemented_provider(provider: str) -> AuthProviderListing:
     listing = get_auth_provider(provider)
     if not listing.implemented:
-        raise AuthProviderReservedError(provider)
+        raise AuthProviderReservedError(
+            translated_message="application.auth.errors.provider_reserved",
+            context={"provider": provider},
+        )
     return listing
 
 
