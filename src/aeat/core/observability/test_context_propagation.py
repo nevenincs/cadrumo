@@ -81,48 +81,45 @@ class TestRunContextOutcome:
     def test_outcome_ok_on_clean_exit(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        with run_context(entrypoint="aeat test ok", arguments=()) as info:
-            run_id = info.run_id
-        trace = load_trace(run_id)
-        assert trace.outcome is RunOutcome.OK
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            with run_context(entrypoint="aeat test ok", arguments=()) as info:
+                run_id = info.run_id
+            trace = load_trace(run_id)
+            assert trace.outcome is RunOutcome.OK
 
     def test_outcome_failed_when_yield_raises(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        captured: dict[str, str] = {}
-        with (
-            pytest.raises(RuntimeError, match="boom"),
-            run_context(entrypoint="aeat test fail", arguments=()) as info,
-        ):
-            captured["run_id"] = info.run_id
-            raise RuntimeError("boom")
-        trace = load_trace(captured["run_id"])
-        # Pessimistic default: yield raised, so outcome must be FAILED
-        # even though the persisted trace was written from a finally.
-        assert trace.outcome is RunOutcome.FAILED
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            captured: dict[str, str] = {}
+            with (
+                pytest.raises(RuntimeError, match="boom"),
+                run_context(entrypoint="aeat test fail", arguments=()) as info,
+            ):
+                captured["run_id"] = info.run_id
+                raise RuntimeError("boom")
+            trace = load_trace(captured["run_id"])
+            # Pessimistic default: yield raised, so outcome must be FAILED
+            # even though the persisted trace was written from a finally.
+            assert trace.outcome is RunOutcome.FAILED
 
     def test_keyboard_interrupt_recorded_as_failed(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        captured: dict[str, str] = {}
-        with (
-            pytest.raises(KeyboardInterrupt),
-            run_context(entrypoint="aeat test int", arguments=()) as info,
-        ):
-            captured["run_id"] = info.run_id
-            raise KeyboardInterrupt
-        trace = load_trace(captured["run_id"])
-        # BaseException path: Ctrl-C must still leave a FAILED trace.
-        assert trace.outcome is RunOutcome.FAILED
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            captured: dict[str, str] = {}
+            with (
+                pytest.raises(KeyboardInterrupt),
+                run_context(entrypoint="aeat test int", arguments=()) as info,
+            ):
+                captured["run_id"] = info.run_id
+                raise KeyboardInterrupt
+            trace = load_trace(captured["run_id"])
+            # BaseException path: Ctrl-C must still leave a FAILED trace.
+            assert trace.outcome is RunOutcome.FAILED
 
     def test_trace_persistence_failure_surfaces_on_clean_exit(
         self,
@@ -160,7 +157,6 @@ class TestRunContextRunIdValidation:
     def test_caller_supplied_bad_run_id_rejected_before_fs(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """A malicious run_id must never touch the filesystem.
 
@@ -172,49 +168,47 @@ class TestRunContextRunIdValidation:
         """
         from . import RunTraceValidationError
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
-            with (
-                pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
-                run_context(entrypoint="aeat test", arguments=(), run_id=bad),
-            ):
-                pass
-            # No directory must have been created by the rejected enter.
-            assert not any(tmp_path.iterdir()), f"rejected run_id {bad!r} left debris under {tmp_path}"
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
+                with (
+                    pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
+                    run_context(entrypoint="aeat test", arguments=(), run_id=bad),
+                ):
+                    pass
+                # No directory must have been created by the rejected enter.
+                assert not any(tmp_path.iterdir()), f"rejected run_id {bad!r} left debris under {tmp_path}"
 
     def test_caller_supplied_valid_run_id_accepted(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        with run_context(
-            entrypoint="aeat test",
-            arguments=(),
-            run_id="cafebabecafebabe",
-        ) as info:
-            assert info.run_id == "cafebabecafebabe"
-        trace = load_trace("cafebabecafebabe")
-        assert trace.run_id == "cafebabecafebabe"
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            with run_context(
+                entrypoint="aeat test",
+                arguments=(),
+                run_id="cafebabecafebabe",
+            ) as info:
+                assert info.run_id == "cafebabecafebabe"
+            trace = load_trace("cafebabecafebabe")
+            assert trace.run_id == "cafebabecafebabe"
 
 
 class TestRunIdPropagation:
     def test_run_id_is_identical_across_chain(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        chain: Callable[[str], None] = _SubmissionStep(_InboxStep(_StatusStep()))
-        with run_context(entrypoint="aeat test chain", arguments=()) as info:
-            chain("alpha")
-            chain("beta")
-            run_id = info.run_id
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            chain: Callable[[str], None] = _SubmissionStep(_InboxStep(_StatusStep()))
+            with run_context(entrypoint="aeat test chain", arguments=()) as info:
+                chain("alpha")
+                chain("beta")
+                run_id = info.run_id
 
-        events = load_events(run_id)
-        assert events, "expected at least one event after running the chain"
-        run_ids = {evt.run_id for evt in events}
-        assert run_ids == {run_id}
+            events = load_events(run_id)
+            assert events, "expected at least one event after running the chain"
+            run_ids = {evt.run_id for evt in events}
+            assert run_ids == {run_id}
 
 
 class TestRunSinkScrubbing:
@@ -235,73 +229,68 @@ class TestRunSinkScrubbing:
     def test_nif_shaped_field_is_sha256_prefixed_in_jsonl(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """A NIF-shaped value in a GenericPayload field must not appear in plain text."""
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            with run_context(entrypoint="aeat test scrub nif", arguments=()) as info:
+                record_event(
+                    RunEventKind.ASSERTION,
+                    payload=RunEventPayload(
+                        generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
+                    ),
+                )
+                run_id = info.run_id
 
-        with run_context(entrypoint="aeat test scrub nif", arguments=()) as info:
-            record_event(
-                RunEventKind.ASSERTION,
-                payload=RunEventPayload(
-                    generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
-                ),
+            jsonl_path = tmp_path / run_id / "events.jsonl"
+            assert jsonl_path.exists(), f"JSONL sink file not found: {jsonl_path}"
+
+            raw_text = jsonl_path.read_text(encoding="utf-8")
+            assert self._PLAIN_NIF not in raw_text, (
+                f"plain NIF {self._PLAIN_NIF!r} found in JSONL output — scrubbing did not fire"
             )
-            run_id = info.run_id
-
-        jsonl_path = tmp_path / run_id / "events.jsonl"
-        assert jsonl_path.exists(), f"JSONL sink file not found: {jsonl_path}"
-
-        raw_text = jsonl_path.read_text(encoding="utf-8")
-        assert self._PLAIN_NIF not in raw_text, (
-            f"plain NIF {self._PLAIN_NIF!r} found in JSONL output — scrubbing did not fire"
-        )
-        # The DIAGNOSTIC rule SHA256-prefixes NIF spans.
-        assert "sha256:" in raw_text, (
-            "expected sha256: prefix in JSONL output to confirm NIF was redacted, not absent"
-        )
+            # The DIAGNOSTIC rule SHA256-prefixes NIF spans.
+            assert "sha256:" in raw_text, (
+                "expected sha256: prefix in JSONL output to confirm NIF was redacted, not absent"
+            )
 
     def test_scrubbing_filter_present_on_sink_after_attach(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """The sink handler must carry a SecretScrubbingFilter after attach_run_sink."""
         from ..logging import SecretScrubbingFilter, attach_run_sink
         from ._sink import JsonlRunSink
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)
-        attach_run_sink(sink)
-        try:
-            has_filter = any(isinstance(f, SecretScrubbingFilter) for f in sink.filters)
-            assert has_filter, "SecretScrubbingFilter not installed on sink by attach_run_sink"
-        finally:
-            import logging
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)
+            attach_run_sink(sink)
+            try:
+                has_filter = any(isinstance(f, SecretScrubbingFilter) for f in sink.filters)
+                assert has_filter, "SecretScrubbingFilter not installed on sink by attach_run_sink"
+            finally:
+                import logging
 
-            logging.getLogger().removeHandler(sink)
-            sink.close()
+                logging.getLogger().removeHandler(sink)
+                sink.close()
 
     def test_jsonl_lines_are_valid_json(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Every JSONL line must deserialise cleanly after scrubbing is applied."""
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            with run_context(entrypoint="aeat test scrub json", arguments=()) as info:
+                record_event(
+                    RunEventKind.NAVIGATION,
+                    payload=RunEventPayload(
+                        generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
+                    ),
+                )
+                run_id = info.run_id
 
-        with run_context(entrypoint="aeat test scrub json", arguments=()) as info:
-            record_event(
-                RunEventKind.NAVIGATION,
-                payload=RunEventPayload(
-                    generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
-                ),
-            )
-            run_id = info.run_id
-
-        jsonl_path = tmp_path / run_id / "events.jsonl"
-        lines = [ln for ln in jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
-        assert lines, "no JSONL lines written"
-        for line in lines:
-            parsed = json.loads(line)
-            assert isinstance(parsed, dict), f"expected JSON object per line, got {type(parsed)}"
+            jsonl_path = tmp_path / run_id / "events.jsonl"
+            lines = [ln for ln in jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            assert lines, "no JSONL lines written"
+            for line in lines:
+                parsed = json.loads(line)
+                assert isinstance(parsed, dict), f"expected JSON object per line, got {type(parsed)}"
