@@ -173,29 +173,29 @@ Lift the fifty-nine bare-string registry-id field sites enumerated in the identi
 
 Replace bare-string casilla_id, formula_id, revision_id, modelo_id field declarations across entrypoints/cli/_modelo_payloads and adjacent CLI payload modules with the existing registry aliases. CLI input crosses a wire boundary and the strict-pydantic discipline forbids bare-string identity surfaces under Rule 8.
 
-- [ ] `W04.P15.S57` - replace the fifteen bare-string casilla_id, formula_id, revision_id, and modelo_id field declarations with the typed registry aliases per ADR Rule 8; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S58` - replace the residual bare-string registry-id field declarations across the remaining CLI payload modules with the typed registry aliases per ADR Rule 8; `src/aeat/entrypoints/cli/`.
+- [x] `W04.P15.S57` - replace the fifteen bare-string casilla_id, formula_id, revision_id, and modelo_id field declarations with the typed registry aliases per ADR Rule 8; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S58` - replace the residual bare-string registry-id field declarations across the remaining CLI payload modules with the typed registry aliases per ADR Rule 8; `src/aeat/entrypoints/cli/`.
 
 ### Phase `W04.P16` - lift registry validator modules onto registry aliases
 
 Replace bare-string registry-id field declarations across the domain/calculations/registry/_validate_* modules with their typed aliases. The registry validators are downstream consumers of the registry-authority pipeline and must consume the typed contract.
 
-- [ ] `W04.P16.S59` - replace the bare-string registry-id field declarations across the registry _validate_* modules with the typed registry aliases per ADR Rule 8 and confirm the registry-suite passes sequentially; `src/aeat/domain/calculations/registry/`.
+- [x] `W04.P16.S59` - replace the bare-string registry-id field declarations across the registry _validate_* modules with the typed registry aliases per ADR Rule 8 and confirm the registry-suite passes sequentially; `src/aeat/domain/calculations/registry/`.
 
 ### Phase `W04.P17` - lift filing schema and record design onto registry aliases
 
 Replace bare-string registry-id field declarations across domain/filing/_schema and the record-design surface with the typed aliases. The filing schema is the persisted boundary for filing draft records and must consume the typed registry identity contract.
 
-- [ ] `W04.P17.S60` - replace the four bare-string casilla_id, formula_id, revision_id, and modelo_id field declarations on the filing schema with the typed registry aliases per ADR Rule 8; `src/aeat/domain/filing/_schema.py`.
-- [ ] `W04.P17.S61` - replace the bare-string registry-id field declarations across the record-design surface with the typed registry aliases per ADR Rule 8; `src/aeat/domain/calculations/registry/_record_design.py`.
+- [x] `W04.P17.S60` - replace the four bare-string casilla_id, formula_id, revision_id, and modelo_id field declarations on the filing schema with the typed registry aliases per ADR Rule 8; `src/aeat/domain/filing/_schema.py`.
+- [x] `W04.P17.S61` - replace the bare-string registry-id field declarations across the record-design surface with the typed registry aliases per ADR Rule 8; `src/aeat/domain/calculations/registry/_record_design.py`.
 
 ### Phase `W04.P18` - lift remaining registry-id survivors across application and adapter layers
 
 Replace the residual bare-string registry-id field declarations across application services and adapter modules with the typed aliases, closing the bare-string registry-id survivor list enumerated in the identity-primitives reference.
 
-- [ ] `W04.P18.S62` - replace the residual bare-string registry-id field declarations across application services with the typed registry aliases per ADR Rule 8; `src/aeat/application/`.
-- [ ] `W04.P18.S63` - replace the residual bare-string registry-id field declarations across adapter modules with the typed registry aliases per ADR Rule 8; `src/aeat/adapters/`.
-- [ ] `W04.P18.S64` - run ripgrep across src/aeat for bare-string casilla_id, formula_id, revision_id, and modelo_id field declarations on pydantic models and confirm zero occurrences remain outside the registry _ids.py module; `src/aeat/`.
+- [x] `W04.P18.S62` - replace the residual bare-string registry-id field declarations across application services with the typed registry aliases per ADR Rule 8; `src/aeat/application/`.
+- [x] `W04.P18.S63` - replace the residual bare-string registry-id field declarations across adapter modules with the typed registry aliases per ADR Rule 8; `src/aeat/adapters/`.
+- [x] `W04.P18.S64` - run ripgrep across src/aeat for bare-string casilla_id, formula_id, revision_id, and modelo_id field declarations on pydantic models and confirm zero occurrences remain outside the registry _ids.py module; `src/aeat/`.
 
 ## Wave `W05` - land the Rule 9 enforcement test
 
