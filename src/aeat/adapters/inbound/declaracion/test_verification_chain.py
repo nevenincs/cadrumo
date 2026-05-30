@@ -59,8 +59,11 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 |        |                            |                   |                  | specimens (2021-2022)               |
 | M347   | 2008-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa;      |
 |        |                            |                   |                  | only decl.ejercicio extracted        |
-| M349   | 2020-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — summary casillas  |
-|        |                            |                   |                  | only; no aggregation formulas        |
+| M349   | 2020-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY-INTRINSIC — closure |
+|        |                            |                   |                  | totals are Tipo-2 row aggregations  |
+|        |                            |                   |                  | (Orden HAC/174/2020 Anexo pos.      |
+|        |                            |                   |                  | 138-146, 147-161, 162-170, 171-185) |
+|        |                            |                   |                  | — not casilla-to-casilla arithmetic |
 | M369   | esquema-union              | 1 synthetic PDF   | none             | EXTRACTION-ONLY — declaracion-only; |
 |        |                            |                   |                  | only decl.ejercicio + decl.periodo   |
 | M390   | 2022-y-siguientes          | 2 real PDFs       | yes              | VERIFIED (cuota-devengada-total,    |
@@ -86,11 +89,24 @@ Follow-up tasks surfaced by this sweep:
     Both revisions (2023-y-siguientes: 8 specimens; 2009-y-siguientes: 7 legacy
     specimens) now use synthetic PDFs with c46 = c27 - c45, so engine resultado
     == extracted resultado. Verdict upgraded FORMULA-MISMATCH → VERIFIED.
+  - M349: closure totals (pos. 138-146, 147-161, 162-170, 171-185 in Tipo 1
+    header record) are defined by Orden HAC/174/2020 Anexo as counts/sums over
+    Tipo 2 detail records in the submitted fichero. The declaracion_pdf surface
+    exposes only the Tipo 1 summary; no peer casillas exist on the same form
+    whose arithmetic the formula DSL could express. Formula authoring is
+    impossible without a new row-array aggregation primitive. Verdict is
+    EXTRACTION-ONLY-INTRINSIC — a domain fact, not an engineering gap.
+    The existing bindings (collectible_invoice, count_distinct / sum) correctly
+    model the arithmetic per the Orden; the calculation engine does not recompute
+    these casillas from other casillas but from the raw invoice data source.
 
 Summary: 8 modelos VERIFIED (M111, M115, M123, M130, M131, M180, M190-engine
 via M115 chain, M193, M303, M390 partial); 8 modelos EXTRACTION-ONLY (M036,
 M100 CORPUS-LIMITED, M184, M190, M347, M349, M369, M720, M840);
 0 modelos NOT-CHAIN-READY.
+M349 sub-classification: EXTRACTION-ONLY-INTRINSIC (closure arithmetic is
+row-aggregation over fichero Tipo 2 records, not casilla arithmetic — no
+formula DSL path exists; not an engineering gap).
 """
 
 from __future__ import annotations
@@ -2043,9 +2059,26 @@ def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> N
 
     Extraction verdict: VERIFIED — 4 named-label casillas extracted.
 
-    Formula verdict: EXTRACTION-ONLY — M349 has no closure aggregation formulas
-    in the registry (the casillas represent direct declarant-entered summary
-    values, not computed closures). Formula verification is not applicable.
+    Formula verdict: EXTRACTION-ONLY-INTRINSIC — M349 closure totals are
+    defined by Orden HAC/174/2020 Anexo (Diseño de Registros) as aggregations
+    over Tipo 2 detail records in the submitted fichero:
+
+      pos. 138-146 (numero-operadores): count of Tipo 2 operador records with
+        clave E/M/H/T/A/S/I/R/D/C (position 133 of the record).
+      pos. 147-161 (importe-operaciones): sum of pos. 134-146 (base imponible)
+        across Tipo 2 operador records with the same clave set.
+      pos. 162-170 (numero-rectificaciones): count of Tipo 2 rectificacion
+        records with clave E/M/H/T/A/S/I/R/D/C.
+      pos. 171-185 (importe-rectificaciones): sum of pos. 153-165 (base
+        imponible rectificada) across Tipo 2 rectificacion records.
+
+    The declaracion_pdf surface exposes only the Tipo 1 header record. No peer
+    casillas on the same form participate in any arithmetic these closures
+    summarise. The formula DSL (casilla-to-casilla arithmetic) cannot express
+    count/sum over Tipo 2 record arrays. The existing registry bindings
+    (collectible_invoice, count_distinct/sum) model this arithmetic correctly.
+    This is a domain fact, not an engineering gap — no formula can be authored
+    without a new row-array aggregation primitive.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "349" / "2024-1T.pdf"
 
