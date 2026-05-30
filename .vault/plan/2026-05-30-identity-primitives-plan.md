@@ -134,36 +134,36 @@ Delete the duplicated _HEX_*_LENGTH constants, the private re-alias blocks under
 
 Remove the three _HEX_INVOICE_ID_LENGTH, _HEX_TRANSACTION_ID_LENGTH, and _HEX_WORK_UNIT_ID_LENGTH constants from their non-_ids.py homes per ADR Rule 4 and the Consequences shadow-declarations section, replacing each consumer field with the typed alias from the owning _ids.py module.
 
-- [ ] `W03.P10.S47` - delete the _HEX_TRANSACTION_ID_LENGTH constant and replace the consumer field with the typed TransactionId alias per ADR Rule 4; `src/aeat/domain/invoices/_service.py`.
-- [ ] `W03.P10.S48` - delete the _HEX_TRANSACTION_ID_LENGTH and _HEX_INVOICE_ID_LENGTH constants and replace the consumer fields with the typed TransactionId and InvoiceId aliases per ADR Rule 4; `src/aeat/domain/invoices/_models.py`.
-- [ ] `W03.P10.S49` - delete the _HEX_WORK_UNIT_ID_LENGTH constant and replace the consumer field with the typed WorkUnitId alias per ADR Rule 4; `src/aeat/domain/modelos/_work_unit.py`.
+- [x] `W03.P10.S47` - delete the _HEX_TRANSACTION_ID_LENGTH constant and replace the consumer field with the typed TransactionId alias per ADR Rule 4; `src/aeat/domain/invoices/_service.py`.
+- [x] `W03.P10.S48` - delete the _HEX_TRANSACTION_ID_LENGTH and _HEX_INVOICE_ID_LENGTH constants and replace the consumer fields with the typed TransactionId and InvoiceId aliases per ADR Rule 4; `src/aeat/domain/invoices/_models.py`.
+- [x] `W03.P10.S49` - delete the _HEX_WORK_UNIT_ID_LENGTH constant and replace the consumer field with the typed WorkUnitId alias per ADR Rule 4; `src/aeat/domain/modelos/_work_unit.py`.
 
 ### Phase `W03.P11` - delete private re-alias blocks under domain/modelos
 
 Remove the private re-aliasing blocks at domain/modelos/_work_unit, domain/modelos/_filing_record, and domain/modelos/_calculation_revision per Rule 4 (cross-package consumers import the alias by its public name, never re-alias under a private name). Modules consume the aliases under their public names.
 
-- [ ] `W03.P11.S50` - delete the private re-alias block and rewrite the module to consume the alias under its public name per ADR Rule 4; `src/aeat/domain/modelos/_work_unit.py`.
-- [ ] `W03.P11.S51` - delete the four private re-alias entries and rewrite the module to consume the aliases under their public names per ADR Rule 4; `src/aeat/domain/modelos/_filing_record.py`.
-- [ ] `W03.P11.S52` - delete the two private re-alias entries and rewrite the module to consume the aliases under their public names per ADR Rule 4; `src/aeat/domain/modelos/_calculation_revision.py`.
+- [x] `W03.P11.S50` - delete the private re-alias block and rewrite the module to consume the alias under its public name per ADR Rule 4; `src/aeat/domain/modelos/_work_unit.py`.
+- [x] `W03.P11.S51` - delete the four private re-alias entries and rewrite the module to consume the aliases under their public names per ADR Rule 4; `src/aeat/domain/modelos/_filing_record.py`.
+- [x] `W03.P11.S52` - delete the two private re-alias entries and rewrite the module to consume the aliases under their public names per ADR Rule 4; `src/aeat/domain/modelos/_calculation_revision.py`.
 
 ### Phase `W03.P12` - delete the CLI registry private-regex import
 
 Remove the import of _CASILLA_RE and _REF_RE from entrypoints/cli/_modelo per ADR Rule 8. The CLI payload models consume the registry aliases (CasillaId, FormulaId, RevisionId, ModeloId) directly and let pydantic enforce the shape at the model boundary.
 
-- [ ] `W03.P12.S53` - delete the private _CASILLA_RE and _REF_RE import per ADR Rule 8 and switch the CLI payload models to consume the registry aliases directly; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P12.S53` - delete the private _CASILLA_RE and _REF_RE import per ADR Rule 8 and switch the CLI payload models to consume the registry aliases directly; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W03.P13` - tighten the sede casilla_id declaration
 
 Replace the permissive bare-string casilla_id field on the outbound AEAT sede schema with the typed CasillaId alias per Rule 8 so the registry pattern is enforced at the persistence boundary.
 
-- [ ] `W03.P13.S54` - replace the permissive bare-string casilla_id field with the typed CasillaId alias per ADR Rule 8 and confirm the outbound sede roundtrip rejects values outside the registry pattern; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
+- [x] `W03.P13.S54` - replace the permissive bare-string casilla_id field with the typed CasillaId alias per ADR Rule 8 and confirm the outbound sede roundtrip rejects values outside the registry pattern; `src/aeat/adapters/outbound/aeat/sede/_schema.py`.
 
 ### Phase `W03.P14` - factor retained fingerprint shape duplications
 
 Retain the sha-256 hex-64 Field declarations in application/user_profile and core/corpus_manifest under Rule 7 (fingerprints are not identities), but factor each modules three-way duplication to a single module-local shape constant. The shape constant is private to its declaring module and is not promoted to an identity alias.
 
-- [ ] `W03.P14.S55` - factor the three-way canonical_hash, stored_hash, current_hash declarations to a single module-local hex-64 shape constant under Rule 7 and confirm the fields retain their bare-str shape; `src/aeat/application/user_profile/__init__.py`.
-- [ ] `W03.P14.S56` - factor the two repeated hex-64 sha256 / manifest_sha256 declarations to a single module-local hex-64 shape constant under Rule 7; `src/aeat/core/corpus_manifest/__init__.py`.
+- [x] `W03.P14.S55` - factor the three-way canonical_hash, stored_hash, current_hash declarations to a single module-local hex-64 shape constant under Rule 7 and confirm the fields retain their bare-str shape; `src/aeat/application/user_profile/__init__.py`.
+- [x] `W03.P14.S56` - factor the two repeated hex-64 sha256 / manifest_sha256 declarations to a single module-local hex-64 shape constant under Rule 7; `src/aeat/core/corpus_manifest/__init__.py`.
 
 ## Wave `W04` - sweep registry-id bare-string survivors onto existing aliases
 
