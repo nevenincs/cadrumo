@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import SecretStr
 
 from .....application.user_profile._orchestration import profile_create_storage_span
 from .....application.user_profile._testing import register_minimal_profile
@@ -347,8 +348,8 @@ class TestAttemptDiagnostics:
             )
             settings = Settings().model_copy(
                 update={
-                    "aeat_clave_movil_dni_nie": "X1234567L",
-                    "aeat_clave_movil_nie_soporte": "support-marker",
+                    "aeat_clave_movil_dni_nie": SecretStr("X1234567L"),
+                    "aeat_clave_movil_nie_soporte": SecretStr("support-marker"),
                     "aeat_clave_prefer_non_qr": True,
                     "aeat_clave_movil_timeout_ms": 120_000,
                 }

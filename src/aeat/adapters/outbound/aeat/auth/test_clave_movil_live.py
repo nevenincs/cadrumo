@@ -81,7 +81,7 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
         try:
             session, assertion = await provider.probe_persisted_session()
             assert isinstance(session, AeatSession)
-            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.strip().upper()
+            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.get_secret_value().strip().upper()
             assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
             assert isinstance(assertion, AeatLoginAssertion)
             assert assertion.is_valid is True, (
@@ -106,7 +106,7 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
         try:
             session = await provider.authenticate()
             assert isinstance(session, AeatSession)
-            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.strip().upper()
+            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.get_secret_value().strip().upper()
             assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
             assertion = await provider.verify(session)
             assert assertion.is_valid is True, (
