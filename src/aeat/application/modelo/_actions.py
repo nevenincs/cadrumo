@@ -18,6 +18,7 @@ import hashlib
 import re as _re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
+import decimal as _decimal
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -2740,7 +2741,7 @@ def _evaluate_advisory_predicate_fires(
         num = casilla_values.get(num_id, Decimal(0))
         try:
             threshold = Decimal(thr_str)
-        except Exception:
+        except _decimal.InvalidOperation:
             return False
         return (num / den) >= threshold
     return False

@@ -355,4 +355,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.core.profile.ProjectAnswersNotRegisteredError",
+        ErrorCode(
+            code="INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_profile_project_answers_not_registered",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.profile_catalogue.WizardCatalogueNotRegisteredError",
+        ErrorCode(
+            code="INTERNAL_WIZARD_CATALOGUE_NOT_REGISTERED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_wizard_catalogue_not_registered",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.profile_catalogue.WizardCatalogueAlreadyRegisteredError",
+        ErrorCode(
+            code="INTERNAL_WIZARD_CATALOGUE_ALREADY_REGISTERED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_wizard_catalogue_already_registered",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

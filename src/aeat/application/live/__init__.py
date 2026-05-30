@@ -101,6 +101,7 @@ from ...core._bucket_pointer_io import resolve_active_bucket_id as _resolve_acti
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
+from ...core.errors import AeatError as _AeatError
 from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
@@ -1387,7 +1388,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 operation="live-iva-remote-state-read",
                 target_url=_PRE303_PRESENTATION_SERVICE_URL,
             )
-        except Exception as exc:
+        except (_AeatError, OSError, asyncio.TimeoutError) as exc:
             auth_error = exc
 
         if auth_result is None:
@@ -1416,7 +1417,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 surface=LiveIvaReadSurface.FILED_HISTORY,
                 timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
             )
-        except Exception as exc:
+        except (_AeatError, OSError, asyncio.TimeoutError) as exc:
             filed_error = exc
 
         try:
@@ -1432,7 +1433,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 surface=LiveIvaReadSurface.WALLET_CARTERA,
                 timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
             )
-        except Exception as exc:
+        except (_AeatError, OSError, asyncio.TimeoutError) as exc:
             wallet_error = exc
 
         report = build_iva_remote_state_acquisition_report(

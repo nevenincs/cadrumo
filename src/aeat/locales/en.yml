@@ -30,25 +30,36 @@ adapters:
       errors:
         already_active: AeatAuthenticator already has an active session; call close()
           or reauthenticate() before authenticating again.
-        already_active_before_resume: 'AeatAuthenticator already has an active session; call close() before resuming.'
+        already_active_before_resume: AeatAuthenticator already has an active session;
+          call close() before resuming.
         assertion_failed: Fresh AEAT authentication did not produce a valid login
           assertion.
-        capture_requires_active_session: 'capture_storage_state() requires the currently active authenticated session.'
-        capture_requires_certificate: 'capture_storage_state() requires a certificate-backed session with handshake metadata.'
-        closing: 'The authenticator is closing; no new verify_login operations are allowed.'
-        context_marker_missing: 'Browser context was not tagged with the expected certificate marker.'
+        capture_requires_active_session: capture_storage_state() requires the currently
+          active authenticated session.
+        capture_requires_certificate: capture_storage_state() requires a certificate-backed
+          session with handshake metadata.
+        closing: The authenticator is closing; no new verify_login operations are
+          allowed.
+        context_marker_missing: Browser context was not tagged with the expected certificate
+          marker.
         metadata_parse_failed: Persisted metadata did not produce a parsed model.
-        no_active_context: 'No active browser context; call authenticate() first.'
-        no_context_capture_storage: 'No active browser context; cannot capture storage state.'
-        persisted_session_verification_failed: 'Persisted AEAT browser session failed live verification.'
+        no_active_context: No active browser context; call authenticate() first.
+        no_context_capture_storage: No active browser context; cannot capture storage
+          state.
+        persisted_session_verification_failed: Persisted AEAT browser session failed
+          live verification.
         resume_failed: Persisted AEAT session resume did not produce a usable context.
-        session_stale: 'The AEAT session is stale; the idle deadline has elapsed.'
+        session_stale: The AEAT session is stale; the idle deadline has elapsed.
     clave_movil:
       errors:
-        already_active: 'Cl@ve Móvil already has an active session; call close() before authenticating again.'
-        approval_timeout: 'Cl@ve Móvil browser authentication did not complete within the configured timeout.'
-        dni_nie_not_set: 'AEAT_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI or NIE before authenticating.'
-        metadata_invalid: 'Cl@ve Móvil session metadata is invalid or could not be parsed.'
+        already_active: Cl@ve Móvil already has an active session; call close() before
+          authenticating again.
+        approval_timeout: Cl@ve Móvil browser authentication did not complete within
+          the configured timeout.
+        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI or
+          NIE before authenticating.
+        metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
+          parsed.
         no_persisted_session: No persisted Cl@ve Movil session found; run `aeat config
           auth status` first.
         page_missing_click: Playwright page does not expose click(); cannot drive
@@ -56,7 +67,8 @@ adapters:
         session_expired: Cl@ve Movil session has passed its idle deadline.
         storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
           data may be corrupt.
-        verify_requires_active_context: 'Cl@ve Móvil verify() requires an active browser context; call authenticate() first.'
+        verify_requires_active_context: Cl@ve Móvil verify() requires an active browser
+          context; call authenticate() first.
   google:
     calc_sheets:
       errors:
@@ -148,16 +160,19 @@ adapters:
         auth status` first.
       parse_failed: Failed to parse the AEAT declarations response; the page structure
         may have changed.
-      playwright_alert_modal_failed: 'Continuing the AEAT alert modal failed.'
-      playwright_buscar_click_failed: 'Clicking the Buscar button on the Sede page failed.'
-      playwright_combobox_open_failed: 'Opening the Sede combobox failed.'
-      playwright_combobox_select_failed: 'Selecting a combobox option on the Sede page failed.'
+      playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
+      playwright_buscar_click_failed: Clicking the Buscar button on the Sede page
+        failed.
+      playwright_combobox_open_failed: Opening the Sede combobox failed.
+      playwright_combobox_select_failed: Selecting a combobox option on the Sede page
+        failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
 aggregation:
   grouping:
     errors:
-      unsupported_modelo: 'No aggregation contract is registered for the requested modelo.'
+      unsupported_modelo: No aggregation contract is registered for the requested
+        modelo.
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -187,9 +202,11 @@ aggregation:
     parse_error: Period format not recognised
   prorrata:
     errors:
-      current_year_not_after_prior: 'current_year must be strictly greater than prior_year.'
-      invalid_provisional_period: 'Provisional period must be a quarterly (Qn) or monthly (Mnn) token.'
-      year_out_of_range: 'Prorrata aggregation year is outside the supported range 2000-2100.'
+      current_year_not_after_prior: current_year must be strictly greater than prior_year.
+      invalid_provisional_period: Provisional period must be a quarterly (Qn) or monthly
+        (Mnn) token.
+      year_out_of_range: Prorrata aggregation year is outside the supported range
+        2000-2100.
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
@@ -231,6 +248,9 @@ application:
         identity_unset: No DNI/NIE has been configured for Cl@ve Móvil. Configure
           one before continuing.
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
+    errors:
+      provider_reserved: 'Authentication provider {provider} is reserved and not yet implemented.'
+      session_field_not_datetime: 'Persisted session field {field} must be a datetime or ISO-8601 string.'
     operator:
       alignment:
         both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -340,8 +360,10 @@ application:
           before reading AEAT data.
   ledger:
     errors:
-      evidence_attachment_requires_ids: 'Ledger evidence attachment requires purchase evidence or attachment ids.'
-      purchase_evidence_already_set: 'Ledger transaction already has a purchase_invoice_evidence_id; remove or replace through the attachments workflow.'
+      evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
+        evidence or attachment ids.
+      purchase_evidence_already_set: Ledger transaction already has a purchase_invoice_evidence_id;
+        remove or replace through the attachments workflow.
   modelo:
     borrador_binding:
       errors:
@@ -351,8 +373,10 @@ application:
           with `aeat app live borrador 100 list`.
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
     errors:
-      amendment_verification_refused_missing_casillas: 'The amendment is incomplete: required casilla ids are missing from the corrected map.'
-      amendment_verification_refused_no_snapshot: 'Registry has no snapshot for the requested modelo, year, and period.'
+      amendment_verification_refused_missing_casillas: 'The amendment is incomplete:
+        required casilla ids are missing from the corrected map.'
+      amendment_verification_refused_no_snapshot: Registry has no snapshot for the
+        requested modelo, year, and period.
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
       computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
         and cannot be overridden by external binding. Affected casillas: %{computed}.'
@@ -374,16 +398,18 @@ application:
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       verification_report_not_found: No verification report found with id=%{verification_report_id}.
-      work_unit_already_discarded: 'The work unit is already discarded.'
+      work_unit_already_discarded: The work unit is already discarded.
       work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded
         and cannot be calculated. Create a fresh work unit on the same modelo, year,
         and period to continue.
       work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and
         cannot be imported. Create a fresh work unit on the same modelo, year, and
         period to continue.
-      work_unit_mutation_refused: 'The work unit is discarded; create a fresh work unit to continue.'
+      work_unit_mutation_refused: The work unit is discarded; create a fresh work
+        unit to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
-      workflow_input_mismatch: 'Workflow input request does not match the calculation revision.'
+      workflow_input_mismatch: Workflow input request does not match the calculation
+        revision.
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -450,7 +476,8 @@ application:
         profile create NAME` to create it.
       profile_tombstoned_not_selectable: Profile '%{profile}' is tombstoned and cannot
         be selected.
-      unsupported_bundle_schema_version: 'The bundle schema version is not supported by this application version.'
+      unsupported_bundle_schema_version: The bundle schema version is not supported
+        by this application version.
   wizard:
     errors:
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
@@ -459,7 +486,7 @@ application:
         flags and run the command again: %{missing_flags}. Or run it without --quiet
         from an interactive terminal to use the guided setup.'
     next_hint:
-      modelo_work_create: 'aeat app modelo work create'
+      modelo_work_create: aeat app modelo work create
     status:
       errors:
         missing_tax_id: Active profile is missing tax.id.
@@ -468,8 +495,34 @@ application:
         unexpected_projection_type: Setup flow answers did not project to SetupAnswers.
   workflow:
     errors:
+      adapter_missing_deadline_engine: Workflow engine requires a deadline_engine
+        adapter.
+      adapter_missing_filing_draft_builder: Workflow engine requires a filing_draft_builder
+        adapter.
+      adapter_missing_inputs_provider: Workflow engine requires a bucket-backed filing
+        inputs provider.
       no_active_profile_bucket: No active profile bucket.
+      no_run_for_period: No persisted workflow run found for modelo {modelo} period
+        {period}. Drive the workflow at least once before resuming.
+      period_registry_unmappable: Cannot map workflow period {period} to a registry
+        period.
+      period_registry_year_unresolvable: Cannot derive registry year from workflow
+        period {period}.
+      profile_label_ambiguous: 'Profile label {label} is ambiguous: {count} active
+        buckets carry it.'
+      resume_refused_no_aborted_reason: Workflow run {run_id} is ABORTED without a
+        recorded reason; refusing to resume an inconsistent record.
+      resume_refused_no_obligation: Workflow run {run_id} carries no obligation; cannot
+        determine modelo and period for a retry.
+      resume_refused_not_aborted: 'Workflow run {run_id} cannot be resumed: it is
+        in {final_stage} state, not ABORTED.'
+      resume_refused_terminal_reason: Workflow run {run_id} aborted for {reason},
+        which is terminal by design and may not be resumed.
+      run_id_invalid_blank: Run identifier must not be blank.
+      run_id_invalid_separators: Run identifier must not contain path separators.
+      run_not_found: 'Workflow run not found: {run_id}.'
       state_unreadable: Local configuration state could not be read.
+      state_write_invalid_payload: 'Workflow state could not be saved: invalid payload.'
 auth:
   catalogue:
     certificate_description: X.509 client certificate authentication (FNMT-RCM or
@@ -1602,8 +1655,8 @@ cli:
           neither.
       help: Inventory the secure-object index by namespace.
       labels:
-        count: 'count'
-        namespace: 'namespace'
+        count: count
+        namespace: namespace
       list_help: List secure-object keys stored under one namespace.
       namespace_help: Namespace to inventory.
       unreadable_help: Restrict the listing to undecryptable rows.
@@ -2371,6 +2424,10 @@ cli:
         list registered topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
+core:
+  profile:
+    errors:
+      registration_duplicate_callable: 'Project answers implementation registered twice with different callables; it must be registered exactly once.'
 dotted:
   key: Dotted key
 entries:
@@ -2997,7 +3054,13 @@ errors:
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
     internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
+    internal_profile_project_answers_not_registered: 'Internal error: project_answers
+      has not been registered at application startup.'
     internal_profile_registration: errors.internal.internal_profile_registration
+    internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
+      was registered a second time with different objects.'
+    internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
+      has not been registered at application startup.'
     internal_wizard_script_overflow: 'Internal error: the wizard closed with unconsumed
       scripted answers.'
     internal_wizard_script_underflow: 'Internal error: the wizard asked for more answers

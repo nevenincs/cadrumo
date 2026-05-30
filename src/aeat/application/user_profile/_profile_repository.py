@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ...core.errors import AeatError
+
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
@@ -305,7 +307,7 @@ class ProfileRepository:
                 )
             )
             record = result.profile
-        except Exception:
+        except (AeatError, OSError, ValidationError):
             # Roll back every store this create touched: the staged
             # directory + manifest are removed and the pointer is
             # restored to its pre-create state. The per-bucket

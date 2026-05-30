@@ -30,26 +30,37 @@ adapters:
       errors:
         already_active: AeatAuthenticator ja te una sessio activa; crideu close()
           o reauthenticate() abans d'autenticar de nou.
-        already_active_before_resume: 'AeatAuthenticator ja té una sessió activa; crideu close() abans de reprendre.'
+        already_active_before_resume: AeatAuthenticator ja té una sessió activa; crideu
+          close() abans de reprendre.
         assertion_failed: L'autenticacio AEAT no ha produit una assercio d'inici de
           sessio valida.
-        capture_requires_active_session: 'capture_storage_state() requereix la sessió autenticada activa.'
-        capture_requires_certificate: 'capture_storage_state() requereix una sessió amb certificat i metadades de handshake.'
-        closing: 'L''autenticador s''està tancant; no es permeten noves operacions verify_login.'
-        context_marker_missing: 'El context del navegador no està etiquetat amb el marcador de certificat esperat.'
+        capture_requires_active_session: capture_storage_state() requereix la sessió
+          autenticada activa.
+        capture_requires_certificate: capture_storage_state() requereix una sessió
+          amb certificat i metadades de handshake.
+        closing: L'autenticador s'està tancant; no es permeten noves operacions verify_login.
+        context_marker_missing: El context del navegador no està etiquetat amb el
+          marcador de certificat esperat.
         metadata_parse_failed: Les metadades persistides no han produit un model analitzat.
-        no_active_context: 'No hi ha context de navegador actiu; crideu authenticate() primer.'
-        no_context_capture_storage: 'No hi ha context de navegador actiu; no es pot capturar l''estat d''emmagatzematge.'
-        persisted_session_verification_failed: 'La sessió persistida del navegador AEAT ha fallat la verificació en directe.'
+        no_active_context: No hi ha context de navegador actiu; crideu authenticate()
+          primer.
+        no_context_capture_storage: No hi ha context de navegador actiu; no es pot
+          capturar l'estat d'emmagatzematge.
+        persisted_session_verification_failed: La sessió persistida del navegador
+          AEAT ha fallat la verificació en directe.
         resume_failed: La represa de la sessio AEAT persistida no ha produit un context
           utilitzable.
-        session_stale: 'La sessió AEAT ha caducat; el termini d''inactivitat ha expirat.'
+        session_stale: La sessió AEAT ha caducat; el termini d'inactivitat ha expirat.
     clave_movil:
       errors:
-        already_active: 'Cl@ve Móvil ja té una sessió activa; crideu close() abans de tornar a autenticar-vos.'
-        approval_timeout: 'L''autenticació per navegador de Cl@ve Móvil no s''ha completat dins del temps configurat.'
-        dni_nie_not_set: 'AEAT_CLAVE_MOVIL_DNI_NIE no està configurat; configureu el vostre DNI o NIE abans d''autenticar-vos.'
-        metadata_invalid: 'Les metadades de sessió de Cl@ve Móvil no són vàlides o no es poden analitzar.'
+        already_active: Cl@ve Móvil ja té una sessió activa; crideu close() abans
+          de tornar a autenticar-vos.
+        approval_timeout: L'autenticació per navegador de Cl@ve Móvil no s'ha completat
+          dins del temps configurat.
+        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE no està configurat; configureu el
+          vostre DNI o NIE abans d'autenticar-vos.
+        metadata_invalid: Les metadades de sessió de Cl@ve Móvil no són vàlides o
+          no es poden analitzar.
         no_persisted_session: No s'ha trobat cap sessio de Cl@ve Movil; executeu `aeat
           config auth status` primer.
         page_missing_click: La pagina de Playwright no exposa click(); no es pot operar
@@ -57,7 +68,8 @@ adapters:
         session_expired: La sessio de Cl@ve Movil ha superat el seu termini d'inactivitat.
         storage_state_hash_mismatch: El hash de l'estat d'emmagatzematge de Cl@ve
           Movil no coincideix; les dades de sessio poden estar corrompudes.
-        verify_requires_active_context: 'Cl@ve Móvil verify() requereix un context de navegador actiu; crideu authenticate() primer.'
+        verify_requires_active_context: Cl@ve Móvil verify() requereix un context
+          de navegador actiu; crideu authenticate() primer.
   google:
     calc_sheets:
       errors:
@@ -162,17 +174,20 @@ adapters:
         executeu primer `aeat config auth status`.
       parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
         de la pàgina pot haver canviat.
-      playwright_alert_modal_failed: 'Error en continuar el modal d''alerta de l''AEAT.'
-      playwright_buscar_click_failed: 'Error en fer clic al botó Buscar de la Seu electrònica.'
-      playwright_combobox_open_failed: 'Error en obrir el quadre combinat de la Seu electrònica.'
-      playwright_combobox_select_failed: 'Error en seleccionar una opció del quadre combinat de la Seu electrònica.'
+      playwright_alert_modal_failed: Error en continuar el modal d'alerta de l'AEAT.
+      playwright_buscar_click_failed: Error en fer clic al botó Buscar de la Seu electrònica.
+      playwright_combobox_open_failed: Error en obrir el quadre combinat de la Seu
+        electrònica.
+      playwright_combobox_select_failed: Error en seleccionar una opció del quadre
+        combinat de la Seu electrònica.
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
 aggregation:
   grouping:
     errors:
-      unsupported_modelo: 'No hi ha cap contracte d''agregació registrat per al model sol·licitat.'
+      unsupported_modelo: No hi ha cap contracte d'agregació registrat per al model
+        sol·licitat.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
@@ -202,9 +217,11 @@ aggregation:
     parse_error: Format de període no reconegut
   prorrata:
     errors:
-      current_year_not_after_prior: 'L''any actual ha de ser estrictament major que l''any anterior.'
-      invalid_provisional_period: 'El període provisional ha de ser un token trimestral (Qn) o mensual (Mnn).'
-      year_out_of_range: 'L''any d''agregació de prorrata és fora del rang admès 2000-2100.'
+      current_year_not_after_prior: L'any actual ha de ser estrictament major que
+        l'any anterior.
+      invalid_provisional_period: El període provisional ha de ser un token trimestral
+        (Qn) o mensual (Mnn).
+      year_out_of_range: L'any d'agregació de prorrata és fora del rang admès 2000-2100.
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
@@ -251,6 +268,9 @@ application:
           un abans de continuar.
         operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
           per l'operador.
+    errors:
+      provider_reserved: 'El proveïdor d''autenticació {provider} està reservat i no està implementat.'
+      session_field_not_datetime: 'El camp {field} de la sessió persistent ha de ser una data-hora o cadena ISO-8601.'
     operator:
       alignment:
         both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -374,8 +394,10 @@ application:
           auth test` abans de llegir dades AEAT.
   ledger:
     errors:
-      evidence_attachment_requires_ids: 'L''adjunt d''evidència del llibre diari requereix evidència de compra o identificadors d''adjunt.'
-      purchase_evidence_already_set: 'La transacció del llibre diari ja té un purchase_invoice_evidence_id; elimineu-lo o substituïu-lo a través del flux d''adjunts.'
+      evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
+        evidència de compra o identificadors d'adjunt.
+      purchase_evidence_already_set: La transacció del llibre diari ja té un purchase_invoice_evidence_id;
+        elimineu-lo o substituïu-lo a través del flux d'adjunts.
   modelo:
     borrador_binding:
       errors:
@@ -388,8 +410,10 @@ application:
         source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
           els identificadors de binding resolts.
     errors:
-      amendment_verification_refused_missing_casillas: 'L''esmena és incompleta: falten identificadors de casella requerits al mapa corregit.'
-      amendment_verification_refused_no_snapshot: 'El registre no té una instantània per al model, any i període sol·licitats.'
+      amendment_verification_refused_missing_casillas: 'L''esmena és incompleta: falten
+        identificadors de casella requerits al mapa corregit.'
+      amendment_verification_refused_no_snapshot: El registre no té una instantània
+        per al model, any i període sol·licitats.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
         a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
@@ -414,16 +438,18 @@ application:
         profile create NAME` abans de reconciliar una unitat de treball.
       verification_report_not_found: No s'ha trobat cap informe de verificació amb
         id=%{verification_report_id}.
-      work_unit_already_discarded: 'La unitat de treball ja està descartada.'
+      work_unit_already_discarded: La unitat de treball ja està descartada.
       work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està
         descartada i no es pot calcular. Crea una nova unitat de treball sobre el
         mateix modelo, any i periode per continuar.
       work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està
         descartada i no es pot importar. Crea una nova unitat de treball sobre el
         mateix modelo, any i periode per continuar.
-      work_unit_mutation_refused: 'La unitat de treball està descartada; creeu una nova unitat de treball per continuar.'
+      work_unit_mutation_refused: La unitat de treball està descartada; creeu una
+        nova unitat de treball per continuar.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
-      workflow_input_mismatch: 'La sol·licitud d''entrada del flux de treball no coincideix amb la revisió de càlcul.'
+      workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
+        amb la revisió de càlcul.
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -489,7 +515,8 @@ application:
         profile create NAME` per crear-lo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
         es pot seleccionar.
-      unsupported_bundle_schema_version: 'La versió de l''esquema del paquet no és compatible amb aquesta versió de l''aplicació.'
+      unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
+        amb aquesta versió de l'aplicació.
   wizard:
     errors:
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
@@ -498,7 +525,7 @@ application:
         Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
         sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
     next_hint:
-      modelo_work_create: 'aeat app modelo work create'
+      modelo_work_create: aeat app modelo work create
     status:
       errors:
         missing_tax_id: El perfil actiu no té tax.id.
@@ -508,8 +535,23 @@ application:
           com SetupAnswers.
   workflow:
     errors:
+      adapter_missing_deadline_engine: 'El motor de flux de treball requereix un adaptador deadline_engine.'
+      adapter_missing_filing_draft_builder: 'El motor de flux de treball requereix un adaptador filing_draft_builder.'
+      adapter_missing_inputs_provider: 'El motor de flux de treball requereix un proveïdor d''entrades basat en dipòsit.'
       no_active_profile_bucket: No hi ha cap perfil actiu.
+      no_run_for_period: 'No s''ha trobat cap execució de flux de treball per al model {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.'
+      period_registry_unmappable: 'No es pot assignar el període de flux de treball {period} a un període del registre.'
+      period_registry_year_unresolvable: 'No es pot derivar l''any del registre a partir del període de flux de treball {period}.'
+      profile_label_ambiguous: 'L''etiqueta de perfil {label} és ambigua: {count} dipòsits actius la comparteixen.'
+      resume_refused_no_aborted_reason: 'L''execució {run_id} és ABORTED sense raó registrada; es rebutja reprendre un registre inconsistent.'
+      resume_refused_no_obligation: 'L''execució {run_id} no té cap obligació; no es pot determinar el model i el període per reintentar.'
+      resume_refused_not_aborted: 'L''execució {run_id} no es pot reprendre: es troba en estat {final_stage}, no ABORTED.'
+      resume_refused_terminal_reason: 'L''execució {run_id} es va avortar per {reason}, que és terminal per disseny i no es pot reprendre.'
+      run_id_invalid_blank: 'L''identificador d''execució no pot estar en blanc.'
+      run_id_invalid_separators: 'L''identificador d''execució no ha de contenir separadors de ruta.'
+      run_not_found: 'Execució de flux de treball no trobada: {run_id}.'
       state_unreadable: No s'ha pogut llegir l'estat de configuració local.
+      state_write_invalid_payload: 'No s''ha pogut desar l''estat del flux de treball: càrrega útil no vàlida.'
 auth:
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
@@ -1693,8 +1735,8 @@ cli:
           neither.
       help: Inventory the secure-object index by namespace.
       labels:
-        count: 'recompte'
-        namespace: 'espai de noms'
+        count: recompte
+        namespace: espai de noms
       list_help: List secure-object keys stored under one namespace.
       namespace_help: Namespace to inventory.
       unreadable_help: Restrict the listing to undecryptable rows.
@@ -2460,6 +2502,10 @@ cli:
         per llistar els temes registrats.'
     opts:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
+core:
+  profile:
+    errors:
+      registration_duplicate_callable: 'La implementació de respostes del projecte s''ha registrat dues vegades amb invocables distintos; s''ha de registrar exactament una vegada.'
 dotted:
   key: Clau amb punts
 entries:
@@ -3136,7 +3182,10 @@ errors:
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
     internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
+    internal_profile_project_answers_not_registered: errors.internal.internal_profile_project_answers_not_registered
     internal_profile_registration: errors.internal.internal_profile_registration
+    internal_wizard_catalogue_already_registered: errors.internal.internal_wizard_catalogue_already_registered
+    internal_wizard_catalogue_not_registered: errors.internal.internal_wizard_catalogue_not_registered
     internal_wizard_script_overflow: 'Error intern: l''assistent s''ha tancat amb
       respostes guionades sense consumir.'
     internal_wizard_script_underflow: 'Error intern: l''assistent ha demanat més respostes

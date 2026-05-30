@@ -13,6 +13,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
+from pydantic import ValidationError
+
 if TYPE_CHECKING:
     from ...domain.transactions._classification_rule import LedgerClassificationRule
 
@@ -28,7 +30,7 @@ from ...adapters.inbound.financial.providers import (
 )
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...core.errors import resolve_error_message
+from ...core.errors import AeatError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.time._utc import _coerce_utc_aware
 from ...core.i18n import tr
@@ -82,6 +84,7 @@ from ...domain.usage_ratios import (
     load_usage_ratios,
     validate_usage_ratio_reference,
 )
+from ...core.aggregation import AggregationSourceKind
 from ..aggregation import Period
 from ..export import serialize_tabular_rows
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
@@ -3140,7 +3143,7 @@ def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: date
 
 def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
     values = {
-        "source_kind": "ledger_transaction",
+        "source_kind": AggregationSourceKind.LEDGER_TRANSACTION,
         "source_command": command.source_command,
         "actor": command.actor,
         "business_classification": command.business_classification.value,
@@ -3436,7 +3439,7 @@ def bulk_classify_from_csv(
                     strict=False,
                 )
             )
-        except Exception as exc:
+        except (ValidationError, ValueError, KeyError) as exc:
             parse_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,
@@ -3473,7 +3476,7 @@ def bulk_classify_from_csv(
                 # update_manual_transaction_fields returned without events:
                 # classification was already identical — treat as skipped.
                 skipped += 1
-        except Exception as exc:
+        except (AeatError, ValidationError) as exc:
             apply_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,

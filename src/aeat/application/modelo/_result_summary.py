@@ -21,6 +21,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
@@ -70,8 +71,8 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     casilla_values = revision.casilla_values
     try:
         work_unit = get_work_unit(str(revision.work_unit_id))
-    except Exception as exc:
-        _log.debug(
+    except (LookupError, KeyError, AttributeError, AeatError) as exc:
+        _log.warning(
             "modelo result summary: unable to resolve work unit for revision=%s",
             revision.revision_id,
             exc_info=exc,
@@ -79,8 +80,8 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
         return None
     try:
         snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
-    except Exception as exc:
-        _log.debug(
+    except (LookupError, KeyError, AttributeError, AeatError) as exc:
+        _log.warning(
             "modelo result summary: unable to resolve registry snapshot for work_unit=%s",
             work_unit.work_unit_id,
             exc_info=exc,
