@@ -455,10 +455,10 @@ Thread translated_message on every AeatLoginAssertionError raise across _authent
 
 Close A4 JSON-decode boundaries (crypto + master-key), A7 Playwright wait-state literals (15+ sites), browser timeout magic numbers, MIME constants, env-write doc comments, A8 missing CAST-RATIONALE markers.
 
-- [ ] `W02.P13.S292` - wrap json.loads at crypto/_encrypted_columns.py:185 in EncryptedPayload(BaseModel) or model_validate; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
-- [ ] `W02.P13.S293` - add roundtrip test asserting EncryptedPayload validates and rejects malformed; `src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py`.
-- [ ] `W02.P13.S294` - define EnvelopeDocument(BaseModel) and use model_validate_json at master_key/_master_key.py:1117; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `W02.P13.S295` - add roundtrip test asserting EnvelopeDocument validates and rejects malformed; `src/aeat/adapters/persistence/storage/master_key/test_envelope_document.py`.
+- [x] `W02.P13.S292` - wrap json.loads at crypto/_encrypted_columns.py:185 in EncryptedPayload(BaseModel) or model_validate; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [x] `W02.P13.S293` - add roundtrip test asserting EncryptedPayload validates and rejects malformed; `src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py`.
+- [x] `W02.P13.S294` - define EnvelopeDocument(BaseModel) and use model_validate_json at master_key/_master_key.py:1117; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `W02.P13.S295` - add roundtrip test asserting EnvelopeDocument validates and rejects malformed; `src/aeat/adapters/persistence/storage/master_key/test_envelope_document.py`.
 - [x] `W02.P13.S296` - introduce src/aeat/adapters/outbound/aeat/sede/_browser_constants.py with PLAYWRIGHT_WAIT_DOMCONTENTLOADED and PLAYWRIGHT_WAIT_NETWORKIDLE; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
 - [x] `W02.P13.S297` - migrate 15+ domcontentloaded/networkidle literals across _declarations.py, _iva_compensation_wallet.py, _groi_check.py, _nif_iva_check.py, _censo_live.py, _walker.py to use the constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [x] `W02.P13.S298` - add real-behavior test asserting Playwright wait-state constants are the single source of truth across sede adapter; `src/aeat/adapters/outbound/aeat/sede/test_playwright_wait_constants.py`.
@@ -468,13 +468,13 @@ Close A4 JSON-decode boundaries (crypto + master-key), A7 Playwright wait-state 
 - [x] `W02.P13.S302` - migrate application/json literal at _declarations.py:1223 and text/csv literal at application/export/_tabular.py:69 to constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [x] `W02.P13.S303` - add real-behavior test asserting MIME-type constants are sole source; `src/aeat/core/test_external_constants.py`.
 - [x] `W02.P13.S304` - document intentional env-write at _replay.py:172,179 with # env-write: intentional scoped context-manager comment; `src/aeat/core/observability/_replay.py`.
-- [ ] `W02.P13.S305` - wrap _stdio.py:89 os.environ COLUMNS write in a context-manager to scope the mutation; `src/aeat/entrypoints/cli/_stdio.py`.
-- [ ] `W02.P13.S306` - add real-behavior test asserting _stdio.py COLUMNS write is scoped and reverted; `src/aeat/entrypoints/cli/test_stdio.py`.
+- [x] `W02.P13.S305` - wrap _stdio.py:89 os.environ COLUMNS write in a context-manager to scope the mutation; `src/aeat/entrypoints/cli/_stdio.py`.
+- [x] `W02.P13.S306` - add real-behavior test asserting _stdio.py COLUMNS write is scoped and reverted; `src/aeat/entrypoints/cli/test_stdio.py`.
 - [x] `W02.P13.S307` - swap raw logging.getLogger and replace print() at sede/test_renta_web_open_explore_dom.py:57,175,208 to use get_logger and _log.debug; `src/aeat/adapters/outbound/aeat/sede/test_renta_web_open_explore_dom.py`.
 - [x] `W02.P13.S308` - swap raw logging.getLogger at storage/test_google_drive_live.py:42 to get_logger; `src/aeat/adapters/outbound/storage/test_google_drive_live.py`.
 - [x] `W02.P13.S309` - add CAST-RATIONALE-SANITIZER-PIKEPDF-OPERANDS marker at sanitizer/_streams.py:152; `src/aeat/adapters/inbound/sanitizer/_streams.py`.
 - [x] `W02.P13.S310` - add CAST-RATIONALE-LEDGER-RULE-REPO-INJECT marker at ledger/_actions.py:3503 and :3547; `src/aeat/application/ledger/_actions.py`.
 - [x] `W02.P13.S311` - add CAST-RATIONALE-WIZARD-COMMAND-INJECT marker at wizard/_commands.py:928; `src/aeat/application/wizard/_commands.py`.
 - [x] `W02.P13.S312` - add real-behavior test asserting all production cast() calls carry CAST-RATIONALE marker; `src/aeat/test_cast_rationale_inventory.py`.
-- [ ] `W02.P13.S313` - enroll _pdf_n26.py:287,288 to DEFAULT_CURRENCY (the 2 sites missed in Wave 1 currency sweep); `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
-- [ ] `W02.P13.S314` - add real-behavior test asserting financial provider DEFAULT_CURRENCY enrollment is complete; `src/aeat/adapters/inbound/financial/providers/test_pdf_n26.py`.
+- [x] `W02.P13.S313` - enroll _pdf_n26.py:287,288 to DEFAULT_CURRENCY (the 2 sites missed in Wave 1 currency sweep); `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
+- [x] `W02.P13.S314` - add real-behavior test asserting financial provider DEFAULT_CURRENCY enrollment is complete; `src/aeat/adapters/inbound/financial/providers/test_pdf_n26.py`.
