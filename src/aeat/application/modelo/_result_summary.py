@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
 from ...core.logging import get_logger
+from ...domain.calculations.registry._ids import CasillaId
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
 
@@ -35,7 +36,7 @@ class ResultSummaryRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla_id: str
+    casilla_id: CasillaId
     label: str
     value: Decimal
     role: str
