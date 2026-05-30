@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ...core.time._utc import _coerce_utc_aware
 from . import AuthProviderKind
 
 if TYPE_CHECKING:
@@ -88,7 +89,7 @@ def inspect_auth_acquisition_lock(
     """Return the current acquisition-lock health without mutating it."""
 
     path = auth_acquisition_lock_path(settings, kind)
-    reference = _utc(now)
+    reference = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     if not path.exists():
         return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path)
     try:
@@ -254,14 +255,6 @@ def _remove_lock_file(path: Path) -> None:
         path.unlink()
     except FileNotFoundError:
         return
-
-
-def _utc(value: datetime | None) -> datetime:
-    if value is None:
-        return datetime.now(UTC)
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
 
 
 def _same_host(hostname: str) -> bool:

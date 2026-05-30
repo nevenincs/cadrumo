@@ -15,6 +15,8 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
+from ...core.errors import CoreValidationError
+from ...core.time._utc import _validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
 
@@ -164,9 +166,10 @@ class Attachment(BaseModel):
             parsed = value
         else:
             raise AttachmentValidationError("captured_at must be a datetime or ISO-8601 string")
-        if parsed.tzinfo is None or parsed.utcoffset() is None:
-            raise AttachmentValidationError("captured_at must be timezone-aware")
-        return parsed
+        try:
+            return _validate_utc_aware(parsed)
+        except CoreValidationError as exc:
+            raise AttachmentValidationError(str(exc)) from exc
 
     @field_validator("linked_transaction_ids", mode="before")
     @classmethod

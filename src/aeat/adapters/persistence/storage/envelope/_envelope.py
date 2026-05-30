@@ -35,8 +35,10 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .....core.classification import SensitivityClass
+from .....core.errors import CoreValidationError
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
+from .....core.time._utc import _validate_utc_aware
 from ..crypto._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..errors import (
     ClassificationError,
@@ -135,9 +137,10 @@ class Envelope[PayloadT: BaseModel](BaseModel):
     @field_validator("written_at")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise StorageValidationError("written_at must be timezone-aware")
-        return value
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise StorageValidationError(str(exc)) from exc
 
     @classmethod
     def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
@@ -339,9 +342,10 @@ class CipherEnvelope(BaseModel):
     @field_validator("written_at")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise StorageValidationError("written_at must be timezone-aware")
-        return value
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise StorageValidationError(str(exc)) from exc
 
 
 def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:

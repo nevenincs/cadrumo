@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, SkipValidation, ValidationErr
 from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ...core.time._utc import _validate_utc_aware
 from ...core.logging import get_logger
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import (
@@ -402,8 +403,7 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
         if text.endswith("Z"):
             text = f"{text[:-1]}+00:00"
         parsed = datetime.fromisoformat(text)
-        if parsed.tzinfo is None:
-            raise ValueError(f"persisted session {field} must be timezone-aware")
+        _validate_utc_aware(parsed)
         return parsed
     raise TypeError(f"persisted session {field} must be a datetime or ISO-8601 string")
 
