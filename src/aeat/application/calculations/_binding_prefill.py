@@ -31,6 +31,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict
 
 from ...core.resources import resources
+from ...domain.calculations.registry._ids import BindingId
 from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -92,7 +93,7 @@ class PrefilledBinding(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    binding_id: str
+    binding_id: BindingId
     value: Decimal
     provenance: str = _LOCAL_FILING_PROVENANCE
     source_kind: str = _LOCAL_FILING_PROVENANCE
@@ -120,7 +121,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    binding_id: str
+    binding_id: BindingId
     amount: Decimal
     source_kind: str = _LOCAL_FILING_PROVENANCE
     source_modelo: str
