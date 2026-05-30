@@ -16,8 +16,8 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.errors import CoreValidationError
+from ...core.identity import BucketId
 from ...core.time._utc import _validate_utc_aware
-from ..modelos._ids import BucketId
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
 
