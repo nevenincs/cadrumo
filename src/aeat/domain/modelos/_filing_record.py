@@ -36,7 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 
-from ._ids import BucketId as _BucketId
+from ...core.identity import BucketId as _BucketId
 from ._ids import CalculationRevisionId as _CalculationRevisionId
 from ._ids import FilingRecordId as _FilingRecordId
 from ._ids import WorkUnitId as _WorkUnitId
