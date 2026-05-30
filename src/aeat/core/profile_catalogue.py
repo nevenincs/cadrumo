@@ -19,12 +19,13 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from .errors import CoreError
 from .logging import get_logger
 
 _log = get_logger(__name__)
 
 
-class WizardCatalogueNotRegisteredError(RuntimeError):
+class WizardCatalogueNotRegisteredError(CoreError):
     """Raised when a domain consumer accesses the catalogue before registration."""
 
     def __init__(self) -> None:
@@ -33,6 +34,10 @@ class WizardCatalogueNotRegisteredError(RuntimeError):
             "Call register_wizard_catalogue() at application startup before "
             "any domain module accesses SETUP_FLOW or WIZARD_FLOWS."
         )
+
+
+class WizardCatalogueAlreadyRegisteredError(CoreError):
+    """Raised when register_wizard_catalogue() is called a second time with different objects."""
 
 
 @runtime_checkable
@@ -73,7 +78,7 @@ def register_wizard_catalogue(
     if _SETUP_FLOW_SLOT:
         if _SETUP_FLOW_SLOT[0] is setup_flow and _WIZARD_FLOWS_SLOT[0] is wizard_flows:
             return
-        raise RuntimeError(
+        raise WizardCatalogueAlreadyRegisteredError(
             "register_wizard_catalogue() called a second time with different objects. "
             "The catalogue must be registered exactly once."
         )
@@ -109,6 +114,7 @@ def get_wizard_flows() -> tuple[Any, ...]:
 
 
 __all__ = [
+    "WizardCatalogueAlreadyRegisteredError",
     "WizardCatalogueNotRegisteredError",
     "WizardFlowProtocol",
     "get_setup_flow",

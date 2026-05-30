@@ -32,26 +32,38 @@ adapters:
       errors:
         already_active: AeatAuthenticator ya tiene una sesion activa; llame a close()
           o reauthenticate() antes de autenticar de nuevo.
-        already_active_before_resume: 'AeatAuthenticator ya tiene una sesión activa; llame a close() antes de reanudar.'
+        already_active_before_resume: AeatAuthenticator ya tiene una sesión activa;
+          llame a close() antes de reanudar.
         assertion_failed: La autenticacion AEAT no produjo una asercion de inicio
           de sesion valida.
-        capture_requires_active_session: 'capture_storage_state() requiere la sesión autenticada actualmente activa.'
-        capture_requires_certificate: 'capture_storage_state() requiere una sesión respaldada por certificado con metadatos de handshake.'
-        closing: 'El autenticador está cerrando; no se permiten nuevas operaciones verify_login.'
-        context_marker_missing: 'El contexto del navegador no está etiquetado con el marcador de certificado esperado.'
+        capture_requires_active_session: capture_storage_state() requiere la sesión
+          autenticada actualmente activa.
+        capture_requires_certificate: capture_storage_state() requiere una sesión
+          respaldada por certificado con metadatos de handshake.
+        closing: El autenticador está cerrando; no se permiten nuevas operaciones
+          verify_login.
+        context_marker_missing: El contexto del navegador no está etiquetado con el
+          marcador de certificado esperado.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
-        no_active_context: 'No hay contexto de navegador activo; llame a authenticate() primero.'
-        no_context_capture_storage: 'No hay contexto de navegador activo; no se puede capturar el estado de almacenamiento.'
-        persisted_session_verification_failed: 'La sesión persistida del navegador AEAT falló la verificación en vivo.'
+        no_active_context: No hay contexto de navegador activo; llame a authenticate()
+          primero.
+        no_context_capture_storage: No hay contexto de navegador activo; no se puede
+          capturar el estado de almacenamiento.
+        persisted_session_verification_failed: La sesión persistida del navegador
+          AEAT falló la verificación en vivo.
         resume_failed: La reanudacion de la sesion AEAT persistida no produjo un contexto
           utilizable.
-        session_stale: 'La sesión AEAT ha caducado; el plazo de inactividad ha expirado.'
+        session_stale: La sesión AEAT ha caducado; el plazo de inactividad ha expirado.
     clave_movil:
       errors:
-        already_active: 'Cl@ve Móvil ya tiene una sesión activa; llame a close() antes de autenticarse de nuevo.'
-        approval_timeout: 'La autenticación por navegador Cl@ve Móvil no se completó en el tiempo configurado.'
-        dni_nie_not_set: 'AEAT_CLAVE_MOVIL_DNI_NIE no está configurado; configure su DNI o NIE antes de autenticarse.'
-        metadata_invalid: 'Los metadatos de sesión de Cl@ve Móvil son inválidos o no pueden analizarse.'
+        already_active: Cl@ve Móvil ya tiene una sesión activa; llame a close() antes
+          de autenticarse de nuevo.
+        approval_timeout: La autenticación por navegador Cl@ve Móvil no se completó
+          en el tiempo configurado.
+        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE no está configurado; configure su
+          DNI o NIE antes de autenticarse.
+        metadata_invalid: Los metadatos de sesión de Cl@ve Móvil son inválidos o no
+          pueden analizarse.
         no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
           config auth status` primero.
         page_missing_click: La pagina de Playwright no expone click(); no se puede
@@ -59,7 +71,8 @@ adapters:
         session_expired: La sesion de Cl@ve Movil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
           Movil no coincide; los datos de sesion pueden estar corruptos.
-        verify_requires_active_context: 'Cl@ve Móvil verify() requiere un contexto de navegador activo; llame a authenticate() primero.'
+        verify_requires_active_context: Cl@ve Móvil verify() requiere un contexto
+          de navegador activo; llame a authenticate() primero.
   google:
     calc_sheets:
       errors:
@@ -164,17 +177,20 @@ adapters:
         ejecute primero `aeat config auth status`.
       parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
         estructura de la página puede haber cambiado.
-      playwright_alert_modal_failed: 'Error al continuar el modal de alerta de AEAT.'
-      playwright_buscar_click_failed: 'Error al hacer clic en el botón Buscar de la Sede.'
-      playwright_combobox_open_failed: 'Error al abrir el cuadro combinado de la Sede.'
-      playwright_combobox_select_failed: 'Error al seleccionar una opción del cuadro combinado en la Sede.'
+      playwright_alert_modal_failed: Error al continuar el modal de alerta de AEAT.
+      playwright_buscar_click_failed: Error al hacer clic en el botón Buscar de la
+        Sede.
+      playwright_combobox_open_failed: Error al abrir el cuadro combinado de la Sede.
+      playwright_combobox_select_failed: Error al seleccionar una opción del cuadro
+        combinado en la Sede.
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
 aggregation:
   grouping:
     errors:
-      unsupported_modelo: 'No hay contrato de agregación registrado para el modelo solicitado.'
+      unsupported_modelo: No hay contrato de agregación registrado para el modelo
+        solicitado.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -204,9 +220,12 @@ aggregation:
     parse_error: Formato de período no reconocido
   prorrata:
     errors:
-      current_year_not_after_prior: 'El año actual debe ser estrictamente mayor que el año anterior.'
-      invalid_provisional_period: 'El período provisional debe ser un token trimestral (Qn) o mensual (Mnn).'
-      year_out_of_range: 'El año de agregación de prorrata está fuera del rango admitido 2000-2100.'
+      current_year_not_after_prior: El año actual debe ser estrictamente mayor que
+        el año anterior.
+      invalid_provisional_period: El período provisional debe ser un token trimestral
+        (Qn) o mensual (Mnn).
+      year_out_of_range: El año de agregación de prorrata está fuera del rango admitido
+        2000-2100.
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para la agregación del
@@ -253,6 +272,9 @@ application:
           antes de continuar.
         operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
           por el operador.
+    errors:
+      provider_reserved: 'El proveedor de autenticación {provider} está reservado y no está implementado.'
+      session_field_not_datetime: 'El campo {field} de sesión persistida debe ser una fecha-hora o cadena ISO-8601.'
     operator:
       alignment:
         both_missing_detail: No están configurados ni la identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -375,8 +397,10 @@ application:
           auth test` antes de leer datos AEAT.
   ledger:
     errors:
-      evidence_attachment_requires_ids: 'El adjunto de evidencia del libro mayor requiere evidencia de compra o identificadores de adjunto.'
-      purchase_evidence_already_set: 'La transacción del libro mayor ya tiene un purchase_invoice_evidence_id; elimine o reemplace a través del flujo de adjuntos.'
+      evidence_attachment_requires_ids: El adjunto de evidencia del libro mayor requiere
+        evidencia de compra o identificadores de adjunto.
+      purchase_evidence_already_set: La transacción del libro mayor ya tiene un purchase_invoice_evidence_id;
+        elimine o reemplace a través del flujo de adjuntos.
   modelo:
     borrador_binding:
       errors:
@@ -388,8 +412,10 @@ application:
         source_trace_mismatch: La traza de origen del borrador debe coincidir con
           los identificadores de binding resueltos.
     errors:
-      amendment_verification_refused_missing_casillas: 'La enmienda está incompleta: faltan identificadores de casilla requeridos en el mapa corregido.'
-      amendment_verification_refused_no_snapshot: 'El registro no tiene una instantánea para el modelo, año y período solicitados.'
+      amendment_verification_refused_missing_casillas: 'La enmienda está incompleta:
+        faltan identificadores de casilla requeridos en el mapa corregido.'
+      amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
+        para el modelo, año y período solicitados.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
@@ -414,16 +440,18 @@ application:
         create NAME` antes de reconciliar una unidad de trabajo.
       verification_report_not_found: No existe ningún informe de verificación con
         id=%{verification_report_id}.
-      work_unit_already_discarded: 'La unidad de trabajo ya está descartada.'
+      work_unit_already_discarded: La unidad de trabajo ya está descartada.
       work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
         descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
         descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
-      work_unit_mutation_refused: 'La unidad de trabajo está descartada; cree una nueva unidad de trabajo para continuar.'
+      work_unit_mutation_refused: La unidad de trabajo está descartada; cree una nueva
+        unidad de trabajo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
-      workflow_input_mismatch: 'La solicitud de entrada del flujo de trabajo no coincide con la revisión de cálculo.'
+      workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
+        con la revisión de cálculo.
     findings:
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
@@ -491,7 +519,8 @@ application:
         profile create NAME` para crearlo.
       profile_tombstoned_not_selectable: El perfil '%{profile}' está eliminado y no
         puede seleccionarse.
-      unsupported_bundle_schema_version: 'La versión del esquema del paquete no es compatible con esta versión de la aplicación.'
+      unsupported_bundle_schema_version: La versión del esquema del paquete no es
+        compatible con esta versión de la aplicación.
   wizard:
     errors:
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
@@ -500,7 +529,7 @@ application:
         Añade estos flags y vuelve a ejecutar el comando: %{missing_flags}. O ejecútalo
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
     next_hint:
-      modelo_work_create: 'aeat app modelo work create'
+      modelo_work_create: aeat app modelo work create
     status:
       errors:
         missing_tax_id: El perfil activo no tiene tax.id.
@@ -510,8 +539,23 @@ application:
           como SetupAnswers.
   workflow:
     errors:
+      adapter_missing_deadline_engine: 'El motor de flujo de trabajo requiere un adaptador deadline_engine.'
+      adapter_missing_filing_draft_builder: 'El motor de flujo de trabajo requiere un adaptador filing_draft_builder.'
+      adapter_missing_inputs_provider: 'El motor de flujo de trabajo requiere un proveedor de entradas respaldado por depósito.'
       no_active_profile_bucket: No hay un perfil activo.
+      no_run_for_period: 'No se encontró ejecución de flujo de trabajo para el modelo {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.'
+      period_registry_unmappable: 'No se puede asignar el período de flujo de trabajo {period} a un período del registro.'
+      period_registry_year_unresolvable: 'No se puede derivar el año del registro a partir del período de flujo de trabajo {period}.'
+      profile_label_ambiguous: 'La etiqueta de perfil {label} es ambigua: {count} depósitos activos la comparten.'
+      resume_refused_no_aborted_reason: 'La ejecución de flujo de trabajo {run_id} está ABORTED sin razón registrada; se rechaza reanudar un registro inconsistente.'
+      resume_refused_no_obligation: 'La ejecución {run_id} no tiene obligación asociada; no se puede determinar el modelo y período para reintentar.'
+      resume_refused_not_aborted: 'La ejecución de flujo de trabajo {run_id} no se puede reanudar: está en estado {final_stage}, no ABORTED.'
+      resume_refused_terminal_reason: 'La ejecución {run_id} se abortó por {reason}, que es terminal por diseño y no puede reanudarse.'
+      run_id_invalid_blank: 'El identificador de ejecución no debe estar en blanco.'
+      run_id_invalid_separators: 'El identificador de ejecución no debe contener separadores de ruta.'
+      run_not_found: 'Ejecución de flujo de trabajo no encontrada: {run_id}.'
       state_unreadable: No se pudo leer el estado de configuración local.
+      state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo: carga útil no válida.'
 auth:
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
@@ -1713,8 +1757,8 @@ cli:
           o ninguno.
       help: Inventariar el índice de objetos seguros por espacio de nombres.
       labels:
-        count: 'recuento'
-        namespace: 'namespace'
+        count: recuento
+        namespace: namespace
       list_help: Lista las claves de objetos seguros guardadas en un espacio de nombres.
       namespace_help: Espacio de nombres que se va a inventariar.
       unreadable_help: Limita el listado a filas no descifrables.
@@ -2494,6 +2538,10 @@ cli:
         para listar los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
+core:
+  profile:
+    errors:
+      registration_duplicate_callable: 'La implementación de respuestas de proyecto se registró dos veces con distintos invocables; debe registrarse exactamente una vez.'
 dotted:
   key: Clave con puntos
 entries:
@@ -3165,7 +3213,10 @@ errors:
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
     internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
+    internal_profile_project_answers_not_registered: errors.internal.internal_profile_project_answers_not_registered
     internal_profile_registration: errors.internal.internal_profile_registration
+    internal_wizard_catalogue_already_registered: errors.internal.internal_wizard_catalogue_already_registered
+    internal_wizard_catalogue_not_registered: errors.internal.internal_wizard_catalogue_not_registered
     internal_wizard_script_overflow: 'Error interno: el asistente se cerró con respuestas
       guionizadas sin consumir.'
     internal_wizard_script_underflow: 'Error interno: el asistente solicitó más respuestas

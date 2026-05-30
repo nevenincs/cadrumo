@@ -50,7 +50,7 @@ class ProfileRegistrationError(CoreError):
     """
 
 
-class ProjectAnswersNotRegisteredError(RuntimeError):
+class ProjectAnswersNotRegisteredError(CoreError):
     """Raised when domain code calls project_answers before registration."""
 
     def __init__(self) -> None:
@@ -90,8 +90,7 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
             return
         raise ProfileRegistrationError(
-            "register_project_answers() called a second time with a different callable. "
-            "The implementation must be registered exactly once."
+            translated_message="core.profile.errors.registration_duplicate_callable",
         )
     _PROJECT_ANSWERS_SLOT.append(fn)
     _log.debug("project_answers registered: %r", fn)
