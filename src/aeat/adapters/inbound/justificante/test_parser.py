@@ -184,6 +184,10 @@ def _observed_period_expected(fixture: Path, ejercicio: str, filename_period: st
     explicit_annual_fixtures = {
         ("100", "2021-0A"),
         ("100", "2022-0A"),
+        # Synthetic fixtures regenerated to print "Periodo: 0A" explicitly;
+        # parser extracts the label verbatim rather than promoting ejercicio.
+        ("390", "2022-0A"),
+        ("390", "2023-0A"),
     }
     if filename_period == "0A" and (fixture.parent.name, fixture.stem) not in explicit_annual_fixtures:
         return ejercicio

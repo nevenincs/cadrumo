@@ -1476,6 +1476,10 @@ class _Modelo303CorpusFixture:
     # Derived via _compute_m303_closure:
     c46: Decimal  # Resultado regimen general = c27 - c45
     c69: Decimal  # Resultado de la autoliquidacion = c46 - 0
+    # Justificante receipt fields — required by the sidecar roundtrip test.
+    # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
+    csv: str = ""
+    presented_at: str = "2024-01-01 10:00:00"
 
 
 def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal]:
@@ -1857,6 +1861,25 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
 
     y -= 4 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt fields required by the sidecar roundtrip test.
+    # Codigo Seguro de Verificacion: the sidecar expects SANITIZED303{ejercicio}.
+    # Fecha y hora de presentacion: required by _extract_presented_at (YYYY-MM-DD HH:MM:SS shape).
+    # Verification URL: required by _extract_verification_url.
+    csv_val = fixture.csv if fixture.csv else f"SANITIZED303{fixture.ejercicio}"
+    c.drawString(
+        20 * mm,
+        y,
+        f"Codigo Seguro de Verificacion: {csv_val}",
+    )
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        "https://sede.agenciatributaria.gob.es",
+    )
 
 
 @dataclass(frozen=True)
@@ -1893,6 +1916,10 @@ class _Modelo130CorpusFixture:
     tax_id: str
     c03: Decimal  # rendimiento neto (leaf input)
     c19: Decimal  # resultado final (engine-derived closure)
+    # Justificante receipt fields — required by the sidecar roundtrip test.
+    # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
+    csv: str = ""
+    presented_at: str = "2024-01-01 10:00:00"
 
 
 def _compute_m130_closure(c03: Decimal) -> Decimal:
@@ -2127,6 +2154,25 @@ def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) 
         y -= _M130_ROW_STEP
     y -= 4 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt fields required by the sidecar roundtrip test.
+    # Codigo Seguro de Verificacion: the sidecar expects SANITIZED130{ejercicio}.
+    # Fecha y hora de presentacion: required by _extract_presented_at (YYYY-MM-DD HH:MM:SS shape).
+    # Verification URL: required by _extract_verification_url.
+    csv_val = fixture.csv if fixture.csv else f"SANITIZED130{fixture.ejercicio}"
+    c.drawString(
+        20 * mm,
+        y,
+        f"Codigo Seguro de Verificacion: {csv_val}",
+    )
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        "https://sede.agenciatributaria.gob.es",
+    )
 
 
 @dataclass(frozen=True)
@@ -2172,6 +2218,10 @@ class _Modelo390CorpusFixture:
     c47: Decimal  # cuota-devengada-total = c06 + c04 + c02 + c26
     c64: Decimal  # cuota-deducible-total = c49 + c26
     c65: Decimal  # resultado-regimen-general = c47 - c64
+    # Justificante receipt fields — required by the sidecar roundtrip test.
+    # csv must match SANITIZED{modelo}{ejercicio} to satisfy _CSV_SYNTHETIC_RE.
+    csv: str = ""
+    presented_at: str = "2024-01-01 10:00:00"
 
 
 def _compute_m390_closure(
@@ -2342,6 +2392,25 @@ def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) 
     )
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt fields required by the sidecar roundtrip test.
+    # Codigo Seguro de Verificacion: the sidecar expects SANITIZED390{ejercicio}.
+    # Fecha y hora de presentacion: required by _extract_presented_at (YYYY-MM-DD HH:MM:SS shape).
+    # Verification URL: required by _extract_verification_url.
+    csv_val = fixture.csv if fixture.csv else f"SANITIZED390{fixture.ejercicio}"
+    c.drawString(
+        20 * mm,
+        y,
+        f"Codigo Seguro de Verificacion: {csv_val}",
+    )
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        "https://sede.agenciatributaria.gob.es",
+    )
 
 
 def main() -> None:

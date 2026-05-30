@@ -62,10 +62,11 @@ _PERIOD_EQUALS_EJERCICIO: frozenset[tuple[str, str]] = frozenset(
     {
         # M190 Resumen anual 2024: positional layout prints only year.
         ("190", "2024-0A"),
-        # M390 older layouts: all three years collapse period to year.
+        # M390 2021-0A: real multi-page PDF in English layout that omits
+        # a labelled Período token; parser promotes ejercicio as period.
+        # M390 2022-0A and 2023-0A are synthetic fixtures that print
+        # "Periodo: 0A" explicitly — their period IS "0A", not the year.
         ("390", "2021-0A"),
-        ("390", "2022-0A"),
-        ("390", "2023-0A"),
         # M100 2023: newer layout omits labelled Período token.
         ("100", "2023-0A"),
     }
