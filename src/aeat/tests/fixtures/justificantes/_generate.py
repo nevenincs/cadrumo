@@ -22,6 +22,8 @@ suite. Run manually with ``uv run python src/aeat/tests/fixtures/justificantes/_
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -227,6 +229,15 @@ def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
     )
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M349 is quarterly; Ejercicio/Periodo labels are already printed above.
+    csv_val = f"SANITIZED349{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -337,6 +348,16 @@ def _draw_modelo_180(c: canvas.Canvas, fixture: _Modelo180Fixture) -> None:
     )
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M180 prints "Periodo: 0A" above, so the parser extracts "0A" as the period.
+    # TestRealCorpusParses explicit_annual_fixtures includes ("180", "2024-0A") to match.
+    csv_val = f"SANITIZED180{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -429,6 +450,15 @@ def _draw_modelo_369(c: canvas.Canvas, fixture: _Modelo369Fixture) -> None:
     c.drawString(20 * mm, y, f"Periodo: {fixture.periodo}")
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M369 is quarterly; Ejercicio and Periodo labels are already printed above.
+    csv_val = f"SANITIZED369{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -539,6 +569,16 @@ def _draw_modelo_193(c: canvas.Canvas, fixture: _Modelo193Fixture) -> None:
     )
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M193 prints "Periodo: 0A" above, so the parser extracts "0A" as the period.
+    # TestRealCorpusParses explicit_annual_fixtures includes ("193", "2024-0A") to match.
+    csv_val = f"SANITIZED193{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -658,6 +698,15 @@ def _draw_modelo_115(c: canvas.Canvas, fixture: _Modelo115Fixture) -> None:
     c.drawString(20 * mm, y, f"Resultado a ingresar {fixture.resultado_ingresar}")
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M115 is quarterly; Ejercicio and Periodo labels are already printed above.
+    csv_val = f"SANITIZED115{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -756,6 +805,15 @@ def _draw_modelo_720(c: canvas.Canvas, fixture: _Modelo720Fixture) -> None:
     )
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M720 has no Periodo label; parser fallback returns the ejercicio year as period.
+    csv_val = f"SANITIZED720{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -772,17 +830,31 @@ class _Modelo036Fixture:
 
     The named_label parser matches label_pattern against this heading and captures
     the event-kind value (Alta/Modificacion/Baja) on the same line.
+
+    ``ejercicio`` is included so the sidecar CSV token SANITIZED036{ejercicio} can be
+    derived deterministically.  M036 has no calendar period (it uses event codes
+    alta/modificacion/baja), so the justificante trailer does not print a Periodo label.
     """
 
     filename: str
+    ejercicio: str
     tax_id: str
     full_name: str
     event_kind: str
+    presented_at: str = "2025-01-01 10:00:00"
 
 
 _MODELO_036_FIXTURES: tuple[_Modelo036Fixture, ...] = (
     _Modelo036Fixture(
         filename="036/2025-0A.pdf",
+        ejercicio="2025",
+        tax_id="Y0000001S",
+        full_name="DEMO EMPRESA SL",
+        event_kind="Alta",
+    ),
+    _Modelo036Fixture(
+        filename="036/2025-alta.pdf",
+        ejercicio="2025",
         tax_id="Y0000001S",
         full_name="DEMO EMPRESA SL",
         event_kind="Alta",
@@ -816,6 +888,11 @@ def _draw_modelo_036(c: canvas.Canvas, fixture: _Modelo036Fixture) -> None:
     c.drawString(20 * mm, y, f"NIF: {fixture.tax_id}")
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Razon social: {fixture.full_name}")
+    y -= 6 * mm
+    # Ejercicio label — required by the justificante parser's _extract_period_and_ejercicio
+    # to locate the fiscal year.  M036 has no Periodo token; the parser falls back to
+    # returning the ejercicio year as the period, consistent with other annual declaraciones.
+    c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}")
     y -= 10 * mm
     # PAGINA 1 section heading — label text verbatim from AEAT practical guide
     # instrucciones-cumplimentacion-pagina-1.html (h3):
@@ -828,6 +905,16 @@ def _draw_modelo_036(c: canvas.Canvas, fixture: _Modelo036Fixture) -> None:
     )
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M036 has no calendar Periodo; the CSV token uses the ejercicio year.
+    # SANITIZED036{ejercicio} matches _CSV_SYNTHETIC_RE in the sidecar roundtrip test.
+    csv_val = f"SANITIZED036{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -924,6 +1011,15 @@ def _draw_modelo_232(c: canvas.Canvas, fixture: _Modelo232Fixture) -> None:
     c.drawString(20 * mm, y, f"C.N.A.E. actividad principal {fixture.cnae}")
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M232 is annual (no Periodo label). CSV token uses the ejercicio year.
+    csv_val = f"SANITIZED232{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -1065,6 +1161,15 @@ def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
         y -= 6 * mm
     y -= 4 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M123 is quarterly; Ejercicio and Periodo labels are already printed above.
+    csv_val = f"SANITIZED123{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -1144,6 +1249,15 @@ def _draw_modelo_347(c: canvas.Canvas, fixture: _Modelo347Fixture) -> None:
     c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}")
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M347 has no Periodo label; parser fallback returns the ejercicio year as period.
+    csv_val = f"SANITIZED347{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -1222,6 +1336,15 @@ def _draw_modelo_184(c: canvas.Canvas, fixture: _Modelo184Fixture) -> None:
     c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}")
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M184 has no Periodo label; parser fallback returns the ejercicio year as period.
+    csv_val = f"SANITIZED184{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -1293,11 +1416,12 @@ _MODELO_131_CASILLAS: tuple[tuple[str, str, str], ...] = (
 
 _MODELO_131_FIXTURES: tuple[_Modelo131Fixture, ...] = (
     _Modelo131Fixture(
-        # filename uses 2024 to match the corpus naming convention for the gap test;
-        # ejercicio is 2026 so año_override=2026 resolves the 2026 revision which
-        # carries the declaracion_pdf extraction profile under test.
+        # filename and ejercicio both use 2024 so TestRealCorpusParses passes the
+        # ejercicio assertion (filepath stem "2024-1T" → ejercicio_expected "2024").
+        # The declaracion parser tests use año_override=2026 explicitly, so they
+        # are not affected by the ejercicio value printed in the PDF.
         filename="131/2024-1T.pdf",
-        ejercicio="2026",
+        ejercicio="2024",
         periodo="1T",
         tax_id="Y0000001S",
         full_name="DEMO AUTONOMO EO",
@@ -1357,6 +1481,15 @@ def _draw_modelo_131(c: canvas.Canvas, fixture: _Modelo131Fixture) -> None:
         y -= 6 * mm
     y -= 4 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M131 is quarterly; Ejercicio and Periodo labels are already printed above.
+    csv_val = f"SANITIZED131{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 @dataclass(frozen=True)
@@ -1423,6 +1556,15 @@ def _draw_modelo_840(c: canvas.Canvas, fixture: _Modelo840Fixture) -> None:
     c.drawString(20 * mm, y, f"15Declaracion de: {fixture.tipo_declaracion}")
     y -= 10 * mm
     c.drawString(20 * mm, y, "Ejemplar para la Administracion")
+    y -= 8 * mm
+    # Justificante receipt trailer — required by TestRealCorpusParses and sidecar roundtrip test.
+    # M840 has no Periodo label; parser fallback returns the ejercicio year as period.
+    csv_val = f"SANITIZED840{fixture.ejercicio}"
+    c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
 def _fmt_spanish(d: Decimal) -> str:
@@ -2413,6 +2555,63 @@ def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) 
     )
 
 
+def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> None:
+    """Write a sanitiser-manifest sidecar JSON for a synthetic fixture PDF.
+
+    The sidecar format mirrors the real sanitiser manifest consumed by
+    ``test_corpus_sidecar_roundtrip.py``'s ``_load_ground_truth``.  The
+    ``replacements_applied`` list must contain a ``SANITIZED{modelo}{ejercicio}``
+    token so the roundtrip test can derive the expected CSV ground truth.
+
+    The pdf_path must already exist (written by the caller before calling this).
+    """
+    pdf_bytes = pdf_path.read_bytes()
+    pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    sidecar_data = {
+        "source_sha256": pdf_sha256,
+        "output_sha256": pdf_sha256,
+        "source_size_bytes": len(pdf_bytes),
+        "output_size_bytes": len(pdf_bytes),
+        "sanitizer_version": "0.1.0-synthetic",
+        "determinism_flags": {
+            "deterministic_id": True,
+            "static_id": False,
+            "object_stream_mode": "preserve",
+            "linearize": False,
+            "recompress_flate": False,
+            "compress_streams": True,
+        },
+        "replacements_applied": [
+            {
+                "surface": "content_stream",
+                "surface_index": [0, 0],
+                "real_sha256": "0" * 64,
+                "synthetic": "01-01-1900",
+                "encoding": "literal",
+            },
+            {
+                "surface": "content_stream",
+                "surface_index": [0, 1],
+                "real_sha256": "0" * 64,
+                "synthetic": f"SANITIZED{modelo}{ejercicio}",
+                "encoding": "literal",
+            },
+            {
+                "surface": "content_stream",
+                "surface_index": [0, 2],
+                "real_sha256": "0" * 64,
+                "synthetic": tax_id,
+                "encoding": "literal",
+            },
+        ],
+        "surfaces_scrubbed": [],
+        "warnings": [],
+    }
+    sidecar_path = pdf_path.with_suffix(".json")
+    sidecar_path.write_text(json.dumps(sidecar_data, indent=2), encoding="utf-8")
+    print(f"wrote sidecar {sidecar_path}")
+
+
 def main() -> None:
     """Regenerate every fixture PDF in-place."""
     out_dir = Path(__file__).parent
@@ -2458,6 +2657,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "369", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_180_FIXTURES:
         target = out_dir / fixture.filename
@@ -2472,6 +2672,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "180", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_036_FIXTURES:
         target = out_dir / fixture.filename
@@ -2486,6 +2687,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "036", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_232_FIXTURES:
         target = out_dir / fixture.filename
@@ -2500,6 +2702,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "232", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_349_FIXTURES:
         target = out_dir / fixture.filename
@@ -2514,6 +2717,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "349", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_123_FIXTURES:
         target = out_dir / fixture.filename
@@ -2528,6 +2732,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "123", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_840_FIXTURES:
         target = out_dir / fixture.filename
@@ -2542,6 +2747,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "840", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_193_FIXTURES:
         target = out_dir / fixture.filename
@@ -2556,6 +2762,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "193", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_720_FIXTURES:
         target = out_dir / fixture.filename
@@ -2570,6 +2777,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "720", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_347_FIXTURES:
         target = out_dir / fixture.filename
@@ -2584,6 +2792,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "347", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_184_FIXTURES:
         target = out_dir / fixture.filename
@@ -2598,6 +2807,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "184", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_115_FIXTURES:
         target = out_dir / fixture.filename
@@ -2612,6 +2822,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "115", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_131_FIXTURES:
         target = out_dir / fixture.filename
@@ -2626,6 +2837,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "131", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_303_CORPUS_FIXTURES:
         target = out_dir / fixture.filename

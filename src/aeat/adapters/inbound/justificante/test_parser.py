@@ -188,7 +188,15 @@ def _observed_period_expected(fixture: Path, ejercicio: str, filename_period: st
         # parser extracts the label verbatim rather than promoting ejercicio.
         ("390", "2022-0A"),
         ("390", "2023-0A"),
+        # M180 and M193 print "Periodo: 0A" in the PDF body; parser extracts "0A".
+        ("180", "2024-0A"),
+        ("193", "2024-0A"),
     }
+    # M036 uses event codes (alta/modificacion/baja) not calendar period codes.
+    # The parser's period regex requires at least one digit and cannot match
+    # "alta"; it falls back to returning the ejercicio year.
+    if fixture.parent.name == "036":
+        return ejercicio
     if filename_period == "0A" and (fixture.parent.name, fixture.stem) not in explicit_annual_fixtures:
         return ejercicio
     return filename_period
