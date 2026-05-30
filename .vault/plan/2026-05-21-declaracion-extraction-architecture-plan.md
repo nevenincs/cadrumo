@@ -487,7 +487,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [x] `W10.P44.S201` - OCR evidence invoice path discipline research (tasklist #70) — research landed at `.vault/research/2026-05-30-declaracion-extraction-architecture-research.md`; seven OCR-specific silent-failure classes documented; discipline analogue proposed (`InvoiceCorpusSource`, `InvoiceOcrExtractionError`, engine-version gate); verdict: separate ADR `purchase-invoice-ocr-extraction-discipline` warranted; follow-up phases: ADR authoring, model/error implementation, OCR pipeline, gate enforcement.
+- [x] `W10.P44.S201` - OCR evidence invoice path discipline research (tasklist #70) — research landed at `.vault/research/2026-05-30-declaracion-extraction-architecture-research.md`; `seven OCR-specific silent-failure classes documented; discipline analogue proposed (`InvoiceCorpusSource`, `InvoiceOcrExtractionError`, engine-version gate); verdict: separate ADR `purchase-invoice-ocr-extraction-discipline` warranted; follow-up phases: ADR authoring, model/error implementation, OCR pipeline, gate enforcement`.
 
 ### Phase `W10.P45` - M130 corpus regeneration with formula-consistent values
 
@@ -555,3 +555,9 @@ Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classif
 16 pre-existing failures in src/aeat/adapters/inbound/justificante/test_parser.py across M036/M115/M123/M131/M180/M184/M193/M232/M347/M349/M369/M720/M840. Fixtures were added by prior campaign steps (#42/#43/#44/#45/#56 etc.) without parallel test_parser.py support — only test_corpus_sidecar_roundtrip.py was extended. Add per-modelo test_parser.py entries mirroring the existing M111/M130/M303/M390 pattern. Lower priority than verification chain but warrants completeness.
 
 - [x] `W10.P55.S214` - Add per-modelo test_parser.py entries for 13 newly-added corpus modelos following the M111/M130/M303/M390 pattern (tasklist #84); `src/aeat/adapters/inbound/justificante/test_parser.py`.
+
+### Phase `W10.P56` - purchase-invoice OCR ADR ratification (W10.P44 research follow-up)
+
+Author and land the purchase-invoice-ocr-extraction-discipline ADR, ratifying the discipline analogue derived from the W10.P44 OCR evidence research closure. Supersedes the 2026-05-12 receipt-OCR ADR on OCR implementation contract.
+
+- [x] `W10.P56.S215` - Author and commit the purchase-invoice-ocr-extraction-discipline ADR; `.vault/adr/2026-05-30-purchase-invoice-ocr-extraction-discipline-adr.md`.
