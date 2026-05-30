@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from pydantic import ValidationError
 
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
 from ._enums import BusinessClassification
 from ._errors import TransactionCatalogueError, TransactionNotFoundError
@@ -21,7 +22,6 @@ from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalog
 
 _LOGGER = get_logger(__name__)
 
-_MANUAL_CLASSIFIED_BY = "manual"
 _DEFAULT_MANUAL_CONFIDENCE = Decimal("1.0")
 
 _EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, str | None, str, Decimal | None]
@@ -193,7 +193,7 @@ def _resolve_confidence(*, classified_by: str, confidence: Decimal | None) -> De
     """
     if confidence is not None:
         return confidence
-    if classified_by == _MANUAL_CLASSIFIED_BY:
+    if classified_by == CLASSIFIED_BY_MANUAL:
         return _DEFAULT_MANUAL_CONFIDENCE
     return None
 

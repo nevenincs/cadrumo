@@ -28,7 +28,7 @@ from ...adapters.inbound.financial.providers import (
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.errors import resolve_error_message
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -85,7 +85,6 @@ from ..export import serialize_tabular_rows
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
-    CLASSIFIED_BY_MANUAL,
     ApplyRulesAppliedRow,
     ApplyRulesResult,
     BulkClassifyFailure,
