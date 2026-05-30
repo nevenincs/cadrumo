@@ -22,6 +22,8 @@ would tighten this guarantee but is out of scope for this module.
 
 from __future__ import annotations
 
+from ._errors import MasterKeyTypeError
+
 
 def zeroise(buffer: object) -> None:
     """Overwrite every byte of a mutable buffer with zero.
@@ -43,7 +45,7 @@ def zeroise(buffer: object) -> None:
     """
 
     if not isinstance(buffer, bytearray):
-        raise TypeError(
+        raise MasterKeyTypeError(
             f"zeroise() requires a bytearray; got {type(buffer).__name__}. "
             "Python's immutable bytes cannot be overwritten in place.",
         )

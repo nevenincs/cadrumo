@@ -15,6 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .....core.time._utc import _validate_utc_aware
+from ..errors import StorageValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -31,7 +32,7 @@ def _validate_b64(value: str) -> str:
     decoded = _decode_b64(value)
     re_encoded = base64.b64encode(decoded).decode("ascii")
     if re_encoded != value:
-        raise ValueError("base64 field is not in canonical form")
+        raise StorageValidationError("base64 field is not in canonical form")
     return value
 
 

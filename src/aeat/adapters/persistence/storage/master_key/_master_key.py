@@ -971,9 +971,9 @@ class EphemeralMasterKeyProvider:
 
     def __enter__(self) -> object:
         if self._session is not None:
-            raise RuntimeError(
-                "EphemeralMasterKeyProvider context manager is not re-entrant",
-            )
+            from ._errors import MasterKeyReentrantError
+
+            raise MasterKeyReentrantError(type(self).__name__)
         from datetime import UTC, datetime
 
         from ._active_session import activate_session
@@ -1291,9 +1291,9 @@ def _provider_enter(
     from ._bucket_session import BucketSession
 
     if provider._session is not None:
-        raise RuntimeError(
-            f"{type(provider).__name__} context manager is not re-entrant",
-        )
+        from ._errors import MasterKeyReentrantError
+
+        raise MasterKeyReentrantError(type(provider).__name__)
 
     bucket_id = resolve_active_bucket_id() or fallback_bucket_id
     if not bucket_id:

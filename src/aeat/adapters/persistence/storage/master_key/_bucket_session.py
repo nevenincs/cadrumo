@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 
 from .....core.logging import get_logger
 from ..bucket._errors import BucketLockedError
+from ..errors import StorageValidationError
 from ._zeroise import zeroise as _zeroise
 
 _KEK_BYTES = 32
@@ -94,13 +95,13 @@ class BucketSession:
         """
 
         if not bucket_id:
-            raise ValueError("bucket_id must be non-empty")
+            raise StorageValidationError("bucket_id must be non-empty")
         if idle_minutes <= 0:
-            raise ValueError("idle_minutes must be a strict positive integer")
+            raise StorageValidationError("idle_minutes must be a strict positive integer")
         if len(kek) != _KEK_BYTES:
-            raise ValueError(f"kek must be exactly {_KEK_BYTES} bytes")
+            raise StorageValidationError(f"kek must be exactly {_KEK_BYTES} bytes")
         if len(dek) != _DEK_BYTES:
-            raise ValueError(f"dek must be exactly {_DEK_BYTES} bytes")
+            raise StorageValidationError(f"dek must be exactly {_DEK_BYTES} bytes")
 
         idle_window = timedelta(minutes=idle_minutes)
         return cls(

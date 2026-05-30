@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 from cryptography.exceptions import InvalidTag
 
+from aeat.adapters.persistence.storage.errors import EncryptionError
 from aeat.adapters.persistence.storage.master_key._dek_wrap import (
     WrappedDek,
     unwrap_dek,
@@ -125,17 +126,17 @@ def test_unwrap_fails_when_ciphertext_is_tampered() -> None:
 
 
 def test_wrap_rejects_wrong_size_kek() -> None:
-    with pytest.raises(ValueError, match="kek must be exactly 32 bytes"):
+    with pytest.raises(EncryptionError, match="kek must be exactly 32 bytes"):
         wrap_dek(kek=b"x" * 16, dek=_REFERENCE_DEK, bucket_id="bucket-x")
 
 
 def test_wrap_rejects_wrong_size_dek() -> None:
-    with pytest.raises(ValueError, match="dek must be exactly 32 bytes"):
+    with pytest.raises(EncryptionError, match="dek must be exactly 32 bytes"):
         wrap_dek(kek=_REFERENCE_KEK, dek=b"x" * 16, bucket_id="bucket-x")
 
 
 def test_wrap_rejects_empty_bucket_id() -> None:
-    with pytest.raises(ValueError, match="bucket_id must be non-empty"):
+    with pytest.raises(EncryptionError, match="bucket_id must be non-empty"):
         wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="")
 
 

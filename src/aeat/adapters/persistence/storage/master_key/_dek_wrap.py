@@ -24,6 +24,8 @@ import secrets
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..errors import EncryptionError
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _NONCE_BYTES = 12
@@ -46,7 +48,7 @@ def _associated_data(bucket_id: str) -> bytes:
     """Compose the AEAD additional-authenticated-data for one bucket."""
 
     if not bucket_id:
-        raise ValueError("bucket_id must be non-empty")
+        raise EncryptionError("bucket_id must be non-empty")
     return f"aeat.dek-wrap.v1:{bucket_id}".encode()
 
 
@@ -66,14 +68,14 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
         tag.
 
     Raises:
-        ValueError: If `kek` or `dek` is not 32 bytes, or `bucket_id`
+        EncryptionError: If `kek` or `dek` is not 32 bytes, or `bucket_id`
             is empty.
     """
 
     if len(kek) != _KEK_BYTES:
-        raise ValueError(f"kek must be exactly {_KEK_BYTES} bytes")
+        raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")
     if len(dek) != _DEK_BYTES:
-        raise ValueError(f"dek must be exactly {_DEK_BYTES} bytes")
+        raise EncryptionError(f"dek must be exactly {_DEK_BYTES} bytes")
 
     nonce = secrets.token_bytes(_NONCE_BYTES)
     aad = _associated_data(bucket_id)
@@ -95,14 +97,14 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
         The 32-byte data-encryption key.
 
     Raises:
-        ValueError: If `kek` is not 32 bytes or `bucket_id` is empty.
+        EncryptionError: If `kek` is not 32 bytes or `bucket_id` is empty.
         cryptography.exceptions.InvalidTag: If the AEAD tag does not
             verify (wrong KEK, wrong bucket id, tampered ciphertext or
             tag).
     """
 
     if len(kek) != _KEK_BYTES:
-        raise ValueError(f"kek must be exactly {_KEK_BYTES} bytes")
+        raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")
 
     aad = _associated_data(bucket_id)
     cipher_with_tag = wrapped.ciphertext + wrapped.tag

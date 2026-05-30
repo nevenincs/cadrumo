@@ -1226,4 +1226,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.adapters.persistence.storage.master_key._errors.MasterKeyReentrantError",
+        ErrorCode(
+            code="INTERNAL_MASTER_KEY_REENTRANT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_master_key_reentrant",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.master_key._errors.MasterKeyTypeError",
+        ErrorCode(
+            code="INTERNAL_MASTER_KEY_TYPE",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_master_key_type",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

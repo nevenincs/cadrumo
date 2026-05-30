@@ -31,6 +31,7 @@ from __future__ import annotations
 import pytest
 
 from aeat.adapters.persistence.storage.bucket._manifest import ManifestKdfParams
+from aeat.adapters.persistence.storage.errors import KeyDerivationError
 from aeat.adapters.persistence.storage.master_key._kdf import derive_kek
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -98,7 +99,7 @@ def test_derive_kek_rejects_non_argon2id_algorithm() -> None:
         output_length=32,
     )
 
-    with pytest.raises(ValueError, match="unsupported KDF algorithm"):
+    with pytest.raises(KeyDerivationError, match="unsupported KDF algorithm"):
         derive_kek(_REFERENCE_PASSPHRASE, bad_params)
 
 
@@ -113,5 +114,5 @@ def test_derive_kek_rejects_non_thirty_two_output_length() -> None:
         output_length=16,
     )
 
-    with pytest.raises(ValueError, match="unsupported KDF output_length"):
+    with pytest.raises(KeyDerivationError, match="unsupported KDF output_length"):
         derive_kek(_REFERENCE_PASSPHRASE, bad_params)
