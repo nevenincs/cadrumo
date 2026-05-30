@@ -3004,6 +3004,7 @@ errors:
       érkezett.
   integrity:
     integrity_aeat_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
+    integrity_profile_answer_type: Egy profilválasz-mező váratlan típust kapott.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van
       konfigurálva.
     integrity_filing_amendment_validation: A módosítás sérti a jogi vagy strukturális

@@ -116,6 +116,17 @@ class CoreValidationError(CoreError, ValueError):
     """
 
 
+class ProfileAnswerTypeError(CoreValidationError):
+    """Raised when a typed profile-answers field coercion receives an unexpected type.
+
+    Lives in :mod:`aeat.core.errors` so :class:`~aeat.core.profile.SetupAnswers`
+    can raise a typed error without importing application-layer wizard modules.
+    Application-layer wizard code raises the narrower
+    :class:`~aeat.application.wizard._errors.WizardAnswerTypeError`, which
+    inherits from this class, so callers catching either type continue to work.
+    """
+
+
 class AeatObservabilityError(AeatError):
     """Base class for observability-layer errors.
 
@@ -219,6 +230,7 @@ __all__ = [
     "BaseSeverity",
     "CoreError",
     "CoreValidationError",
+    "ProfileAnswerTypeError",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",

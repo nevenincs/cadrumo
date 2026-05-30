@@ -3040,6 +3040,7 @@ errors:
   integrity:
     integrity_aeat_core_validation: Una comprobación interna de integridad de datos
       no se superó.
+    integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo inesperado.
     integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
       mal configurado.
     integrity_filing_amendment_validation: La declaración complementaria infringe

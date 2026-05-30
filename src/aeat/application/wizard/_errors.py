@@ -8,7 +8,7 @@ in the application error registry.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreValidationError
+from ...core.errors import AeatError, CoreValidationError, ProfileAnswerTypeError
 
 
 class WizardError(AeatError):
@@ -35,17 +35,16 @@ class WizardCompileError(WizardError):
     """Raised when ``compile_profile_keys`` rejects a malformed wizard catalogue."""
 
 
-class WizardAnswerTypeError(CoreValidationError):
+class WizardAnswerTypeError(ProfileAnswerTypeError):
     """Raised when a :class:`SetupAnswers` field coercion receives an unexpected type.
 
-    Each ``@field_validator`` in :mod:`aeat.application.wizard._setup_answers`
-    accepts only the declared union arms (an enum member, a canonical string
-    token, or in some cases a blank string).  Any other runtime type violates
-    the typed boundary and is rejected with this error instead of a bare
-    :class:`TypeError` so the failure propagates through the typed error
-    registry and produces a structured envelope.
+    Each ``@field_validator`` in :mod:`aeat.core.profile`'s :class:`SetupAnswers`
+    raises :class:`~aeat.core.errors.ProfileAnswerTypeError` (the canonical core
+    type); this subclass is retained so application-layer code and tests that
+    catch :class:`WizardAnswerTypeError` by name continue to work.
 
-    Inherits from :class:`CoreValidationError` (which itself inherits from
-    :class:`ValueError`) to remain compatible with pydantic's field-validator
-    contract while exposing a typed exception in the registry.
+    Inherits from :class:`~aeat.core.errors.ProfileAnswerTypeError` (which inherits
+    from :class:`CoreValidationError` and :class:`ValueError`) to remain compatible
+    with pydantic's field-validator contract while exposing a typed exception in
+    the error registry.
     """

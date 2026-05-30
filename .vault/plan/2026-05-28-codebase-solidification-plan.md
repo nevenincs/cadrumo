@@ -550,14 +550,14 @@ Replace 10+ date.fromisoformat() inline + _parse_date reimpl in _notifications.p
 
 Replace 5 inline value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) with _round_to_cents from aeat.domain.fincas._rounding. Replace 2 local _coerce_decimal reimpl + 2 bare Decimal(str(...)) with coerce_decimal. Replace 2 format_decimal bypasses.
 
-- [ ] `W03.P18.S358` - replace inline quantize at entrypoints/cli/_modelo.py:2527,2598,2604 with _round_to_cents from aeat.domain.fincas._rounding; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W03.P18.S359` - replace inline quantize at application/invoices/_projection.py:124 with _round_to_cents; `src/aeat/application/invoices/_projection.py`.
-- [ ] `W03.P18.S360` - replace inline quantize at domain/calculations/registry/_formula_runtime.py:1206 with _round_to_cents; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
-- [ ] `W03.P18.S361` - replace inline quantize at domain/iva/_prorrata.py:430 with _round_to_cents; `src/aeat/domain/iva/_prorrata.py`.
-- [ ] `W03.P18.S362` - replace inline quantize at adapters/outbound/aeat/export/_formats/_deserialise.py:100,110 with _round_to_cents; `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`.
-- [ ] `W03.P18.S363` - replace inline quantize at adapters/outbound/aeat/export/_formats/_record_spec.py:316 with _round_to_cents and route format_decimal through aeat.core.decimal._format; `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`.
-- [ ] `W03.P18.S364` - replace local _coerce_decimal reimpl in application/review/_edit.py:126 with coerce_decimal from aeat.core.decimal._coerce; `src/aeat/application/review/_edit.py`.
-- [ ] `W03.P18.S365` - replace local _coerce_decimal reimpl in domain/calculations/registry/_schema.py:48 with coerce_decimal; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `W03.P18.S366` - replace bare Decimal(str(...)) in adapters/inbound/financial/providers/_base.py:393 with coerce_decimal; `src/aeat/adapters/inbound/financial/providers/_base.py`.
-- [ ] `W03.P18.S367` - replace bare Decimal(str(...)) in application/overview/__init__.py:795 with coerce_decimal; `src/aeat/application/overview/__init__.py`.
-- [ ] `W03.P18.S368` - add real-behavior test asserting zero inline value.quantize(Decimal(0.01),ROUND_HALF_UP) and bare Decimal(str()) coercion survive in production; `src/aeat/test_decimal_enrollment_inventory.py`.
+- [x] `W03.P18.S358` - replace inline quantize at entrypoints/cli/_modelo.py:2527,2598,2604 with _round_to_cents from aeat.domain.fincas._rounding; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P18.S359` - replace inline quantize at application/invoices/_projection.py:124 with _round_to_cents; `src/aeat/application/invoices/_projection.py`.
+- [x] `W03.P18.S360` - replace inline quantize at domain/calculations/registry/_formula_runtime.py:1206 with _round_to_cents; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [x] `W03.P18.S361` - replace inline quantize at domain/iva/_prorrata.py:430 with _round_to_cents; `src/aeat/domain/iva/_prorrata.py`.
+- [x] `W03.P18.S362` - replace inline quantize at adapters/outbound/aeat/export/_formats/_deserialise.py:100,110 with _round_to_cents; `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`.
+- [x] `W03.P18.S363` - replace inline quantize at adapters/outbound/aeat/export/_formats/_record_spec.py:316 with _round_to_cents and route format_decimal through aeat.core.decimal._format; `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`.
+- [x] `W03.P18.S364` - replace local _coerce_decimal reimpl in application/review/_edit.py:126 with coerce_decimal from aeat.core.decimal._coerce; `src/aeat/application/review/_edit.py`.
+- [x] `W03.P18.S365` - replace local _coerce_decimal reimpl in domain/calculations/registry/_schema.py:48 with coerce_decimal; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W03.P18.S366` - replace bare Decimal(str(...)) in adapters/inbound/financial/providers/_base.py:393 with coerce_decimal; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [x] `W03.P18.S367` - replace bare Decimal(str(...)) in application/overview/__init__.py:795 with coerce_decimal; `src/aeat/application/overview/__init__.py`.
+- [x] `W03.P18.S368` - add real-behavior test asserting zero inline value.quantize(Decimal(0.01),ROUND_HALF_UP) and bare Decimal(str()) coercion survive in production; `src/aeat/test_decimal_enrollment_inventory.py`.

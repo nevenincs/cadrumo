@@ -59,6 +59,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.errors.ProfileAnswerTypeError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_ANSWER_TYPE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_answer_type",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.errors.AeatObservabilityError",
         ErrorCode(
             code="ERROR_AEAT_OBSERVABILITY",

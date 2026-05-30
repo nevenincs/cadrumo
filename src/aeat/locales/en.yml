@@ -2877,6 +2877,7 @@ errors:
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
     integrity_aeat_core_validation: An internal data-integrity check failed.
+    integrity_profile_answer_type: A profile-answer field received an unexpected type.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_filing_amendment_validation: The amendment violates a legal or structural
       invariant.
