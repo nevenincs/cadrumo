@@ -33,7 +33,6 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core.errors import AeatError
 from ...domain.modelos._ids import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -45,12 +44,12 @@ from ._snapshot_base import (
 )
 
 
-class CensoSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
+class CensoSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 036 censo snapshot lookup misses by id.
 
-    Inherits ``AeatError`` first so MRO routes ``__init__`` through the
-    structured constructor (accepts ``suggestion=`` / ``context=`` kwargs)
-    rather than :class:`KeyError`'s C-level constructor.
+    :class:`SnapshotNotFoundError` inherits ``AeatError`` first, so MRO
+    routes ``__init__`` through the structured constructor. Listing
+    ``AeatError`` explicitly here would violate C3 linearization.
     """
 
 

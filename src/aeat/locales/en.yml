@@ -114,20 +114,28 @@ adapters:
         year_conflict: --año {year} conflicts with detected {detected}.
   sede:
     errors:
-      cotejo_nav_failed: 'Navigation to the AEAT cotejo page failed; session may have expired mid-walk. Run ''aeat config auth test'' and retry.'
-      ejercicio_unavailable: 'The AEAT declarations register does not offer the requested tax year for this modelo.'
+      cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
+        expired mid-walk. Run 'aeat config auth test' and retry.
+      ejercicio_unavailable: The AEAT declarations register does not offer the requested
+        tax year for this modelo.
       empty_identity_nif: AEAT session identity NIF is empty; cannot bind live filing
         observation.
-      form_render_timeout: 'The AEAT declarations register form did not render within the timeout; session may have expired or AEAT is serving a maintenance page.'
+      form_render_timeout: The AEAT declarations register form did not render within
+        the timeout; session may have expired or AEAT is serving a maintenance page.
       iva_wallet_empty_amount_cell: IVA compensation wallet amount cell is empty.
       iva_wallet_empty_period_cell: IVA compensation wallet period cell is empty.
-      justificante_column_missing: 'The AEAT declarations response is missing the justificante column; the table structure may have changed.'
-      listbox_missing: 'The AEAT declarations response is missing the expected listing container; the page structure may have changed.'
-      listing_nav_failed: 'Navigation to the AEAT declarations listing failed. Check network connectivity and retry.'
+      justificante_column_missing: The AEAT declarations response is missing the justificante
+        column; the table structure may have changed.
+      listbox_missing: The AEAT declarations response is missing the expected listing
+        container; the page structure may have changed.
+      listing_nav_failed: Navigation to the AEAT declarations listing failed. Check
+        network connectivity and retry.
       no_auth_session: AEAT auth session is missing or not persisted; run `aeat config
         auth status` first.
-      parse_failed: 'Failed to parse the AEAT declarations response; the page structure may have changed.'
-      session_expired_nav_failed: 'The AEAT declarations register did not load; your session has likely expired. Run ''aeat config auth test'' and retry.'
+      parse_failed: Failed to parse the AEAT declarations response; the page structure
+        may have changed.
+      session_expired_nav_failed: The AEAT declarations register did not load; your
+        session has likely expired. Run 'aeat config auth test' and retry.
 aggregation:
   iva_ledger:
     errors:
@@ -387,7 +395,8 @@ application:
         modelo_blank: Modelo identifier must not be blank.
   portals:
     errors:
-      portal_not_found: 'The requested AEAT portal is not registered. Run ''aeat app live portals list'' to see available portals.'
+      portal_not_found: The requested AEAT portal is not registered. Run 'aeat app
+        live portals list' to see available portals.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -2796,6 +2805,8 @@ errors:
       your internet connection and try again.
     fail_outbound_storage_unavailable: The storage service is temporarily unavailable.
       Wait a few minutes and try again.
+    fail_repair_decision_not_found: The requested repair-remediation decision does
+      not exist.
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
     fail_secure_storage: A secure-storage error occurred.
@@ -2806,6 +2817,7 @@ errors:
     fail_sede_validation: The data captured from the AEAT Sede does not have the expected
       shape.
     fail_site_health: The site health check failed.
+    fail_snapshot_not_found: No snapshot exists with the requested identifier.
     fail_storage: A storage error occurred.
     fail_storage_blob_not_found: The requested object was not found in the encrypted
       store.
@@ -2813,6 +2825,8 @@ errors:
       could not be loaded. Recovery may never have been enrolled.
     fail_storage_persistence: A persistence error occurred in the secure store.
     fail_storage_repository: A repository operation failed.
+    fail_storage_repository_setup: A repository subclass is missing a required class
+      attribute and cannot be instantiated.
     fail_storage_secret_not_found: No secret was found for the requested key.
     fail_storage_secret_store: An input/output error occurred in the secret store.
     fail_storage_secure_object_revision_conflict: The secure object was changed by
@@ -2889,7 +2903,11 @@ errors:
       the current projection.
     integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier
       provided.
+    integrity_repair_integrity: A repair-integrity invariant or decision contract
+      was violated.
     integrity_storage_blob: A stored object's SHA-256 hash disagrees with its manifest.
+    integrity_storage_bucket_validation: A bucket parameter or manifest field failed
+      validation.
     integrity_storage_classification: A record's declared sensitivity class is incompatible
       with its repository.
     integrity_storage_corpus_manifest: The corpus manifest could not be parsed or
@@ -2920,7 +2938,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_storage_bucket_validation: 'A bucket parameter or manifest field failed validation.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
@@ -3101,6 +3118,9 @@ errors:
       the registry does not declare for that modelo, year and period.
     refused_modelo_amendment_verification: The corrected casilla map of the amendment
       failed verification. Required casillas are missing.
+    refused_modelo_applicability_filter: An unknown applicability filter name was
+      encountered in the registry. This is a registry-authoring error; update the
+      filter dispatch table.
     refused_modelo_workflow_gate: The workflow gate refused the filing transition.
       The declaration cannot be considered legally filed.
     refused_no_active_profile: This operation requires an active profile. Create or
@@ -3124,6 +3144,8 @@ errors:
     refused_profile_foral_regime: The foral regime selected is not modelled by this
       profile. Select a supported regime.
     refused_profile_inventory_validation: A profile inventory ledger failed validation.
+    refused_profile_label_ambiguous: The profile label matches more than one active
+      profile. Use the profile UUID to disambiguate.
     refused_profile_lifo_forbidden: LIFO stock valuation is not admitted for tax purposes.
       Use FIFO, weighted average price, or average cost.
     refused_profile_not_configured: RENTA verification needs a tax-residence profile.
@@ -3179,7 +3201,6 @@ errors:
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
-    refused_modelo_applicability_filter: 'An unknown applicability filter name was encountered in the registry. This is a registry-authoring error; update the filter dispatch table.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

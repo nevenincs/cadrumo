@@ -30,7 +30,7 @@ from pydantic import BaseModel
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
 from .._path_safety import safe_repository_id
-from ..errors import ClassificationError, EnvelopeVersionError
+from ..errors import ClassificationError, EnvelopeVersionError, RepositorySetupError
 from ..runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_bucket,
@@ -102,7 +102,7 @@ class SecureBoundRepository[T: BaseModel]:
         cls = type(self)
         for attr in ("namespace", "payload_type", "sensitivity", "schema_version"):
             if not hasattr(cls, attr) or getattr(cls, attr, None) is None:
-                raise TypeError(
+                raise RepositorySetupError(
                     f"{cls.__name__} must set class attribute {attr!r} "
                     f"before instantiating SecureBoundRepository",
                 )

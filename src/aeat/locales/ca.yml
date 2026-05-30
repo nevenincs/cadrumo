@@ -28,16 +28,22 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: 'AeatAuthenticator ja te una sessio activa; crideu close() o reauthenticate() abans d''autenticar de nou.'
-        assertion_failed: 'L''autenticacio AEAT no ha produit una assercio d''inici de sessio valida.'
-        metadata_parse_failed: 'Les metadades persistides no han produit un model analitzat.'
-        resume_failed: 'La represa de la sessio AEAT persistida no ha produit un context utilitzable.'
+        already_active: AeatAuthenticator ja te una sessio activa; crideu close()
+          o reauthenticate() abans d'autenticar de nou.
+        assertion_failed: L'autenticacio AEAT no ha produit una assercio d'inici de
+          sessio valida.
+        metadata_parse_failed: Les metadades persistides no han produit un model analitzat.
+        resume_failed: La represa de la sessio AEAT persistida no ha produit un context
+          utilitzable.
     clave_movil:
       errors:
-        no_persisted_session: 'No s''ha trobat cap sessio de Cl@ve Movil; executeu `aeat config auth status` primer.'
-        page_missing_click: 'La pagina de Playwright no exposa click(); no es pot operar l''entrada de Cl@ve Movil.'
-        session_expired: 'La sessio de Cl@ve Movil ha superat el seu termini d''inactivitat.'
-        storage_state_hash_mismatch: 'El hash de l''estat d''emmagatzematge de Cl@ve Movil no coincideix; les dades de sessio poden estar corrompudes.'
+        no_persisted_session: No s'ha trobat cap sessio de Cl@ve Movil; executeu `aeat
+          config auth status` primer.
+        page_missing_click: La pagina de Playwright no exposa click(); no es pot operar
+          l'entrada de Cl@ve Movil.
+        session_expired: La sessio de Cl@ve Movil ha superat el seu termini d'inactivitat.
+        storage_state_hash_mismatch: El hash de l'estat d'emmagatzematge de Cl@ve
+          Movil no coincideix; les dades de sessio poden estar corrompudes.
   google:
     calc_sheets:
       errors:
@@ -119,22 +125,32 @@ adapters:
         year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
   sede:
     errors:
-      cotejo_nav_failed: 'La navegació a la pàgina de cotejo d''AEAT ha fallat; la sessió pot haver caducat. Executeu ''aeat config auth test'' i torneu-ho a intentar.'
-      ejercicio_unavailable: 'El registre de declaracions d''AEAT no ofereix l''exercici sol·licitat per a aquest model.'
+      cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
+        pot haver caducat. Executeu 'aeat config auth test' i torneu-ho a intentar.
+      ejercicio_unavailable: El registre de declaracions d'AEAT no ofereix l'exercici
+        sol·licitat per a aquest model.
       empty_identity_nif: El NIF d'identitat de la sessió AEAT és buit; no es pot
         vincular l'observació de presentació.
-      form_render_timeout: 'El formulari del registre de declaracions d''AEAT no s''ha renderitzat en el temps establert; la sessió pot haver caducat o l''AEAT està en manteniment.'
+      form_render_timeout: El formulari del registre de declaracions d'AEAT no s'ha
+        renderitzat en el temps establert; la sessió pot haver caducat o l'AEAT està
+        en manteniment.
       iva_wallet_empty_amount_cell: La cel·la d'import de la cartera de compensació
         d'IVA és buida.
       iva_wallet_empty_period_cell: La cel·la de període de la cartera de compensació
         d'IVA és buida.
-      justificante_column_missing: 'La resposta de declaracions d''AEAT no conté la columna de justificant; l''estructura de la taula pot haver canviat.'
-      listbox_missing: 'La resposta de declaracions d''AEAT no conté el contenidor de llista esperat; l''estructura de la pàgina pot haver canviat.'
-      listing_nav_failed: 'La navegació al llistat de declaracions d''AEAT ha fallat. Comproveu la connectivitat de xarxa i torneu-ho a intentar.'
+      justificante_column_missing: La resposta de declaracions d'AEAT no conté la
+        columna de justificant; l'estructura de la taula pot haver canviat.
+      listbox_missing: La resposta de declaracions d'AEAT no conté el contenidor de
+        llista esperat; l'estructura de la pàgina pot haver canviat.
+      listing_nav_failed: La navegació al llistat de declaracions d'AEAT ha fallat.
+        Comproveu la connectivitat de xarxa i torneu-ho a intentar.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
         executeu primer `aeat config auth status`.
-      parse_failed: 'No s''ha pogut analitzar la resposta de declaracions d''AEAT; l''estructura de la pàgina pot haver canviat.'
-      session_expired_nav_failed: 'El registre de declaracions d''AEAT no s''ha carregat; la sessió probablement ha caducat. Executeu ''aeat config auth test'' i torneu-ho a intentar.'
+      parse_failed: No s'ha pogut analitzar la resposta de declaracions d'AEAT; l'estructura
+        de la pàgina pot haver canviat.
+      session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
+        la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
+        a intentar.
 aggregation:
   iva_ledger:
     errors:
@@ -418,7 +434,8 @@ application:
         modelo_blank: L'identificador de modelo no pot estar en blanc.
   portals:
     errors:
-      portal_not_found: 'El portal AEAT sol·licitat no està registrat. Executeu ''aeat app live portals list'' per veure els portals disponibles.'
+      portal_not_found: El portal AEAT sol·licitat no està registrat. Executeu 'aeat
+        app live portals list' per veure els portals disponibles.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
@@ -2915,6 +2932,7 @@ errors:
       Comprova la connexió a internet i torna-ho a provar.
     fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
       temporalment. Espera uns minuts i torna-ho a provar.
+    fail_repair_decision_not_found: errors.fail.fail_repair_decision_not_found
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sanitization_source_parse: El PDF d'origen no s'ha pogut obrir per sanejar-lo.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
@@ -2926,6 +2944,7 @@ errors:
     fail_sede_validation: Les dades capturades de la Seu de l'AEAT no tenen la forma
       esperada.
     fail_site_health: La comprovació d'estat del lloc ha fallat.
+    fail_snapshot_not_found: errors.fail.fail_snapshot_not_found
     fail_storage: S'ha produït un error en l'emmagatzematge.
     fail_storage_blob_not_found: No s'ha trobat l'objecte sol·licitat al magatzem
       xifrat.
@@ -2934,6 +2953,7 @@ errors:
     fail_storage_persistence: S'ha produït un error de persistència en l'emmagatzematge
       segur.
     fail_storage_repository: Una operació de repositori ha fallat.
+    fail_storage_repository_setup: errors.fail.fail_storage_repository_setup
     fail_storage_secret_not_found: No s'ha trobat cap secret per a la clau sol·licitada.
     fail_storage_secret_store: S'ha produït un error d'entrada o sortida en el magatzem
       de secrets.
@@ -3020,8 +3040,11 @@ errors:
       no coincideix amb la projecció actual.
     integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb
       l'identificador indicat.
+    integrity_repair_integrity: errors.integrity.integrity_repair_integrity
     integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
       amb el del seu manifest.
+    integrity_storage_bucket_validation: Un paràmetre del dipòsit o camp del manifest
+      no ha superat la validació.
     integrity_storage_classification: La classe de sensibilitat declarada d'un registre
       és incompatible amb el seu repositori.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
@@ -3054,7 +3077,6 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
-    integrity_storage_bucket_validation: 'Un paràmetre del dipòsit o camp del manifest no ha superat la validació.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3247,6 +3269,9 @@ errors:
       model, any i període.
     refused_modelo_amendment_verification: El mapa de caselles corregit de la declaració
       complementària no ha superat la verificació. Falten caselles obligatòries.
+    refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
+      desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
+      la taula de despacho de filtres.
     refused_modelo_workflow_gate: El control del flux de treball ha rebutjat la transició
       de la declaració. La declaració no es pot considerar presentada legalment.
     refused_no_active_profile: Aquesta operació necessita un perfil actiu. Crea o
@@ -3273,6 +3298,7 @@ errors:
       perfil. Selecciona un règim admès.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
       la validació.
+    refused_profile_label_ambiguous: errors.refused.refused_profile_label_ambiguous
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
     refused_profile_not_configured: La verificació de la declaració de la Renda necessita
@@ -3330,7 +3356,6 @@ errors:
       revision.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_modelo_applicability_filter: 'S''ha trobat un nom de filtre d''aplicabilitat desconegut al registre. Es tracta d''un error d''autoria del registre; actualitzeu la taula de despacho de filtres.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

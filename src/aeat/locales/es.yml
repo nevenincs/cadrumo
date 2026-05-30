@@ -30,10 +30,13 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: 'AeatAuthenticator ya tiene una sesion activa; llame a close() o reauthenticate() antes de autenticar de nuevo.'
-        assertion_failed: 'La autenticacion AEAT no produjo una asercion de inicio de sesion valida.'
-        metadata_parse_failed: 'Los metadatos persistidos no produjeron un modelo analizado.'
-        resume_failed: 'La reanudacion de la sesion AEAT persistida no produjo un contexto utilizable.'
+        already_active: AeatAuthenticator ya tiene una sesion activa; llame a close()
+          o reauthenticate() antes de autenticar de nuevo.
+        assertion_failed: La autenticacion AEAT no produjo una asercion de inicio
+          de sesion valida.
+        metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
+        resume_failed: La reanudacion de la sesion AEAT persistida no produjo un contexto
+          utilizable.
     clave_movil:
       errors:
         no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
@@ -124,22 +127,32 @@ adapters:
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
   sede:
     errors:
-      cotejo_nav_failed: 'La navegación a la página de cotejo de AEAT falló; la sesión puede haber expirado. Ejecute ''aeat config auth test'' y vuelva a intentarlo.'
-      ejercicio_unavailable: 'El registro de declaraciones de AEAT no ofrece el ejercicio solicitado para este modelo.'
+      cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
+        puede haber expirado. Ejecute 'aeat config auth test' y vuelva a intentarlo.
+      ejercicio_unavailable: El registro de declaraciones de AEAT no ofrece el ejercicio
+        solicitado para este modelo.
       empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se
         puede vincular la observación de presentación.
-      form_render_timeout: 'El formulario del registro de declaraciones de AEAT no se renderizó en el tiempo establecido; la sesión puede haber expirado o AEAT está en mantenimiento.'
+      form_render_timeout: El formulario del registro de declaraciones de AEAT no
+        se renderizó en el tiempo establecido; la sesión puede haber expirado o AEAT
+        está en mantenimiento.
       iva_wallet_empty_amount_cell: La celda de importe de la cartera de compensación
         de IVA está vacía.
       iva_wallet_empty_period_cell: La celda de periodo de la cartera de compensación
         de IVA está vacía.
-      justificante_column_missing: 'La respuesta de declaraciones de AEAT no contiene la columna de justificante; la estructura de la tabla puede haber cambiado.'
-      listbox_missing: 'La respuesta de declaraciones de AEAT no contiene el contenedor de listado esperado; la estructura de la página puede haber cambiado.'
-      listing_nav_failed: 'La navegación al listado de declaraciones de AEAT falló. Compruebe la conectividad de red y vuelva a intentarlo.'
+      justificante_column_missing: La respuesta de declaraciones de AEAT no contiene
+        la columna de justificante; la estructura de la tabla puede haber cambiado.
+      listbox_missing: La respuesta de declaraciones de AEAT no contiene el contenedor
+        de listado esperado; la estructura de la página puede haber cambiado.
+      listing_nav_failed: La navegación al listado de declaraciones de AEAT falló.
+        Compruebe la conectividad de red y vuelva a intentarlo.
       no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
         ejecute primero `aeat config auth status`.
-      parse_failed: 'No se pudo analizar la respuesta de declaraciones de AEAT; la estructura de la página puede haber cambiado.'
-      session_expired_nav_failed: 'El registro de declaraciones de AEAT no se cargó; la sesión probablemente ha expirado. Ejecute ''aeat config auth test'' y vuelva a intentarlo.'
+      parse_failed: No se pudo analizar la respuesta de declaraciones de AEAT; la
+        estructura de la página puede haber cambiado.
+      session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
+        la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
+        a intentarlo.
 aggregation:
   iva_ledger:
     errors:
@@ -423,7 +436,8 @@ application:
         modelo_blank: El identificador de modelo no puede estar en blanco.
   portals:
     errors:
-      portal_not_found: 'El portal AEAT solicitado no está registrado. Ejecute ''aeat app live portals list'' para ver los portales disponibles.'
+      portal_not_found: El portal AEAT solicitado no está registrado. Ejecute 'aeat
+        app live portals list' para ver los portales disponibles.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -2949,6 +2963,7 @@ errors:
       Comprueba tu conexión a internet y vuelve a intentarlo.
     fail_outbound_storage_unavailable: El servicio de almacenamiento está temporalmente
       no disponible. Espera unos minutos y vuelve a intentarlo.
+    fail_repair_decision_not_found: errors.fail.fail_repair_decision_not_found
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
@@ -2960,6 +2975,7 @@ errors:
     fail_sede_validation: Los datos capturados de la Sede de la AEAT no tienen la
       forma esperada.
     fail_site_health: La comprobación de estado del sitio falló.
+    fail_snapshot_not_found: errors.fail.fail_snapshot_not_found
     fail_storage: Se produjo un error en el almacenamiento.
     fail_storage_blob_not_found: No se encontró el objeto solicitado en el almacén
       cifrado.
@@ -2968,6 +2984,7 @@ errors:
     fail_storage_persistence: Se produjo un error de persistencia en el almacenamiento
       seguro.
     fail_storage_repository: Una operación de repositorio falló.
+    fail_storage_repository_setup: errors.fail.fail_storage_repository_setup
     fail_storage_secret_not_found: No se encontró ningún secreto para la clave solicitada.
     fail_storage_secret_store: Se produjo un error de entrada o salida en el almacén
       de secretos.
@@ -3052,8 +3069,11 @@ errors:
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
       el identificador indicado.
+    integrity_repair_integrity: errors.integrity.integrity_repair_integrity
     integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
       el de su manifiesto.
+    integrity_storage_bucket_validation: Un parámetro del depósito o campo del manifiesto
+      no superó la validación.
     integrity_storage_classification: La clase de sensibilidad declarada de un registro
       es incompatible con su repositorio.
     integrity_storage_corpus_manifest: El manifiesto del corpus no se pudo leer o
@@ -3086,7 +3106,6 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
-    integrity_storage_bucket_validation: 'Un parámetro del depósito o campo del manifiesto no superó la validación.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3279,6 +3298,9 @@ errors:
       año y periodo.
     refused_modelo_amendment_verification: El mapa de casillas corregido de la declaración
       complementaria no superó la verificación. Faltan casillas obligatorias.
+    refused_modelo_applicability_filter: Se encontró un nombre de filtro de aplicabilidad
+      desconocido en el registro. Se trata de un error de autoría del registro; actualice
+      la tabla de despacho de filtros.
     refused_modelo_workflow_gate: El control del flujo de trabajo rechazó la transición
       de la declaración. La declaración no puede considerarse presentada legalmente.
     refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
@@ -3305,6 +3327,7 @@ errors:
       este perfil. Selecciona un régimen admitido.
     refused_profile_inventory_validation: Un libro de inventario del perfil no superó
       la validación.
+    refused_profile_label_ambiguous: errors.refused.refused_profile_label_ambiguous
     refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
     refused_profile_not_configured: La verificación de la declaración de la Renta
@@ -3362,7 +3385,6 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_modelo_applicability_filter: 'Se encontró un nombre de filtro de aplicabilidad desconocido en el registro. Se trata de un error de autoría del registro; actualice la tabla de despacho de filtros.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

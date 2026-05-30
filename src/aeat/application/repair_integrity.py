@@ -51,10 +51,33 @@ from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
 )
+from ..core.errors import CoreError
 from ..core.logging import get_logger
 from .diagnostics import DiagnosticCheck
 
 _log = get_logger(__name__)
+
+
+class RepairIntegrityError(CoreError):
+    """Base error for secure-object integrity and repair-remediation failures.
+
+    Raised by the repair-integrity application layer when an integrity
+    invariant or remediation contract is violated. Inherits from
+    :class:`aeat.core.errors.CoreError` so callers can catch either the
+    specific subclass or the broad domain base without importing the full
+    repair-integrity module.
+    """
+
+
+class RepairDecisionNotFoundError(RepairIntegrityError):
+    """Raised when a repair-remediation decision lookup misses its target.
+
+    Fired by :meth:`RepairRemediationDecisionRepository.load_decision`
+    when no row exists for the requested ``decision_id``. Distinct from
+    a generic not-found so the CLI can produce an actionable hint
+    (e.g. list existing decisions) without catching broad exception classes.
+    """
+
 
 _REPAIR_DECISION_NAMESPACE = REPAIR_DECISION_STORAGE_NAMESPACE.namespace
 """Profile-local secure-object namespace for repair-remediation decisions.
@@ -227,7 +250,7 @@ def build_repair_list_report(
     """
     if include_all and only_unreadable:
         msg = "build_repair_list_report cannot combine --all and --unreadable; pass one or neither"
-        raise ValueError(msg)
+        raise RepairIntegrityError(msg)
     if repository is None:
         with active_bucket_repair_session():
             return _build_repair_list_report(
@@ -389,7 +412,7 @@ class RepairRemediationDecisionRepository:
         """Persist one decision as an encrypted AUDIT-class secure-object row."""
         expected_decision_id = _expected_repair_decision_id(decision)
         if decision.decision_id != expected_decision_id:
-            raise ValueError(
+            raise RepairIntegrityError(
                 f"repair-remediation decision declares decision_id {decision.decision_id!r} "
                 f"but re-derived {expected_decision_id!r}; refusing the save"
             )
@@ -412,11 +435,11 @@ class RepairRemediationDecisionRepository:
             max_supported_version=REPAIR_DECISION_STORAGE_NAMESPACE.schema_version,
         )
         if record is None:
-            raise ValueError(f"repair-remediation decision {decision_id!r} does not exist")
+            raise RepairDecisionNotFoundError(f"repair-remediation decision {decision_id!r} does not exist")
         decoded = RepairRemediationDecision.model_validate_json(record.payload)
         expected_decision_id = _expected_repair_decision_id(decoded)
         if decoded.decision_id != decision_id or decoded.decision_id != expected_decision_id:
-            raise ValueError(
+            raise RepairIntegrityError(
                 f"repair-remediation decision payload at key {decision_id!r} "
                 f"declares decision_id {decoded.decision_id!r} but re-derived "
                 f"{expected_decision_id!r}; refusing the load"
@@ -438,7 +461,7 @@ class RepairRemediationDecisionRepository:
             decision = RepairRemediationDecision.model_validate_json(record.payload)
             expected_decision_id = _expected_repair_decision_id(decision)
             if decision.decision_id != expected_decision_id:
-                raise ValueError(
+                raise RepairIntegrityError(
                     f"repair-remediation decision declares decision_id {decision.decision_id!r} "
                     f"but re-derived {expected_decision_id!r}; refusing the list entry"
                 )
