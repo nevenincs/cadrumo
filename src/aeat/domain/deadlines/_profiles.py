@@ -54,7 +54,7 @@ def taxpayer_profile_from_mapping(
     if canonical.get("iva.regime"):
         canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
 
-    SETUP_FLOW = get_setup_flow()
+    setup_flow = get_setup_flow()
 
     # SetupAnswers requires identity.tax_id and activities.description;
     # the deadline engine supplies a tax_id default so it can render
@@ -84,7 +84,7 @@ def taxpayer_profile_from_mapping(
         if bare in canonical and canonical_key not in canonical:
             padded[canonical_key] = canonical[bare]
 
-    typed = project_answers(SETUP_FLOW, padded)
+    typed = project_answers(setup_flow, padded)
     if not isinstance(typed, SetupAnswers):
         raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
 

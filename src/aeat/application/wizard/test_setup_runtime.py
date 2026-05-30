@@ -19,7 +19,7 @@ from aeat.application.wizard._models import WizardWidget
 from aeat.application.wizard._persistence import project_answers, serialise_answers
 from aeat.application.wizard._prompter import ScriptedPrompter
 from aeat.application.wizard._runner import run_flow
-from aeat.application.wizard._setup_answers import SetupAnswers
+from aeat.core.profile import SetupAnswers
 from aeat.domain.deadlines._models import LegalEntityForm
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

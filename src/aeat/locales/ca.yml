@@ -3012,6 +3012,7 @@ errors:
   integrity:
     integrity_aeat_core_validation: Una comprovació interna d'integritat de dades
       no s'ha superat.
+    integrity_profile_answer_type: Un camp de resposta de perfil ha rebut un tipus inesperat.
     integrity_cli_output_schema: El registre d'esquemes de sortida de la CLI està
       mal configurat.
     integrity_filing_amendment_validation: La declaració complementària infringeix

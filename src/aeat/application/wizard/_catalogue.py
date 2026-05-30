@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
+from ...core.profile import SetupAnswers
+from ...core.profile_catalogue import register_wizard_catalogue
 from ...domain.deadlines._models import (
     EntityType,
     FiscalResidency,
@@ -36,8 +38,6 @@ from ._models import (
     WizardVisibility,
     WizardWidget,
 )
-from ...core.profile import SetupAnswers
-from ...core.profile_catalogue import register_wizard_catalogue
 
 
 def _confirm(

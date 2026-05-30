@@ -23,7 +23,7 @@ from ...domain.deadlines import (
 )
 from ._catalogue import SETUP_FLOW
 from ._persistence import project_answers, serialise_answers
-from ._setup_answers import SetupAnswers
+from aeat.core.profile import SetupAnswers
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
