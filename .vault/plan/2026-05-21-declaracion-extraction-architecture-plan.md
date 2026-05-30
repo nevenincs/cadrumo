@@ -577,11 +577,11 @@ Forward-horizon follow-up tracked beyond campaign close. Detail in matching task
 
 - [x] `W11.P58.S217` - Extend borrador extractor registry to 2021-2025, synthesize engine-derived corpus PDFs (reportlab, invariant=True), and add M100 x3 VERIFIED parametrised verification chain test proving 0545/0546/0585/0586 closure casillas match engine output; `src/aeat/adapters/inbound/borrador/_extractors/__init__.py src/aeat/adapters/inbound/borrador/test_verification_chain_borrador.py src/aeat/tests/fixtures/borrador/`.
 
-
 ### Phase `W11.P59` - EXTRACTION-ONLY to VERIFIED transitions where AEAT-authored formulas exist for the modelo (tasklist #90)
 
 Forward-horizon follow-up tracked beyond campaign close. Detail in matching tasklist entry.
 
+- [x] `W11.P59.S218` - Audit M349 closure-formula feasibility against Orden HAC/174/2020 Anexo Diseño de Registro; `establish EXTRACTION-ONLY-intrinsic domain verdict; update verification chain test docstring with AEAT-published arithmetic authority; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
 
 ### Phase `W11.P60` - Bank-PDF provider expansion BBVA Santander Caixabank ING per the W10.P42 ADR framework (tasklist #89)
 
