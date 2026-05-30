@@ -10,7 +10,7 @@ gives downstream tooling no stability contract for the emitted JSON.
 
 from __future__ import annotations
 
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ._schemas import OutputSchema, register_schema
 
 
