@@ -59,6 +59,12 @@ from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+# Defensive ceiling on financial-source ingest size. Real bank statements
+# (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
+# cap rejects oversized inputs (including XLSX zip-bomb payloads) before
+# they reach openpyxl / pdfplumber / the csv reader.
+_MAX_SOURCE_BYTES = 64 * 1024 * 1024
+
 #: Allowed values for :attr:`FinancialProvider.verification_source`.
 CorpusVerificationSource = Literal[
     "real_bank_corpus_pdf",
@@ -248,6 +254,16 @@ class FinancialProvider(ABC):
             raise InvalidFinancialSourceError(
                 translated_message="errors.financial.source_file_not_found",
                 context={"path": str(resolved)},
+            )
+        size = resolved.stat().st_size
+        if size > _MAX_SOURCE_BYTES:
+            raise InvalidFinancialSourceError(
+                translated_message="errors.financial.source_file_too_large",
+                context={
+                    "path": str(resolved),
+                    "size_bytes": size,
+                    "max_bytes": _MAX_SOURCE_BYTES,
+                },
             )
         return resolved.read_bytes()
 
