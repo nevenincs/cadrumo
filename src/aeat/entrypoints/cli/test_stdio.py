@@ -25,6 +25,11 @@ from __future__ import annotations
 
 import io
 import logging
+import os
+import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import IO
 
 import pytest
 
@@ -36,6 +41,55 @@ from aeat.entrypoints.cli._stdio import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+# ---------------------------------------------------------------------------
+# Scoped state helpers — replace ``monkeypatch.setattr``/``setenv`` per the
+# project no-monkeypatch mandate (CLAUDE.md). Each helper snapshots the
+# process-global slot it touches and restores it on exit, matching the
+# semantics of pytest's MonkeyPatch but without the fixture indirection.
+# ---------------------------------------------------------------------------
+
+
+@contextmanager
+def _patched_stdio(stdout: IO[str] | None, stderr: IO[str] | None) -> Iterator[None]:
+    """Swap ``sys.stdout``/``sys.stderr`` for the with-block."""
+    saved_out, saved_err = sys.stdout, sys.stderr
+    sys.stdout = stdout  # type: ignore[assignment]
+    sys.stderr = stderr  # type: ignore[assignment]
+    try:
+        yield
+    finally:
+        sys.stdout = saved_out
+        sys.stderr = saved_err
+
+
+@contextmanager
+def _patched_argv(argv: list[str]) -> Iterator[None]:
+    """Swap ``sys.argv`` for the with-block."""
+    saved = sys.argv
+    sys.argv = argv
+    try:
+        yield
+    finally:
+        sys.argv = saved
+
+
+@contextmanager
+def _patched_env(name: str, value: str | None) -> Iterator[None]:
+    """Pin ``os.environ[name]`` (or remove if ``value is None``) for the block."""
+    prior = os.environ.get(name)
+    if value is None:
+        os.environ.pop(name, None)
+    else:
+        os.environ[name] = value
+    try:
+        yield
+    finally:
+        if prior is None:
+            os.environ.pop(name, None)
+        else:
+            os.environ[name] = prior
 
 
 class _ReconfigurableStream(io.StringIO):
@@ -69,7 +123,7 @@ class _ReconfigureRefusingStream(io.StringIO):
         raise OSError("stream refused mid-run reconfiguration")
 
 
-def test_reconfigurable_streams_receive_utf8_replace(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_reconfigurable_streams_receive_utf8_replace() -> None:
     """A stream exposing ``reconfigure`` must end up on UTF-8 with the
     ``replace`` error policy. The replace policy degrades non-
     encodable characters to ``?`` rather than crashing — the right
@@ -78,71 +132,61 @@ def test_reconfigurable_streams_receive_utf8_replace(monkeypatch: pytest.MonkeyP
 
     stdout = _ReconfigurableStream()
     stderr = _ReconfigurableStream()
-    monkeypatch.setattr("sys.stdout", stdout)
-    monkeypatch.setattr("sys.stderr", stderr)
-
-    configure_stdio_for_utf8()
+    with _patched_stdio(stdout, stderr):
+        configure_stdio_for_utf8()
 
     assert stdout.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
     assert stderr.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
 
 
-def test_non_reconfigurable_streams_are_skipped_silently(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_non_reconfigurable_streams_are_skipped_silently() -> None:
     """A stream without ``reconfigure`` (test-capture fixtures,
     custom wrappers) must be left untouched. The helper must not
     raise."""
 
     stdout = _NonReconfigurableStream()
     stderr = _NonReconfigurableStream()
-    monkeypatch.setattr("sys.stdout", stdout)
-    monkeypatch.setattr("sys.stderr", stderr)
     assert not hasattr(stdout, "reconfigure")
 
-    configure_stdio_for_utf8()
+    with _patched_stdio(stdout, stderr):
+        configure_stdio_for_utf8()
 
 
-def test_reconfigure_failure_is_swallowed(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_reconfigure_failure_is_swallowed() -> None:
     """A stream that raises on ``reconfigure`` (e.g. a pipe that
     refuses mid-run encoding changes) must not crash the CLI
     startup."""
 
     stdout = _ReconfigureRefusingStream()
     stderr = _ReconfigureRefusingStream()
-    monkeypatch.setattr("sys.stdout", stdout)
-    monkeypatch.setattr("sys.stderr", stderr)
-
-    configure_stdio_for_utf8()
+    with _patched_stdio(stdout, stderr):
+        configure_stdio_for_utf8()
 
     assert stdout.reconfigure_calls == 1
     assert stderr.reconfigure_calls == 1
 
 
-def test_configure_stdio_for_utf8_handles_none_streams(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_configure_stdio_for_utf8_handles_none_streams() -> None:
     """Some pythonw-style environments expose ``sys.stdout`` /
     ``sys.stderr`` as ``None``. The helper must accept that without
     raising."""
 
-    import sys
-
-    monkeypatch.setattr("sys.stdout", None)
-    monkeypatch.setattr("sys.stderr", None)
-    assert sys.stdout is None and sys.stderr is None
-    result = configure_stdio_for_utf8()
+    with _patched_stdio(None, None):
+        assert sys.stdout is None and sys.stderr is None
+        result = configure_stdio_for_utf8()
     assert result is None
 
 
-def test_configure_stdio_for_utf8_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_configure_stdio_for_utf8_is_idempotent() -> None:
     """Calling the helper more than once must not raise. The Typer
     callback re-imports the entrypoint package in some test setups;
     the helper must survive that."""
 
     stdout = _ReconfigurableStream()
     stderr = _ReconfigurableStream()
-    monkeypatch.setattr("sys.stdout", stdout)
-    monkeypatch.setattr("sys.stderr", stderr)
-
-    configure_stdio_for_utf8()
-    configure_stdio_for_utf8()
+    with _patched_stdio(stdout, stderr):
+        configure_stdio_for_utf8()
+        configure_stdio_for_utf8()
 
     # Both calls reach the underlying reconfigure call.
     assert stdout.reconfigure_calls == [
@@ -182,7 +226,7 @@ def test_configure_stdio_for_utf8_tolerates_non_reconfigurable_explicit_streams(
 # --- help-surface render width ---------------------------------------------
 
 
-def test_help_invocation_below_floor_widens_columns(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_help_invocation_below_floor_widens_columns() -> None:
     """A `--help` invocation with a narrow COLUMNS widens to the floor.
 
     Rich ellipsises long wizard flag names (`--address-postco…`) when
@@ -190,53 +234,49 @@ def test_help_invocation_below_floor_widens_columns(monkeypatch: pytest.MonkeyPa
     help surface keeps the names readable.
     """
 
-    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "FOO", "--help"])
-    monkeypatch.setenv("COLUMNS", "80")
+    with (
+        _patched_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
+        _patched_env("COLUMNS", "80"),
+    ):
+        with _ensure_help_render_width():
+            assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
 
-    with _ensure_help_render_width():
-        import os
 
-        assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
-
-
-def test_help_invocation_keeps_wider_columns(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_help_invocation_keeps_wider_columns() -> None:
     """A genuinely wide terminal keeps its real width on a help surface."""
 
-    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "FOO", "-h"])
-    monkeypatch.setenv("COLUMNS", "300")
+    with (
+        _patched_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
+        _patched_env("COLUMNS", "300"),
+    ):
+        with _ensure_help_render_width():
+            assert os.environ["COLUMNS"] == "300"
 
-    with _ensure_help_render_width():
-        import os
 
-        assert os.environ["COLUMNS"] == "300"
-
-
-def test_non_help_invocation_leaves_columns_untouched(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_non_help_invocation_leaves_columns_untouched() -> None:
     """Ordinary command output keeps the real terminal width.
 
     The widening is scoped to `--help`; piping a non-help command into
     another tool must not see an inflated help-width render.
     """
 
-    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])
-    monkeypatch.setenv("COLUMNS", "80")
+    with (
+        _patched_argv(["aeat", "config", "profile", "list"]),
+        _patched_env("COLUMNS", "80"),
+    ):
+        with _ensure_help_render_width():
+            assert os.environ["COLUMNS"] == "80"
 
-    with _ensure_help_render_width():
-        import os
 
-        assert os.environ["COLUMNS"] == "80"
-
-
-def test_non_help_invocation_without_columns_set(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_non_help_invocation_without_columns_set() -> None:
     """A non-help invocation does not set COLUMNS when it was unset."""
 
-    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])
-    monkeypatch.delenv("COLUMNS", raising=False)
-
-    with _ensure_help_render_width():
-        import os
-
-        assert "COLUMNS" not in os.environ
+    with (
+        _patched_argv(["aeat", "config", "profile", "list"]),
+        _patched_env("COLUMNS", None),
+    ):
+        with _ensure_help_render_width():
+            assert "COLUMNS" not in os.environ
 
 
 # --- _COLUMNS_ENV_VAR constant (S188) ----------------------------------------
@@ -252,7 +292,7 @@ def test_columns_env_var_constant_value() -> None:
     assert _COLUMNS_ENV_VAR == "COLUMNS"
 
 
-def test_columns_env_var_used_for_env_write(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_columns_env_var_used_for_env_write() -> None:
     """_ensure_help_render_width writes the floor to os.environ[_COLUMNS_ENV_VAR].
 
     Confirms that the production code path uses the constant to mutate
@@ -260,85 +300,80 @@ def test_columns_env_var_used_for_env_write(monkeypatch: pytest.MonkeyPatch) -> 
     invocation with a narrow terminal os.environ[_COLUMNS_ENV_VAR] must
     hold the floor value.
     """
-    import os
+    with (
+        _patched_argv(["aeat", "--help"]),
+        _patched_env(_COLUMNS_ENV_VAR, "80"),
+    ):
+        with _ensure_help_render_width():
+            assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
-    monkeypatch.setattr("sys.argv", ["aeat", "--help"])
-    monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
 
-    with _ensure_help_render_width():
-        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
-
-
-def test_columns_env_var_used_for_env_read(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_columns_env_var_used_for_env_read() -> None:
     """_ensure_help_render_width reads from os.environ[_COLUMNS_ENV_VAR].
 
     When the env slot named by _COLUMNS_ENV_VAR already exceeds the
     floor the function must leave it untouched, proving the read path
     uses the constant rather than an independent literal.
     """
-    import os
-
     wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
-    monkeypatch.setattr("sys.argv", ["aeat", "--help"])
-    monkeypatch.setenv(_COLUMNS_ENV_VAR, wide)
-
-    with _ensure_help_render_width():
-        assert os.environ[_COLUMNS_ENV_VAR] == wide
+    with (
+        _patched_argv(["aeat", "--help"]),
+        _patched_env(_COLUMNS_ENV_VAR, wide),
+    ):
+        with _ensure_help_render_width():
+            assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
 # --- COLUMNS env-write scoping (S306) ----------------------------------------
 
 
-def test_columns_write_is_scoped_help_invocation(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_columns_write_is_scoped_help_invocation() -> None:
     """The COLUMNS env write must be restored to its original value after the block.
 
     _ensure_help_render_width widens COLUMNS inside the ``with`` block for
     help rendering but must restore the original value on exit, preventing
     the mutation from leaking into sibling processes or subsequent test runs.
     """
-    import os
+    with (
+        _patched_argv(["aeat", "config", "profile", "create", "--help"]),
+        _patched_env(_COLUMNS_ENV_VAR, "80"),
+    ):
+        before = os.environ[_COLUMNS_ENV_VAR]
+        with _ensure_help_render_width():
+            # Inside the block COLUMNS must be widened to the floor.
+            assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+        after = os.environ[_COLUMNS_ENV_VAR]
 
-    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "--help"])
-    monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
-
-    before = os.environ[_COLUMNS_ENV_VAR]
-    with _ensure_help_render_width():
-        # Inside the block COLUMNS must be widened to the floor.
-        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
-    after = os.environ[_COLUMNS_ENV_VAR]
-
-    assert after == before, (
-        f"COLUMNS not restored after context-manager exit: before={before!r} after={after!r}"
-    )
+        assert after == before, (
+            f"COLUMNS not restored after context-manager exit: before={before!r} after={after!r}"
+        )
 
 
-def test_columns_write_is_scoped_unset_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_columns_write_is_scoped_unset_env() -> None:
     """When COLUMNS was absent before the block it must be absent again after exit."""
-    import os
+    with (
+        _patched_argv(["aeat", "--help"]),
+        _patched_env(_COLUMNS_ENV_VAR, None),
+    ):
+        assert _COLUMNS_ENV_VAR not in os.environ
+        with _ensure_help_render_width():
+            # Floor must be set inside the block.
+            assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+        assert _COLUMNS_ENV_VAR not in os.environ, (
+            "COLUMNS must be removed after context-manager exit when it was originally absent"
+        )
 
-    monkeypatch.setattr("sys.argv", ["aeat", "--help"])
-    monkeypatch.delenv(_COLUMNS_ENV_VAR, raising=False)
 
-    assert _COLUMNS_ENV_VAR not in os.environ
-    with _ensure_help_render_width():
-        # Floor must be set inside the block.
-        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
-    assert _COLUMNS_ENV_VAR not in os.environ, (
-        "COLUMNS must be removed after context-manager exit when it was originally absent"
-    )
-
-
-def test_columns_write_not_scoped_on_non_help(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_columns_write_not_scoped_on_non_help() -> None:
     """On a non-help invocation COLUMNS must not be touched at all."""
-    import os
-
-    monkeypatch.setattr("sys.argv", ["aeat", "app", "status"])
-    monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
-
-    before = os.environ[_COLUMNS_ENV_VAR]
-    with _ensure_help_render_width():
+    with (
+        _patched_argv(["aeat", "app", "status"]),
+        _patched_env(_COLUMNS_ENV_VAR, "80"),
+    ):
+        before = os.environ[_COLUMNS_ENV_VAR]
+        with _ensure_help_render_width():
+            assert os.environ[_COLUMNS_ENV_VAR] == before
         assert os.environ[_COLUMNS_ENV_VAR] == before
-    assert os.environ[_COLUMNS_ENV_VAR] == before
 
 
 # --- SecretScrubbingFilter propagation via stdio logger (S50) ----------------
