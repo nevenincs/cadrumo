@@ -35,8 +35,8 @@ from ....application.diagnostics import (
 )
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
-from ....application.wizard._catalogue import SETUP_FLOW as _SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command as _build_wizard_command
+from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
 from ....core.errors import AeatError as _AeatError
@@ -52,8 +52,8 @@ from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 if typing.TYPE_CHECKING:
     from ....domain.buckets import BucketEvent, BucketEventType
 
-_wizard_create_command = _build_wizard_command(_SETUP_FLOW, mode="create")
-_wizard_edit_command = _build_wizard_command(_SETUP_FLOW, mode="edit")
+_wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
+_wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
 
 app = typer.Typer(
     name="config",
@@ -1438,7 +1438,6 @@ def config_status(ctx: typer.Context) -> None:
     from pydantic import ValidationError
 
     from ....application.user_profile._projections import record_to_path_values
-    from ....application.wizard._catalogue import SETUP_FLOW as _SETUP_FLOW
     from ....application.wizard._persistence import project_answers
     from ....application.workflow._persistence import workflow_state_repository
     from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
@@ -1528,7 +1527,7 @@ def config_status(ctx: typer.Context) -> None:
         _emit(ctx, payload, lines)
         return
     try:
-        projection = project_answers(_SETUP_FLOW, values)
+        projection = project_answers(_get_setup_flow(), values)
     except ValidationError:
         payload = {
             "active_profile": active_profile,
