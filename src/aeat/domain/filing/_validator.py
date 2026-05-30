@@ -15,6 +15,7 @@ from decimal import Decimal
 
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
+from ...core.time._clock import _now
 from ._protocols import (
     CasillaCollection,
     CasillaSchemaProvider,
@@ -217,7 +218,7 @@ def apply_validation(
         update={
             "findings": findings,
             "status": new_status,
-            "updated_at": datetime.now(tz=UTC),
+            "updated_at": _now(),
         }
     )
 
