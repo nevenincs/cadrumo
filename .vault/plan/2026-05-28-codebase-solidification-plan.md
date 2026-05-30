@@ -654,21 +654,21 @@ Wave 5 audit broke the four-consecutive-zero-regression streak with 2 strict fil
 
 Close 1 regression (WorkflowError tr-positional at _persistence.py:105), thread translated_message on 3 W4-introduced classes (SessionDeserializationError, ProfileRegistrationError, AuthProviderReservedError), and 11 new workflow-engine + persistence + adapters + resume bare-string raises.
 
-- [ ] `W05.P23.S429` - fix regression: route WorkflowError at workflow/_persistence.py:105-106 through translated_message= instead of positional tr() arg; `src/aeat/application/workflow/_persistence.py`.
-- [ ] `W05.P23.S430` - thread translated_message on SessionDeserializationError at auth/_sessions.py:419; `src/aeat/application/auth/_sessions.py`.
-- [ ] `W05.P23.S431` - thread translated_message on AuthProviderReservedError at auth/_operator.py:1215; `src/aeat/application/auth/_operator.py`.
-- [ ] `W05.P23.S432` - thread translated_message on ProfileRegistrationError at core/profile.py:92; `src/aeat/core/profile.py`.
-- [ ] `W05.P23.S433` - thread translated_message on ProfileLabelAmbiguousError at workflow/_profile_bucket_scan.py:104; `src/aeat/application/workflow/_profile_bucket_scan.py`.
-- [ ] `W05.P23.S434` - thread translated_message on 4 WorkflowResumeRefusedError sites at workflow/_resume.py:80,84,88,94; `src/aeat/application/workflow/_resume.py`.
-- [ ] `W05.P23.S435` - thread translated_message on WorkflowError at workflow/_persistence.py:141 (state-write-invalid-payload); `src/aeat/application/workflow/_persistence.py`.
-- [ ] `W05.P23.S436` - thread translated_message on WorkflowError at workflow/_persistence.py:311 (run-not-found); `src/aeat/application/workflow/_persistence.py`.
-- [ ] `W05.P23.S437` - thread translated_message on WorkflowError at workflow/_engine.py:97,111 (period-registry-year-unresolvable); `src/aeat/application/workflow/_engine.py`.
-- [ ] `W05.P23.S438` - thread translated_message on WorkflowError at workflow/_resume.py:139 (no-run-for-period); `src/aeat/application/workflow/_resume.py`.
-- [ ] `W05.P23.S439` - thread translated_message on 3 WorkflowError adapter-missing raises at workflow/_adapters.py:194,196,198; `src/aeat/application/workflow/_adapters.py`.
-- [ ] `W05.P23.S440` - thread translated_message on WorkflowError run-id-invalid raises at workflow/_persistence.py:389,392; `src/aeat/application/workflow/_persistence.py`.
-- [ ] `W05.P23.S441` - convert tr-f-string-as-key positional at cli/_config/_google.py:164 to translated_message= with static key + context; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W05.P23.S442` - assert wizard flow.id description keys exist statically at cli/_commands.py:939 module-init via inventory test; `src/aeat/application/wizard/_commands.py`.
-- [ ] `W05.P23.S443` - add aggregate test asserting all W05.P23 raises envelope-localize at operator surface; `src/aeat/test_w05_p23_locale_coverage.py`.
+- [x] `W05.P23.S429` - fix regression: route WorkflowError at workflow/_persistence.py:105-106 through translated_message= instead of positional tr() arg; `src/aeat/application/workflow/_persistence.py`.
+- [x] `W05.P23.S430` - thread translated_message on SessionDeserializationError at auth/_sessions.py:419; `src/aeat/application/auth/_sessions.py`.
+- [x] `W05.P23.S431` - thread translated_message on AuthProviderReservedError at auth/_operator.py:1215; `src/aeat/application/auth/_operator.py`.
+- [x] `W05.P23.S432` - thread translated_message on ProfileRegistrationError at core/profile.py:92; `src/aeat/core/profile.py`.
+- [x] `W05.P23.S433` - thread translated_message on ProfileLabelAmbiguousError at workflow/_profile_bucket_scan.py:104; `src/aeat/application/workflow/_profile_bucket_scan.py`.
+- [x] `W05.P23.S434` - thread translated_message on 4 WorkflowResumeRefusedError sites at workflow/_resume.py:80,84,88,94; `src/aeat/application/workflow/_resume.py`.
+- [x] `W05.P23.S435` - thread translated_message on WorkflowError at workflow/_persistence.py:141 (state-write-invalid-payload); `src/aeat/application/workflow/_persistence.py`.
+- [x] `W05.P23.S436` - thread translated_message on WorkflowError at workflow/_persistence.py:311 (run-not-found); `src/aeat/application/workflow/_persistence.py`.
+- [x] `W05.P23.S437` - thread translated_message on WorkflowError at workflow/_engine.py:97,111 (period-registry-year-unresolvable); `src/aeat/application/workflow/_engine.py`.
+- [x] `W05.P23.S438` - thread translated_message on WorkflowError at workflow/_resume.py:139 (no-run-for-period); `src/aeat/application/workflow/_resume.py`.
+- [x] `W05.P23.S439` - thread translated_message on 3 WorkflowError adapter-missing raises at workflow/_adapters.py:194,196,198; `src/aeat/application/workflow/_adapters.py`.
+- [x] `W05.P23.S440` - thread translated_message on WorkflowError run-id-invalid raises at workflow/_persistence.py:389,392; `src/aeat/application/workflow/_persistence.py`.
+- [x] `W05.P23.S441` - convert tr-f-string-as-key positional at cli/_config/_google.py:164 to translated_message= with static key + context; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W05.P23.S442` - assert wizard flow.id description keys exist statically at cli/_commands.py:939 module-init via inventory test; `src/aeat/application/wizard/_commands.py`.
+- [x] `W05.P23.S443` - add aggregate test asserting all W05.P23 raises envelope-localize at operator surface; `src/aeat/test_w05_p23_locale_coverage.py`.
 
 ### Phase `W05.P24` - A1 exceptions: W3 class registry binding + except-narrowing sweep
 
