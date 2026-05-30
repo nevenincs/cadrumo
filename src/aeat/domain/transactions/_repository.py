@@ -18,6 +18,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
+from ..modelos._ids import BucketId
 from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
 
@@ -80,7 +81,7 @@ class ImportSummary(BaseModel):
     imported: int = Field(ge=0)
     skipped: int = Field(ge=0)
     errors: int = Field(default=0, ge=0)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     imported_refs: tuple[BucketTransactionRef, ...] = ()
     skipped_refs: tuple[BucketTransactionRef, ...] = ()
     likely_duplicate_refs: tuple[BucketTransactionRef, ...] = ()
