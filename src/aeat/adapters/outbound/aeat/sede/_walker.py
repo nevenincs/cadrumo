@@ -29,6 +29,9 @@ from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
+from ._browser_constants import (
+    PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
+)
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -123,7 +126,7 @@ async def walk_expedientes_tree(
     settings = settings or Settings()
     async with _open_browser_page(session, settings) as (_context, page):
         try:
-            await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
         except PlaywrightError as exc:
             raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
 
@@ -170,11 +173,11 @@ async def resolve_justificante_ref(
         # per-year endpoint without this is fine when cookies are
         # fresh but fails intermittently after idle periods.
         try:
-            await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
         except Exception as _exc:
             log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
         try:
-            await page.goto(detail_url, wait_until="domcontentloaded")
+            await page.goto(detail_url, wait_until=_WAIT_DOMCONTENTLOADED)
         except PlaywrightError as exc:
             raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
         html = await page.content()
@@ -220,11 +223,11 @@ async def capture_justificante(
     detail_url = str(expediente.detail_url)
     async with _open_browser_page(session, settings) as (context, page):
         try:
-            await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            await page.goto(_RESUMEN_URL, wait_until=_WAIT_DOMCONTENTLOADED)
         except Exception as _exc:
             log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
         try:
-            await page.goto(detail_url, wait_until="domcontentloaded")
+            await page.goto(detail_url, wait_until=_WAIT_DOMCONTENTLOADED)
         except PlaywrightError as exc:
             raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
         detail_html = await page.content()
@@ -298,7 +301,7 @@ async def _snapshot_html(page: object) -> str:
     for _ in range(8):
         if wait_for_load_state is not None:
             try:
-                await wait_for_load_state("domcontentloaded", timeout=2_000)
+                await wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=2_000)
             except PlaywrightError as wait_exc:
                 log.debug(
                     "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc

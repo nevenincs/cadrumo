@@ -63,6 +63,9 @@ from ._adapter_utils import (
     normalize_response_text,
     registry_failure_message,
 )
+from ._browser_constants import (
+    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+)
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
@@ -295,7 +298,7 @@ async def collect_groi_observations(
             # only DOM the verdict parser sees.
             await browser_session.navigate(page, str(AEAT_GROI_URL))
             await _playwright_stage(
-                page.wait_for_load_state("networkidle", timeout=timeout_ms),
+                page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
                 stage="wait-form-networkidle",
                 description="GROI form network idle",
                 timeout_ms=timeout_ms,
@@ -424,7 +427,7 @@ async def _check_single_nif(
         timeout_is_shape_change=True,
     )
     await _playwright_stage(
-        page.wait_for_load_state("networkidle", timeout=timeout_ms),
+        page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
         stage=f"check-nif-{nif}:wait-response",
         description="GROI response network idle",
         timeout_ms=timeout_ms,
