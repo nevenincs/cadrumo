@@ -102,10 +102,15 @@ def iter_aeat_modules(root: Path = AEAT_ROOT) -> Iterator[Path]:
         yield path
 
 
-def _module_dotted_path(path: Path) -> str:
-    """Return the ``aeat.<...>`` dotted path for ``path``."""
+def _module_dotted_path(path: Path, root: Path = AEAT_ROOT) -> str:
+    """Return the ``<root.name>.<...>`` dotted path for ``path``.
 
-    rel = path.relative_to(AEAT_ROOT.parent).with_suffix("")
+    ``root`` defaults to the ``aeat`` package root; the helper accepts
+    an alternate root so test fixtures rooted at a synthetic
+    ``tmp_path/src/aeat`` layout resolve cleanly.
+    """
+
+    rel = path.relative_to(root.parent).with_suffix("")
     parts = list(rel.parts)
     if parts and parts[-1] == "__init__":
         parts.pop()
@@ -200,7 +205,7 @@ def build_alias_inventory(root: Path = AEAT_ROOT) -> AliasInventory:
         names = _module_alias_names(tree)
         if not names:
             continue
-        alias_modules.add(_module_dotted_path(path))
+        alias_modules.add(_module_dotted_path(path, root))
         for alias in names:
             owner = _camel_to_snake(alias[:-2])  # strip trailing ``Id``
             by_owner.setdefault(owner, alias)
@@ -250,7 +255,7 @@ def find_sibling_domain_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
 
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
-        dotted = _module_dotted_path(path)
+        dotted = _module_dotted_path(path, root)
         consumer_domain = _domain_root(dotted)
         if consumer_domain is None:
             continue
@@ -304,7 +309,7 @@ def find_private_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
 
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
-        dotted = _module_dotted_path(path)
+        dotted = _module_dotted_path(path, root)
         if not _is_consumer_layer(dotted):
             continue
         tree, err = _parse(path)
@@ -369,6 +374,118 @@ def find_misplaced_hex_length_constants(root: Path = AEAT_ROOT) -> list[Finding]
                         (
                             f"misplaced shape constant {name!r}: hex-length constants "
                             f"belong only in the owning _ids.py module"
+                        ),
+                    )
+                )
+    return findings
+
+
+# --- Clause 4: bare-``str`` ``<owner>_id`` BaseModel field ----------------
+
+
+def _is_basemodel_subclass(node: ast.ClassDef) -> bool:
+    """Return whether ``node`` textually inherits from ``BaseModel``.
+
+    The walker inspects each base name as a plain attribute or name
+    expression. A class is recognised as a pydantic model when any base
+    spells ``BaseModel`` (the canonical pydantic import name) — the
+    project does not subclass under an aliased name, so a textual match
+    is sufficient. Generic-parameterised bases (e.g. ``BaseModel[T]``)
+    are unwrapped through the ``ast.Subscript`` value.
+    """
+
+    for base in node.bases:
+        target = base
+        if isinstance(target, ast.Subscript):
+            target = target.value
+        if isinstance(target, ast.Name) and target.id == "BaseModel":
+            return True
+        if isinstance(target, ast.Attribute) and target.attr == "BaseModel":
+            return True
+    return False
+
+
+def _annotation_is_bare_str(annotation: ast.expr) -> bool:
+    """Return whether ``annotation`` is ``str`` or ``str | None``.
+
+    A typed alias (``WorkUnitId``, ``ProfileId``) is an ``ast.Name``
+    other than ``str``; an inline ``Annotated[str, ...]`` is an
+    ``ast.Subscript``; either form passes the detector. The detector
+    only flags the two bare shapes that drop the typed contract.
+    """
+
+    if isinstance(annotation, ast.Name) and annotation.id == "str":
+        return True
+    if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
+        left = annotation.left
+        right = annotation.right
+        if _annotation_is_bare_str(left) and _expr_is_none(right):
+            return True
+        if _annotation_is_bare_str(right) and _expr_is_none(left):
+            return True
+    return False
+
+
+def _expr_is_none(node: ast.expr) -> bool:
+    return isinstance(node, ast.Constant) and node.value is None
+
+
+def _is_alias_declaration_module(path: Path) -> bool:
+    """Return whether ``path`` declares typed-id aliases (skip in detector)."""
+
+    return _is_alias_module(path)
+
+
+def find_bare_str_typed_id_fields(
+    root: Path = AEAT_ROOT,
+    inventory: AliasInventory | None = None,
+) -> list[Finding]:
+    """Detect bare-``str`` ``<owner>_id`` fields on pydantic models.
+
+    For every pydantic ``BaseModel`` subclass declared under ``root``,
+    inspect every ``AnnAssign`` field whose target name matches
+    ``<owner>_id``. If ``<owner>`` is in the alias inventory and the
+    annotation is bare ``str`` (or ``str | None``), the field is flagged
+    — the typed alias for that identity exists and is the contract the
+    field should consume.
+    """
+
+    if inventory is None:
+        inventory = build_alias_inventory(root)
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        if _is_alias_declaration_module(path):
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for class_node in (n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)):
+            if not _is_basemodel_subclass(class_node):
+                continue
+            for field in class_node.body:
+                if not isinstance(field, ast.AnnAssign):
+                    continue
+                target = field.target
+                if not isinstance(target, ast.Name):
+                    continue
+                name = target.id
+                if not name.endswith("_id"):
+                    continue
+                owner = name[:-3]
+                if owner not in inventory.aliases_by_owner:
+                    continue
+                if not _annotation_is_bare_str(field.annotation):
+                    continue
+                alias = inventory.aliases_by_owner[owner]
+                findings.append(
+                    Finding(
+                        path,
+                        field.lineno,
+                        (
+                            f"bare-str typed-id field {class_node.name}.{name}: a typed "
+                            f"alias {alias!r} exists for owner {owner!r}; consume it"
                         ),
                     )
                 )

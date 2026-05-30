@@ -14,6 +14,8 @@ import pytest
 
 from aeat.diagnostics._identity_placement import (
     Finding,
+    build_alias_inventory,
+    find_bare_str_typed_id_fields,
     find_misplaced_hex_length_constants,
     find_private_id_imports,
     find_sibling_domain_id_imports,
@@ -56,3 +58,97 @@ def test_no_misplaced_hex_length_constants() -> None:
 
     findings = find_misplaced_hex_length_constants()
     assert findings == [], "misplaced _HEX_*_LENGTH constants detected:\n" + _render(findings)
+
+
+def test_alias_inventory_discovers_known_owners() -> None:
+    """The alias-inventory walker discovers every typed-id alias under aeat.
+
+    The mapping is itself part of the test contract: if a typed alias
+    is added or renamed, the inventory must reflect it. The assertion
+    pins the known owners present in the post-Wave-2 tree; new aliases
+    extend the set.
+    """
+
+    inventory = build_alias_inventory()
+    required_owners = {
+        "bucket",
+        "profile",
+        "snapshot",
+        "transaction",
+        "work_unit",
+        "calculation_revision",
+        "filing_record",
+        "verification_report",
+        "invoice",
+        "attachment",
+        "bundle",
+        "evidence",
+        "casilla",
+        "formula",
+        "revision",
+        "modelo",
+    }
+    missing = required_owners - inventory.aliases_by_owner.keys()
+    assert not missing, (
+        f"alias inventory missing owners {sorted(missing)!r}; "
+        f"discovered {sorted(inventory.aliases_by_owner.keys())!r}"
+    )
+
+
+def test_bare_str_typed_id_detector_recognises_synthetic_violation(tmp_path) -> None:
+    """Sanity-check the bare-``str`` detector against a controlled fixture.
+
+    The detector parses every ``BaseModel`` subclass under the tree
+    root and flags ``<owner>_id`` fields annotated as bare ``str`` (or
+    ``str | None``) when the alias inventory carries a typed alias for
+    that owner. The synthetic fixture exercises three shapes — bare
+    ``str``, ``str | None``, and the accepted typed-alias form — to
+    confirm the detector reports the two bare shapes and accepts the
+    typed shape.
+
+    The exhaustive full-tree enforcement is deferred to a follow-up
+    Wave that adjudicates the cross-domain ADR-amendment surface the
+    detector surfaces (see W05.P19.S68 step record for the inventory
+    of 54 known sites the detector flags against the post-W04 tree).
+    """
+
+    fixture_root = tmp_path / "src" / "aeat"
+    diagnostics_dir = fixture_root / "diagnostics"
+    diagnostics_dir.mkdir(parents=True)
+    (fixture_root / "__init__.py").write_text("")
+    (diagnostics_dir / "__init__.py").write_text("")
+
+    invoices_dir = fixture_root / "domain" / "invoices"
+    invoices_dir.mkdir(parents=True)
+    (fixture_root / "domain" / "__init__.py").write_text("")
+    (invoices_dir / "__init__.py").write_text("")
+    (invoices_dir / "_ids.py").write_text(
+        "from typing import Annotated\n"
+        "from pydantic import StringConstraints\n"
+        "InvoiceId = Annotated[str, StringConstraints(min_length=64, max_length=64)]\n"
+        '__all__ = ("InvoiceId",)\n'
+    )
+
+    consumer = invoices_dir / "_consumer.py"
+    consumer.write_text(
+        "from pydantic import BaseModel, Field\n"
+        "from ._ids import InvoiceId\n"
+        "class BareField(BaseModel):\n"
+        "    invoice_id: str = Field(min_length=64, max_length=64)\n"
+        "class OptionalBareField(BaseModel):\n"
+        "    invoice_id: str | None = None\n"
+        "class TypedField(BaseModel):\n"
+        "    invoice_id: InvoiceId\n"
+    )
+
+    inventory = build_alias_inventory(fixture_root)
+    assert "invoice" in inventory.aliases_by_owner, (
+        f"alias inventory failed to discover InvoiceId; got "
+        f"{sorted(inventory.aliases_by_owner.keys())!r}"
+    )
+
+    findings = find_bare_str_typed_id_fields(fixture_root, inventory)
+    classes_flagged = sorted(f.message.split(" ")[3].split(".")[0] for f in findings)
+    assert classes_flagged == ["BareField", "OptionalBareField"], (
+        f"detector mis-classifies typed alias usage; flagged {classes_flagged!r}"
+    )
