@@ -72,6 +72,7 @@ from pydantic import (
     model_validator,
 )
 
+from ..fincas._rounding import _round_to_cents
 from .errors import ProrrataInputError, ProrrataSectorError
 
 
@@ -427,7 +428,7 @@ def classify_input_deduction(
         raise ProrrataInputError(f"general_percentage out of range 0..100, got {general_percentage}")
 
     deductible_percentage = _deductible_percentage_for(classification, general_percentage)
-    deductible_amount = (input_vat_amount * deductible_percentage / Decimal("100")).quantize(Decimal("0.01"))
+    deductible_amount = _round_to_cents(input_vat_amount * deductible_percentage / Decimal("100"))
     return ProrrataInputDeduction(
         classification=classification,
         input_vat_amount=input_vat_amount,
