@@ -149,19 +149,49 @@ def _click_leaf_paths(
     return leaves
 
 
+# ---------------------------------------------------------------------
+# Group-callback emit sites
+# ---------------------------------------------------------------------
+#
+# A handful of group callbacks legitimately emit a typed envelope when
+# invoked with no subcommand (or with ``--help``). These are NOT leaf
+# commands and so :func:`_click_leaf_paths` cannot reach them, but they
+# are real emission sites with stable schemas registered in the
+# registry. They are enumerated here so the conformance gate models the
+# walker's reach accurately:
+#
+#  * ``aeat`` (root callback) emits ``root.status`` for the landing /
+#    help surface.
+#  * ``aeat app`` (group callback) emits ``root.app`` for the
+#    ``aeat app`` landing / help surface.
+#
+# When a future group callback adds an envelope emit, register its key
+# here so the gate continues to model the actual reach of the CLI tree.
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
+    {
+        "root.status",
+        "root.app",
+    }
+)
+
+
 def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
-    """Enumerate every leaf-command registry key reachable from ``app``.
+    """Enumerate every registered envelope key reachable from ``app``.
 
     Forces every lazy subtree to materialise so the resulting set is
     exhaustive — no lazy import elides a leaf — then projects each
     leaf path through :func:`_normalise_command_path` to obtain the
-    canonical registry-key string.
+    canonical registry-key string. Group-callback emit sites are added
+    via :data:`_GROUP_CALLBACK_EMIT_KEYS` because the click leaf walk
+    cannot reach a callback that does not register as a subcommand.
     """
     _force_load_lazy_subcommands(app)
     root = _typer_get_command(app)
     root.name = app.info.name or "aeat"
     leaf_paths = _click_leaf_paths(root, prefix=())
-    return {_normalise_command_path(path) for path in leaf_paths}
+    keys = {_normalise_command_path(path) for path in leaf_paths}
+    keys.update(_GROUP_CALLBACK_EMIT_KEYS)
+    return keys
 
 
 # ---------------------------------------------------------------------

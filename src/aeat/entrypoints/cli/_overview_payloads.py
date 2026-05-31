@@ -82,21 +82,23 @@ class OverviewStatusResult(OutputSchema):
 
 @register_schema("overview.calendar")
 class OverviewCalendarResult(OutputSchema):
-    """JSON envelope for ``aeat app overview calendar`` (single-profile mode)."""
+    """JSON envelope for ``aeat app overview calendar``.
+
+    Covers both the single-profile mode (``entries``/``warnings``/
+    ``suppressed_entries`` populated) and the ``--all-profiles`` mode
+    (``profiles`` populated, single-profile fields empty). The same
+    envelope key serves the leaf so the JSON-contract registry holds
+    exactly one schema per CLI leaf; the populated field set tells the
+    consumer which branch produced the payload.
+    """
 
     from_date: str | None = None
     to_date: str | None = None
     entries: list[dict] = []
     warnings: list[dict] = []
     suppressed_entries: list[dict] = []
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
-
-
-@register_schema("overview.calendar.all_profiles")
-class OverviewCalendarAllProfilesResult(OutputSchema):
-    """JSON envelope for ``aeat app overview calendar --all-profiles``."""
-
     profiles: list[dict] = []
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
 @register_schema("overview.agenda")
