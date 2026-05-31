@@ -347,8 +347,8 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     # TaxpayerProfile _check_representante_fiscal_required validator does
     # not fire; this lets the source-jurisdiction refusal surface cleanly
     # without provisioning the full TRLIRNR Art. 10 representante tuple.
-    # The non-EU/EEA path (Argentina, Morocco) is deferred to the schema-
-    # fix FU that resolves the representante_fiscal_nombre catalogue gap.
+    # The non-EU/EEA path (Argentina, Morocco) is tracked under the schema-
+    # fix follow-up that resolves the representante_fiscal_nombre catalogue gap.
     _set_profile_axis("taxpayer_type.country_of_fiscal_residence", "FR")
 
     result = _RUNNER.invoke(

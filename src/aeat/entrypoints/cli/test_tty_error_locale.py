@@ -5,7 +5,7 @@ Verifies that :class:`NonTtyRefusedError` does NOT set ``error.args[0]``
 ``message_key``), and that the registered locale key
 ``errors.refused.refused_cli_non_tty`` resolves to non-placeholder copy.
 
-No mocks, no skips, no xfail, no tautological assertions.
+No mocks, no skips, no expected-fail markers, no tautological assertions.
 """
 
 from __future__ import annotations
