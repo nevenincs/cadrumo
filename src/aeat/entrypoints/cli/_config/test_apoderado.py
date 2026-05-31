@@ -99,7 +99,14 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
         ],
     )
     assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
-    assert "represented_nif\t87654321X" in configure.output
+    # NIF is identity-class data: the CLI success-output redactor rewrites
+    # any 8-digits+letter NIF span via SHA256_PREFIX, so the rendered line
+    # carries the fingerprint, not the raw NIF. Pin both the field label
+    # and the fingerprint shape so an unintended raw leak would still fail.
+    assert "represented_nif\tsha256:" in configure.output
+    assert "87654321X" not in configure.output, (
+        f"raw NIF leaked into CLI output: {configure.output!r}"
+    )
     assert "RENT" in configure.output
 
     # status now reflects the configured state.
