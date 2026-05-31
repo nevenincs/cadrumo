@@ -10,8 +10,8 @@ The service is local-only: it never contacts AEAT and never invokes
 :mod:`aeat.application.filing.reconciliation._reconcile` with a parser
 for the supplied source kind.
 
-The CLI verb ``aeat app modelo reconcile`` (per the app-modelo-shape
-ADR amendment) is a thin delegate over this service.
+The CLI verb ``aeat app modelo reconcile`` is a thin delegate over this
+service.
 """
 
 from __future__ import annotations
@@ -39,10 +39,8 @@ class ModeloReconciliationSourceKind(StrEnum):
 class ModeloReconciliationVerdict(StrEnum):
     """Closed verdict catalogue for :class:`ModeloReconciliationReport`.
 
-    Drawn verbatim from the 2026-05-15 amendment to the
-    app-modelo-shape ADR: ``matches`` / ``mismatches`` /
-    ``evidence_invalid``. Any expansion needs an ADR amendment first
-    per the no-design-only-shells rule.
+    Closed set: ``matches`` / ``mismatches`` / ``evidence_invalid``.
+    Any expansion requires a design decision and must not add shells.
     """
 
     MATCHES = "matches"
@@ -98,28 +96,26 @@ class ModeloReconciliationReport(BaseModel):
 class ReconciliationEvidenceInvalidError(AeatError):
     """Raised when the supplied external evidence cannot be parsed.
 
-    The complementaria-external-filing-path ADR mandates this error for
-    malformed justificantes. The CLI surfaces it as a refusal with the
-    canonical recovery hint; downstream consumers branch on it without
-    string-matching the message.
+    Raised for malformed justificantes. The CLI surfaces it as a refusal
+    with the canonical recovery hint; downstream consumers branch on it
+    without string-matching the message.
     """
 
 class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """Raised when ``from_declaration`` is requested before the declaration parser ships.
 
-    The app-modelo-shape ADR amendment lists ``--from-declaration PATH``
-    as a required surface variant. Until the parser lands, the service
-    refuses cleanly rather than silently degrading.
+    ``--from-declaration PATH`` is a planned surface variant. Until the
+    declaration parser lands, the service refuses cleanly rather than
+    silently degrading.
     """
 
 class ReconciliationCrossBucketRefusedError(AeatError):
     """Raised when the addressed work unit belongs to a different bucket than the active profile bucket.
 
-    The bucket-event-history ADR scopes every event to a bucket id.
-    Allowing the service to emit into a non-active bucket would let any
-    caller write into other operators' history. The check is enforced
-    at the application service so neither the CLI nor any future caller
-    can bypass it.
+    Every event is scoped to a bucket id. Allowing the service to emit
+    into a non-active bucket would let any caller write into other
+    operators' history. The check is enforced at the application service
+    so neither the CLI nor any future caller can bypass it.
     """
 
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:

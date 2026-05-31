@@ -28,7 +28,6 @@ Cross-package consumers MUST import from this module
 ``_applicability``. Imports of ``_applicability`` are flagged by
 ``test_public_api_boundaries.py::test_source_tree_does_not_use_absolute_registry_private_imports``.
 
-Decision recorded under P08.S55.
 """
 
 from __future__ import annotations

@@ -1610,8 +1610,8 @@ class DisenoCoverageReport:
     having a coverage gap, surfaced as information for follow-up
     authoring. The load-blocking gate is the bounded
     calculation-completeness gate, not this full-Diseño inventory — that
-    is the ADR-amendment separation: calculation-completeness is enforced
-    at load, full-Diseño coverage is inventoried off-load-path.
+    Calculation-completeness is enforced at load; full-Diseño coverage is
+    inventoried off-load-path as an advisory follow-up surface.
 
     Fields:
 
@@ -1666,9 +1666,9 @@ def build_diseno_coverage_report(
     off the snapshot-build path — it parses the multi-megabyte Diseño
     corpus — and must never run on the load path. A coverage gap reported
     here does not fail any modelo: the load-blocking enforcement is the
-    bounded calculation-completeness gate, per the ADR amendment that
-    separates calculation-completeness (enforced at load) from
-    full-Diseño coverage (inventoried off-load-path).
+    bounded calculation-completeness gate; calculation-completeness is
+    enforced at load while full-Diseño coverage is inventoried
+    off-load-path.
 
     For a ``multi_segment`` modelo the comparison is segment-aware: a
     Diseño casilla under segment ``S`` is "covered" only when the

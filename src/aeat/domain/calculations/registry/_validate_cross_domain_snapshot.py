@@ -14,9 +14,8 @@ class CrossDomainSnapshotCheck(Protocol):
     A peer domain (for example :mod:`aeat.domain.renta`) may need to
     assert that the casilla ids it routes to are real casillas on a
     registry snapshot. The registry must not import the peer domain
-    directly -- that reverses the dependency direction the restructure
-    ADR fixes (defect F7, Wave 2 P04). Instead the peer domain
-    registers a :class:`CrossDomainSnapshotCheck` via
+    directly -- that reverses the hexagonal dependency direction. Instead
+    the peer domain registers a :class:`CrossDomainSnapshotCheck` via
     :func:`register_cross_domain_snapshot_check`; the registry calls
     every registered check at snapshot-build time without naming the
     peer.

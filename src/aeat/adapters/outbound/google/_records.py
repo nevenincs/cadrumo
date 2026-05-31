@@ -75,7 +75,7 @@ class OAuthToken(BaseModel):
     token on next process start.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     refresh_token: str = Field(min_length=1)
     token_uri: str = Field(min_length=1)
@@ -91,7 +91,7 @@ class OAuthMetadata(BaseModel):
     re-consent.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     account_email: str = Field(min_length=1)
     granted_scopes: tuple[str, ...] = Field(min_length=1)
@@ -126,7 +126,7 @@ class DriveConfig(BaseModel):
     env var so env vars only act as overrides for one-off / CI runs).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     root_folder_id: str = Field(min_length=1)
 
@@ -142,7 +142,7 @@ class DriveAppProperties(BaseModel):
     extra API round-trip.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key_hmac: str = Field(min_length=1)

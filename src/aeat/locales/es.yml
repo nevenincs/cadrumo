@@ -1250,6 +1250,12 @@ cli:
           o paternidad. NO lo incluyas en --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta debe ser un
           importe decimal; se recibió: {value}.'
+        preview_maritime_exemption_annual_salary_help: 'Salario anual bruto en EUR (Decimal). Obligatorio cuando el perfil activo cumple los requisitos del Art. 7.p) (vessel_flag=foreign o waters_type=international).'
+        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary debe ser un importe decimal; se recibio: {value}.'
+        preview_maritime_exemption_gross_navigation_income_help: 'Total de ingresos brutos de trabajo procedentes de la navegacion en EUR (Decimal). Obligatorio cuando el perfil activo cumple REBECA (vessel_registry en REBECA / rebeca_eu_eea / scheduled_canary_route).'
+        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income debe ser un importe decimal; se recibio: {value}.'
+        preview_maritime_exemption_help: 'Previsualiza la exencion IRPF del trabajador del mar (Art. 7.p) LIRPF / REBECA 50%) a partir de los hechos maritime_worker del perfil activo. Emite filas CasillaObservation tipadas con legal_refs; muestra el aviso RETMAR de declaracion obligatoria cuando retmar_registered=True; rechaza con el codigo DA 41 inactivo cuando el selector tuna_fleet aplica.'
+        preview_maritime_exemption_qualifying_days_help: 'Dias naturales trabajados fuera del territorio espanol en el ejercicio. Obligatorio junto con --annual-salary cuando se aplica el Art. 7.p).'
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
@@ -3036,7 +3042,10 @@ errors:
     error_profile_validation: Un registro de perfil no superó la validación.
     error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
     error_renta: Se produjo un error en el cálculo de la declaración de la Renta.
-    error_renta_profile_completeness_warning: 'Aviso de declaración obligatoria RETMAR: este trabajador figura inscrito en RETMAR. Desde enero de 2023, todos los trabajadores inscritos en RETMAR deben presentar declaración del IRPF independientemente del nivel de ingresos (Ley 47/2015 BOE-A-2015-11346).'
+    error_renta_profile_completeness_warning: 'Aviso de declaración obligatoria RETMAR:
+      este trabajador figura inscrito en RETMAR. Desde enero de 2023, todos los trabajadores
+      inscritos en RETMAR deben presentar declaración del IRPF independientemente
+      del nivel de ingresos (Ley 47/2015 BOE-A-2015-11346).'
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
     error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
       límite legal del activo arrendado.
@@ -3538,7 +3547,11 @@ errors:
       un dato de perfil obligatorio. Completa el perfil antes de continuar.
     refused_profile_schema_validation: Los datos del perfil infringen el contrato
       del esquema. Corrige los valores indicados.
-    refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera) está inactiva: no se ha concedido la autorización de ayudas de Estado de la UE para 2024/2025. La AEAT confirma su no aplicabilidad. Active esta exención solo tras la concesión de la autorización europea (Ley 35/2006 DA 41 BOE-A-2006-20764, Ley 6/2018 BOE-A-2018-9268).'
+    refused_renta_maritime_exemption_inactive: 'La exención DA 41 LIRPF (flota atunera)
+      está inactiva: no se ha concedido la autorización de ayudas de Estado de la
+      UE para 2024/2025. La AEAT confirma su no aplicabilidad. Active esta exención
+      solo tras la concesión de la autorización europea (Ley 35/2006 DA 41 BOE-A-2006-20764,
+      Ley 6/2018 BOE-A-2018-9268).'
     refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
       la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba

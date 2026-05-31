@@ -267,12 +267,11 @@ def _classify_renta_transaction(
             reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
         )
-    # W05.P23 FU-W05-E (S321): use the EUR-projected amount for the
-    # business gate so a non-EUR row that passed the
-    # is_non_eur_without_conversion check (because value_in_eur is set)
-    # contributes its pre-converted EUR equivalent rather than its
-    # raw foreign-currency amount.  EUR rows are unaffected: their
-    # value_in_eur is None and effective_eur_amount falls back to
+    # Use the EUR-projected amount for the business gate so a non-EUR row
+    # that passed the is_non_eur_without_conversion check (because
+    # value_in_eur is set) contributes its pre-converted EUR equivalent
+    # rather than its raw foreign-currency amount.  EUR rows are unaffected:
+    # their value_in_eur is None and effective_eur_amount falls back to
     # raw.amount.
     eur_amount = effective_eur_amount(transaction)
     business_amount = _business_amount(

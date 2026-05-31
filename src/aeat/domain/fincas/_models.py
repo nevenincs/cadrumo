@@ -37,7 +37,7 @@ class Finca(_FincaRecord):
     * ``VIVIENDA_ARRENDADA`` / ``LOCAL_COMERCIAL`` → rendimiento del
       capital inmobiliario regime, Ley 35/2006 IRPF Arts. 22-24
       (gross rent, deductible gastos, art. 23.1.f amortización,
-      art. 23.2 reducción). The W05.P15 ``Finca*`` stem covers this.
+      art. 23.2 reducción).
     * ``OTRO_INMUEBLE_NO_AFECTO`` / ``VIVIENDA_DESOCUPADA`` →
       imputación de rentas inmobiliarias regime, Ley 35/2006 IRPF
       Art. 85 (2 % or 1,1 % of valor catastral). Use the

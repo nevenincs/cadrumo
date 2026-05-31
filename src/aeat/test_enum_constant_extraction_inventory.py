@@ -1,11 +1,11 @@
-"""W06.P29 aggregate inventory test: zero bare-literal survivors in production source.
+"""Enum / named-constant extraction inventory: zero bare-literal survivors.
 
-Asserts that the regressions and new enum/constant migrations landed by W06.P29
-(S486-S494) have no surviving bare-string occurrences outside canonical
-definition sites and documented escape hatches.
+Asserts that the enum / named-constant migrations have no surviving
+bare-string occurrences outside canonical definition sites and
+documented escape hatches.
 
-Canonical definition sites are excluded from every scan; the test asserts the
-*non-canonical* production code is clean.
+Canonical definition sites are excluded from every scan; the test
+asserts the *non-canonical* production code is clean.
 """
 
 from __future__ import annotations
@@ -71,7 +71,7 @@ def _scan(files: list[Path], pattern: re.Pattern[str], skip_comment_lines: bool 
 
 
 # ---------------------------------------------------------------------------
-# S486 regression: no bare "ledger_transaction" runtime usage outside enum defs
+# No bare "ledger_transaction" runtime usage outside enum defs
 # ---------------------------------------------------------------------------
 
 # Matches bare "ledger_transaction" string literals used as runtime dict keys,
@@ -91,7 +91,7 @@ def test_no_bare_ledger_transaction_literals() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S487 regression: no bare ".xls" runtime usage outside canonical extension def
+# No bare ".xls" runtime usage outside canonical extension def
 # ---------------------------------------------------------------------------
 
 _RE_XLS_BARE = re.compile(r'"\\.xls"')
@@ -108,7 +108,7 @@ def test_no_bare_xls_extension_literals() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S490: no duplicate SEDE_BODY_ENCODING = "latin-1" definition outside _browser_constants
+# No duplicate SEDE_BODY_ENCODING = "latin-1" outside _browser_constants
 # ---------------------------------------------------------------------------
 
 _BROWSER_CONSTANTS = (
@@ -140,8 +140,8 @@ def test_no_duplicate_sede_body_encoding_definition() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S488: no bare "production" string used as OracleEnvironment bypass outside
-#        the match validator and TOML/config defaults
+# No bare "production" string used as OracleEnvironment bypass outside
+# the match validator and TOML/config defaults
 # ---------------------------------------------------------------------------
 
 # Matches environment="production" or environment == "production" call patterns
@@ -164,7 +164,7 @@ def test_no_bare_production_oracle_environment_bypass() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S489 regression: no bare "invoice" runtime usage in source-kind context
+# No bare "invoice" runtime usage in source-kind context
 # ---------------------------------------------------------------------------
 
 # Matches bare "invoice" used specifically in source-kind comparisons or

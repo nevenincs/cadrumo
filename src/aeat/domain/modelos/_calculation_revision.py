@@ -184,7 +184,7 @@ def _outputs_for_hash_from_mapping(casilla_values: Mapping[str, Decimal]) -> dic
     Trimmed casilla_id keys, ``_canonical_decimal`` values, sorted by
     casilla_id — matches the original inline projection in
     :func:`derive_calculation_revision_id` byte-for-byte. The
-    `P08.S35` hash-stability pin guards this contract.
+    A hash-stability contract guards this projection.
     """
     return dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items()))
 
@@ -194,17 +194,16 @@ def _outputs_for_hash_from_observations(
 ) -> dict[str, str]:
     """Same canonical projection as :func:`_outputs_for_hash_from_mapping`, sourced from observations.
 
-    Stage one of the `casilla-values-collapse-projection-strategy` ADR
-    (2026-05-26): the typed envelope is the logical source of truth for
+    The typed ``observations`` envelope is the logical source of truth for
     derivation. This helper materialises the same
     ``{casilla_id: canonical_decimal_str}`` projection the flat-mapping
     helper produces, sourced from ``CasillaObservation.value``. The
     validator uses this to assert the persisted ``casilla_values`` field
     is byte-identical to the projection of ``observations``.
 
-    Stage two of the ADR (future cycle) drops the flat field and routes
-    the hash directly through this helper; stage one keeps both fields
-    and uses this helper for the consistency check only.
+    A future cycle drops the flat field and routes the hash directly through
+    this helper; currently both fields are kept and this helper is used for
+    the consistency check only.
     """
     return _outputs_for_hash_from_mapping({obs.casilla_id: obs.value for obs in observations})
 
@@ -310,15 +309,13 @@ class CalculationRevision(BaseModel):
                 f"calculation_revision_id {self.calculation_revision_id!r} does not match "
                 f"the derived id {derived!r} for work_unit_id={self.work_unit_id!r}"
             )
-        # Stage one of the casilla-values-collapse-projection-strategy ADR
-        # (2026-05-26): the typed `observations` envelope is the logical
-        # source of truth; the flat `casilla_values` field is a
-        # denormalised cache enforced equal to the projection of
-        # observations. When observations is populated, the two MUST
-        # agree byte-for-byte (same canonical projection used by the
-        # hash). A mismatch means save/load drift or a caller passed
-        # inconsistent payload — fail at construction time rather than
-        # at the next hash mismatch downstream.
+        # The typed `observations` envelope is the logical source of truth;
+        # the flat `casilla_values` field is a denormalised cache enforced
+        # equal to the projection of observations. When observations is
+        # populated, the two MUST agree byte-for-byte (same canonical
+        # projection used by the hash). A mismatch means save/load drift or
+        # a caller passed inconsistent payload — fail at construction time
+        # rather than at the next hash mismatch downstream.
         if self.observations:
             projected = _outputs_for_hash_from_observations(self.observations)
             persisted = _outputs_for_hash_from_mapping(self.casilla_values)

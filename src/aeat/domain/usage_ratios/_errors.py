@@ -51,10 +51,10 @@ class CensoRatioMismatchError(UsageRatioError):
     when a pre-existing per-category override for a HOME_OFFICE category
     deviates from the legally-binding census-derived value, or when the
     operator has not yet captured a census snapshot at all. The
-    modelo-036-037-foundation ADR (2026-05-16 amendment) treats AEAT
-    as the binding legal source of truth: a profile in conflict with
-    the census must be refused at the load boundary so the calculation
-    surface never silently consumes a stale ratio.
+    AEAT is the binding legal source of truth for census-derived values:
+    a profile in conflict with the census must be refused at the load
+    boundary so the calculation surface never silently consumes a stale
+    ratio.
 
     The fix is operator-driven: either refresh the census via
     ``aeat config profile census refresh`` and ``apply``, or unset the

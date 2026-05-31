@@ -2350,18 +2350,17 @@ def _normalise_fichero_boe_encoding(declared: str) -> str:
     return ENCODING_ALIAS_MAP.get(declared.strip().lower(), declared.strip().lower())
 
 
-# P10.S68: single source of truth for the predicate-DSL operator
-# names. The registry-load validator
+# Single source of truth for the predicate-DSL operator names. The
+# registry-load validator
 # (_validate_surfaces.validate_verification_expectation_section)
-# uses this set to reject unknown operators at authoring time.
-# The runtime evaluator
+# uses this set to reject unknown operators at authoring time. The
+# runtime evaluator
 # (aeat.application.modelo._actions._evaluate_predicate_expression)
-# carries its own regex per operator but MUST keep its set of
-# operators identical to this constant — drift between the two
-# sets is a silent-pass hazard at the predicate layer (a typo
-# would silently pass the gate that's missing the operator). A
-# gate test asserts the runtime evaluator recognises every name
-# in this constant.
+# carries its own regex per operator but MUST keep its set of operators
+# identical to this constant — drift between the two sets is a
+# silent-pass hazard at the predicate layer (a typo would silently pass
+# the gate that's missing the operator). A gate test asserts the
+# runtime evaluator recognises every name in this constant.
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
     {
         "advisory_when_ratio_ge",
@@ -2382,7 +2381,7 @@ class VerificationPredicateDefinition(RegistryModel):
     class handles multi-casilla structural invariants (e.g. ``if ingresos
     is non-zero then rendimiento neto must also be present``).
 
-    ``expression`` uses a minimal W04 DSL:
+    ``expression`` uses a minimal predicate DSL:
 
     - ``all_nonzero(["id1", "id2", ...])`` — every listed casilla value must
       be non-zero (i.e. the filing invariant requires them all to be present
@@ -2391,8 +2390,8 @@ class VerificationPredicateDefinition(RegistryModel):
       value must be non-zero.
     - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the
       ceiling casilla is strictly positive, the limited casilla MUST NOT
-      exceed the ceiling. Added by P08.S47 to enforce AEAT cap rules like
-      Modelo 131 C11 ≤ C10 and Modelo 130 C15 ≤ C14 ("en ningún caso podrá
+      exceed the ceiling, enforcing AEAT cap rules like Modelo 131 C11 ≤ C10
+      and Modelo 130 C15 ≤ C14 ("en ningún caso podrá
       figurar... un importe superior a la cantidad positiva consignada").
       Predicate holds when ceiling ≤ 0; the cap applies only when the
       operator's gross liability is positive.

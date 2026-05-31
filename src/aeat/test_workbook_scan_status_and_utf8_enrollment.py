@@ -1,16 +1,18 @@
-"""W09.P37 aggregate inventory test: S553-S555 survivor checks.
+"""Workbook scan-status enum, STRICT_FROZEN_CONFIG, and UTF-8 enrollment.
 
 Asserts that:
-(a) Zero bare ``report.scan_status == "scanned"`` (or ``in {"failed", "timeout"}``)
-    comparisons survive in ``_workbook_parity.py`` — all sites must use
-    ``WorkbookScanStatus`` enum members.
-(b) ``STRICT_FROZEN_CONFIG`` from ``aeat.core._models`` is used everywhere a
-    local ``_STRICT_FROZEN = ConfigDict(...)`` is defined; the two files that
-    were missed by the W13 sweep now use the canonical constant.
-(c) ``UTF_8_ENCODING`` from ``aeat.core.external_constants`` is enrolled in
-    all production persistence and application call sites; no bare
-    ``encoding="utf-8"`` strings remain outside the documented allowlist of
-    test files and the canonical definition site.
+(a) Zero bare ``report.scan_status == "scanned"`` (or
+    ``in {"failed", "timeout"}``) comparisons survive in
+    ``_workbook_parity.py`` — all sites must use ``WorkbookScanStatus``
+    enum members.
+(b) ``STRICT_FROZEN_CONFIG`` from ``aeat.core._models`` is used everywhere
+    a local ``_STRICT_FROZEN = ConfigDict(...)`` would otherwise be
+    declared; the two relevant persistence-layer files use the canonical
+    constant.
+(c) ``UTF_8_ENCODING`` from ``aeat.core.external_constants`` is enrolled
+    in all production persistence and application call sites covered by
+    this inventory; no bare ``encoding="utf-8"`` strings remain in the
+    enrolled-files set outside the canonical definition site.
 """
 
 from __future__ import annotations
@@ -81,7 +83,7 @@ def _scan(
 
 
 # ---------------------------------------------------------------------------
-# S553: no bare scan_status string comparisons in _workbook_parity.py
+# No bare scan_status string comparisons in _workbook_parity.py
 # ---------------------------------------------------------------------------
 
 # Matches == "scanned" or in {"scanned", ...} where the string is a bare literal
@@ -108,8 +110,9 @@ def test_no_bare_scan_status_scanned_comparison() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S555: no local _STRICT_FROZEN = ConfigDict(...) definition in the two files
-#        that W13 missed; both now import STRICT_FROZEN_CONFIG from core._models
+# No local _STRICT_FROZEN = ConfigDict(...) definition in the two
+# persistence-layer files; both must import STRICT_FROZEN_CONFIG from
+# core._models
 # ---------------------------------------------------------------------------
 
 _LAYOUT_FILE = (
@@ -151,8 +154,8 @@ def test_secure_objects_uses_canonical_strict_frozen_config() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S554: UTF_8_ENCODING enrollment — no bare encoding="utf-8" in production
-#        persistence and application modules outside the allowlist
+# UTF_8_ENCODING enrollment - no bare encoding="utf-8" in the enrolled
+# production persistence and application modules
 # ---------------------------------------------------------------------------
 
 # Matches encoding="utf-8" as a keyword argument (file I/O pattern)
@@ -160,11 +163,9 @@ _RE_BARE_ENCODING_KWARG = re.compile(r'\bencoding\s*=\s*"utf-8"')
 # Matches .encode("utf-8") and .decode("utf-8") (bytes codec pattern)
 _RE_BARE_ENCODE_DECODE = re.compile(r'\.(?:encode|decode)\s*\(\s*"utf-8"\s*\)')
 
-# S554 enrolled files — the specific files this step migrated.
-# New siblings discovered during the S554 sweep beyond the plan's listed lines
-# are also included here. Future steps should extend this list as more files
-# are enrolled.
-_S554_ENROLLED_FILES: tuple[Path, ...] = (
+# Enrolled UTF-8-canonicalised files. Extend this list as more modules
+# are migrated to UTF_8_ENCODING.
+_UTF8_ENROLLED_FILES: tuple[Path, ...] = (
     _SRC_ROOT / "adapters" / "persistence" / "storage" / "blob_store" / "_blob_store.py",
     _SRC_ROOT / "adapters" / "persistence" / "storage" / "master_key" / "_master_key.py",
     _SRC_ROOT / "adapters" / "persistence" / "storage" / "master_key" / "_recovery.py",
@@ -176,19 +177,19 @@ _S554_ENROLLED_FILES: tuple[Path, ...] = (
 )
 
 
-def test_utf8_encoding_enrolled_in_s554_files() -> None:
-    """The files enrolled by S554 must contain no bare encoding='utf-8' /
+def test_utf8_encoding_enrolled_files_have_no_bare_literals() -> None:
+    """The UTF-8-enrolled files must contain no bare encoding='utf-8' /
     .encode('utf-8') / .decode('utf-8') literals.  All sites must use
     UTF_8_ENCODING imported from aeat.core.external_constants."""
     hits: list[str] = []
-    for path in _S554_ENROLLED_FILES:
+    for path in _UTF8_ENROLLED_FILES:
         if not path.is_file():
             hits.append(f"MISSING: {path.relative_to(PROJECT_ROOT).as_posix()}")
             continue
         file_hits = _scan([path], _RE_BARE_ENCODING_KWARG) + _scan([path], _RE_BARE_ENCODE_DECODE)
         hits.extend(file_hits)
     assert not hits, (
-        f"Found {len(hits)} bare 'utf-8' literal(s) in S554-enrolled files; "
+        f"Found {len(hits)} bare 'utf-8' literal(s) in enrolled files; "
         "replace with UTF_8_ENCODING from aeat.core.external_constants:\n"
         + "\n".join(f"  {h}" for h in hits)
     )

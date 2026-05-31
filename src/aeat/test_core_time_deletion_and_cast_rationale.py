@@ -1,8 +1,8 @@
-"""Real-behavior verification for W07.P33 cleanup steps.
+"""aeat.core._time deletion inventory and cast() rationale-marker invariant.
 
-S528 — Confirms aeat.core._time has been fully deleted with no import survivors.
-S530 — Re-runs the W2 cast-rationale inventory contract to confirm every
-       production cast() call carries an inline CAST-RATIONALE-* marker.
+Confirms:
+- aeat.core._time has been fully deleted with no import survivors.
+- Every production cast() call carries an inline CAST-RATIONALE-* marker.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ _RATIONALE_MARKER = "CAST-RATIONALE-"
 
 
 # ---------------------------------------------------------------------------
-# S528 — Deletion verification
+# aeat.core._time deletion verification
 # ---------------------------------------------------------------------------
 
 
@@ -49,7 +49,7 @@ def test_no_source_imports_aeat_core_time() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S530 — Cast-rationale inventory contract (mirrors test_cast_rationale_inventory)
+# Cast-rationale inventory contract (mirrors test_cast_rationale_inventory)
 # ---------------------------------------------------------------------------
 
 
@@ -110,7 +110,7 @@ def _collect_cast_violations() -> list[str]:
 
 
 def test_every_production_cast_has_rationale_marker() -> None:
-    """Every production cast() call must carry a CAST-RATIONALE-* marker (W2 contract re-run)."""
+    """Every production cast() call must carry a CAST-RATIONALE-* marker."""
     violations = _collect_cast_violations()
     if violations:
         joined = "\n  ".join(violations)

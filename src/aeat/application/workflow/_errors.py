@@ -52,12 +52,11 @@ class NoActiveProfileError(WorkflowError):
 class BootstrapAlreadyCompleteError(WorkflowError):
     """Raised when `aeat config profile create NAME` is re-invoked after a profile already exists.
 
-    The bootstrap wizard is a one-shot first-run flow per the
-    2026-05-16 profile-lifecycle ADR. A second invocation must
-    refuse with this typed error so the operator is redirected to
-    the canonical second-or-later-profile creation path (the
-    upcoming `aeat config profile create NAME` verb) rather than
-    silently overwriting the existing default profile.
+    The bootstrap wizard is a one-shot first-run flow. A second invocation
+    must refuse with this typed error so the operator is redirected to the
+    canonical second-or-later-profile creation path (the ``aeat config
+    profile create NAME`` verb) rather than silently overwriting the
+    existing default profile.
     """
 
 
@@ -75,12 +74,11 @@ class ProfileNameCollisionError(WorkflowError):
 class ProfileLockedError(WorkflowError):
     """Raised when a profile-scoped operation requires an unlocked profile session.
 
-    The profile-bucket lifecycle ADR mandates explicit
-    unlock-on-switch semantics: a verb that needs the active
-    profile's plaintext payload must run inside an unlocked
-    `BucketSession`. Verbs that touch encrypted payloads on a
-    locked-default state refuse with this typed error so the
-    operator runs the unlock flow explicitly.
+    The profile-bucket lifecycle mandates explicit unlock-on-switch
+    semantics: a verb that needs the active profile's plaintext payload
+    must run inside an unlocked ``BucketSession``. Verbs that touch
+    encrypted payloads on a locked-default state refuse with this typed
+    error so the operator runs the unlock flow explicitly.
     """
 
 

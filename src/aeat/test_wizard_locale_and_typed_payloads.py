@@ -1,15 +1,17 @@
-"""Real-behavior aggregate test for W09.P39 locale + pydantic boundary steps.
+"""Wizard locale routing and typed-payload boundary contracts.
 
-S562 — wizard tab-key ``status`` label is routed through ``tr()``.
-S563 — catalogue f-string sites are documented as bounded dynamic-dispatch
-        survivors in ``_ast_scanner._DYNAMIC_TRANSLATION_ROOTS``.
-S564 — Google API response TypedDicts (``GoogleDriveFile``, ``GoogleSheetsRange``,
-        ``GoogleSpreadsheet``) are importable from ``_api``.
-S565 — ``OAuthClientPayload`` TypedDict and ``_OAuthClientWrapper`` pydantic model
-        validate the Cloud Console Desktop envelope.
-S566 — ``InvoiceRowPayload`` TypedDict is returned by ``_decode_invoice_payload``
-        and survives the ``parse_invoice_payload`` pipeline.
-S567 — Orphan namespace ``__init__`` modules carry intent documentation.
+- Wizard tab-key ``status`` label is routed through ``tr()``.
+- Catalogue f-string sites are documented as bounded dynamic-dispatch
+  survivors in ``_ast_scanner._DYNAMIC_TRANSLATION_ROOTS``.
+- Google API response TypedDicts (``GoogleDriveFile``,
+  ``GoogleSheetsRange``, ``GoogleSpreadsheet``) are importable from
+  ``_api``.
+- ``OAuthClientPayload`` TypedDict and ``_OAuthClientWrapper`` pydantic
+  model validate the Cloud Console Desktop envelope.
+- ``InvoiceRowPayload`` TypedDict is returned by
+  ``_decode_invoice_payload`` and survives the ``parse_invoice_payload``
+  pipeline.
+- Orphan namespace ``__init__`` modules carry intent documentation.
 """
 
 from __future__ import annotations
@@ -26,12 +28,12 @@ _SRC_ROOT = pathlib.Path(__file__).parent
 
 
 # ---------------------------------------------------------------------------
-# S562 — wizard status tab-key label routed through tr()
+# Wizard status tab-key label routed through tr()
 # ---------------------------------------------------------------------------
 
 
 def test_wizard_status_label_uses_tr() -> None:
-    """Line 907 in wizard/_commands.py must use tr() for the status tab-key label."""
+    """wizard/_commands.py must use tr() for the status tab-key label."""
     commands_path = _SRC_ROOT / "application" / "wizard" / "_commands.py"
     source = commands_path.read_text(encoding="utf-8")
     tree = ast.parse(source, filename=str(commands_path))
@@ -73,7 +75,7 @@ def test_wizard_status_locale_key_exists_in_all_locales() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S563 — wizard f-string dynamic dispatch documented in _ast_scanner
+# Wizard f-string dynamic dispatch documented in _ast_scanner
 # ---------------------------------------------------------------------------
 
 
@@ -105,7 +107,7 @@ def test_catalogue_fstring_prefixes_detected_by_scanner() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S564 — Google API TypedDicts are importable and structurally correct
+# Google API TypedDicts are importable and structurally correct
 # ---------------------------------------------------------------------------
 
 

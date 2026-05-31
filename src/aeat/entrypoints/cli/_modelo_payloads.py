@@ -942,6 +942,36 @@ class ModeloAggregateResult(OutputSchema):
     result_row_count: int
 
 
+@register_schema("modelo.work.preview_maritime_exemption")
+class WorkPreviewMaritimeExemptionResult(OutputSchema):
+    """Result payload for ``aeat app modelo work preview-maritime-exemption``.
+
+    Surfaces the maritime worker IRPF exemption resolution for the active
+    profile: typed CasillaObservation rows carrying ``legal_refs`` and
+    ``source_refs`` (the canonical contract per aeat-calculation-grounding)
+    alongside a flat ``casilla_values`` projection for human readability.
+
+    The ``retmar_mandatory_filing`` flag mirrors the RETMAR completeness
+    gate: when ``True`` the operator is informed via the RETMAR warning
+    message that all RETMAR-registered workers must file IRPF regardless
+    of income level (Ley 47/2015 BOE-A-2015-11346). The DA 41 inactive
+    refusal raises ``MaritimeExemptionInactiveError`` and is rendered
+    through the CLI error boundary; this payload is not emitted in that
+    branch.
+    """
+
+    operation: str = "modelo.work.preview_maritime_exemption"
+    worker_class: str | None = None
+    vessel_flag: str | None = None
+    waters_type: str | None = None
+    vessel_registry: str | None = None
+    retmar_registered: bool = False
+    retmar_mandatory_filing: bool = False
+    retmar_warning: str | None = None
+    casilla_values: dict[str, str] = Field(default_factory=dict)
+    observations: list[CasillaObservationPayload] = Field(default_factory=list)
+
+
 @register_schema("modelo.work.compare_taxation")
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
@@ -1017,6 +1047,7 @@ __all__ = [
     "WorkFileResult",
     "WorkHistoryResult",
     "WorkListResult",
+    "WorkPreviewMaritimeExemptionResult",
     "WorkRenameResult",
     "WorkResumeResult",
     "WorkRevisionsResult",

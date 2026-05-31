@@ -1,4 +1,4 @@
-"""W08.P36 dedup gate — canonical_decimal_string uniqueness invariant.
+"""canonical_decimal_string uniqueness invariant.
 
 Asserts:
 1. ``canonical_decimal_string`` has exactly one definition site across
@@ -42,7 +42,7 @@ def _collect_function_defs(source_root: pathlib.Path) -> dict[str, list[pathlib.
 
 
 # ---------------------------------------------------------------------------
-# S552-A: exactly one definition of canonical_decimal_string
+# Exactly one definition of canonical_decimal_string
 # ---------------------------------------------------------------------------
 
 
@@ -63,7 +63,7 @@ def test_canonical_decimal_string_has_exactly_one_definition_site() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S552-B: _decimal.py is deleted; financial package no longer defines its own
+# _decimal.py is deleted; financial package no longer defines its own
 # ---------------------------------------------------------------------------
 
 

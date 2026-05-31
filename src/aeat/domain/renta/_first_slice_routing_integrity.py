@@ -9,8 +9,8 @@ deductibility validator runs.
 
 This check is owned by the ``renta`` domain because the routing table
 is renta domain knowledge. The registry must not import ``renta``
-directly -- that reverses the dependency direction the restructure ADR
-fixes (defect F7, Wave 2 P04). Instead this module registers a
+directly -- that reverses the dependency direction the hexagonal
+architecture enforces. Instead this module registers a
 :class:`~aeat.domain.calculations.registry.CrossDomainSnapshotCheck`
 with the registry validator via
 :func:`~aeat.domain.calculations.registry.register_cross_domain_snapshot_check`.

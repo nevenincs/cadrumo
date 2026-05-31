@@ -25,10 +25,9 @@ from ._schema import DataBindingDefinition, InputKind, ModeloRevision
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
 
 # Canonical source-kind strings the registry uses for invoice-shaped
-# bindings after the W84.S2309 migration retired the bare ``"invoice"``
-# source. Every consumer that needs "is this binding an invoice
-# binding?" routes through this frozenset so the answer stays single-
-# sourced.
+# bindings. The bare ``"invoice"`` source was retired; every consumer
+# that needs "is this binding an invoice binding?" routes through this
+# frozenset so the answer stays single-sourced.
 INVOICE_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
     {"collectible_invoice", "payable_invoice", "purchase_invoice_evidence"}
 )

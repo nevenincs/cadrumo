@@ -1,8 +1,9 @@
 """Narrow exceptions for the 036 census-sync application service.
 
-Backs the W85.S2349 census-sync wave per the 2026-05-16 amendment to
-the modelo-036-037-foundation ADR. Every error here surfaces through
-the ``aeat config profile census`` verb tree as a typed refusal.
+Every error here surfaces through the ``aeat config profile census``
+verb tree as a typed refusal, covering authentication failures, schema
+violations, and apply-path conflicts that the census-sync service can
+encounter against the AEAT Mis Datos Censales endpoint.
 """
 
 from __future__ import annotations
@@ -45,7 +46,7 @@ class CensoApplyConflictError(CensoSyncError):
     apply path refuses cleanly so the operator can resolve the
     in-flight state first; partial cross-validation that leaves some
     dependents stamped and others unstamped would silently corrupt
-    the legal-source-of-truth invariant the ADR amendment locks.
+    the legal-source-of-truth invariant the census lifecycle enforces.
     """
 
 

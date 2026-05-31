@@ -1,9 +1,9 @@
-"""Real-behavior inventory test: LATIN_1_ENCODING enrollment (S540 / S532).
+"""LATIN_1_ENCODING enrollment in the BOE export test package.
 
-Asserts that the ``adapters/outbound/aeat/export/`` package contains no bare
-``"iso-8859-1"`` string literals in test files — every occurrence must be
-replaced with the named ``LATIN_1_ENCODING`` constant imported from
-``aeat.core.external_constants``.
+Asserts that the ``adapters/outbound/aeat/export/`` package contains no
+bare ``"iso-8859-1"`` string literals in test files — every occurrence
+must be replaced with the named ``LATIN_1_ENCODING`` constant imported
+from ``aeat.core.external_constants``.
 
 No mocks, no skips, no xfail, no tautological assertions.
 """

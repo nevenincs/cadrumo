@@ -2042,10 +2042,10 @@ def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
 def _reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: str) -> None:
     """Refuse a work-unit create that names a period the revision does not declare.
 
-    Cross-domain-continuity W02.P12.S220 (persona R7-003): M202 currently
-    accepts ``--period 1T`` at create then fails calculate with
-    no-revision-for-period; period validation must fire at create using
-    the revision's declared period catalogue.
+    M202 accepts ``--period 1T`` at create but fails calculate with
+    no-revision-for-period when the period is not in the revision's catalogue;
+    period validation must fire at create time using the revision's declared
+    period catalogue.
 
     The revision's ``filing_schedules`` carry the declared periods per
     period-kind (monthly / quarterly / annual / ad_hoc). The union of
@@ -2482,8 +2482,8 @@ def _evaluate_predicate_expression(
     if m:
         # cap_le_when_positive(["limited_id", "ceiling_id"]) — when the
         # ceiling casilla is strictly positive, the limited casilla value
-        # MUST NOT exceed the ceiling. P08.S47/S48: enforces AEAT cap rules
-        # like Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
+        # MUST NOT exceed the ceiling, enforcing AEAT cap rules like
+        # Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
         # caso podrá figurar... un importe superior a la cantidad positiva
         # consignada".
         ids = _parse_predicate_casilla_ids(m.group("ids"))
@@ -2557,7 +2557,7 @@ def _resolve_m210_rate(
 
     2. **Per-row absent, no treaty country** — the baseline parameter
        is loaded but has no row for the requested ``tipo_renta`` (e.g.
-       pension, deferred under task #229 corpus-blocking) AND the
+       pension, not yet covered in the registry baseline corpus) AND the
        profile declares no ``country_of_fiscal_residence``. The helper
        returns ``(None, [finding])`` with the
        ``m210-baseline-tipo-deferred`` BLOCKING kind, citing the

@@ -1,18 +1,18 @@
-"""W09.P38 rationale-marker inventory test.
+"""Broad-except, lazy-module, and snapshot-dispatch rationale-marker inventory.
 
 Real-behavior AST + source walk that asserts:
 
-(a) The three financial-provider teardown ``except Exception`` sites (S557)
+(a) The three financial-provider teardown ``except Exception`` sites
     carry a ``BROAD-EXCEPT-RATIONALE-*`` inline comment.
 
-(b) The three ``-> Any`` lazy-module helpers in ``core/profile.py`` (S558)
-    carry an ``ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE`` inline marker.
+(b) The three ``-> Any`` lazy-module helpers in ``core/profile.py`` carry
+    an ``ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE`` inline marker.
 
-(c) The four ``**kwargs: Any`` snapshot-dispatch hooks (S559) carry a
+(c) The four ``**kwargs: Any`` snapshot-dispatch hooks carry a
     ``KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH`` marker.
 
-The tests walk real source files using ``ast`` + line-level string matching.
-No mocks, no skips, no tautological assertions.
+The tests walk real source files using ``ast`` + line-level string
+matching. No mocks, no skips, no tautological assertions.
 """
 from __future__ import annotations
 
@@ -27,7 +27,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 # Filesystem root
 # ---------------------------------------------------------------------------
 
-# __file__ lives at src/aeat/test_w09_p38_rationale_inventory.py
 _SRC = Path(__file__).parent  # src/aeat/
 
 
@@ -36,13 +35,13 @@ def _source_lines(path: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# (a) S557 — financial-provider teardown broad-except sites
+# (a) Financial-provider teardown broad-except sites
 # ---------------------------------------------------------------------------
 
-# Specific (file, marker-token) pairs mandated by S557.  The test walks every
-# ``except Exception`` line in each file and checks that the one from the plan
+# Specific (file, marker-token) pairs.  The test walks every
+# ``except Exception`` line in each file and checks that the documented site
 # carries its BROAD-EXCEPT-RATIONALE-* token.
-_S557_MANDATE: list[tuple[Path, str]] = [
+_BROAD_EXCEPT_MANDATE: list[tuple[Path, str]] = [
     (
         _SRC / "adapters/inbound/financial/providers/_pdf_n26.py",
         "BROAD-EXCEPT-RATIONALE-PDF-N26-TEARDOWN",
@@ -59,9 +58,9 @@ _S557_MANDATE: list[tuple[Path, str]] = [
 
 
 def test_financial_provider_teardown_broad_except_carry_rationale() -> None:
-    """Each mandated financial-provider teardown broad-except site carries its BROAD-EXCEPT-RATIONALE-* marker."""
+    """Each financial-provider teardown broad-except site carries its BROAD-EXCEPT-RATIONALE-* marker."""
     failures: list[str] = []
-    for path, expected_token in _S557_MANDATE:
+    for path, expected_token in _BROAD_EXCEPT_MANDATE:
         assert path.exists(), f"Expected source file not found: {path}"
         source = path.read_text(encoding="utf-8")
         if expected_token not in source:
@@ -70,7 +69,7 @@ def test_financial_provider_teardown_broad_except_carry_rationale() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (b) S558 — profile.py lazy-module helper ANY-RETURN-RATIONALE markers
+# (b) profile.py lazy-module helper ANY-RETURN-RATIONALE markers
 # ---------------------------------------------------------------------------
 
 _PROFILE_MODULE = _SRC / "core/profile.py"
@@ -106,13 +105,12 @@ def test_profile_lazy_module_helpers_carry_any_return_rationale() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (c) S559 — snapshot-dispatch kwargs-Any hooks carry KWARGS-ANY-RATIONALE
+# (c) Snapshot-dispatch kwargs-Any hooks carry KWARGS-ANY-RATIONALE
 # ---------------------------------------------------------------------------
 
-# Each entry is (path, function_name) pairs that the Step brief mandates.
-# The marker may appear in the 10 lines preceding the def (block-comment style)
-# or on the def line itself.
-_S559_MANDATE: list[tuple[Path, str]] = [
+# Each entry is a (path, function_name) pair. The marker may appear in the
+# 10 lines preceding the def (block-comment style) or on the def line itself.
+_KWARGS_ANY_MANDATE: list[tuple[Path, str]] = [
     (_SRC / "application/live/_borrador_100.py", "_derive_snapshot_id"),
     (_SRC / "application/live/_censo.py", "_derive_snapshot_id"),
     (_SRC / "application/live/_expedientes.py", "_derive_snapshot_id"),
@@ -132,7 +130,7 @@ def _check_marker_near_def(
     return any(token in ln for ln in lines[start:end])
 
 
-@pytest.mark.parametrize("path,func_name", _S559_MANDATE, ids=lambda x: x if isinstance(x, str) else x.name)
+@pytest.mark.parametrize("path,func_name", _KWARGS_ANY_MANDATE, ids=lambda x: x if isinstance(x, str) else x.name)
 def test_snapshot_dispatch_hooks_carry_kwargs_any_rationale(path: Path, func_name: str) -> None:
     """Each mandated snapshot-dispatch hook must carry a KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH marker."""
     assert path.exists(), f"Expected source file not found: {path}"

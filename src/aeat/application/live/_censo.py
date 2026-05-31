@@ -1,9 +1,8 @@
 """Application-live persistence for captured Modelo 036 census snapshots.
 
 `CensoSnapshot` holds the AEAT-side census facts the operator's
-profile must mirror per the 2026-05-16 amendment to the
-modelo-036-037-foundation ADR. AEAT is the binding legal source of
-truth; the local profile is a cache that must be kept honest.
+profile must mirror. AEAT is the binding legal source of truth for
+census data; the local profile is a cache that must be kept honest.
 
 The snapshot pattern mirrors :mod:`aeat.application.live._borrador_100`:
 content-addressed snapshot ids, encrypted SQLite persistence under a
