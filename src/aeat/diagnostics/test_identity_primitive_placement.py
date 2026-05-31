@@ -22,6 +22,7 @@ from pathlib import Path
 from aeat.diagnostics import _identity_placement
 from aeat.diagnostics._identity_placement import (
     Finding,
+    PROMOTE001_PROTECT_LIST,
     build_alias_inventory,
     build_kind_status_state_alias_inventory,
     find_bare_str_kind_status_state_fields,
@@ -269,6 +270,7 @@ def test_detector_public_surface_is_pinned() -> None:
         "AEAT_ROOT",
         "AliasInventory",
         "Finding",
+        "PROMOTE001_PROTECT_LIST",
         "build_alias_inventory",
         "build_kind_status_state_alias_inventory",
         "find_bare_str_kind_status_state_fields",
