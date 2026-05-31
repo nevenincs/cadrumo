@@ -546,7 +546,7 @@ def _coerce_sensitivity_class(value: object) -> object:
 SensitivityClassField = Annotated[SensitivityClass, BeforeValidator(_coerce_sensitivity_class)]
 
 CalculationClass = Literal["filing", "informative", "summary"]
-ModeloCapability = Literal["borrador", "renta_ledger_default"]
+ModeloFilingCapability = Literal["borrador", "renta_ledger_default"]
 """Discriminator for the calculation role of a ModeloDefinition.
 
 - ``filing``: The modelo computes and submits filing-grade amounts.
@@ -2493,12 +2493,12 @@ class ModeloDefinition(RegistryModel):
     jurisdiction: Literal["ES-AEAT"]
     calculation_class: CalculationClass = "filing"
     output_sensitivity: SensitivityClassField = SensitivityClass.FINANCIAL
-    capabilities: Annotated[frozenset[ModeloCapability], BeforeValidator(frozenset)] = frozenset()
+    capabilities: Annotated[frozenset[ModeloFilingCapability], BeforeValidator(frozenset)] = frozenset()
     legal_refs: LegalRefs
     source_refs: SourceRefs
     revisions: Mapping[RevisionId, ModeloRevision]
 
-    def has_capability(self, name: ModeloCapability) -> bool:
+    def has_capability(self, name: ModeloFilingCapability) -> bool:
         """Return whether this modelo declares the given capability."""
         return name in self.capabilities
 
