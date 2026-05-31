@@ -202,21 +202,21 @@ Remove the actionable shims and indirection aliases: LedgerTransactionDirection 
 
 Remove the LedgerTransactionDirection alias from three production modules and one test module (RELOC-033..036), replacing each use with TransactionDirection imported directly, per the aeat-architecture-boundaries no-alias rule.
 
-- [ ] `W07.P18.S59` - remove LedgerTransactionDirection alias and replace with TransactionDirection direct import in application/aggregation/_renta_ledger.py; `RELOC-033, architecture-boundaries; `src/aeat/application/aggregation/_renta_ledger.py`.
-- [ ] `W07.P18.S60` - remove LedgerTransactionDirection alias and replace with TransactionDirection direct import in application/aggregation/_renta_income_ledger.py; `RELOC-034, architecture-boundaries; `src/aeat/application/aggregation/_renta_income_ledger.py`.
-- [ ] `W07.P18.S61` - remove LedgerTransactionDirection alias and replace with TransactionDirection direct import in application/aggregation/_iva_ledger.py; `RELOC-035, architecture-boundaries; `src/aeat/application/aggregation/_iva_ledger.py`.
-- [ ] `W07.P18.S62` - remove LedgerTransactionDirection alias from the test module application/aggregation/test_renta_ledger_helpers.py and replace with TransactionDirection direct import; `RELOC-036, architecture-boundaries; `src/aeat/application/aggregation/test_renta_ledger_helpers.py`.
+- [x] `W07.P18.S59` - remove LedgerTransactionDirection alias and replace with TransactionDirection direct import in application/aggregation/_renta_ledger.py; `RELOC-033, architecture-boundaries; `src/aeat/application/aggregation/_renta_ledger.py`.
+- [x] `W07.P18.S60` - remove LedgerTransactionDirection alias and replace with TransactionDirection direct import in application/aggregation/_renta_income_ledger.py; `RELOC-034, architecture-boundaries; `src/aeat/application/aggregation/_renta_income_ledger.py`.
+- [x] `W07.P18.S61` - remove LedgerTransactionDirection alias and replace with TransactionDirection direct import in application/aggregation/_iva_ledger.py; `RELOC-035, architecture-boundaries; `src/aeat/application/aggregation/_iva_ledger.py`.
+- [x] `W07.P18.S62` - remove LedgerTransactionDirection alias from the test module application/aggregation/test_renta_ledger_helpers.py and replace with TransactionDirection direct import; `RELOC-036, architecture-boundaries; `src/aeat/application/aggregation/test_renta_ledger_helpers.py`.
 
 ### Phase `W07.P19` - domain.calculations passthrough migration and test deduplication
 
 Migrate the five callers that use the domain.calculations short-path passthrough to direct domain.calculations.registry.* imports, then remove the passthrough symbols from __init__.py per Rule 9-B (RELOC-039). Also deduplicate SECRET_PASSPHRASE test constant via conftest (RENAME-008).
 
-- [ ] `W07.P19.S63` - migrate the first domain.calculations passthrough caller to a direct domain.calculations.registry.* import and verify the registry test suite passes; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
-- [ ] `W07.P19.S64` - migrate the second domain.calculations passthrough caller to a direct domain.calculations.registry.* import; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
-- [ ] `W07.P19.S65` - migrate the third domain.calculations passthrough caller to a direct domain.calculations.registry.* import; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
-- [ ] `W07.P19.S66` - migrate the fourth domain.calculations passthrough caller to a direct domain.calculations.registry.* import; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
-- [ ] `W07.P19.S67` - migrate the fifth domain.calculations passthrough caller to a direct domain.calculations.registry.* import, remove the six passthrough symbols from domain/calculations/registry/__init__.py, and run the registry suite sequentially; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/registry/__init__.py`.
-- [ ] `W07.P19.S68` - deduplicate SECRET_PASSPHRASE test constant by extracting to a shared conftest fixture referenced by both test files; `RENAME-008, aeat-source-hygiene; `src/aeat/adapters/outbound/aeat/auth/`.
+- [x] `W07.P19.S63` - migrate the first domain.calculations passthrough caller to a direct domain.calculations.registry.* import and verify the registry test suite passes; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
+- [x] `W07.P19.S64` - migrate the second domain.calculations passthrough caller to a direct domain.calculations.registry.* import; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
+- [x] `W07.P19.S65` - migrate the third domain.calculations passthrough caller to a direct domain.calculations.registry.* import; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
+- [x] `W07.P19.S66` - migrate the fourth domain.calculations passthrough caller to a direct domain.calculations.registry.* import; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/`.
+- [x] `W07.P19.S67` - migrate the fifth domain.calculations passthrough caller to a direct domain.calculations.registry.* import, remove the six passthrough symbols from domain/calculations/registry/__init__.py, and run the registry suite sequentially; `RELOC-039, Rule 9-B; `src/aeat/domain/calculations/registry/__init__.py`.
+- [x] `W07.P19.S68` - deduplicate SECRET_PASSPHRASE test constant by extracting to a shared conftest fixture referenced by both test files; `RENAME-008, aeat-source-hygiene; `src/aeat/adapters/outbound/aeat/auth/`.
 
 ## Wave `W08` - import-direction violation purge - application to adapters cluster
 
