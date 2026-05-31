@@ -186,7 +186,7 @@ class XlsxProvider(FinancialProvider):
                 best.lookup,
                 best.header_index,
             )
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN: openpyxl raises OSError (file I/O), ValueError (invalid cell values), KeyError (missing sheet/named range), IndexError (out-of-range row/column access), and TypeError (unexpected cell type); `_close_workbook_during_teardown` must run unconditionally on any failure before re-raising.
             _close_workbook_during_teardown(workbook)
             raise
 

@@ -170,7 +170,7 @@ class OfxProvider(FinancialProvider):
         try:
             with path.open("rb") as handle:
                 parsed = OfxParser.parse(handle)
-        except Exception as exc:  # pragma: no cover - validated in tests through error path
+        except Exception as exc:  # BROAD-EXCEPT-RATIONALE-OFX-TEARDOWN: ofxparse raises Exception (base), ValueError (malformed date/amount fields), and TypeError (unexpected field types) from its parsing surface; the library does not expose a typed exception hierarchy, so broad catch is required to guarantee conversion to InvalidFinancialSourceError.  # pragma: no cover - validated in tests through error path
             _logger.error("ofx_provider: failed to parse OFX file %s", path.name, exc_info=True)
             raise InvalidFinancialSourceError(f"could not parse OFX file: {path}") from exc
         accounts = []

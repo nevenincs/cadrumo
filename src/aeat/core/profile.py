@@ -135,21 +135,21 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
 # ---------------------------------------------------------------------------
 
 
-def _m() -> Any:
+def _m() -> Any:  # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the aeat.domain.deadlines._models module object; a typed return would require importing the module at definition time, re-introducing the circular import described in the block comment above.
     """Return the aeat.domain.deadlines._models module (lazy)."""
     import importlib
 
     return importlib.import_module("aeat.domain.deadlines._models")
 
 
-def _p() -> Any:
+def _p() -> Any:  # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the aeat.domain.profile module object; typed return would require importing the module at definition time, re-introducing the circular import.
     """Return the aeat.domain.profile module (lazy)."""
     import importlib
 
     return importlib.import_module("aeat.domain.profile")
 
 
-def _ccaa() -> Any:
+def _ccaa() -> Any:  # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the CCAA enum class object; typed return would require importing the module at definition time, re-introducing the circular import.
     """Return the CCAA enum class (lazy)."""
     import importlib
 

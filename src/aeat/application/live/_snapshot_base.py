@@ -205,6 +205,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
 
     # ---- subclass hooks ----------------------------------------------------
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required by this abstract hook contract to allow concrete subclasses to accept caller-specific keyword arguments without a shared typed parameter set.  Each concrete implementation narrows via direct key access; tightening the abstract signature would break the polymorphic dispatch chain.
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         """Derive a content-addressed id from capture kwargs."""
@@ -341,6 +342,7 @@ class StatelessSnapshotService[TPayload: BaseModel](ABC):
             )
         return repository
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required by this abstract hook contract to allow concrete subclasses to accept caller-specific keyword arguments without a shared typed parameter set.  Each concrete implementation narrows via direct key access; tightening the abstract signature would break the polymorphic dispatch chain.
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str: ...
 
