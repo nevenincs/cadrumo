@@ -185,7 +185,7 @@ def acquire_auth_acquisition_lock(
             with os.fdopen(fd, "w", encoding=UTF_8_ENCODING) as file:
                 file.write(record.model_dump_json(indent=2))
                 file.write("\n")
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-ACQUISITION-LOCK-TEARDOWN
             _remove_lock_file(path)
             raise
         acquired = True

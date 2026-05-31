@@ -12,6 +12,7 @@ from types import MappingProxyType
 from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
+from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, IvaDeductibilityHint
@@ -87,13 +88,8 @@ def load_category_profile_registry(
     target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
-    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
     return _load_category_profile_registry_cached(str(resolved), fingerprint)
-
-
-def _file_fingerprint(path: Path) -> tuple[str, int, int]:
-    stat = path.stat()
-    return (path.name, stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=8)

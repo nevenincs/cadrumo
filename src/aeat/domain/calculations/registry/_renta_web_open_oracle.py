@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from json import JSONDecodeError, loads
-from typing import Literal, Protocol
+from typing import Final, Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
@@ -20,6 +20,7 @@ from ._live_parity import (
 )
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
+_RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int] = 2025
 
 
 class RentaWebOpenModel(BaseModel):
@@ -68,7 +69,7 @@ class RentaWebOpenLivePayload(RentaWebOpenModel):
     profile: RentaWebOpenSyntheticProfile = Field(default_factory=RentaWebOpenSyntheticProfile)
     app_url: AnyUrl = Field(
         default_factory=lambda: AnyUrl(
-            Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=2025)
+            Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=_RENTA_WEB_OPEN_DEFAULT_YEAR)
         )
     )
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
@@ -158,8 +159,10 @@ class RentaWebOpenOracle:
             )
         if self._driver is not None:
             return self._driver.planned_operations(payload, expected=expected)
+        template = Settings.external_constants().aeat.oracles.renta_web_open_app_template
+        app_url = AnyUrl(template.format(year=_RENTA_WEB_OPEN_DEFAULT_YEAR))
         return (
-            RemoteOperation(kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=2025))),
+            RemoteOperation(kind="http", method="GET", url=app_url),
             RemoteOperation(kind="browser_action", action="requires-renta-web-open-driver"),
         )
 

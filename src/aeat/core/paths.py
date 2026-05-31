@@ -136,3 +136,26 @@ def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Pat
     except ValueError as exc:  # pragma: no cover - defensive
         raise CoreValidationError(f"{context} escapes the owning root") from exc
     return resolved
+
+
+def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
+    """Return a cache-key fingerprint triple for a single file.
+
+    The triple ``(name, size_bytes, mtime_ns)`` is a stable, low-cost
+    proxy for file identity used by file-backed loader caches. Any
+    in-place modification that changes size or mtime invalidates the
+    cache without requiring a full content hash.
+
+    Args:
+        path: The file to fingerprint. Must be an existing, stat-able
+            path.
+
+    Returns:
+        ``(path.name, stat.st_size, stat.st_mtime_ns)``
+
+    Raises:
+        OSError: When ``path.stat()`` fails (e.g. permission denied,
+            file disappears between glob and stat).
+    """
+    stat = path.stat()
+    return (path.name, stat.st_size, stat.st_mtime_ns)
