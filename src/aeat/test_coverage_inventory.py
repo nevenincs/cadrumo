@@ -1,20 +1,16 @@
 """Audit gate: module-level test coverage inventory.
 
-S215 enumeration — production modules without a paired test file:
-  Walks every production Python module under src/aeat/ and compares
-  against the set of test_*.py files present in the same directory.
-  Modules without a sibling test_*.py are recorded as coverage gaps.
+Walks every production Python module under src/aeat/ and compares
+against the set of test_*.py files present in the same directory.
+Modules without a sibling test_*.py are recorded as coverage gaps.
 
-S216 assertion — this file provides the real-behavior test that asserts
-  every production module either has a paired test or appears in the
-  documented exemption list below.
-
-Wave 2 follow-up Steps (S215 enumeration output):
-  The COVERAGE_GAPS set below is the canonical output of the S215
-  enumeration pass.  Each entry is a Wave 2 follow-up target.  Entries
-  are removed as tests are added; the test below enforces that the
-  on-disk state never exceeds the declared gap set (i.e. new untested
-  modules cannot be added silently).
+This file provides the real-behavior test that asserts every
+production module either has a paired test or appears in the
+documented exemption list below. The COVERAGE_GAPS set captures
+the currently-known untested modules; entries are removed as tests
+are added, and the test enforces that the on-disk state never exceeds
+the declared gap set (i.e. new untested modules cannot be added
+silently).
 
 Exemption criteria (modules excluded from the gap requirement):
   - __init__.py files (package roots; tested transitively)
@@ -51,15 +47,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
     }
 )
 
-# Modules that exist without a paired test_*.py as of the S215 enumeration
-# pass (2026-05-28).  These are the Wave 2 follow-up targets.  The test
-# below asserts that the live gap set is a subset of this declared set —
-# new untested modules cannot sneak in without updating this file.
+# Modules that exist without a paired test_*.py at the time of this
+# inventory.  The test below asserts that the live gap set is a subset
+# of this declared set — new untested modules cannot sneak in without
+# updating this file.
 COVERAGE_GAPS: frozenset[str] = frozenset(
     {
-        # Wave 2 follow-ups from S215 enumeration pass (2026-05-28).
-        # These modules reside in directories with no paired test_*.py file.
-        # Each is a follow-up target for Wave 2 test-coverage work.
+        # Known untested modules.  These reside in directories with no
+        # paired test_*.py file and are tracked for future coverage.
         #
         # adapters/inbound — sub-parsers in directories with no test file
         "src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py",
@@ -170,7 +165,7 @@ def test_new_production_modules_have_test_coverage() -> None:
 
     A new module added without a paired test_*.py will fail this gate
     immediately, surfacing the gap before it grows stale.  Existing known
-    gaps are tracked in COVERAGE_GAPS and treated as Wave 2 follow-ups.
+    gaps are tracked in COVERAGE_GAPS.
     """
     production_modules = _collect_production_modules()
     new_gaps: list[str] = []
@@ -184,7 +179,7 @@ def test_new_production_modules_have_test_coverage() -> None:
     assert not new_gaps, (
         "New production modules added without a paired test_*.py.\n"
         "Either add a test file or add the module to COVERAGE_GAPS in\n"
-        f"src/aeat/test_coverage_inventory.py with a Wave 2 follow-up note:\n\n"
+        f"src/aeat/test_coverage_inventory.py with a justification note:\n\n"
         + "\n".join(f"  {g}" for g in sorted(new_gaps))
     )
 

@@ -266,7 +266,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 #   scripts/derive_m100_closure.py             — file-write encoding literal
 #   scripts/gen_aeip_audit.py                  — file-read/write encoding literals
 #
-# scripts/check_relative_imports.py was fixed in W12.P44.S594 and must
+# scripts/check_relative_imports.py was previously fixed and must
 # NOT be re-added to the known-violating set.
 
 _SCRIPTS_KNOWN_VIOLATING: frozenset[str] = frozenset(

@@ -42,10 +42,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 # Format: "path:lineno:function_name" -> "rationale"
 # Paths are relative to the repository src/aeat root (POSIX separators).
 _WAIVERS: dict[str, str] = {
-    # _populated_snapshot in test_borrador_100_roundtrip.py is a TBD item
-    # (see s223 audit); waived pending Wave 2 verification step.
+    # _populated_snapshot in test_borrador_100_roundtrip.py is waived
+    # pending verification of snapshot-model optional-field coverage.
     "application/live/test_borrador_100_roundtrip.py:36:_populated_snapshot": (
-        "TBD - Wave 2 follow-up; snapshot model optional-field coverage unconfirmed"
+        "snapshot model optional-field coverage unconfirmed"
     ),
 }
 

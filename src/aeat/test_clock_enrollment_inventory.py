@@ -9,11 +9,10 @@ traceable.
 
 Enrollment progress
 -------------------
-W03.P15 (S328–S337) migrated the first cohort of 19+ sites.  The remaining
-sites below are the Wave 3 audit enumeration output; they are tracked as
-follow-up Steps.  The test asserts that the live violation set is a **subset**
-of the declared pending set — new inline calls cannot be added without
-updating this file.
+An initial cohort of sites has migrated to the injectable clock.  The
+remaining sites below are the pending-enrollment set; the test asserts
+that the live violation set is a **subset** of the declared pending set
+— new inline calls cannot be added without updating this file.
 
 Exclusions (permanent)
 ----------------------
@@ -69,11 +68,10 @@ _VIOLATION_PATTERNS: tuple[str, ...] = (
 )
 
 # ---------------------------------------------------------------------------
-# Pending enrollment — Wave 3 follow-up targets
+# Pending enrollment
 # ---------------------------------------------------------------------------
 # Format: POSIX path relative to repo root (src/aeat/…).
-# These are the sites identified in the Wave 3 audit enumeration (S328–S337
-# pass, 2026-05-30). Remove entries as their Steps land.  The test asserts
+# Remove entries as the inline calls are migrated.  The test asserts
 # that no NEW sites appear beyond this declared pending set.
 
 PENDING_ENROLLMENT: frozenset[str] = frozenset(
@@ -215,7 +213,7 @@ def test_no_inline_datetime_now_utc() -> None:
 
     All enrolled sites use ``_now()`` from ``aeat.core.time._clock``.
     Remaining pending-enrollment sites are tracked in ``PENDING_ENROLLMENT``
-    above and will be addressed in follow-up Wave 3 Steps.
+    above.
 
     This test fails if a new inline call is added outside the declared pending
     set, preventing regressions while enrollment proceeds incrementally.
