@@ -11,6 +11,7 @@ at import time.
 from __future__ import annotations
 
 import tomllib
+from decimal import Decimal
 from functools import cached_property, lru_cache
 from importlib.resources import files
 from pathlib import Path
@@ -313,6 +314,10 @@ DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
 
 #: Ordered tuple of BCP-47 language tags supported by the CLI and API output layer.
 SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = ("es", "en", "ca", "hu")
+
+#: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
+#: Counterparties whose annual operations total at most this amount are NOT declarable.
+M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 """Canonical encoding probe order for CSV financial sources.
 
 The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`
