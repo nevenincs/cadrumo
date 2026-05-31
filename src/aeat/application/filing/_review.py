@@ -208,7 +208,7 @@ def approve_draft(
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
         category_profiles: Optional category profile map override.
-        approved_at: Optional timestamp; defaults to ``datetime.now(UTC)``.
+        approved_at: Optional timestamp; defaults to the canonical clock helper.
 
     Returns:
         A new :class:`ModeloDraft` with approval metadata populated.
@@ -263,7 +263,7 @@ def unapprove_draft(
     Args:
         draft: The draft to revert.
         unapproved_at: Optional timestamp; defaults to
-            ``datetime.now(UTC)``.
+            the canonical clock helper.
 
     Returns:
         A new :class:`ModeloDraft` with approval metadata cleared and
@@ -311,7 +311,7 @@ def refresh_review_status(
         transaction_catalogue: Optional catalogue override.
         category_profiles: Optional category profile map override.
         refreshed_at: Optional timestamp; defaults to
-            ``datetime.now(UTC)``.
+            the canonical clock helper.
 
     Returns:
         Either ``draft`` unchanged (when no transition was needed) or a
