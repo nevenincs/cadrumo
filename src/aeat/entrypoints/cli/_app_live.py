@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
+from aeat.core.time import _now
+
 from ...application.live import (
     FiledDataListingRow,
     IvaCompensationHistoryReport,
@@ -904,7 +906,7 @@ def notifications_list(ctx: typer.Context) -> None:
 
     bucket_id = _active_bucket_id()
     rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
-    from ._app_live_payloads import NotificationSnapshotListingPayload, NotificationsListResult
+    from ._app_live_payloads import NotificationsListResult, NotificationSnapshotListingPayload
 
     result = NotificationsListResult(
         bucket_id=bucket_id,
@@ -1166,7 +1168,7 @@ def expedientes_list(ctx: typer.Context) -> None:
 
     bucket_id = _active_bucket_id()
     rows = ExpedientesService().list_snapshots(bucket_id=bucket_id)
-    from ._app_live_payloads import ExpedienteSnapshotSummaryPayload, ExpedientesListResult
+    from ._app_live_payloads import ExpedientesListResult, ExpedienteSnapshotSummaryPayload
 
     result = ExpedientesListResult(
         bucket_id=bucket_id,
@@ -1477,7 +1479,6 @@ def verify_nif_iva(
         ),
     ] = None,
 ) -> None:
-    from datetime import UTC, datetime
 
     from ...adapters.outbound.aeat.sede._nif_iva_check import NifIvaCheckSedeDriver
     from ...application.live._verify import VerifyService, VerifySurface
@@ -1499,7 +1500,7 @@ def verify_nif_iva(
         surface=VerifySurface.NIF_IVA,
         nif=observation.nif,
         verdict=observation.verdict,
-        checked_at=datetime.now(tz=UTC),
+        checked_at=_now(),
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
@@ -1530,7 +1531,6 @@ def verify_tgvi(
         ),
     ] = None,
 ) -> None:
-    from datetime import UTC, datetime
 
     from ...adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
     from ...application.live._verify import VerifyService, VerifySurface
@@ -1552,7 +1552,7 @@ def verify_tgvi(
         surface=VerifySurface.TGVI,
         nif=observation.nif,
         verdict=observation.verdict,
-        checked_at=datetime.now(tz=UTC),
+        checked_at=_now(),
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
