@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Any
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
+from ...core.errors._not_found import CoreNotFoundError
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEvent,
@@ -207,8 +208,13 @@ class WorkUnitMutationRefusedError(ModeloError):
     """Raised when a mutation targets a discarded work unit."""
 
 
-class CalculationRevisionNotFoundError(ModeloError, KeyError):
-    """Raised when a calculation revision lookup fails."""
+class CalculationRevisionNotFoundError(ModeloError, CoreNotFoundError):
+    """Raised when a calculation revision lookup fails.
+
+    Inherits from CoreNotFoundError (which itself inherits from CoreError
+    and KeyError) to participate in the shared CoreNotFoundError catch
+    surface and maintain KeyError compatibility for dict-like lookups.
+    """
 
 
 class CalculationRevisionStateError(ModeloError):
