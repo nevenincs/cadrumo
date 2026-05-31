@@ -31,8 +31,17 @@ from ...application.registry import (
     verify_registry_manual,
 )
 from ...domain.manuals import ManualPart
-from ._common import _emit
+from ._common import _emit_envelope
 from ...core.i18n import tr
+from ._registry_corpus_payloads import (
+    CitationListResult,
+    CitationShowResult,
+    CitationVerifyResult,
+    ManualListResult,
+    ManualShowResult,
+    ManualRulesListResult,
+    ManualVerifyResult,
+)
 
 citations_app = typer.Typer(
     name="citations",
@@ -60,7 +69,8 @@ def list_citations_cmd(
 ) -> None:
     """List the normatives codified in the project's legal corpus."""
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
-    _emit(ctx, report, _citation_list_lines(report))
+    typed = CitationListResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.citations.list", result=typed, lines=_citation_list_lines(report))
 
 
 @citations_app.command("view", help=tr("cli.registry.citations.view_help"))
@@ -77,14 +87,16 @@ def show_citation_cmd(
 ) -> None:
     """View one normative and, optionally, one cited article."""
     report = show_registry_citation(RegistryCitationShowCommand(normative_id=normative_id, articulo=articulo))
-    _emit(ctx, report, _citation_show_lines(report))
+    typed = CitationShowResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.citations.show", result=typed, lines=_citation_show_lines(report))
 
 
 @citations_app.command("verify", help=tr("cli.registry.citations.verify_help"))
 def verify_citations_cmd(ctx: typer.Context) -> None:
     """Verify the legal corpus against its own schema invariants."""
     report = verify_registry_citations()
-    _emit(ctx, report, _citation_verification_lines(report))
+    typed = CitationVerifyResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.citations.verify", result=typed, lines=_citation_verification_lines(report))
     if not report.passed:
         raise typer.Exit(code=1)
 
@@ -103,7 +115,8 @@ def list_manuals_cmd(
 ) -> None:
     """List AEAT Manual práctico records available on disk."""
     report = list_registry_manuals(RegistryManualsListCommand(manual=manual, year=year))
-    _emit(ctx, report, _manuals_list_lines(report))
+    typed = ManualListResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.manuals.list", result=typed, lines=_manuals_list_lines(report))
 
 
 @manuals_app.command("view", help=tr("cli.registry.manuals.view_help"))
@@ -128,7 +141,8 @@ def show_manual_cmd(
 ) -> None:
     """View one manual's metadata and, optionally, one section by id."""
     report = show_registry_manual(RegistryManualShowCommand(manual=manual, year=year, part=part, section=section))
-    _emit(ctx, report, _manual_show_lines(report))
+    typed = ManualShowResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.manuals.show", result=typed, lines=_manual_show_lines(report))
 
 
 @manuals_app.command("rules", help=tr("cli.registry.manuals.rules_help"))
@@ -153,7 +167,8 @@ def list_manual_rules_cmd(
 ) -> None:
     """List AEAT rule decisions for one manual / year / part."""
     report = list_registry_manual_rules(RegistryManualRulesCommand(manual=manual, year=year, part=part, kind=kind))
-    _emit(ctx, report, _manual_rules_lines(report))
+    typed = ManualRulesListResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.manuals.rules.list", result=typed, lines=_manual_rules_lines(report))
 
 
 @manuals_app.command("verify", help=tr("cli.registry.manuals.verify_help"))
@@ -174,7 +189,8 @@ def verify_manual_cmd(
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
-    _emit(ctx, report, _manual_verification_lines(report))
+    typed = ManualVerifyResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="registry_corpus.manuals.verify", result=typed, lines=_manual_verification_lines(report))
     if not report.passed:
         raise typer.Exit(code=1)
 
