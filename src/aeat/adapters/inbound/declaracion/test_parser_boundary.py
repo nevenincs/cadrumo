@@ -921,7 +921,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     - Chunk 1 (9 casillas): cuota-chain closure — 0545/0546/0505/0585/0586/0587/0595/0610/0670.
     - Chunk 2 (4 casillas): apartado-summary bases — 0235/0432/0500/0510.
     - Chunk 3 (6 casillas): actividades-económicas ED detail — 0180/0218/0223/0224/0226/0231.
-    - Chunk 4 (1 casilla): W10.P50 leaf extension — 0171 (ingresos de explotación).
+    - Chunk 4 (1 casilla): ED leaf input — 0171 (ingresos de explotación).
 
     Ground truth is derived from reading the printed declaracion PDF text directly.
     The sanitised corpus replaces real monetary values with 1.000,00 synthetic values.
@@ -955,7 +955,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
 
     # All 20 covered casillas must be present: 9 cuota-chain closure casillas (first chunk),
     # 4 apartado-summary casillas (second chunk), 6 actividades-económicas ED detail (third chunk),
-    # 1 leaf input from W10.P50 (fourth chunk).
+    # 1 ED leaf input (fourth chunk).
     # 0435 (base imponible general) is deferred: the IRPF form prints the line twice
     # (body section + base liquidable section), both identical, so the parser rejects it as
     # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
@@ -982,7 +982,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
         "0224",  # rendimiento neto
         "0226",  # rendimiento neto reducido
         "0231",  # suma de rendimientos netos reducidos (pre-0235 subtotal)
-        # Fourth chunk (W10.P50): leaf input for the ED formula chain
+        # Fourth chunk: ED leaf input for the formula chain
         "0171",  # ingresos de explotación (leaf input for 0180 = sum(0171..0179))
     }
 

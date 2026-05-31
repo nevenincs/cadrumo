@@ -21,14 +21,14 @@ Verdict taxonomy per modelo per corpus PDF:
     BINDING-GAP       — engine raised RegistryValidationError (missing binding)
     FORMULA-MISMATCH  — engine computed but value != extracted printed value
 
-Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
+Comprehensive per-modelo verdict table:
 
 | Modelo | Revisions                  | Specimens         | Closure formulas | Verdict                             |
 |--------|----------------------------|-------------------|------------------|-------------------------------------|
 | M036   | 2025-02-03-y-siguientes    | 1 synthetic PDF   | none             | EXTRACTION-ONLY — censal (ad-hoc);  |
 |        |                            |                   |                  | only decl.event-kind extracted       |
 | M100   | 2021, 2022, 2023           | 3 real PDFs       | yes (complex)    | EXTRACTION-ONLY (CORPUS-LIMITED) —  |
-|        |                            |                   |                  | 0171 leaf added (W10.P50); only one  |
+|        |                            |                   |                  | 0171 is the only printed leaf; only  |
 |        |                            |                   |                  | 017x leaf is printed on the form;   |
 |        |                            |                   |                  | corpus sanitisation (all amounts →  |
 |        |                            |                   |                  | ~1.001.000,00 with box# appended)   |
@@ -76,7 +76,7 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 |        |                            |                   |                  | decl.ejercicio extracted             |
 
 Follow-up tasks surfaced by this sweep:
-  - M100: leaf 0171 added (W10.P50); 0172-0179 absent from declaracion_pdf form
+  - M100: leaf 0171 is the only printed ED leaf; 0172-0179 absent from declaracion_pdf form
     (only 0171 = ingresos de explotación is individually printed; 0180 = total).
     Full ED verification blocked by corpus sanitisation artefact: all amounts
     replaced with ~1.001.000,00 plus merged box numbers, so no formula closure
@@ -85,7 +85,7 @@ Follow-up tasks surfaced by this sweep:
     match any revision period_selector (M036 declares ["alta", "modificacion",
     "baja"]). Resolved by renaming to 2025-alta.pdf and adding test with
     period_override="alta". Verdict upgraded NOT-CHAIN-READY → EXTRACTION-ONLY.
-  - M303 corpus regenerated with formula-consistent synthetic PDFs (W10.P52).
+  - M303 corpus regenerated with formula-consistent synthetic PDFs.
     Both revisions (2023-y-siguientes: 8 specimens; 2009-y-siguientes: 7 legacy
     specimens) now use synthetic PDFs with c46 = c27 - c45, so engine resultado
     == extracted resultado. Verdict upgraded FORMULA-MISMATCH → VERIFIED.
@@ -551,7 +551,7 @@ _COMPUTED_CASILLAS_M303 = frozenset(
 """M303 casillas whose input_kind is 'computed' — must NOT appear in engine inputs.
 
 Boxes 64, 66, 71 extended from 'manual' to 'computed' per closure DAG extension
-(W11.P57, Orden HAC/819/2024 art. 1).
+(Orden HAC/819/2024 art. 1).
 """
 
 
@@ -583,7 +583,8 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     engine result matches the printed value exactly.
 
     Verdict: VERIFIED — engine resultado == extracted resultado for all
-    8 new-template specimens (2023-2024). W10.P52 corpus regen.
+    8 new-template specimens (2023-2024). Corpus-regenerated with
+    formula-consistent synthetic values.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
@@ -765,7 +766,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     For the synthetic corpus PDFs: c58 = 0, c76 = 0, so box 64 = box 46.
 
     Verdict: VERIFIED — engine box 64 == extracted box 64 for all 8 new-template
-    specimens (2023-2024). Closure DAG extension W11.P57.
+    specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
@@ -800,7 +801,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
     Grounded in RD 1624/1992 art. 71 (régimen de tributación conjunta).
 
     Verdict: VERIFIED — engine box 66 == extracted box 66 for all 8 new-template
-    specimens (2023-2024). Closure DAG extension W11.P57.
+    specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
@@ -835,7 +836,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
     Grounded in LIVA arts. 99, 115, 116; RD 1624/1992 arts. 29, 30, 71.
 
     Verdict: VERIFIED — engine box 69 == extracted box 69 for all 8 new-template
-    specimens (2023-2024). Closure DAG extension W11.P57.
+    specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
@@ -870,7 +871,7 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     Grounded in LIVA arts. 99, 115, 116; RD 1624/1992 arts. 29, 30, 71.
 
     Verdict: VERIFIED — engine box 71 == extracted box 71 for all 8 new-template
-    specimens (2023-2024). Closure DAG extension W11.P57.
+    specimens (2023-2024). Closure DAG (Orden HAC/819/2024 art. 1).
     """
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
@@ -925,7 +926,8 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
     with formula-consistent values: c46 = c27 - c45.
 
     Verdict: VERIFIED — engine resultado == extracted resultado for all 7
-    legacy specimens (2021-2022). W10.P52 corpus regen.
+    legacy specimens (2021-2022). Corpus-regenerated with
+    formula-consistent synthetic values.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
@@ -1875,7 +1877,7 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
     2022-0A.pdf, 2023-0A.pdf.
 
     Extraction verdict: VERIFIED — 20 casilla IDs extracted from each corpus PDF.
-    W10.P50 extended the profile from 19 to 20 casillas by adding casilla 0171
+    The declaracion_pdf profile covers 20 casillas including casilla 0171
     (ingresos de explotación), the only individually-printed 017x leaf input.
 
     Formula verdict: EXTRACTION-ONLY (CORPUS-LIMITED) — the declaracion_pdf profile
@@ -1926,7 +1928,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     src/aeat/tests/fixtures/justificantes/100/2021-0A.pdf (representative
     specimen; same sanitisation pattern applies across 2021/2022/2023).
 
-    W10.P50 finding: the M100 corpus PDFs have ALL amounts replaced with the
+    Empirical finding: the M100 corpus PDFs have ALL amounts replaced with the
     uniform synthetic value ~1.001.000,00 (EUR). pdfplumber merges the adjacent
     casilla box number into the value token, producing garbage values like
     Decimal('1001000.001071') for casilla 0171. These values are NOT
@@ -1963,7 +1965,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Non-leaf casillas computed by the engine — must NOT appear in engine inputs.
-    # Determined by formula DAG analysis (W10.P50 UNIT 1):
+    # Determined by formula DAG analysis of the M100 closure chain:
     #   0180 = sum(0171..0179); 0218 = sum(gas deducibles); 0223 = 0218 + 0222;
     #   0224 = 0180 - 0223 (simplificada); 0226 = 0224 - 0225;
     #   0231 = copy(0226); 0235 = 0231 - 0232 - 0233 - 0234;
@@ -2046,10 +2048,9 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
         f"{extracted_0546!r} — same sanitisation guard as 0545."
     )
 
-    # Step 3: Leaf input 0171 was extracted (W10.P50 profile extension).
+    # Step 3: Leaf input 0171 must be extracted by the declaracion_pdf profile.
     assert "0171" in extracted, (
-        "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values "
-        "after W10.P50 profile extension."
+        "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values."
     )
     assert isinstance(extracted["0171"], Decimal), (
         f"PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: "
