@@ -183,7 +183,7 @@ class OAuthClientPayload(TypedDict):
     ``web`` variant is rejected by :func:`_coerce_client_json`.
     """
 
-    installed: dict[str, Any]
+    installed: dict[str, Any]  # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use.
 
 
 class _OAuthClientWrapper(BaseModel):
@@ -197,7 +197,7 @@ class _OAuthClientWrapper(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
-    installed: dict[str, Any]
+    installed: dict[str, Any]  # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use.
 
 
 def _coerce_client_json(path: Path) -> OAuthClient:

@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -26,7 +26,7 @@ from ..aggregation._source_mesh import (
 from ._errors import IvaWalletReconciliationError
 
 if TYPE_CHECKING:
-    from ._binding_prefill import LocalIvaCompensationRecurrence
+    from ._binding_prefill import BindingPrefillReport, LocalIvaCompensationRecurrence
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
@@ -134,7 +134,7 @@ class IvaCompensationReconciliationReport(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     decision: IvaCompensationReconciliationDecision
-    prefill_report: Any
+    prefill_report: BindingPrefillReport
 
 
 class IvaCompensationReconciliationInputError(AeatError, ValueError):

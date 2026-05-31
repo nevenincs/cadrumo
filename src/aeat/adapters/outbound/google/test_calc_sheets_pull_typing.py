@@ -97,8 +97,7 @@ def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
     authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     snapshot = authority.snapshot("130", filing_year=2024, period="2T")
     manual_casillas = [c for c in snapshot.revision.casillas if c.input_kind == InputKind.MANUAL]
-    if not manual_casillas:
-        pytest.skip("no manual casillas found in 130/2T-2024 snapshot")
+    assert manual_casillas, "bundled 130/2T-2024 snapshot must contain at least one MANUAL casilla"
 
     casilla = manual_casillas[0]
     casilla_id = casilla.id

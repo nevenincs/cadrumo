@@ -64,6 +64,10 @@ from ._row_set_assembly import (
     assemble_withholding_observations,
 )
 
+# Resolve forward reference: BindingPrefillReport is TYPE_CHECKING-only inside
+# _iva_wallet_reconciliation due to a circular import; rebuild after both modules load.
+IvaCompensationReconciliationReport.model_rebuild()
+
 __all__ = [
     "AssembledObservations",
     "IvaWalletBalanceReport",
