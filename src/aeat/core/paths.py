@@ -151,11 +151,8 @@ def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
             path.
 
     Returns:
-        ``(path.name, stat.st_size, stat.st_mtime_ns)``
-
-    Raises:
-        OSError: When ``path.stat()`` fails (e.g. permission denied,
-            file disappears between glob and stat).
+        ``(path.name, stat.st_size, stat.st_mtime_ns)``. ``path.stat()``
+        propagates ``OSError`` when the file is unreadable or disappears.
     """
     stat = path.stat()
     return (path.name, stat.st_size, stat.st_mtime_ns)
