@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ...core.identity import IdentityError
 from ..iva import InvoiceKind
 from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
@@ -390,11 +389,11 @@ def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
 def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
     """ES counterparties must pass NIF/NIE/CIF validation."""
     # "INVALID" has 7 chars → tax-id shape gate rejects it before any
-    # checksum runs. The IdentityError is raised inside the mode="before"
-    # validator BUT propagates out unwrapped because IdentityError does
-    # not inherit from ValueError; only ValueError-descended exceptions
-    # get wrapped as pydantic ValidationError. Pin the actual class.
-    with pytest.raises(IdentityError, match=r"tax identifier must be 9 characters long"):
+    # checksum runs. IdentityError inherits from ValueError, so pydantic
+    # wraps the raise into ValidationError at the model boundary. Pin
+    # both the wrapping class and the underlying message substring so the
+    # contract surface is stable.
+    with pytest.raises(ValidationError, match=r"tax identifier must be 9 characters long"):
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
 
 

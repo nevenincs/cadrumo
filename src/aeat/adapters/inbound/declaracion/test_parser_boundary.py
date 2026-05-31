@@ -1832,9 +1832,12 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
     adjacent value word to the right.
 
     Ground truth is derived by probing the committed synthetic fixture PDF with
-    pdfplumber (see _find_bbox_casilla_hits in _parser.py).  The fixture was
-    generated with aeat.tests.fixtures.justificantes._generate and carries
-    exercicio=2026, periodo=1T, NIF=Y0000001S.
+    pdfplumber (see _find_bbox_casilla_hits in _parser.py).  The fixture file
+    is named 2024-1T.pdf (filename pinned by the round-trip corpus test) but
+    the printed ejercicio is irrelevant here: this test forces the 2026
+    revision selection via the full override triple (modelo + año + revision),
+    which bypasses text-based template detection.  The 2026 revision is the
+    only one that ships a bbox_anchored extraction profile for M131.
 
     Expected values (all 15 casillas must be extracted):
     - 01: 5.000,00 (rendimientos netos)
@@ -1863,6 +1866,7 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
         _MODELO_131_SYNTHETIC_FIXTURE,
         modelo_override="131",
         **{"año_override": 2026},
+        template_revision_override="2026",
         period_override="1T",
     )
 
