@@ -10,17 +10,20 @@ disk.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ...adapters.persistence.storage.envelope._envelope import Envelope
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage.envelope._envelope import Envelope
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -123,6 +126,9 @@ class TransactionCatalogueRepository:
             EnvelopeVersionError: If the persisted object's schema version is
                 higher than the consumer supports.
         """
+        from ...adapters.persistence.storage.envelope._envelope import Envelope
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+
         record = self._objects.load(
             TX_BUCKET_NAMESPACE,
             self._object_key,
@@ -142,11 +148,11 @@ class TransactionCatalogueRepository:
             _log.error("transaction catalogue integrity error", exc_info=True)
             raise
         except ValidationError as exc:
-            # Wave-3 audit W09.P41.S214: pydantic ValidationError previously
-            # propagated raw and lost the typed drift signal at the CLI
-            # boundary. Mirror the StoredProfileDriftError pattern so the
-            # CLI can route stored-data-validation failures to the repair-
-            # oriented surface instead of a generic refusal.
+            # pydantic ValidationError previously propagated raw and lost the
+            # typed drift signal at the CLI boundary. Mirror the
+            # StoredProfileDriftError pattern so the CLI can route
+            # stored-data-validation failures to the repair-oriented surface
+            # instead of a generic refusal.
             _log.error(
                 "transaction catalogue schema drift bucket_id=%s object_key=%s",
                 self._bucket_id,
@@ -189,6 +195,8 @@ class TransactionCatalogueRepository:
 
     def to_secure_object_write(self, catalogue: TransactionCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it."""
+        from ...adapters.persistence.storage.envelope._envelope import Envelope
+        from ...adapters.persistence.storage.sql import SecureObjectWrite
 
         envelope = Envelope[TransactionCatalogue](
             schema_version=_TX_CATALOGUE_VERSION,
