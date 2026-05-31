@@ -53,7 +53,7 @@ from ._flow import (
     settlement_sides_for_flow,
 )
 from ._schema import IvaCategory, IvaRateKind
-from ..invoices._enums import IvaRate
+from ..invoices import IvaRate
 from ..invoices._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
