@@ -164,30 +164,30 @@ Migrate the 3 live-AEAT-status command emit sites in _app_live.py to typed Outpu
 
 Author the OutputSchema subclass for the filed-list command in _app_live_payloads.py and migrate its emit sites.
 
-- [ ] `W03.P09.S85` - author FiledListResult OutputSchema subclass with @register_schema decorator for app.live.filed.list; `src/aeat/entrypoints/cli/_app_live_payloads.py`.
-- [ ] `W03.P09.S86` - migrate all filed_list_cmd bare emit sites to _emit_envelope using typed FiledListResult; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W03.P09.S85` - author FiledListResult OutputSchema subclass with @register_schema decorator for app.live.filed.list; `src/aeat/entrypoints/cli/_app_live_payloads.py`.
+- [x] `W03.P09.S86` - migrate all filed_list_cmd bare emit sites to _emit_envelope using typed FiledListResult; `src/aeat/entrypoints/cli/_app_live.py`.
 
 ### Phase `W03.P10` - filed-capture payload class and emit migration
 
 Author the OutputSchema subclass for the filed-capture command in _app_live_payloads.py and migrate its emit sites.
 
-- [ ] `W03.P10.S87` - author FiledCaptureResult OutputSchema subclass with @register_schema decorator for app.live.filed.capture; `src/aeat/entrypoints/cli/_app_live_payloads.py`.
-- [ ] `W03.P10.S88` - migrate all filed_capture_cmd bare emit sites to _emit_envelope using typed FiledCaptureResult; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W03.P10.S87` - author FiledCaptureResult OutputSchema subclass with @register_schema decorator for app.live.filed.capture; `src/aeat/entrypoints/cli/_app_live_payloads.py`.
+- [x] `W03.P10.S88` - migrate all filed_capture_cmd bare emit sites to _emit_envelope using typed FiledCaptureResult; `src/aeat/entrypoints/cli/_app_live.py`.
 
 ### Phase `W03.P11` - filed-capture-sources payload class and emit migration
 
 Author the OutputSchema subclass for the filed-capture-sources command in _app_live_payloads.py and migrate its emit sites.
 
-- [ ] `W03.P11.S89` - author FiledCaptureSourcesResult OutputSchema subclass with @register_schema decorator for app.live.filed.capture.sources; `src/aeat/entrypoints/cli/_app_live_payloads.py`.
-- [ ] `W03.P11.S90` - migrate all filed_capture_sources_cmd bare emit sites to _emit_envelope using typed FiledCaptureSourcesResult; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W03.P11.S89` - author FiledCaptureSourcesResult OutputSchema subclass with @register_schema decorator for app.live.filed.capture.sources; `src/aeat/entrypoints/cli/_app_live_payloads.py`.
+- [x] `W03.P11.S90` - migrate all filed_capture_sources_cmd bare emit sites to _emit_envelope using typed FiledCaptureSourcesResult; `src/aeat/entrypoints/cli/_app_live.py`.
 
 ### Phase `W03.P12` - MIGRATED_COMMANDS extension and surface-test re-baseline for app_live
 
 Append the 3 app_live command paths to MIGRATED_COMMANDS and re-baseline affected _app_live CLI surface tests.
 
-- [ ] `W03.P12.S91` - append the 3 app_live command paths to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W03.P12.S92` - import _app_live_payloads as side-effect in test_json_schema_conformance; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W03.P12.S93` - re-baseline _app_live CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_live_read_subgroups.py`.
+- [x] `W03.P12.S91` - append the 3 app_live command paths to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W03.P12.S92` - import _app_live_payloads as side-effect in test_json_schema_conformance; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W03.P12.S93` - re-baseline _app_live CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_live_read_subgroups.py`.
 
 ## Wave `W04` - _modelo.py burndown - 24 bare emit sites
 
