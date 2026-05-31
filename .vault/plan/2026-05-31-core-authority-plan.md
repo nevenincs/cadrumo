@@ -116,7 +116,7 @@ Consolidate duplicate and mis-placed enum declarations per Rule 7. Phases cover:
 
 Delete CalendarCCAA from domain/deadlines/_festivos.py (MERGE-002, RELOC-022) because it is a 100% geographic duplicate of CCAA in domain/profile/_ccaa.py, and migrate the six callers in domain/deadlines/ to use CCAA directly. Conduct the bounded CCAA-promotion audit (RELOC-021) and document the placement decision.
 
-- [ ] `W04.P09.S30` - audit whether CCAA is consumed outside domain/ to determine if Rule 1 clause (a) triggers promotion to core/geography.py; `produce a one-sentence placement decision persisted in the commit message; RELOC-021, Rule 1; `src/aeat/domain/profile/_ccaa.py`.
+- [x] `W04.P09.S30` - audit whether CCAA is consumed outside domain/ to determine if Rule 1 clause (a) triggers promotion to core/geography.py; `produce a one-sentence placement decision persisted in the commit message; RELOC-021, Rule 1; `src/aeat/domain/profile/_ccaa.py`.
 - [ ] `W04.P09.S31` - delete CalendarCCAA from domain/deadlines/_festivos.py and migrate the first two domain/deadlines/ callers to import CCAA from domain/profile/_ccaa.py; `MERGE-002, RELOC-022, Rule 7; `src/aeat/domain/deadlines/_festivos.py`.
 - [ ] `W04.P09.S32` - migrate the remaining four domain/deadlines/ callers of CalendarCCAA to CCAA and run the deadlines test suite sequentially to confirm zero regressions; `MERGE-002, Rule 7; `src/aeat/domain/deadlines/`.
 
@@ -131,23 +131,23 @@ Establish domain/calculations/registry/_schema.py ProfileFactValue as the single
 
 Cross-reference the two missing IVA rate entries against BOE to confirm oversight or intentional exclusion, then consolidate to the single canonical mapping in domain/iva/_classification.py with a coverage test (MERGE-013, Rule 7).
 
-- [ ] `W04.P11.S35` - cross-reference the two missing entries in domain/iva/_classification.py _IVA_RATE_TO_VAT_KIND against the BOE IVA rate schedule and document the finding as intentional exclusion or oversight in the commit message; `MERGE-013, Rule 7; `src/aeat/domain/iva/_classification.py`.
+- [x] `W04.P11.S35` - cross-reference the two missing entries in domain/iva/_classification.py _IVA_RATE_TO_VAT_KIND against the BOE IVA rate schedule and document the finding as intentional exclusion or oversight in the commit message; `MERGE-013, Rule 7; `src/aeat/domain/iva/_classification.py`.
 - [ ] `W04.P11.S36` - consolidate the IVA rate mapping to domain/iva/_classification.py, delete the application/calculations/ copy, update the four callers, and add a coverage test asserting every BOE-confirmed IVA rate has a mapping entry; `MERGE-013, Rule 7; `src/aeat/domain/iva/_classification.py`.
 
 ### Phase `W04.P12` - STRICT_FROZEN pre-condition audit and canonical merge
 
 Audit all 10 _STRICT_FROZEN declarations to confirm identical ConfigDict values, then consolidate to STRICT_FROZEN_CONFIG in core/_models.py exported via core/__init__.py, migrating every production module (MERGE-014, Rule 10).
 
-- [ ] `W04.P12.S37` - audit all 10 _STRICT_FROZEN declarations across the codebase via ripgrep, compare ConfigDict values, and document any intentional divergence with module-specific names in the commit message before the merge executes; `MERGE-014, Rule 10; `src/aeat/`.
-- [ ] `W04.P12.S38` - declare STRICT_FROZEN_CONFIG in core/_models.py, export via core/__init__.py, and migrate the first five production modules from _STRICT_FROZEN to the canonical import; `MERGE-014, Rule 10; `src/aeat/core/_models.py`.
-- [ ] `W04.P12.S39` - migrate the remaining five production modules from _STRICT_FROZEN to STRICT_FROZEN_CONFIG imported from core and run the full suite sequentially to confirm zero config-drift regressions; `MERGE-014, Rule 10; `src/aeat/`.
+- [x] `W04.P12.S37` - audit all 10 _STRICT_FROZEN declarations across the codebase via ripgrep, compare ConfigDict values, and document any intentional divergence with module-specific names in the commit message before the merge executes; `MERGE-014, Rule 10; `src/aeat/`.
+- [x] `W04.P12.S38` - declare STRICT_FROZEN_CONFIG in core/_models.py, export via core/__init__.py, and migrate the first five production modules from _STRICT_FROZEN to the canonical import; `MERGE-014, Rule 10; `src/aeat/core/_models.py`.
+- [x] `W04.P12.S39` - migrate the remaining five production modules from _STRICT_FROZEN to STRICT_FROZEN_CONFIG imported from core and run the full suite sequentially to confirm zero config-drift regressions; `MERGE-014, Rule 10; `src/aeat/`.
 
 ### Phase `W04.P13` - ActorLabel disambiguation
 
 Rename the five _ActorLabel declarations across domain/buckets and domain/modelos to domain-specific names (BucketActorLabel, ModeloActorLabel, etc.) to eliminate the five-way name collision (MERGE-015, Rule 4).
 
-- [ ] `W04.P13.S40` - rename the domain/buckets _ActorLabel declaration to BucketActorLabel and update its callers in the same package; `MERGE-015, Rule 4; `src/aeat/domain/buckets/`.
-- [ ] `W04.P13.S41` - rename the four domain/modelos _ActorLabel declarations to ModeloActorLabel (and three variant names) and update all callers; `run the modelos test suite sequentially; MERGE-015, Rule 4; `src/aeat/domain/modelos/`.
+- [x] `W04.P13.S40` - rename the domain/buckets _ActorLabel declaration to BucketActorLabel and update its callers in the same package; `MERGE-015, Rule 4; `src/aeat/domain/buckets/`.
+- [x] `W04.P13.S41` - rename the four domain/modelos _ActorLabel declarations to ModeloActorLabel (and three variant names) and update all callers; `run the modelos test suite sequentially; MERGE-015, Rule 4; `src/aeat/domain/modelos/`.
 
 ## Wave `W05` - type-alias and Literal centralisation
 
