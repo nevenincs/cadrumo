@@ -13,16 +13,15 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId
 from ...core.time._utc import _validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
 from ._ids import AttachmentId
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
 

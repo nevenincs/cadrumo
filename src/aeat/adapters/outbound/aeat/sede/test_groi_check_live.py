@@ -31,7 +31,6 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     extract_verdict_from_response_text,
 )
 from aeat.core.config import Settings
-from aeat.domain.calculations.registry import AEAT_GROI_URL
 from aeat.tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
@@ -80,7 +79,7 @@ async def _assert_form_shape() -> None:
         assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
         page: _Page = _raw
         await page.set_viewport_size({"width": 1366, "height": 900})
-        await session.navigate(page, str(AEAT_GROI_URL))
+        await session.navigate(page, Settings.external_constants().aeat.oracles.groi_check)
         await page.wait_for_load_state("networkidle", timeout=20_000)
 
         # Asserting the actual elements the offline driver expects to find.
@@ -117,7 +116,7 @@ async def _query_live_body_text(nif: str) -> str:
         assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
         page: _Page = _raw
         await page.set_viewport_size({"width": 1366, "height": 900})
-        await session.navigate(page, str(AEAT_GROI_URL))
+        await session.navigate(page, Settings.external_constants().aeat.oracles.groi_check)
         await page.wait_for_load_state("networkidle", timeout=20_000)
         await page.locator("input#nif").fill(nif, timeout=10_000)
         await page.locator("input#enviar").click(timeout=10_000)

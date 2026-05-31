@@ -205,6 +205,8 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
+from ._not_found import CoreNotFoundError
+
 from ._registry import (
     ERROR_REGISTRY,
     ErrorCategory,
@@ -229,6 +231,7 @@ __all__ = [
     "AeatObservabilityError",
     "BaseSeverity",
     "CoreError",
+    "CoreNotFoundError",
     "CoreValidationError",
     "ProfileAnswerTypeError",
     "ErrorCategory",

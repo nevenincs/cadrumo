@@ -18,14 +18,12 @@ from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.time._utc import _validate_utc_aware
 from ._errors import TransactionValidationError
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
 
 class SourceFormat(StrEnum):
     """Closed taxonomy of supported raw-transaction input formats.

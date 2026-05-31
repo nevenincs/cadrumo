@@ -43,7 +43,7 @@ from urllib.parse import urlsplit
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page, ViewportSize
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -56,7 +56,6 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
-from .....domain.calculations.registry._groi_oracle import AEAT_GROI_URL
 from ..browser import BrowserError, default_browser_session_factory
 from ._adapter_utils import (
     first_visible_locator,
@@ -71,7 +70,7 @@ from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNa
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
-_GROI_HOST = urlsplit(str(AEAT_GROI_URL)).netloc
+_GROI_HOST = urlsplit(_EXTERNAL.aeat.oracles.groi_check).netloc
 
 _TIMEOUT_DEFAULTS = Settings()
 DEFAULT_GROI_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
@@ -196,7 +195,7 @@ class GroiSedeDriver:
         if not expected:
             raise RegistryValidationError("GroiSedeDriver.planned_operations requires at least one expected NIF")
         operations: list[RemoteOperation] = [
-            RemoteOperation(kind="http", method="GET", url=AEAT_GROI_URL),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check)),
             RemoteOperation(kind="browser_action", action="open-groi-form"),
         ]
         # Normalise to match GroiOracle._expected_values so the operation
@@ -298,7 +297,7 @@ async def collect_groi_observations(
             # The GROI servlet renders a fresh form on each GET; navigate per
             # NIF so each query starts clean and the response page is the
             # only DOM the verdict parser sees.
-            await browser_session.navigate(page, str(AEAT_GROI_URL))
+            await browser_session.navigate(page, Settings.external_constants().aeat.oracles.groi_check)
             await _playwright_stage(
                 page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
                 stage="wait-form-networkidle",
@@ -361,7 +360,7 @@ async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
 # segment of the centralized GROI oracle URL. Any deviation indicates AEAT
 # changed the submission target and the driver must refuse to submit until the
 # change is investigated.
-_EXPECTED_FORM_ACTION = urlsplit(str(AEAT_GROI_URL)).path.rsplit("/", 1)[-1]
+_EXPECTED_FORM_ACTION = urlsplit(Settings.external_constants().aeat.oracles.groi_check).path.rsplit("/", 1)[-1]
 
 
 async def _assert_form_action_is_consult_endpoint(page: Page, *, timeout_ms: int) -> None:

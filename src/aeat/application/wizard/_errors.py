@@ -15,8 +15,13 @@ class WizardError(AeatError):
     """Base class for every wizard error."""
 
 
-class WizardValidationError(WizardError):
-    """Raised when a widget-level validator rejects an answer."""
+class WizardValidationError(WizardError, CoreValidationError):
+    """Raised when a widget-level validator rejects an answer.
+
+    Inherits from CoreValidationError (which itself inherits from CoreError
+    and ValueError) to participate in the shared CoreValidationError catch
+    surface and remain compatible with pydantic field validators.
+    """
 
 
 class WizardScriptUnderflowError(WizardError):

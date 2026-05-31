@@ -2802,6 +2802,7 @@ errors:
     error_access_gate_submission_preflight: A hozzáférési kapu előzetes ellenőrzése
       elutasított egy írási műveletet.
     error_aeat_core: Belső alkalmazáshiba történt.
+    error_aeat_core_not_found: A kért erőforrás vagy rekord nem található.
     error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.

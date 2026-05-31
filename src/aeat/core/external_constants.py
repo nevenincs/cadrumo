@@ -11,6 +11,7 @@ at import time.
 from __future__ import annotations
 
 import tomllib
+from decimal import Decimal
 from functools import cached_property, lru_cache
 from importlib.resources import files
 from pathlib import Path
@@ -304,11 +305,23 @@ CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", 
 
 #: Provenance source identifier for facts entered interactively via the CLI.
 PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
-"""Canonical encoding probe order for CSV financial sources.
 
-The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`
-is prepended at runtime; this tuple defines the fallback candidates that follow it.
-"""
+#: Environment variable name used to override the CLI output language at runtime.
+OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
+
+#: BCP-47 language tag for the default CLI and API output language (Spanish).
+DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
+
+#: Ordered tuple of BCP-47 language tags supported by the CLI and API output layer.
+SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = ("es", "en", "ca", "hu")
+
+#: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
+#: Counterparties whose annual operations total at most this amount are NOT declarable.
+M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
+
+#: Modelo 720 declaration floor per asset class per AEAT instrucciones.
+#: An asset class is declarable iff its total valuation strictly exceeds this amount.
+MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
 
 @lru_cache(maxsize=1)

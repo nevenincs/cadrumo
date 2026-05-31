@@ -93,7 +93,7 @@ from ._retenciones import (
 )
 from ._service import (
     ACCEPTED_SOURCE_KINDS,
-    ERROR_CODES,
+    AggregationErrorCodes,
     AggregationSourceKind,
     PerModeloAggregationCommand,
     PerModeloAggregationLogFields,
@@ -117,7 +117,7 @@ from ._source_profile import ProfileSourceResolver
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
-    "ERROR_CODES",
+    "AggregationErrorCodes",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
     "AggregationError",

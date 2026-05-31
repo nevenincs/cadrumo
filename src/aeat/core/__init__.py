@@ -2,4 +2,6 @@
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from ._models import STRICT_FROZEN_CONFIG
+
+__all__: list[str] = ["STRICT_FROZEN_CONFIG"]

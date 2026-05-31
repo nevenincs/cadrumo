@@ -329,7 +329,7 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ),
 )
 
-ERROR_CODES: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT",)
+OperatorSurfaceErrorCodes: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT",)
 
 
 def build_operator_surface_contract() -> OperatorSurfaceContract:
@@ -363,7 +363,7 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
         command_families=MOUNTED_COMMAND_FAMILIES,
         service_owners=SERVICE_OWNERS,
         log_fields=log_fields,
-        error_codes=ERROR_CODES,
+        error_codes=OperatorSurfaceErrorCodes,
     )
     LOGGER.debug("built operator surface contract", extra=log_fields.as_extra())
     return contract

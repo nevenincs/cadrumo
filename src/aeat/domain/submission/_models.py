@@ -12,11 +12,10 @@ from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._errors import SubmissionValidationError
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SubmissionStatus(StrEnum):

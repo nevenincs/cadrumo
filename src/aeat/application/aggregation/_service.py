@@ -53,7 +53,7 @@ ACCEPTED_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
     AggregationSourceKind.COLLECTIBLE_INVOICE,
 )
 
-ERROR_CODES: tuple[str, ...] = (
+AggregationErrorCodes: tuple[str, ...] = (
     "ERROR_FINANCIAL_AGGREGATION",
     "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
     "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
@@ -248,7 +248,7 @@ def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     contract = PerModeloAggregationContract(
         providers=providers,
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
-        error_codes=ERROR_CODES,
+        error_codes=AggregationErrorCodes,
     )
     LOGGER.debug(
         "built per-modelo aggregation contract",
@@ -364,7 +364,7 @@ def _observation_count_for_command(
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
-    "ERROR_CODES",
+    "AggregationErrorCodes",
     "AggregationSourceKind",
     "PerModeloAggregationCommand",
     "PerModeloAggregationContract",

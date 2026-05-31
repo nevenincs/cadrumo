@@ -10,18 +10,22 @@ the appropriate top-level error.
 from __future__ import annotations
 
 from ..errors import AeatError
+from ..errors._not_found import CoreNotFoundError
 
 
 class ResourceLoadError(AeatError):
     """Base class for every failure to load a bundled resource."""
 
 
-class ResourceNotFoundError(ResourceLoadError):
+class ResourceNotFoundError(ResourceLoadError, CoreNotFoundError):
     """A resource key does not resolve to any bundled file.
 
     Raised when the underlying bundled-data path does not exist
     or when a queried identifier has no record in the loaded
     catalogue.
+
+    Inherits from CoreNotFoundError to participate in the shared
+    not-found catch surface across all layers.
     """
 
 

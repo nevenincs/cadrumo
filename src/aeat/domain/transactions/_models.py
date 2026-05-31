@@ -27,11 +27,12 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
 
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ._ids import TransactionId
@@ -40,9 +41,6 @@ from ...core.time._utc import _validate_utc_aware
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
 
 def derive_transaction_id(raw: RawTransaction) -> str:
     """Return the stable transaction hash for one raw transaction.

@@ -7,7 +7,6 @@ from decimal import Decimal
 import pytest
 
 from aeat.application.aggregation._counterpart import (
-    THRESHOLD_347_EUR,
     CounterpartAggregation,
     CounterpartObservation,
     CounterpartSourceKind,
@@ -17,6 +16,7 @@ from aeat.application.aggregation._counterpart import (
     aggregate_counterpart_349,
     declarable_for_347,
 )
+from aeat.core.external_constants import M347_THRESHOLD_EUR
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -105,7 +105,7 @@ class TestAggregate347:
 
 class TestThreshold347:
     def test_threshold_is_canonical_3005_06(self) -> None:
-        assert Decimal("3005.06") == THRESHOLD_347_EUR
+        assert Decimal("3005.06") == M347_THRESHOLD_EUR
 
     def test_declarable_when_above_threshold(self) -> None:
         observations = (

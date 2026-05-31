@@ -31,7 +31,7 @@ from ..errors import (
     LIFOForbiddenError as _LIFOForbiddenError,
 )
 
-SCHEMA_VERSION = "1"
+INVENTORY_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _CENT = Decimal("0.01")
@@ -97,7 +97,7 @@ class MovementRecord(BaseModel):
     vat_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
     vat_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_vat_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
-    schema_version: str = SCHEMA_VERSION
+    schema_version: str = INVENTORY_SCHEMA_VERSION
 
     @property
     def value(self) -> Decimal:
@@ -120,8 +120,8 @@ class MovementRecord(BaseModel):
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
-        if value != SCHEMA_VERSION:
+        """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
+        if value != INVENTORY_SCHEMA_VERSION:
             raise _InventoryValidationError(f"unsupported MovementRecord schema_version {value!r}")
         return value
 
@@ -184,13 +184,13 @@ class InventoryLedger(BaseModel):
     opening_layers: tuple[StockLayer, ...] = ()
     closing_stock: Decimal | None = Field(default=None, ge=Decimal("0"))
     period_movements: tuple[MovementRecord, ...] = ()
-    schema_version: str = SCHEMA_VERSION
+    schema_version: str = INVENTORY_SCHEMA_VERSION
 
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
-        if value != SCHEMA_VERSION:
+        """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
+        if value != INVENTORY_SCHEMA_VERSION:
             raise _InventoryValidationError(f"unsupported InventoryLedger schema_version {value!r}")
         return value
 
@@ -212,14 +212,14 @@ class InventoryLedgerDocument(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: str = SCHEMA_VERSION
+    schema_version: str = INVENTORY_SCHEMA_VERSION
     ledgers: tuple[InventoryLedger, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
-        if value != SCHEMA_VERSION:
+        """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
+        if value != INVENTORY_SCHEMA_VERSION:
             raise _InventoryValidationError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
         return value
 

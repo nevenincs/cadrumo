@@ -20,9 +20,6 @@ from ._live_parity import (
 )
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
-_EXTERNAL = Settings.external_constants()
-RENTA_WEB_OPEN_LANDING_URL = AnyUrl(f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.renta_web_open_landing}")
-RENTA_WEB_OPEN_APP_URL = AnyUrl(_EXTERNAL.aeat.oracles.renta_web_open_app_template.format(year=2025))
 
 
 class RentaWebOpenModel(BaseModel):
@@ -69,7 +66,11 @@ class RentaWebOpenLivePayload(RentaWebOpenModel):
     """
 
     profile: RentaWebOpenSyntheticProfile = Field(default_factory=RentaWebOpenSyntheticProfile)
-    app_url: AnyUrl = RENTA_WEB_OPEN_APP_URL
+    app_url: AnyUrl = Field(
+        default_factory=lambda: AnyUrl(
+            Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=2025)
+        )
+    )
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
     casilla_overrides: dict[str, str] = Field(default_factory=dict)
     scrape_casillas: list[str] = Field(default_factory=list)
@@ -158,7 +159,7 @@ class RentaWebOpenOracle:
         if self._driver is not None:
             return self._driver.planned_operations(payload, expected=expected)
         return (
-            RemoteOperation(kind="http", method="GET", url=RENTA_WEB_OPEN_APP_URL),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=2025))),
             RemoteOperation(kind="browser_action", action="requires-renta-web-open-driver"),
         )
 
@@ -280,8 +281,6 @@ def _narrative_for_verdict(
 
 
 __all__ = [
-    "RENTA_WEB_OPEN_APP_URL",
-    "RENTA_WEB_OPEN_LANDING_URL",
     "RentaWebOpenDriver",
     "RentaWebOpenLivePayload",
     "RentaWebOpenObservation",

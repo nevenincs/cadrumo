@@ -88,7 +88,6 @@ from ._formula_runtime import (
     read_parameter,
 )
 from ._groi_oracle import (
-    AEAT_GROI_URL,
     GROI_ORACLE_ID,
     GroiDriver,
     GroiObservation,
@@ -180,8 +179,6 @@ from ._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from ._renta_web_open_oracle import (
-    RENTA_WEB_OPEN_APP_URL,
-    RENTA_WEB_OPEN_LANDING_URL,
     RentaWebOpenDriver,
     RentaWebOpenLivePayload,
     RentaWebOpenObservation,
@@ -229,7 +226,7 @@ from ._schema import (
     LegalParameter,
     LegalReference,
     LiveCrossReferenceDecision,
-    ModeloCapability,
+    ModeloFilingCapability,
     ModeloDefinition,
     ModeloRevision,
     ModeloScheduleDefinition,
@@ -304,7 +301,6 @@ from ._workbook_parity import (
 )
 
 __all__ = [
-    "AEAT_GROI_URL",
     "AEAT_WRITE_FORBIDDEN_ACTIONS",
     "AEAT_WRITE_FORBIDDEN_VERB_TOKENS",
     "CENSUS_MODELO_ERROR_CODES",
@@ -312,8 +308,6 @@ __all__ = [
     "CENSUS_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
-    "RENTA_WEB_OPEN_APP_URL",
-    "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicabilityVerdict",
     "ApplicationLinkDefinition",
     "BboxAnchorSpec",
@@ -377,7 +371,7 @@ __all__ = [
     "ModeloApplicabilityRule",
     "ModeloBindingRow",
     "ModeloBindingsReport",
-    "ModeloCapability",
+    "ModeloFilingCapability",
     "ModeloCasillaRow",
     "ModeloCasillasReport",
     "ModeloDefinition",

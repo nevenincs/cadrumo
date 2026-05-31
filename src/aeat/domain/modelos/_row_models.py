@@ -32,6 +32,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
+from ...core.external_constants import M347_THRESHOLD_EUR
+
 # ---------------------------------------------------------------------------
 # Shared type aliases
 # ---------------------------------------------------------------------------
@@ -271,9 +273,6 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
 # 1065/2007 art. 31.1).  The threshold check is performed at the CLI
 # validator level, not here, so that partial row accumulation works.
 # ---------------------------------------------------------------------------
-
-# Minimum importe total per counterparty (RD 1065/2007 art. 31.1).
-M347_THRESHOLD_EUR: Decimal = Decimal("3005.06")
 
 # Valid clave de operacion codes per M347 form / Orden EHA/3012/2008.
 _M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G", "H", "I"]

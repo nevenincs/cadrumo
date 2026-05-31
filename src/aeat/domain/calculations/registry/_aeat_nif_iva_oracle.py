@@ -40,15 +40,6 @@ from ._remote_state_guard import RemoteOperation
 
 ORACLE_ID = "aeat-nif-iva-checker"
 
-_EXTERNAL = Settings.external_constants()
-AEAT_NIF_IVA_VERIFICATION_URL = AnyUrl(_EXTERNAL.aeat.oracles.nif_iva_verification)
-# AEAT's public sede entry point for the verification flow. The form servlet
-# above redirects to a sede error page when reached cold; the live Playwright
-# driver must navigate to the entry point first to acquire the session
-# cookies the servlet requires. The sede gestiones page lists the form among
-# the VIES management actions.
-AEAT_NIF_IVA_ENTRY_URL = AnyUrl(f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}")
-
 
 class AeatNifIvaModel(BaseModel):
     """Strict frozen base for AEAT NIF-IVA parity records."""
@@ -159,11 +150,12 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         expected_values = self._expected_values(expected)
         if self._driver is not None:
             return self._driver.planned_operations(payload, expected=expected)
+        _ext = Settings.external_constants()
         operations: list[RemoteOperation] = [
             # Navigate to the sede entry point first so the session cookies the
             # servlet requires are acquired; then GET the form servlet itself.
-            RemoteOperation(kind="http", method="GET", url=AEAT_NIF_IVA_ENTRY_URL),
-            RemoteOperation(kind="http", method="GET", url=AEAT_NIF_IVA_VERIFICATION_URL),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}")),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(_ext.aeat.oracles.nif_iva_verification)),
             RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
         ]
         for nif in sorted(expected_values):
@@ -215,8 +207,6 @@ def register_default(
 
 
 __all__ = [
-    "AEAT_NIF_IVA_ENTRY_URL",
-    "AEAT_NIF_IVA_VERIFICATION_URL",
     "ORACLE_ID",
     "AeatNifIvaCheckerOracle",
     "AeatNifIvaDriver",

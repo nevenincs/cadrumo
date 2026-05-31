@@ -10,8 +10,6 @@ from pydantic import ValidationError
 from aeat.core.config import Settings
 
 from ._aeat_nif_iva_oracle import (
-    AEAT_NIF_IVA_ENTRY_URL,
-    AEAT_NIF_IVA_VERIFICATION_URL,
     ORACLE_ID,
     AeatNifIvaCheckerOracle,
     AeatNifIvaReplayDriver,
@@ -84,8 +82,11 @@ def test_adapter_urls_stay_inside_aeat_host_pinning_suffix() -> None:
     subdomain and the form URL is on the www1 subdomain. Both match.
     """
 
-    assert str(AEAT_NIF_IVA_ENTRY_URL).startswith("https://sede.agenciatributaria.gob.es/")
-    assert str(AEAT_NIF_IVA_VERIFICATION_URL).startswith("https://www1.agenciatributaria.gob.es/")
+    _ext = Settings.external_constants()
+    entry_url = f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"
+    verification_url = _ext.aeat.oracles.nif_iva_verification
+    assert entry_url.startswith("https://sede.agenciatributaria.gob.es/")
+    assert verification_url.startswith("https://www1.agenciatributaria.gob.es/")
 
 
 def test_planned_operations_returns_entry_then_form_then_per_nif_then_discard() -> None:
@@ -99,12 +100,13 @@ def test_planned_operations_returns_entry_then_form_then_per_nif_then_discard() 
     # Expected sequence: GET sede entry, GET form servlet, open-form,
     # check DE111..., check FR123..., discard.
     assert len(operations) == 6
+    _ext = Settings.external_constants()
     assert operations[0].kind == "http"
     assert operations[0].method == "GET"
-    assert operations[0].url == AEAT_NIF_IVA_ENTRY_URL
+    assert str(operations[0].url) == f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"
     assert operations[1].kind == "http"
     assert operations[1].method == "GET"
-    assert operations[1].url == AEAT_NIF_IVA_VERIFICATION_URL
+    assert str(operations[1].url) == _ext.aeat.oracles.nif_iva_verification
     assert operations[2].kind == "browser_action"
     assert operations[2].action == "open-nif-iva-form"
     assert operations[3].kind == "browser_action"

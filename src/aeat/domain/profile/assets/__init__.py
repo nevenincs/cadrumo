@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ..errors import AssetValidationError as _AssetValidationError
 
-SCHEMA_VERSION = "1"
+ASSETS_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _CENT = Decimal("0.01")
@@ -134,13 +134,13 @@ class AssetRecord(BaseModel):
     libertad_amortizacion: LibertadAmortizacionElection = Field(default_factory=LibertadAmortizacionElection)
     actividad_id: str | None = None
     allocation_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
-    schema_version: str = SCHEMA_VERSION
+    schema_version: str = ASSETS_SCHEMA_VERSION
 
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
-        if value != SCHEMA_VERSION:
+        """Reject any schema_version other than the current :data:`ASSETS_SCHEMA_VERSION`."""
+        if value != ASSETS_SCHEMA_VERSION:
             raise _AssetValidationError(f"unsupported AssetRecord schema_version {value!r}")
         return value
 
@@ -204,13 +204,13 @@ class AmortizacionLedger(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     entries: tuple[AmortizacionEntry, ...] = ()
-    schema_version: str = SCHEMA_VERSION
+    schema_version: str = ASSETS_SCHEMA_VERSION
 
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
-        if value != SCHEMA_VERSION:
+        """Reject any schema_version other than the current :data:`ASSETS_SCHEMA_VERSION`."""
+        if value != ASSETS_SCHEMA_VERSION:
             raise _AssetValidationError(f"unsupported AmortizacionLedger schema_version {value!r}")
         return value
 
@@ -225,14 +225,14 @@ class AssetsLedgerDocument(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: str = SCHEMA_VERSION
+    schema_version: str = ASSETS_SCHEMA_VERSION
     assets: tuple[AssetRecord, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
     def _schema_version_supported(cls, value: str) -> str:
-        """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
-        if value != SCHEMA_VERSION:
+        """Reject any schema_version other than the current :data:`ASSETS_SCHEMA_VERSION`."""
+        if value != ASSETS_SCHEMA_VERSION:
             raise _AssetValidationError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
         return value
 

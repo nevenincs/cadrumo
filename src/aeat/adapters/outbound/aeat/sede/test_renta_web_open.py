@@ -6,8 +6,8 @@ from decimal import Decimal
 
 import pytest
 
+from aeat.core.config import Settings
 from .....domain.calculations.registry import (
-    RENTA_WEB_OPEN_APP_URL,
     RentaWebOpenLivePayload,
     equivalent_renta_web_open_value,
 )
@@ -29,8 +29,10 @@ def test_renta_web_open_driver_plans_real_app_navigation_and_summary_scrapes() -
         expected={"Resultado de la declaración": Decimal("0.00"), "Mínimo personal y familiar": Decimal("5550.00")},
     )
 
+    _ext = Settings.external_constants()
+    expected_app_url = _ext.aeat.oracles.renta_web_open_app_template.format(year=2025)
     assert plan[0].kind == "http"
-    assert plan[0].url == RENTA_WEB_OPEN_APP_URL
+    assert str(plan[0].url) == expected_app_url
     actions = tuple(operation.action for operation in plan if operation.kind == "browser_action")
     assert "start-open-simulator" in actions
     assert "fill-synthetic-profile" in actions

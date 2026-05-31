@@ -29,8 +29,9 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
 
@@ -41,8 +42,6 @@ type CasillaInputs = ModeloInputs
 An amendment restates casilla values, so its input contract is the
 same canonical :data:`aeat.domain.filing.ModeloInputs` mapping the
 filing builder consumes."""
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class AmendmentKind(StrEnum):

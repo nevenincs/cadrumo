@@ -79,7 +79,7 @@ class CalculationRevisionAmendmentKind(StrEnum):
 
 
 from ._ids import CalculationRevisionId, WorkUnitId
-_ActorLabel = Annotated[
+ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
@@ -284,12 +284,12 @@ class CalculationRevision(BaseModel):
     created_at: datetime
     updated_at: datetime
     verified_at: datetime | None = None
-    verified_by: _ActorLabel | None = None
+    verified_by: ModeloActorLabel | None = None
     filed_at: datetime | None = None
-    filed_by: _ActorLabel | None = None
+    filed_by: ModeloActorLabel | None = None
     superseded_at: datetime | None = None
     discarded_at: datetime | None = None
-    discarded_by: _ActorLabel | None = None
+    discarded_by: ModeloActorLabel | None = None
     discard_reason: _DiscardReason | None = None
     amendment_kind: CalculationRevisionAmendmentKind | None = None
     amends_filing_record_id: CalculationRevisionId | None = None

@@ -102,34 +102,34 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anthropic", specifier = ">=0.74.1" },
-    { name = "argon2-cffi", specifier = ">=23.1.0" },
-    { name = "beautifulsoup4", specifier = ">=4.12" },
-    { name = "cryptography", specifier = ">=47.0.0" },
-    { name = "defusedxml", specifier = ">=0.7.1" },
-    { name = "formulas", specifier = ">=1.2.0" },
-    { name = "google-api-python-client", specifier = ">=2.195.0" },
-    { name = "google-auth", specifier = ">=2.50.0" },
-    { name = "google-auth-oauthlib", specifier = ">=1.3.1" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "keyring", specifier = ">=25.6.0" },
-    { name = "ofxparse", specifier = ">=0.21" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pdfplumber", specifier = ">=0.11.9" },
-    { name = "pikepdf", specifier = ">=10.0.0" },
-    { name = "playwright", specifier = ">=1.58.0" },
-    { name = "pydantic", specifier = ">=2.12.5" },
-    { name = "pydantic-settings", specifier = ">=2.9.1" },
-    { name = "pypdfium2", specifier = ">=5.7.1" },
-    { name = "python-dotenv", specifier = ">=1.2.2" },
-    { name = "python-i18n", specifier = ">=0.3.9" },
+    { name = "anthropic", specifier = ">=0.74.1,<1" },
+    { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
+    { name = "beautifulsoup4", specifier = ">=4.12,<5" },
+    { name = "cryptography", specifier = ">=47.0.0,<48" },
+    { name = "defusedxml", specifier = ">=0.7.1,<1" },
+    { name = "formulas", specifier = ">=1.2.0,<2" },
+    { name = "google-api-python-client", specifier = ">=2.195.0,<3" },
+    { name = "google-auth", specifier = ">=2.50.0,<3" },
+    { name = "google-auth-oauthlib", specifier = ">=1.3.1,<2" },
+    { name = "httpx", specifier = ">=0.28.1,<1" },
+    { name = "keyring", specifier = ">=25.6.0,<26" },
+    { name = "ofxparse", specifier = ">=0.21,<1" },
+    { name = "openpyxl", specifier = ">=3.1.5,<4" },
+    { name = "pdfplumber", specifier = ">=0.11.9,<1" },
+    { name = "pikepdf", specifier = ">=10.0.0,<11" },
+    { name = "playwright", specifier = ">=1.58.0,<2" },
+    { name = "pydantic", specifier = ">=2.12.5,<3" },
+    { name = "pydantic-settings", specifier = ">=2.9.1,<3" },
+    { name = "pypdfium2", specifier = ">=5.7.1,<6" },
+    { name = "python-dotenv", specifier = ">=1.2.2,<2" },
+    { name = "python-i18n", specifier = ">=0.3.9,<1" },
     { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'workbook-windows'", specifier = ">=311" },
-    { name = "questionary", specifier = ">=2.1.1" },
-    { name = "rich", specifier = ">=14.2.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.36" },
-    { name = "typer", specifier = ">=0.20.0" },
+    { name = "questionary", specifier = ">=2.1.1,<3" },
+    { name = "rich", specifier = ">=14.2.0,<16" },
+    { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
+    { name = "typer", specifier = ">=0.20.0,<1" },
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
-    { name = "xlrd", specifier = ">=2.0.1" },
+    { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
 provides-extras = ["workbook-windows"]
 
@@ -231,14 +231,14 @@ wheels = [
 
 [[package]]
 name = "argon2-cffi"
-version = "25.1.0"
+version = "23.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argon2-cffi-bindings" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/89/ce5af8a7d472a67cc819d5d998aa8c82c5d860608c4db9f46f1162d7dab9/argon2_cffi-25.1.0.tar.gz", hash = "sha256:694ae5cc8a42f4c4e2bf2ca0e64e51e23a040c6a517a85074683d3959e1346c1", size = 45706, upload-time = "2025-06-03T06:55:32.073Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/fa/57ec2c6d16ecd2ba0cf15f3c7d1c3c2e7b5fcb83555ff56d7ab10888ec8f/argon2_cffi-23.1.0.tar.gz", hash = "sha256:879c3e79a2729ce768ebb7d36d4609e3a78a4ca2ec3a9f12286ca057e3d0db08", size = 42798, upload-time = "2023-08-15T14:13:12.711Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/d3/a8b22fa575b297cd6e3e3b0155c7e25db170edf1c74783d6a31a2490b8d9/argon2_cffi-25.1.0-py3-none-any.whl", hash = "sha256:fdc8b074db390fccb6eb4a3604ae7231f219aa669a2652e0f20e16ba513d5741", size = 14657, upload-time = "2025-06-03T06:55:30.804Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/6a/e8a041599e78b6b3752da48000b14c8d1e8a04ded09c88c714ba047f34f5/argon2_cffi-23.1.0-py3-none-any.whl", hash = "sha256:c670642b78ba29641818ab2e68bd4e6a78ba53b7eff7b4c3815ae16abf91c7ea", size = 15124, upload-time = "2023-08-15T14:13:10.752Z" },
 ]
 
 [[package]]
@@ -2893,15 +2893,15 @@ wheels = [
 
 [[package]]
 name = "rich"
-version = "15.0.0"
+version = "14.3.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e9/67/cae617f1351490c25a4b8ac3b8b63a4dda609295d8222bad12242dfdc629/rich-14.3.4.tar.gz", hash = "sha256:817e02727f2b25b40ef56f5aa2217f400c8489f79ca8f46ea2b70dd5e14558a9", size = 230524, upload-time = "2026-04-11T02:57:45.419Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654, upload-time = "2026-04-12T08:24:02.83Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/76/6d163cfac87b632216f71879e6b2cf17163f773ff59c00b5ff4900a80fa3/rich-14.3.4-py3-none-any.whl", hash = "sha256:07e7adb4690f68864777b1450859253bed81a99a31ac321ac1817b2313558952", size = 310480, upload-time = "2026-04-11T02:57:47.484Z" },
 ]
 
 [[package]]

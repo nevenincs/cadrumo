@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 from aeat.core.aggregation import AggregationSourceKind
+from aeat.core.external_constants import M347_THRESHOLD_EUR
 from aeat.domain.calculations.registry._bindings import CounterpartSourceKind
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
@@ -308,17 +309,12 @@ def _counterpart_readiness_for_modelo(
     }
 
 
-THRESHOLD_347_EUR: Decimal = Decimal("3005.06")
-"""Modelo 347 declaration floor: counterparties whose annual operations
-total to at most this amount are NOT declarable per AEAT instrucciones."""
-
-
 def declarable_counterparty_nifs_347(aggregation: CounterpartAggregation) -> frozenset[str]:
     """Return counterparties whose full Modelo 347 total exceeds the declaration floor."""
     totals: dict[str, Decimal] = {}
     for rollup in aggregation.rollups:
         totals[rollup.counterparty_nif] = totals.get(rollup.counterparty_nif, Decimal("0")) + rollup.total_invoice_total
-    return frozenset(nif for nif, total in totals.items() if total > THRESHOLD_347_EUR)
+    return frozenset(nif for nif, total in totals.items() if total > M347_THRESHOLD_EUR)
 
 
 def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif: str) -> bool:
@@ -327,7 +323,6 @@ def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif:
 
 
 __all__ = [
-    "THRESHOLD_347_EUR",
     "CounterpartAggregation",
     "CounterpartObservation",
     "CounterpartRollup",

@@ -6,7 +6,7 @@ callers can catch the project-wide base.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreValidationError
 
 
 class ModeloDraftError(AeatError):
@@ -17,7 +17,7 @@ class ModeloBuilderError(ModeloDraftError):
     """Raised when builder selection or execution fails."""
 
 
-class FilingValidationError(ModeloDraftError):
+class FilingValidationError(ModeloDraftError, CoreValidationError):
     """Raised when validation surfaces a blocking finding.
 
     The validator itself never raises; this error is reserved for

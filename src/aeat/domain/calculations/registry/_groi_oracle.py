@@ -59,10 +59,6 @@ from ._remote_state_guard import RemoteOperation
 
 GROI_ORACLE_ID = "aeat-groi-spanish-roi-checker"
 
-# Live-captured 2026-05-07. The host-pinning suffix
-# ``agenciatributaria.gob.es`` already covers www2; no allow-list change.
-AEAT_GROI_URL = AnyUrl(Settings.external_constants().aeat.oracles.groi_check)
-
 
 class _GroiModel(BaseModel):
     """Strict frozen base for GROI parity records."""
@@ -186,7 +182,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         if self._driver is not None:
             return self._driver.planned_operations(payload, expected=expected)
         operations: list[RemoteOperation] = [
-            RemoteOperation(kind="http", method="GET", url=AEAT_GROI_URL),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check)),
             RemoteOperation(kind="browser_action", action="open-groi-form"),
         ]
         for nif in sorted(expected_values):
@@ -233,7 +229,6 @@ def register_default(
 
 
 __all__ = [
-    "AEAT_GROI_URL",
     "GROI_ORACLE_ID",
     "GroiDriver",
     "GroiObservation",

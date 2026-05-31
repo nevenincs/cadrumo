@@ -15,8 +15,6 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
-    AEAT_NIF_IVA_ENTRY_URL,
-    AEAT_NIF_IVA_VERIFICATION_URL,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     NifIvaCheckObservation,
     NifIvaCheckResult,
@@ -25,6 +23,7 @@ from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
     extract_verdict_from_response_text,
     is_aeat_auth_gate_redirect,
 )
+from aeat.core.config import Settings
 from aeat.domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
@@ -44,12 +43,13 @@ def test_planned_operations_lists_entry_form_open_per_nif_discard() -> None:
 
     # Six steps: entry GET, form GET, open-form, two per-NIF checks (sorted), discard.
     assert len(operations) == 6
+    _ext = Settings.external_constants()
     assert operations[0].kind == "http"
     assert operations[0].method == "GET"
-    assert operations[0].url == AEAT_NIF_IVA_ENTRY_URL
+    assert str(operations[0].url) == f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}"
     assert operations[1].kind == "http"
     assert operations[1].method == "GET"
-    assert operations[1].url == AEAT_NIF_IVA_VERIFICATION_URL
+    assert str(operations[1].url) == _ext.aeat.oracles.nif_iva_verification
     assert operations[2].kind == "browser_action"
     assert operations[2].action == "open-nif-iva-form"
     # Per-NIF checks emitted in sorted order so the operation list is deterministic.
