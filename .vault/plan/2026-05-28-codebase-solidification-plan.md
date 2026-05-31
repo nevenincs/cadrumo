@@ -1062,8 +1062,8 @@ Land remaining canonical-home symbol relocations as atomic explicit-path commits
 
 Two relocations observed in flight on 2026-05-31: InvoiceKind to aeat.domain.iva._classification; ModeloDraftStatus to aeat.domain.submission._protocols. Land each as one atomic commit with consumer sweep and pytest --collect-only -q clean check.
 
-- [ ] `W19.P51.S641` - Land relocation:InvoiceKind as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/iva/_classification.py` + every consumer of `InvoiceKind`.
-- [ ] `W19.P51.S642` - Land relocation:ModeloDraftStatus as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/submission/_protocols.py` + every consumer of `ModeloDraftStatus`.
+- [x] `W19.P51.S641` - Land relocation:InvoiceKind as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/iva/_classification.py` + every consumer of `InvoiceKind`. Closed 2026-05-31: peer commits already landed canonical home and consumer sweep; zero `from aeat.domain.invoices import InvoiceKind` callers remain; suite collects clean; commit-subject `relocation:` tag is a going-forward discipline.
+- [x] `W19.P51.S642` - Land relocation:ModeloDraftStatus as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/submission/_protocols.py` + every consumer of `ModeloDraftStatus`. Closed 2026-05-31: peer commits already landed canonical home and consumer sweep; zero `from aeat.adapters.outbound.aeat.export import ModeloDraftStatus` callers remain; suite collects clean.
 
 ## Wave `W20` - close W20 audit findings: 0 regressions + 2 survivor-missed Any-parameter annotations
 
