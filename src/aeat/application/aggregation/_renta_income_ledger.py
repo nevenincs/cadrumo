@@ -31,9 +31,9 @@ from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
@@ -239,7 +239,7 @@ def _classify_income_transaction(
 
     transaction_id = transaction.transaction_id
 
-    if transaction.direction is not LedgerTransactionDirection.INCOMING:
+    if transaction.direction is not TransactionDirection.INCOMING:
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
