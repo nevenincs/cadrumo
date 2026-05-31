@@ -883,11 +883,11 @@ class Settings(BaseSettings):
         default=False,
         description=(
             "Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo "
-            "work create --modelo 210` emits the task-196 Path-B refusal stub. When True "
+            "work create --modelo 210` emits the Path-B refusal stub. When True "
             "the stub guard is skipped and the engine path runs (m210_resolve_rate "
-            "dispatch + representante-fiscal predicate + cuota composition shipped at "
-            "S400 + S390). Flipped to True only after S392 persona-replay acceptance "
-            "gates pass per m210-irnr-full-engine ADR section D5."
+            "dispatch + representante-fiscal predicate + cuota composition). "
+            "Flipped to True only after persona-replay acceptance gates pass per "
+            "the m210-irnr-full-engine ADR section D5."
         ),
     )
 
