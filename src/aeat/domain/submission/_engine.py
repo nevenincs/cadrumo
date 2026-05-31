@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...adapters.persistence.storage.errors import StorageError
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._errors import SubmissionError
@@ -92,6 +91,8 @@ class SubmissionEngine:
             SubmissionError: If ``submission_id`` is malformed or no
                 secure object exists for the supplied id.
         """
+        from ...adapters.persistence.storage.errors import StorageError
+
         repository = SubmissionRepository()
         try:
             filing = repository.load(submission_id)
