@@ -129,6 +129,7 @@ COVERAGE_GAPS: frozenset[str] = frozenset(
         "src/aeat/domain/portals/_entries/portal_renta_web_borrador.py",
         "src/aeat/domain/portals/_entries/portal_sede_root.py",
         # tests/fixtures — generator scripts; no test file in their directories
+        "src/aeat/tests/fixtures/borrador/_generate.py",
         "src/aeat/tests/fixtures/financial/n26/_generate.py",
         "src/aeat/tests/fixtures/justificantes/_generate.py",
     }
