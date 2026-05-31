@@ -175,6 +175,16 @@ nitpick_ignore_regex = [
     # Typed-id NewType aliases (CasillaId, SourceRefId, ...) are documented at
     # their definition, not as standalone class targets.
     (r"py:.*", r".*\._ids\.[A-Za-z]\w*$"),
+    # References into private (underscore) modules, which are excluded from the
+    # documented API surface, have no cross-reference target.
+    (r"py:.*", r".*\._[a-z]\w*\.[A-Za-z_]\w*$"),
+    # External types resolved (when online) via intersphinx; ignored so the
+    # gate stays hermetic offline.
+    (
+        r"py:.*",
+        r"^(Path|Decimal|Session|TypeDecorator|PydanticUndefined|"
+        r"Ge|Le|Gt|Lt|Len|Interval|MultipleOf)$",
+    ),
 ]
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────

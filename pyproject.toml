@@ -228,6 +228,8 @@ convention = "google"
 "src/aeat/**/_test_*.py" = ["S101", "T20", "D"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
 "src/aeat/**/conftest.py" = ["D"]
+# Sphinx build configuration is tooling, not the documented package API.
+"docs/conf.py" = ["D"]
 # `tools/` holds contributor-only one-shot analysis scripts; print() is
 # the canonical surface for these CLIs.
 "tools/**/*.py" = ["T20"]
