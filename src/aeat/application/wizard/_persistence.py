@@ -139,7 +139,9 @@ def persist_answers(
         )
 
     if supplied_question_ids is None:
-        raise WorkflowInputMismatchError("persist_answers(mode='edit') requires supplied_question_ids — edit is a patch, not a rewrite")
+        raise WorkflowInputMismatchError(
+            translated_message="application.wizard.errors.persist_answers_edit_requires_supplied_question_ids",
+        )
     canonical = serialise_answers(flow, answers, only_question_ids=supplied_question_ids)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
     return set_active_fields(state, facts)

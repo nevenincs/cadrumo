@@ -1,0 +1,181 @@
+"""Inventory test: no production AeatError subclass raise may use tr() as positional arg.
+
+Rule
+----
+For every ``raise SomeError(tr(...))`` pattern in a non-test production module
+under ``src/aeat/``, the first positional argument to the error constructor
+must NOT be a ``tr()`` call result.
+
+The canonical form is::
+
+    raise SomeError(
+        translated_message="some.locale.key",
+        context={...},
+    )
+
+NOT::
+
+    raise SomeError(tr("some.locale.key"))   # WRONG — eager resolution
+
+Rationale
+---------
+Passing ``tr()`` as the positional ``message`` argument resolves the locale
+string eagerly at raise time using the ambient output language, rather than
+deferring resolution to the CLI render layer where the operator's chosen
+``--output-language`` is active.  The ``translated_message`` keyword preserves
+deferred, per-render resolution across all output languages.
+
+Exclusions
+----------
+- ``test_*.py`` files: tests may call tr() freely.
+- Lines where ``tr(`` appears only inside a Python string literal are excluded.
+- Calls where ``tr(...)`` is passed to Typer/Click (``help=``, ``typer.*``,
+  ``click.*``) or to non-AeatError standard-library exceptions (e.g.
+  ``typer.BadParameter``, ``ValueError``) are out-of-scope; the rule targets
+  AeatError subclass constructors only.
+"""
+
+from __future__ import annotations
+
+import ast
+import pathlib
+from typing import Iterator
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+
+_SRC_ROOT = pathlib.Path(__file__).parent
+
+# Exception class names that are NOT AeatError subclasses and therefore
+# do not need the translated_message pattern (Typer/Click/stdlib classes).
+_NON_AEAT_EXCEPTION_CLASSES = frozenset(
+    {
+        "BadParameter",
+        "ValueError",
+        "TypeError",
+        "KeyError",
+        "RuntimeError",
+        "AssertionError",
+        "NotImplementedError",
+        "ClickException",
+        "Exit",
+        "Abort",
+    }
+)
+
+# Factory function names that return non-AeatError exceptions (e.g. typer.BadParameter
+# wrappers). Raising ``_bad(tr(...))`` is not the AeatError anti-pattern because
+# ``_bad`` wraps ``typer.BadParameter``, not an AeatError subclass.
+_NON_AEAT_FACTORY_FUNCTIONS = frozenset(
+    {
+        "_bad",  # cli/_common.py factory for typer.BadParameter
+        "_google_refusal",  # cli/_config/_google.py factory for CliRefusedBoundaryError — has its own correct pattern
+    }
+)
+
+
+def _is_tr_call(node: ast.expr) -> bool:
+    """Return True if *node* is a bare ``tr(...)`` or ``Translatable(...)`` call."""
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    if isinstance(func, ast.Name) and func.id in ("tr", "Translatable"):
+        return True
+    if isinstance(func, ast.Attribute) and func.attr in ("tr", "Translatable"):
+        return True
+    return False
+
+
+def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:
+    """Yield (lineno, description) for raise statements where the first positional
+    arg to an exception constructor is a tr() call."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Raise):
+            continue
+        exc = node.exc
+        if exc is None:
+            continue
+        # ``raise SomeError(...)``
+        if not isinstance(exc, ast.Call):
+            continue
+        # Identify the class name being raised.
+        func = exc.func
+        if isinstance(func, ast.Name):
+            class_name = func.id
+        elif isinstance(func, ast.Attribute):
+            class_name = func.attr
+        else:
+            continue
+        # Skip non-AeatError exception classes and factory functions that wrap
+        # non-AeatError types (e.g. _bad() returns typer.BadParameter).
+        if class_name in _NON_AEAT_EXCEPTION_CLASSES or class_name in _NON_AEAT_FACTORY_FUNCTIONS:
+            continue
+        # Check: does the call have at least one positional arg that is tr()?
+        args = exc.args
+        if args and _is_tr_call(args[0]):
+            yield exc.lineno, f"raise {class_name}(tr(...))"
+
+
+# The modules addressed by the W6.P27 locale sweep.  Once a module is added
+# to this list it must remain at zero tr-positional violations forever.
+_SWEPT_MODULES: frozenset[str] = frozenset(
+    {
+        "application/wizard/_persistence.py",
+        "application/workflow/_models.py",
+        "application/aggregation/_models.py",
+        "application/user_profile/_orchestration.py",
+        "application/filing/_runtime_repository.py",
+        "application/wizard/_prompter.py",
+        "application/wizard/_commands.py",
+        "application/modelo/_actions.py",
+        "entrypoints/cli/_config/__init__.py",
+        "entrypoints/cli/_config/_google.py",
+        "entrypoints/cli/_config/_profile_census.py",
+    }
+)
+
+
+def _collect_violations(*, swept_only: bool = True) -> list[str]:
+    violations: list[str] = []
+    for path in sorted(_SRC_ROOT.rglob("*.py")):
+        if path.name.startswith("test_"):
+            continue
+        rel = path.relative_to(_SRC_ROOT.parent.parent)
+        rel_str = rel.as_posix().replace("src/aeat/", "")
+        if swept_only and not any(module in rel_str for module in _SWEPT_MODULES):
+            continue
+        source = path.read_text(encoding="utf-8", errors="replace")
+        try:
+            tree = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            continue
+        for lineno, description in _raise_positional_tr_violations(tree):
+            violations.append(f"{rel}:{lineno} — {description}")
+    return violations
+
+
+def test_no_aeat_error_raise_with_positional_tr_in_swept_modules() -> None:
+    """Swept modules must have zero raise-with-positional-tr() violations.
+
+    The modules listed in ``_SWEPT_MODULES`` were migrated as part of
+    W6.P27 (S465-S475).  Once swept, they must stay at zero violations.
+    New modules are added to ``_SWEPT_MODULES`` as they are migrated.
+
+    The canonical pattern is::
+
+        raise SomeError(translated_message="key", context={...})
+
+    NOT::
+
+        raise SomeError(tr("key"))   # WRONG — eager resolution
+    """
+    violations = _collect_violations(swept_only=True)
+    if violations:
+        joined = "\n  ".join(violations)
+        raise AssertionError(
+            f"{len(violations)} raise(s) pass tr() as a positional AeatError arg "
+            f"in swept modules:\n  {joined}\n\n"
+            "Convert to: raise SomeError(translated_message='key', context={{...}})"
+        )

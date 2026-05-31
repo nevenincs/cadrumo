@@ -158,7 +158,9 @@ def repair_quarantine(
     """
 
     if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(tr("cli.config.repair.quarantine_requires_yes"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.repair.quarantine_requires_yes",
+        )
     # Cold-root guard: quarantine is bootstrap-exempt; on a root with no
     # active profile there is no per-bucket database to scan. Report
     # cleanly rather than crashing on the absent database URL
@@ -267,7 +269,9 @@ def repair_reset_state(
     from ....application.workflow._persistence import fingerprint_workflow_state, reset_workflow_state
 
     if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(tr("cli.config.repair.reset_state_requires_yes"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.repair.reset_state_requires_yes",
+        )
     # Cold-root guard: reset-state is bootstrap-exempt; on a root with
     # no active profile there is no workflow-state envelope to reset.
     # Report cleanly rather than crashing on the absent per-bucket
@@ -344,10 +348,7 @@ def repair_profile(
 
     if clear_active and repair_manifest_status:
         raise _CliRefusedBoundaryError(
-            tr(
-                "cli.config.repair.profile_one_action",
-                default="Choose either --clear-active or --repair-manifest-status, not both.",
-            )
+            translated_message="cli.config.repair.profile_one_action",
         )
     if profile is not None and not clear_active and not repair_manifest_status:
         _emit_profile_record_status(ctx, profile)
@@ -355,9 +356,14 @@ def repair_profile(
     if profile is not None:
         resolved = _resolve_profile_by_label(profile)
         if resolved.bucket_id != _resolve_active_bucket_id():
-            raise _CliRefusedBoundaryError(tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.repair.profile_clear_active_mismatch",
+                context={"profile": profile},
+            )
     if (clear_active or repair_manifest_status) and not yes:
-        raise _CliRefusedBoundaryError(tr("cli.config.repair.profile_requires_yes"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.repair.profile_requires_yes",
+        )
     if repair_manifest_status:
         result = repair_active_profile_manifest_status(confirmed=yes)
         health = result.after or result.before
@@ -676,9 +682,15 @@ def _resolve_profile_by_label(name: str):
     try:
         pointer = _read_profile_bucket(name)
     except ValueError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        ) from exc
     if pointer is None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        )
     return pointer
 
 
@@ -807,7 +819,10 @@ def config_profile_switch(
 
     pointer = _read_profile_bucket(name)
     if pointer is None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        )
     _assert_profile_record_present(
         ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
     )
@@ -956,13 +971,21 @@ def config_profile_show(
         try:
             pointer = _read_profile_bucket(name, include_tombstoned=True)
         except ValueError as exc:
-            raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+            raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        ) from exc
         if pointer is None:
-            raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+            raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        )
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
-            raise _CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+            raise _CliRefusedBoundaryError(
+            translated_message="cli.config.errors.no_active_profile",
+        )
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -1029,7 +1052,10 @@ def config_profile_delete(
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.delete_requires_yes",
+            context={"name": name},
+        )
     # Resolve the operator-supplied label to a bucket pointer FIRST. This
     # is a plaintext manifest scan that needs no bucket session, so an
     # unknown name surfaces a clear "unknown profile" refusal distinct
@@ -1041,7 +1067,10 @@ def config_profile_delete(
     try:
         record = delete_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": name},
+        ) from exc
     payload = {
         "profile_id": record.profile_id,
         "display_name": record.display_name,
@@ -1089,7 +1118,10 @@ def config_profile_duplicate(
 
     source_pointer = _resolve_profile_by_label(source)
     if _read_profile_bucket(target) is not None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.already_exists",
+            context={"name": target},
+        )
 
     try:
         source_record = _read_profile_record(
@@ -1097,7 +1129,10 @@ def config_profile_duplicate(
             bucket_id=source_pointer.bucket_id,
         )
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": source},
+        ) from exc
 
     try:
         target_id = _atomic_create_profile(
@@ -1105,7 +1140,10 @@ def config_profile_duplicate(
             facts=source_record.facts,
         )
     except ProfileAlreadyRegisteredError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.already_exists",
+            context={"name": target},
+        ) from exc
 
     _emit(
         ctx,
@@ -1180,9 +1218,15 @@ def config_profile_rename(
     try:
         record = rename_profile(profile_id=pointer.bucket_id, new_label=target)
     except ProfileAlreadyRegisteredError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.already_exists",
+            context={"name": target},
+        ) from exc
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": source},
+        ) from exc
 
     _emit(
         ctx,
@@ -1236,7 +1280,9 @@ def config_profile_export(
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
-            raise _CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+            raise _CliRefusedBoundaryError(
+            translated_message="cli.config.errors.no_active_profile",
+        )
     try:
         from ....adapters.persistence.storage import has_active_bucket_session
         from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
@@ -1247,7 +1293,10 @@ def config_profile_export(
             with profile_storage_session(pointer.bucket_id):
                 bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=pointer.label)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": pointer.label},
+        ) from exc
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
     _emit(
@@ -1319,11 +1368,8 @@ def config_profile_import(
 
     if not path.is_file():
         raise _CliRefusedBoundaryError(
-            tr(
-                "cli.config.profile.import_missing_bundle",
-                default=f"bundle path not found: {path}",
-                path=str(path),
-            )
+            translated_message="cli.config.profile.import_missing_bundle",
+            context={"path": str(path)},
         )
     try:
         bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
@@ -1331,7 +1377,8 @@ def config_profile_import(
         raise
     except Exception as exc:
         raise _CliRefusedBoundaryError(
-            tr("cli.config.profile.import_invalid_bundle", default=f"bundle parse error: {exc}", error=str(exc))
+            translated_message="cli.config.profile.import_invalid_bundle",
+            context={"error": str(exc)},
         ) from exc
     try:
         _validate_bundle_schema_version(bundle)
@@ -1350,14 +1397,8 @@ def config_profile_import(
     # Tier 1 (identity-preserving path): refuse if the bundle UUID already exists.
     if not fresh_uuid_mode and read_profile_bucket_by_id(bundle_profile_id) is not None:
         raise _CliRefusedBoundaryError(
-            tr(
-                "cli.config.profile.import_uuid_collision",
-                default=(
-                    f"profile already registered (id={bundle_profile_id}); "
-                    "run `aeat config profile delete NAME` before re-importing if you intend to replace it."
-                ),
-                profile_id=bundle_profile_id,
-            )
+            translated_message="cli.config.profile.import_uuid_collision",
+            context={"profile_id": bundle_profile_id},
         )
 
     target_label = explicit_label if explicit_label is not None else record.display_name
@@ -1365,14 +1406,8 @@ def config_profile_import(
     existing = _read_profile_bucket(target_label)
     if existing is not None:
         raise _CliRefusedBoundaryError(
-            tr(
-                "cli.config.profile.import_label_taken_different_id",
-                default=(
-                    f"label {target_label!r} is already taken by a different profile; "
-                    "pass `--label NEW_NAME` to import under a distinct name."
-                ),
-                name=target_label,
-            )
+            translated_message="cli.config.profile.import_label_taken_different_id",
+            context={"name": target_label},
         )
     try:
         # Preserve the bundle's profile_id only on the identity-preserving path
@@ -1385,7 +1420,8 @@ def config_profile_import(
         )
     except ProfileAlreadyRegisteredError as exc:
         raise _CliRefusedBoundaryError(
-            tr("cli.config.profile.already_exists", name=target_label)
+            translated_message="cli.config.profile.already_exists",
+            context={"name": target_label},
         ) from exc
     # Import v2 financial-history objects into the newly-provisioned bucket.
     with profile_storage_session(target_id):
@@ -1583,7 +1619,9 @@ def config_reset(
     from ....application.config_reset import reset_config
 
     if not yes:
-        raise _CliRefusedBoundaryError(tr("cli.config.reset.requires_yes"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.reset.requires_yes",
+        )
     scope_enum = _parse_config_reset_scope(scope)
     report = reset_config(scope_enum, confirmed=True)
     _emit(
@@ -1661,11 +1699,19 @@ def auth_configure(
     try:
         result = configure_operator_auth(provider, certificate_path=file)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider},
+        ) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider)) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.reserved_provider",
+            context={"provider": provider},
+        ) from exc
     except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.no_active_bucket")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.no_active_bucket",
+        ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     lines = [
@@ -1710,7 +1756,10 @@ def auth_status(
     try:
         result = inspect_operator_auth(provider)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider or ""},
+        ) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
@@ -1735,9 +1784,15 @@ def auth_test(
     try:
         result = test_operator_auth(provider)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider or ""},
+        ) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.reserved_provider",
+            context={"provider": provider or ""},
+        ) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
@@ -1768,9 +1823,15 @@ def auth_login(
     try:
         result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider or ""},
+        ) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.reserved_provider",
+            context={"provider": provider or ""},
+        ) from exc
     except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
@@ -1800,9 +1861,15 @@ def auth_clear(
     try:
         result = clear_operator_auth(provider=provider, all_providers=all_providers, sessions=sessions, locks=locks)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider or ""},
+        ) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.reserved_provider",
+            context={"provider": provider or ""},
+        ) from exc
     _emit(
         ctx,
         result.model_dump(mode="json"),
@@ -1861,7 +1928,8 @@ def auth_diagnostics_show(
     detail = load_auth_diagnostic(diagnostic_id)
     if detail is None:
         raise _CliRefusedBoundaryError(
-            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id)
+            translated_message="cli.config.auth.diagnostics.not_found",
+            context={"diagnostic_id": diagnostic_id},
         )
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     bool_value = _optional_bool_text
@@ -1938,15 +2006,16 @@ def auth_diagnostics_report(
         result = record_auth_diagnostic_phone_state(diagnostic_id, phone_state)
     except ValueError as exc:
         raise _CliRefusedBoundaryError(
-            tr(
-                "cli.config.auth.diagnostics.invalid_phone_state",
-                phone_state=phone_state,
-                choices=", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
-            )
+            translated_message="cli.config.auth.diagnostics.invalid_phone_state",
+            context={
+                "phone_state": phone_state,
+                "choices": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
+            },
         ) from exc
     if result is None:
         raise _CliRefusedBoundaryError(
-            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id),
+            translated_message="cli.config.auth.diagnostics.not_found",
+            context={"diagnostic_id": diagnostic_id},
         )
     _emit(
         ctx,
@@ -1988,7 +2057,9 @@ def apoderado_status(ctx: typer.Context) -> None:
 
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.no_active_profile",
+        )
 
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
@@ -2027,7 +2098,9 @@ def apoderado_configure(
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.no_active_profile",
+        )
 
     svc = ApoderadoService()
     result = svc.configure(
@@ -2055,7 +2128,9 @@ def apoderado_clear(ctx: typer.Context) -> None:
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.no_active_profile",
+        )
 
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
@@ -2077,7 +2152,9 @@ def apoderado_check(ctx: typer.Context) -> None:
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.no_active_profile",
+        )
 
     svc = ApoderadoService()
 

@@ -164,13 +164,21 @@ class Period(BaseModel):
     @model_validator(mode="after")
     def _validate_shape(self) -> Self:
         if self.kind is PeriodKind.QUARTERLY and self.quarter is None:
-            raise AggregationPeriodError(tr("aggregation.models.errors.quarter_required"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.quarter_required",
+            )
         if self.kind is PeriodKind.MONTHLY and self.month is None:
-            raise AggregationPeriodError(tr("aggregation.models.errors.month_required"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.month_required",
+            )
         if self.kind is PeriodKind.ANNUAL and (self.quarter is not None or self.month is not None):
-            raise AggregationPeriodError(tr("aggregation.models.errors.annual_period_mixed"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.annual_period_mixed",
+            )
         if self.quarter is not None and self.month is not None:
-            raise AggregationPeriodError(tr("aggregation.models.errors.period_type_ambiguous"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.period_type_ambiguous",
+            )
         return self
 
     @computed_field

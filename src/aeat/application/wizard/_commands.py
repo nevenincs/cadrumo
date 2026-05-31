@@ -696,10 +696,7 @@ def _run_full_flow(
         if missing:
             missing_flags = _format_missing_flags(missing)
             raise WizardMissingFlagError(
-                tr(
-                    "application.wizard.errors.quiet_missing_flags",
-                    missing_flags=missing_flags,
-                ),
+                translated_message="application.wizard.errors.quiet_missing_flags",
                 context={
                     "flow_id": flow.id,
                     "missing": missing,
@@ -729,21 +726,8 @@ def _run_full_flow(
             # non-interactive `profile edit` patch form instead.
             if mode == "edit":
                 raise WizardEditUnsupportedConsoleError(
-                    tr(
-                        "wizard.errors.unsupported_console_edit",
-                        default=(
-                            "The guided setup could not open an interactive "
-                            "prompt in this run.\nNothing has been saved yet.\n\n"
-                            "Edit this profile non-interactively by naming the "
-                            "field to change:\n"
-                            f"  aeat config profile edit {profile_name} "
-                            "--quiet --<field> VALUE\n\n"
-                            "Or re-run the guided edit from an interactive "
-                            "terminal session:\n"
-                            f"  aeat config profile edit {profile_name}"
-                        ),
-                        profile_name=profile_name,
-                    )
+                    translated_message="wizard.errors.unsupported_console_edit",
+                    context={"profile_name": profile_name},
                 ) from exc
             raise
 
@@ -820,7 +804,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         raw_profile_name = kwargs.pop("profile_name")
         if not isinstance(raw_profile_name, str) or not raw_profile_name.strip():
             raise WizardMissingFlagError(
-                tr("application.wizard.errors.profile_flag_required"),
+                translated_message="application.wizard.errors.profile_flag_required",
                 context={"flow_id": flow.id, "missing": ("profile_name",)},
             )
         profile_name = raw_profile_name.strip()
@@ -840,7 +824,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             pointer = read_profile_bucket(profile_name)
             if pointer is None:
                 raise WizardMissingFlagError(
-                    tr("application.wizard.errors.profile_flag_required"),
+                    translated_message="application.wizard.errors.profile_flag_required",
                     context={"flow_id": flow.id, "missing": ("profile_name",)},
                 )
             profile_id = pointer.bucket_id

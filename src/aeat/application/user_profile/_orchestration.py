@@ -25,7 +25,6 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
-from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -382,14 +381,8 @@ def _refuse_duplicate_label(
     if read_profile_bucket(display_name) is None:
         return
     raise ProfileAlreadyRegisteredError(
-        tr(
-            "application.user_profile.errors.profile_already_exists",
-            default=(
-                "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
-                "to activate it or `aeat config profile delete NAME` first."
-            ),
-            profile=display_name,
-        ),
+        translated_message="application.user_profile.errors.profile_already_exists",
+        context={"profile": display_name},
     )
 
 
@@ -405,11 +398,8 @@ def _require_registered_label(display_name: str) -> None:
 
     if read_profile_bucket(display_name) is None:
         raise ProfileNotFoundError(
-            tr(
-                "application.user_profile.errors.profile_not_registered",
-                default="Profile '%{profile}' does not exist; run `aeat config profile create NAME` to create it.",
-                profile=display_name,
-            ),
+            translated_message="application.user_profile.errors.profile_not_registered",
+            context={"profile": display_name},
         )
 
 
@@ -593,7 +583,9 @@ def _require_active(state: WorkflowState) -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise ProfileNotFoundError(tr("application.user_profile.errors.no_active_profile_selected"))
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.no_active_profile_selected",
+        )
     return bucket_id
 
 

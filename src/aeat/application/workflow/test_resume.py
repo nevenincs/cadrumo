@@ -112,8 +112,9 @@ def test_resume_returns_context_for_resumable_aborted_run(tmp_path: Path) -> Non
 def test_resume_refuses_done_run(tmp_path: Path) -> None:
     run_id = "b" * 16
     save_run(_done_result(run_id))
-    with pytest.raises(WorkflowResumeRefusedError, match=r"final_stage"):
+    with pytest.raises(WorkflowResumeRefusedError) as raised:
         resume_modelo_workflow(run_id)
+    assert raised.value.translated_message == "application.workflow.errors.resume_refused_not_aborted"
 
 
 @pytest.mark.parametrize(
@@ -136,8 +137,9 @@ def test_resume_refuses_non_resumable_reasons(
             obligation=_obligation() if reason is not WorkflowAbortReason.NO_PENDING_OBLIGATION else None,
         ),
     )
-    with pytest.raises(WorkflowResumeRefusedError, match=r"terminal by design"):
+    with pytest.raises(WorkflowResumeRefusedError) as raised:
         resume_modelo_workflow(run_id)
+    assert raised.value.translated_message == "application.workflow.errors.resume_refused_terminal_reason"
 
 
 def test_resume_refuses_run_without_obligation(tmp_path: Path) -> None:
@@ -149,13 +151,15 @@ def test_resume_refuses_run_without_obligation(tmp_path: Path) -> None:
             obligation=None,
         ),
     )
-    with pytest.raises(WorkflowResumeRefusedError, match=r"obligation"):
+    with pytest.raises(WorkflowResumeRefusedError) as raised:
         resume_modelo_workflow(run_id)
+    assert raised.value.translated_message == "application.workflow.errors.resume_refused_no_obligation"
 
 
 def test_resume_for_missing_run_id_surfaces_workflow_error(tmp_path: Path) -> None:
-    with pytest.raises(WorkflowError, match=r"workflow run not found"):
+    with pytest.raises(WorkflowError) as raised:
         resume_modelo_workflow("missing-run-id-9")
+    assert raised.value.translated_message == "application.workflow.errors.run_not_found"
 
 
 def test_resume_context_run_id_satisfies_engine_resumed_from_contract(tmp_path: Path) -> None:
@@ -214,8 +218,9 @@ def test_resume_for_unknown_run_id_is_indistinguishable_from_stale(tmp_path: Pat
     share one error path. The engine itself cannot verify existence; the
     upstream resume action is the gate."""
 
-    with pytest.raises(WorkflowError, match=r"workflow run not found"):
+    with pytest.raises(WorkflowError) as raised:
         resume_modelo_workflow("c" * 16)
+    assert raised.value.translated_message == "application.workflow.errors.run_not_found"
 
 
 def test_resume_is_idempotent_for_a_persistently_aborted_run(tmp_path: Path) -> None:
@@ -273,8 +278,9 @@ def test_find_latest_run_for_period_ignores_other_periods(tmp_path: Path) -> Non
             obligation=_obligation("303", "2026Q2"),
         ),
     )
-    with pytest.raises(WorkflowError, match=r"no persisted workflow run"):
+    with pytest.raises(WorkflowError) as raised:
         find_latest_run_for_period(modelo="130", period="2026Q1")
+    assert raised.value.translated_message == "application.workflow.errors.no_run_for_period"
 
 
 def test_find_latest_run_for_period_resolves_id_for_resume(tmp_path: Path) -> None:
