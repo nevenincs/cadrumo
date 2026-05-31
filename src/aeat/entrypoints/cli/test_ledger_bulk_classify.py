@@ -53,7 +53,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    rows = payload if isinstance(payload, list) else payload.get("transactions", payload.get("rows", []))
+    rows = payload.get("result", payload).get("rows", [])
     assert len(rows) >= 2, listed.output
     rows_sorted = sorted(rows, key=lambda r: (r.get("date", ""), r.get("transaction_id", "")))
     return rows_sorted[0]["transaction_id"], rows_sorted[1]["transaction_id"]
@@ -63,7 +63,7 @@ def _list_transactions() -> list[dict]:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    return payload if isinstance(payload, list) else payload.get("transactions", payload.get("rows", []))
+    return payload.get("result", payload).get("rows", [])
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
         ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["applied"] >= 1
     assert payload["failures"]  # at least one failure for unknown id
 

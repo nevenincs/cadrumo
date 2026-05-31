@@ -57,9 +57,7 @@ def _create_profile_and_import(tmp_path: Path) -> str:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    rows = payload if isinstance(payload, list) else payload.get(
-        "transactions", payload.get("rows", [])
-    )
+    rows = payload.get("result", payload).get("rows", [])
     assert rows, listed.output
     return rows[0]["transaction_id"]
 
@@ -280,7 +278,7 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["transaction"]["source_jurisdiction"] == "ES", payload
 
 
@@ -404,5 +402,5 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["transaction"]["source_jurisdiction"] == "FR", payload

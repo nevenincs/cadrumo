@@ -76,6 +76,7 @@ from ._common import (
     _bad,
     _canonical_period,
     _emit,
+    _emit_envelope,
     _no_active_profile_refusal,
     _parse_iso_date,
     _profile_to_taxpayer,
@@ -285,20 +286,26 @@ def _emit_update_result(
     result_transaction: Transaction,
     bucket_id: str,
     events: tuple[str, ...],
+    *,
+    command: str,
+    result_cls: type,
 ) -> None:
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
-    payload = {
-        "bucket_id": bucket_id,
-        "transaction_id": result_transaction.transaction_id,
-        "bucket_event_ids": list(events),
-        "review_status": review_status,
-        "transaction": transaction_payload.model_dump(mode="python"),
-    }
-    _emit(
+    result = result_cls.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "transaction_id": result_transaction.transaction_id,
+            "bucket_event_ids": list(events),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command=command,
+        result=result,
+        lines=[
             f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
@@ -407,17 +414,22 @@ def ledger_add(
         command,
         transaction_repository=transaction_repository,
     )
+    from ._ledger_payloads import LedgerAddResult
+
     transaction_payload = ledger_transaction_payload(result.transaction)
-    payload = {
-        "bucket_id": result.ref.bucket_id,
-        "transaction_id": result.ref.transaction_id,
-        "bucket_event_ids": list(result.bucket_event_ids),
-        "transaction": transaction_payload.model_dump(mode="python"),
-    }
-    _emit(
+    add_result = LedgerAddResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.ref.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.add",
+        result=add_result,
+        lines=[
             f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
@@ -480,7 +492,9 @@ def ledger_update(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerUpdateResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.update", result_cls=LedgerUpdateResult)
 
 
 @app.command("classify", help=tr("cli.ledger.classify.help"))
@@ -574,9 +588,19 @@ def ledger_classify(
                 ),
             )
         ]
+        from ._ledger_payloads import LedgerClassifyResult
+
         for failure in result.failures:
             lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
-        _emit(ctx, payload, lines)
+        classify_result = LedgerClassifyResult.model_validate(
+            {
+                "total": result.total,
+                "applied": result.applied,
+                "skipped": result.skipped,
+                "failures": [f.model_dump(mode="json") for f in result.failures],
+            }
+        )
+        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
         return
 
     # Single-transaction mode: --id and --classification are required
@@ -630,9 +654,33 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    from ._ledger_payloads import LedgerClassifyResult
+
     if reaffirm:
         typer.echo(tr("cli.ledger.classify.reaffirmed"))
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = LedgerClassifyResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    _emit_envelope(
+        ctx,
+        command="ledger.classify",
+        result=classify_result,
+        lines=[
+            f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+        ],
+    )
 
 
 @app.command("categories", help=tr("cli.ledger.categories.help"))
@@ -678,12 +726,20 @@ def ledger_categories(ctx: typer.Context) -> None:
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
     lines.append(tr("cli.ledger.categories.income_note"))
-    payload = {
-        "families": families,
-        "category_ids": [category.value for category in SpendingCategory],
-        "income_requires_category": False,
-    }
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerCategoriesResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.categories",
+        result=LedgerCategoriesResult.model_validate(
+            {
+                "families": families,
+                "category_ids": [category.value for category in SpendingCategory],
+                "income_requires_category": False,
+            }
+        ),
+        lines=lines,
+    )
 
 
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))
@@ -740,7 +796,9 @@ def ledger_allocate(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerAllocateResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.allocate", result_cls=LedgerAllocateResult)
 
 
 @app.command("attach", help=tr("cli.ledger.attach.help"))
@@ -772,7 +830,9 @@ def ledger_attach(
         source_command="aeat app ledger attach",
         transaction_repository=transaction_repository,
     )
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerAttachResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.attach", result_cls=LedgerAttachResult)
 
 
 @app.command("archive", help=tr("cli.ledger.archive.help"))
@@ -797,7 +857,9 @@ def ledger_archive(
         source_command="aeat app ledger archive",
         transaction_repository=transaction_repository,
     )
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerArchiveResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.archive", result_cls=LedgerArchiveResult)
 
 
 @app.command("stash", help=tr("cli.ledger.stash.help"))
@@ -822,7 +884,9 @@ def ledger_stash(
         source_command="aeat app ledger stash",
         transaction_repository=transaction_repository,
     )
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerStashResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.stash", result_cls=LedgerStashResult)
 
 
 @app.command("remove", help=tr("cli.ledger.remove.help"))
@@ -849,11 +913,13 @@ def ledger_remove(
         source_command="aeat app ledger remove",
         transaction_repository=transaction_repository,
     )
-    payload = report.model_dump(mode="json")
-    _emit(
+    from ._ledger_payloads import LedgerRemoveResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.remove",
+        result=LedgerRemoveResult.model_validate(report.model_dump(mode="json")),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
             f"{tr('cli.ledger.labels.id')}\t{report.transaction_id}",
             f"{tr('cli.ledger.labels.removed')}\t{report.removed}",
@@ -883,11 +949,13 @@ def ledger_reset(
         source_command="aeat app ledger reset",
         transaction_repository=transaction_repository,
     )
-    payload = report.model_dump(mode="json")
-    _emit(
+    from ._ledger_payloads import LedgerResetResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.reset",
+        result=LedgerResetResult.model_validate(report.model_dump(mode="json")),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
             f"{tr('cli.ledger.labels.rows')}\t{len(report.removed_transaction_ids)}",
             f"{tr('cli.ledger.labels.reset')}\t{report.reset}",
@@ -946,17 +1014,21 @@ def ledger_split(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    payload = {
-        "bucket_id": result.bucket_id,
-        "parent_transaction_id": result.parent_transaction_id,
-        "split_group_id": result.split_group_id,
-        "child_transaction_ids": list(result.child_transaction_ids),
-        "bucket_event_id": result.bucket_event_id,
-    }
-    _emit(
+    from ._ledger_payloads import LedgerSplitResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.split",
+        result=LedgerSplitResult.model_validate(
+            {
+                "bucket_id": result.bucket_id,
+                "parent_transaction_id": result.parent_transaction_id,
+                "split_group_id": result.split_group_id,
+                "child_transaction_ids": list(result.child_transaction_ids),
+                "bucket_event_id": result.bucket_event_id,
+            }
+        ),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
             f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
@@ -994,18 +1066,22 @@ def ledger_merge(
         reason=reason,
         transaction_repository=transaction_repository,
     )
-    payload = {
-        "bucket_id": result.bucket_id,
-        "split_group_id": result.split_group_id,
-        "parent_transaction_id": result.parent_transaction_id,
-        "merged_transaction_id": result.merged_transaction_id,
-        "source_child_ids": list(result.source_child_ids),
-        "bucket_event_id": result.bucket_event_id,
-    }
-    _emit(
+    from ._ledger_payloads import LedgerMergeResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.merge",
+        result=LedgerMergeResult.model_validate(
+            {
+                "bucket_id": result.bucket_id,
+                "split_group_id": result.split_group_id,
+                "parent_transaction_id": result.parent_transaction_id,
+                "merged_transaction_id": result.merged_transaction_id,
+                "source_child_ids": list(result.source_child_ids),
+                "bucket_event_id": result.bucket_event_id,
+            }
+        ),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
             f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
@@ -1324,19 +1400,27 @@ def ledger_history(
         include_split_siblings=include_split_siblings,
     )
     matches = _collect_ledger_history_events(object_ids)
-    payload = {
-        "bucket_id": transaction_repository.bucket_id,
-        "transaction_id": resolved_id,
-        "event_count": len(matches),
-        "events": [event.model_dump(mode="json") for event in matches],
-    }
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
         f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
         f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
     ]
     lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerHistoryResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.history",
+        result=LedgerHistoryResult.model_validate(
+            {
+                "bucket_id": transaction_repository.bucket_id,
+                "transaction_id": resolved_id,
+                "event_count": len(matches),
+                "events": [event.model_dump(mode="json") for event in matches],
+            }
+        ),
+        lines=lines,
+    )
 
 
 def _history_object_ids(
@@ -1411,12 +1495,15 @@ def ledger_export(
         ),
         transaction_repository=transaction_repository,
     )
-    payload = result.model_dump(mode="json", exclude={"payload"})
-    payload["output_path"] = str(output)
-    _emit(
+    export_payload = result.model_dump(mode="json", exclude={"payload"})
+    export_payload["output_path"] = str(output)
+    from ._ledger_payloads import LedgerExportResult as LedgerExportResultSchema
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.export",
+        result=LedgerExportResultSchema.model_validate(export_payload),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
             f"{tr('cli.ledger.labels.rows')}\t{result.row_count}",
@@ -1458,10 +1545,13 @@ def ledger_list(ctx: typer.Context) -> None:
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
             f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
         )
-    _emit(
+    from ._ledger_payloads import LedgerListResult
+
+    _emit_envelope(
         ctx,
-        {"bucket_id": transaction_repository.bucket_id, "rows": rows},
-        lines,
+        command="ledger.list",
+        result=LedgerListResult.model_validate({"bucket_id": transaction_repository.bucket_id, "rows": rows}),
+        lines=lines,
     )
 
 
@@ -1515,7 +1605,14 @@ def ledger_view(
         f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
-    _emit(ctx, result_payload.model_dump(mode="python"), lines)
+    from ._ledger_payloads import LedgerViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.view",
+        result=LedgerViewResult.model_validate(result_payload.model_dump(mode="json")),
+        lines=lines,
+    )
 
 
 @app.command("status", help=tr("cli.ledger.status.help"))
@@ -1566,7 +1663,14 @@ def ledger_status(
             lines.append(
                 _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
             )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerStatusResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.status",
+        result=LedgerStatusResult.model_validate(report.model_dump(mode="json")),
+        lines=lines,
+    )
 
 
 def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str, detail: str) -> str:
@@ -1602,15 +1706,19 @@ def ledger_track(
         transaction_id=resolved_id,
         transaction_repository=transaction_repository,
     )
-    payload = {
-        "bucket_id": result.ref.bucket_id,
-        "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="python"),
-        "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="python"),
-    }
-    _emit(
+    from ._ledger_payloads import LedgerTrackResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.track",
+        result=LedgerTrackResult.model_validate(
+            {
+                "bucket_id": result.ref.bucket_id,
+                "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
+                "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
+            }
+        ),
+        lines=[
             f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
             f"{tr('cli.ledger.labels.lifecycle_state')}\t{result.transaction.lifecycle_state.value}",
             f"{tr('cli.ledger.labels.created_event_id')}\t{result.transaction.created_event_id or '-'}",
@@ -1668,7 +1776,7 @@ def ledger_import(
         ),
         transaction_repository=transaction_repository,
     )
-    payload = result.model_dump(mode="json")
+    import_payload = result.model_dump(mode="json")
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
@@ -1680,11 +1788,11 @@ def ledger_import(
         # the imported/skipped counts above are not read as a no-op.
         dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
         lines.append(dry_run_notice)
-        payload["dry_run_notice"] = dry_run_notice
+        import_payload["dry_run_notice"] = dry_run_notice
     empty_import_notice = _empty_import_notice(result)
     if empty_import_notice is not None:
         lines.append(empty_import_notice)
-        payload["empty_import_notice"] = empty_import_notice
+        import_payload["empty_import_notice"] = empty_import_notice
     if result.likely_duplicates > 0:
         # Cross-format duplicate suspicion: same date and amount as an
         # existing row but a divergent narrative. The row is imported;
@@ -1695,13 +1803,16 @@ def ledger_import(
             f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
         )
         lines.append(likely_duplicate_notice)
-        payload["likely_duplicate_notice"] = likely_duplicate_notice
+        import_payload["likely_duplicate_notice"] = likely_duplicate_notice
     if verbose or verify:
         lines.extend(_validation_lines(result.validation, result.source))
-    _emit(
+    from ._ledger_payloads import LedgerImportResult as LedgerImportResultSchema
+
+    _emit_envelope(
         ctx,
-        payload,
-        lines,
+        command="ledger.import",
+        result=LedgerImportResultSchema.model_validate(import_payload),
+        lines=lines,
     )
 
 
@@ -1775,28 +1886,33 @@ def ledger_review(
         ),
         transaction_repository=transaction_repository,
     )
+    from ._ledger_payloads import LedgerReviewResult
+
     if record_id is not None:
         if not result.rows:
-            _emit(
+            _emit_envelope(
                 ctx,
-                {"rows": [], "filters": list(result.filters)},
-                [tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
+                command="ledger.review",
+                result=LedgerReviewResult.model_validate({"rows": [], "filters": list(result.filters)}),
+                lines=[tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
             )
             return
         row = result.rows[0]
-        payload = {
-            "id": row.id,
-            "date": row.date,
-            "amount": row.amount,
-            "description": row.description,
-            "review_status": row.status,
-            "transaction": row.transaction,
-            "verbose": verbose,
-        }
-        _emit(
+        _emit_envelope(
             ctx,
-            payload,
-            [
+            command="ledger.review",
+            result=LedgerReviewResult.model_validate(
+                {
+                    "id": row.id,
+                    "date": row.date,
+                    "amount": row.amount,
+                    "description": row.description,
+                    "review_status": row.status,
+                    "transaction": row.transaction.model_dump(mode="json") if row.transaction is not None else None,
+                    "verbose": verbose,
+                }
+            ),
+            lines=[
                 f"{tr('cli.ledger.labels.id')}\t{row.id}",
                 f"{tr('cli.ledger.labels.date')}\t{row.date}",
                 f"{tr('cli.ledger.labels.amount')}\t{row.amount}",
@@ -1804,10 +1920,6 @@ def ledger_review(
             ],
         )
         return
-    payload = {
-        "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
-        "filters": list(result.filters),
-    }
     lines: list[str] = [tr("cli.ledger.review.header")]
     review_ids = tuple(row.id for row in result.rows)
     review_width = compute_display_id_width(review_ids)
@@ -1817,7 +1929,17 @@ def ledger_review(
     )
     if not result.rows:
         lines.append(tr("cli.ledger.review.no_rows"))
-    _emit(ctx, payload, lines)
+    _emit_envelope(
+        ctx,
+        command="ledger.review",
+        result=LedgerReviewResult.model_validate(
+            {
+                "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
+                "filters": list(result.filters),
+            }
+        ),
+        lines=lines,
+    )
 
 
 ratios_app = typer.Typer(

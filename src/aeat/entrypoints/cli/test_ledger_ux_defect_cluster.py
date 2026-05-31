@@ -56,9 +56,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    rows = payload if isinstance(payload, list) else payload.get(
-        "transactions", payload.get("rows", [])
-    )
+    rows = payload.get("result", payload).get("rows", [])
     assert rows, listed.output
     return rows[0]["transaction_id"]
 
@@ -73,7 +71,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     _create_profile()
     result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     listed = set(payload["category_ids"])
     expected = {category.value for category in SpendingCategory}
     assert listed == expected
@@ -115,7 +113,7 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    transaction = json.loads(result.output)["transaction"]
+    transaction = json.loads(result.output)["result"]["transaction"]
     assert transaction["category_id"] == SpendingCategory.MATERIAL_OFICINA.value
 
 
@@ -185,7 +183,7 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
               "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["imported"] == 0
     assert "empty_import_notice" in payload
     assert "no data rows" in payload["empty_import_notice"].lower()
@@ -208,7 +206,7 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
               "--provider", "csv"],
     )
     assert second.exit_code == 0, second.output
-    payload = json.loads(second.output)
+    payload = json.loads(second.output)["result"]
     assert payload["imported"] == 0
     assert payload["skipped"] == 1
     assert "empty_import_notice" in payload
@@ -259,7 +257,7 @@ def test_add_business_row_without_business_pct_succeeds(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    transaction = json.loads(result.output)["transaction"]
+    transaction = json.loads(result.output)["result"]["transaction"]
     assert transaction["business_classification"] == "BUSINESS"
 
 
@@ -276,7 +274,7 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
         app, ["--format", "json", "app", "ledger", "review", "--id", txn[:8]]
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["id"] == txn
     assert "config repair" not in result.output
 
@@ -291,7 +289,7 @@ def test_review_by_full_id_still_resolves_the_transaction(
         app, ["--format", "json", "app", "ledger", "review", "--id", txn]
     )
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["id"] == txn
+    assert json.loads(result.output)["result"]["id"] == txn
 
 
 # --- ledger view shows the full stored field set ----------------------------
@@ -321,7 +319,7 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
         ],
     )
     assert added.exit_code == 0, added.output
-    txn = json.loads(added.output)["transaction_id"]
+    txn = json.loads(added.output)["result"]["transaction_id"]
 
     viewed = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
     assert viewed.exit_code == 0, viewed.output
@@ -353,11 +351,11 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
         ],
     )
     assert added.exit_code == 0, added.output
-    txn = json.loads(added.output)["transaction_id"]
+    txn = json.loads(added.output)["result"]["transaction_id"]
 
     viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", txn])
     assert viewed.exit_code == 0, viewed.output
-    transaction = json.loads(viewed.output)["transaction"]
+    transaction = json.loads(viewed.output)["result"]["transaction"]
     assert transaction["counterparty"] == "PC Shop SL"
     # Decimal fields are carried in their normalized display form.
     assert transaction["taxable_base"] == "200"
@@ -420,7 +418,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
          "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
-    payload = json.loads(dry_run.output)
+    payload = json.loads(dry_run.output)["result"]
     assert payload["dry_run"] is True
     assert payload["imported"] == 4
     assert payload["skipped"] == 0
@@ -432,7 +430,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
               "--provider", "csv"],
     )
     assert real.exit_code == 0, real.output
-    assert json.loads(real.output)["imported"] == 4
+    assert json.loads(real.output)["result"]["imported"] == 4
 
 
 def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> None:
@@ -451,7 +449,7 @@ def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> No
               "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
-    payload = json.loads(dry_run.output)
+    payload = json.loads(dry_run.output)["result"]
     assert payload["imported"] == 0
     assert payload["skipped"] == 4
 
@@ -475,7 +473,7 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
     assert first.exit_code == 0, first.output
 
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
-    rows = json.loads(listed.output)["rows"]
+    rows = json.loads(listed.output)["result"]["rows"]
     assert len(rows) == 4
     target = rows[0]["transaction_id"]
 
@@ -491,13 +489,13 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
               "--provider", "csv"],
     )
     assert reimport.exit_code == 0, reimport.output
-    payload = json.loads(reimport.output)
+    payload = json.loads(reimport.output)["result"]
     assert payload["imported"] == 0, payload
     assert payload["skipped"] == 4
     # The catalogue still holds exactly four rows — no duplicate of the
     # edited transaction.
     after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
-    assert len(json.loads(after.output)["rows"]) == 4
+    assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
 def test_cross_format_import_of_the_same_movements_deduplicates(
@@ -525,11 +523,11 @@ def test_cross_format_import_of_the_same_movements_deduplicates(
               "--provider", "ofx"],
     )
     assert ofx_import.exit_code == 0, ofx_import.output
-    payload = json.loads(ofx_import.output)
+    payload = json.loads(ofx_import.output)["result"]
     assert payload["imported"] == 0, payload
     assert payload["skipped"] == 4
     after = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
-    assert len(json.loads(after.output)["rows"]) == 4
+    assert len(json.loads(after.output)["result"]["rows"]) == 4
 
 
 def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
@@ -561,7 +559,7 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
               "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["imported"] == 1
     assert payload["likely_duplicates"] == 1
     assert "likely_duplicate_notice" in payload
@@ -603,7 +601,7 @@ def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None
          "--classification", "BUSINESS", "--taxable-base", "100.00"],
     )
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["transaction"]["taxable_base"] == "100"
+    assert json.loads(result.output)["result"]["transaction"]["taxable_base"] == "100"
 
 
 # ---------------------------------------------------------------------------
@@ -657,7 +655,7 @@ def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
          "--classification", "MIXED", "--business-pct", "0.5"],
     )
     assert result.exit_code == 0, result.output
-    transaction = json.loads(result.output)["transaction"]
+    transaction = json.loads(result.output)["result"]["transaction"]
     assert transaction["business_classification"] == "MIXED"
     assert transaction["business_pct"] == "0.5"
 
@@ -697,7 +695,7 @@ def test_history_accepts_the_id_positionally_like_view(tmp_path: Path) -> None:
         app, ["--format", "json", "app", "ledger", "history", txn]
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.output)["result"]
     assert payload["transaction_id"] == txn
     assert payload["event_count"] >= 1
 
@@ -735,7 +733,7 @@ def test_list_and_view_render_accented_descriptions_identically(
     assert "?" not in listed.output
 
     txn = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
-    transaction_id = json.loads(txn.output)["rows"][0]["transaction_id"]
+    transaction_id = json.loads(txn.output)["result"]["rows"][0]["transaction_id"]
     viewed = _RUNNER.invoke(app, ["app", "ledger", "view", transaction_id])
     assert viewed.exit_code == 0, viewed.output
     assert accented in viewed.output
