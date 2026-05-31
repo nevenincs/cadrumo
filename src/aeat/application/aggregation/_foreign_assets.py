@@ -18,6 +18,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from aeat.core.aggregation import AggregationSourceKind
+from aeat.core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {
@@ -150,17 +151,12 @@ class ForeignAssetsAggregation(BaseModel):
         return self
 
 
-THRESHOLD_720_EUR_PER_CLASS: Decimal = Decimal("50000.00")
-"""Modelo 720 declaration floor per asset class: a class is declarable iff
-its total valuation strictly exceeds this amount per AEAT instrucciones."""
-
-
 def declarable_asset_classes_720(aggregation: ForeignAssetsAggregation) -> frozenset[ForeignAssetClass]:
     """Return asset classes whose full valuation exceeds the 720 declaration floor."""
     totals: dict[ForeignAssetClass, Decimal] = {}
     for rollup in aggregation.rollups:
         totals[rollup.asset_class] = totals.get(rollup.asset_class, Decimal("0")) + rollup.total_valuation_eur
-    return frozenset(asset_class for asset_class, total in totals.items() if total > THRESHOLD_720_EUR_PER_CLASS)
+    return frozenset(asset_class for asset_class, total in totals.items() if total > MODELO_720_REPORTING_THRESHOLD_EUR)
 
 
 def declarable_class(aggregation: ForeignAssetsAggregation, *, asset_class: ForeignAssetClass) -> bool:
@@ -216,7 +212,6 @@ def aggregate_foreign_assets_720(
 
 
 __all__ = [
-    "THRESHOLD_720_EUR_PER_CLASS",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
     "ForeignAssetIngestObservation",

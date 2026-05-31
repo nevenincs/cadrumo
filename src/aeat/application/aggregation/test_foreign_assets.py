@@ -7,7 +7,6 @@ from decimal import Decimal
 import pytest
 
 from aeat.application.aggregation._foreign_assets import (
-    THRESHOLD_720_EUR_PER_CLASS,
     ForeignAssetClass,
     ForeignAssetClassRollup,
     ForeignAssetIngestObservation,
@@ -15,6 +14,7 @@ from aeat.application.aggregation._foreign_assets import (
     aggregate_foreign_assets_720,
     declarable_class,
 )
+from aeat.core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -128,7 +128,7 @@ class TestAggregateBasic:
 
 class TestThreshold720:
     def test_threshold_is_canonical_50000(self) -> None:
-        assert Decimal("50000.00") == THRESHOLD_720_EUR_PER_CLASS
+        assert Decimal("50000.00") == MODELO_720_REPORTING_THRESHOLD_EUR
 
     def test_declarable_strict_above_50000(self) -> None:
         observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)

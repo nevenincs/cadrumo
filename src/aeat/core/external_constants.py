@@ -318,11 +318,10 @@ SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = ("es", "en", "ca", "hu")
 #: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
 M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
-"""Canonical encoding probe order for CSV financial sources.
 
-The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`
-is prepended at runtime; this tuple defines the fallback candidates that follow it.
-"""
+#: Modelo 720 declaration floor per asset class per AEAT instrucciones.
+#: An asset class is declarable iff its total valuation strictly exceeds this amount.
+MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
 
 @lru_cache(maxsize=1)
