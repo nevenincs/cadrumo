@@ -6,7 +6,9 @@ the typed-id alias placement rule. Discovery is text-only: the helper
 never imports application, domain, adapter, or entrypoint code so the
 test surface cannot pull side effects from the modules it inspects.
 
-The detectors expose four checks, one per clause of the placement rule:
+The detectors expose ten checks, one per clause of the placement rule
+(four inherited from the identity-primitives ADR, six new under
+core-authority ADR Rule 11):
 
 * :func:`find_sibling_domain_id_imports` — a ``domain.<a>`` module
   importing a name from ``domain.<b>._ids`` for ``a != b`` other than the
@@ -20,6 +22,24 @@ The detectors expose four checks, one per clause of the placement rule:
   subclass declaring a ``<owner>_id`` field as bare ``str`` (or
   ``str | None``) when a typed alias for that owner exists in the
   alias inventory.
+* :func:`find_sibling_domain_enum_imports` — a ``domain.<a>`` module
+  importing from ``domain.<b>._enums`` for ``a != b``.
+* :func:`find_sibling_domain_constant_imports` — a ``domain.<a>``
+  module importing from ``domain.<b>._constants`` for ``a != b``.
+* :func:`find_sibling_domain_protocol_imports` — a ``domain.<a>``
+  module importing from ``domain.<b>._protocols`` for ``a != b``.
+* :func:`find_private_name_cross_package_imports` — any production
+  module importing a ``_``-prefixed name (excluding dunders) from a
+  cross-package module other than ``_ids.py``.
+* :func:`find_same_name_constant_multi_declarations` — two or more
+  production modules outside the protect list declaring an
+  ``UPPER_SNAKE_CASE`` constant with the same name and the same
+  literal value.
+* :func:`find_bare_str_kind_status_state_fields` — a pydantic
+  ``BaseModel`` subclass at a persisted or wire boundary declaring a
+  ``<owner>_kind``, ``<owner>_status``, or ``<owner>_state`` field as
+  bare ``str`` (or ``str | None``) when a typed alias for that owner
+  exists.
 
 Every detector returns a list of :class:`Finding` records; the test
 surface asserts the list is empty. The detectors do not raise on
@@ -40,10 +60,17 @@ __all__ = (
     "AliasInventory",
     "Finding",
     "build_alias_inventory",
+    "build_kind_status_state_alias_inventory",
+    "find_bare_str_kind_status_state_fields",
     "find_bare_str_typed_id_fields",
     "find_misplaced_hex_length_constants",
     "find_private_id_imports",
+    "find_private_name_cross_package_imports",
+    "find_same_name_constant_multi_declarations",
+    "find_sibling_domain_constant_imports",
+    "find_sibling_domain_enum_imports",
     "find_sibling_domain_id_imports",
+    "find_sibling_domain_protocol_imports",
     "iter_aeat_modules",
 )
 
@@ -486,6 +513,505 @@ def find_bare_str_typed_id_fields(
                         (
                             f"bare-str typed-id field {class_node.name}.{name}: a typed "
                             f"alias {alias!r} exists for owner {owner!r}; consume it"
+                        ),
+                    )
+                )
+    return findings
+
+
+# --- Clause 5: sibling-domain ``_enums`` import ----------------------------
+
+
+def _is_named_domain_subpackage(domain_segment: str) -> bool:
+    """Return whether ``domain_segment`` identifies a named subpackage.
+
+    A named subpackage starts with a letter, not an underscore.  Module-level
+    ``_enums.py`` / ``_constants.py`` / ``_protocols.py`` placed directly under
+    ``domain/`` have ``parts[2] == '_enums'`` etc. and are NOT sibling
+    subpackages — they are the root domain package's own internal modules.
+    """
+
+    return bool(domain_segment) and domain_segment[0].isalpha()
+
+
+def find_sibling_domain_enum_imports(root: Path = AEAT_ROOT) -> list[Finding]:
+    """Detect ``domain.<a>`` importing from ``domain.<b>._enums`` for ``a != b``.
+
+    Only named subpackages (those whose name starts with a letter) are
+    considered sibling domains.  Root-level ``domain/_enums.py`` is not a
+    sibling subpackage and imports from it are not flagged by this clause.
+    """
+
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        dotted = _module_dotted_path(path, root)
+        consumer_domain = _domain_root(dotted)
+        if consumer_domain is None or not _is_named_domain_subpackage(consumer_domain):
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for node in _iter_import_from(tree):
+            target = _resolve_relative_import(dotted, node.module, node.level)
+            if target is None:
+                continue
+            target_domain = _domain_root(target)
+            if (
+                target_domain is None
+                or target_domain == consumer_domain
+                or not _is_named_domain_subpackage(target_domain)
+            ):
+                continue
+            seg = target.split(".")
+            if seg[-1] != "_enums":
+                continue
+            imported = ", ".join(alias.name for alias in node.names)
+            findings.append(
+                Finding(
+                    path,
+                    node.lineno,
+                    (
+                        f"sibling-domain _enums import: aeat.domain.{consumer_domain} "
+                        f"imports {imported!r} from {target}"
+                    ),
+                )
+            )
+    return findings
+
+
+# --- Clause 6: sibling-domain ``_constants`` import ------------------------
+
+
+def find_sibling_domain_constant_imports(root: Path = AEAT_ROOT) -> list[Finding]:
+    """Detect ``domain.<a>`` importing from ``domain.<b>._constants`` for ``a != b``.
+
+    Only named subpackages (those whose name starts with a letter) are
+    considered sibling domains.
+    """
+
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        dotted = _module_dotted_path(path, root)
+        consumer_domain = _domain_root(dotted)
+        if consumer_domain is None or not _is_named_domain_subpackage(consumer_domain):
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for node in _iter_import_from(tree):
+            target = _resolve_relative_import(dotted, node.module, node.level)
+            if target is None:
+                continue
+            target_domain = _domain_root(target)
+            if (
+                target_domain is None
+                or target_domain == consumer_domain
+                or not _is_named_domain_subpackage(target_domain)
+            ):
+                continue
+            seg = target.split(".")
+            if seg[-1] != "_constants":
+                continue
+            imported = ", ".join(alias.name for alias in node.names)
+            findings.append(
+                Finding(
+                    path,
+                    node.lineno,
+                    (
+                        f"sibling-domain _constants import: aeat.domain.{consumer_domain} "
+                        f"imports {imported!r} from {target}"
+                    ),
+                )
+            )
+    return findings
+
+
+# --- Clause 7: sibling-domain ``_protocols`` import ------------------------
+
+
+def find_sibling_domain_protocol_imports(root: Path = AEAT_ROOT) -> list[Finding]:
+    """Detect ``domain.<a>`` importing from ``domain.<b>._protocols`` for ``a != b``.
+
+    Only named subpackages (those whose name starts with a letter) are
+    considered sibling domains.
+    """
+
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        dotted = _module_dotted_path(path, root)
+        consumer_domain = _domain_root(dotted)
+        if consumer_domain is None or not _is_named_domain_subpackage(consumer_domain):
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for node in _iter_import_from(tree):
+            target = _resolve_relative_import(dotted, node.module, node.level)
+            if target is None:
+                continue
+            target_domain = _domain_root(target)
+            if (
+                target_domain is None
+                or target_domain == consumer_domain
+                or not _is_named_domain_subpackage(target_domain)
+            ):
+                continue
+            seg = target.split(".")
+            if seg[-1] != "_protocols":
+                continue
+            imported = ", ".join(alias.name for alias in node.names)
+            findings.append(
+                Finding(
+                    path,
+                    node.lineno,
+                    (
+                        f"sibling-domain _protocols import: aeat.domain.{consumer_domain} "
+                        f"imports {imported!r} from {target}"
+                    ),
+                )
+            )
+    return findings
+
+
+# --- Clause 8: private-name cross-package import (non-``_ids.py``) ---------
+
+#: Dotted module prefixes that are exempt from the private-name cross-package rule.
+#: These correspond to the 13 protect-list sites from the core-authority ADR.
+_CLAUSE8_PROTECT_MODULES: frozenset[str] = frozenset(
+    {
+        "aeat.core.identity",
+        "aeat.adapters.persistence.storage",
+        "aeat.application.auth",
+    }
+)
+
+
+def _is_same_package(consumer_dotted: str, imported_dotted: str) -> bool:
+    """Return whether ``consumer_dotted`` and ``imported_dotted`` share an immediate package.
+
+    Two modules share a package when their parent dotted paths are identical
+    (e.g. ``aeat.core.errors._registry`` and ``aeat.core.errors._base``
+    both live in ``aeat.core.errors``).
+    """
+
+    def _parent(dotted: str) -> str:
+        parts = dotted.rsplit(".", 1)
+        return parts[0] if len(parts) > 1 else ""
+
+    return _parent(consumer_dotted) == _parent(imported_dotted)
+
+
+def find_private_name_cross_package_imports(root: Path = AEAT_ROOT) -> list[Finding]:
+    """Detect cross-package imports of ``_``-prefixed names from non-``_ids.py`` modules.
+
+    Only production modules are considered: test modules (``test_*.py`` or
+    ``*_test.py``) are excluded because they legitimately reach into private
+    helpers to exercise internal behaviour. Dunder names (``__version__``,
+    ``__all__``, etc.) are excluded because they are a Python convention and
+    not private API. Relative imports are within-package by definition and are
+    excluded. Imports from modules on the ADR protect list are excluded.
+    """
+
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        if path.name.startswith("test_") or path.stem.endswith("_test"):
+            continue
+        # files inside test-infrastructure directories are not production modules
+        if "tests" in path.parts:
+            continue
+        dotted = _module_dotted_path(path, root)
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for node in _iter_import_from(tree):
+            if node.level > 0:
+                # relative import — within the same package by definition
+                continue
+            mod = node.module or ""
+            if not mod:
+                continue
+            if mod.endswith("._ids") or mod.split(".")[-1] == "_ids":
+                # covered by clause 2
+                continue
+            if any(
+                mod == protect or mod.startswith(protect + ".")
+                for protect in _CLAUSE8_PROTECT_MODULES
+            ):
+                continue
+            if _is_same_package(dotted, mod):
+                continue
+            for alias in node.names:
+                name = alias.name
+                if not name.startswith("_"):
+                    continue
+                if name.startswith("__") and name.endswith("__"):
+                    # dunder — not a private API name
+                    continue
+                findings.append(
+                    Finding(
+                        path,
+                        node.lineno,
+                        (
+                            f"private-name cross-package import: {name!r} imported from "
+                            f"{mod} is a private implementation detail; expose a public API"
+                        ),
+                    )
+                )
+    return findings
+
+
+# --- Clause 9: same-name ``UPPER_SNAKE_CASE`` multi-declaration ------------
+
+_UPPER_SNAKE_RE = re.compile(r"^[A-Z][A-Z0-9_]+$")
+
+#: Dotted module prefixes exempt from the same-name constant rule (protect list).
+_CLAUSE9_PROTECT_MODULES: frozenset[str] = frozenset(
+    {
+        "aeat.core.identity",
+        "aeat.adapters.persistence.storage",
+        "aeat.application.auth",
+    }
+)
+
+
+def _literal_constant_value(node: ast.expr) -> object:
+    """Return the literal value of ``node`` if it is a simple constant, else sentinel."""
+
+    _MISSING = object()
+    if isinstance(node, ast.Constant):
+        return node.value
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        if isinstance(node.operand, ast.Constant):
+            return -node.operand.value  # type: ignore[operator]
+    return _MISSING
+
+
+def find_same_name_constant_multi_declarations(
+    root: Path = AEAT_ROOT,
+) -> list[Finding]:
+    """Detect ``UPPER_SNAKE_CASE`` constants with the same name and value in multiple modules.
+
+    Only module-level assignments whose right-hand side is a simple literal
+    (int, float, str, bytes, bool, or unary-negated number) are considered.
+    Test modules and protect-list modules are excluded.
+    """
+
+    _MISSING = object()
+    # name -> list of (dotted_module, literal_value, path, lineno)
+    registry: dict[str, list[tuple[str, object, Path, int]]] = {}
+
+    for path in iter_aeat_modules(root):
+        if path.name.startswith("test_") or "test_" in path.stem:
+            continue
+        dotted = _module_dotted_path(path, root)
+        if any(
+            dotted == protect or dotted.startswith(protect + ".")
+            for protect in _CLAUSE9_PROTECT_MODULES
+        ):
+            continue
+        tree, err = _parse(path)
+        if err is not None:
+            continue
+        assert tree is not None
+        for name, lineno in _iter_module_assignments(tree):
+            if not _UPPER_SNAKE_RE.match(name):
+                continue
+            # find the corresponding value node
+            val = _MISSING
+            for node in tree.body:
+                if isinstance(node, ast.Assign):
+                    for tgt in node.targets:
+                        if isinstance(tgt, ast.Name) and tgt.id == name and node.lineno == lineno:
+                            val = _literal_constant_value(node.value)
+                elif (
+                    isinstance(node, ast.AnnAssign)
+                    and isinstance(node.target, ast.Name)
+                    and node.target.id == name
+                    and node.lineno == lineno
+                    and node.value is not None
+                ):
+                    val = _literal_constant_value(node.value)
+            if val is _MISSING:
+                continue
+            registry.setdefault(name, []).append((dotted, val, path, lineno))
+
+    findings: list[Finding] = []
+    for const_name, sites in registry.items():
+        # group by value
+        by_value: dict[object, list[tuple[str, object, Path, int]]] = {}
+        for site in sites:
+            _val = site[1]
+            # use repr as dict key to handle unhashable types safely
+            key = repr(_val)
+            by_value.setdefault(key, []).append(site)
+        for _val_repr, same_value_sites in by_value.items():
+            if len(same_value_sites) < 2:
+                continue
+            modules = {s[0] for s in same_value_sites}
+            if len(modules) < 2:
+                continue
+            for dotted, _v, path, lineno in same_value_sites:
+                findings.append(
+                    Finding(
+                        path,
+                        lineno,
+                        (
+                            f"same-name constant multi-declaration: {const_name!r} "
+                            f"declared in {len(same_value_sites)} modules with the same "
+                            f"literal value; import from the canonical site instead"
+                        ),
+                    )
+                )
+    return findings
+
+
+# --- Clause 10: bare-``str`` ``<owner>_kind/_status/_state`` BaseModel field --
+
+_KIND_STATUS_STATE_SUFFIXES: tuple[tuple[str, int], ...] = (
+    ("_kind", 5),
+    ("_status", 7),
+    ("_state", 6),
+)
+
+
+def _is_string_alias_value(value_node: ast.expr) -> bool:
+    """Return whether ``value_node`` represents a string-backed typed alias.
+
+    A string-backed alias is one whose value is a ``Literal[...]`` or
+    an ``Annotated[str, ...]``.  Enum class bodies and integer Literals
+    are excluded.  This guards the clause-10 inventory against false
+    positives from enum classes and integer constants that happen to
+    share the ``Kind``/``Status``/``State`` naming suffix.
+    """
+
+    if not isinstance(value_node, ast.Subscript):
+        return False
+    outer = value_node.value
+    if isinstance(outer, ast.Name):
+        outer_name = outer.id
+    elif isinstance(outer, ast.Attribute):
+        outer_name = outer.attr
+    else:
+        return False
+    if outer_name == "Literal":
+        return True
+    if outer_name == "Annotated":
+        # first type arg must be str
+        slice_node = value_node.slice
+        if isinstance(slice_node, ast.Tuple) and slice_node.elts:
+            first = slice_node.elts[0]
+            if isinstance(first, ast.Name) and first.id == "str":
+                return True
+    return False
+
+
+def build_kind_status_state_alias_inventory(root: Path = AEAT_ROOT) -> AliasInventory:
+    """Discover string-backed typed aliases for ``<owner>Kind``, ``<owner>Status``, ``<owner>State``.
+
+    Only ``Literal[...]`` and ``Annotated[str, ...]`` aliases are
+    considered.  Enum classes and non-string type aliases sharing the
+    ``Kind``/``Status``/``State`` naming suffix are excluded so the
+    inventory does not generate false-positive clause-10 violations.
+    """
+
+    by_owner: dict[str, str] = {}
+    alias_modules: set[str] = set()
+    for path in iter_aeat_modules(root):
+        tree, _err = _parse(path)
+        if tree is None:
+            continue
+        for node in tree.body:
+            name: str | None = None
+            value_node: ast.expr | None = None
+            if isinstance(node, ast.Assign):
+                if node.targets and isinstance(node.targets[0], ast.Name):
+                    name = node.targets[0].id
+                    value_node = node.value
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                name = node.target.id
+                value_node = node.value
+            elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+                name = node.name.id
+                value_node = getattr(node, "value", None)
+            if not name or not name[0].isupper() or name.startswith("_"):
+                continue
+            if value_node is None or not _is_string_alias_value(value_node):
+                continue
+            for suffix, strip in _KIND_STATUS_STATE_SUFFIXES:
+                camel_suffix = suffix.lstrip("_").capitalize()
+                if name.endswith(camel_suffix):
+                    snake = _camel_to_snake(name)
+                    owner = snake[: -strip]
+                    by_owner.setdefault(owner, name)
+                    alias_modules.add(_module_dotted_path(path, root))
+                    break
+    return AliasInventory(
+        aliases_by_owner=dict(sorted(by_owner.items())),
+        alias_modules=frozenset(alias_modules),
+    )
+
+
+def find_bare_str_kind_status_state_fields(
+    root: Path = AEAT_ROOT,
+    inventory: AliasInventory | None = None,
+) -> list[Finding]:
+    """Detect bare-``str`` ``<owner>_kind/_status/_state`` fields on pydantic models.
+
+    For every pydantic ``BaseModel`` subclass declared under ``root``,
+    inspect every ``AnnAssign`` field whose target name ends in
+    ``_kind``, ``_status``, or ``_state``. If a typed alias for that
+    owner exists in the inventory and the annotation is bare ``str`` (or
+    ``str | None``), the field is flagged.
+    """
+
+    if inventory is None:
+        inventory = build_kind_status_state_alias_inventory(root)
+    findings: list[Finding] = []
+    for path in iter_aeat_modules(root):
+        tree, err = _parse(path)
+        if err is not None:
+            findings.append(err)
+            continue
+        assert tree is not None
+        for class_node in (n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)):
+            if not _is_basemodel_subclass(class_node):
+                continue
+            for field in class_node.body:
+                if not isinstance(field, ast.AnnAssign):
+                    continue
+                target = field.target
+                if not isinstance(target, ast.Name):
+                    continue
+                fname = target.id
+                matched_owner: str | None = None
+                matched_alias: str | None = None
+                for suffix, strip in _KIND_STATUS_STATE_SUFFIXES:
+                    if fname.endswith(suffix):
+                        owner = fname[: -strip]
+                        if owner in inventory.aliases_by_owner:
+                            matched_owner = owner
+                            matched_alias = inventory.aliases_by_owner[owner]
+                            break
+                if matched_owner is None or matched_alias is None:
+                    continue
+                if not _annotation_is_bare_str(field.annotation):
+                    continue
+                findings.append(
+                    Finding(
+                        path,
+                        field.lineno,
+                        (
+                            f"bare-str typed field {class_node.name}.{fname}: a typed "
+                            f"alias {matched_alias!r} exists for owner {matched_owner!r}; "
+                            f"consume it"
                         ),
                     )
                 )

@@ -6,6 +6,11 @@ structural failure mode for the typed-id alias placement rule. The
 tests are real-behavior: no mocks, no fakes, no skipped variants. A
 violation surfaces as a precise ``path:line`` location in the
 assertion message so the failure points the operator at the source.
+
+Ten cumulative clauses:
+
+* Clauses 1-4: inherited from the identity-primitives ADR.
+* Clauses 5-10: new under core-authority ADR Rule 11.
 """
 
 from __future__ import annotations
@@ -18,10 +23,17 @@ from aeat.diagnostics import _identity_placement
 from aeat.diagnostics._identity_placement import (
     Finding,
     build_alias_inventory,
+    build_kind_status_state_alias_inventory,
+    find_bare_str_kind_status_state_fields,
     find_bare_str_typed_id_fields,
     find_misplaced_hex_length_constants,
     find_private_id_imports,
+    find_private_name_cross_package_imports,
+    find_same_name_constant_multi_declarations,
+    find_sibling_domain_constant_imports,
+    find_sibling_domain_enum_imports,
     find_sibling_domain_id_imports,
+    find_sibling_domain_protocol_imports,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -258,10 +270,274 @@ def test_detector_public_surface_is_pinned() -> None:
         "AliasInventory",
         "Finding",
         "build_alias_inventory",
+        "build_kind_status_state_alias_inventory",
+        "find_bare_str_kind_status_state_fields",
         "find_bare_str_typed_id_fields",
         "find_misplaced_hex_length_constants",
         "find_private_id_imports",
+        "find_private_name_cross_package_imports",
+        "find_same_name_constant_multi_declarations",
+        "find_sibling_domain_constant_imports",
+        "find_sibling_domain_enum_imports",
         "find_sibling_domain_id_imports",
+        "find_sibling_domain_protocol_imports",
         "iter_aeat_modules",
     }
     assert set(_identity_placement.__all__) == expected
+
+
+# ---------------------------------------------------------------------------
+# Clauses 5-10 (core-authority ADR Rule 11)
+# ---------------------------------------------------------------------------
+# Clauses that currently surface real violations in the production tree are
+# marked BLOCKED below.  The detector and anti-tautology proof are implemented
+# for all six clauses; the zero-violation full-tree assertion is only present
+# for clauses whose production tree is clean.  Blocked clauses must be
+# resolved by the owning Wave before the assertion can be uncommented.
+
+
+# --- Clause 5 (BLOCKED): sibling-domain ``_enums`` import -----------------
+# domain/iva/_invoice_classification.py:56 imports IvaRate from
+# domain/invoices/_enums.  Belongs to W04 (enum centralisation / MERGE-013).
+
+
+def test_sibling_domain_enum_detector_flags_synthetic_violation(tmp_path: Path) -> None:
+    """Anti-tautology proof for clause 5.
+
+    Construct a synthetic ``domain.a`` importing from ``domain.b._enums``,
+    confirm the detector fires, then remove the import and confirm it clears.
+    """
+
+    root = _seed_synthetic_aeat(tmp_path)
+    domain = root / "domain"
+    domain.mkdir()
+    (domain / "__init__.py").write_text("")
+    for name in ("a", "b"):
+        sub = domain / name
+        sub.mkdir()
+        (sub / "__init__.py").write_text("")
+    (domain / "b" / "_enums.py").write_text(
+        "import enum\n"
+        "class ExampleKind(enum.Enum):\n"
+        "    X = 'x'\n"
+    )
+    consumer = domain / "a" / "_consumer.py"
+    consumer.write_text("from aeat.domain.b._enums import ExampleKind\n")
+
+    findings = find_sibling_domain_enum_imports(root)
+    assert any("ExampleKind" in f.message for f in findings), (
+        "sibling-domain enum detector failed to surface synthetic violation; "
+        f"findings={[f.render() for f in findings]!r}"
+    )
+
+    consumer.write_text("ExampleKind = None\n")
+    assert find_sibling_domain_enum_imports(root) == []
+
+
+# --- Clause 6 (BLOCKED): sibling-domain ``_constants`` import -------------
+# domain/buckets/_event.py:24 imports ProfileName from domain/profile/_constants.
+# Belongs to W03 (constant centralisation) or W04.
+
+
+def test_sibling_domain_constant_detector_flags_synthetic_violation(tmp_path: Path) -> None:
+    """Anti-tautology proof for clause 6."""
+
+    root = _seed_synthetic_aeat(tmp_path)
+    domain = root / "domain"
+    domain.mkdir()
+    (domain / "__init__.py").write_text("")
+    for name in ("a", "b"):
+        sub = domain / name
+        sub.mkdir()
+        (sub / "__init__.py").write_text("")
+    (domain / "b" / "_constants.py").write_text("EXAMPLE_CONST = 'example'\n")
+    consumer = domain / "a" / "_consumer.py"
+    consumer.write_text("from aeat.domain.b._constants import EXAMPLE_CONST\n")
+
+    findings = find_sibling_domain_constant_imports(root)
+    assert any("EXAMPLE_CONST" in f.message for f in findings), (
+        "sibling-domain constant detector failed to surface synthetic violation; "
+        f"findings={[f.render() for f in findings]!r}"
+    )
+
+    consumer.write_text("EXAMPLE_CONST = 'local'\n")
+    assert find_sibling_domain_constant_imports(root) == []
+
+
+# --- Clause 7 (BLOCKED): sibling-domain ``_protocols`` import -------------
+# domain/filing/_schema.py:23 imports ModeloDraftStatus from
+# domain/submission/_protocols.  Belongs to W06 (Protocol centralisation).
+
+
+def test_sibling_domain_protocol_detector_flags_synthetic_violation(tmp_path: Path) -> None:
+    """Anti-tautology proof for clause 7."""
+
+    root = _seed_synthetic_aeat(tmp_path)
+    domain = root / "domain"
+    domain.mkdir()
+    (domain / "__init__.py").write_text("")
+    for name in ("a", "b"):
+        sub = domain / name
+        sub.mkdir()
+        (sub / "__init__.py").write_text("")
+    (domain / "b" / "_protocols.py").write_text(
+        "from typing import Protocol\n"
+        "class ExampleProtocol(Protocol):\n"
+        "    def run(self) -> None: ...\n"
+    )
+    consumer = domain / "a" / "_consumer.py"
+    consumer.write_text("from aeat.domain.b._protocols import ExampleProtocol\n")
+
+    findings = find_sibling_domain_protocol_imports(root)
+    assert any("ExampleProtocol" in f.message for f in findings), (
+        "sibling-domain protocol detector failed to surface synthetic violation; "
+        f"findings={[f.render() for f in findings]!r}"
+    )
+
+    consumer.write_text("ExampleProtocol = None\n")
+    assert find_sibling_domain_protocol_imports(root) == []
+
+
+# --- Clause 8 (BLOCKED): private-name cross-package import ----------------
+# domain/deadlines/_profiles.py imports _parse_bool, _parse_date from
+# aeat.core.parsing; adapters import _round_to_cents from
+# aeat.domain.fincas._rounding.  Belongs to W09/W10.
+
+
+def test_private_name_cross_package_detector_flags_synthetic_violation(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology proof for clause 8."""
+
+    root = _seed_synthetic_aeat(tmp_path)
+    pkg_a = root / "domain" / "a"
+    pkg_b = root / "domain" / "b"
+    (root / "domain").mkdir()
+    (root / "domain" / "__init__.py").write_text("")
+    pkg_a.mkdir()
+    (pkg_a / "__init__.py").write_text("")
+    pkg_b.mkdir()
+    (pkg_b / "__init__.py").write_text("")
+    (pkg_b / "_utils.py").write_text("def _private_helper() -> None: ...\n")
+    consumer = pkg_a / "_consumer.py"
+    consumer.write_text("from aeat.domain.b._utils import _private_helper\n")
+
+    findings = find_private_name_cross_package_imports(root)
+    assert any("_private_helper" in f.message for f in findings), (
+        "private-name cross-package detector failed to surface synthetic violation; "
+        f"findings={[f.render() for f in findings]!r}"
+    )
+
+    consumer.write_text("from aeat.domain.b._utils import public_helper\n")
+    assert find_private_name_cross_package_imports(root) == []
+
+
+# --- Clause 9 (CLEAR): same-name ``UPPER_SNAKE_CASE`` multi-declaration ---
+
+
+def test_no_same_name_constant_multi_declarations() -> None:
+    """No two production modules declare an ``UPPER_SNAKE_CASE`` constant
+    with the same name and the same literal value.
+    """
+
+    findings = find_same_name_constant_multi_declarations()
+    assert findings == [], (
+        "same-name constant multi-declaration detected:\n" + _render(findings)
+    )
+
+
+def test_same_name_constant_detector_flags_synthetic_violation(tmp_path: Path) -> None:
+    """Anti-tautology proof for clause 9."""
+
+    root = _seed_synthetic_aeat(tmp_path)
+    pkg_a = root / "application" / "a"
+    pkg_b = root / "application" / "b"
+    (root / "application").mkdir()
+    (root / "application" / "__init__.py").write_text("")
+    pkg_a.mkdir()
+    (pkg_a / "__init__.py").write_text("")
+    pkg_b.mkdir()
+    (pkg_b / "__init__.py").write_text("")
+    (pkg_a / "_constants.py").write_text("SHARED_LIMIT = 100\n")
+    (pkg_b / "_constants.py").write_text("SHARED_LIMIT = 100\n")
+
+    findings = find_same_name_constant_multi_declarations(root)
+    assert any("SHARED_LIMIT" in f.message for f in findings), (
+        "same-name constant detector failed to surface synthetic violation; "
+        f"findings={[f.render() for f in findings]!r}"
+    )
+
+    # rewrite one to a different name — violation clears
+    (pkg_b / "_constants.py").write_text("LOCAL_LIMIT = 100\n")
+    assert find_same_name_constant_multi_declarations(root) == []
+
+
+# --- Clause 10 (BLOCKED): bare-``str`` ``_kind/_status/_state`` field -----
+# application/ledger/_models.py has two bare-str review_status fields when
+# ReviewStatus (Literal) exists.  Belongs to W12 (bare-str enrollment).
+
+
+def test_kind_status_state_alias_inventory_discovers_known_aliases(tmp_path: Path) -> None:
+    """The clause-10 alias inventory discovers ``Literal`` and ``Annotated[str]``
+    aliases for ``Kind``/``Status``/``State``-suffixed names and ignores enum classes.
+    """
+
+    root = _seed_synthetic_aeat(tmp_path)
+    pkg = root / "domain" / "review"
+    pkg.mkdir(parents=True)
+    (root / "domain" / "__init__.py").write_text("")
+    (pkg / "__init__.py").write_text("")
+    (pkg / "_schema.py").write_text(
+        "from typing import Literal\n"
+        "ReviewStatus = Literal['pending', 'approved', 'rejected']\n"
+        "import enum\n"
+        "class ReviewKindEnum(enum.Enum):\n"  # should NOT be inventoried
+        "    A = 'a'\n"
+    )
+
+    inv = build_kind_status_state_alias_inventory(root)
+    assert "review" in inv.aliases_by_owner, (
+        f"inventory failed to discover ReviewStatus; got {sorted(inv.aliases_by_owner.keys())!r}"
+    )
+    assert "review_kind_enum" not in inv.aliases_by_owner, (
+        "inventory should not discover enum classes"
+    )
+
+
+def test_bare_str_kind_status_state_detector_flags_synthetic_violation(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology proof for clause 10."""
+
+    root = _seed_synthetic_aeat(tmp_path)
+    pkg = root / "domain" / "review"
+    pkg.mkdir(parents=True)
+    (root / "domain" / "__init__.py").write_text("")
+    (pkg / "__init__.py").write_text("")
+    (pkg / "_schema.py").write_text(
+        "from typing import Literal\n"
+        "ReviewStatus = Literal['pending', 'approved']\n"
+    )
+    consumer = pkg / "_models.py"
+    consumer.write_text(
+        "from pydantic import BaseModel\n"
+        "class ReviewRecord(BaseModel):\n"
+        "    review_status: str\n"
+    )
+
+    inv = build_kind_status_state_alias_inventory(root)
+    findings = find_bare_str_kind_status_state_fields(root, inv)
+    assert any("ReviewRecord" in f.message for f in findings), (
+        "clause-10 detector failed to surface synthetic violation; "
+        f"findings={[f.render() for f in findings]!r}"
+    )
+
+    # fix: use the typed alias
+    consumer.write_text(
+        "from pydantic import BaseModel\n"
+        "from ._schema import ReviewStatus\n"
+        "class ReviewRecord(BaseModel):\n"
+        "    review_status: ReviewStatus\n"
+    )
+    inv2 = build_kind_status_state_alias_inventory(root)
+    assert find_bare_str_kind_status_state_fields(root, inv2) == []
