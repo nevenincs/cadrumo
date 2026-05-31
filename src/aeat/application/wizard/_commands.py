@@ -857,11 +857,10 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
                 explicit_question_ids=frozenset(explicit_flags),
             )
 
-        import json as _json
-
         import typer as _typer
 
         from ...core.click_context import json_output_requested
+        from ...core.json_contract import emit_json_success
 
         verb = "created" if mode == "create" else "updated"
         verb_label = (
@@ -881,7 +880,10 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         if mode == "create":
             payload["active_profile"] = profile_name
         if json_output_requested():
-            _typer.echo(_json.dumps(payload, ensure_ascii=False))
+            command_path = (
+                "config.profile.create" if mode == "create" else "config.profile.edit"
+            )
+            emit_json_success(command_path, payload)
         else:
             _typer.echo(f"{tr('application.wizard.output_labels.profile')}\t{profile_name}")
             _typer.echo(f"{tr('application.wizard.output_labels.status')}\t{verb_label}")
