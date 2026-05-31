@@ -26,10 +26,10 @@ from ...domain.filing import (
     ModeloApprovalBasis,
     ModeloDraft,
     ModeloDraftError,
-    ModeloDraftStatus,
     ModeloValidator,
     derive_validation_status,
 )
+from ...domain.submission._protocols import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
 
 _logger = get_logger(__name__)

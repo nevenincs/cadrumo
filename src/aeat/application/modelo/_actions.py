@@ -56,7 +56,7 @@ from ...domain.calculations.registry import (
     materialize_relation_binding_values,
 )
 from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
-from ...domain.filing import ModeloDraftStatus
+from ...domain.submission import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -192,7 +192,7 @@ def _emit_bucket_event(
     return event
 
 
-from ..workflow._errors import WorkflowInputMismatchError  # re-exported for callers
+from ..workflow import WorkflowInputMismatchError
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
