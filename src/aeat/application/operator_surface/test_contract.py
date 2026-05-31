@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import importlib
 import inspect
+from collections.abc import Iterator
 
 import pytest
 from pydantic import ValidationError
@@ -25,9 +27,57 @@ from aeat.application.operator_surface import (
 )
 from aeat.application.operator_surface._models import LifecycleContract, RootSurface
 from aeat.application.overview import FilingStatus
+from aeat.core.config import override_settings
 from aeat.core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _pin_english_locale() -> Iterator[None]:
+    """Pin the operator-surface contract tests to the English locale.
+
+    The contract surface (help paragraphs, error messages, retired-surface
+    reasons) is rendered through the project locale layer. These tests
+    assert against the canonical English strings, so we pin the locale
+    here rather than coupling the assertions to whatever the default
+    locale happens to be in any given environment.
+
+    The retired-surface ``reason`` strings are resolved by ``tr()`` at
+    module-import time and frozen into module-level constants, so we
+    additionally reload the ``_contract`` module while the override
+    is active to rebuild those constants in English. The cached
+    ``get_operator_surface_contract()`` result is cleared so the next
+    call rebuilds against the reloaded constants.
+    """
+    with override_settings(aeat_output_language="en"):
+        contract_module = importlib.import_module(
+            "aeat.application.operator_surface._contract"
+        )
+        package_module = importlib.import_module("aeat.application.operator_surface")
+        original_retired = contract_module.RETIRED_OPERATOR_SURFACES
+        # Rebuild the retired-surface tuple under the active (English)
+        # locale by re-running the module-level tr() calls. The
+        # constant is captured at module-import time, so simply
+        # toggling Settings is not sufficient — we have to rebuild.
+        rebuilt = importlib.reload(contract_module).RETIRED_OPERATOR_SURFACES
+        contract_module.get_operator_surface_contract.cache_clear()
+        # Re-bind the package-level re-export and any symbols the test
+        # module imported eagerly so they point at the freshly-reloaded
+        # contract module.
+        package_module.RETIRED_OPERATOR_SURFACES = rebuilt
+        package_module.get_operator_surface_contract = (
+            contract_module.get_operator_surface_contract
+        )
+        package_module.require_accepted_root = contract_module.require_accepted_root
+        package_module.retired_surface_suggestion = (
+            contract_module.retired_surface_suggestion
+        )
+        try:
+            yield
+        finally:
+            contract_module.RETIRED_OPERATOR_SURFACES = original_retired
+            contract_module.get_operator_surface_contract.cache_clear()
 
 
 def test_contract_roots_are_exactly_config_and_app() -> None:
@@ -96,7 +146,7 @@ def test_retired_surface_suggestions_capture_rejected_roots() -> None:
     assert declaration.suggestion == "aeat app modelo"
     assert submit is not None
     assert submit.replacement is None
-    assert submit.reason == "live submission is permanently disabled"
+    assert submit.reason == "live submission is permanently disabled."
 
 
 def test_require_accepted_root_uses_registered_application_error() -> None:
@@ -107,7 +157,7 @@ def test_require_accepted_root_uses_registered_application_error() -> None:
 
     error = exc_info.value
     assert error.suggestion == "aeat config profile create NAME"
-    assert error.reason == "setup and config are consolidated under the config root"
+    assert error.reason == "setup and config are consolidated under the config root."
     assert get_registered_error_code(error).code == "REFUSED_OPERATOR_SURFACE_CONTRACT"
 
 
