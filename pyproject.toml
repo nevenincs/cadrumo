@@ -513,6 +513,22 @@ exclude = [
   "src/aeat/**/_test_*.py",
 ]
 
+# ── pydoclint (docstring-vs-signature accuracy) ──────────────────────────────
+# Verifies documented Args/Returns/Raises match the real signature - the
+# true-to-reality docstring gate. Configured to the project convention: types
+# live in signatures (rendered by autodoc_typehints="description"), so
+# docstrings carry no arg type hints; pydantic Field(description=...) covers
+# attribute docs, so class-attribute checks are off. Tests are out of scope.
+[tool.pydoclint]
+style = "google"
+arg-type-hints-in-docstring = false
+check-return-types = false
+check-yield-types = false
+check-class-attributes = false
+skip-checking-short-docstrings = true
+allow-init-docstring = true
+exclude = 'tests|test_|_test_'
+
 # ── Vulture (dead-code) ──────────────────────────────────────────────────────
 # Vulture defaults to confidence threshold 60 which surfaces many
 # false-positive "unused" guesses (decorators, dynamic dispatch, test
