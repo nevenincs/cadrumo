@@ -90,16 +90,16 @@ and adds locale strings. Depends on W02 being merged.
 Adds locale strings for the worker class selector, each exemption variant label, and
 the RETMAR mandatory-filing warning.
 
-- [ ] `W03.P06.S19` - scaffold locale keys for worker_class selector and trabajador_del_mar value; `python -m aeat.locales scaffold`.
-- [ ] `W03.P06.S20` - scaffold locale keys for art_7p exemption label, rebeca exemption label, da41 inactive label, and retmar_mandatory_filing warning; `python -m aeat.locales scaffold`.
-- [ ] `W03.P06.S21` - add Spanish (es) locale translations for all new keys added in S19-S20; `locales/es.yml`.
-- [ ] `W03.P06.S22` - run locale audit to confirm no orphan or missing keys; `python -m aeat.locales audit`.
+- [x] `W03.P06.S19` - scaffold locale keys for worker_class selector and trabajador_del_mar value; `python -m aeat.locales scaffold`.
+- [x] `W03.P06.S20` - scaffold locale keys for art_7p exemption label, rebeca exemption label, da41 inactive label, and retmar_mandatory_filing warning; `python -m aeat.locales scaffold`.
+- [x] `W03.P06.S21` - add Spanish (es) locale translations for all new keys added in S19-S20; `locales/es.yml`.
+- [x] `W03.P06.S22` - run locale audit to confirm no orphan or missing keys; `python -m aeat.locales audit`.
 
 ### Phase `W03.P07` - CLI surface verification
 
 Confirms the new profile fact is accepted by the CLI input path and that the RETMAR
 warning surfaces in operator-facing output.
 
-- [ ] `W03.P07.S23` - verify CLI accepts worker_class = trabajador_del_mar in the config input path without validation error; `src/aeat/entrypoints/cli/`.
-- [ ] `W03.P07.S24` - verify CLI JSON output for a trabajador_del_mar profile includes maritime exemption CasillaObservation rows with legal_refs; `src/aeat/entrypoints/cli/`.
-- [ ] `W03.P07.S25` - verify RETMAR mandatory-filing warning appears in CLI output when retmar_registered = True; `src/aeat/entrypoints/cli/`.
+- [x] `W03.P07.S23` - verify CLI accepts worker_class = trabajador_del_mar in the config input path without validation error; `src/aeat/entrypoints/cli/`.
+- [x] `W03.P07.S24` - verify CLI JSON output for a trabajador_del_mar profile includes maritime exemption CasillaObservation rows with legal_refs; `src/aeat/entrypoints/cli/`.
+- [x] `W03.P07.S25` - verify RETMAR mandatory-filing warning appears in CLI output when retmar_registered = True; `src/aeat/entrypoints/cli/`.
