@@ -1121,3 +1121,12 @@ Pay down ~10-15 enrolled sites where the type-ignore can be replaced with proper
 
 - [x] `W26.P56.S657` - inventory the type-ignore allowlist from S654 and classify each site by paydown difficulty (trivial / moderate / hard); `produce a typed paydown classification report under .vault/audit/; `.vault/audit/2026-05-31-type-ignore-paydown-classification-audit.md`.
 - [x] `W26.P56.S658` - pay down 10-15 high-confidence sites from the trivial bucket; `each fix is one commit; allowlist shrinks by the same count; aggregate test re-runs ratchet post-paydown; `src/aeat/...` (sites selected from S657 report) + `src/aeat/test_type_ignore_rationale_inventory.py` (allowlist update)`.
+
+### Phase `W26.P57` - second paydown batch: remaining 30 trivial-cluster sites
+
+Allowlist at 84 after W26.P56. The trivial bucket still holds ~30 sites across remaining clusters: pydantic model_config tail (16+ sites), click stubs (8), ctypes (1), TOML key erasure (3), generic getattr (2), runtime CM protocol (4 — verify 4 not 12 per coder reclassification note in S657 audit).
+
+- [ ] `W26.P57.S659` - pay down click-stubs cluster (8 sites in entrypoints/cli/_doc_reference.py:90,104,167,168,199,263,291,348) with TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING marker; shrink allowlist by 8; ratchet green; `src/aeat/entrypoints/cli/_doc_reference.py` + `src/aeat/test_type_ignore_rationale_inventory.py`.
+- [ ] `W26.P57.S660` - pay down remaining pydantic model_config sites (config_payloads + root_payloads + google_payloads + profile_census_payloads; ~17 sites) with TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR marker; shrink allowlist proportionally; ratchet green; `src/aeat/entrypoints/cli/_config_payloads.py` + `_config/_google_payloads.py` + `_config/_profile_census_payloads.py` + `_root_payloads.py` + `src/aeat/test_type_ignore_rationale_inventory.py`.
+- [ ] `W26.P57.S661` - pay down ctypes (1) + TOML-key-erasure (3) + generic-getattr (2) + runtime-CM-protocol (4) clusters; 10 markers total; shrink allowlist by 10; ratchet green; multiple `src/aeat/` sites per S657 audit + `src/aeat/test_type_ignore_rationale_inventory.py`.
+- [ ] `W26.P57.S662` - aggregate test asserting all P57 closures landed + allowlist size matches expected post-paydown count + prior-wave ratchets green; `src/aeat/test_w26_p57_closure.py`.
