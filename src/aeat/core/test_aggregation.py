@@ -106,28 +106,25 @@ def test_aggregation_source_kind_roundtrip_json() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S327 — migration inventory: no importer of the old location remains
+# Structural invariant: AggregationSourceKind lives at aeat.core.aggregation
 # ---------------------------------------------------------------------------
 
+_FORBIDDEN_ABSOLUTE_PATH = "aeat.application.aggregation._source_kinds"
+_FORBIDDEN_RELATIVE_MODULE = "_source_kinds"
+_GUARDED_NAME = "AggregationSourceKind"
 
-def test_no_production_module_imports_from_old_source_kinds_location() -> None:
-    """No .py file under src/aeat/ imports AggregationSourceKind from the old module path.
 
-    This test parses the AST of every production Python file and asserts that
-    none of them contain an import statement of the form:
-        from aeat.application.aggregation._source_kinds import AggregationSourceKind
-        from ._source_kinds import AggregationSourceKind   (relative, inside aggregation/)
+def test_aggregation_source_kind_has_a_single_canonical_import_path() -> None:
+    """``AggregationSourceKind`` must only be imported from ``aeat.core.aggregation``.
 
-    A missed migration would surface as a failing assertion, not a silent import
-    that resolves through a shim.
+    The enum is a core primitive; importing it from any private aggregation
+    module re-introduces a hidden second source of truth. The AST walker below
+    asserts no production module reaches for either an absolute or relative
+    private alias of the enum.
     """
 
     repo_root = Path(__file__).parents[3]
     src_root = repo_root / "src" / "aeat"
-
-    _OLD_ABSOLUTE = "aeat.application.aggregation._source_kinds"
-    _OLD_RELATIVE_MODULE = "_source_kinds"
-    _TARGET_NAME = "AggregationSourceKind"
 
     offenders: list[str] = []
 
@@ -138,25 +135,22 @@ def test_no_production_module_imports_from_old_source_kinds_location() -> None:
         for node in ast.walk(tree):
             if not isinstance(node, ast.ImportFrom):
                 continue
-            # Absolute import: from aeat.application.aggregation._source_kinds import ...
-            if node.module == _OLD_ABSOLUTE:
+            if node.module == _FORBIDDEN_ABSOLUTE_PATH:
                 for alias in node.names:
-                    if alias.name == _TARGET_NAME:
+                    if alias.name == _GUARDED_NAME:
                         offenders.append(
                             f"{py_file.relative_to(repo_root)}:{node.lineno}: "
-                            f"absolute import from old location '{_OLD_ABSOLUTE}'"
+                            f"absolute import from private path '{_FORBIDDEN_ABSOLUTE_PATH}'"
                         )
-            # Relative import: from ._source_kinds import AggregationSourceKind
-            if node.module == _OLD_RELATIVE_MODULE and node.level and node.level >= 1:
+            if node.module == _FORBIDDEN_RELATIVE_MODULE and node.level and node.level >= 1:
                 for alias in node.names:
-                    if alias.name == _TARGET_NAME:
+                    if alias.name == _GUARDED_NAME:
                         offenders.append(
                             f"{py_file.relative_to(repo_root)}:{node.lineno}: "
-                            f"relative import from old module '{_OLD_RELATIVE_MODULE}'"
+                            f"relative import from private module '{_FORBIDDEN_RELATIVE_MODULE}'"
                         )
 
     assert offenders == [], (
-        "AggregationSourceKind is still imported from the old _source_kinds location.\n"
-        "Migrate these imports to 'from aeat.core.aggregation import AggregationSourceKind':\n"
-        + "\n".join(offenders)
+        f"{_GUARDED_NAME} must be imported from 'aeat.core.aggregation' only.\n"
+        "Offending imports:\n" + "\n".join(offenders)
     )

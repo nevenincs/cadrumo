@@ -684,11 +684,12 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
 
 
 # ---------------------------------------------------------------------------
-# M303 closure DAG verification — boxes 64, 66, 69, 71 (2023-y-siguientes)
-# Orden HAC/819/2024 art. 1 §§ 4-6
+# Modelo 303 verification — boxes 64, 66, 69, 71 for the 2023-onwards template.
+# The AEAT form revision was published by Orden HAC/819/2024 art. 1 §§ 4-6
+# (BOE-A-2024-XXXX) and applies to 2023 and subsequent filings.
 # ---------------------------------------------------------------------------
 
-_M303_NEW_TEMPLATE_PARAMS = [
+_M303_2023_ONWARDS_PARAMS = [
     ("2023-1T", 2023, "1T"),
     ("2023-2T", 2023, "2T"),
     ("2023-3T", 2023, "3T"),
@@ -754,7 +755,7 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
     return extracted, dict(result.values), inputs
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     pdf_stem: str, year: int, period: str
 ) -> None:
@@ -788,7 +789,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     )
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
     pdf_stem: str, year: int, period: str
 ) -> None:
@@ -823,7 +824,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
     )
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidacion(
     pdf_stem: str, year: int, period: str
 ) -> None:
@@ -858,7 +859,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
     )
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_NEW_TEMPLATE_PARAMS)
+@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     pdf_stem: str, year: int, period: str
 ) -> None:
