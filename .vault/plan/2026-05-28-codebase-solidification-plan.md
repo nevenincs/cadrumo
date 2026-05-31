@@ -705,3 +705,62 @@ Fix CLI wire-boundary type mismatch in _modelo_payloads.py:84 (dict[str, object]
 
 - [x] `W05.P26.S463` - align CalculationRevisionPayload.inputs_snapshot type at cli/_modelo_payloads.py:84 from dict[str,object] to dict[str,str] (matching domain Mapping[str,str] contract); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
 - [x] `W05.P26.S464` - add real-behavior test asserting CalculationRevisionPayload inputs_snapshot roundtrips dict[str,str] through CLI JSON channel; `src/aeat/entrypoints/cli/test_modelo_payloads.py`.
+
+## Wave `W06` - close Wave 6 audit findings: 4 regressions + 45 new/survivor
+
+Wave 6 audit surfaced 4 strict regressions (worse than W5's 2): A3 WorkflowInputMismatchError at wizard/_persistence.py:142 (W5 fixed :105 sibling missed), A7 ledger_transaction at _bindings.py/_schema.py 4 sites (W5 actions sibling missed), A7 .xls Literal annotations + sites at _workbook_parity.py (W5 .xlsx cluster sibling missed), A8 cast at _bindings.py:1651 without CAST-RATIONALE marker. Plus major systemic A3 finding: tr()-as-positional pattern at 28+ sites across _config, modelo, aggregation, wizard, orchestration that W5 audit missed. W06 emphasises broader-grep enforcement per Step: every fix must grep the file for sibling patterns.
+
+### Phase `W06.P27` - A3 locale: regression + tr-positional systemic sweep
+
+Close 1 regression at wizard/_persistence.py:142 + systemic sweep of tr()-as-positional across all operator-facing AeatError raises. Single-agent file-by-file broad-grep pass with strict no-positional-tr inventory test.
+
+- [ ] `W06.P27.S465` - fix regression: thread translated_message on WorkflowInputMismatchError at wizard/_persistence.py:142 (sibling W5 missed); `src/aeat/application/wizard/_persistence.py`.
+- [ ] `W06.P27.S466` - migrate 28+ tr-as-positional sites in entrypoints/cli/_config/__init__.py to translated_message kwarg via grep-find-all-CliRefusedBoundaryError-tr-positional + replace; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `W06.P27.S467` - migrate tr-as-positional sites in entrypoints/cli/_config/_google.py:765,775,785,1256 + convert :170 f-string-as-translated_message to static keys + context; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `W06.P27.S468` - migrate tr-as-positional in entrypoints/cli/_config/_profile_census.py:32,35; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [ ] `W06.P27.S469` - migrate WizardUnsupportedConsoleError tr-positional at wizard/_prompter.py:195,202,223 + wizard/_commands.py:939 f-string-as-key; `src/aeat/application/wizard/_prompter.py`.
+- [ ] `W06.P27.S470` - migrate NoActiveProfileError tr-positional at workflow/_models.py:239,266; `src/aeat/application/workflow/_models.py`.
+- [ ] `W06.P27.S471` - migrate WorkUnitNotFoundError tr-positional at modelo/_actions.py:694,721,783,1441,3196,3959,3962,3967; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W06.P27.S472` - migrate AggregationPeriodError tr-positional at aggregation/_models.py:167,169,171,173; `src/aeat/application/aggregation/_models.py`.
+- [ ] `W06.P27.S473` - migrate ProfileNotFoundError tr-positional at user_profile/_orchestration.py:596; `src/aeat/application/user_profile/_orchestration.py`.
+- [ ] `W06.P27.S474` - migrate ModeloApplicationError tr-positional at filing/_runtime_repository.py:19,22; `src/aeat/application/filing/_runtime_repository.py`.
+- [ ] `W06.P27.S475` - add real-behavior inventory test asserting zero raise (Class)(tr(...)) positional anti-pattern survives in production AeatError subclasses; `src/aeat/test_locale_tr_positional_inventory.py`.
+
+### Phase `W06.P28` - A1 exceptions: calc_sheets + repository + base + MRO + swallow
+
+Enroll calc_sheets/ cluster (5 sites in _engine, _records, _parity_harness, _calc_sheets_pull). Enroll _repository.py 5 constructor guards into BucketValidationError. Replace _base.py 5 __init_subclass__ TypeError with FinancialProviderConfigError. Narrow _notifications.py swallow. Address dual ValueError MRO leaks in GoogleAuthValidationError + BucketValidationError.
+
+- [ ] `W06.P28.S476` - introduce CalcSheetsEngineError(AeatError) in src/aeat/application/storage/calc_sheets/_errors.py and migrate ValueError raises at _engine.py:57,300,309; `src/aeat/application/storage/calc_sheets/_engine.py`.
+- [ ] `W06.P28.S477` - introduce CalcSheetsRecordError(AeatError) and migrate _records.py:83,94 utility ValueError; `src/aeat/application/storage/calc_sheets/_records.py`.
+- [ ] `W06.P28.S478` - introduce CalcSheetsParityError(AeatError) and migrate _parity_harness.py:154 ValueError; `src/aeat/application/storage/calc_sheets/_parity_harness.py`.
+- [ ] `W06.P28.S479` - migrate _calc_sheets_pull.py:745 column-index ValueError to OutboundStorageValidationError; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
+- [ ] `W06.P28.S480` - migrate 5 user_profile/_repository.py constructor ValueError guards at lines 97,112,114,124,222 to BucketValidationError (matches sibling _profile_repository.py pattern); `src/aeat/application/user_profile/_repository.py`.
+- [ ] `W06.P28.S481` - introduce FinancialProviderConfigError(AeatError) and migrate 5 __init_subclass__ TypeError raises at financial/providers/_base.py:231,236,241,246,250; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [ ] `W06.P28.S482` - narrow silent except Exception swallow at sede/_notifications.py:449 warm-up navigation; `document non-Playwright propagation; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
+- [ ] `W06.P28.S483` - drop ValueError mixin from BucketValidationError MRO at bucket/_errors.py:20; `callers requiring isinstance(exc,ValueError) catch BucketValidationError directly; `src/aeat/adapters/persistence/storage/bucket/_errors.py`.
+- [ ] `W06.P28.S484` - drop ValueError mixin from GoogleAuthValidationError MRO at google/_errors.py:20; `src/aeat/adapters/outbound/google/_errors.py`.
+- [ ] `W06.P28.S485` - add aggregate real-behavior test asserting calc_sheets cluster + new error classes envelope-roundtrip and MRO does not leak ValueError; `src/aeat/test_w06_p28_exceptions.py`.
+
+### Phase `W06.P29` - A7 hardcoded + enum: 2 regressions + new sweep
+
+Fix 2 regressions: _bindings.py/_schema.py ledger_transaction sibling sites; _workbook_parity.py .xls Literal annotations. Add OracleEnvironment enum to registry.__init__ match block. Add INVOICE member to AggregationSourceKind. Delete SEDE_BODY_ENCODING duplicate. Add UTF_8_ENCODING constant. Extract env-var name constants from auth modules. file_permissions.py SYSTEMROOT+USERDOMAIN env constants.
+
+- [ ] `W06.P29.S486` - fix regression: migrate ledger_transaction bare sites in _bindings.py:1631,1637,2846 + _schema.py:1787 to AggregationSourceKind.LEDGER_TRANSACTION; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W06.P29.S487` - fix regression: migrate .xls bare sites + Literal annotations in _workbook_parity.py:109,364,646,1129 to XLS_EXTENSION/XLSX_EXTENSION; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `W06.P29.S488` - migrate OracleEnvironment bare strings in application/registry/__init__.py:269-274,288-289 + entrypoints/cli/registry.py:184 to OracleEnvironment enum members; `src/aeat/application/registry/__init__.py`.
+- [ ] `W06.P29.S489` - add INVOICE member to AggregationSourceKind in aeat.core.aggregation and migrate 4 bare 'invoice' sites in _bindings.py + _schema.py + _validate_record_sections.py; `src/aeat/core/aggregation.py`.
+- [ ] `W06.P29.S490` - delete SEDE_BODY_ENCODING duplicate in sede/_browser_constants.py and import LATIN_1_ENCODING from external_constants instead; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [ ] `W06.P29.S491` - introduce UTF_8_ENCODING constant in external_constants and selectively migrate encoding= kwarg call-sites (excluding idiomatic encode/decode hashing); `src/aeat/core/external_constants.py`.
+- [ ] `W06.P29.S492` - extract _SYSTEMROOT_ENV_VAR and _USERDOMAIN_ENV_VAR Final constants in core/file_permissions.py:63,65; `src/aeat/core/file_permissions.py`.
+- [ ] `W06.P29.S493` - extract _CERT_PASSWORD_SECRET_ENV and _CLAVE_MOVIL_DNI_NIE_ENV Final constants in auth modules where env-var names appear in error messages; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W06.P29.S494` - migrate LATIN_1_ENCODING into _record_spec.py:16 alias dict key and document _record_spec.py:17 latin_1 alias variant; `src/aeat/domain/calculations/registry/_record_spec.py`.
+- [ ] `W06.P29.S495` - add aggregate inventory test asserting zero ledger_transaction/.xls/SEDE_BODY_ENCODING/production-string survivors in production; `src/aeat/test_w06_p29_constants_inventory.py`.
+
+### Phase `W06.P30` - A8 cast marker + A5 wrapper consolidation
+
+Add CAST-RATIONALE marker on _bindings.py:1651 cast (regression). Consolidate 3 _parse_date validator wrappers in domain/profile/family.py into single helper.
+
+- [ ] `W06.P30.S496` - fix regression: add CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker on cast at _bindings.py:1651 (added in W05.P25.S459 without marker); `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W06.P30.S497` - verify cast inventory test (W2.P13.S312) catches the _bindings.py:1651 site and document why it didn't fire in W6; `src/aeat/test_cast_rationale_inventory.py`.
+- [ ] `W06.P30.S498` - consolidate 3 _parse_date validator wrappers in domain/profile/family.py:80,98,122 into single module-level factory used by all 3 validator methods; `src/aeat/domain/profile/family.py`.
+- [ ] `W06.P30.S499` - add real-behavior test asserting consolidated _parse_date factory matches each validator's input/output contract; `src/aeat/domain/profile/test_family_parse_date.py`.
