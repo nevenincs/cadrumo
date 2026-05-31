@@ -179,8 +179,6 @@ from ._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from ._renta_web_open_oracle import (
-    RENTA_WEB_OPEN_APP_URL,
-    RENTA_WEB_OPEN_LANDING_URL,
     RentaWebOpenDriver,
     RentaWebOpenLivePayload,
     RentaWebOpenObservation,
@@ -310,8 +308,6 @@ __all__ = [
     "CENSUS_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
-    "RENTA_WEB_OPEN_APP_URL",
-    "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicabilityVerdict",
     "ApplicationLinkDefinition",
     "BboxAnchorSpec",

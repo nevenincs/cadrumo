@@ -19,7 +19,6 @@ from ._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from ._renta_web_open_oracle import (
-    RENTA_WEB_OPEN_LANDING_URL,
     RentaWebOpenOracle,
     _overall_verdict,
     _parse_decimal_text,
@@ -71,8 +70,10 @@ def test_oracle_surface_kind_is_open_simulator() -> None:
 
 
 def test_landing_url_targets_aeat_sede_documentation() -> None:
-    assert "sede.agenciatributaria.gob.es" in str(RENTA_WEB_OPEN_LANDING_URL)
-    assert "renta-web-open" in str(RENTA_WEB_OPEN_LANDING_URL)
+    _ext = Settings.external_constants()
+    landing_url = f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.renta_web_open_landing}"
+    assert "sede.agenciatributaria.gob.es" in landing_url
+    assert "renta-web-open" in landing_url
 
 
 def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None:

@@ -15,7 +15,6 @@ from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
-    RENTA_WEB_OPEN_APP_URL,
     RegistryValidationError,
     RemoteOperation,
     RentaWebOpenLivePayload,
@@ -509,7 +508,6 @@ def _normalize_summary_text(value: str) -> str:
 
 
 __all__ = [
-    "RENTA_WEB_OPEN_APP_URL",
     "RentaWebOpenLivePayload",
     "RentaWebOpenSedeDriver",
     "collect_renta_web_open_observation",
