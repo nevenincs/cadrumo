@@ -289,16 +289,16 @@ def test_detector_public_surface_is_pinned() -> None:
 # ---------------------------------------------------------------------------
 # Clauses 5-10 (core-authority ADR Rule 11)
 # ---------------------------------------------------------------------------
-# Clauses that currently surface real violations in the production tree are
-# marked BLOCKED below.  The detector and anti-tautology proof are implemented
-# for all six clauses; the zero-violation full-tree assertion is only present
-# for clauses whose production tree is clean.  Blocked clauses must be
-# resolved by the owning Wave before the assertion can be uncommented.
 
 
-# --- Clause 5 (BLOCKED): sibling-domain ``_enums`` import -----------------
-# domain/iva/_invoice_classification.py:56 imports IvaRate from
-# domain/invoices/_enums.  Belongs to W04 (enum centralisation / MERGE-013).
+# --- Clause 5: sibling-domain ``_enums`` import ----------------------------
+
+
+def test_no_sibling_domain_enum_imports() -> None:
+    """No ``domain.<a>`` module imports from ``domain.<b>._enums`` for ``a != b``."""
+
+    findings = find_sibling_domain_enum_imports()
+    assert findings == [], "sibling-domain _enums imports detected:\n" + _render(findings)
 
 
 def test_sibling_domain_enum_detector_flags_synthetic_violation(tmp_path: Path) -> None:
@@ -334,9 +334,14 @@ def test_sibling_domain_enum_detector_flags_synthetic_violation(tmp_path: Path) 
     assert find_sibling_domain_enum_imports(root) == []
 
 
-# --- Clause 6 (BLOCKED): sibling-domain ``_constants`` import -------------
-# domain/buckets/_event.py:24 imports ProfileName from domain/profile/_constants.
-# Belongs to W03 (constant centralisation) or W04.
+# --- Clause 6: sibling-domain ``_constants`` import ------------------------
+
+
+def test_no_sibling_domain_constant_imports() -> None:
+    """No ``domain.<a>`` module imports from ``domain.<b>._constants`` for ``a != b``."""
+
+    findings = find_sibling_domain_constant_imports()
+    assert findings == [], "sibling-domain _constants imports detected:\n" + _render(findings)
 
 
 def test_sibling_domain_constant_detector_flags_synthetic_violation(tmp_path: Path) -> None:
@@ -364,9 +369,14 @@ def test_sibling_domain_constant_detector_flags_synthetic_violation(tmp_path: Pa
     assert find_sibling_domain_constant_imports(root) == []
 
 
-# --- Clause 7 (BLOCKED): sibling-domain ``_protocols`` import -------------
-# domain/filing/_schema.py:23 imports ModeloDraftStatus from
-# domain/submission/_protocols.  Belongs to W06 (Protocol centralisation).
+# --- Clause 7: sibling-domain ``_protocols`` import ------------------------
+
+
+def test_no_sibling_domain_protocol_imports() -> None:
+    """No ``domain.<a>`` module imports from ``domain.<b>._protocols`` for ``a != b``."""
+
+    findings = find_sibling_domain_protocol_imports()
+    assert findings == [], "sibling-domain _protocols imports detected:\n" + _render(findings)
 
 
 def test_sibling_domain_protocol_detector_flags_synthetic_violation(tmp_path: Path) -> None:
@@ -398,10 +408,14 @@ def test_sibling_domain_protocol_detector_flags_synthetic_violation(tmp_path: Pa
     assert find_sibling_domain_protocol_imports(root) == []
 
 
-# --- Clause 8 (BLOCKED): private-name cross-package import ----------------
-# domain/deadlines/_profiles.py imports _parse_bool, _parse_date from
-# aeat.core.parsing; adapters import _round_to_cents from
-# aeat.domain.fincas._rounding.  Belongs to W09/W10.
+# --- Clause 8: private-name cross-package import --------------------------
+
+
+def test_no_private_name_cross_package_imports() -> None:
+    """No production module imports a ``_``-prefixed name from a cross-package module."""
+
+    findings = find_private_name_cross_package_imports()
+    assert findings == [], "private-name cross-package imports detected:\n" + _render(findings)
 
 
 def test_private_name_cross_package_detector_flags_synthetic_violation(
