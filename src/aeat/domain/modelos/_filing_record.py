@@ -42,7 +42,7 @@ _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
 ]
-_ActorLabel = Annotated[
+ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
@@ -142,7 +142,7 @@ class ModeloRecord(BaseModel):
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
     period: _Period
     filed_at: datetime
-    filed_by: _ActorLabel
+    filed_by: ModeloActorLabel
     notes: _Notes | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE

@@ -35,7 +35,7 @@ _ReportId = Annotated[
     StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
 ]
 _CalculationRevisionId = _ReportId
-_ActorLabel = Annotated[
+ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
@@ -140,7 +140,7 @@ class VerificationReport(BaseModel):
     resolved_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
     missing_required_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
     run_at: datetime
-    verified_by: _ActorLabel
+    verified_by: ModeloActorLabel
     granted_verificado_completo: bool
 
     @model_validator(mode="after")
