@@ -49,7 +49,17 @@ def _invoke(args: list[str]):
 
 
 def _json(result) -> dict:
-    return json.loads(result.output)
+    payload = json.loads(result.output)
+    # Emit-envelope migration: ``_emit_envelope`` wraps typed CLI
+    # payloads in ``{"schema_version", "command", "result", "warnings"}``.
+    # The round-trip helper consumes the inner ``result`` so the focused
+    # assertions read the typed payload fields directly. Non-enveloped
+    # emits (legacy ``_emit`` callers) pass through unchanged.
+    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
+        inner = payload["result"]
+        if isinstance(inner, dict):
+            return inner
+    return payload
 
 
 def _mounted_child_names(root_name: str) -> set[str]:
