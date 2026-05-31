@@ -39,6 +39,8 @@ from . import (  # noqa: F401  (side-effect import)
 )
 from ._config import _google_payloads, _profile_census_payloads  # noqa: F401
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
 # ---------------------------------------------------------------------
 # Canonical command-path normalisation
 # ---------------------------------------------------------------------
@@ -173,8 +175,6 @@ def _live_app() -> typer.Typer:
     return live_app
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 def test_every_cli_leaf_has_a_registered_schema() -> None:
     """Every CLI leaf command must have a registered OutputSchema.
 
@@ -215,8 +215,6 @@ def test_every_cli_leaf_has_a_registered_schema() -> None:
     assert not diagnostic_lines, "\n".join(diagnostic_lines)
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 @pytest.mark.parametrize("command_path", sorted(SCHEMA_REGISTRY.keys()))
 def test_registered_schema_envelope_round_trips(command_path: str) -> None:
     """Each registered schema must specialise :class:`SchemaEnvelope` cleanly.
