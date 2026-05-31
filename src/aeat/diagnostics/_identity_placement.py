@@ -245,9 +245,7 @@ def _resolve_string_constant(
 def _extract_constraint_shape_from_call(
     call: ast.Call, literals: dict[str, str]
 ) -> ConstraintShape:
-    """Extract a :class:`ConstraintShape` from a ``StringConstraints(...)`` or
-    ``Field(...)`` call.
-    """
+    """Extract a constraint shape from a ``StringConstraints`` or ``Field`` call."""
     min_length: int | None = None
     max_length: int | None = None
     pattern: str | None = None
