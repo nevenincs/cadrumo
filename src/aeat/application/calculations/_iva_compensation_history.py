@@ -10,7 +10,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
     SensitivityClass,
@@ -19,6 +18,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.errors import AeatError
 from ._errors import IvaCompensationModeloError
+from ._ports import FiledDeclaracionObservationProtocol
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _ZERO = Decimal("0")
@@ -304,7 +304,7 @@ def seed_iva_compensation_period(
 
 
 def iva_compensation_state_from_filed_observation(
-    observation: FiledDeclaracionObservation,
+    observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
     """Build one IVA compensation history state from a filed Modelo 303 observation."""
 
@@ -342,7 +342,7 @@ def iva_compensation_state_from_filed_observation(
     )
 
 
-def _decimal_casilla_values(observation: FiledDeclaracionObservation) -> dict[str, Decimal]:
+def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[str, Decimal]:
     values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
         if casilla.source_artefact_kind == "justificante_pdf":
