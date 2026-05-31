@@ -46,19 +46,19 @@ Introduce the CoreError base class in core/errors/_base.py and migrate all layer
 
 Declare CoreError in core/errors/_base.py, export it through core/errors/__init__, then migrate all five ValidationError subclasses across layers to descend from CoreError, satisfying Rule 3 and MERGE-011.
 
-- [ ] `W02.P02.S03` - declare CoreError as the root exception class, export it through core/errors/__init__, and add a non-tautological test asserting that catching CoreError catches a concrete subclass instance; `PROMOTE-003, Rule 3; `src/aeat/core/errors/_base.py`.
-- [ ] `W02.P02.S04` - make the core/errors ValidationError subclass descend from CoreError and assert the catch order is well-defined; `MERGE-011, Rule 3; `src/aeat/core/errors/__init__.py`.
-- [ ] `W02.P02.S05` - make the domain/filing ValidationError subclass descend from CoreError and run the filing test suite sequentially to confirm catch-order is preserved; `MERGE-011, Rule 3; `src/aeat/domain/filing/_errors.py`.
-- [ ] `W02.P02.S06` - make the two application-layer ValidationError subclasses (application/export and application/filing) descend from CoreError and run the application test suite sequentially; `MERGE-011, Rule 3; `src/aeat/application/`.
-- [ ] `W02.P02.S07` - make the adapters ValidationError subclass descend from CoreError and run the adapters test suite sequentially; `MERGE-011, Rule 3; `src/aeat/adapters/_errors.py`.
+- [x] `W02.P02.S03` - declare CoreError as the root exception class, export it through core/errors/__init__, and add a non-tautological test asserting that catching CoreError catches a concrete subclass instance; `PROMOTE-003, Rule 3; `src/aeat/core/errors/_base.py`.
+- [x] `W02.P02.S04` - make the core/errors ValidationError subclass descend from CoreError and assert the catch order is well-defined; `MERGE-011, Rule 3; `src/aeat/core/errors/__init__.py`.
+- [x] `W02.P02.S05` - make the domain/filing ValidationError subclass descend from CoreError and run the filing test suite sequentially to confirm catch-order is preserved; `MERGE-011, Rule 3; `src/aeat/domain/filing/_errors.py`.
+- [x] `W02.P02.S06` - make the two application-layer ValidationError subclasses (application/export and application/filing) descend from CoreError and run the application test suite sequentially; `MERGE-011, Rule 3; `src/aeat/application/`.
+- [x] `W02.P02.S07` - make the adapters ValidationError subclass descend from CoreError and run the adapters test suite sequentially; `MERGE-011, Rule 3; `src/aeat/adapters/_errors.py`.
 
 ### Phase `W02.P03` - NotFoundError family consolidation
 
 Consolidate the three NotFoundError declarations under a single CoreNotFoundError base in core/errors/_not_found.py, making domain subclasses explicit descendants, satisfying MERGE-012 and Rule 3.
 
-- [ ] `W02.P03.S08` - rename the core/errors/_not_found.py NotFoundError to CoreNotFoundError, update its __all__ export, and assert it descends from CoreError; `MERGE-012, Rule 3; `src/aeat/core/errors/_not_found.py`.
-- [ ] `W02.P03.S09` - make the first domain NotFoundError subclass an explicit subclass of CoreNotFoundError and run the relevant domain test suite sequentially; `MERGE-012, Rule 3; `src/aeat/domain/`.
-- [ ] `W02.P03.S10` - make the second domain NotFoundError subclass an explicit subclass of CoreNotFoundError and run the sequential pytest suite confirming no caller regressions; `MERGE-012, Rule 3; `src/aeat/domain/`.
+- [x] `W02.P03.S08` - rename the core/errors/_not_found.py NotFoundError to CoreNotFoundError, update its __all__ export, and assert it descends from CoreError; `MERGE-012, Rule 3; `src/aeat/core/errors/_not_found.py`.
+- [x] `W02.P03.S09` - make the first domain NotFoundError subclass an explicit subclass of CoreNotFoundError and run the relevant domain test suite sequentially; `MERGE-012, Rule 3; `src/aeat/domain/`.
+- [x] `W02.P03.S10` - make the second domain NotFoundError subclass an explicit subclass of CoreNotFoundError and run the sequential pytest suite confirming no caller regressions; `MERGE-012, Rule 3; `src/aeat/domain/`.
 
 ## Wave `W03` - constant centralisation to core
 
