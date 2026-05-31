@@ -68,6 +68,7 @@ class ProfileSourceResolver:
         )
 
 
+# ANY-RETURN-RATIONALE-SOURCE-PROFILE-FINGERPRINT: concrete type is a pydantic model registered at runtime via the aggregation source registry; helper duck-types via hasattr(model_dump_json) to avoid cross-domain import.
 def _profile_fingerprint(profile_record: Any) -> str | None:
     if profile_record is None:
         return None
