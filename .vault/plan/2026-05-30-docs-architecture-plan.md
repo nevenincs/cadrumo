@@ -54,21 +54,21 @@ Add the runnable docs build and docs-check entrypoints the pyproject comment pro
 
 - [x] `W01.P03.S07` - add the docs build recipe producing furo html; `justfile`.
 - [x] `W01.P03.S08` - add the docs-check conformance recipe; `justfile`.
-- [ ] `W01.P03.S09` - confirm both documentation recipes run; `justfile`.
+- [x] `W01.P03.S09` - confirm both documentation recipes run; `justfile`.
 - [x] `W01.P03.S65` - wire doc8 rst formatting linting into the docs-check recipe; `justfile`.
 
 ### Phase `W01.P04` - sphinx config and toctree repair
 
 Repair the inconsistent Sphinx config: fix the toctree, remove stale exclusions and warning suppression, drop the unconsumed markdown builder, and curate the nitpick baseline.
 
-- [ ] `W01.P04.S10` - repair the index toctree to reference only existing pages; `docs/index.rst`.
-- [ ] `W01.P04.S11` - delete the stale exclude_patterns entries for removed legacy docs; `docs/conf.py`.
-- [ ] `W01.P04.S12` - remove the myst xref warning suppression; `docs/conf.py`.
-- [ ] `W01.P04.S13` - drop the sphinx_markdown_builder extension; `docs/conf.py`.
-- [ ] `W01.P04.S14` - curate the nitpick_ignore baseline coupled to autodoc_mock_imports; `docs/conf.py`.
+- [x] `W01.P04.S10` - repair the index toctree to reference only existing pages; `docs/index.rst`.
+- [x] `W01.P04.S11` - delete the stale exclude_patterns entries for removed legacy docs; `docs/conf.py`.
+- [x] `W01.P04.S12` - remove the myst xref warning suppression; `docs/conf.py`.
+- [x] `W01.P04.S13` - drop the sphinx_markdown_builder extension; `docs/conf.py`.
+- [x] `W01.P04.S14` - curate the nitpick_ignore baseline coupled to autodoc_mock_imports; `docs/conf.py`.
 - [ ] `W01.P04.S15` - confirm a nitpicky build surfaces only curated ignores; `docs/conf.py`.
-- [ ] `W01.P04.S66` - document the deferred multilang attachment point as a seam comment; `docs/conf.py`.
-- [ ] `W01.P04.S67` - seed the linkcheck_ignore baseline and add the advisory linkcheck lane; `docs/conf.py`.
+- [x] `W01.P04.S66` - document the deferred multilang attachment point as a seam comment; `docs/conf.py`.
+- [x] `W01.P04.S67` - seed the linkcheck_ignore baseline and add the advisory linkcheck lane; `docs/conf.py`.
 
 ## Wave `W02` - conformance harness
 
@@ -218,29 +218,3 @@ Run a fresh-context honesty review against the closure summary before declaring 
 
 - [ ] `W05.P21.S62` - run a fresh-context honesty review against the epic closure summary; `.vault/audit`.
 - [ ] `W05.P21.S63` - track honesty-review findings as new steps with verification gates; `.vault/plan/2026-05-30-docs-architecture-plan.md`.
-
-## Parallelization
-
-Waves are sequenced: `W01` before `W02` before `W03` before `W04`
-before `W05`. `W02` needs `W01`'s deps and recipes; `W03` remediates
-against `W02`'s gates; `W04` pages build under `W02`'s gates; `W05`
-flips gates to blocking once the tree is green. Within `W03` the seven
-subpackage Phases (`P09`-`P15`) are independent and are the swarm
-fan-out; `W02`'s four Phases are independent; `W01`'s Phases are largely
-independent.
-
-## Verification
-
-The epic is structurally complete when every Step is closed and: `ruff`
-`D` + `convention="google"` passes tree-wide with only audience-scoped
-ignores; `pydoclint --style=google` passes; `interrogate` meets its
-floor; `sphinx-build -n -W` passes with only a curated `nitpick_ignore`;
-`doc8` passes on `docs/` and the advisory `linkcheck` lane runs with a
-curated `linkcheck_ignore`; the module-to-stub correspondence, CLI
-reference drift, docs-versus-tree, and schema-registry conformance tests
-pass; the bootstrap-presence pin passes and fails when a doc is removed;
-README/getting-started/architecture are authored via the documentation
-pipeline and build green; `docs-check` is wired into the standing gate
-set and the gates are blocking; no documentation path or filename
-encodes framework or project-management metadata; and a fresh-context
-honesty review ran before closure.
