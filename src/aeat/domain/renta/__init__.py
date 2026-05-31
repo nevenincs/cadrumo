@@ -27,12 +27,31 @@ from ._ledger_expenses import (
     evaluate_renta_deductibility,
     normalize_spending_category,
 )
+from ._maritime_exemption import (
+    ART_7P_EXEMPTION_CAP_EUR,
+    RENTA_EXENTA_CASILLA,
+    MaritimeExemptionInactiveError,
+    MaritimeWorkerFacts,
+    ProfileCompletenessError,
+    art_7p_eligible,
+    calculate_art_7p_exemption,
+    calculate_rebeca_exemption,
+    check_retmar_mandatory_filing,
+    da41_eligible,
+    guard_da41_inactive,
+    rebeca_eligible,
+)
 from ._substrate import EstimacionDirectaModalidad, RentaIncomeType
 
 __all__ = [
+    "ART_7P_EXEMPTION_CAP_EUR",
     "LEDGER_RENTA_EXPENSE_SOURCE",
     "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
+    "RENTA_EXENTA_CASILLA",
     "EstimacionDirectaModalidad",
+    "MaritimeExemptionInactiveError",
+    "MaritimeWorkerFacts",
+    "ProfileCompletenessError",
     "RentaDeductibilityContext",
     "RentaDeductibilityResult",
     "RentaDeductibilityStatus",
@@ -42,7 +61,14 @@ __all__ = [
     "RentaIncomeType",
     "RentaInvoiceEvidenceStatus",
     "RentaReconciliationStatus",
+    "art_7p_eligible",
     "build_renta_deductible_expense_observation",
+    "calculate_art_7p_exemption",
+    "calculate_rebeca_exemption",
+    "check_retmar_mandatory_filing",
+    "da41_eligible",
     "evaluate_renta_deductibility",
+    "guard_da41_inactive",
     "normalize_spending_category",
+    "rebeca_eligible",
 ]
