@@ -36,9 +36,9 @@ from . import (
 )
 from .certificate import _select_backend
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+from ._test_fixtures import SECRET_PASSPHRASE
 
-SECRET_PASSPHRASE = "correct-horse-battery-staple"
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 @contextmanager

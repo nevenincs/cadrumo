@@ -52,12 +52,12 @@ from . import (
 from . import _authenticator as authenticator_module
 from .certificate import CertificateBundle
 
+from ._test_fixtures import SECRET_PASSPHRASE
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 if TYPE_CHECKING:
     from .....core.config import Settings
-
-SECRET_PASSPHRASE = "correct-horse-battery-staple"
 _BUCKET_ID = "auth-session"
 
 
