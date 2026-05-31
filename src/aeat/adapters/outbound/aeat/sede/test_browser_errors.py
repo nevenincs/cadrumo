@@ -126,8 +126,8 @@ def test_collect_nif_iva_check_observations_raises_browser_adapter_type_error_on
     """collect_nif_iva_check_observations must raise BrowserAdapterTypeError when
     the injected BrowserContext.new_page() returns a non-Page object.
 
-    Uses the production ``browser_session_factory`` DI parameter rather
-    than a monkeypatch attribute swap.
+    A fake factory is passed via the production
+    ``browser_session_factory`` DI parameter.
     """
 
     with pytest.raises(BrowserAdapterTypeError) as exc_info:
@@ -152,8 +152,8 @@ def test_collect_groi_observations_raises_browser_adapter_type_error_on_wrong_pa
     """collect_groi_observations must raise BrowserAdapterTypeError when
     the injected BrowserContext.new_page() returns a non-Page object.
 
-    Uses the production ``browser_session_factory`` DI parameter rather
-    than a monkeypatch attribute swap.
+    A fake factory is passed via the production
+    ``browser_session_factory`` DI parameter.
     """
 
     with pytest.raises(BrowserAdapterTypeError) as exc_info:

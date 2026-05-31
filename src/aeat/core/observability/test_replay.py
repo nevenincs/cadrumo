@@ -243,8 +243,7 @@ class TestEnvFileFingerprint:
         env_file = env_dir / ".env"
 
         # compute_corpus_sha256 takes the .env path explicitly, so the
-        # dotfile channel is exercised against a real temp file with no
-        # PROJECT_ROOT monkeypatching.
+        # dotfile channel is exercised against a real temp file.
         settings = Settings()
 
         env_file.write_text("FOO=1\n", encoding="utf-8")
