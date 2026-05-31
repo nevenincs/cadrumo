@@ -2249,7 +2249,8 @@ def _required_patched[T](
     value = getattr(patch, field)
     if value is None:
         raise TransactionValidationError(f"manual ledger patch {field} must not be null")
-    return value  # type: ignore[no-any-return]  # bounded by caller's T via fallback
+    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED: getattr returns Any but the caller binds the result to a generic T via the fallback parameter.
+    return value  # type: ignore[no-any-return]
 
 
 def _optional_patched[T](
@@ -2264,7 +2265,8 @@ def _optional_patched[T](
     """
     if field not in patch_fields:
         return fallback
-    return getattr(patch, field)  # type: ignore[no-any-return]  # bounded by caller's T via fallback
+    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED: getattr returns Any but the caller binds the result to a generic T via the fallback parameter.
+    return getattr(patch, field)  # type: ignore[no-any-return]
 
 
 def _command_from_patch(

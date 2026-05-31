@@ -87,6 +87,7 @@ def _force_lazy_imports(app: object) -> None:
     from aeat.entrypoints.cli._command_suggestions import _LAZY_REGISTRY
 
     seen: set[int] = set()
+    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
     pending: list[typer.Typer] = [app]  # type: ignore[valid-type]
     while pending:
         node = pending.pop()
@@ -101,6 +102,7 @@ def _force_lazy_imports(app: object) -> None:
                 pending.append(group.typer_instance)
 
 
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[name-defined]
     """Walk the tree and raise if any subtree is an import-failure fallback.
 
@@ -163,6 +165,7 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
 # ---------------------------------------------------------------------------
 
 
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 def _collect_commands(
     root: click.Command,  # type: ignore[name-defined]
 ) -> dict[tuple[str, ...], click.Command]:  # type: ignore[name-defined]
@@ -195,6 +198,7 @@ def _collect_commands(
     return result
 
 
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 def _collect_leaf_paths(
     root: click.Command,  # type: ignore[name-defined]
 ) -> list[tuple[str, ...]]:
@@ -260,6 +264,7 @@ def _rst_field_list(items: list[tuple[str, str]]) -> str:
     return "\n".join(lines) + "\n" if lines else ""
 
 
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[name-defined]
     """Render a RST definition-list for command parameters.
 
@@ -286,6 +291,7 @@ def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[n
     return "\n".join(sections) if sections else ""
 
 
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 def _render_command_section(
     path: tuple[str, ...],
     cmd: click.Command,  # type: ignore[name-defined]
@@ -341,11 +347,12 @@ def _render_command_section(
 # ---------------------------------------------------------------------------
 
 
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 def _render_family_page(
     family_name: str,
     leaf_paths: list[tuple[str, ...]],
     schema_registry: dict[str, object],
-    all_commands: dict[tuple[str, ...], click.Command],  # type: ignore[name-defined]
+    all_commands: dict[tuple[str, ...], click.Command],  # type: ignore[name-defined]  # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
 ) -> str:
     """Render a full RST page for one top-level command family.
 

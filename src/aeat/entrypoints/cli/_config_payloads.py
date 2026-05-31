@@ -163,7 +163,7 @@ class ConfigProfileShowResult(OutputSchema):
     display_name: str | None = None
     status: str | None = None
     valid: bool | None = None
-    schema_version: str | None = None
+    schema_version: int | None = None
     issues: list[ProfileIssuePayload] | None = None
     facts: list[ProfileFactPayload] | None = None
     # Error / readiness branches
@@ -173,6 +173,9 @@ class ConfigProfileShowResult(OutputSchema):
     error: str | None = None
     next_action: str | None = None
     bucket_id: str | None = None
+    # Readiness / repair branches (raised when profile record cannot be loaded).
+    readiness: str | None = None
+    profile_record: str | None = None
 
 
 @register_schema("config.profile.delete")
@@ -271,6 +274,7 @@ class AuthStatusResult(OutputSchema):
     re-declaring every provider-specific key here.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -282,6 +286,7 @@ class AuthTestResult(OutputSchema):
     fields. ``extra="allow"`` forwards them without re-declaration.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -293,6 +298,7 @@ class AuthLoginResult(OutputSchema):
     login fields. ``extra="allow"`` forwards them without re-declaration.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -406,6 +412,7 @@ class RepairProfileResult(OutputSchema):
     keeps the envelope shape stable without re-declaring every field.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -428,6 +435,7 @@ class RepairIntegrityObjectsResult(OutputSchema):
     sub-model.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -440,6 +448,7 @@ class RepairIntegrityRegistryResult(OutputSchema):
     the registry / diagnostic-check shapes locally.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -492,6 +501,7 @@ class ApoderadoScopesListResult(OutputSchema):
     Mirrors the apoderado scope catalogue payload.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -522,6 +532,7 @@ class AuthDiagnosticsShowResult(OutputSchema):
     field without re-declaring the application model locally.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 

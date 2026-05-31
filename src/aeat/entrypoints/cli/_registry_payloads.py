@@ -87,6 +87,7 @@ class RegistryVerifyFiledStateResult(OutputSchema):
     observation_path: str
     source_observation_paths: list[str] = []
     comparison: dict
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -106,6 +107,7 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
     runner: dict
     reports: list[dict] = []
     modelo_coverage: list[dict] = []
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -123,6 +125,7 @@ class RegistryParityRunResult(OutputSchema):
     runner: dict
     report: dict
     path: str | None = None
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -139,4 +142,5 @@ class RegistryParityReplayResult(OutputSchema):
     differences: list[str] = []
     stored: dict
     current: dict
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
