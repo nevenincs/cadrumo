@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceKind, InvoiceLine, IvaRate, PaymentStatus
+from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ...domain.iva import InvoiceKind
 from ...domain.transactions import (
     RawProvenance,
     RawTransaction,

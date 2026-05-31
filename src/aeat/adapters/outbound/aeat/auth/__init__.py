@@ -11,7 +11,6 @@ from .....application.auth import (
 from .....core.access_gate import (
     AeatAccessGate,
     AeatGateEnvSnapshot,
-    AeatLiveReadNotEnabledError,
 )
 from .....core.file_permissions import restrict_file_permissions
 from ._authenticator import (
@@ -54,7 +53,6 @@ from ._providers import (
     describe_certificate_provider,
 )
 from .certificate import (
-    CertificateBackend,
     CertificateBundle,
     CertificateError,
     CertificateExpiredError,
@@ -85,16 +83,15 @@ __all__ = [
     "AeatAccessGate",
     "AeatAuthenticator",
     "AeatGateEnvSnapshot",
-    "AeatLiveReadNotEnabledError",
     "AeatLoginAssertion",
     "AeatLoginAssertionError",
     "AeatSession",
     "AeatSessionExpiredError",
     "AuthConfigurationError",
     "AuthError",
+    "AuthLoginAssertionDetail",
     "AuthProvider",
     "AuthProviderKind",
-    "AuthLoginAssertionDetail",
     "AuthSessionDetail",
     "BrowserContextLike",
     "BrowserContextProvisioner",
@@ -102,7 +99,6 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
-    "CertificateBackend",
     "CertificateBundle",
     "CertificateContextProvisioner",
     "CertificateError",

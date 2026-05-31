@@ -10,9 +10,11 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.iva import InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
@@ -37,7 +39,6 @@ from ._currency_predicates import effective_eur_amount, is_non_eur_without_conve
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _LEDGER_CATALOGUE_ID = "ledger"
 
 class RentaLedgerAggregationIssueReason(StrEnum):

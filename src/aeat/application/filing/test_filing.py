@@ -10,13 +10,13 @@ import pytest
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.resources import resources
+from ...domain.filing import ModeloDraftError
+from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
 from . import (
     CasillaSchemaProvider,
     ModeloCalculateError,
     ModeloDraft,
-    ModeloDraftError,
-    ModeloDraftStatus,
     ModeloValidationFinding,
     ModeloValidator,
     ModeloValueKind,

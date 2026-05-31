@@ -11,7 +11,6 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
-    InvoiceKind,
 )
 from ...domain.invoices._service import (
     LinkInconsistency,
@@ -19,6 +18,7 @@ from ...domain.invoices._service import (
     find_unmatched,
     verify_link_consistency,
 )
+from ...domain.iva import InvoiceKind
 from ...domain.transactions import TransactionCatalogueRepository
 
 

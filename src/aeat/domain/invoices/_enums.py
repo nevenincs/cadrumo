@@ -1,7 +1,6 @@
 """Closed enumerations for invoice records.
 
-Defines :class:`InvoiceKind`, :class:`IvaRate`, and
-:class:`PaymentStatus` together with the
+Defines :class:`IvaRate` and :class:`PaymentStatus` together with the
 :func:`iva_rate_percentage` helper that resolves the numeric Decimal
 percentage backing each :class:`IvaRate` member.
 
@@ -18,7 +17,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from ..iva import EUMemberState, InvoiceKind, IvaRateKind, lookup_rate
+from ..iva import EUMemberState, IvaRateKind, lookup_rate
 from ..iva.errors import IvaRateNotFoundError
 
 
@@ -112,7 +111,6 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
 
 
 __all__ = [
-    "InvoiceKind",
     "IvaRate",
     "PaymentStatus",
     "IvaRateNotFoundError",

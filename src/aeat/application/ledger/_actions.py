@@ -40,7 +40,8 @@ from ...domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.iva import InvoiceKind
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._repository import WorkUnitCatalogueRepository

@@ -32,7 +32,6 @@ Examples:
 
 from __future__ import annotations
 
-from .._identifiers import ModeloIdentifier
 from ._engine import (
     DeadlineEngine,
     ScheduleProducer,
@@ -104,7 +103,6 @@ __all__ = [
     "ModeloDeadline",
     "ModeloEnrollment",
     "ModeloIVAProfile",
-    "ModeloIdentifier",
     "NoDeadlineWindowsError",
     "ObligationStatus",
     "ProfileError",

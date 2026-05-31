@@ -476,11 +476,11 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
         Invoice,
         InvoiceCatalogue,
         InvoiceCatalogueRepository,
-        InvoiceKind,
         InvoiceLine,
         IvaRate,
         PaymentStatus,
     )
+    from aeat.domain.iva import InvoiceKind
 
     purchase_line = InvoiceLine(
         description="Material oficina",

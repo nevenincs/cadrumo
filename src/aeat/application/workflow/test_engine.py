@@ -33,10 +33,6 @@ from pydantic import AnyHttpUrl
 from ...adapters.outbound.aeat.auth import AeatSession
 from ...adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ...adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
-from ...adapters.outbound.aeat.export import (
-    ModeloDraftStatus,
-    ModeloFinding,
-)
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
 from ...application.auth import AuthProviderDescription, AuthProviderKind
 from ...core.config import Settings
@@ -49,7 +45,7 @@ from ...domain.deadlines import (
     Schedule,
     TaxpayerProfile,
 )
-from ...domain.submission import SubmissionPreflightError
+from ...domain.submission import ModeloDraftStatus, ModeloFinding, SubmissionPreflightError
 from ...tests import FIXTURES_DIR
 from ..filing.runtime import build_runtime_schema_provider
 from . import (

@@ -29,7 +29,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from .....core.config import Settings, override_settings
+from .....core.config import CertificateBackend, Settings, override_settings
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from . import (
@@ -40,7 +40,6 @@ from . import (
     AeatSession,
     BrowserContextLike,
     BrowserSessionLike,
-    CertificateBackend,
     CertificateSessionDetail,
     HandshakeResult,
     LoadedCertificate,

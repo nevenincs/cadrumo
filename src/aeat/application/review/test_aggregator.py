@@ -17,12 +17,12 @@ from ...core.i18n import Translatable as tr
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
-    InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
 from ...domain.invoices._repository import InvoiceCatalogueRepository
+from ...domain.iva import InvoiceKind
 from ...domain.transactions import (
     RawProvenance,
     RawTransaction,

@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...domain.invoices import InvoiceKind
+from ...domain.iva import InvoiceKind
 from ._errors import FilterParseError
 from ._filter import (
     FilterClause,

@@ -24,6 +24,7 @@ from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .....core.classification import SensitivityClass
+from .....core.config import CertificateBackend
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from . import (
@@ -36,7 +37,6 @@ from . import (
     AeatSessionExpiredError,
     BrowserContextLike,
     BrowserSessionLike,
-    CertificateBackend,
     CertificateLoginAssertionDetail,
     CertificateNifParseError,
     CertificateSessionDetail,
@@ -50,9 +50,8 @@ from . import (
     select_provider,
 )
 from . import _authenticator as authenticator_module
-from .certificate import CertificateBundle
-
 from ._fixtures import SECRET_PASSPHRASE
+from .certificate import CertificateBundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.access_gate import LiveSubmitForbiddenError
 from .....core.errors import AeatError
 from .....domain.submission import SubmissionError, SubmissionPreflightError
-from . import (
-    LiveSubmitForbiddenError,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 

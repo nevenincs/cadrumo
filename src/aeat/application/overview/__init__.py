@@ -41,7 +41,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
-    ModeloApplicability,
     derive_modelo_applicability,
 )
 from aeat.domain.calculations.registry.applicability import (
@@ -873,11 +872,9 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
 
 
 __all__ = [
-    "ApplicabilityVerdict",
     "CalendarCompleteness",
     "CalendarWarning",
     "FilingStatus",
-    "ModeloApplicability",
     "OverviewAgendaError",
     "OverviewBacklogError",
     "OverviewCalendar",

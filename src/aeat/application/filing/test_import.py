@@ -11,12 +11,10 @@ from pathlib import Path
 
 import pytest
 
+from ...domain.filing import ModeloImportError
 from ...domain.justificante import JustificanteParseError
 from ...tests import FIXTURES_DIR
-from . import (
-    ModeloImportError,
-    import_filing_from_justificante,
-)
+from . import import_filing_from_justificante
 from .runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

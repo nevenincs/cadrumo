@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...domain.invoices import InvoiceKind
+from ...domain.iva import InvoiceKind
 from ._filter import (
     DeclaracionReviewFilterSpec,
     DeclaracionReviewStatus,
