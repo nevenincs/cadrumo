@@ -5201,6 +5201,13 @@ def modelo_compare(
     # -- Build delta rows -----------------------------------------------------
     all_casilla_ids = sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values))
 
+    # Provenance from the latest revision's typed observations (year_b preferred;
+    # fall back to year_a for casillas that appear only in the older revision).
+    obs_by_id: dict[str, CasillaObservation] = {}
+    for rev in (rev_a, rev_b):
+        for obs in rev.observations:
+            obs_by_id[obs.casilla_id] = obs
+
     delta_rows: list[dict[str, object]] = []
     for cid in all_casilla_ids:
         val_a = rev_a.casilla_values.get(cid, Decimal("0"))
@@ -5212,6 +5219,7 @@ def modelo_compare(
         else:
             pct_change = None
 
+        obs_entry = obs_by_id.get(cid)
         delta_rows.append(
             {
                 "casilla_id": cid,
@@ -5221,6 +5229,9 @@ def modelo_compare(
                 "year_b_value": str(val_b),
                 "delta": str(delta),
                 "pct_change": pct_change,
+                "formula_id": obs_entry.formula_id if obs_entry is not None else None,
+                "legal_refs": list(obs_entry.legal_refs) if obs_entry is not None else [],
+                "source_refs": list(obs_entry.source_refs) if obs_entry is not None else [],
             }
         )
 
