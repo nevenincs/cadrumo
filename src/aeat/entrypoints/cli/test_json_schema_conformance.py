@@ -121,6 +121,36 @@ MIGRATED_COMMANDS: frozenset[str] = frozenset(
         "config.auth.clear",
         "config.apoderado.check",
         "config.bucket.history",
+        # W04.P13: modelo audit and work-history verbs.
+        "modelo.audit.show",
+        "modelo.audit.check",
+        "modelo.audit.export",
+        "modelo.audit.replay",
+        "modelo.work.history",
+        "modelo.work.runs",
+        # W04.P14: filing record verbs.
+        "modelo.filing_record.list",
+        "modelo.filing_record.show",
+        "modelo.filing_record.import",
+        "modelo.verification_report.list",
+        "modelo.verification_report.show",
+        # W04.P15: registry describe verbs.
+        "modelo.list",
+        "modelo.describe",
+        "modelo.casillas",
+        "modelo.bindings.list",
+        "modelo.bindings.preview",
+        "modelo.formulas",
+        # W04.P16: singleton verbs.
+        "modelo.export",
+        "modelo.compare",
+        "modelo.history",
+        "modelo.project",
+        "modelo.readiness",
+        "modelo.iva_wallet.balance",
+        "modelo.iva_wallet.seed",
+        "modelo.work.resume",
+        "modelo.aggregate",
     }
 )
 

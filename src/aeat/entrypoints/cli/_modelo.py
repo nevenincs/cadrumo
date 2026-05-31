@@ -317,11 +317,63 @@ def modelo_readiness(
         f"ledger_checked\t{report.ledger_checked_transaction_count}",
         f"ledger_issues\t{len(report.ledger_issues)}",
     ]
+    from ._common import _emit_envelope
+    from ._modelo_payloads import (
+        LedgerIssuePayload,
+        ModeloReadinessMissingRequirementPayload,
+        ModeloReadinessResult,
+    )
+
+    readiness_result = ModeloReadinessResult(
+        profile_id=str(report.profile_id),
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=period or "",
+        ready=report.ready,
+        profile_ready=report.profile_ready,
+        missing=[
+            ModeloReadinessMissingRequirementPayload(
+                section_key=req.section_key,
+                field_key=req.field_key,
+                selector=req.selector,
+            )
+            for req in report.missing
+        ],
+        ledger_preflight_required=report.ledger_preflight_required,
+        ledger_ready=report.ledger_ready,
+        ledger_period=report.ledger_period,
+        ledger_checked_transaction_count=report.ledger_checked_transaction_count,
+        ledger_issues=[
+            LedgerIssuePayload(
+                transaction_id=issue.transaction_id,
+                reason=issue.reason.value,
+                detail=issue.detail,
+            )
+            for issue in report.ledger_issues
+        ],
+    )
+    lines = [
+        f"profile_id\t{report.profile_id}",
+        f"modelo\t{modelo}",
+        f"revision_id\t{revision_id}",
+        f"filing_year\t{filing_year}",
+        f"period\t{period or ''}",
+        "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
+        f"ready\t{report.ready}",
+        f"profile_ready\t{report.profile_ready}",
+        f"missing\t{len(report.missing)}",
+        f"ledger_preflight_required\t{report.ledger_preflight_required}",
+        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
+        f"ledger_period\t{report.ledger_period or ''}",
+        f"ledger_checked\t{report.ledger_checked_transaction_count}",
+        f"ledger_issues\t{len(report.ledger_issues)}",
+    ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
     for issue in report.ledger_issues:
         lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.readiness", result=readiness_result, lines=lines)
 
 
 @app.command("list")
@@ -1326,11 +1378,18 @@ def aggregate_modelo(
         ),
     )
     result = aggregate_per_modelo(command)
-    payload = {
-        "operation": "modelo.aggregate",
-        **result.model_dump(mode="json"),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloAggregateResult
+
     source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
+    aggregate_result = ModeloAggregateResult(
+        modelo=result.modelo,
+        period=result.period,
+        provider=result.provider.value,
+        observation_count=result.log_fields.observation_count,
+        source_kinds=[sk.value for sk in result.source_kinds],
+        result_row_count=result.log_fields.result_row_count,
+    )
     lines = [
         "operation\tmodelo.aggregate",
         f"modelo\t{result.modelo}",
@@ -1340,7 +1399,7 @@ def aggregate_modelo(
         f"source_kinds\t{source_kinds}",
         f"result_row_count\t{result.log_fields.result_row_count}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines)
 
 
 work_app = typer.Typer(
@@ -3689,10 +3748,18 @@ def _resolve_workflow_run_id(target: str) -> str:
     work-unit id is resolved to the latest persisted run for that
     work unit's ``(modelo, period)``.
 
+    Args:
+        target: Raw argument string supplied by the operator — either a
+            16-character workflow run id or a 64-character work-unit id.
+
+    Returns:
+        The resolved 16-character workflow run id.
+
     Raises:
+        _bad_parameter_from_error: When the work unit does not exist or
+            no run targets it yet.
         typer.BadParameter: When ``target`` is neither a 16-character
-            run id nor a 64-character work-unit id, when the work
-            unit does not exist, or when no run targets it yet.
+            run id nor a 64-character work-unit id.
     """
     from ...application.modelo import workflow_period_for_work_unit
     from ...application.workflow import WorkflowError, find_latest_run_for_period
@@ -3822,14 +3889,16 @@ def work_resume(
     except (WorkflowResumeRefusedError, WorkflowError) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.resume",
-        "prior_workflow_run_id": result.resumed_from_run_id,
-        "modelo": result.modelo,
-        "period": result.period,
-        "aborted_reason": result.aborted_reason.value,
-        "obligation": result.obligation.model_dump(mode="json"),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkResumeResult
+
+    resume_result = WorkResumeResult(
+        prior_workflow_run_id=result.resumed_from_run_id,
+        modelo=result.modelo,
+        period=result.period,
+        aborted_reason=result.aborted_reason.value,
+        obligation=result.obligation.model_dump(mode="json"),
+    )
     lines = [
         "operation\tmodelo.work.resume",
         f"prior_workflow_run_id\t{result.resumed_from_run_id}",
@@ -3840,7 +3909,7 @@ def work_resume(
         f"closes_on\t{result.obligation.closes_on.isoformat()}",
         f"obligation_status\t{result.obligation.status.value}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.resume", result=resume_result, lines=lines)
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
@@ -4531,28 +4600,31 @@ def modelo_history(
             continue
         matches.append(event)
     matches.sort(key=lambda e: e.occurred_at)
-    payload = {
-        "modelo": modelo,
-        "year": year,
-        "period": period,
-        "count": len(matches),
-        "events": [
-            {
-                "event_id": e.event_id,
-                "event_type": e.event_type.value,
-                "occurred_at": e.occurred_at.isoformat(),
-                "actor": e.actor,
-                "object_type": e.object_type.value,
-                "object_id": e.object_id,
-                "payload": dict(e.payload),
-            }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
+
+    history_result = ModeloHistoryResult(
+        modelo=modelo,
+        year=year,
+        period=period,
+        count=len(matches),
+        events=[
+            ModeloLifecycleEventPayload(
+                event_id=e.event_id,
+                event_type=e.event_type.value,
+                occurred_at=e.occurred_at.isoformat(),
+                actor=e.actor,
+                object_type=e.object_type.value,
+                object_id=e.object_id,
+                payload=dict(e.payload),
+            )
             for e in matches
         ],
-    }
+    )
     lines = [f"modelo\t{modelo}", f"count\t{len(matches)}"]
     for e in matches:
         lines.append(f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
 
 
 def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport) -> None:
@@ -5091,42 +5163,46 @@ def modelo_project(
     # formula_id.  Non-computed (input/bound) casillas have no entry in
     # engine_result.entries and do not appear here; their values are
     # operator-supplied inputs already visible in the m130_accumulated block.
-    casilla_observations = [
-        {
-            "casilla_id": entry.target,
-            "value": str(entry.value),
-            "formula_id": entry.formula_id,
-            "legal_refs": list(entry.legal_refs),
-            "source_refs": list(entry.source_refs),
-        }
-        for entry in engine_result.entries
-    ]
+    from ._common import _emit_envelope
+    from ._modelo_payloads import (
+        CasillaObservationPayload,
+        M100ProjectionPayload,
+        M130AccumulatedPayload,
+        ModeloProjectResult,
+    )
 
-    payload: dict[str, object] = {
-        "operation": "modelo.project",
-        "year": year,
-        "ccaa": ccaa,
-        "quarters_filed": quarters_filed,
-        "quarters_available": sorted(m130_quarters.keys()),
-        "is_extrapolated": is_extrapolated,
-        "m130_accumulated": {
-            "ingresos": str(total_ingresos),
-            "gastos": str(total_gastos),
-            "rendimiento_neto": str(total_rendimiento_neto),
-            "pagos_fraccionados": str(total_pagos_fraccionados),
-        },
-        "casilla_observations": casilla_observations,
-        "m100_projection": {
-            "base_liquidable_general_0505": str(projected_rendimiento_neto),
-            "pagos_fraccionados_0604": str(total_pagos_fraccionados),
-            "cuota_integra_estatal_0545": str(cuota_estatal),
-            "cuota_integra_autonomica_0546": str(cuota_autonomica),
-            "cuota_liquida_estatal_0595": str(cuota_liquida_estatal),
-            "cuota_liquida_autonomica_0596": str(cuota_liquida_autonomica),
-            "cuota_resultante_0597": str(cuota_resultante),
-        },
-    }
-
+    project_result = ModeloProjectResult(
+        year=year,
+        ccaa=ccaa,
+        quarters_filed=quarters_filed,
+        quarters_available=sorted(m130_quarters.keys()),
+        is_extrapolated=is_extrapolated,
+        m130_accumulated=M130AccumulatedPayload(
+            ingresos=str(total_ingresos),
+            gastos=str(total_gastos),
+            rendimiento_neto=str(total_rendimiento_neto),
+            pagos_fraccionados=str(total_pagos_fraccionados),
+        ),
+        casilla_observations=[
+            CasillaObservationPayload(
+                casilla_id=entry.target,
+                value=str(entry.value),
+                formula_id=entry.formula_id,
+                legal_refs=list(entry.legal_refs),
+                source_refs=list(entry.source_refs),
+            )
+            for entry in engine_result.entries
+        ],
+        m100_projection=M100ProjectionPayload(
+            base_liquidable_general_0505=str(projected_rendimiento_neto),
+            pagos_fraccionados_0604=str(total_pagos_fraccionados),
+            cuota_integra_estatal_0545=str(cuota_estatal),
+            cuota_integra_autonomica_0546=str(cuota_autonomica),
+            cuota_liquida_estatal_0595=str(cuota_liquida_estatal),
+            cuota_liquida_autonomica_0596=str(cuota_liquida_autonomica),
+            cuota_resultante_0597=str(cuota_resultante),
+        ),
+    )
     extrapolation_note = f" (extrapolated from {quarters_filed}Q)" if is_extrapolated else ""
     lines = [
         "operation\tmodelo.project",
@@ -5145,7 +5221,7 @@ def modelo_project(
         f"m100_cuota_liquida_autonomica\t{cuota_liquida_autonomica}",
         f"m100_cuota_resultante\t{cuota_resultante}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 
 @app.command(
@@ -5333,24 +5409,56 @@ def modelo_compare(
             by_section[sec] = []
         by_section[sec].append(row)
 
-    payload: dict[str, object] = {
-        "operation": "modelo.compare",
-        "modelo": modelo,
-        "year_a": year_a,
-        "year_b": year_b,
-        "year_a_revision_id": rev_a.calculation_revision_id,
-        "year_b_revision_id": rev_b.calculation_revision_id,
-        "year_a_is_draft": draft_a,
-        "year_b_is_draft": draft_b,
-        "sections": [
-            {
-                "section": sec,
-                "rows": by_section[sec],
-            }
-            for sec in sections_seen
-        ],
-        "delta_rows": delta_rows,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import CompareSectionPayload, DeltaRowPayload, ModeloCompareResult
+
+    typed_delta_rows = [
+        DeltaRowPayload(
+            casilla_id=str(row["casilla_id"]),
+            label=str(row["label"]),
+            section=str(row["section"]),
+            year_a_value=str(row["year_a_value"]),
+            year_b_value=str(row["year_b_value"]),
+            delta=str(row["delta"]),
+            pct_change=str(row["pct_change"]) if row["pct_change"] is not None else None,
+            formula_id=str(row["formula_id"]) if row.get("formula_id") is not None else None,
+            legal_refs=list(row.get("legal_refs", [])),
+            source_refs=list(row.get("source_refs", [])),
+        )
+        for row in delta_rows
+    ]
+    typed_sections = [
+        CompareSectionPayload(
+            section=sec,
+            rows=[
+                DeltaRowPayload(
+                    casilla_id=str(row["casilla_id"]),
+                    label=str(row["label"]),
+                    section=str(row["section"]),
+                    year_a_value=str(row["year_a_value"]),
+                    year_b_value=str(row["year_b_value"]),
+                    delta=str(row["delta"]),
+                    pct_change=str(row["pct_change"]) if row["pct_change"] is not None else None,
+                    formula_id=str(row["formula_id"]) if row.get("formula_id") is not None else None,
+                    legal_refs=list(row.get("legal_refs", [])),
+                    source_refs=list(row.get("source_refs", [])),
+                )
+                for row in by_section[sec]
+            ],
+        )
+        for sec in sections_seen
+    ]
+    compare_result = ModeloCompareResult(
+        modelo=modelo,
+        year_a=year_a,
+        year_b=year_b,
+        year_a_revision_id=rev_a.calculation_revision_id,
+        year_b_revision_id=rev_b.calculation_revision_id,
+        year_a_is_draft=draft_a,
+        year_b_is_draft=draft_b,
+        sections=typed_sections,
+        delta_rows=typed_delta_rows,
+    )
 
     # Tab-delimited text: header + one row per casilla with non-zero delta.
     draft_note_a = " (BORRADOR)" if draft_a else ""
@@ -5371,7 +5479,7 @@ def modelo_compare(
             f"{row['casilla_id']}\t{row['label']}\t{row['section']}"
             f"\t{row['year_a_value']}\t{row['year_b_value']}\t{row['delta']}\t{pct}"
         )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)
 
 
 iva_wallet_app = typer.Typer(
@@ -5416,7 +5524,16 @@ def iva_wallet_balance_cmd(
     from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
 
     report = query_iva_wallet_balance(as_of_year=as_of_year)
-    payload = report.model_dump(mode="json")
+    from ._common import _emit_envelope
+    from ._modelo_payloads import IvaWalletBalanceResult
+
+    balance_result = IvaWalletBalanceResult(
+        as_of_year=report.as_of_year,
+        total_balance=str(report.total_balance),
+        lot_count=report.lot_count,
+        next_expiry_year=report.next_expiry_year,
+        unallocated_applied_amount=str(report.unallocated_applied_amount),
+    )
     lines = [
         "operation\tmodelo.iva-wallet.balance",
         f"as_of_year\t{report.as_of_year}",
@@ -5425,7 +5542,7 @@ def iva_wallet_balance_cmd(
         f"next_expiry_year\t{report.next_expiry_year}",
         f"unallocated_applied_amount\t{report.unallocated_applied_amount}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.iva_wallet.balance", result=balance_result, lines=lines)
 
 
 @iva_wallet_app.command(
@@ -5572,14 +5689,16 @@ def iva_wallet_seed_cmd(
             )
         ) from exc
 
-    payload = {
-        "operation": "modelo.iva-wallet.seed",
-        "filing_year": state.filing_year,
-        "period": state.period,
-        "taxpayer_nif": state.taxpayer_nif,
-        "amount": str(state.available_end_amount),
-        "status": state.status,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import IvaWalletSeedResult
+
+    seed_result = IvaWalletSeedResult(
+        filing_year=state.filing_year,
+        period=state.period,
+        taxpayer_nif=state.taxpayer_nif,
+        amount=str(state.available_end_amount),
+        status=str(state.status),
+    )
     lines = [
         "operation\tmodelo.iva-wallet.seed",
         f"filing_year\t{state.filing_year}",
@@ -5588,7 +5707,7 @@ def iva_wallet_seed_cmd(
         f"amount\t{state.available_end_amount}",
         f"status\t{state.status}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
 
 
 __all__ = ["app"]
