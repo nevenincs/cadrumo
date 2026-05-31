@@ -46,7 +46,7 @@ from .sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _STREAM_CHUNK_SIZE = 1024 * 1024
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _ATTACHMENT_BLOB_VERSION = ATTACHMENT_BLOB_STORAGE_NAMESPACE.schema_version

@@ -13,6 +13,7 @@ import re
 from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from functools import lru_cache
+
 import i18n
 import yaml
 
@@ -142,6 +143,12 @@ def _output_language_cache_key() -> tuple[object, ...]:
     # ``Settings`` inside ``_cached_output_language`` with the correct
     # .env+os.environ merge order. The key only needs to *change* when
     # the effective value could change; it does not need the merged value.
+    # os.environ.get allowlist: the reads below compute a cache-key signature,
+    # not a settings value.  Constructing a full Settings instance on every
+    # tr() call is prohibitively expensive (~100 calls per --help render).
+    # The variables sampled here are exactly those Pydantic-settings merges
+    # from os.environ; reading them raw to detect *change* does not bypass the
+    # merge order — the cache miss path still builds Settings normally.
     env_signature = tuple(os.environ.get(name) for name in _OUTPUT_LANGUAGE_KEY_ENV_VARS)
     return (
         "env",

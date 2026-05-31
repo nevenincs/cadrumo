@@ -30,9 +30,10 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
+from ...core.aggregation import RowSetGroupingKind
 from ...core.decimal import coerce_decimal
-from ...core.parsing._dates import _parse_iso8601_date
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry._bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
@@ -58,13 +59,13 @@ __all__ = [
 # that consumes its cells. The set of supported groupings is closed:
 # any grouping not in this map signals a registry binding declared
 # without a matching application-layer ingestor.
-_GROUPING_DISPATCH: Mapping[str, str] = {
-    "per_perceptor": "withholding",
-    "per_perceptor_clave": "withholding",
-    "per_related_party_operation": "related_party",
-    "per_foreign_asset": "foreign_asset",
-    "per_atribucion_member": "atribucion",
-    "per_refund_operation": "refund",
+_GROUPING_DISPATCH: Mapping[str, RowSetGroupingKind] = {
+    "per_perceptor": RowSetGroupingKind.WITHHOLDING,
+    "per_perceptor_clave": RowSetGroupingKind.WITHHOLDING,
+    "per_related_party_operation": RowSetGroupingKind.RELATED_PARTY,
+    "per_foreign_asset": RowSetGroupingKind.FOREIGN_ASSET,
+    "per_atribucion_member": RowSetGroupingKind.ATRIBUCION,
+    "per_refund_operation": RowSetGroupingKind.REFUND,
 }
 
 
@@ -106,15 +107,15 @@ def assemble_observations_for_grouping(
             f"declared but unassemblable groupings are: "
             f"{sorted(set(_GROUPING_DISPATCH) ^ {grouping})}"
         )
-    if source_kind == "withholding":
+    if source_kind == RowSetGroupingKind.WITHHOLDING:
         return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
-    if source_kind == "related_party":
+    if source_kind == RowSetGroupingKind.RELATED_PARTY:
         return (source_kind, assemble_related_party_observations(cells, revision, filing_year=filing_year))
-    if source_kind == "foreign_asset":
+    if source_kind == RowSetGroupingKind.FOREIGN_ASSET:
         return (source_kind, assemble_foreign_asset_observations(cells, revision, filing_year=filing_year))
-    if source_kind == "atribucion":
+    if source_kind == RowSetGroupingKind.ATRIBUCION:
         return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
-    if source_kind == "refund":
+    if source_kind == RowSetGroupingKind.REFUND:
         return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
     # Unreachable: dispatch table is exhaustive.
     raise RegistryValidationError(f"row-set grouping {grouping!r} dispatch fell through")

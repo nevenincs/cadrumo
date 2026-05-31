@@ -141,7 +141,11 @@ def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCata
     try:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(f"failed to load transactions catalogue from secure backend: {exc}") from exc
+        raise ReviewSourceLoadError(
+            message=f"failed to load transactions catalogue from secure backend: {exc}",
+            translated_message="review.adapters.errors.transactions_load_failed",
+            context={"error": str(exc)},
+        ) from exc
 
 
 def _to_transaction_item(
@@ -202,7 +206,11 @@ def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
     try:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(f"failed to load invoices catalogue from secure backend: {exc}") from exc
+        raise ReviewSourceLoadError(
+            message=f"failed to load invoices catalogue from secure backend: {exc}",
+            translated_message="review.adapters.errors.invoices_load_failed",
+            context={"error": str(exc)},
+        ) from exc
 
 
 def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:

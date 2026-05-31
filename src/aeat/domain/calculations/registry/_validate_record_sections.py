@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from ....core.aggregation import AggregationSourceKind
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
@@ -182,7 +183,7 @@ def _validate_per_source_binding(
 ) -> None:
     """Run the per-source typed binding-definition validators."""
     source_validators = (
-        ("invoice", validate_invoice_binding_definition),
+        (AggregationSourceKind.INVOICE, validate_invoice_binding_definition),
         ("ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition),
         ("ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition),
         ("ledger_renta_expense_aggregation", validate_ledger_renta_expense_aggregation_binding_definition),

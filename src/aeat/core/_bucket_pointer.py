@@ -17,10 +17,9 @@ from __future__ import annotations
 
 import tomllib
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class BucketPointer(BaseModel):
     """Plaintext pointer to the active bucket id."""
@@ -55,6 +54,5 @@ class BucketPointer(BaseModel):
 
         payload = tomllib.loads(text)
         return cls.model_validate(payload)
-
 
 __all__ = ["BucketPointer"]

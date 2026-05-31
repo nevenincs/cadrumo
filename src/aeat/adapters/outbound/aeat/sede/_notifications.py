@@ -444,9 +444,13 @@ async def _fetch_and_parse(
         try:
             page = await context.new_page()
             # Warm the cookie jar on the authenticated landing.
+            # Non-Playwright failures (e.g. domain errors, keyboard interrupts)
+            # propagate unmodified; only browser-level transport and OS-level
+            # I/O errors are suppressed here since they do not prevent the
+            # primary goto from succeeding.
             try:
                 await page.goto(_RESUMEN_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-            except Exception as exc:
+            except (PlaywrightError, OSError) as exc:
                 log.debug(
                     "fetch_notifications: warm-up navigation to %s suppressed: %s",
                     _RESUMEN_URL,

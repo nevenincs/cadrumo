@@ -25,7 +25,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
-from ...core.i18n import tr
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -341,7 +341,7 @@ def capture_active_profile_pointer() -> str | None:
     target = pointer_path(load_settings().aeat_local_storage_root)
     if not target.is_file():
         return None
-    return target.read_text(encoding="utf-8")
+    return target.read_text(encoding=_UTF_8_ENCODING)
 
 
 def restore_active_profile_pointer(prior_text: str | None) -> None:
@@ -362,7 +362,7 @@ def restore_active_profile_pointer(prior_text: str | None) -> None:
             target.unlink()
         return
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(prior_text, encoding="utf-8")
+    target.write_text(prior_text, encoding=_UTF_8_ENCODING)
 
 
 def _refuse_duplicate_label(
@@ -382,14 +382,8 @@ def _refuse_duplicate_label(
     if read_profile_bucket(display_name) is None:
         return
     raise ProfileAlreadyRegisteredError(
-        tr(
-            "application.user_profile.errors.profile_already_exists",
-            default=(
-                "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
-                "to activate it or `aeat config profile delete NAME` first."
-            ),
-            profile=display_name,
-        ),
+        translated_message="application.user_profile.errors.profile_already_exists",
+        context={"profile": display_name},
     )
 
 
@@ -405,11 +399,8 @@ def _require_registered_label(display_name: str) -> None:
 
     if read_profile_bucket(display_name) is None:
         raise ProfileNotFoundError(
-            tr(
-                "application.user_profile.errors.profile_not_registered",
-                default="Profile '%{profile}' does not exist; run `aeat config profile create NAME` to create it.",
-                profile=display_name,
-            ),
+            translated_message="application.user_profile.errors.profile_not_registered",
+            context={"profile": display_name},
         )
 
 
@@ -593,7 +584,9 @@ def _require_active(state: WorkflowState) -> str:
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        raise ProfileNotFoundError(tr("application.user_profile.errors.no_active_profile_selected"))
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.no_active_profile_selected",
+        )
     return bucket_id
 
 

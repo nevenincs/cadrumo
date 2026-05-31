@@ -28,10 +28,10 @@ import hashlib
 import json
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import typer
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 if TYPE_CHECKING:
     from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
@@ -92,8 +92,7 @@ from ....application.storage.calc_sheets import (
 )
 from ....core.config import load_settings
 from ....core.i18n import tr
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import ValidatedRegistryAuthority
+from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -172,6 +171,31 @@ def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBo
     )
 
 
+class OAuthClientPayload(TypedDict):
+    """Typed shape for a Cloud Console Desktop OAuth client JSON file.
+
+    Cloud Console emits ``{"installed": {<client fields>}}`` for Desktop
+    application types. Only the ``installed`` key is accepted here; the
+    ``web`` variant is rejected by :func:`_coerce_client_json`.
+    """
+
+    installed: dict[str, Any]
+
+
+class _OAuthClientWrapper(BaseModel):
+    """Pydantic wrapper that validates the outer Cloud Console envelope.
+
+    Validates that the JSON payload is a mapping that carries exactly an
+    ``installed`` field, which must itself be a dict. Downstream callers
+    then unwrap ``installed`` and validate the inner structure through
+    :class:`OAuthClient`.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    installed: dict[str, Any]
+
+
 def _coerce_client_json(path: Path) -> OAuthClient:
     """Read ``path``, unwrap the Cloud Console wrapper, return an OAuthClient.
 
@@ -189,26 +213,25 @@ def _coerce_client_json(path: Path) -> OAuthClient:
             context={"path": str(path), "reason": str(exc)},
         ) from exc
     try:
-        payload = json.loads(raw)
+        raw_payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise GoogleAuthValidationError(
             translated_message="cli.config.google.detail.client_json_invalid",
             context={"path": str(path), "reason": exc.msg},
         ) from exc
-    if not isinstance(payload, dict) or "installed" not in payload:
+    try:
+        wrapper = _OAuthClientWrapper.model_validate(raw_payload)
+    except ValidationError as _wrapper_exc:
+        # _OAuthClientWrapper.extra="ignore" accepts extra top-level keys; missing
+        # "installed" raises a required-field ValidationError — both the web-client
+        # shape (no "installed" key) and a non-dict payload map to client_json_not_desktop.
         raise GoogleAuthValidationError(
             translated_message="cli.config.google.detail.client_json_not_desktop",
             context={"path": str(path)},
-        )
-    inner = payload["installed"]
-    if not isinstance(inner, dict):
-        raise GoogleAuthValidationError(
-            translated_message="cli.config.google.detail.client_json_bad_wrapper",
-            context={"path": str(path)},
-        )
+        ) from _wrapper_exc
     # Cloud Console writes redirect_uris as a JSON array; strict pydantic
     # rejects list-vs-tuple coercion, so normalise before validation.
-    coerced = dict(inner)
+    coerced = dict(wrapper.installed)
     if isinstance(coerced.get("redirect_uris"), list):
         coerced["redirect_uris"] = tuple(coerced["redirect_uris"])
     try:
@@ -763,37 +786,25 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
     if not root_folder_id:
         raise CliRefusedBoundaryError(
-            tr("cli.config.google.sync.calc.export.root_folder_required"),
+            translated_message="cli.config.google.sync.calc.export.root_folder_required",
         )
     return credentials, root_folder_id
 
 
 def _load_snapshot(modelo: str, period: str, year: int):
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = _bundled_authority()
     if modelo not in {candidate.id for candidate in authority.modelos}:
         available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
         raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.google.sync.calc.export.unknown_modelo",
-                modelo=modelo,
-                available=available,
-            ),
+            translated_message="cli.config.google.sync.calc.export.unknown_modelo",
+            context={"modelo": modelo, "available": available},
         )
     try:
         return authority.snapshot(modelo, filing_year=year, period=period)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.google.sync.calc.export.snapshot_failure",
-                modelo=modelo,
-                period=period,
-                year=year,
-                detail=str(exc),
-                default=(
-                    "Cannot build registry snapshot for modelo "
-                    f"{modelo} ({period} {year}): {exc}"
-                ),
-            ),
+            translated_message="cli.config.google.sync.calc.export.snapshot_failure",
+            context={"modelo": modelo, "period": period, "year": year, "detail": str(exc)},
         ) from exc
 
 
@@ -1254,10 +1265,8 @@ def _compute_pull_casillas(
         return []
     if result.metadata_match != "matches":
         raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.google.sync.calc.pull.compute_refused_stale",
-                metadata_match=result.metadata_match,
-            ),
+            translated_message="cli.config.google.sync.calc.pull.compute_refused_stale",
+            context={"metadata_match": result.metadata_match},
         )
     try:
         calc = compute_from_pull(snapshot, result)

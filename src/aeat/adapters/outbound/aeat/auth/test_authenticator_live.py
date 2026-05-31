@@ -45,11 +45,10 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
         pytest.skip("AEAT certificate env vars are not fully configured")
 
-    # Bridge the passphrase into the process environment for the cert loader.
-    os.environ.setdefault(
-        "AEAT_CERTIFICATE_PASSWORD_SECRET",
-        settings.aeat_certificate_password_secret.get_secret_value(),
-    )
+    # Production cert loader reads the passphrase via
+    # ``CertificateBundle.password`` (a SecretStr field on Settings);
+    # the env-var round-trip is gone (see ``certificate.py`` docstring).
+    # No os.environ bridge is needed.
 
     authenticator = AeatAuthenticator(settings)
 
@@ -87,10 +86,6 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
         pytest.skip("AEAT certificate env vars are not fully configured")
-    os.environ.setdefault(
-        "AEAT_CERTIFICATE_PASSWORD_SECRET",
-        settings.aeat_certificate_password_secret.get_secret_value(),
-    )
 
     from typing import Any, cast
 

@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from aeat.adapters.persistence.storage.bucket._errors import BucketValidationError
 from aeat.adapters.persistence.storage.bucket._layout import (
     BucketPaths,
     bucket_paths,
@@ -36,14 +37,14 @@ def test_provision_is_fail_closed_on_existing_bucket(tmp_path: Path) -> None:
 
 
 def test_provision_rejects_empty_bucket_id(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="non-empty"):
+    with pytest.raises(BucketValidationError, match="non-empty"):
         provision_bucket_directory(tmp_path, "")
 
 
 def test_provision_rejects_path_separator_in_bucket_id(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="path separator"):
+    with pytest.raises(BucketValidationError, match="path separator"):
         provision_bucket_directory(tmp_path, "a/b")
-    with pytest.raises(ValueError, match="path separator"):
+    with pytest.raises(BucketValidationError, match="path separator"):
         provision_bucket_directory(tmp_path, "a\\b")
 
 

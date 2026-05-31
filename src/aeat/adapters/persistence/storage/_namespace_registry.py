@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.classification import SensitivityClass
 from .errors import NamespaceRegistryError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
@@ -27,14 +27,12 @@ BUCKET_DEK_FILENAME = "bucket.dek.json"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 
-
 class StorageNamespaceScope(StrEnum):
     """Logical custody scope for a secure-object namespace."""
 
     PROFILE_LOCAL = "profile_local"
     BUCKET_LOCAL = "bucket_local"
     PROCESS_LOCAL = "process_local"
-
 
 class StorageRemoteMirrorPolicy(StrEnum):
     """Remote-provider mirroring policy for one secure-object namespace."""
@@ -43,7 +41,6 @@ class StorageRemoteMirrorPolicy(StrEnum):
     LOCAL_ONLY = "local_only"
     TEST_ONLY = "test_only"
 
-
 class StoragePathKind(StrEnum):
     """Persistent storage hierarchy node kind."""
 
@@ -51,7 +48,6 @@ class StoragePathKind(StrEnum):
     FILE = "file"
     LOGICAL_SQL = "logical_sql"
     BLOB_OBJECT = "blob_object"
-
 
 class SecureObjectNamespaceDefinition(BaseModel):
     """Contract for one encrypted SQL secure-object namespace."""
@@ -119,7 +115,6 @@ class SecureObjectNamespaceDefinition(BaseModel):
             raise NamespaceRegistryError(f"namespace {self.namespace!r} does not define a singleton object key")
         return self.default_object_key
 
-
 class StoragePathDefinition(BaseModel):
     """Contract for one storage hierarchy path or logical marker."""
 
@@ -151,7 +146,6 @@ class StoragePathDefinition(BaseModel):
         if "/" in value or "\\" in value:
             raise NamespaceRegistryError("path segment must be a single component")
         return value
-
 
 class StorageHierarchyRegistry(BaseModel):
     """Registry carrying the known secure-storage hierarchy contracts."""
@@ -197,7 +191,6 @@ class StorageHierarchyRegistry(BaseModel):
             if path.key == key:
                 return path
         raise KeyError(key)
-
 
 WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="workflow_state",

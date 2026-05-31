@@ -29,6 +29,14 @@ from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
 from ._schema import DeclaracionObservation, TemplateRevision
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD: pdfplumber's Page.extract_words()
+# returns dicts whose full key-set varies by version and page content.  A
+# TypedDict would require listing every optional key with total=False and
+# would break silently on upstream pdfplumber releases.  Moving to
+# aeat.core._types is unwarranted because _PdfWord is consumed exclusively
+# within this adapter module.  This alias is correct-by-containment: it
+# documents the caller's expectations without over-constraining the library
+# boundary.
 _PdfWord = dict[str, Any]
 
 _logger = get_logger(__name__)

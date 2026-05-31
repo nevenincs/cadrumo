@@ -30,7 +30,7 @@ import base64
 from collections.abc import Callable
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ..bucket._errors import RecoveryVerificationError
 from ..crypto._crypto import EncryptedBlob
@@ -46,11 +46,10 @@ from ._recovery import (
 )
 from ._recovery_record import RecoveryRecord
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _GCM_TAG_BYTES = 16
 _HKDF_INFO = "aeat.recovery-key.master-wrap.v1"
-
 
 class MintedRecovery(BaseModel):
     """In-memory result of a recovery enrollment.
@@ -64,7 +63,6 @@ class MintedRecovery(BaseModel):
 
     envelope: RecoveryRecord
     mnemonic: str
-
 
 def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRecord:
     """Split the GCM wire shape into the `RecoveryRecord` field set."""
@@ -81,7 +79,6 @@ def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRe
         created_at=created_at,
     )
 
-
 def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
     """Re-assemble an `EncryptedBlob` from the typed envelope fields."""
 
@@ -89,7 +86,6 @@ def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
     ciphertext = base64.b64decode(envelope.wrapped_dek_b64.encode("ascii"), validate=True)
     tag = base64.b64decode(envelope.tag_b64.encode("ascii"), validate=True)
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext + tag)
-
 
 def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecovery:
     """Mint a fresh recovery envelope wrapping `dek`.
@@ -104,7 +100,6 @@ def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecover
     blob = wrapped.to_blob()
     envelope = _envelope_from_blob(blob, created_at=created_at)
     return MintedRecovery(envelope=envelope, mnemonic=recovery_key.mnemonic)
-
 
 def unwrap_recovery_envelope(
     *,
@@ -141,7 +136,6 @@ def unwrap_recovery_envelope(
             "recovery envelope did not decrypt under the supplied mnemonic",
         ) from exc
 
-
 def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool:
     """Return True iff the mnemonic correctly unwraps the envelope.
 
@@ -155,7 +149,6 @@ def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool
     except RecoveryVerificationError:
         return False
     return True
-
 
 def open_session_from_recovery(
     *,
@@ -182,7 +175,6 @@ def open_session_from_recovery(
         idle_minutes=idle_minutes,
         opened_at=opened_at,
     )
-
 
 __all__ = [
     "MintedRecovery",

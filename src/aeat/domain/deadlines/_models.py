@@ -15,11 +15,10 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ..profile._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
-
 
 class IVARegime(StrEnum):
     """The IVA regime a taxpayer files under.
@@ -41,7 +40,6 @@ class IVARegime(StrEnum):
     RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
     REAGP = "REAGP"
     EXENTO = "EXENTO"
-
 
 class EntityType(StrEnum):
     """The taxpayer's entity type — the most consequential taxpayer axis.
@@ -66,7 +64,6 @@ class EntityType(StrEnum):
     NATURAL_PERSON = "natural_person"
     LEGAL_ENTITY = "legal_entity"
     ATTRIBUTION_ENTITY = "attribution_entity"
-
 
 class LegalEntityForm(StrEnum):
     """The recognised legal form of an Impuesto sobre Sociedades entity.
@@ -102,7 +99,6 @@ class LegalEntityForm(StrEnum):
     SIN_FINES_LUCRATIVOS = "sin_fines_lucrativos"
     OTHER = "other"
 
-
 class IrpfIncomeCategory(StrEnum):
     """An IRPF income category (rendimiento) a natural person declares.
 
@@ -135,7 +131,6 @@ class IrpfIncomeCategory(StrEnum):
     GANANCIAS_PATRIMONIALES = "ganancias_patrimoniales"
     PENSION = "pension"
 
-
 class IrpfEstimationRegime(StrEnum):
     """The IRPF method for determining net economic-activity income.
 
@@ -156,7 +151,6 @@ class IrpfEstimationRegime(StrEnum):
     DIRECTA_NORMAL = "directa_normal"
     DIRECTA_SIMPLIFICADA = "directa_simplificada"
     OBJETIVA = "objetiva"
-
 
 class IrpfSpecialRegime(StrEnum):
     """IRPF special-regime category for natural persons.
@@ -182,7 +176,6 @@ class IrpfSpecialRegime(StrEnum):
 
     GENERAL = "general"
     IMPATRIADO = "impatriado"
-
 
 class ObligationStatus(StrEnum):
     """Status of a single :class:`ModeloDeadline` against a reference date.
@@ -211,9 +204,7 @@ class ObligationStatus(StrEnum):
     FILED = "FILED"
     NOT_APPLICABLE = "NOT_APPLICABLE"
 
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ModeloEnrollment(BaseModel):
     """AEAT enrollment facts used by registry filing schedules."""
@@ -222,7 +213,6 @@ class ModeloEnrollment(BaseModel):
 
     large_company: bool = False
     public_administration_budget_gt_6000000: bool = False
-
 
 class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
@@ -248,7 +238,6 @@ class ModeloIVAProfile(BaseModel):
     intracommunity_operations_exceed_50000_eur: bool = False
     sii_enrolled: bool = False
     redeme_enrolled: bool = False
-
 
 class TaxpayerProfile(BaseModel):
     """The profile of a Spanish taxpayer for filing-deadline computation.
@@ -636,9 +625,7 @@ class TaxpayerProfile(BaseModel):
 
         return any(150 <= days <= 215 for days in self.days_in_spain.values())
 
-
 _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD: Decimal = Decimal("1500")
-
 
 def evaluate_multiple_pagadores_obligation(
     pagadores_count: int | None,
@@ -668,7 +655,6 @@ def evaluate_multiple_pagadores_obligation(
         return False
     return pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD
 
-
 # Static lookup: ISO 3166-1 alpha-2 → BOE reference for double-taxation treaties
 # signed by Spain. Source: AEAT Convenios de doble imposición.
 _CONVENIO_BY_COUNTRY: dict[str, str] = {
@@ -679,7 +665,6 @@ _CONVENIO_BY_COUNTRY: dict[str, str] = {
     "NL": "BOE-A-1972-674 España-Países Bajos",
     "MA": "BOE-A-1985-13340 España-Marruecos",
 }
-
 
 class RecargoBand(BaseModel):
     """One Ley 58/2003 art-27 recargo band loaded from the registry TOML.
@@ -723,7 +708,6 @@ class RecargoBand(BaseModel):
             )
         return self
 
-
 class Recovery(BaseModel):
     """Operator-facing recovery payload attached to an OVERDUE obligation.
 
@@ -752,7 +736,6 @@ class Recovery(BaseModel):
     recargo_band: RecargoBand
     legal_ref: str = Field(min_length=1, max_length=128)
     next_command: str = Field(min_length=1, max_length=256)
-
 
 class ModeloDeadline(BaseModel):
     """A single filing obligation in a :class:`Schedule`.
@@ -804,7 +787,6 @@ class ModeloDeadline(BaseModel):
                 f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})"
             )
         return self
-
 
 class Schedule(BaseModel):
     """The full filing schedule for an autónomo for a given year.

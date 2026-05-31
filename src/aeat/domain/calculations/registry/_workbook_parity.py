@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 import shutil
 import subprocess
@@ -16,10 +15,13 @@ from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Literal
+from zipfile import BadZipFile
 
 from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell, MergedCell
 from openpyxl.formula import Tokenizer
+from openpyxl.formula.tokenizer import TokenizerError
+from openpyxl.utils.exceptions import InvalidFileException
 from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -27,6 +29,7 @@ from ....core.config import Settings as _Settings
 from ....core.errors import CoreError
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from ....core.hashing import hash_file as _hash_file
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
@@ -36,14 +39,17 @@ _PARITY_DEFAULTS = _Settings()
 
 _log = get_logger(__name__)
 
-WorkbookKind = Literal[
-    "formula_form",
-    "record_design_layout",
-    "validation_hints",
-    "static_layout",
-    "unsupported_binary_xls",
-    "unreadable",
-]
+class WorkbookKind(StrEnum):
+    """Observable classification for a single discovered workbook artefact."""
+
+    FORMULA_FORM = "formula_form"
+    RECORD_DESIGN_LAYOUT = "record_design_layout"
+    VALIDATION_HINTS = "validation_hints"
+    STATIC_LAYOUT = "static_layout"
+    UNSUPPORTED_BINARY_XLS = "unsupported_binary_xls"
+    UNREADABLE = "unreadable"
+
+
 class WorkbookScanStatus(StrEnum):
     """Observable status codes for a single workbook scan attempt."""
 
@@ -51,10 +57,15 @@ class WorkbookScanStatus(StrEnum):
     UNSUPPORTED = "unsupported"
     TIMEOUT = "timeout"
     FAILED = "failed"
+
+
 WorkbookConversionStatus = Literal["converted", "failed"]
 WorkbookRunnerStatus = Literal["available"]
 WorkbookRunnerEngine = Literal["libreoffice-headless", "excel-com"]
 ParityStatus = Literal["match", "mismatch", "not_run"]
+
+# Runner-engine string constant — single source for every callsite.
+_ENGINE_LIBREOFFICE: WorkbookRunnerEngine = "libreoffice-headless"
 
 _WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
@@ -100,7 +111,7 @@ class WorkbookArtefactReport(WorkbookParityModel):
 
     path: str
     modelo: str | None
-    extension: Literal[".xlsx", ".xls"]
+    extension: Literal[_XLSX_EXTENSION, _XLS_EXTENSION]
     bytes: int = Field(ge=0)
     sha256: str = Field(min_length=64, max_length=64)
     sheets: tuple[str, ...] = ()
@@ -116,9 +127,10 @@ class WorkbookArtefactReport(WorkbookParityModel):
 
     @model_validator(mode="after")
     def _validate_status(self) -> WorkbookArtefactReport:
-        if self.scan_status == "scanned" and self.workbook_kind in {"unreadable", "unsupported_binary_xls"}:
+        unreadable_kinds = {WorkbookKind.UNREADABLE, WorkbookKind.UNSUPPORTED_BINARY_XLS}
+        if self.scan_status == WorkbookScanStatus.SCANNED and self.workbook_kind in unreadable_kinds:
             raise RegistryValidationError("scanned workbook cannot be unreadable or unsupported")
-        if self.scan_status != "scanned" and self.error is None:
+        if self.scan_status != WorkbookScanStatus.SCANNED and self.error is None:
             raise RegistryValidationError("non-scanned workbook report must include an error")
         return self
 
@@ -130,7 +142,7 @@ class WorkbookConversionReport(WorkbookParityModel):
     modelo: str | None
     bytes: int = Field(ge=0)
     sha256: str = Field(min_length=64, max_length=64)
-    converted_extension: Literal[".xlsx"] | None = None
+    converted_extension: Literal[_XLSX_EXTENSION] | None = None
     sheets: tuple[str, ...] = ()
     formula_cells: int = Field(ge=0)
     input_candidates: tuple[WorkbookCellRef, ...] = ()
@@ -305,7 +317,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             error=str(exc),
             started=started,
         )
-    except Exception as exc:
+    except (InvalidFileException, BadZipFile, OSError) as exc:
         _log.warning(
             "workbook parity scan failed for %s: %s",
             relative,
@@ -322,6 +334,16 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             error=f"{type(exc).__name__}: {exc}",
             started=started,
         )
+    except Exception as exc:
+        _log.warning(
+            "workbook parity scan unexpected error for %s: %s",
+            relative,
+            exc,
+            exc_info=True,
+        )
+        raise RegistryValidationError(
+            f"Unexpected error scanning workbook {relative}: {type(exc).__name__}: {exc}"
+        ) from exc
     kind = _classify_xlsx(relative, formulas)
     evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
     return WorkbookArtefactReport(
@@ -351,14 +373,14 @@ def _unsupported_binary_xls_report(
     started: float,
 ) -> WorkbookArtefactReport:
     """Stable .xls short-circuit report — binary XLS requires conversion before scanning."""
-    evidence_tier, not_evidence_for = _evidence_for_workbook_kind("unsupported_binary_xls")
+    evidence_tier, not_evidence_for = _evidence_for_workbook_kind(WorkbookKind.UNSUPPORTED_BINARY_XLS)
     return WorkbookArtefactReport(
         path=relative,
         modelo=modelo,
-        extension=".xls",
+        extension=_XLS_EXTENSION,
         bytes=byte_count,
         sha256=digest,
-        workbook_kind="unsupported_binary_xls",
+        workbook_kind=WorkbookKind.UNSUPPORTED_BINARY_XLS,
         evidence_tier=evidence_tier,
         not_evidence_for=not_evidence_for,
         scan_status=WorkbookScanStatus.UNSUPPORTED,
@@ -461,7 +483,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
         runner = _resolve_libreoffice_runner(str(settings_configured))
         return WorkbookRunnerAvailability(
             status="available",
-            engine="libreoffice-headless",
+            engine=_ENGINE_LIBREOFFICE,
             executable=str(runner),
             detail=f"LibreOffice executable configured by {_LIBREOFFICE_EXECUTABLE_ENV}",
         )
@@ -470,7 +492,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
         if found:
             return WorkbookRunnerAvailability(
                 status="available",
-                engine="libreoffice-headless",
+                engine=_ENGINE_LIBREOFFICE,
                 executable=found,
                 detail="LibreOffice executable found for local workbook recalculation",
             )
@@ -637,7 +659,7 @@ def _binary_xls_conversion_context(workbook_path: Path, *, root: Path) -> _Binar
     resolved_path = workbook_path.resolve()
     if resolved_root not in resolved_path.parents and resolved_root != resolved_path:
         raise RegistryValidationError(f"workbook path escapes conversion root: {workbook_path}")
-    if resolved_path.suffix.lower() != ".xls":
+    if resolved_path.suffix.lower() != _XLS_EXTENSION:
         raise RegistryValidationError("binary workbook conversion accepts only XLS artefacts")
     relative = resolved_path.relative_to(resolved_root).as_posix()
     digest, byte_count = _hash_file(resolved_path)
@@ -718,7 +740,7 @@ def run_registry_workbook_parity(
 ) -> WorkbookParityRunReport:
     """Execute one registry-vs-workbook parity comparison with shared inputs."""
 
-    if workbook.workbook_kind != "formula_form":
+    if workbook.workbook_kind != WorkbookKind.FORMULA_FORM:
         raise RegistryValidationError(
             f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle"
         )
@@ -828,7 +850,7 @@ def _execution_runner_availability(executable: str | None) -> WorkbookRunnerAvai
     runner = _resolve_libreoffice_runner(executable)
     return WorkbookRunnerAvailability(
         status="available",
-        engine="libreoffice-headless",
+        engine=_ENGINE_LIBREOFFICE,
         executable=str(runner),
         detail="LibreOffice executable provided for this workbook parity run",
     )
@@ -944,13 +966,18 @@ def verify_workbook_backend(
         previous_reports=previous_report.reports if previous_report is not None else (),
     )
     runner = detect_workbook_runner()
+    failed_statuses = {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}
     report = WorkbookBackendVerificationReport(
         root=root.resolve().as_posix(),
         workbook_count=len(discover_workbooks(root)) if root.exists() else 0,
-        scanned_count=sum(1 for report in reports if report.scan_status == "scanned"),
-        formula_workbook_count=sum(1 for report in reports if report.workbook_kind == "formula_form"),
-        unsupported_xls_count=sum(1 for report in reports if report.workbook_kind == "unsupported_binary_xls"),
-        failed_count=sum(1 for report in reports if report.scan_status in {"failed", "timeout"}),
+        scanned_count=sum(1 for report in reports if report.scan_status == WorkbookScanStatus.SCANNED),
+        formula_workbook_count=sum(
+            1 for report in reports if report.workbook_kind == WorkbookKind.FORMULA_FORM
+        ),
+        unsupported_xls_count=sum(
+            1 for report in reports if report.workbook_kind == WorkbookKind.UNSUPPORTED_BINARY_XLS
+        ),
+        failed_count=sum(1 for report in reports if report.scan_status in failed_statuses),
         runner=runner,
         reports=reports,
         modelo_coverage=_build_modelo_coverage(reports),
@@ -965,7 +992,8 @@ def verify_workbook_backend(
 def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> None:
     """Raise when discovery could not inspect every workbook artefact."""
 
-    failed = tuple(item for item in report.reports if item.scan_status in {"failed", "timeout"})
+    failed_statuses = {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}
+    failed = tuple(item for item in report.reports if item.scan_status in failed_statuses)
     if failed:
         details = "\n".join(f" - {item.path}: {item.error}" for item in failed)
         raise RegistryValidationError(f"workbook verification failed to scan {len(failed)} artefact(s):\n{details}")
@@ -991,16 +1019,6 @@ def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationRepo
         )
 
 
-def _hash_file(path: Path) -> tuple[str, int]:
-    digest = hashlib.sha256()
-    length = 0
-    with path.open("rb") as handle:
-        while chunk := handle.read(65_536):
-            digest.update(chunk)
-            length += len(chunk)
-    return digest.hexdigest(), length
-
-
 def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[WorkbookModeloCoverage, ...]:
     buckets: dict[str, list[WorkbookArtefactReport]] = {}
     for report in reports:
@@ -1010,11 +1028,16 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
         WorkbookModeloCoverage(
             modelo=modelo,
             workbook_count=len(modelo_reports),
-            formula_workbook_count=sum(1 for report in modelo_reports if report.workbook_kind == "formula_form"),
-            unsupported_xls_count=sum(
-                1 for report in modelo_reports if report.workbook_kind == "unsupported_binary_xls"
+            formula_workbook_count=sum(
+                1 for report in modelo_reports if report.workbook_kind == WorkbookKind.FORMULA_FORM
             ),
-            failed_count=sum(1 for report in modelo_reports if report.scan_status in {"failed", "timeout"}),
+            unsupported_xls_count=sum(
+                1 for report in modelo_reports if report.workbook_kind == WorkbookKind.UNSUPPORTED_BINARY_XLS
+            ),
+            failed_count=sum(
+                1 for report in modelo_reports
+                if report.scan_status in {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}
+            ),
         )
         for modelo, modelo_reports in sorted(buckets.items())
     )
@@ -1049,12 +1072,12 @@ def _classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> Workbo
     formula_count = sum(1 for _ in formulas)
     lowered = relative.lower()
     if "valid" in lowered or "valida" in lowered:
-        return "validation_hints"
+        return WorkbookKind.VALIDATION_HINTS
     if _is_record_design_path(lowered):
-        return "record_design_layout"
+        return WorkbookKind.RECORD_DESIGN_LAYOUT
     if formula_count > 0:
-        return "formula_form"
-    return "static_layout"
+        return WorkbookKind.FORMULA_FORM
+    return WorkbookKind.STATIC_LAYOUT
 
 
 def _is_record_design_path(lowered_relative_path: str) -> bool:
@@ -1062,11 +1085,11 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
 
 
 def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
-    if kind == "formula_form":
+    if kind == WorkbookKind.FORMULA_FORM:
         return "executable_parity_evidence", ("legal_authority", "layout_authority")
-    if kind in {"record_design_layout", "unsupported_binary_xls"}:
+    if kind in {WorkbookKind.RECORD_DESIGN_LAYOUT, WorkbookKind.UNSUPPORTED_BINARY_XLS}:
         return "layout_authority", ("legal_authority", "executable_parity_evidence")
-    if kind in {"validation_hints", "static_layout"}:
+    if kind in {WorkbookKind.VALIDATION_HINTS, WorkbookKind.STATIC_LAYOUT}:
         return "official_source_guidance", ("legal_authority", "executable_parity_evidence")
     return None, (
         "legal_authority",
@@ -1083,7 +1106,7 @@ def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workb
     try:
         tokens = Tokenizer(formula).items
         token_values = (token.value for token in tokens)
-    except Exception as exc:
+    except TokenizerError as exc:
         _log.debug(
             "workbook parity: openpyxl Tokenizer failed on formula %r; falling back to regex (%s)",
             formula[:80],
@@ -1120,7 +1143,7 @@ def _failed_report(
     *,
     relative: str,
     modelo: str | None,
-    suffix: Literal[".xlsx", ".xls"],
+    suffix: Literal[_XLSX_EXTENSION, _XLS_EXTENSION],
     byte_count: int,
     digest: str,
     status: WorkbookScanStatus,
@@ -1133,7 +1156,7 @@ def _failed_report(
         extension=suffix,
         bytes=byte_count,
         sha256=digest,
-        workbook_kind="unreadable",
+        workbook_kind=WorkbookKind.UNREADABLE,
         formula_cells=0,
         evidence_tier=None,
         not_evidence_for=(
@@ -1162,7 +1185,7 @@ def _failed_conversion_report(
         modelo=modelo,
         bytes=byte_count,
         sha256=digest,
-        workbook_kind="unreadable",
+        workbook_kind=WorkbookKind.UNREADABLE,
         formula_cells=0,
         evidence_tier=None,
         not_evidence_for=(

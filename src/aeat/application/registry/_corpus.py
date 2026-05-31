@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import get_args
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.config import Settings, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
@@ -46,16 +46,14 @@ from ...domain.normatives.errors import NormativeParseError
 from ..topics import Topic, TopicCatalogue, load_topic_catalogue
 from ._errors import RegistryApplicationInputError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _LOGGER = get_logger(__name__)
-
 
 class RegistryManualId(StrEnum):
     """Manual identifiers approved for the registry manual operator surface."""
 
     RENTA = "renta"
     IVA = "iva"
-
 
 class RegistryTopicProjection(BaseModel):
     """Resolved topic content exposed by registry corpus services."""
@@ -67,7 +65,6 @@ class RegistryTopicProjection(BaseModel):
     body: str = Field(min_length=1)
     see_also: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
-
 
 class RegistryCitationReferenceProjection(BaseModel):
     """One normative reference row in the registry citations surface."""
@@ -86,7 +83,6 @@ class RegistryCitationReferenceProjection(BaseModel):
     short_title: str = Field(min_length=1)
     topic_slugs: tuple[str, ...] = ()
 
-
 class RegistryCitationArticleProjection(BaseModel):
     """One cited article projection in the registry citations surface."""
 
@@ -98,14 +94,12 @@ class RegistryCitationArticleProjection(BaseModel):
     permalink: str = Field(min_length=1)
     cite: str = Field(min_length=1)
 
-
 class RegistryCitationsListCommand(BaseModel):
     """Application command for listing registry citations."""
 
     model_config = _STRICT_FROZEN
 
     tag: str | None = None
-
 
 class RegistryCitationShowCommand(BaseModel):
     """Application command for showing one registry citation."""
@@ -114,7 +108,6 @@ class RegistryCitationShowCommand(BaseModel):
 
     normative_id: str = Field(min_length=1)
     articulo: str | None = None
-
 
 class RegistryCitationsListReport(BaseModel):
     """Typed report for registry citation listing."""
@@ -128,7 +121,6 @@ class RegistryCitationsListReport(BaseModel):
     topics: tuple[RegistryTopicProjection, ...] = ()
     references: tuple[RegistryCitationReferenceProjection, ...] = ()
 
-
 class RegistryCitationShowReport(BaseModel):
     """Typed report for a single registry citation lookup."""
 
@@ -139,7 +131,6 @@ class RegistryCitationShowReport(BaseModel):
     articulo: RegistryCitationArticleProjection | None = None
     related_topics: tuple[RegistryTopicProjection, ...] = ()
 
-
 class RegistryCorpusIssueProjection(BaseModel):
     """Normalized issue row for registry corpus verification reports."""
 
@@ -149,7 +140,6 @@ class RegistryCorpusIssueProjection(BaseModel):
     code: str = Field(min_length=1)
     message: str = Field(min_length=1)
     reference_id: str | None = None
-
 
 class RegistryCitationsVerificationReport(BaseModel):
     """Typed report for registry citation corpus verification."""
@@ -164,7 +154,6 @@ class RegistryCitationsVerificationReport(BaseModel):
     topic_count: int = Field(ge=0)
     topics: tuple[RegistryTopicProjection, ...] = ()
 
-
 class RegistryManualPartProjection(BaseModel):
     """One discovered manual part row."""
 
@@ -175,7 +164,6 @@ class RegistryManualPartProjection(BaseModel):
     part: str = Field(min_length=1)
     root: str = Field(min_length=1)
 
-
 class RegistryManualsListCommand(BaseModel):
     """Application command for listing registry manuals."""
 
@@ -183,7 +171,6 @@ class RegistryManualsListCommand(BaseModel):
 
     manual: RegistryManualId | None = None
     year: int | None = Field(default=None, ge=2000, le=2100)
-
 
 class RegistryManualShowCommand(BaseModel):
     """Application command for showing one registry manual."""
@@ -195,7 +182,6 @@ class RegistryManualShowCommand(BaseModel):
     part: ManualPart = ManualPart.SINGLE
     section: str | None = None
 
-
 class RegistryManualRulesCommand(BaseModel):
     """Application command for listing registry manual rules."""
 
@@ -206,7 +192,6 @@ class RegistryManualRulesCommand(BaseModel):
     part: ManualPart = ManualPart.SINGLE
     kind: str | None = None
 
-
 class RegistryManualVerifyCommand(BaseModel):
     """Application command for verifying one registry manual part."""
 
@@ -215,7 +200,6 @@ class RegistryManualVerifyCommand(BaseModel):
     manual: RegistryManualId
     year: int = Field(ge=2000, le=2100)
     part: ManualPart = ManualPart.SINGLE
-
 
 class RegistryManualsListReport(BaseModel):
     """Typed report for registry manual listing."""
@@ -230,7 +214,6 @@ class RegistryManualsListReport(BaseModel):
     topic_count: int = Field(ge=0)
     topics: tuple[RegistryTopicProjection, ...] = ()
 
-
 class RegistryManualSectionProjection(BaseModel):
     """One manual section projection."""
 
@@ -240,7 +223,6 @@ class RegistryManualSectionProjection(BaseModel):
     title: str = Field(min_length=1)
     rule_count: int = Field(ge=0)
     paragraph_count: int = Field(ge=0)
-
 
 class RegistryManualShowReport(BaseModel):
     """Typed report for one manual lookup."""
@@ -260,7 +242,6 @@ class RegistryManualShowReport(BaseModel):
     topic_count: int = Field(ge=0)
     topics: tuple[RegistryTopicProjection, ...] = ()
 
-
 class RegistryManualRuleProjection(BaseModel):
     """One manual rule projection."""
 
@@ -270,7 +251,6 @@ class RegistryManualRuleProjection(BaseModel):
     kind: str = Field(min_length=1)
     section_id: str = Field(min_length=1)
     references_casillas: tuple[str, ...] = ()
-
 
 class RegistryManualRulesReport(BaseModel):
     """Typed report for manual rule listing."""
@@ -288,7 +268,6 @@ class RegistryManualRulesReport(BaseModel):
     topic_count: int = Field(ge=0)
     topics: tuple[RegistryTopicProjection, ...] = ()
 
-
 class RegistryManualVerificationReport(BaseModel):
     """Typed report for manual corpus verification."""
 
@@ -305,7 +284,6 @@ class RegistryManualVerificationReport(BaseModel):
     issues: tuple[RegistryCorpusIssueProjection, ...] = ()
     topic_count: int = Field(ge=0)
     topics: tuple[RegistryTopicProjection, ...] = ()
-
 
 def list_registry_citations(
     command: RegistryCitationsListCommand | None = None,
@@ -341,7 +319,6 @@ def list_registry_citations(
         topics=topics,
         references=rows,
     )
-
 
 def show_registry_citation(
     command: RegistryCitationShowCommand,
@@ -392,7 +369,6 @@ def show_registry_citation(
         related_topics=_topics_for_reference(topics, reference_id=reference.id, articulo=command.articulo),
     )
 
-
 def verify_registry_citations(
     *,
     topic_catalogue: TopicCatalogue | None = None,
@@ -421,7 +397,6 @@ def verify_registry_citations(
         topic_count=len(topics),
         topics=topics,
     )
-
 
 def list_registry_manuals(
     command: RegistryManualsListCommand | None = None,
@@ -458,7 +433,6 @@ def list_registry_manuals(
         topic_count=len(topics),
         topics=topics,
     )
-
 
 def show_registry_manual(
     command: RegistryManualShowCommand,
@@ -567,7 +541,6 @@ def show_registry_manual(
         topics=topics,
     )
 
-
 def list_registry_manual_rules(
     command: RegistryManualRulesCommand,
     *,
@@ -609,7 +582,6 @@ def list_registry_manual_rules(
         topics=topics,
     )
 
-
 def verify_registry_manual(
     command: RegistryManualVerifyCommand,
     *,
@@ -629,7 +601,6 @@ def verify_registry_manual(
     )
     return _manual_verification_report(report, topics=topics)
 
-
 def _topic_projections(
     topic_catalogue: TopicCatalogue | None,
     *,
@@ -639,7 +610,6 @@ def _topic_projections(
     resolved_locale = _registry_topic_locale(locale)
     return tuple(_topic_projection(topic, locale=resolved_locale) for topic in catalogue.topics)
 
-
 def _topic_projection(topic: Topic, *, locale: str) -> RegistryTopicProjection:
     return RegistryTopicProjection(
         slug=topic.slug,
@@ -648,7 +618,6 @@ def _topic_projection(topic: Topic, *, locale: str) -> RegistryTopicProjection:
         see_also=topic.see_also,
         legal_refs=topic.legal_refs,
     )
-
 
 def _registry_topic_locale(locale: str | None) -> str:
     if locale is None:
@@ -673,7 +642,6 @@ def _registry_topic_locale(locale: str | None) -> str:
         )
     return normalized
 
-
 def _localized(text: Mapping[str, str]) -> str:
     """Resolve a multilingual normative field to the operator's language.
 
@@ -686,7 +654,6 @@ def _localized(text: Mapping[str, str]) -> str:
     """
 
     return text.get(output_language()) or text["es"]
-
 
 def _citation_reference_projection(
     reference: NormativeReference,
@@ -707,7 +674,6 @@ def _citation_reference_projection(
         topic_slugs=tuple(topic.slug for topic in _topics_for_reference(topics, reference_id=reference.id)),
     )
 
-
 def _topics_for_reference(
     topics: tuple[RegistryTopicProjection, ...],
     *,
@@ -717,7 +683,6 @@ def _topics_for_reference(
     return tuple(
         topic for topic in topics if _topic_mentions_reference(topic, reference_id=reference_id, articulo=articulo)
     )
-
 
 def _topic_mentions_reference(
     topic: RegistryTopicProjection,
@@ -734,7 +699,6 @@ def _topic_mentions_reference(
             return True
     return False
 
-
 def _normative_issue_projection(issue: NormativeVerificationIssue) -> RegistryCorpusIssueProjection:
     return RegistryCorpusIssueProjection(
         level=issue.level,
@@ -743,14 +707,12 @@ def _normative_issue_projection(issue: NormativeVerificationIssue) -> RegistryCo
         reference_id=issue.reference_id,
     )
 
-
 def _manual_issue_projection(issue) -> RegistryCorpusIssueProjection:
     return RegistryCorpusIssueProjection(
         level=issue.level,
         code=issue.code,
         message=issue.message,
     )
-
 
 def _discover_manual_parts(
     *,
@@ -777,12 +739,10 @@ def _discover_manual_parts(
                 discovered.append((manual_id, year, part, part_dir))
     return tuple(discovered)
 
-
 def _manual_part_dirs(year_dir: Path) -> tuple[Path, ...]:
     if (year_dir / "manifest.json").exists() or (year_dir / "structure" / "manual.json").exists():
         return (year_dir,)
     return tuple(path for path in sorted(year_dir.iterdir()) if path.is_dir())
-
 
 def _manual_part_from_dir(*, year_dir: Path, part_dir: Path) -> ManualPart | None:
     if part_dir == year_dir:
@@ -791,7 +751,6 @@ def _manual_part_from_dir(*, year_dir: Path, part_dir: Path) -> ManualPart | Non
         return ManualPart(part_dir.name)
     except ValueError:
         return None
-
 
 def _manual_part_projection(
     manual_id: RegistryManualId,
@@ -805,7 +764,6 @@ def _manual_part_projection(
         part=part.value,
         root=root.as_posix(),
     )
-
 
 def registry_manual_id(value: str | RegistryManualId | ManualId) -> RegistryManualId:
     """Resolve an operator-facing registry manual id."""
@@ -832,10 +790,8 @@ def registry_manual_id(value: str | RegistryManualId | ManualId) -> RegistryManu
             },
         ) from exc
 
-
 def _domain_manual_id(manual_id: RegistryManualId) -> ManualId:
     return ManualId(manual_id.value)
-
 
 def _manual_rule_kind(kind: str | None) -> RuleKind | None:
     if kind is None:
@@ -873,7 +829,6 @@ def _manual_rule_kind(kind: str | None) -> RuleKind | None:
         },
     )
 
-
 def _load_manual_manifest(
     *,
     manual_id: ManualId,
@@ -883,7 +838,6 @@ def _load_manual_manifest(
 ):
     part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=settings)
     return load_manifest(part_root / "manifest.json"), part_root
-
 
 def _manual_verification_report(
     report: ManualVerificationReport,
@@ -906,10 +860,8 @@ def _manual_verification_report(
         topics=topics,
     )
 
-
 def _ref_id(reference: NormativeReference) -> str:
     return reference.id
-
 
 __all__ = [
     "RegistryCitationArticleProjection",

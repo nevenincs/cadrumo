@@ -61,6 +61,65 @@ from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profi
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+
+def test_proyecto_casilla_observations_carry_provenance() -> None:
+    """The ``casilla_observations`` projection in the CLI payload carries
+    regulatory provenance (``formula_id``, ``legal_refs``, ``source_refs``)
+    for every formula-computed casilla.
+
+    Verifies the contract of the ``engine_result.entries`` path the project
+    verb uses to build ``casilla_observations``.  Uses M130 because it has
+    a minimal, well-specified binding set and avoids the complex M100
+    CCAA / atribución bindings that vary across revisions.
+
+    The M130 casillas "03" (rendimiento neto), "04" (pago fraccionado), and
+    "19" (resultado final) are formula-computed; their registry entries must
+    carry non-empty ``legal_refs`` and ``formula_id``.
+    """
+    authority = resources().modelos.authority
+    m130_snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    engine_result = calculate_registry_snapshot(
+        m130_snapshot,
+        inputs={
+            "01": Decimal("10000.00"),
+            "02": Decimal("4000.00"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        date_context={"filing_period": date(2026, 3, 31)},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+    )
+
+    # The project verb builds casilla_observations from engine_result.entries.
+    casilla_observations = [
+        {
+            "casilla_id": entry.target,
+            "value": str(entry.value),
+            "formula_id": entry.formula_id,
+            "legal_refs": list(entry.legal_refs),
+            "source_refs": list(entry.source_refs),
+        }
+        for entry in engine_result.entries
+    ]
+
+    assert len(casilla_observations) > 0, "M130 must produce formula-computed entries"
+    obs_by_id = {obs["casilla_id"]: obs for obs in casilla_observations}
+
+    for casilla_id in ("03", "19"):
+        obs = obs_by_id.get(casilla_id)
+        assert obs is not None, f"computed casilla {casilla_id!r} must be in casilla_observations"
+        assert obs["formula_id"], f"casilla {casilla_id!r} must carry formula_id"
+        assert obs["legal_refs"], f"casilla {casilla_id!r} must carry legal_refs"
+        assert obs["source_refs"], f"casilla {casilla_id!r} must carry source_refs"
+
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -311,3 +370,19 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}, 0604={_TOTAL_PAGOS_FRACCIONADOS}, "
             f"ccaa={_CCAA!r}."
         )
+
+    # -- Provenance: casilla_observations carries legal_refs / source_refs -----
+    # The grounding rule requires every CLI JSON emit of a calculated casilla
+    # to surface legal_refs, source_refs, and formula_id.  The project verb
+    # must include a casilla_observations list in its payload.
+    casilla_observations = proj_payload.get("casilla_observations")
+    assert casilla_observations is not None, "project payload must include casilla_observations"
+    assert len(casilla_observations) > 0, "project payload must have at least one casilla_observation"
+    # Every observation for a computed M100 casilla must carry non-empty legal_refs.
+    obs_by_id = {obs["casilla_id"]: obs for obs in casilla_observations}
+    for casilla_id in ("0545", "0546", "0595"):
+        obs = obs_by_id.get(casilla_id)
+        assert obs is not None, f"casilla_observations must include computed casilla {casilla_id!r}"
+        assert obs.get("formula_id"), f"casilla {casilla_id!r} observation must carry formula_id"
+        assert obs.get("legal_refs"), f"casilla {casilla_id!r} observation must carry legal_refs"
+        assert obs.get("source_refs"), f"casilla {casilla_id!r} observation must carry source_refs"

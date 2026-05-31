@@ -7,6 +7,7 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.resources import bundled_path as _bundled_path
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
@@ -128,6 +129,18 @@ class ValidatedRegistryAuthority:
         return tuple(self.modelo(modelo_id) for modelo_id in modelos)
 
 
+def bundled_authority() -> ValidatedRegistryAuthority:
+    """Return an authority loaded from the package-bundled AEAT registry.
+
+    Callers that always load the same default registry path use this
+    instead of writing the bundled-path boilerplate inline.  The result
+    is backed by :func:`_load_authority`'s LRU cache, so repeated calls
+    within one process are free.
+    """
+    root = _bundled_path("registry", "aeat")
+    return ValidatedRegistryAuthority.load(root, source_root=_bundled_path())
+
+
 @lru_cache(maxsize=16)
 def _load_authority(
     root: Path,
@@ -136,7 +149,7 @@ def _load_authority(
 ) -> ValidatedRegistryAuthority:
     del _fingerprint
     modelos, catalogues = load_registry_tree(root)
-    return ValidatedRegistryAuthority(
+    authority = ValidatedRegistryAuthority(
         root=root,
         source_root=source_root,
         modelos=modelos,
@@ -151,3 +164,5 @@ def _load_authority(
         _validated_modelos=set(),
         _snapshots={},
     )
+    authority.validate_registry()
+    return authority

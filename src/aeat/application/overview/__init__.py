@@ -37,7 +37,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -107,8 +107,7 @@ if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
     from ..workflow import WorkflowState
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-"""Shared :class:`pydantic.ConfigDict` for overview records."""
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class OverviewPeriodState(StrEnum):

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable
-from logging import Logger
 from typing import Protocol
 
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -29,7 +29,7 @@ def build_playwright_stage_runner(
     surface_label: str,
     log_prefix: str,
     shape_suggestion: str,
-    logger: Logger,
+    logger: logging.Logger,
 ) -> PlaywrightStageRunner:
     """Build a surface-bound stage runner using the shared Sede error mapping."""
 
@@ -65,7 +65,7 @@ async def run_playwright_stage[T](
     surface_label: str,
     log_prefix: str,
     shape_suggestion: str,
-    logger: Logger,
+    logger: logging.Logger,
     timeout_is_shape_change: bool = False,
 ) -> T:
     """Await a Playwright operation and emit uniform Sede failure modes."""

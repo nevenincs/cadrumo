@@ -207,10 +207,10 @@ def test_google_auth_error_hierarchy_is_unified() -> None:
         assert issubclass(leaf, GoogleAuthError), leaf.__name__
 
 
-def test_google_auth_validation_error_is_value_error_subclass() -> None:
-    """Validation error doubles as `ValueError` for pydantic compatibility."""
+def test_google_auth_validation_error_is_not_value_error_subclass() -> None:
+    """GoogleAuthValidationError must NOT be a ValueError subclass (MRO leak removed)."""
 
-    assert issubclass(GoogleAuthValidationError, ValueError)
+    assert not issubclass(GoogleAuthValidationError, ValueError)
 
 
 def test_every_leaf_carries_a_registered_error_code() -> None:

@@ -12,19 +12,17 @@ import base64
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from .....core.time._utc import _validate_utc_aware
 from ..errors import StorageValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 def _decode_b64(value: str) -> bytes:
     """Decode a strict base64 string; raise if malformed."""
 
     return base64.b64decode(value.encode("ascii"), validate=True)
-
 
 def _validate_b64(value: str) -> str:
     """Accept a base64 string and verify it decodes; return canonical form."""
@@ -34,7 +32,6 @@ def _validate_b64(value: str) -> str:
     if re_encoded != value:
         raise StorageValidationError("base64 field is not in canonical form")
     return value
-
 
 class RecoveryRecord(BaseModel):
     """BIP-39 recovery envelope wrapping one bucket's DEK."""
@@ -57,6 +54,5 @@ class RecoveryRecord(BaseModel):
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
         return _validate_utc_aware(value)
-
 
 __all__ = ["RecoveryRecord"]

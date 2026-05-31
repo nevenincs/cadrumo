@@ -5,12 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ...adapters.outbound.aeat.auth import (
-    ClaveMovilApprovalTimeoutError,
-    ClaveMovilConfigurationError,
-    ClaveMovilFailureMode,
-)
-from ...adapters.outbound.aeat.sede import SedeError, SedeFailureMode
 from ...core.errors import AeatError
 
 
@@ -50,6 +44,12 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
 
 def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisitionFailureMode:
     """Map adapter exceptions to the live IVA acquisition result vocabulary."""
+    from ...adapters.outbound.aeat.auth import (
+        ClaveMovilApprovalTimeoutError,
+        ClaveMovilConfigurationError,
+        ClaveMovilFailureMode,
+    )
+    from ...adapters.outbound.aeat.sede import SedeError, SedeFailureMode
 
     if isinstance(exc, LiveIvaSurfaceTimeoutError):
         return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED

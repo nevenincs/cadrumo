@@ -18,6 +18,8 @@ from ._record_spec import (
     record_field,
     validate_segment_specs,
 )
+from aeat.core.external_constants import LATIN_1_ENCODING
+
 from ._serialise import serialise_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
@@ -148,7 +150,7 @@ class TestEnvelopeSerialise:
                 "FIELD_IDENTITY": "X1234567L",
             },
             segments=segments,
-            encoding="iso-8859-1",
+            encoding=LATIN_1_ENCODING,
         )
 
         # 17 (seg 1) + 43 (seg 2) + 2 (CRLF) = 62.
@@ -177,12 +179,12 @@ class TestEnvelopeSerialise:
                 "FIELD_IDENTITY": "X1234567L",
             },
             segments=segments,
-            encoding="iso-8859-1",
+            encoding=LATIN_1_ENCODING,
         )
         parsed = deserialise_envelope(
             payload,
             segments=segments,
-            encoding="iso-8859-1",
+            encoding=LATIN_1_ENCODING,
         )
         assert "SEG0_MINI" in parsed.segments
         assert "SEG1_MINI" in parsed.segments
@@ -197,7 +199,7 @@ class TestEnvelopeSerialise:
                 casilla_values={"01": Decimal("0.00")},
                 headers={"FIELD_YEAR": "2024"},
                 segments=segments,
-                encoding="iso-8859-1",
+                encoding=LATIN_1_ENCODING,
                 required_field_ids=frozenset({"FIELD_IDENTITY"}),
             )
 
@@ -209,5 +211,5 @@ class TestEnvelopeSerialise:
             deserialise_envelope(
                 b"SHORT",
                 segments=segments,
-                encoding="iso-8859-1",
+                encoding=LATIN_1_ENCODING,
             )

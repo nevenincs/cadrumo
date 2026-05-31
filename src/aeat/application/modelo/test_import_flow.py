@@ -375,7 +375,7 @@ def test_import_refuses_empty_casilla_values(repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
-    with pytest.raises(ExternalModeloImportError, match=r"empty|casilla"):
+    with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={},
@@ -387,6 +387,7 @@ def test_import_refuses_empty_casilla_values(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T1,
         )
+    assert raised.value.translated_message == "application.modelo.errors.external_filing_no_casilla_values"
 
 
 def test_import_refuses_empty_evidence_reference(repos) -> None:
@@ -396,7 +397,7 @@ def test_import_refuses_empty_evidence_reference(repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
 
-    with pytest.raises(ExternalModeloImportError, match=r"evidence_reference_id|non-empty"):
+    with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={"01": Decimal("1500")},
@@ -408,6 +409,7 @@ def test_import_refuses_empty_evidence_reference(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T1,
         )
+    assert raised.value.translated_message == "application.modelo.errors.external_filing_evidence_reference_blank"
 
 
 def test_import_refuses_discarded_work_unit(repos) -> None:

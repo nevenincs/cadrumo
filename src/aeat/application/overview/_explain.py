@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.i18n import tr
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
@@ -43,8 +43,7 @@ this union is a contract change; keep it tight so the boundary
 remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class OverviewExplain(BaseModel):
     """Outcome of ``build_overview_explain``.
@@ -89,7 +88,6 @@ class OverviewExplain(BaseModel):
     profile_facts: dict[str, _ProfileFactValue] = Field(default_factory=dict)
     generated_at: datetime
 
-
 _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "tax_id",
     "entity_type",
@@ -106,7 +104,6 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
 )
-
 
 def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
     """Return the applicability-relevant profile fields as a plain dict.
@@ -144,7 +141,6 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
         )
     return facts
 
-
 def _modelo_is_registered(modelo: str) -> bool:
     """Return whether ``modelo`` is a known modelo in the calculation registry.
 
@@ -163,7 +159,6 @@ def _modelo_is_registered(modelo: str) -> bool:
     except ResourceNotFoundError:
         return False
     return True
-
 
 def build_overview_explain(
     profile: TaxpayerProfile,
@@ -233,7 +228,6 @@ def build_overview_explain(
         generated_at=datetime.now(UTC),
     )
 
-
 def _scheduling_rationale(
     profile: TaxpayerProfile,
     *,
@@ -264,7 +258,6 @@ def _scheduling_rationale(
         raise OverviewExplainError(
             f"could not evaluate modelo {modelo!r} for year {year}: {exc}",
         ) from exc
-
 
 __all__ = [
     "OverviewExplain",

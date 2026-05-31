@@ -16,3 +16,8 @@ _CENT = Decimal("0.01")
 def _round_to_cents(value: Decimal) -> Decimal:
     """Round *value* to euro-cent precision using ROUND_HALF_UP."""
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
+
+
+#: Public alias — cross-package callers outside ``domain/fincas/`` must import
+#: ``round_to_cents`` rather than the private ``_round_to_cents`` name.
+round_to_cents = _round_to_cents

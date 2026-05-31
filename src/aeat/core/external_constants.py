@@ -38,6 +38,10 @@ CSV_MIME_TYPE: Final[str] = "text/csv"
 #: constant prevents the literal from drifting across the application and domain layers.
 CLASSIFIED_BY_MANUAL: Final[str] = "manual"
 
+#: Sentinel written to ``classified_by`` when the classification was produced automatically
+#: by the rule engine with no operator override.
+CLASSIFIED_BY_AUTO: Final[str] = "auto"
+
 
 class _Frozen(BaseModel):
     """Strict, frozen base for external-constant submodels."""
@@ -301,6 +305,16 @@ XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
 
+#: UTF-8 character encoding used for all text file I/O in the application layer.
+UTF_8_ENCODING: Final[str] = "utf-8"
+
+#: Allowed wire encodings for fichero-BOE payloads.
+#:
+#: Windows-1252 is a superset of ISO-8859-1 that adds characters in the
+#: 0x80-0x9F range; AEAT treats them as equivalent for fichero-BOE
+#: purposes.  ISO-8859-15 adds the Euro symbol at 0xA4 plus minor deltas.
+BOE_ENCODING_CHOICES: Final[tuple[str, ...]] = ("cp1252", "iso-8859-1", "iso-8859-15")
+
 CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
 
 #: Provenance source identifier for facts entered interactively via the CLI.
@@ -308,6 +322,9 @@ PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
 
 #: Environment variable name used to override the CLI output language at runtime.
 OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
+
+#: POSIX / Windows environment variable that Rich uses to determine console column width.
+COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
 
 #: BCP-47 language tag for the default CLI and API output language (Spanish).
 DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
@@ -322,6 +339,10 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: Modelo 720 declaration floor per asset class per AEAT instrucciones.
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
+
+#: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
+#: Used by the auth diagnostics service and the persistence namespace registry.
+CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
 
 
 @lru_cache(maxsize=1)

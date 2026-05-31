@@ -18,12 +18,14 @@ fields), not by the modelo's ``output_sensitivity`` declaration. The
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ._schema import Justificante
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):
@@ -49,7 +51,5 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
 
 
 __all__ = [
-    "ClassificationError",
-    "EnvelopeVersionError",
     "JustificanteRepository",
 ]

@@ -29,10 +29,14 @@ def _active_pointer() -> tuple[ProfileName, ProfileName]:
 
     active = resolve_active_bucket_id()
     if active is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.errors.no_active_profile",
+        )
     pointer = read_profile_bucket_by_id(active)
     if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.errors.no_active_profile",
+        )
     return active, pointer.bucket_id
 
 

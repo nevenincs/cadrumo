@@ -39,7 +39,6 @@ cannot silently ship without the declaration.
 from __future__ import annotations
 
 import csv
-import hashlib
 import unicodedata
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
@@ -48,16 +47,17 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors import AeatError
+from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Defensive ceiling on financial-source ingest size. Real bank statements
 # (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
@@ -72,7 +72,6 @@ CorpusVerificationSource = Literal[
     "no_corpus",
 ]
 
-
 class FinancialProviderError(AeatError):
     """Base error raised by financial-ingest providers.
 
@@ -80,25 +79,24 @@ class FinancialProviderError(AeatError):
     layer can catch every provider failure with one ``except`` clause.
     """
 
+class FinancialProviderConfigError(FinancialProviderError):
+    """Raised when a :class:`FinancialProvider` subclass declaration is invalid.
+
+    Fired by ``__init_subclass__`` when the concrete provider class is
+    missing or carries an invalid ``verification_source`` or
+    ``provisional_pending_specimen`` class variable.
+    """
 
 class UnsupportedFinancialSourceError(FinancialProviderError):
     """Raised when no provider can interpret a source document."""
 
-
 class InvalidFinancialSourceError(FinancialProviderError):
     """Raised when a source document is unreadable or structurally invalid."""
 
-
-class FinancialValidationError(FinancialProviderError, ValueError):
-    """Raised when a specific field (date, amount) fails domain validation.
-
-    This error inherits from both :class:`FinancialProviderError` and
-    :class:`ValueError` for compatibility with Pydantic and consistent
-    adapter-layer error handling.
-    """
+class FinancialValidationError(FinancialProviderError):
+    """Raised when a specific field (date, amount) fails domain validation."""
 
     pass
-
 
 class BankStatementParseError(FinancialProviderError):
     """Raised when a bank statement PDF cannot be fully parsed.
@@ -141,7 +139,6 @@ class BankStatementParseError(FinancialProviderError):
         self.ambiguous: tuple[str, ...] = ambiguous
         self.coverage: Decimal | None = coverage
 
-
 class ProviderValidation(BaseModel):
     """Typed validation result returned before ingest.
 
@@ -161,7 +158,6 @@ class ProviderValidation(BaseModel):
     warnings: tuple[str, ...] = ()
     detected_encoding: str | None = None
     detected_dialect: str | None = None
-
 
 class FinancialProvider(ABC):
     """Abstract base class for file-backed raw transaction providers.
@@ -228,26 +224,26 @@ class FinancialProvider(ABC):
             {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
         )
         if not hasattr(cls, "verification_source"):
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'verification_source' class variable"
             )
         vs = cls.verification_source  # type: ignore[attr-defined]
         if vs not in _VALID_SOURCES:
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.verification_source={vs!r} is not one of "
                 f"{sorted(_VALID_SOURCES)}"
             )
         if not hasattr(cls, "provisional_pending_specimen"):
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable"
             )
         pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]
         if not isinstance(pps, bool):
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}"
             )
         if vs == "no_corpus" and pps is not True:
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__}: verification_source='no_corpus' requires "
                 "provisional_pending_specimen=True"
             )
@@ -325,7 +321,7 @@ class FinancialProvider(ABC):
     @staticmethod
     def _compute_sha256(source_bytes: bytes) -> str:
         """Return the lowercase SHA-256 digest of the source bytes."""
-        return hashlib.sha256(source_bytes).hexdigest()
+        return _sha256_hex(source_bytes)
 
     def _build_provenance(
         self,
@@ -356,18 +352,15 @@ class FinancialProvider(ABC):
             provider_name=self.name,
         )
 
-
 def describe_dialect(dialect: type[csv.Dialect]) -> str:
     """Return a compact human-readable dialect description."""
     return f"delimiter={dialect.delimiter!r},quotechar={dialect.quotechar!r}"
-
 
 def normalize_header(value: str) -> str:
     """Normalize a column header for alias matching."""
     normalized = unicodedata.normalize("NFKD", value.replace("\ufeff", "").strip().lower())
     without_diacritics = "".join(char for char in normalized if not unicodedata.combining(char))
     return " ".join(without_diacritics.split())
-
 
 def coerce_cell_text(value: object) -> str:
     """Coerce a source value to a stripped string for raw-field storage."""
@@ -378,7 +371,6 @@ def coerce_cell_text(value: object) -> str:
     if isinstance(value, date):
         return value.isoformat()
     return str(value).strip()
-
 
 def parse_date_value(value: object, *, day_first: bool = True) -> date:
     """Parse a bank-statement date or date-time into a ``date``."""
@@ -427,7 +419,6 @@ def parse_date_value(value: object, *, day_first: bool = True) -> date:
             )
             continue
     raise FinancialValidationError(f"unsupported date format: {raw!r}")
-
 
 def parse_amount_value(
     value: object,
@@ -486,7 +477,6 @@ def parse_amount_value(
         raise FinancialValidationError(f"non-finite amount value: {raw!r}")
     return -amount if negative else amount
 
-
 def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
     """Strip whitespace and sign markers from ``raw``; return ``(digits-and-separators, negative_flag)``.
 
@@ -504,7 +494,6 @@ def _sanitise_amount_text(raw: str) -> tuple[str, bool]:
     sanitized = sanitized.strip("()-+")
     sanitized = "".join(char for char in sanitized if char.isdigit() or char in ",.")
     return sanitized, negative
-
 
 def _resolve_decimal_separator(
     sanitized: str,
@@ -528,7 +517,6 @@ def _resolve_decimal_separator(
         return ","
     return "."
 
-
 def _normalise_amount_digits(sanitized: str, *, decimal_sep: str) -> str:
     """Drop the thousands separator and rewrite the decimal separator as ``.``."""
     thousands_sep = "." if decimal_sep == "," else ","
@@ -536,7 +524,6 @@ def _normalise_amount_digits(sanitized: str, *, decimal_sep: str) -> str:
     if decimal_sep != ".":
         normalized = normalized.replace(decimal_sep, ".")
     return normalized
-
 
 def synthesize_transaction_id(
     *,
@@ -547,7 +534,6 @@ def synthesize_transaction_id(
     """Build a deterministic synthetic transaction identifier."""
     prefix = provider_name.lower().replace(" ", "-")
     return f"{prefix}-{source_sha256[:12]}-{source_row_index}"
-
 
 def build_raw_transaction(
     *,
@@ -580,7 +566,6 @@ def build_raw_transaction(
         ),
         raw_fields=raw_fields,
     )
-
 
 def default_currency() -> str:
     """Return the configured project-default financial currency."""

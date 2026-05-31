@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....domain.calculations.registry._ids import (
     BindingId,
@@ -63,8 +63,7 @@ from ._records import (
     _column_index_to_letters,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class _CasillaRow(BaseModel):
     model_config = _STRICT_FROZEN
@@ -74,7 +73,6 @@ class _CasillaRow(BaseModel):
     row: int = Field(ge=2)
     section_path: tuple[str, ...]
 
-
 class _BindingRow(BaseModel):
     model_config = _STRICT_FROZEN
 
@@ -82,7 +80,6 @@ class _BindingRow(BaseModel):
     tab: Literal[TabName.ENTRADAS]
     row: int = Field(ge=2)
     label: str
-
 
 class BracketRanges(BaseModel):
     """A1 ranges for the lower-bound, fixed-addition, and marginal-rate
@@ -108,7 +105,6 @@ class BracketRanges(BaseModel):
     fixed_addition: str = Field(min_length=2)
     marginal_rate: str = Field(min_length=2)
     row_count: int = Field(ge=1)
-
 
 class SheetLayout(BaseModel):
     """Resolved cell addresses for every casilla, binding, and parameter."""
@@ -153,7 +149,6 @@ class SheetLayout(BaseModel):
             raise KeyError(f"unknown relation in layout: {relation!r}")
         return self.relation_cells[relation]
 
-
 def _walk_expression_parameters(expression: FormulaExpression) -> Iterable[ParameterId]:
     if expression.parameter is not None:
         yield expression.parameter
@@ -162,20 +157,17 @@ def _walk_expression_parameters(expression: FormulaExpression) -> Iterable[Param
     for child in expression.args:
         yield from _walk_expression_parameters(child)
 
-
 def _walk_expression_bindings(expression: FormulaExpression) -> Iterable[BindingId]:
     if expression.binding is not None:
         yield expression.binding
     for child in expression.args:
         yield from _walk_expression_bindings(child)
 
-
 def _walk_expression_relations(expression: FormulaExpression) -> Iterable[RelationId]:
     if expression.relation is not None:
         yield expression.relation
     for child in expression.args:
         yield from _walk_expression_relations(child)
-
 
 def _referenced_relations(revision: ModeloRevision) -> tuple[RelationId, ...]:
     seen: dict[RelationId, None] = {}
@@ -188,7 +180,6 @@ def _referenced_relations(revision: ModeloRevision) -> tuple[RelationId, ...]:
             seen.setdefault(relation, None)
     return tuple(seen)
 
-
 def _referenced_parameters(revision: ModeloRevision) -> tuple[ParameterId, ...]:
     seen: dict[ParameterId, None] = {}
     formulas = {formula.id: formula for formula in revision.formulas}
@@ -199,7 +190,6 @@ def _referenced_parameters(revision: ModeloRevision) -> tuple[ParameterId, ...]:
         for parameter in _walk_expression_parameters(formula.expression):
             seen.setdefault(parameter, None)
     return tuple(seen)
-
 
 def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
     seen: dict[BindingId, None] = {}
@@ -212,14 +202,11 @@ def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
             seen.setdefault(binding, None)
     return tuple(seen)
 
-
 def _is_operator_input(casilla: CasillaDefinition) -> bool:
     return casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND)
 
-
 def _is_computed(casilla: CasillaDefinition) -> bool:
     return casilla.input_kind == InputKind.COMPUTED
-
 
 def _select_active_brackets(
     definition: ParameterDefinition,
@@ -239,7 +226,6 @@ def _select_active_brackets(
         if entry.valid_from <= on and (entry.valid_to is None or entry.valid_to >= on)
     )
     return tuple(sorted(active, key=lambda entry: entry.lower_bound))
-
 
 def plan_layout(
     revision: ModeloRevision,
@@ -292,7 +278,6 @@ def plan_layout(
         bracket_entries=parameter_plan.bracket_entries,
     )
 
-
 # Both data tabs share the same column layout:
 # A=Section, B=Casilla number, C=Casilla label, D=Value.
 _ENTRADAS_VALUE_COLUMN = 4
@@ -303,7 +288,6 @@ _TARIFFS_ANCHOR_COLUMN = 3
 _DATA_HEADER_ROW = 1
 _TARIFFS_HEADER_OFFSET = 1
 
-
 @dataclass(frozen=True, slots=True)
 class _CasillaPlan:
     """Bundle returned by _layout_casillas — casilla cells + row trackers."""
@@ -313,7 +297,6 @@ class _CasillaPlan:
     entradas_rows: list[_CasillaRow]
     calculos_rows: list[_CasillaRow]
     entradas_next_row: int
-
 
 def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _CasillaPlan:
     """Assign each casilla a tab + row + value-cell address.
@@ -364,14 +347,12 @@ def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _Casilla
         entradas_next_row=entradas_row,
     )
 
-
 @dataclass(frozen=True, slots=True)
 class _BindingPlan:
     """Bundle returned by _layout_bindings — caller-supplied numeric inputs on Entradas."""
 
     binding_cells: dict[BindingId, SheetCellAddress]
     binding_rows: list[_BindingRow]
-
 
 def _layout_bindings(
     revision: ModeloRevision,
@@ -401,7 +382,6 @@ def _layout_bindings(
         entradas_row += 1
     return _BindingPlan(binding_cells=binding_cells, binding_rows=binding_rows)
 
-
 @dataclass(frozen=True, slots=True)
 class _ParameterPlan:
     """Bundle returned by _layout_parameters — anchors + bracket tables on Tariffs."""
@@ -411,7 +391,6 @@ class _ParameterPlan:
     bracket_ranges: dict[ParameterId, BracketRanges]
     bracket_entries: dict[ParameterId, tuple[BracketEntry, ...]]
     tariffs_next_row: int
-
 
 def _layout_parameters(
     revision: ModeloRevision,
@@ -464,7 +443,6 @@ def _layout_parameters(
         tariffs_next_row=tariffs_row,
     )
 
-
 def _emit_bracket_table_layout(
     definition: ParameterDefinition,
     *,
@@ -505,7 +483,6 @@ def _emit_bracket_table_layout(
     )
     return last_data_row + 2  # one blank row between regions
 
-
 def _layout_relations(
     revision: ModeloRevision,
     *,
@@ -529,6 +506,5 @@ def _layout_relations(
         relation_cells[relation_id] = SheetCellAddress.at(TabName.TARIFFS, tariffs_row, anchor_column)
         tariffs_row += 2
     return relation_cells
-
 
 __all__ = ["BracketRanges", "SheetLayout", "plan_layout"]

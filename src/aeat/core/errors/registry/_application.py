@@ -1163,4 +1163,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.storage.calc_sheets._errors.CalcSheetsEngineError",
+        ErrorCode(
+            code="ERROR_CALC_SHEETS_ENGINE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calc_sheets_engine",
+            default_suggestion="aeat app modelo calc export --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.storage.calc_sheets._errors.CalcSheetsRecordError",
+        ErrorCode(
+            code="ERROR_CALC_SHEETS_RECORD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calc_sheets_record",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.storage.calc_sheets._errors.CalcSheetsParityError",
+        ErrorCode(
+            code="ERROR_CALC_SHEETS_PARITY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calc_sheets_parity",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

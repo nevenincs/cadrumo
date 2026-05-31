@@ -1,4 +1,12 @@
-"""Application tests for relation prefill source mesh enrollment."""
+"""Application tests for relation prefill source mesh enrollment.
+
+Finding F2 — cross-domain-handoffs-swarm-audit 2026-05-16: the bare
+``except Exception`` in ``resolve_relations_from_local_store`` was narrowed to
+``except RegistryValidationError`` so that unexpected failures surface instead
+of silently downgrading to ``operator_manual`` provenance. The operator-manual
+fallback is legitimate when the local store genuinely has no prior filings; it
+must not mask structural failures.
+"""
 
 from __future__ import annotations
 
@@ -69,3 +77,58 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
             "modelo-180-rel-115-base-anual:2026:1T,2T,3T,4T",
             "modelo-180-rel-115-retenciones-anual:2026:1T,2T,3T,4T",
         }
+
+
+def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_empty(tmp_path: Path) -> None:
+    """Empty local store produces blank relation cells without raising.
+
+    When the operator has no prior filings in the local store,
+    ``resolve_relations_from_local_store`` must return a
+    :class:`RelationValues` with ``value=None`` for every relation
+    declared in the snapshot, leaving the engine to emit blank cells
+    the operator fills by hand. This path must NOT raise (the
+    narrowed ``except RegistryValidationError`` from F2 of the
+    cross-domain-handoffs audit 2026-05-16 must not accidentally
+    broaden back to a silent-swallow ``except Exception``).
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+        result = resolve_relations_from_local_store(snapshot)
+
+    assert result.values, "M180 must have at least one relation"
+    # Every relation must surface as None (operator-manual) when no
+    # prior filings exist — never raises, never crashes, never fabricates.
+    assert all(rv.value is None for rv in result.values), (
+        "empty local store must produce all-None relation values; "
+        "a non-None value means the prefill fabricated data from nothing"
+    )
+
+
+def test_resolve_relations_produced_values_carry_provenance_string_when_resolved(tmp_path: Path) -> None:
+    """Resolved relations carry the local-filing provenance marker.
+
+    When prior filings exist and the resolver succeeds, every
+    :class:`RelationValue` with a non-None value must carry
+    ``provenance='local_filing'`` so the engine can distinguish
+    operator-sourced data from prefilled data in the workbook.
+    This pins the provenance-string contract across the
+    modelo→filing handoff boundary (F2 finding, 2026-05-16 audit).
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        for observation in _modelo_115_observations():
+            repository.save_observation(observation, source_kind="app_filing")
+
+        snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
+        result = resolve_relations_from_local_store(snapshot, repository=repository)
+
+    resolved = [rv for rv in result.values if rv.value is not None]
+    assert resolved, "at least one relation must resolve from M115 observations"
+    for rv in resolved:
+        assert rv.provenance == "local_filing", (
+            f"resolved relation {rv.relation!r} must carry provenance='local_filing' "
+            f"but got {rv.provenance!r}; the provenance contract was lost at the "
+            "modelo→filing handoff boundary"
+        )

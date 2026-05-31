@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from ._authority import ValidatedRegistryAuthority
+from ._authority import ValidatedRegistryAuthority, bundled_authority
 from ._bindings import (
     CasillaObservation,
     CounterpartAggregationObservation,
@@ -434,6 +434,7 @@ __all__ = [
     "SyntheticInputValue",
     "TaxRoute",
     "ValidatedRegistryAuthority",
+    "bundled_authority",
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
     "WithholdingObservation",

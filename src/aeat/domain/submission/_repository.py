@@ -9,13 +9,15 @@ submission JSON or envelope file lands on disk.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...core.logging import get_logger
 from ._models import ModeloPresentado
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
 _log = get_logger(__name__)
 
@@ -45,6 +47,7 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         on listing all healthy submissions even when a single row is
         unreadable.
         """
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
         for submission_id in self.iter_ids():
             try:
@@ -61,7 +64,5 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
 
 
 __all__ = [
-    "ClassificationError",
-    "EnvelopeVersionError",
     "SubmissionRepository",
 ]

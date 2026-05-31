@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator
+from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
@@ -20,7 +20,7 @@ from ...domain.transactions import (
 )
 from ..aggregation import IvaLedgerAggregationIssueReason, Period, iva_ledger_missing_fact_reasons
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _CLASSIFIED_TAX_STATES = frozenset(
     {
         BusinessClassification.BUSINESS,
@@ -28,7 +28,6 @@ _CLASSIFIED_TAX_STATES = frozenset(
         BusinessClassification.PERSONAL,
     }
 )
-
 
 class LedgerPreflightIssueReason(StrEnum):
     """Machine-readable ledger facts missing before modelo calculation."""
@@ -41,7 +40,6 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
 
-
 class LedgerPreflightIssue(BaseModel):
     """One model-readiness issue attached to a bucket-local transaction."""
 
@@ -50,7 +48,6 @@ class LedgerPreflightIssue(BaseModel):
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: LedgerPreflightIssueReason
     detail: str = Field(min_length=1, max_length=512)
-
 
 class LedgerPreflightReport(BaseModel):
     """Readiness report for ledger facts consumed by modelo calculation."""
@@ -76,7 +73,6 @@ class LedgerPreflightReport(BaseModel):
     def ready(self) -> bool:
         return not self.issues
 
-
 def preflight_ledger_tax_readiness(
     *,
     bucket_id: str,
@@ -96,7 +92,6 @@ def preflight_ledger_tax_readiness(
         period=period,
         transactions=repository.load(),
     )
-
 
 def preflight_transaction_catalogue(
     *,
@@ -124,7 +119,6 @@ def preflight_transaction_catalogue(
         issues=tuple(issues),
     )
 
-
 def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
     return tuple(
         sorted(
@@ -135,7 +129,6 @@ def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transactio
             ),
         )
     )
-
 
 def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     """Return whether the transaction feeds the deductible-expense pipeline.
@@ -156,7 +149,6 @@ def _transaction_needs_expense_category(transaction: Transaction) -> bool:
         transaction.direction is TransactionDirection.INCOMING
         and transaction.purchase_invoice_evidence_id is not None
     )
-
 
 def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
     issues: list[LedgerPreflightIssue] = []
@@ -214,7 +206,6 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
         )
     return tuple(issues)
 
-
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
     return {
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
@@ -222,14 +213,12 @@ def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
     }[reason]
 
-
 def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
     return {
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
     }[reason]
-
 
 __all__ = [
     "LedgerPreflightIssue",

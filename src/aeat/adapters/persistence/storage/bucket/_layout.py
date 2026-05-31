@@ -17,8 +17,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.identity import BucketId
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
@@ -27,8 +28,6 @@ from .._namespace_registry import (
     BUCKETS_DIRNAME,
 )
 from ._errors import BucketValidationError
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
 
 class BucketPaths(BaseModel):

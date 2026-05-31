@@ -27,12 +27,11 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ...core._bucket_pointer_io import resolve_active_bucket_id
-from ...core.i18n import tr
 from ...core.identity import BucketId
 from ..auth._models import AuthState
 from ._utils import utc_now
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -44,7 +43,7 @@ if TYPE_CHECKING:
 class WorkflowEvent(BaseModel):
     """One operator-visible workflow event."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     action: str = Field(min_length=1)
     reason: str = ""
@@ -123,7 +122,7 @@ class WorkflowAbortReason(StrEnum):
 class DeclaracionPointer(BaseModel):
     """Pointer to a persisted filing draft and its status."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     modelo: str
     period: str
@@ -145,7 +144,7 @@ class ProfileBucketPointer(BaseModel):
     profile never leaks into ``list`` / ``switch`` / name-uniqueness.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
     label: str = Field(min_length=1, max_length=160)
@@ -189,7 +188,7 @@ class WorkflowState(BaseModel):
     precedence chain (Settings override > plaintext pointer file).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     auth: AuthState = Field(default_factory=AuthState)
     declarations: dict[str, DeclaracionPointer] = Field(default_factory=dict)
@@ -236,7 +235,9 @@ def active_bucket_id_or_raise() -> str:
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
-        raise NoActiveProfileError(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise NoActiveProfileError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     return bucket_id
 
 
@@ -263,7 +264,9 @@ def require_active_bucket_id() -> str:
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 
-        raise NoActiveProfileError(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise NoActiveProfileError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     return bucket_id
 
 
@@ -281,7 +284,7 @@ def active_transaction_catalogue_repository(
         bucket_id = active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
-            tr("application.workflow.errors.no_active_profile_bucket"),
+            translated_message="application.workflow.errors.no_active_profile_bucket",
             context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
             suggestion="aeat config profile create NAME",
         ) from exc

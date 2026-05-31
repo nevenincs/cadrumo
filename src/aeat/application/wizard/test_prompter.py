@@ -101,11 +101,13 @@ def test_questionary_prompter_translates_no_console_error() -> None:
         def write_raw(self, data: str) -> None:  # pragma: no cover - first call raises
             raise OSError("No console screen buffer attached")
 
+    from aeat.core.errors._registry import resolve_error_message
+
     with create_pipe_input() as pipe_input:
         prompter = QuestionaryPrompter(input=pipe_input, output=_RaisingOutput())
         with pytest.raises(WizardUnsupportedConsoleError) as raised:
             prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
-    message = str(raised.value)
+    message = resolve_error_message(raised.value)
     assert "aeat config profile create NAME" in message
     assert "No console screen buffer attached" not in message
 

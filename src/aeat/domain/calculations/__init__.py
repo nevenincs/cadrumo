@@ -1,21 +1,7 @@
-"""Central registry for legally approved AEAT calculation definitions."""
+"""Central registry for legally approved AEAT calculation definitions.
 
-from __future__ import annotations
-
-from .registry import (
-    RegistryCatalogues,
-    RegistrySnapshot,
-    RegistryValidator,
-    build_snapshot,
-    load_modelo_file,
-    load_registry_tree,
-)
-
-__all__ = [
-    "RegistryCatalogues",
-    "RegistrySnapshot",
-    "RegistryValidator",
-    "build_snapshot",
-    "load_modelo_file",
-    "load_registry_tree",
-]
+This package is a namespace container. Callers must import from the
+``aeat.domain.calculations.registry`` subpackage directly; nothing is
+re-exported at this level by design. Exporting here would couple callers to
+the internal subpackage layout and undermine the hexagonal-layer discipline.
+"""

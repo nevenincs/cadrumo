@@ -11,6 +11,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ..calculations.registry import (
@@ -365,20 +366,20 @@ def _overdue_recovery_or_none(
 
 
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:
-    if window.period_kind == "quarterly" and "Q" in window.period:
+    if window.period_kind == PeriodKind.QUARTERLY and "Q" in window.period:
         return f"{window.period.rsplit('Q', 1)[1]}T"
-    if window.period_kind == "quarterly" and window.period.endswith("T"):
+    if window.period_kind == PeriodKind.QUARTERLY and window.period.endswith("T"):
         return window.period.rsplit("-", 1)[-1]
-    if window.period_kind == "quarterly" and window.period.endswith("P"):
+    if window.period_kind == PeriodKind.QUARTERLY and window.period.endswith("P"):
         # Pago-fraccionado periods use the YYYY-NP form (e.g. 2025-1P,
         # 2025-2P, 2025-3P). The filing schedule's ``periods`` list carries
         # just the ordinal suffix (``1P``, ``2P``, ``3P``), so strip the
         # year prefix so the period filter in ``applicable_filing_schedules``
         # can match.
         return window.period.rsplit("-", 1)[-1]
-    if window.period_kind == "monthly" and "-" in window.period:
+    if window.period_kind == PeriodKind.MONTHLY and "-" in window.period:
         return window.period.rsplit("-", 1)[1]
-    if window.period_kind == "annual":
+    if window.period_kind == PeriodKind.ANNUAL:
         return "0A"
     return window.period
 

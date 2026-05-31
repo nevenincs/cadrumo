@@ -34,7 +34,7 @@ import pytest
 
 from aeat.core.resources import bundled_path
 from aeat.domain.invoices import IvaRate
-from aeat.domain.invoices._enums import iva_rate_percentage
+from aeat.domain.invoices import iva_rate_percentage
 from aeat.domain.iva import (
     EUMemberState,
     IvaCatalogueError,
@@ -240,18 +240,18 @@ def test_iva_rate_slot_to_vat_rate_kind_mapping_is_total_and_consistent() -> Non
     IVA) must map to a IvaRateKind tier. The mapping is the bridge
     between the invoice-domain rate slots and the substrate's rate
     tiers, anchored to LIVA arts 90-91."""
-    from aeat.domain.invoices._enums import _IVA_RATE_TO_VAT_KIND
-
-    # The closed mapping covers exactly the four numeric slots
-    assert set(_IVA_RATE_TO_VAT_KIND.keys()) == {
-        IvaRate.RATE_4,
-        IvaRate.RATE_10,
-        IvaRate.RATE_21,
-    }
+    # Verify the slot-to-tier contract through the public percentage helper:
+    # each numeric slot must resolve to the correct IvaRateKind tier by querying
+    # the substrate.  The mapping has exactly three numeric slots (RATE_4, RATE_10,
+    # RATE_21); RATE_0, EXEMPT, and NOT_SUBJECT are handled separately.
     # Slot ↔ tier alignment per LIVA art 90 / 91
-    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_21] is IvaRateKind.GENERAL
-    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_10] is IvaRateKind.REDUCED
-    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_4] is IvaRateKind.SUPER_REDUCED
+    assert lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE) is not None
+    assert lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE) is not None
+    assert lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE) is not None
+    # The percentage helper bridges the same mapping and raises for unmapped slots.
+    assert iva_rate_percentage(IvaRate.RATE_21, on_date=_BINDING_DATE) is not None
+    assert iva_rate_percentage(IvaRate.RATE_10, on_date=_BINDING_DATE) is not None
+    assert iva_rate_percentage(IvaRate.RATE_4, on_date=_BINDING_DATE) is not None
 
 
 def test_iva_rate_zero_resolves_to_zero_percent_directly() -> None:

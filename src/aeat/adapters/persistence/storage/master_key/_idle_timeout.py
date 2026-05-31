@@ -20,16 +20,15 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from .....core.config import Settings as _Settings
 from ..errors import StorageValidationError
 from ._bucket_session import BucketSession
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 DEFAULT_IDLE_LOCK_MINUTES = _Settings().aeat_bucket_default_idle_lock_minutes
-
 
 class IdleEvaluation(BaseModel):
     """Typed outcome of an idle-window evaluation."""
@@ -38,7 +37,6 @@ class IdleEvaluation(BaseModel):
 
     expired: bool
     remaining_seconds: int = Field(ge=0)
-
 
 def evaluate_idle(
     *,
@@ -78,6 +76,5 @@ def evaluate_idle(
 
     delta: timedelta = deadline - now
     return IdleEvaluation(expired=False, remaining_seconds=int(delta.total_seconds()))
-
 
 __all__ = ["DEFAULT_IDLE_LOCK_MINUTES", "IdleEvaluation", "evaluate_idle"]

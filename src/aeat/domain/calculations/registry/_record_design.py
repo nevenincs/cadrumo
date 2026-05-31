@@ -21,6 +21,7 @@ from pydantic import ConfigDict
 from xlrd.sheet import Sheet as XlrdSheet
 
 from ....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
+from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
@@ -95,7 +96,7 @@ def _extract_record_design_cached(
         return extract_record_design_pdf(source_path)
     if suffix in {_XLSX_EXTENSION, _XLSM_EXTENSION}:
         return extract_record_design_workbook(source_path)
-    if suffix == ".xls":
+    if suffix == _XLS_EXTENSION:
         return extract_record_design_xls_workbook(source_path)
     raise RegistryValidationError(f"unsupported record-design source extension: {source_path.suffix}")
 

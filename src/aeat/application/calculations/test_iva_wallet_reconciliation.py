@@ -329,3 +329,134 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
             decided_at=_NOW,
             max_wallet_age_days=-1,
         )
+
+
+# ---------------------------------------------------------------------------
+# first_period_zero divergence — LIVA art. 99.5 grounding
+# ---------------------------------------------------------------------------
+
+
+def _wallet_for_period(
+    amount: Decimal, period: str, *, captured_at: datetime = _NOW
+) -> IvaCompensationWalletObservation:
+    return IvaCompensationWalletObservation(
+        taxpayer_nif=_TAXPAYER_REF,
+        authenticated_identity=_TAXPAYER_REF,
+        target_year=2026,
+        target_period=period,
+        rows=(
+            IvaCompensationWalletRow(
+                generation_year=2025,
+                generation_period="4T",
+                generated_amount=amount,
+                applied_amount=Decimal("0"),
+                pending_amount=amount,
+                raw_label="2025 4T",
+            ),
+        ) if amount > Decimal("0") else (),
+        total_pending=amount,
+        source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+        captured_at=captured_at,
+        raw_sha256="b" * 64,
+    )
+
+
+def test_first_period_zero_with_aeat_wallet_zero_is_non_blocking() -> None:
+    """AEAT wallet showing zero for the first registered IVA period is non-blocking.
+
+    Under LIVA art. 99.5 there is no prior compensation balance for the first
+    period; zero is legally certain.  The decision must select aeat_wallet with
+    first_period_zero divergence and blocked=False.
+    """
+
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif=_TAXPAYER_REF,
+        target_year=2026,
+        target_period="1T",
+        wallet=_wallet_for_period(Decimal("0"), "1T"),
+        local_recurrence_amount=None,
+        decided_at=_NOW,
+        is_first_iva_period=True,
+    )
+
+    assert decision.divergence == "first_period_zero"
+    assert decision.selected_authority == "aeat_wallet"
+    assert decision.selected_amount == Decimal("0")
+    assert decision.blocked is False
+    assert "art. 99.5" in decision.reason
+    assert "LIVA" in decision.reason
+
+
+def test_first_period_zero_with_seeded_zero_local_record_is_non_blocking() -> None:
+    """A seeded-zero local recurrence for the first IVA period is non-blocking.
+
+    When no AEAT wallet is available but a seeded-zero compensation state exists
+    for the first registered period, the decision must be non-blocking with
+    first_period_zero divergence under LIVA art. 99.5.
+    """
+
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif=_TAXPAYER_REF,
+        target_year=2026,
+        target_period="1T",
+        wallet=None,
+        local_recurrence_amount=Decimal("0"),
+        decided_at=_NOW,
+        is_first_iva_period=True,
+    )
+
+    assert decision.divergence == "first_period_zero"
+    assert decision.selected_authority == "local_recurrence"
+    assert decision.selected_amount == Decimal("0")
+    assert decision.blocked is False
+    assert "art. 99.5" in decision.reason
+    assert "LIVA" in decision.reason
+
+
+def test_first_period_flag_does_not_suppress_non_zero_wallet_divergence() -> None:
+    """is_first_iva_period=True must not suppress a non-zero wallet value.
+
+    If the AEAT wallet shows a non-zero balance even though the caller marked
+    the period as the first, the standard divergence logic applies — the
+    non-zero value must be reconciled through the normal authority path.
+    """
+
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif=_TAXPAYER_REF,
+        target_year=2026,
+        target_period="1T",
+        wallet=_wallet_for_period(Decimal("500"), "1T"),
+        local_recurrence_amount=None,
+        decided_at=_NOW,
+        is_first_iva_period=True,
+    )
+
+    assert decision.divergence == "wallet_only"
+    assert decision.selected_authority == "aeat_wallet"
+    assert decision.selected_amount == Decimal("500")
+    assert decision.blocked is False
+
+
+def test_first_period_flag_does_not_suppress_stale_wallet() -> None:
+    """A stale wallet is not promoted to non-blocking by is_first_iva_period.
+
+    The first_period_zero path only applies to a fresh wallet showing zero.
+    A stale wallet must still route through the staleness branch regardless
+    of the first-period flag.
+    """
+
+    stale = _wallet_for_period(Decimal("0"), "1T", captured_at=_NOW - timedelta(days=40))
+
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif=_TAXPAYER_REF,
+        target_year=2026,
+        target_period="1T",
+        wallet=stale,
+        local_recurrence_amount=None,
+        decided_at=_NOW,
+        max_wallet_age_days=31,
+        is_first_iva_period=True,
+    )
+
+    assert decision.divergence == "wallet_stale"
+    assert decision.blocked is True

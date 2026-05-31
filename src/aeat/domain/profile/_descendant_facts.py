@@ -26,6 +26,7 @@ import re
 from collections.abc import Sequence
 from datetime import date
 
+from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing._dates import _parse_iso8601_date
 from .family import DescendantInfo
 
@@ -156,7 +157,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
 
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
-        raise ValueError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
+        raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
     birth_date = _parse_iso8601_date(nacimiento_raw)
 
     adoption_date: date | None = None
@@ -169,7 +170,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if disc_raw is not None:
         val = int(disc_raw)
         if val not in (0, 33, 65):
-            raise ValueError(f"DISCAPACIDAD must be 0, 33, or 65; got {val!r}")
+            raise ProfileAnswerTypeError(f"DISCAPACIDAD must be 0, 33, or 65; got {val!r}")
         discapacidad_grado = val
 
     convive = True
@@ -187,7 +188,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if meses_raw is not None:
         meses_val = int(meses_raw)
         if not (0 <= meses_val <= 12):
-            raise ValueError(f"MESES_TRABAJO must be 0–12; got {meses_val!r}")
+            raise ProfileAnswerTypeError(f"MESES_TRABAJO must be 0-12; got {meses_val!r}")
         meses_madre_trabajo_2024 = meses_val
 
     gastos_guarderia_euros = 0
@@ -195,7 +196,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if gastos_raw is not None:
         gastos_val = int(gastos_raw)
         if gastos_val < 0:
-            raise ValueError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_val!r}")
+            raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_val!r}")
         gastos_guarderia_euros = gastos_val
 
     nif: str | None = None

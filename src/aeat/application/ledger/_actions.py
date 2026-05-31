@@ -16,27 +16,17 @@ from typing import TYPE_CHECKING, Literal, NamedTuple
 from pydantic import ValidationError
 
 if TYPE_CHECKING:
+    from ...adapters.inbound.financial.providers import ProviderValidation
     from ...domain.transactions._classification_rule import LedgerClassificationRule
 
-from ...adapters.inbound.financial.providers import (
-    CsvProvider,
-    FinancialProvider,
-    FinancialProviderError,
-    OfxProvider,
-    PdfN26Provider,
-    ProviderValidation,
-    XlsxProvider,
-    detect_provider,
-)
-from ...adapters.inbound.pdf._utils import sha256_file
-from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.aggregation import AggregationSourceKind
 from ...core.errors import AeatError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.hashing import sha256_file
 from ...core.i18n import tr
 from ...core.time._utc import _coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
-from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -124,6 +114,7 @@ from ._models import (
     SplitTransactionResult,
 )
 from ._preflight import preflight_ledger_tax_readiness
+from ._protocols import FinancialProviderProtocol
 
 
 class LedgerProviderID(StrEnum):
@@ -478,6 +469,8 @@ def import_ledger_source(
     provider = _resolve_financial_provider(command.provider, command.path)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
+    from ...adapters.inbound.financial.providers import FinancialProviderError
+
     try:
         raw_transactions = tuple(provider.ingest(command.path))
     except FinancialProviderError as exc:
@@ -2074,15 +2067,23 @@ def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
     return TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING
 
 
-def _resolve_financial_provider(provider: str, path: Path) -> FinancialProvider:
+def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderProtocol:
+    from ...adapters.inbound.financial.providers import (
+        CsvProvider,
+        OfxProvider,
+        PdfN26Provider,
+        XlsxProvider,
+        detect_provider,
+    )
+
     try:
         provider_id = LedgerProviderID(provider.strip().lower())
-    except ValueError:
+    except ValueError as exc:
         known = ", ".join(p.value for p in LedgerProviderID)
         raise TransactionValidationError(
             translated_message="errors.transaction.unknown_ledger_provider",
             context={"provider": provider, "providers": known},
-        )
+        ) from exc
     if provider_id is LedgerProviderID.AUTO:
         detected = detect_provider(path)
         if detected is None:
@@ -2103,7 +2104,7 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProvider:
     return PdfN26Provider()
 
 
-def _validate_import_source(provider: FinancialProvider, path: Path) -> ProviderValidation:
+def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> ProviderValidation:
     if not path.exists() or not path.is_file():
         raise TransactionValidationError(
             translated_message="errors.financial.source_file_not_found",
@@ -2774,7 +2775,12 @@ def _verify_attachment_references(
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
-    store = attachment_store or AttachmentStore()
+    if attachment_store is None:
+        from ...adapters.persistence.storage.attachment import AttachmentStore
+
+        store: _AttachmentStoreProtocol = AttachmentStore()
+    else:
+        store = attachment_store
     for attachment_id in command.attachment_ids:
         _verify_single_attachment(
             attachment_id,
@@ -3087,7 +3093,7 @@ def _transaction_from_command(
         payload.update(
             {
                 "classified_at": occurred_at,
-                "classified_by": command.classified_by_override if command.classified_by_override else CLASSIFIED_BY_MANUAL,
+                "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
                 "classification_reason": command.source_command,
                 "classification_confidence": Decimal("1"),
             }

@@ -192,14 +192,18 @@ class QuestionaryPrompter:
         if self._input is not None or self._output is not None:
             return
         if not sys.stdin.isatty():
-            raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console"))
+            raise WizardUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console",
+            )
         try:
             from prompt_toolkit.output.defaults import create_output
 
             output = create_output(always_prefer_tty=True)
             output.flush()
         except _NO_CONSOLE_ERRORS as exc:
-            raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console")) from exc
+            raise WizardUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console",
+            ) from exc
 
     def ask(self, question: WizardQuestion, *, default: str | None) -> str:
         prompt = tr(str(question.prompt))
@@ -220,7 +224,9 @@ class QuestionaryPrompter:
                 case WizardWidget.INTEGER:
                     return self._ask_integer(prompt, default)
         except _NO_CONSOLE_ERRORS as exc:
-            raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console")) from exc
+            raise WizardUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console",
+            ) from exc
 
     def _ask_text(self, prompt: str, default: str | None) -> str:
         result = questionary.text(

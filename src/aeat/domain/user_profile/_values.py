@@ -11,9 +11,9 @@ from enum import StrEnum
 from typing import Annotated
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core._time import utc_now
+from ...core.time._clock import _now as utc_now
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
@@ -23,7 +23,7 @@ from ..modelos._work_unit import WorkUnit as _WorkUnit
 from ..transactions._models import Transaction as _Transaction
 from ._errors import UserProfileValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _ProfileId = Annotated[
     str,
@@ -45,8 +45,7 @@ _FieldPath = Annotated[
 _DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 
-type ProfileFactValue = str | bool | int | Decimal | date | None
-
+type UserProfileFactValue = str | bool | int | Decimal | date | None
 
 # A JSON-encoded canonical Decimal never carries an insignificant leading
 # zero: ``Decimal`` normalises ``08001`` to ``8001`` and ``model_dump(mode=
@@ -58,9 +57,8 @@ type ProfileFactValue = str | bool | int | Decimal | date | None
 _DECIMAL_STRING_RE = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
 _DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
-
 def _coerce_profile_fact_value(value: object) -> object:
-    """Restore Decimal / date types lost when ``ProfileFactValue`` was JSON-encoded.
+    """Restore Decimal / date types lost when ``UserProfileFactValue`` was JSON-encoded.
 
     JSON has no Decimal or date primitive, so ``model_dump_json`` emits both
     as strings. On re-parse the union ``str | bool | int | Decimal | date``
@@ -96,13 +94,11 @@ def _coerce_profile_fact_value(value: object) -> object:
             return value
     return value
 
-
 class UserProfileStatus(StrEnum):
     """Lifecycle status for a live profile root."""
 
     ACTIVE = "active"
     TOMBSTONED = "tombstoned"
-
 
 def new_profile_id() -> str:
     """Mint a fresh immutable profile identity.
@@ -117,13 +113,11 @@ def new_profile_id() -> str:
 
     return str(uuid4())
 
-
 def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
     """Create a deterministic-shape but unique snapshot id."""
 
     instant = created_at or utc_now()
     return f"{profile_id}:{instant.strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}"
-
 
 class UserProfileFact(BaseModel):
     """One effective-dated user-profile fact."""
@@ -131,7 +125,7 @@ class UserProfileFact(BaseModel):
     model_config = _STRICT_FROZEN
 
     path: _FieldPath
-    value: ProfileFactValue
+    value: UserProfileFactValue
     source: _Source = _PROVENANCE_SOURCE_MANUAL_CLI
     valid_from: date | None = None
     valid_to: date | None = None
@@ -146,7 +140,6 @@ class UserProfileFact(BaseModel):
         if self.valid_from is not None and self.valid_to is not None and self.valid_from > self.valid_to:
             raise UserProfileValidationError(f"{self.path}: valid_from is after valid_to")
         return self
-
 
 class UserProfileRecord(BaseModel):
     """Live secure user-profile aggregate before persistence encoding."""
@@ -193,7 +186,6 @@ class UserProfileRecord(BaseModel):
                 "removed_at": instant,
             }
         )
-
 
 class UserProfileSnapshot(BaseModel):
     """Immutable filing/export profile snapshot."""
@@ -276,7 +268,6 @@ class UserProfileSnapshot(BaseModel):
             canonical_hash=digest,
         )
 
-
 class UserProfilePortableExport(BaseModel):
     """User-directed portable profile export payload.
 
@@ -309,7 +300,6 @@ class UserProfilePortableExport(BaseModel):
     calculation_revisions: tuple[_CalculationRevision, ...] = ()
     filing_records: tuple[_ModeloRecord, ...] = ()
 
-
 def _derive_canonical_hash(
     *,
     schema_id: str,
@@ -336,7 +326,6 @@ def _derive_canonical_hash(
         }
     )
     return hashlib.sha256(payload).hexdigest()
-
 
 def _canonical_payload(payload: object) -> bytes:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")

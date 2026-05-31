@@ -24,10 +24,9 @@ from datetime import timedelta
 from enum import StrEnum
 from types import MappingProxyType
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class SensitivityClass(StrEnum):
     """Closed catalogue of sensitivity classes for persisted state.
@@ -77,7 +76,6 @@ class SensitivityClass(StrEnum):
     OPERATIONAL = "operational"
     DIAGNOSTIC = "diagnostic"
 
-
 class OutputSensitivityClass(StrEnum):
     """Closed catalogue of output redaction surfaces.
 
@@ -96,7 +94,6 @@ class OutputSensitivityClass(StrEnum):
     ERROR = "error"
     DIAGNOSTIC = "diagnostic"
 
-
 class AtRestTreatment(StrEnum):
     """Closed catalogue of at-rest data-protection treatments.
 
@@ -111,7 +108,6 @@ class AtRestTreatment(StrEnum):
 
     PLAINTEXT = "plaintext"
     CIPHERTEXT_REQUIRED = "ciphertext_required"
-
 
 class RetentionPolicy(BaseModel):
     """Retention envelope for a :class:`SensitivityClass`.
@@ -139,7 +135,6 @@ class RetentionPolicy(BaseModel):
     archive_after: timedelta | None = Field(default=None)
     require_explicit_expiry: bool = Field(default=False)
 
-
 class RedactionStrategy(StrEnum):
     """Closed catalogue of redaction strategies applied at write time.
 
@@ -158,7 +153,6 @@ class RedactionStrategy(StrEnum):
     HOST_ONLY = "host_only"
     FINGERPRINT = "fingerprint"
     ELLIPSIS = "ellipsis"
-
 
 class RedactionRule(BaseModel):
     """One rule applied at write time by the audit sink and run-trace path.
@@ -185,7 +179,6 @@ class RedactionRule(BaseModel):
     pattern: str = Field(min_length=1)
     strategy: RedactionStrategy
     applies_to: tuple[SensitivityClass, ...] = Field(default=())
-
 
 class ClassificationPolicy(BaseModel):
     """Default policy attached to one :class:`SensitivityClass`.
@@ -215,7 +208,6 @@ class ClassificationPolicy(BaseModel):
     retention: RetentionPolicy
     redaction_rules: tuple[str, ...] = Field(default=())
 
-
 class OutputClassificationPolicy(BaseModel):
     """Default redaction policy attached to an output surface.
 
@@ -238,18 +230,14 @@ class OutputClassificationPolicy(BaseModel):
     redaction_rules: tuple[str, ...] = Field(default=())
     persisted_as: SensitivityClass | None = Field(default=None)
 
-
 _FISCAL_YEAR_RETENTION = timedelta(days=365 * 5)
 """Five fiscal years — Spanish autónomo statute-of-limitations envelope."""
-
 
 _SHORT_SESSION_RETENTION = timedelta(hours=24)
 """Default upper bound on raw bearer-state retention before invalidation."""
 
-
 _DIAGNOSTIC_RETENTION = timedelta(days=7)
 """Default retention for opt-in diagnostic capture."""
-
 
 _AUDIT_REDACTION_RULES = (
     "nif-hash",
@@ -258,7 +246,6 @@ _AUDIT_REDACTION_RULES = (
     "bearer-token-fingerprint",
 )
 """Default rule set for audit-shaped output strings and payloads."""
-
 
 _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = MappingProxyType(
     {
@@ -322,7 +309,6 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
     }
 )
 
-
 _DEFAULT_OUTPUT_POLICY_TABLE: Mapping[OutputSensitivityClass, OutputClassificationPolicy] = MappingProxyType(
     {
         OutputSensitivityClass.CLI_PUBLIC: OutputClassificationPolicy(
@@ -348,7 +334,6 @@ _DEFAULT_OUTPUT_POLICY_TABLE: Mapping[OutputSensitivityClass, OutputClassificati
     }
 )
 
-
 def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
     """Return the default :class:`ClassificationPolicy` for ``sensitivity``.
 
@@ -368,7 +353,6 @@ def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
     """
     return _DEFAULT_POLICY_TABLE[sensitivity]
 
-
 def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassificationPolicy:
     """Return the default output redaction policy for ``output``.
 
@@ -384,7 +368,6 @@ def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassific
     """
     return _DEFAULT_OUTPUT_POLICY_TABLE[output]
 
-
 def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
     """Return the immutable default-policy mapping for every class.
 
@@ -394,7 +377,6 @@ def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
         cannot mutate either.
     """
     return _DEFAULT_POLICY_TABLE
-
 
 def default_output_policy_table() -> Mapping[OutputSensitivityClass, OutputClassificationPolicy]:
     """Return the immutable default-output-policy mapping.

@@ -35,9 +35,10 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
-from ....core.time._clock import _now
 from ....core.logging import get_logger
+from ....core.time._clock import _now
 from .blob_store._blob_store import EncryptedBlobStore
 from .crypto._crypto import decrypt_record, encrypt_record
 from .envelope._envelope import (
@@ -215,7 +216,7 @@ def _atomic_write(target: Path, *, payload: str) -> None:
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
-            encoding="utf-8",
+            encoding=UTF_8_ENCODING,
             dir=target.parent,
             prefix=f"{target.stem}.",
             suffix=".tmp",
@@ -282,7 +283,7 @@ def rotate_master_key(
         with exclusive_file_lock(lock_target):
             try:
                 cipher_envelope = CipherEnvelope.model_validate_json(
-                    path.read_text(encoding="utf-8"),
+                    path.read_text(encoding=UTF_8_ENCODING),
                 )
             except (OSError, ValueError, ValidationError):
                 _log.warning("rotate_master_key: %s is not a CipherEnvelope", path, exc_info=True)

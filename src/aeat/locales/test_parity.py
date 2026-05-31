@@ -278,3 +278,117 @@ def test_inter_locale_parity(locales_state):
 
     if errors:
         pytest.fail("\n".join(errors))
+
+
+# ---------------------------------------------------------------------------
+# F-string registry: concrete key expansion and coverage
+# ---------------------------------------------------------------------------
+
+
+def test_fstring_registry_expands_sal_and_sll_keys() -> None:
+    """The f-string registry must produce concrete keys for SAL and SLL legal-entity-form entries.
+
+    These two enum values caused the #553 structural-repair-exception incident because
+    scaffold could not generate their locale keys from the namespace marker alone.
+    """
+    from aeat.locales._fstring_registry import get_registered_keys
+
+    keys = get_registered_keys()
+    assert "wizard.setup.taxpayer-type.legal-entity-form.choices.sal.label" in keys, (
+        "sal key missing from f-string registry — LegalEntityForm.SAL is not covered"
+    )
+    assert "wizard.setup.taxpayer-type.legal-entity-form.choices.sll.label" in keys, (
+        "sll key missing from f-string registry — LegalEntityForm.SLL is not covered"
+    )
+
+
+def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
+    """Every LegalEntityForm member must have a registered locale key."""
+    from aeat.domain.deadlines._models import LegalEntityForm
+    from aeat.locales._fstring_registry import get_registered_keys
+
+    keys = get_registered_keys()
+    missing = []
+    for member in LegalEntityForm:
+        expected = f"wizard.setup.taxpayer-type.legal-entity-form.choices.{member.value.replace('_', '-')}.label"
+        if expected not in keys:
+            missing.append(expected)
+    assert not missing, (
+        f"LegalEntityForm members not covered by the f-string registry: {missing}\n"
+        "Add the missing values to _fstring_registry._build_registrations()."
+    )
+
+
+def test_fstring_registry_covers_all_fiscal_residency_members() -> None:
+    """Every FiscalResidency member must have a registered locale key."""
+    from aeat.domain.deadlines._models import FiscalResidency
+    from aeat.locales._fstring_registry import get_registered_keys
+
+    keys = get_registered_keys()
+    missing = []
+    for member in FiscalResidency:
+        expected = f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"
+        if expected not in keys:
+            missing.append(expected)
+    assert not missing, (
+        f"FiscalResidency members not covered by the f-string registry: {missing}\n"
+        "Add the missing values to _fstring_registry._build_registrations()."
+    )
+
+
+def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager) -> None:
+    """Every key produced by the f-string registry must exist in every locale file.
+
+    This test is the concrete-key companion to
+    test_codebase_namespaces_are_satisfied_by_locale_entries. The namespace check
+    validates that at least one entry exists under each prefix; this test validates
+    that every specific key the runtime can build from a bounded enumeration is
+    scaffolded. A failure here means a new enum value was added without running
+    scaffold (or scaffold does not cover it yet).
+    """
+    from aeat.locales._fstring_registry import get_registered_keys
+
+    registered_keys = get_registered_keys()
+    errors = []
+    for locale_file in sorted(manager.locales_dir.glob("*.yml")):
+        data = manager.load_locale(locale_file)
+        yaml_keys = manager.get_yaml_keys(data)
+        missing = registered_keys - yaml_keys
+        if missing:
+            errors.append(
+                f"{locale_file.name} is missing {len(missing)} f-string-registered key(s): "
+                + ", ".join(sorted(missing)[:5])
+                + (" ..." if len(missing) > 5 else "")
+            )
+    if errors:
+        pytest.fail(
+            "\n".join(errors)
+            + "\nRun `python -m aeat.locales scaffold` to insert missing placeholder entries."
+        )
+
+
+def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
+    """Scaffold inserts placeholder entries for every f-string-registered key.
+
+    Simulates the SAL/SLL incident: an empty locale file receives scaffold and
+    must contain every registered key as a placeholder afterwards.
+    """
+    from aeat.locales._fstring_registry import get_registered_keys
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    (locales_dir / "es.yml").write_text("{}\n", encoding="utf-8")
+
+    src_dir = Path(__file__).parent.parent
+    temp_manager = LocaleManager(src_dir=src_dir, locales_dir=locales_dir)
+    temp_manager.scaffold()
+
+    data = temp_manager.load_locale(locales_dir / "es.yml")
+    yaml_keys = temp_manager.get_yaml_keys(data)
+
+    registered_keys = get_registered_keys()
+    missing = registered_keys - yaml_keys
+    assert not missing, (
+        f"scaffold failed to insert {len(missing)} f-string-registered key(s): "
+        + ", ".join(sorted(missing)[:10])
+    )

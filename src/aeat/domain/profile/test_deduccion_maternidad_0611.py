@@ -212,38 +212,38 @@ class TestParseDescendienteFlagMesesTrabajo:
 # ---------------------------------------------------------------------------
 
 class TestCLIHelpers:
-    """Unit tests for _parse_meses_trabajo_hijo_spec and _compute_deduccion_maternidad_0611."""
+    """Unit tests for compute_deduccion_maternidad_0611 (domain arithmetic)."""
 
     def test_compute_two_hijos_12_12_gives_2400(self) -> None:
         """Oracle: 2 × 12 meses → 2400."""
-        from aeat.entrypoints.cli._modelo import _compute_deduccion_maternidad_0611
+        from aeat.domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        result = _compute_deduccion_maternidad_0611([("0", 12), ("1", 12)])
+        result = compute_deduccion_maternidad_0611([("0", 12), ("1", 12)])
         assert result == 2400
 
     def test_compute_6_and_12_gives_1800(self) -> None:
         """Oracle: 6 + 12 meses → 1800."""
-        from aeat.entrypoints.cli._modelo import _compute_deduccion_maternidad_0611
+        from aeat.domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        result = _compute_deduccion_maternidad_0611([("0", 6), ("1", 12)])
+        result = compute_deduccion_maternidad_0611([("0", 6), ("1", 12)])
         assert result == 1800
 
     def test_compute_cap_at_1200(self) -> None:
         """Single hijo 12 meses → capped at 1200."""
-        from aeat.entrypoints.cli._modelo import _compute_deduccion_maternidad_0611
+        from aeat.domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        assert _compute_deduccion_maternidad_0611([("laia", 12)]) == 1200
+        assert compute_deduccion_maternidad_0611([("laia", 12)]) == 1200
 
     def test_compute_zero_meses_gives_zero(self) -> None:
         """Passing 0 meses must return 0, not a non-zero constant."""
-        from aeat.entrypoints.cli._modelo import _compute_deduccion_maternidad_0611
+        from aeat.domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        assert _compute_deduccion_maternidad_0611([("0", 0)]) == 0
+        assert compute_deduccion_maternidad_0611([("0", 0)]) == 0
 
     def test_compute_anti_tautology_delta(self) -> None:
         """Incrementing meses from 6 to 12 must change result by exactly 600."""
-        from aeat.entrypoints.cli._modelo import _compute_deduccion_maternidad_0611
+        from aeat.domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        r6 = _compute_deduccion_maternidad_0611([("0", 6)])
-        r12 = _compute_deduccion_maternidad_0611([("0", 12)])
+        r6 = compute_deduccion_maternidad_0611([("0", 6)])
+        r12 = compute_deduccion_maternidad_0611([("0", 12)])
         assert r12 - r6 == 600

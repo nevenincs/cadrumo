@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from aeat.core.aggregation import AggregationSourceKind
 from ...core.config import Settings
@@ -16,8 +16,7 @@ from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
 from ._models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ReviewQueueRow(BaseModel):
     """CLI-ready read-only review queue row."""
@@ -48,14 +47,12 @@ class ReviewQueueRow(BaseModel):
     directly grounded in a registry legal reference.
     """
 
-
 class ReviewQueueReport(BaseModel):
     """Read-only review queue report."""
 
     model_config = _STRICT_FROZEN
 
     rows: tuple[ReviewQueueRow, ...]
-
 
 _ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
     AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
@@ -66,7 +63,6 @@ _ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
     "live_notification": frozenset(),
     "sync_divergence": frozenset(),
 }
-
 
 def project_review_queue(
     *,
@@ -98,7 +94,6 @@ def project_review_queue(
     )
     return ReviewQueueReport(rows=rows)
 
-
 def project_review_item(item_id: str, *, settings: Settings | None = None) -> ReviewQueueRow:
     """Return one review row by id."""
 
@@ -106,8 +101,11 @@ def project_review_item(item_id: str, *, settings: Settings | None = None) -> Re
     for row in report.rows:
         if row.item_id == item_id:
             return row
-    raise ReviewError(f"review item not found: {item_id}")
-
+    raise ReviewError(
+        message=f"review item not found: {item_id}",
+        translated_message="review.operator.errors.item_not_found",
+        context={"item_id": str(item_id)},
+    )
 
 def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
     internal: set[ReviewItemKind] = set()
@@ -117,10 +115,13 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
     for kind in accepted:
         mapped = _ACCEPTED_KIND_TO_INTERNAL.get(kind)
         if mapped is None:
-            raise ReviewError(f"unknown review kind: {kind}")
+            raise ReviewError(
+                message=f"unknown review kind: {kind}",
+                translated_message="review.operator.errors.unknown_kind",
+                context={"kind": kind},
+            )
         internal.update(mapped)
     return frozenset(internal)
-
 
 def _row_matches(
     row: ReviewQueueRow,
@@ -132,7 +133,6 @@ def _row_matches(
         row.source_kind is not None and row.source_kind in accepted_source_kinds
     )
     return kind_matches and source_matches
-
 
 def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQueueRow:
     if isinstance(item, TransactionReviewItem):
@@ -192,20 +192,21 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
             legal_refs=tuple(legal_refs),
         )
-    raise ReviewError(f"unsupported review item type: {type(item).__name__}")
-
+    raise ReviewError(
+        message=f"unsupported review item type: {type(item).__name__}",
+        translated_message="review.operator.errors.unsupported_item_type",
+        context={"item_type": type(item).__name__},
+    )
 
 def _render_summary(value: str) -> str:
     rendered = tr(value)
     return rendered or value
-
 
 def _active_bucket_id() -> str:
     from ..workflow._models import active_bucket_id_or_raise
     from ..workflow._persistence import workflow_state_repository
 
     return active_bucket_id_or_raise()
-
 
 def _year_period(value: str) -> str:
     return value[:7]

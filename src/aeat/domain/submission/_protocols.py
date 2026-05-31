@@ -19,16 +19,20 @@ Every record is either a strict+frozen pydantic v2 model or a
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import BaseSeverity
+from ._models import ModeloPresentado
+
+if TYPE_CHECKING:  # pragma: no cover — type-only import
+    from ...core.identity import SubjectTaxId
 
 
 @runtime_checkable
@@ -177,7 +181,7 @@ class ModeloDraftLike(Protocol):
     def period(self) -> str: ...
 
     @property
-    def profile_tax_id(self) -> str: ...
+    def profile_tax_id(self) -> SubjectTaxId: ...
 
     @property
     def status(self) -> object: ...
@@ -195,4 +199,31 @@ class ModeloDraftLoader(Protocol):
 
     def load(self, draft_path: Path) -> ModeloDraftLike:
         """Load and return the :class:`ModeloDraftLike` at ``draft_path``."""
+        ...
+
+
+@runtime_checkable
+class SubmissionRepositoryProtocol(Protocol):
+    """Narrow domain-facing repository contract for the submission engine.
+
+    The concrete ``SubmissionRepository`` inherits from the adapter-layer
+    ``SecureBoundRepository``. This Protocol captures only the surface the
+    engine consumes so callers can depend inward on this port without
+    importing the concrete class.
+
+    Note: ``SubmissionRepository`` itself retains adapter-level imports
+    because its base class (``SecureBoundRepository``) lives in the adapter
+    layer. Moving the concrete class to adapters is deferred to a later wave.
+    """
+
+    def load(self, record_id: str) -> ModeloPresentado | None:
+        """Load a persisted submission record by id, or return None if absent."""
+        ...
+
+    def iter_submissions(self) -> Iterator[ModeloPresentado]:
+        """Yield every persisted submission in lexicographic id order."""
+        ...
+
+    def list_submission_ids(self) -> tuple[str, ...]:
+        """Return every submission id persisted in this repository."""
         ...

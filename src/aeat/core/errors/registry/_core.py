@@ -48,6 +48,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.errors.DecimalFormatError",
+        ErrorCode(
+            code="ERROR_DECIMAL_FORMAT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_decimal_format",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.errors.RedactionError",
+        ErrorCode(
+            code="ERROR_REDACTION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_redaction",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.errors._not_found.CoreNotFoundError",
         ErrorCode(
             code="ERROR_AEAT_CORE_NOT_FOUND",

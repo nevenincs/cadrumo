@@ -16,17 +16,18 @@ append-only friendly so concurrent agents do not corrupt previous rows.
 
 from __future__ import annotations
 
-import hashlib
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ...core.external_constants import PDF_EXTENSION
+from ...core.external_constants import PDF_EXTENSION, UTF_8_ENCODING
+from ...core.hashing import sha256_file as _sha256_file
 from ...core.identity import BucketId
 from ...core.time import _now
 from ...domain.buckets import (
@@ -43,6 +44,13 @@ _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
 _DEFERRED_ADR_REF = "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"
+
+
+class MediaKind(StrEnum):
+    """Canonical media-kind values for purchase invoice evidence."""
+
+    PDF = "pdf"
+    IMAGE = "image"
 
 
 class PurchaseInvoiceEvidenceInputError(AeatError):
@@ -62,7 +70,7 @@ class PurchaseInvoiceEvidence(BaseModel):
     bucket_id: BucketId
     source_path: str = Field(min_length=1)
     source_sha256: str = Field(min_length=64, max_length=64)
-    media_kind: str = Field(pattern=r"^(pdf|image)$")
+    media_kind: MediaKind
     supplier: str | None = None
     invoice_number: str | None = None
     invoice_date: str | None = None
@@ -92,25 +100,17 @@ class PurchaseInvoiceEvidencePatch(BaseModel):
     notes: str | None = None
 
 
-def _resolve_media_kind(source_path: Path) -> str:
+def _resolve_media_kind(source_path: Path) -> MediaKind:
     suffix = source_path.suffix.lower()
     if suffix in _PDF_EXTENSIONS:
-        return "pdf"
+        return MediaKind.PDF
     if suffix in _IMAGE_EXTENSIONS:
-        return "image"
+        return MediaKind.IMAGE
     raise PurchaseInvoiceEvidenceInputError(
         f"source path {source_path!s} has unsupported extension {suffix!r}; "
         f"only PDF and image inputs are accepted. See {_DEFERRED_ADR_REF}.",
         suggestion="aeat app ledger evidence list",
     )
-
-
-def _hash_file(source_path: Path) -> str:
-    hasher = hashlib.sha256()
-    with source_path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
 
 
 class PurchaseInvoiceEvidenceResult(BaseModel):
@@ -127,7 +127,7 @@ def _load(settings: Settings, bucket_id: str) -> list[PurchaseInvoiceEvidence]:
     if not path.is_file():
         return []
     records: list[PurchaseInvoiceEvidence] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding=UTF_8_ENCODING).splitlines():
         line = line.strip()
         if not line:
             continue
@@ -140,7 +140,7 @@ def _save(settings: Settings, bucket_id: str, records: list[PurchaseInvoiceEvide
     body = "\n".join(record.model_dump_json() for record in records)
     if body:
         body += "\n"
-    path.write_text(body, encoding="utf-8")
+    path.write_text(body, encoding=UTF_8_ENCODING)
 
 
 _EVIDENCE_EVENT_PAYLOAD_VERSION = 1
@@ -233,7 +233,7 @@ class PurchaseInvoiceEvidenceService:
                 suggestion="aeat app ledger evidence list",
             )
         media_kind = _resolve_media_kind(resolved)
-        digest = _hash_file(resolved)
+        digest = _sha256_file(resolved)
         now = _now()
         record = PurchaseInvoiceEvidence(
             evidence_id=uuid.uuid4().hex[:16],

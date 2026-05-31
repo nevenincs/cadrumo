@@ -38,6 +38,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.external_constants import LATIN_1_ENCODING
+
 from .._errors import AeatExportFormatError
 from ._deserialise import deserialise
 from ._record_spec import (
@@ -79,7 +81,7 @@ def test_currency_inline_sign_round_trips_negative_value() -> None:
         casilla_values={"01": Decimal("-12345.67")},
         headers={},
         specs=specs,
-        encoding="iso-8859-1",
+        encoding=LATIN_1_ENCODING,
         total_length=12,
     )
 
@@ -89,7 +91,7 @@ def test_currency_inline_sign_round_trips_negative_value() -> None:
         f"INLINE_SIGN negative value should emit 'N' in byte 0; got {body[0:1]!r}"
     )
 
-    parsed = deserialise(payload, specs=specs, encoding="iso-8859-1", total_length=12)
+    parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
     assert parsed.casilla_values["01"] == Decimal("-12345.67")
 
 
@@ -112,7 +114,7 @@ def test_currency_inline_sign_round_trips_positive_value() -> None:
         casilla_values={"01": Decimal("42.00")},
         headers={},
         specs=specs,
-        encoding="iso-8859-1",
+        encoding=LATIN_1_ENCODING,
         total_length=12,
     )
 
@@ -121,7 +123,7 @@ def test_currency_inline_sign_round_trips_positive_value() -> None:
         f"INLINE_SIGN non-negative value should emit space in byte 0; got {body[0:1]!r}"
     )
 
-    parsed = deserialise(payload, specs=specs, encoding="iso-8859-1", total_length=12)
+    parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
     assert parsed.casilla_values["01"] == Decimal("42.00")
 
 
@@ -144,13 +146,13 @@ def test_date_field_yyyymmdd_round_trips() -> None:
         casilla_values={},
         headers={"DEVENGO": target},
         specs=specs,
-        encoding="iso-8859-1",
+        encoding=LATIN_1_ENCODING,
         total_length=8,
     )
     body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
     assert body == b"20250420"
 
-    parsed = deserialise(payload, specs=specs, encoding="iso-8859-1", total_length=8)
+    parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=8)
     assert parsed.field_values["DEVENGO"] == target
 
 
@@ -173,13 +175,13 @@ def test_date_field_ddmmyyyy_round_trips() -> None:
         casilla_values={},
         headers={"FECHA": target},
         specs=specs,
-        encoding="iso-8859-1",
+        encoding=LATIN_1_ENCODING,
         total_length=8,
     )
     body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
     assert body == b"20042025"
 
-    parsed = deserialise(payload, specs=specs, encoding="iso-8859-1", total_length=8)
+    parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=8)
     assert parsed.field_values["FECHA"] == target
 
 
@@ -208,10 +210,10 @@ def test_alphanumeric_zero_padded_field_round_trips() -> None:
         casilla_values={},
         headers={"REF": "ABC123"},
         specs=specs,
-        encoding="iso-8859-1",
+        encoding=LATIN_1_ENCODING,
         total_length=8,
     )
-    parsed = deserialise(payload, specs=specs, encoding="iso-8859-1", total_length=8)
+    parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=8)
     assert parsed.field_values["REF"] == "ABC123"
 
 
@@ -242,7 +244,7 @@ def test_currency_blank_input_rejected_at_decode() -> None:
     # 12 spaces — a wire shape that earlier silently decoded to 0.00.
     blank_payload = b" " * 12 + b"\r\n"
     with pytest.raises(AeatExportFormatError, match=r"CURRENCY field is blank"):
-        deserialise(blank_payload, specs=specs, encoding="iso-8859-1", total_length=12)
+        deserialise(blank_payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
 
 
 def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
@@ -270,7 +272,7 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     # Sign byte 'N' + 11 blank magnitude bytes
     blank_payload = b"N" + b" " * 11 + b"\r\n"
     with pytest.raises(AeatExportFormatError, match=r"magnitude is blank"):
-        deserialise(blank_payload, specs=specs, encoding="iso-8859-1", total_length=12)
+        deserialise(blank_payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
 
 
 def test_cp1252_encoded_field_round_trips_non_ascii() -> None:
@@ -338,7 +340,7 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
         casilla_values={},
         headers={},
         specs=specs,
-        encoding="iso-8859-1",
+        encoding=LATIN_1_ENCODING,
         total_length=4,
     )
     assert b"AEAT" in payload, payload
@@ -347,7 +349,7 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
     assert corrupted != payload
 
     with pytest.raises(AeatExportFormatError, match="RESERVED"):
-        deserialise(corrupted, specs=specs, encoding="iso-8859-1", total_length=4)
+        deserialise(corrupted, specs=specs, encoding=LATIN_1_ENCODING, total_length=4)
 
 
 # ---------------------------------------------------------------------------

@@ -16,6 +16,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     StorageValidationError,
 )
+from ...adapters.persistence.storage.bucket._errors import BucketValidationError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import override_settings
 from ...domain.user_profile import (
@@ -50,11 +51,11 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def test_object_key_helpers_reject_blank_inputs() -> None:
-    with pytest.raises(ValueError, match="profile_id must not be blank"):
+    with pytest.raises(BucketValidationError, match="profile_id must not be blank"):
         user_profile_value_object_key("  ")
-    with pytest.raises(ValueError, match="profile_id must not be blank"):
+    with pytest.raises(BucketValidationError, match="profile_id must not be blank"):
         user_profile_snapshot_object_key(" ", "snap-1")
-    with pytest.raises(ValueError, match="snapshot_id must not be blank"):
+    with pytest.raises(BucketValidationError, match="snapshot_id must not be blank"):
         user_profile_snapshot_object_key("a4f1c2e0-1111-4222-8333-444455556666", "")
 
 

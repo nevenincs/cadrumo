@@ -277,3 +277,33 @@ class TestErrorCodeBinding:
         bound = bind_error_code(IdentityError)
         assert bound.code == "INTEGRITY_IDENTITY_DOCUMENT"
         assert bound.category.value == "INTEGRITY"
+
+
+class TestNifHardeningRejection:
+    """Regression gate: validate_identity rejects malformed NIFs that a bare
+    strip().upper() normaliser would silently pass through.
+
+    The canonical bug is: ``_normalise_tax_identity("12345678A")`` returns
+    ``"12345678A"`` (string passes through untouched) while
+    ``validate_identity("12345678A")`` raises ``IdentityError`` because the
+    check-letter for ``12345678`` is ``Z``, not ``A``.  This class pins that
+    validate_identity is the correct boundary enforcer.
+    """
+
+    def test_wrong_check_letter_rejected_not_silently_normalised(self) -> None:
+        # 12345678 % 23 = 14 -> correct check letter is Z, not A.
+        # A bare strip().upper() would accept "12345678A" as a string.
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("12345678A")
+        assert excinfo.value.translated_message == "errors.identity.nif_check_letter_mismatch"
+
+    def test_short_nif_rejected_not_silently_normalised(self) -> None:
+        # 7 digits + check letter: wrong shape; bare normaliser returns "1234567Z".
+        with pytest.raises(IdentityError) as excinfo:
+            validate_identity("1234567Z")
+        assert excinfo.value.translated_message == "errors.identity.nif_invalid_shape"
+
+    def test_uppercase_garbage_rejected_not_silently_normalised(self) -> None:
+        # "NOTANIF" would be returned unchanged by strip().upper(); rejected by validate_identity.
+        with pytest.raises(IdentityError):
+            validate_identity("NOTANIF")

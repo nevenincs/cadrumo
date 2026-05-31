@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
 from ...core.time._utc import _coerce_utc_aware
 from . import AuthProviderKind
@@ -93,7 +94,7 @@ def inspect_auth_acquisition_lock(
     if not path.exists():
         return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path)
     try:
-        record = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding="utf-8"))
+        record = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
     except (OSError, ValidationError, ValueError) as exc:
         return AuthAcquisitionLockStatus(
             state=AuthAcquisitionLockState.CORRUPT,
@@ -186,7 +187,7 @@ def acquire_auth_acquisition_lock(
                 suggestion=tr("application.auth.acquisition_lock.errors.lock_held_suggestion"),
             ) from None
         try:
-            with os.fdopen(fd, "w", encoding="utf-8") as file:
+            with os.fdopen(fd, "w", encoding=UTF_8_ENCODING) as file:
                 file.write(record.model_dump_json(indent=2))
                 file.write("\n")
         except Exception:
@@ -243,7 +244,7 @@ def _status_context(status: AuthAcquisitionLockStatus) -> Mapping[str, object]:
 
 def _release_if_owner(path: Path, expected: AuthAcquisitionLockRecord) -> None:
     try:
-        observed = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding="utf-8"))
+        observed = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
     except (OSError, ValidationError, ValueError):
         return
     if observed == expected:

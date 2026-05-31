@@ -1,4 +1,15 @@
-"""Strict Pydantic records for the backend-owned operator surface contract."""
+"""Strict Pydantic records for the backend-owned operator surface contract.
+
+S538 invariant-guard classification note
+-----------------------------------------
+All :class:`ValueError` raises in this module appear inside Pydantic v2
+``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
+:class:`pydantic.ValidationError` automatically; raising any other exception
+type (including :class:`aeat.core.errors.AeatError`) would bypass that wrapping
+and surface as an uncaught internal exception. These guards are therefore
+**developer-surface-only invariants** and must remain :class:`ValueError`. They
+are NOT operator-facing errors and do not require ``translated_message``.
+"""
 
 from __future__ import annotations
 

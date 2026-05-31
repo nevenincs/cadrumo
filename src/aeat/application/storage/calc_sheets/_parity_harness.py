@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     BatchUpdateValuesRequest = Any
     ValueRange = Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....core.config import Settings as _Settings
 from ....domain.calculations.registry._formula_runtime import (
@@ -57,6 +57,7 @@ from ....domain.calculations.registry._ids import CasillaId, RevisionId
 from ....domain.calculations.registry._schema import CasillaDefinition, InputKind
 from ....domain.calculations.registry._schema import RegistrySnapshot
 from ._engine import build_export_plan
+from ._errors import CalcSheetsParityError
 from ._layout import plan_layout
 from ._records import (
     OperatorInput,
@@ -66,9 +67,8 @@ from ._records import (
     SheetExportPlan,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _SHEETS_RECALC_DELAY_SECONDS = _Settings().aeat_calc_sheets_recalc_delay_s
-
 
 class CasillaParity(BaseModel):
     """Per-casilla parity verdict across three calculation surfaces."""
@@ -84,7 +84,6 @@ class CasillaParity(BaseModel):
     sheets_vs_local: bool | None = None
     local_vs_aeat: bool | None = None
     sheets_vs_aeat: bool | None = None
-
 
 class ParityReport(BaseModel):
     """Aggregate parity verdict across every computed casilla.
@@ -112,7 +111,6 @@ class ParityReport(BaseModel):
     verdict: Literal["all_match", "divergence", "inconclusive"]
     divergences: tuple[CasillaParity, ...] = ()
 
-
 class OperatorInputScenario(BaseModel):
     """Caller-supplied scenario for the parity harness.
 
@@ -132,7 +130,6 @@ class OperatorInputScenario(BaseModel):
     expected_by_number: Mapping[str, Decimal] = Field(default_factory=dict)
     scenario_label: str = ""
 
-
 def _build_operator_inputs(
     snapshot: RegistrySnapshot,
     scenario: OperatorInputScenario,
@@ -151,17 +148,15 @@ def _build_operator_inputs(
         operator_input_records.append(OperatorInput(casilla=casilla_id, value=value))
         inputs_by_id[casilla_id] = value
     if unknown:
-        raise ValueError(
+        raise CalcSheetsParityError(
             f"scenario references unknown casilla numbers in modelo {snapshot.modelo.id!r}: {sorted(unknown)!r}"
         )
     return OperatorInputs(values=tuple(operator_input_records)), inputs_by_id
-
 
 def _build_relation_values(scenario: OperatorInputScenario) -> RelationValues:
     return RelationValues(
         values=tuple(RelationValue(relation=key, value=value) for key, value in scenario.relation_values.items()),
     )
-
 
 def _seed_inputs_into_sheet(
     sheets_service: SheetsResource,
@@ -224,7 +219,6 @@ def _seed_inputs_into_sheet(
             body=batch_body,
         ).execute()
 
-
 def _read_sheets_computed(
     sheets_service: SheetsResource,
     spreadsheet_id: str,
@@ -268,7 +262,6 @@ def _read_sheets_computed(
             continue
     return {cell.casilla: row_to_value[cell.address.row] for cell in sorted_cells if cell.address.row in row_to_value}
 
-
 def _compute_local(
     snapshot: RegistrySnapshot,
     inputs_by_id: Mapping[CasillaId, Decimal],
@@ -298,7 +291,6 @@ def _compute_local(
         relation_values=relation_defaults,
     )
     return result.values
-
 
 def verify_modelo_parity(
     snapshot: RegistrySnapshot,
@@ -379,7 +371,6 @@ def verify_modelo_parity(
         divergences=tuple(divergences),
     )
 
-
 def _collect_parity_rows(
     *,
     snapshot: RegistrySnapshot,
@@ -402,7 +393,6 @@ def _collect_parity_rows(
         if _is_parity_divergent(row, sheets_v=sheets_v, local=local, inputs_by_id=inputs_by_id):
             divergences.append(row)
     return casillas, divergences
-
 
 def _build_casilla_parity_row(
     casilla: CasillaDefinition,
@@ -427,7 +417,6 @@ def _build_casilla_parity_row(
         sheets_vs_aeat=sheets_vs_aeat,
     )
 
-
 def _is_parity_divergent(
     row: CasillaParity,
     *,
@@ -446,7 +435,6 @@ def _is_parity_divergent(
         return True
     return False in (row.sheets_vs_local, row.local_vs_aeat, row.sheets_vs_aeat)
 
-
 def _resolve_parity_verdict(
     *,
     divergences: list[CasillaParity],
@@ -458,7 +446,6 @@ def _resolve_parity_verdict(
     if aeat_present:
         return "all_match"
     return "inconclusive"
-
 
 __all__ = [
     "CasillaParity",

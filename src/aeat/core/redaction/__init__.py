@@ -43,12 +43,12 @@ The redaction strategies, defined in
 
 from __future__ import annotations
 
-import hashlib
 import re
 from collections.abc import Mapping
 from types import MappingProxyType
 from urllib.parse import urlparse
 
+from ..hashing import sha256_hex as _sha256_hex
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -128,12 +128,12 @@ _CLI_OBJECT_KEY_KEYS = frozenset(
 
 
 def _sha256_prefix(value: str) -> str:
-    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    digest = _sha256_hex(value.encode("utf-8"))
     return f"sha256:{digest[:8]}"
 
 
 def _fingerprint(value: str) -> str:
-    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    digest = _sha256_hex(value.encode("utf-8"))
     return f"token:sha256:{digest[:8]}"
 
 
@@ -271,7 +271,9 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         TypeError: When ``value`` is not a :class:`str`.
     """
     if not isinstance(value, str):
-        raise TypeError(f"redact() expects str; got {type(value).__name__}")
+        from ..errors import RedactionError
+
+        raise RedactionError(f"redact() expects str; got {type(value).__name__}")
     result = value
     for rule in rules:
         result = _apply_one(rule, result)
@@ -427,7 +429,9 @@ def redact_for_cli_output(text: str) -> str:
         Redacted CLI-safe text.
     """
     if not isinstance(text, str):
-        raise TypeError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
+        from ..errors import RedactionError
+
+        raise RedactionError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
     return _redact_cli_string(text)
 
 

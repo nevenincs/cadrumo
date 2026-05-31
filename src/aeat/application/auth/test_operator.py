@@ -566,9 +566,11 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
             overrides={"identity.tax_id": "12345678Z"},
         )
     )
-    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": SecretStr("12345678Z")})
-
-    assert _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL) == "12345678Z"
+    with override_settings(aeat_clave_movil_dni_nie=SecretStr("12345678Z")) as settings:
+        assert (
+            _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
+            == "12345678Z"
+        )
 
 
 def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> None:
@@ -581,15 +583,14 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
             overrides={"identity.tax_id": "00000000T"},
         )
     )
-    settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": SecretStr("00000001R")})
-
-    with pytest.raises(AuthProfileIdentityMismatchError) as raised:
-        _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
-    # The refusal text is routed through the locale system so it honours
-    # the profile language (persona-fleet finding G3); assert it equals
-    # the localised string for the canonical key rather than a
-    # hard-coded English fragment.
-    assert str(raised.value) == tr("application.auth.sessions.errors.clave_identity_profile_mismatch")
+    with override_settings(aeat_clave_movil_dni_nie=SecretStr("00000001R")) as settings:
+        with pytest.raises(AuthProfileIdentityMismatchError) as raised:
+            _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
+        # The refusal text is routed through the locale system so it honours
+        # the profile language (persona-fleet finding G3); assert it equals
+        # the localised string for the canonical key rather than a
+        # hard-coded English fragment.
+        assert str(raised.value) == tr("application.auth.sessions.errors.clave_identity_profile_mismatch")
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

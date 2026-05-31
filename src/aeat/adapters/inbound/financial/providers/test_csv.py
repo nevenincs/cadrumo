@@ -8,7 +8,6 @@ in :class:`aeat.adapters.inbound.financial.providers._csv.CsvProvider`.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
@@ -70,16 +69,8 @@ def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:
 
 def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
     """An invalid preferred encoding should not break the fallback decode order."""
-    key = "FINANCIAL_DEFAULT_CSV_ENCODING"
-    previous = os.environ.get(key)
-    os.environ[key] = "definitely-not-a-codec"
-    try:
+    with override_settings(financial_default_csv_encoding="definitely-not-a-codec"):
         validation = CsvProvider().validate_source(_FIXTURES / "bbva-sample.csv")
-    finally:
-        if previous is None:
-            os.environ.pop(key, None)
-        else:
-            os.environ[key] = previous
     assert validation.is_valid, validation.warnings
 
 

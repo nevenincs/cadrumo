@@ -33,7 +33,7 @@ from pydantic_core import core_schema
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ._ids import TransactionId
 from ...core.errors import CoreValidationError
@@ -170,7 +170,7 @@ def _validate_classified_by_shape(value: str) -> str:
     output from manual and rule-based decisions via this prefix.
     """
     normalized = value.strip()
-    if normalized in {"auto", "manual"}:
+    if normalized in {CLASSIFIED_BY_AUTO, "manual"}:
         return normalized
     for prefix in ("rule:", "llm:"):
         if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
@@ -797,7 +797,7 @@ class Transaction(BaseModel):
     notes: str = ""
     import_fingerprint: str | None = None
     classified_at: datetime | None = None
-    classified_by: str = Field(default="auto", min_length=1)
+    classified_by: str = Field(default=CLASSIFIED_BY_AUTO, min_length=1)
     classification_reason: str = ""
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()

@@ -8,7 +8,7 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
@@ -16,7 +16,6 @@ from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
-
 
 class SourceMeshError(CoreValidationError):
     """Raised when a :class:`CalculationSourceMesh` field validator rejects an invariant.
@@ -29,7 +28,7 @@ class SourceMeshError(CoreValidationError):
     ``ValidationError`` without special handling.
     """
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _log = get_logger(__name__)
 
 CalculationSourceDiagnosticReason = Literal[
@@ -40,7 +39,6 @@ CalculationSourceDiagnosticReason = Literal[
     "storage_degraded",
     "unhandled_binding_source",
 ]
-
 
 class CalculationSourceContext(BaseModel):
     """Context supplied to a calculation source resolver."""
@@ -54,7 +52,6 @@ class CalculationSourceContext(BaseModel):
     revision: ModeloRevision
     calculated_at: datetime | None = None
 
-
 class CalculationSourceDiagnostic(BaseModel):
     """Diagnostic emitted while resolving source-backed calculation values."""
 
@@ -67,7 +64,6 @@ class CalculationSourceDiagnostic(BaseModel):
     binding_id: str | None = Field(default=None, min_length=1, max_length=256)
     casilla_id: str | None = Field(default=None, min_length=1, max_length=256)
 
-
 class CalculationSourceProvenance(BaseModel):
     """Stable source object provenance produced by a resolver."""
 
@@ -76,7 +72,6 @@ class CalculationSourceProvenance(BaseModel):
     source_kind: str = Field(min_length=1, max_length=64)
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
-
 
 class CalculationSourceResolution(BaseModel):
     """Resolved values and provenance returned by one source resolver."""
@@ -154,7 +149,6 @@ class CalculationSourceResolution(BaseModel):
     def _serialize_source_transaction_ids(self, value: Sequence[str]) -> tuple[str, ...]:
         return tuple(value)
 
-
 @runtime_checkable
 class ModeloSourceResolver(Protocol):
     """Application port implemented by one calculation source adapter."""
@@ -169,7 +163,6 @@ class ModeloSourceResolver(Protocol):
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve source-backed calculation values for ``context``."""
-
 
 def merge_source_resolutions(
     resolutions: Sequence[CalculationSourceResolution],
@@ -220,7 +213,6 @@ def merge_source_resolutions(
         provenance=tuple(provenance),
     )
 
-
 def collect_unhandled_source_diagnostics(
     revision: ModeloRevision,
     *,
@@ -243,7 +235,6 @@ def collect_unhandled_source_diagnostics(
             )
         )
     return tuple(diagnostics)
-
 
 def storage_degradation_resolution(
     *,
@@ -276,7 +267,6 @@ def storage_degradation_resolution(
         ),
     )
 
-
 def _claim_binding(owners: dict[str, str], binding_id: str, resolver_id: str) -> None:
     existing = owners.get(binding_id)
     if existing is None:
@@ -286,7 +276,6 @@ def _claim_binding(owners: dict[str, str], binding_id: str, resolver_id: str) ->
         t("aggregation.source_mesh.errors.duplicate_binding_owner"),
         context={"binding_id": binding_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
-
 
 def _claim_bound_casilla(owners: dict[str, str], casilla_id: str, resolver_id: str) -> None:
     existing = owners.get(casilla_id)
@@ -298,7 +287,6 @@ def _claim_bound_casilla(owners: dict[str, str], casilla_id: str, resolver_id: s
         context={"casilla_id": casilla_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
 
-
 def _claim_relation(owners: dict[str, str], relation_id: str, resolver_id: str) -> None:
     existing = owners.get(relation_id)
     if existing is None:
@@ -308,7 +296,6 @@ def _claim_relation(owners: dict[str, str], relation_id: str, resolver_id: str) 
         t("aggregation.source_mesh.errors.duplicate_relation_owner"),
         context={"relation_id": relation_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
-
 
 __all__ = [
     "CalculationSourceContext",

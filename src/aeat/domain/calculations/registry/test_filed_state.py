@@ -174,6 +174,40 @@ def test_filed_state_comparison_reports_missing_local_casilla() -> None:
     assert comparison.drifts == ()
 
 
+def test_filed_state_drift_carries_formula_provenance() -> None:
+    """A drifted computed casilla carries ``formula_id``, ``legal_refs``, and
+    ``source_refs`` pulled from the registry calculation entry so the
+    regulatory grounding for the drift is preserved through the comparison
+    boundary and available to CLI / audit surfaces.
+
+    Casilla "19" (resultado final M130) is formula-computed; its entry
+    in ``RegistryCalculationResult.entries`` must have non-empty
+    ``legal_refs`` and a ``formula_id``.  Drifting it by 0.01 forces it
+    into the ``drifts`` tuple; the test asserts provenance is carried.
+    """
+    calculation = _modelo_130_calculation()
+    observation = _filed_observation(calculation)
+    drifted_observations = tuple(
+        obs.model_copy(update={"value": obs.value + Decimal("0.01")}) if obs.casilla_id == "19" else obs
+        for obs in observation.observations
+    )
+    observation = observation.model_copy(update={"observations": drifted_observations})
+
+    comparison = compare_calculation_to_filed_observation(
+        calculation,
+        observation,
+        required_casillas=_MODELO_130_COMPUTED_CASILLAS,
+    )
+
+    assert comparison.status == "failed"
+    assert len(comparison.drifts) == 1
+    drift = comparison.drifts[0]
+    assert drift.casilla_id == "19"
+    assert drift.formula_id is not None, "computed casilla drift must carry formula_id"
+    assert len(drift.legal_refs) > 0, "computed casilla drift must carry legal_refs"
+    assert len(drift.source_refs) > 0, "computed casilla drift must carry source_refs"
+
+
 def test_filed_state_comparison_reports_composite_missing_and_drift() -> None:
     """Each failure axis must populate independently — one casilla missing
     locally, another missing in the filed observation, and a third with a

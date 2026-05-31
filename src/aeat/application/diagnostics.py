@@ -422,11 +422,11 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
         if context is not None:
             try:
                 await context.close()
-            except Exception:
+            except Exception:  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN: browser context/session close raises heterogeneous async exceptions (TimeoutError, OSError, playwright internals); teardown must complete unconditionally.
                 _log.warning("config repair connectivity context close failed", exc_info=True)
         try:
             await session.close()
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN: browser context/session close raises heterogeneous async exceptions (TimeoutError, OSError, playwright internals); teardown must complete unconditionally.
             _log.warning("config repair connectivity browser close failed", exc_info=True)
 
 
@@ -566,7 +566,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     for ns in namespaces:
         try:
             integrity_items.append(repo.probe_namespace_integrity(ns))
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE: storage probe raises heterogeneous backend errors; per-namespace fallback must not abort the loop.
             _log.debug("secure objects integrity probe failed for namespace=%s", ns, exc_info=True)
             integrity_items.append(
                 SecureObjectNamespaceIntegrity(
@@ -758,7 +758,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
         return ()
     try:
         record = state.active_profile_record()
-    except Exception:  # pragma: no cover - record unreadability handled by storage checks
+    except Exception:  # pragma: no cover  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ: record unreadability handled by upstream storage checks; suppression is final-fallback only.
         _log.debug("config repair profile-key finding probe could not read record", exc_info=True)
         return ()
     if record is None:

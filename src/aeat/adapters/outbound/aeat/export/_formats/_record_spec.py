@@ -30,14 +30,13 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.domain.fincas._rounding import _round_to_cents
+from aeat.core.external_constants import BOE_ENCODING_CHOICES as _BOE_ENCODING_CHOICES
+from aeat.domain.fincas._rounding import round_to_cents as _round_to_cents
 
 from .._errors import AeatExportFormatError
 
-# Per-BOE encoding choices. Windows-1252 is a superset of ISO-8859-1
-# that adds characters in the 0x80-0x9F range; AEAT treats them as
-# equivalent for fichero-BOE purposes. ISO-8859-15 adds the Euro
-# symbol at 0xA4 and other minor deltas.
+# FicheroBoeEncoding must stay as a Literal for static type-checking, but the
+# canonical runtime set is sourced from BOE_ENCODING_CHOICES in external_constants.
 FicheroBoeEncoding = Literal["cp1252", "iso-8859-1", "iso-8859-15"]
 """Allowed wire encodings for fichero-BOE payloads.
 

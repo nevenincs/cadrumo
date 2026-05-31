@@ -78,6 +78,7 @@ def _populated_draft() -> ModeloDraft:
         casilla_provenance=(
             ModeloCasillaProvenance(
                 casilla_id="iva.devengado",
+                formula_id="iva-cuota-devengada-formula",
                 legal_refs=("LIVA.art-92",),
                 source_refs=("AEAT.IVA.2025.casilla-01",),
             ),

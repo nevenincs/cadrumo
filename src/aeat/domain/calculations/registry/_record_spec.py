@@ -11,10 +11,18 @@ details.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Final
+
+from ....core.external_constants import BOE_ENCODING_CHOICES, LATIN_1_ENCODING
+
+# Python codec underscore-alias for the same ISO-8859-1 codec.  Separate
+# constant so the alias is grep-discoverable alongside the canonical
+# ``LATIN_1_ENCODING`` (which uses the hyphenated form ``"latin-1"``).
+_LATIN_1_CODEC_ALIAS: Final[str] = "latin_1"
 
 ENCODING_ALIAS_MAP: Mapping[str, str] = {
-    "latin-1": "iso-8859-1",
-    "latin_1": "iso-8859-1",
+    LATIN_1_ENCODING: "iso-8859-1",
+    _LATIN_1_CODEC_ALIAS: "iso-8859-1",
     "iso-8859-1": "iso-8859-1",
     "iso_8859_1": "iso-8859-1",
     "cp1252": "cp1252",

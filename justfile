@@ -57,7 +57,7 @@ env-setup:
 
 # ── Dev loop ─────────────────────────────────────────────────────────────────
 
-# Lint with ruff and enforce the #162 relative-imports mandate.
+# Lint with ruff and enforce the relative-imports mandate.
 lint:
     uv run ruff check .
     uv run python scripts/check_relative_imports.py
@@ -97,6 +97,19 @@ verify-shims:
 lint-imports:
     uv run --no-sync lint-imports
 
+# Build the HTML documentation (furo) from Google-style docstrings plus
+# the narrative pages under docs/. Output to docs/_build/html (gitignored).
+docs:
+    uv run --no-sync sphinx-build -b html docs docs/_build/html
+
+# Documentation conformance gate: a nitpicky, warnings-as-errors Sphinx
+# build (every unresolved cross-reference fails the build) plus doc8 RST
+# formatting. The build-gate, module-to-stub, and CLI conformance tests
+# run in this lane once they exist.
+docs-check:
+    uv run --no-sync sphinx-build -b html -n -W docs docs/_build/html
+    uv run --no-sync doc8 docs
+
 # Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
     uv run pytest -m "unit or live_read"
@@ -124,7 +137,6 @@ test-live-write:
     uv run pytest -m live_write
 
 # Run the unit suite with coverage and enforce the fail-under floor.
-# See .vault/adr/2026-04-17-pytest-only-testing-adr.md (#15).
 [unix]
 test-cov:
     uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60

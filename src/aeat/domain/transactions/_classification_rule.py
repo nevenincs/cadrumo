@@ -15,7 +15,7 @@ import re
 from datetime import UTC, datetime
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ...core.logging import get_logger
 from ._enums import BusinessClassification
@@ -23,10 +23,9 @@ from ._errors import ClassificationRuleError
 
 _logger = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _RULE_ID_LENGTH: int = 64
-
 
 def _compute_rule_id(
     description_pattern: str,
@@ -37,7 +36,6 @@ def _compute_rule_id(
 
     raw = f"{description_pattern}|{classification.value}|{category_id or ''}"
     return hashlib.sha256(raw.encode()).hexdigest()
-
 
 class LedgerClassificationRule(BaseModel):
     """A persisted ledger classification rule.
@@ -96,7 +94,6 @@ class LedgerClassificationRule(BaseModel):
         """Return ``True`` when this rule's pattern matches ``description`` (case-insensitive)."""
 
         return bool(re.search(self.description_pattern, description, re.IGNORECASE))
-
 
 __all__ = [
     "LedgerClassificationRule",

@@ -18,7 +18,7 @@ contract is enforced at this single chokepoint.
 
 from __future__ import annotations
 
-from ....application.workflow._models import resolve_active_bucket_id
+from ....core._bucket_pointer_io import resolve_active_bucket_id
 from ._errors import GoogleAuthProfileUnboundError
 
 

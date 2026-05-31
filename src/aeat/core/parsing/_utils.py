@@ -40,3 +40,8 @@ def _parse_bool(raw: str | None) -> bool | None:
         return False
     _log.debug("_parse_bool: unrecognised token %r — returning None", token)
     return None
+
+
+#: Public alias — cross-package callers must import ``parse_bool`` rather than
+#: the private ``_parse_bool`` implementation name.
+parse_bool = _parse_bool

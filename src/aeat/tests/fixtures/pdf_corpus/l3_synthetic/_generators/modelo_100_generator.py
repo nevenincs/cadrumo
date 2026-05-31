@@ -17,6 +17,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from aeat.adapters.inbound.borrador._schema import ArtefactKind
+
 from ._generator_shared import (
     A4_HEIGHT,
     A4_WIDTH,
@@ -108,11 +110,11 @@ def _draw_header(c: canvas.Canvas, params: Modelo100GenParams) -> None:
     c.drawString(MARGIN_LEFT, y, f"NIF: {params.tax_id}")
 
     # Stamp the artefact kind marker.
-    if params.artefact_kind == "BORRADOR":
+    if params.artefact_kind == ArtefactKind.BORRADOR:
         y -= 5 * mm
         c.setFont("Helvetica-Bold", 12)
         c.drawString(MARGIN_LEFT, y, "BORRADOR")
-    elif params.artefact_kind == "PREDECLARACION":
+    elif params.artefact_kind == ArtefactKind.PREDECLARACION:
         # Real AEAT simulaciones carry both a diagonal watermark and a
         # non-rotated banner. The banner gives pdfplumber's text stream
         # something to match; the watermark is cosmetic.
@@ -131,7 +133,7 @@ def _draw_header(c: canvas.Canvas, params: Modelo100GenParams) -> None:
 def _draw_footer(c: canvas.Canvas, params: Modelo100GenParams) -> None:
     y = MARGIN_BOTTOM
     c.setFont(LABEL_FONT, LABEL_FONT_SIZE)
-    if params.artefact_kind == "DECLARACION" and params.csv is not None:
+    if params.artefact_kind == ArtefactKind.DECLARACION and params.csv is not None:
         c.drawString(MARGIN_LEFT, y, f"Codigo Seguro de Verificacion: {params.csv}")
 
 

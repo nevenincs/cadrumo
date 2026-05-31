@@ -32,10 +32,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core.classification import SensitivityClass
 from .....core.errors import CoreValidationError
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time._utc import _validate_utc_aware
@@ -49,8 +50,7 @@ from ..errors import (
 from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class AeadAlgorithm(StrEnum):
     """Closed catalogue of AEAD identifiers recognised by the substrate.
@@ -62,7 +62,6 @@ class AeadAlgorithm(StrEnum):
     """
 
     AES_256_GCM_V1 = "aes-256-gcm-v1"
-
 
 class EncryptionMetadata(BaseModel):
     """Encryption envelope describing how the payload was encrypted.
@@ -105,7 +104,6 @@ class EncryptionMetadata(BaseModel):
     def associated_data(self) -> bytes:
         """Decode the associated-data bytes."""
         return base64.b64decode(self.associated_data_b64.encode("ascii"), validate=True)
-
 
 class Envelope[PayloadT: BaseModel](BaseModel):
     """Frozen pydantic v2 envelope wrapping a typed file-backed payload.
@@ -159,7 +157,6 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         # the runtime object IS type[Envelope[PayloadT]].
         return cls.__class_getitem__(payload_cls)  # type: ignore[return-value]
 
-
 @runtime_checkable
 class EnvelopeMigrator[PayloadT: BaseModel](Protocol):
     """Pluggable forward-migrator for one envelope schema version transition."""
@@ -170,7 +167,6 @@ class EnvelopeMigrator[PayloadT: BaseModel](Protocol):
     def migrate(self, envelope: Envelope[PayloadT]) -> Envelope[PayloadT]:
         """Return the migrated envelope advanced to ``target_version``."""
         ...
-
 
 def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
@@ -188,7 +184,7 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
-            encoding="utf-8",
+            encoding=_UTF_8_ENCODING,
             dir=target.parent,
             prefix=f"{target.stem}.",
             suffix=".tmp",
@@ -205,7 +201,6 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise
-
 
 def load_envelope[PayloadT: BaseModel](
     path: Path,
@@ -242,7 +237,7 @@ def load_envelope[PayloadT: BaseModel](
             ``max_supported_version`` or no migrator chain advances it
             to ``max_supported_version``.
     """
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding=_UTF_8_ENCODING)
     envelope = envelope_type.model_validate_json(raw)
     if envelope.classification != expected_class:
         raise ClassificationError(
@@ -256,7 +251,6 @@ def load_envelope[PayloadT: BaseModel](
     if envelope.schema_version < max_supported_version:
         envelope = _apply_migrators(envelope, max_supported_version, migrators)
     return envelope
-
 
 def _apply_migrators[PayloadT: BaseModel](
     envelope: Envelope[PayloadT],
@@ -305,10 +299,8 @@ def _apply_migrators[PayloadT: BaseModel](
         )
     return current
 
-
 _HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"aeat.envelope.payload.v1"
 _CIPHER_ENVELOPE_AAD_PREFIX = b"aeat.envelope.cipher.v1::"
-
 
 class CipherEnvelope(BaseModel):
     """On-disk wire form for ciphertext-at-rest envelopes.
@@ -347,7 +339,6 @@ class CipherEnvelope(BaseModel):
         except CoreValidationError as exc:
             raise StorageValidationError(str(exc)) from exc
 
-
 def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
     """Build the AEAD associated-data binding for a cipher envelope.
 
@@ -357,7 +348,6 @@ def _build_aad(classification: SensitivityClass, hkdf_context: bytes) -> bytes:
     onto another.
     """
     return _CIPHER_ENVELOPE_AAD_PREFIX + classification.value.encode("ascii") + b"::" + hkdf_context
-
 
 def _derive_envelope_key(
     *,
@@ -370,7 +360,6 @@ def _derive_envelope_key(
         salt=_HKDF_CONTEXT_ENVELOPE_PAYLOAD,
         context=hkdf_context,
     )
-
 
 def save_encrypted_envelope(
     envelope: Envelope[Any],
@@ -423,7 +412,7 @@ def save_encrypted_envelope(
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
-            encoding="utf-8",
+            encoding=_UTF_8_ENCODING,
             dir=target.parent,
             prefix=f"{target.stem}.",
             suffix=".tmp",
@@ -440,7 +429,6 @@ def save_encrypted_envelope(
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
         raise
-
 
 def load_encrypted_envelope[PayloadT: BaseModel](
     path: Path,
@@ -482,7 +470,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
             schema version exceeds ``max_supported_version`` or no
             migrator chain can advance it.
     """
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding=_UTF_8_ENCODING)
     cipher_envelope = CipherEnvelope.model_validate_json(raw)
     if cipher_envelope.classification != expected_class:
         raise ClassificationError(
@@ -514,7 +502,6 @@ def load_encrypted_envelope[PayloadT: BaseModel](
         inner = _apply_migrators(inner, max_supported_version, migrators)
     return inner
 
-
 def reencrypt_envelope_file[PayloadT: BaseModel](
     path: Path,
     envelope_type: type[Envelope[PayloadT]],
@@ -543,7 +530,7 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     """
     if not path.exists():
         return False
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding=_UTF_8_ENCODING)
     # If the file already round-trips as a CipherEnvelope, it is
     # already ciphertext-at-rest; nothing to do.
     try:
@@ -573,7 +560,6 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
         hkdf_context=hkdf_context,
     )
     return True
-
 
 __all__ = [
     "CipherEnvelope",

@@ -10,6 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.external_constants import UTF_8_ENCODING
 from ....persistence.storage import SensitivityClass
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository
@@ -55,7 +56,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
         classification=SensitivityClass.SESSION,
         schema_version=_SESSION_VERSION,
         written_at=payload.written_at,
-        payload=payload.model_dump_json().encode("utf-8"),
+        payload=payload.model_dump_json().encode(UTF_8_ENCODING),
     )
 
 
@@ -70,7 +71,7 @@ def load(path: Path) -> PersistedBrowserSession | None:
     )
     if record is None:
         return None
-    return PersistedBrowserSession.model_validate_json(record.payload.decode("utf-8"))
+    return PersistedBrowserSession.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
 def delete(path: Path) -> bool:
@@ -94,5 +95,5 @@ def _repository() -> SecureObjectRepository:
 
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:
-    payload = json.dumps(storage_state, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    payload = json.dumps(storage_state, sort_keys=True, separators=(",", ":"), default=str).encode(UTF_8_ENCODING)
     return hashlib.sha256(payload).hexdigest()

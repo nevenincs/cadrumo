@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification import SensitivityClass
+from ....core.external_constants import UTF_8_ENCODING
 from ._records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 _NAMESPACE_CLIENT = "aeat.google.oauth.client"
@@ -41,7 +42,7 @@ def save_client(profile: str, client: OAuthClient) -> None:
         classification=SensitivityClass.SECRET,
         schema_version=_RECORD_VERSION,
         written_at=datetime.now(UTC),
-        payload=client.model_dump_json().encode("utf-8"),
+        payload=client.model_dump_json().encode(UTF_8_ENCODING),
     )
 
 
@@ -56,7 +57,7 @@ def load_client(profile: str) -> OAuthClient | None:
     )
     if record is None:
         return None
-    return OAuthClient.model_validate_json(record.payload.decode("utf-8"))
+    return OAuthClient.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
 def save_token(profile: str, token: OAuthToken) -> None:
@@ -68,7 +69,7 @@ def save_token(profile: str, token: OAuthToken) -> None:
         classification=SensitivityClass.SECRET,
         schema_version=_RECORD_VERSION,
         written_at=datetime.now(UTC),
-        payload=token.model_dump_json().encode("utf-8"),
+        payload=token.model_dump_json().encode(UTF_8_ENCODING),
     )
 
 
@@ -83,7 +84,7 @@ def load_token(profile: str) -> OAuthToken | None:
     )
     if record is None:
         return None
-    return OAuthToken.model_validate_json(record.payload.decode("utf-8"))
+    return OAuthToken.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
 def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
@@ -95,7 +96,7 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
         classification=SensitivityClass.FINANCIAL,
         schema_version=_RECORD_VERSION,
         written_at=datetime.now(UTC),
-        payload=metadata.model_dump_json().encode("utf-8"),
+        payload=metadata.model_dump_json().encode(UTF_8_ENCODING),
     )
 
 
@@ -110,7 +111,7 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
     )
     if record is None:
         return None
-    return OAuthMetadata.model_validate_json(record.payload.decode("utf-8"))
+    return OAuthMetadata.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
 def save_drive_config(profile: str, config: DriveConfig) -> None:
@@ -122,7 +123,7 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
         classification=SensitivityClass.FINANCIAL,
         schema_version=_RECORD_VERSION,
         written_at=datetime.now(UTC),
-        payload=config.model_dump_json().encode("utf-8"),
+        payload=config.model_dump_json().encode(UTF_8_ENCODING),
     )
 
 
@@ -137,7 +138,7 @@ def load_drive_config(profile: str) -> DriveConfig | None:
     )
     if record is None:
         return None
-    return DriveConfig.model_validate_json(record.payload.decode("utf-8"))
+    return DriveConfig.model_validate_json(record.payload.decode(UTF_8_ENCODING))
 
 
 def delete_session(profile: str) -> tuple[bool, bool]:

@@ -33,7 +33,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.identity import ProfileId
 from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
@@ -44,14 +44,14 @@ from ..live._censo import (
 from ._censo_errors import (
     CensoApplyConflictError,
     CensoNotAvailableError,
+    CensoSyncError,
 )
 from ._repository import UserProfileLifecycleRepository
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 CENSUS_SOURCE_TAG: Final = "aeat_census_read"
 """``UserProfileFact.source`` value stamped on every census-derived fact."""
-
 
 class CensoComparisonStatus(StrEnum):
     """Per-field comparison outcome between snapshot and profile.
@@ -69,7 +69,6 @@ class CensoComparisonStatus(StrEnum):
     PROFILE_ONLY = "profile_only"
     CENSUS_ONLY = "census_only"
 
-
 class CensoFieldComparison(BaseModel):
     """One field-by-field row of a :class:`CensoProfileComparison`."""
 
@@ -79,7 +78,6 @@ class CensoFieldComparison(BaseModel):
     census_value: str | None
     profile_value: str | None
     status: CensoComparisonStatus
-
 
 class CensoProfileComparison(BaseModel):
     """Result of ``census compare``: full field-by-field diff payload."""
@@ -103,7 +101,6 @@ class CensoProfileComparison(BaseModel):
     def profile_only(self) -> tuple[CensoFieldComparison, ...]:
         return tuple(row for row in self.rows if row.status is CensoComparisonStatus.PROFILE_ONLY)
 
-
 class CensoApplyResult(BaseModel):
     """Result of ``census apply``: which facts landed on the profile."""
 
@@ -115,7 +112,6 @@ class CensoApplyResult(BaseModel):
     unchanged_paths: tuple[str, ...] = Field(default_factory=tuple)
     seeded_home_office_categories: tuple[str, ...] = Field(default_factory=tuple)
 
-
 CensoFactSource = Callable[[], Mapping[str, str]]
 """Callable returning the AEAT-side census facts for one refresh.
 
@@ -123,7 +119,6 @@ In production this is wired to the sede G313 adapter; in tests it is
 a constant callable returning a fixture dictionary. The service stays
 sede-agnostic so the same body covers both call paths.
 """
-
 
 class CensoSyncService:
     """Four-verb operator-facing service over census snapshots.
@@ -144,7 +139,7 @@ class CensoSyncService:
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
-            raise ValueError("bucket_id must not be blank")
+            raise CensoSyncError("bucket_id must not be blank")
         self._snapshots = snapshots or CensoSnapshotService(bucket_id=self._bucket_id)
         self._profiles = profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
 
@@ -410,7 +405,6 @@ class CensoSyncService:
             return None
         return ratio
 
-
 def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:
     """Flatten a profile's facts into a path → string-value mapping.
 
@@ -423,14 +417,12 @@ def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:
         return {}
     return {fact.path: _coerce_to_str(fact.value) for fact in profile.facts}
 
-
 def _coerce_to_str(value: object) -> str:
     if value is None:
         return ""
     if isinstance(value, bool):
         return "true" if value else "false"
     return str(value)
-
 
 def _compare(
     census_facts: Mapping[str, str],
@@ -460,7 +452,6 @@ def _compare(
             ),
         )
     return tuple(rows)
-
 
 __all__ = [
     "CENSUS_SOURCE_TAG",

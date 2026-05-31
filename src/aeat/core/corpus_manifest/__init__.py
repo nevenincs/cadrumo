@@ -30,7 +30,7 @@ from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ..errors import CoreValidationError
 from ..logging import get_logger as _get_logger
@@ -38,7 +38,7 @@ from ..time._utc import _validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
 _logger = _get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _MANIFEST_VERSION = 1
 """Wire-format version of the on-disk manifest schema."""
@@ -55,7 +55,6 @@ _CORPUS_SHA256_KWARGS: dict[str, object] = {
     "max_length": 64,
     "pattern": r"^[0-9a-f]{64}$",
 }
-
 
 class CorpusEntry(BaseModel):
     """One file's integrity record under a corpus root.
@@ -94,7 +93,6 @@ class CorpusEntry(BaseModel):
                 raise CorpusManifestError(f"relative_path must not contain dot tokens: {value!r}")
         return value
 
-
 class CorpusManifest(BaseModel):
     """Self-attesting manifest covering every file under a corpus root.
 
@@ -131,7 +129,6 @@ class CorpusManifest(BaseModel):
         except CoreValidationError as exc:
             raise CorpusManifestError(str(exc)) from exc
 
-
 class CorpusManifestDiff(BaseModel):
     """Result of comparing a manifest against the live corpus on disk.
 
@@ -151,7 +148,6 @@ class CorpusManifestDiff(BaseModel):
         """Return ``True`` iff every tracked file's hash matches the manifest."""
         return not (self.added or self.removed or self.changed)
 
-
 def _hash_file(path: Path) -> tuple[str, int]:
     """Return ``(sha256_hex, content_length)`` for ``path``.
 
@@ -165,7 +161,6 @@ def _hash_file(path: Path) -> tuple[str, int]:
             digest.update(chunk)
             length += len(chunk)
     return digest.hexdigest(), length
-
 
 def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:
     """Yield every regular file under ``corpus_root`` excluding the manifest.
@@ -195,7 +190,6 @@ def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:
             continue
         yield path
 
-
 def _canonical_manifest_body(
     *,
     manifest_version: int,
@@ -223,7 +217,6 @@ def _canonical_manifest_body(
         ],
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-
 
 def build_corpus_manifest(
     corpus_root: Path,
@@ -293,7 +286,6 @@ def build_corpus_manifest(
         manifest_sha256=manifest_sha256,
     )
 
-
 def verify_corpus_manifest(
     corpus_root: Path,
     *,
@@ -336,7 +328,6 @@ def verify_corpus_manifest(
         changed=tuple(sorted(changed)),
     )
 
-
 def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     """Atomically persist ``manifest`` as JSON to ``target``."""
     resolved = target.resolve()
@@ -368,7 +359,6 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
             tmp_path.unlink(missing_ok=True)
         _logger.error("save_corpus_manifest: failed to write manifest to %s", resolved, exc_info=True)
         raise
-
 
 def load_corpus_manifest(target: Path) -> CorpusManifest:
     """Load and verify a manifest's self-attesting digest.
@@ -422,11 +412,9 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
     )
     return manifest
 
-
 def manifest_path_for(corpus_root: Path) -> Path:
     """Return the canonical manifest sidecar path inside ``corpus_root``."""
     return corpus_root / _MANIFEST_FILENAME
-
 
 def assert_corpus_clean(corpus_root: Path) -> None:
     """Verify the on-disk manifest matches the corpus root.
@@ -450,7 +438,6 @@ def assert_corpus_clean(corpus_root: Path) -> None:
             f"added={list(diff.added)} removed={list(diff.removed)} changed={list(diff.changed)}",
         )
     _logger.debug("assert_corpus_clean: corpus %r is clean", manifest.corpus_root_name)
-
 
 __all__ = [
     "CorpusEntry",

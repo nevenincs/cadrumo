@@ -177,8 +177,8 @@ aggregation:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
         aggregation bucket.
-      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
-      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
+      candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation period.'
+      unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
   modelo_bindings:
     errors:
       unsupported_period: Unsupported modelo period for ledger aggregation.
@@ -216,11 +216,24 @@ aggregation:
       period_mismatch: Period does not match the expected Renta ledger period.
       quarterly_period_required: Quarterly period is required for M130 income aggregation
         (e.g. 2024Q1).
+  service:
+    errors:
+      envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
+      envelope_period_mismatch: Aggregation period does not match result period.
+      envelope_provider_payload_mismatch: Provider does not match aggregation payload
+        type.
+      observations_mismatch: Observations cannot be supplied for the requested modelo.
+      per_modelo_modelos_not_unique: Per-modelo aggregation modelos must be owned
+        by exactly one provider.
+      per_modelo_providers_not_unique: Per-modelo aggregation providers must be unique.
+      provider_modelos_not_unique: Provider modelos must be unique.
+      result_source_kinds_not_unique: Result source kinds must be unique.
+      source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
   source_mesh:
     errors:
-      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
-      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
-      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
+      duplicate_binding_owner: 'Internal error: duplicate binding owner in source mesh.'
+      duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner in source mesh.'
+      duplicate_relation_owner: 'Internal error: duplicate relation owner in source mesh.'
 application:
   auth:
     acquisition_lock:
@@ -249,8 +262,10 @@ application:
           one before continuing.
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     errors:
-      provider_reserved: 'Authentication provider {provider} is reserved and not yet implemented.'
-      session_field_not_datetime: 'Persisted session field {field} must be a datetime or ISO-8601 string.'
+      provider_reserved: Authentication provider {provider} is reserved and not yet
+        implemented.
+      session_field_not_datetime: Persisted session field {field} must be a datetime
+        or ISO-8601 string.
     operator:
       alignment:
         both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -322,8 +337,8 @@ application:
         no_provider: No auth provider is configured; nothing to probe locally.
         no_session: No persisted AEAT session token on disk; run `aeat config auth
           login` to acquire one.
-        session_expired: application.auth.operator.probe.session_expired
-        session_live: application.auth.operator.probe.session_live
+        session_expired: 'Session expired'
+        session_live: 'Session active'
     provider_impact:
       certificate_ready: Certificate auth is ready. The operator keeps the same CLI
         filing flow for AEAT-backed reads; every provider uses the same command workflow.
@@ -480,6 +495,8 @@ application:
         by this application version.
   wizard:
     errors:
+      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
+        requires supplied_question_ids — edit is a patch, not a full rewrite.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
         fallback).
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
@@ -487,6 +504,11 @@ application:
         from an interactive terminal to use the guided setup.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    output_labels:
+      active_profile: 'Active profile'
+      profile: 'Profile'
+      status: 'Status'
+      next: 'Next'
     status:
       errors:
         missing_tax_id: Active profile is missing tax.id.
@@ -677,7 +699,7 @@ cli:
         acquisition:
           outcome:
             aeat_403: AEAT 403/auth gate
-            authenticated: authenticated
+            authenticated: 'Authenticated'
             certificate_required: certificate required
             dom_drift: AEAT page shape changed
             live_navigation_failed: live navigation failed
@@ -685,7 +707,7 @@ cli:
             operator_timeout: operator approval timed out
             pending_clave_request: pending Cl@ve request
             qr_required: QR approval required
-            unknown: unknown
+            unknown: 'Unknown'
             wrong_identity: wrong identity
         app_help: AEAT IVA compensation wallet capture (read-only; allows only own-name
           representation and the guarded wallet read query).
@@ -890,9 +912,14 @@ cli:
         seed_conflict: 'Internal error: conflict with existing IVA compensation seed
           record.'
         seed_filing_year_help: Filing year of the Modelo 303 period to seed.
-        seed_help: Declare a Modelo 303 carry-forward balance for a period that pre-dates
-          local history. Use this once to seed the first period so subsequent M303
-          prefill resolves modelo-303-compensacion-pendiente-anteriores correctly.
+        seed_help: "Declare a Modelo 303 carry-forward balance for a period that pre-dates
+          local history. Refuses if a record already exists for the period.\n\nTwo cases:\n\n
+          --amount 0   True first-period: this is the taxpayer's first ever Modelo 303
+          filing under this NIF. Casilla 110 is zero because no prior compensation balance
+          exists (LIVA art. 99.5, Ley 37/1992). The reconciliation layer treats this as
+          first_period_zero — non-blocking and legally certain.\n\n  --amount X   Carry-in:
+          the taxpayer has filed prior M303s under a different tool or directly with AEAT.
+          X is the compensacion pendiente de periodos posteriores from the last filed M303."
         seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
         seed_negative_amount: The seed amount cannot be negative.
         seed_no_nif: No NIF defined for the seed operation; associate one with the
@@ -1610,21 +1637,15 @@ cli:
       target_browser: browser
       target_label: Target
     dead_end:
-      registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_bundled: 'Internal error: the registry is bundled into the package and cannot be repaired manually.'
       registry_integrity_internal: Internal application problem; not a fault in your
         profile and not something you can fix yourself.
     next_action:
-      inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+      inspect_registry_toml: 'Inspect the registry TOML sources to identify the problem.'
     profile:
       errors:
-        ambiguous_profile: 'Ambiguous profile label: %{profile}'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: No active profile and no --profile NAME supplied; run `aeat
-          config profile switch NAME` first.
-        profile_empty: --profile must not be empty when supplied.
-        unknown_profile: 'Unknown profile: %{profile}'
-        unknown_profile_key: 'Unknown profile key: %{key}'
       get_help: Read one profile key stored value.
       help: Engineer-only profile field inspection and surgical edits.
       key_help: Profile key.
@@ -1655,8 +1676,8 @@ cli:
           neither.
       help: Inventory the secure-object index by namespace.
       labels:
-        count: count
-        namespace: namespace
+        count: 'Count'
+        namespace: 'Namespace'
       list_help: List secure-object keys stored under one namespace.
       namespace_help: Namespace to inventory.
       unreadable_help: Restrict the listing to undecryptable rows.
@@ -1666,28 +1687,28 @@ cli:
       auth_session_ready: Authentication session ready for %{provider}
       auth_state_unreadable: Authentication readiness cannot be checked until secure
         workflow state is readable.
-      profile_keys_set: cli.diagnostics.summary.profile_keys_set
-      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_keys_set: '%{present}/%{total} profile keys set.'
+      profile_missing_keys: '%{count} profile key(s) missing.'
       profile_none: No profile configured
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'Profile cannot be read: %{status}'
-      registry_counts: cli.diagnostics.summary.registry_counts
-      registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
-      registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
-      registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
-      registry_unavailable: cli.diagnostics.summary.registry_unavailable
-      secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
-      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      registry_counts: '%{modelos} models and %{casillas} fields in the registry.'
+      registry_integrity_failed: 'Registry integrity check: FAILED.'
+      registry_integrity_ok: 'Registry integrity check: OK.'
+      registry_integrity_skipped: 'Registry integrity check: skipped.'
+      registry_unavailable: 'Registry is unavailable.'
+      secure_objects_empty: 'Secure object store is empty.'
+      secure_objects_readable: '%{readable} readable secure-object namespace(s): %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} unreadable row(s), %{readable} readable
         row(s)'
-      state_backend_readable: cli.diagnostics.summary.state_backend_readable
-      state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
-      venv_in_sync: cli.diagnostics.summary.venv_in_sync
-      venv_stale: cli.diagnostics.summary.venv_stale
+      state_backend_readable: 'Workflow state store is readable.'
+      state_backend_unreadable: 'Workflow state store is not readable.'
+      venv_in_sync: 'Virtual environment is in sync.'
+      venv_stale: 'Virtual environment is stale.'
     version:
-      no_revisions: cli.diagnostics.version.no_revisions
-      registry_summary: cli.diagnostics.version.registry_summary
-      registry_unavailable: cli.diagnostics.version.registry_unavailable
+      no_revisions: 'No registry revisions available.'
+      registry_summary: '%{package} %{version}: %{modelos} models, %{casillas} fields, %{formulas} formulas, %{revisions} revisions.'
+      registry_unavailable: '%{package} %{version}: registry unavailable (%{error}).'
   ledger:
     add:
       actor_help: Operator name recorded on the bucket event
@@ -2010,9 +2031,9 @@ cli:
     remove_key_help: Dotted locale key to remove.
     remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
-    set_key_help: cli.locales.set_key_help
-    set_locale_help: cli.locales.set_locale_help
-    set_value_help: cli.locales.set_value_help
+    set_key_help: 'Dotted locale key to set.'
+    set_locale_help: 'Locale code to update (e.g. en, es, ca).'
+    set_value_help: 'Replacement locale value.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -2427,7 +2448,8 @@ cli:
 core:
   profile:
     errors:
-      registration_duplicate_callable: 'Project answers implementation registered twice with different callables; it must be registered exactly once.'
+      registration_duplicate_callable: Project answers implementation registered twice
+        with different callables; it must be registered exactly once.
 dotted:
   key: Dotted key
 entries:
@@ -2614,7 +2636,7 @@ errors:
       for this storage operation.
     auth_session_corrupt: The persisted session metadata cannot be parsed. Authenticate
       again to create a fresh session.
-    auth_session_deserialization: errors.auth.auth_session_deserialization
+    auth_session_deserialization: 'Stored authentication session data could not be deserialised. Re-authenticate to create a new session.'
     auth_session_unavailable: No verified active AEAT session is available. Authenticate
       before continuing.
     auth_storage_bucket_recovery_verification: The recovery code entered is not valid.
@@ -2634,11 +2656,11 @@ errors:
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
   calc:
-    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
+    age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has no filing year.'
     binding_value_missing: Binding {binding_id} has no supplied value.
     bound_casilla_binding_value_missing: Binding {binding_id} has no supplied value.
-    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
-    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
+    bound_input_smuggled_without_binding_value: 'Internal error: bound input field passed without a binding value.'
+    bound_projection_inconsistent: 'Internal error: bound projection is inconsistent.'
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
@@ -2649,8 +2671,8 @@ errors:
     casilla_referenced_before_evaluation: Casilla {casilla_id} referenced before its
       formula evaluated.
     computed_supplied_as_input: 'Computed casillas cannot be supplied as inputs: {casilla_ids}.'
-    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
-    date_binding_value_missing: errors.calc.date_binding_value_missing
+    date_binding_used_as_decimal_leaf: 'Internal error: date binding used as a decimal leaf.'
+    date_binding_value_missing: 'Date binding value is missing.'
     dispatch_key_unknown: 'Dispatch key {dispatch_key!r} is not in the dispatch table
       for op {op} on binding {binding_id} (declared keys: {available_keys}).'
     dispatch_parameter_kind: Parameter {parameter_id} kind mismatch for op {op}; expected
@@ -2664,11 +2686,11 @@ errors:
       leaf.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
-    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
+    text_input_non_text_casillas: 'Text input supplied for non-text fields: %{casilla_ids}.'
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
-    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
-    unsupported_comparison_op: errors.calc.unsupported_comparison_op
-    unsupported_op: errors.calc.unsupported_op
+    unknown_text_input_casillas: 'Unknown text-input field identifiers: %{casilla_ids}.'
+    unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
+    unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
     no_snapshot_captured: No census snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
@@ -2690,6 +2712,12 @@ errors:
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
+    error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
+      state while building the export plan.
+    error_calc_sheets_parity: The parity harness scenario references casilla numbers
+      that are not present in the registry snapshot.
+    error_calc_sheets_record: A spreadsheet record operation failed due to an invalid
+      column index or malformed A1 address.
     error_calculations_registry: An error occurred loading, resolving or validating
       the calculation registry.
     error_calculations_registry_load: The calculation registry files could not be
@@ -2702,12 +2730,14 @@ errors:
     error_categories_validation: A category record failed validation.
     error_config_boundary: The config command encountered an unexpected internal error.
     error_deadlines_deadline: An error occurred in the deadline calculation.
-    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
+    error_deadlines_missing_windows: 'Deadline windows are missing.'
     error_deadlines_profile: The self-employed profile could not be loaded or validated
       for the deadline calculation.
     error_deadlines_schedule_computation: The engine could not produce a valid deadline
       schedule. Check the year requested and the profile facts.
     error_deadlines_validation: A deadline record failed validation.
+    error_decimal_format: 'A decimal formatting error occurred: the value is None
+      but no fallback was configured.'
     error_declaracion_template_not_detected: The declaration PDF's template revision
       could not be auto-detected.
     error_domain: A domain logic error occurred.
@@ -2738,6 +2768,8 @@ errors:
       linked.
     error_financial_invoices_invoice_not_found: The requested invoice was not found.
     error_financial_provider: An error occurred while importing the financial document.
+    error_financial_provider_config: A financial provider subclass declaration is
+      missing or carries an invalid corpus attribute.
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
     error_financial_vat: A VAT calculation error occurred.
@@ -2811,6 +2843,7 @@ errors:
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
     error_profile_tax_residence: A tax-residence profile error occurred.
     error_profile_validation: A profile record failed validation.
+    error_redaction: A redaction helper received an argument of the wrong type.
     error_renta: An error occurred in the RENTA calculation.
     error_renta_validation: A RENTA field value is not valid.
     error_rental_amortization_cap_exceeded: The cumulative amortization would exceed
@@ -3054,10 +3087,10 @@ errors:
       was recorded outside an active run context.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
-    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
+    internal_profile_keys_registration: 'Internal error: profile keys could not be registered.'
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
-    internal_profile_registration: errors.internal.internal_profile_registration
+    internal_profile_registration: 'Internal error: profile could not be registered.'
     internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
       was registered a second time with different objects.'
     internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
@@ -3142,11 +3175,11 @@ errors:
       with the input provided.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
       not resolve to a registered bucket.
-    refused_auth_diagnostic_payload: errors.refused.refused_auth_diagnostic_payload
+    refused_auth_diagnostic_payload: 'Refused: authentication diagnostic payload is invalid.'
     refused_auth_diagnostic_phone_state: The phone state value provided is not recognised.
       Use one of the valid operator phone-state values.
-    refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
-    refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
+    refused_auth_login_live_tests_disabled: 'Live authentication tests are disabled.'
+    refused_auth_login_precondition: 'Authentication login precondition is not met.'
     refused_auth_provider_reserved: The selected authentication provider is reserved
       and unavailable.
     refused_calculations_casilla_constraint: A computed casilla value falls outside
@@ -3202,8 +3235,8 @@ errors:
       year provided.
     refused_inventory_service_input: An input provided violates the inventory contract.
       Correct the input and try again.
-    refused_iva_compensation_decimal_parse: errors.refused.refused_iva_compensation_decimal_parse
-    refused_iva_compensation_year_range: errors.refused.refused_iva_compensation_year_range
+    refused_iva_compensation_decimal_parse: 'Refused: IVA compensation amount could not be parsed as a decimal.'
+    refused_iva_compensation_year_range: 'Refused: IVA compensation year is outside the accepted range.'
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
     refused_ledger_business_operation_invoice_input: An input provided violates the
@@ -3282,7 +3315,7 @@ errors:
     refused_sanitization_unknown_surface: A personal-data surface was detected that
       the sanitizer cannot handle. Human review is required.
     refused_sanitization_validation: The sanitizer parameters failed validation.
-    refused_source_mesh_invariant: errors.refused.refused_source_mesh_invariant
+    refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: The import collides with a storage bucket
       that already exists.
     refused_storage_bucket_no_active: No active bucket could be resolved. Select a
@@ -3318,7 +3351,7 @@ errors:
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
   snapshot:
-    modelo_not_registered: errors.snapshot.modelo_not_registered
+    modelo_not_registered: 'Model is not registered in the registry.'
   storage:
     engine:
       create_failed: The storage database engine could not be created. Check the configured
@@ -3369,6 +3402,12 @@ filing:
     out_of_range: Value out of allowed range
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
+live:
+  errors:
+    expediente_not_found: AEAT declaration register did not return the requested expediente.
+    iva_history_modelo_303_only: IVA compensation history capture only accepts Modelo
+      303 observations.
+    year_range_invalid: From-year must be less than or equal to to-year.
 locales:
   cli:
     audit:
@@ -3389,7 +3428,7 @@ profile:
     deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
       € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
       under 3 with declared working months.'
-    incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
+    incremento_guarderia_applied: 'Nursery supplement (Art. 81 bis LIRPF) applied: %{amount} EUR (box 0613). Limit: min(actual costs, children under 3 x 1000 EUR, social-security contributions 2024).'
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
@@ -3402,12 +3441,22 @@ profile:
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 review:
+  adapters:
+    errors:
+      invoices_load_failed: Failed to load invoices catalogue from secure backend.
+      transactions_load_failed: Failed to load transactions catalogue from secure
+        backend.
   filing:
     draft_placeholder_summary: Draft pending
     finding_summary: Validation finding on draft
     stale_approval_summary: Draft approval is stale
   invoice:
     summary: Invoice pending review
+  operator:
+    errors:
+      item_not_found: Review item not found.
+      unknown_kind: Unknown review kind.
+      unsupported_item_type: Unsupported review item type.
   transaction:
     summary: Transaction pending classification
 sheets:
@@ -3446,6 +3495,9 @@ sheets:
       supplier_tax_id: Supplier tax id
       transfer_pricing_method_code: Transfer pricing method
       valuation_amount: Valuation
+some:
+  locale:
+    key: 'Some locale key'
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
@@ -3526,8 +3578,8 @@ wizard:
     simplificado: Simplified
   commands:
     status:
-      created: created
-      updated: updated
+      created: 'Created'
+      updated: 'Updated'
   demo:
     description: A demonstration section to test wizard functionality
     section:
@@ -3694,21 +3746,21 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: wizard.setup.flags.situacion-familiar.choices.casado.description
-            label: wizard.setup.flags.situacion-familiar.choices.casado.label
+            description: 'Valid marriage - joint tax return available (Art. 82.1.1 LIRPF)'
+            label: 'Married'
           pareja-hecho-no-registrada:
-            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.description
-            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.label
+            description: 'Unregistered civil partnership - joint tax return NOT available'
+            label: 'Unregistered civil partnership'
           pareja-hecho-registrada:
-            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.description
-            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.label
+            description: 'Registered in an autonomous community register - joint tax return available (Art. 82.1.2 LIRPF)'
+            label: 'Registered civil partnership'
           separado-divorciado:
-            label: wizard.setup.flags.situacion-familiar.choices.separado-divorciado.label
+            label: 'Separated / divorced'
           soltero:
-            label: wizard.setup.flags.situacion-familiar.choices.soltero.label
+            label: 'Single'
         help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
           is available and which family unit variant applies.'
-        prompt: wizard.setup.flags.situacion-familiar.prompt
+        prompt: 'Marital status (LIRPF Art. 82)'
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:

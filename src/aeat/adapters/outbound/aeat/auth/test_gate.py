@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-import os
-from collections.abc import Iterator
-from contextlib import contextmanager
-
 import pytest
 
-from .....core.access_gate import _PYTEST_CURRENT_TEST_ENV
 from .....core.config import Settings, override_settings
 from ..export import LiveSubmitForbiddenError
 from . import (
@@ -20,37 +15,10 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-@contextmanager
-def _pytest_current_test(value: str | None) -> Iterator[None]:
-    """Pin ``os.environ[PYTEST_CURRENT_TEST]`` for the with-block.
-
-    ``PYTEST_CURRENT_TEST`` is pytest infrastructure, set by the runner
-    itself; the gate reads it directly from ``os.environ`` as the only
-    documented exception to the Settings single-source-of-truth rule.
-    Testing the present/absent branches requires manipulating that env
-    var, so this helper saves the prior value and restores it on exit
-    — equivalent to ``monkeypatch.setenv``/``delenv`` but without the
-    fixture indirection retired by the project no-monkeypatch mandate
-    (CLAUDE.md).
-    """
-    prior = os.environ.get(_PYTEST_CURRENT_TEST_ENV)
-    if value is None:
-        os.environ.pop(_PYTEST_CURRENT_TEST_ENV, None)
-    else:
-        os.environ[_PYTEST_CURRENT_TEST_ENV] = value
-    try:
-        yield
-    finally:
-        if prior is None:
-            os.environ.pop(_PYTEST_CURRENT_TEST_ENV, None)
-        else:
-            os.environ[_PYTEST_CURRENT_TEST_ENV] = prior
-
-
 def test_snapshot_env_reports_present_values() -> None:
-    with override_settings(aeat_live_tests_enabled="1"), _pytest_current_test(None):
+    with override_settings(aeat_live_tests_enabled="1"):
         settings = Settings(aeat_live_tests_enabled="1")
-        snapshot = AeatAccessGate(settings).snapshot_env()
+        snapshot = AeatAccessGate(settings).snapshot_env(pytest_current_test="")
         assert isinstance(snapshot, AeatGateEnvSnapshot)
         assert snapshot.aeat_live_tests_enabled == "1"
         assert snapshot.pytest_current_test == ""
@@ -59,18 +27,20 @@ def test_snapshot_env_reports_present_values() -> None:
 def test_snapshot_env_reflects_settings_field_value() -> None:
     # snapshot_env reports ``settings.aeat_live_tests_enabled`` (Settings
     # surface) and ``os.environ[PYTEST_CURRENT_TEST]`` (pytest
-    # infrastructure only — not AEAT config, no Settings mirror).
-    with override_settings(aeat_live_tests_enabled=""), _pytest_current_test(None):
+    # infrastructure only — not AEAT config, no Settings mirror). Tests
+    # pass an explicit value via the snapshot_env DI seam rather than
+    # mutating the real env var.
+    with override_settings(aeat_live_tests_enabled=""):
         settings = Settings(aeat_live_tests_enabled="")
-        snapshot = AeatAccessGate(settings).snapshot_env()
+        snapshot = AeatAccessGate(settings).snapshot_env(pytest_current_test="")
         assert snapshot.aeat_live_tests_enabled == settings.aeat_live_tests_enabled
         assert snapshot.pytest_current_test == ""
 
 
 def test_snapshot_as_audit_dict_matches_engine_schema() -> None:
-    with override_settings(aeat_live_tests_enabled="1"), _pytest_current_test(None):
+    with override_settings(aeat_live_tests_enabled="1"):
         settings = Settings(aeat_live_tests_enabled="1")
-        snapshot = AeatAccessGate(settings).snapshot_env()
+        snapshot = AeatAccessGate(settings).snapshot_env(pytest_current_test="")
         assert snapshot.as_audit_dict() == {
             "AEAT_LIVE_TESTS_ENABLED": "1",
             "PYTEST_CURRENT_TEST": "",
@@ -123,10 +93,10 @@ def test_require_live_read_refusal_states_only_literal_one_is_accepted() -> None
 
 
 def test_require_live_write_always_raises_permanent_refusal() -> None:
-    with _pytest_current_test("placeholder"):
-        settings = Settings()
-        with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
-            AeatAccessGate(settings).require_live_write()
+    """``require_live_write`` is unconditional — no env / Settings read."""
+    settings = Settings()
+    with pytest.raises(LiveSubmitForbiddenError, match="permanently forbidden"):
+        AeatAccessGate(settings).require_live_write()
 
 
 def test_access_gate_is_frozen() -> None:

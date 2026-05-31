@@ -12,12 +12,12 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
-from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time._utc import _validate_utc_aware
 from . import AuthProviderKind, select_provider
+from ._protocols import SessionStoreProtocol
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -41,6 +41,31 @@ if TYPE_CHECKING:
     ]
 
 _logger = get_logger(__name__)
+
+# Injected at wiring time (see configure_session_store below).
+# The concrete implementation is adapters/outbound/aeat/auth/_session_store.
+_session_store_impl: SessionStoreProtocol | None = None
+
+
+def configure_session_store(store: SessionStoreProtocol) -> None:
+    """Register the concrete session store at wiring time.
+
+    Called by the entrypoints layer (or test fixtures) to bind the concrete
+    adapter implementation before any session function is invoked.
+    """
+    global _session_store_impl  # noqa: PLW0603
+    _session_store_impl = store
+
+
+def _get_session_store() -> SessionStoreProtocol:
+    if _session_store_impl is None:
+        # Lazily import the concrete adapter implementation on first call.
+        # This import runs at runtime (not TYPE_CHECKING), so it is not hidden.
+        # The module-scope import was removed to break the import-time cycle.
+        from ...adapters.outbound.aeat.auth import _session_store as _impl  # noqa: PLC0415
+
+        configure_session_store(_impl)  # type: ignore[arg-type]
+    return _session_store_impl  # type: ignore[return-value]
 
 
 def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
@@ -156,14 +181,14 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
         kind = AuthProviderKind(settings.aeat_auth_provider.value)
     if kind is not None:
         paths = storage_state_paths(settings, kind)
-        if not _session_store.exists(paths.storage_state):
+        if not _get_session_store().exists(paths.storage_state):
             _logger.debug("load_persisted_session: no session metadata found for provider %s", kind.value)
             return None
         return _parse_single(paths.storage_state, kind)
 
     for candidate in AuthProviderKind:
         paths = storage_state_paths(settings, candidate)
-        if _session_store.exists(paths.storage_state):
+        if _get_session_store().exists(paths.storage_state):
             return _parse_single(paths.storage_state, candidate)
     _logger.debug("load_persisted_session: no session metadata found for any registered provider")
     return None
@@ -176,7 +201,7 @@ def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None =
     kinds = [kind] if kind is not None else list(AuthProviderKind)
     for candidate_kind in kinds:
         paths = storage_state_paths(settings, candidate_kind)
-        if not _session_store.delete(paths.storage_state):
+        if not _get_session_store().delete(paths.storage_state):
             continue
         _logger.debug("delete_persisted_session: removed auth session %s", paths.storage_state)
         removed.append(paths.storage_state)
@@ -203,7 +228,7 @@ async def require_verified_aeat_session(
             tr("application.auth.sessions.errors.session_expired")
         )
     paths = storage_state_paths(settings, persisted.provider_kind)
-    if not _session_store.exists(paths.storage_state):
+    if not _get_session_store().exists(paths.storage_state):
         raise AuthSessionUnavailableError(
             tr("application.auth.sessions.errors.state_missing")
         )
@@ -347,7 +372,7 @@ async def ensure_authenticated_aeat_session(
 
 def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> PersistedAuthSession | None:
     try:
-        persisted = _session_store.load(storage_state_path)
+        persisted = _get_session_store().load(storage_state_path)
     except (ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
             tr("application.auth.sessions.errors.corrupt_session")

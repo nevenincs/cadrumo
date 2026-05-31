@@ -31,7 +31,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from ...core.errors import AeatError
 
@@ -72,11 +72,11 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 
 _TAX_ID_FACT_PATH = "identity.tax_id"
 """Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
-
 
 def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
     """Return the canonical (upper-cased, trimmed) tax id from ``facts``.
@@ -92,7 +92,6 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
                 return text
     return None
 
-
 def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
     """Map the encrypted-record lifecycle status to its manifest mirror.
 
@@ -104,7 +103,6 @@ def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
 
     return BucketLifecycleStatus(status.value)
 
-
 def _default_kdf_params() -> ManifestKdfParams:
     """Return the OWASP-baseline Argon2id parameters for a fresh bucket.
 
@@ -115,7 +113,6 @@ def _default_kdf_params() -> ManifestKdfParams:
     """
 
     return KdfParams.default().to_manifest_params()
-
 
 class ProfileSummary(BaseModel):
     """A typed one-row summary of a registered profile.
@@ -130,7 +127,6 @@ class ProfileSummary(BaseModel):
     profile_id: ProfileId
     label: str = Field(min_length=1, max_length=160)
     status: UserProfileStatus
-
 
 class ProfileRepository:
     """The sole writer of a logical profile's cross-store physical state.
@@ -789,7 +785,7 @@ class ProfileRepository:
         target = pointer_path(self._root)
         if not target.is_file():
             return None
-        return target.read_text(encoding="utf-8")
+        return target.read_text(encoding=_UTF_8_ENCODING)
 
     def _restore_pointer_text(self, prior_text: str | None) -> None:
         """Restore the active-profile pointer to a previously captured state.
@@ -805,7 +801,7 @@ class ProfileRepository:
                 target.unlink()
             return
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(prior_text, encoding="utf-8")
+        target.write_text(prior_text, encoding=_UTF_8_ENCODING)
 
     def _active_pointer_targets(self, profile_id: str) -> bool:
         """Return whether the active-profile pointer aims at ``profile_id``."""
@@ -821,6 +817,5 @@ class ProfileRepository:
         target = pointer_path(self._root)
         if target.is_file():
             target.unlink()
-
 
 __all__ = ["ProfileRepository", "ProfileSummary"]

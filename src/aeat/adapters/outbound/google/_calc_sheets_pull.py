@@ -71,7 +71,7 @@ from ._api import execute_request
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class OperatorEdit(BaseModel):
@@ -742,7 +742,7 @@ def _column_index_to_letters(column: int) -> str:
     """Convert a 1-based column index to A1 letters (1 -> A, 27 -> AA)."""
 
     if column < 1:
-        raise ValueError("column index must be 1-based and positive")
+        raise OutboundStorageValidationError("column index must be 1-based and positive")
     letters: list[str] = []
     remaining = column
     while remaining > 0:

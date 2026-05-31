@@ -29,7 +29,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core.config import Settings
@@ -56,10 +56,9 @@ from .workflow._models import WorkflowState, resolve_active_bucket_id
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _log = get_logger(__name__)
-
 
 class ProjectionActiveProfile(BaseModel):
     """Active-profile identity and health, computed once for every surface.
@@ -88,7 +87,6 @@ class ProjectionActiveProfile(BaseModel):
     registered_bucket: bool = False
     record_present: bool = False
     next_action: str = ""
-
 
 class ProjectionAuthReadiness(BaseModel):
     """Auth operational readiness, computed once for every surface.
@@ -130,7 +128,6 @@ class ProjectionAuthReadiness(BaseModel):
     health_severity: str = ""
     certificate_path: str = ""
 
-
 class ProjectionWorkspaceSummary(BaseModel):
     """Counters for every workspace store, so none is silently zero.
 
@@ -168,7 +165,6 @@ class ProjectionWorkspaceSummary(BaseModel):
     calculation_revisions: int = Field(default=0, ge=0)
     unreadable_rows: int = Field(default=0, ge=0)
 
-
 class ProjectionObligation(BaseModel):
     """One pending filing obligation carried in the projection.
 
@@ -187,7 +183,6 @@ class ProjectionObligation(BaseModel):
     opens_on: date
     closes_on: date
     status: ObligationStatus
-
 
 class OperatorStateProjection(BaseModel):
     """The single canonical operator-facing state view.
@@ -224,7 +219,6 @@ class OperatorStateProjection(BaseModel):
     modelo_readiness: tuple[ProjectionModeloReadiness, ...] = ()
     pending_obligations: tuple[ProjectionObligation, ...] = ()
 
-
 def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
     """Resolve a bucket UUID to its operator-chosen display name.
 
@@ -248,7 +242,6 @@ def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
         return None
     return pointer.label if pointer is not None else None
 
-
 def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfile:
     """Project the profile-health assessment into the projection sub-record."""
 
@@ -260,7 +253,6 @@ def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfil
         record_present=health.profile_record_present,
         next_action=health.next_action,
     )
-
 
 def _certificate_path_resolves(certificate_path: str) -> bool:
     """Return whether a recorded certificate path resolves to an existing file.
@@ -280,7 +272,6 @@ def _certificate_path_resolves(certificate_path: str) -> bool:
     except OSError:
         return False
 
-
 def _provider_configured(state: WorkflowState) -> bool:
     """Return the one canonical ``configured`` flag for the workflow state.
 
@@ -298,7 +289,6 @@ def _provider_configured(state: WorkflowState) -> bool:
     if auth.provider == AuthProviderKind.CERTIFICATE.value:
         return _certificate_path_resolves(auth.certificate_path or "")
     return True
-
 
 def _build_auth_readiness(
     state: WorkflowState,
@@ -391,7 +381,6 @@ def _build_auth_readiness(
         ),
     )
 
-
 def _resolve_health_severity(
     backend_severity: str,
     *,
@@ -431,7 +420,6 @@ def _resolve_health_severity(
         return "ok"
     return "warning"
 
-
 def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSummary:
     """Load every workspace store and project its counters.
 
@@ -463,7 +451,6 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
         unreadable_rows=secure_object_unreadable_total(),
     )
 
-
 def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     """Project the active profile record into an :class:`TaxpayerProfile`.
 
@@ -477,7 +464,6 @@ def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     record = state.active_profile_record()
     raw = record_to_values(record) if record is not None else {}
     return taxpayer_profile_from_mapping(raw, tax_id_default="00000000T")
-
 
 def _build_pending_obligations(
     profile: TaxpayerProfile,
@@ -515,7 +501,6 @@ def _build_pending_obligations(
         for obligation in schedule.obligations
     )
 
-
 class ModeloReadinessRequest(BaseModel):
     """One ``(modelo, revision, year, period)`` readiness target.
 
@@ -530,7 +515,6 @@ class ModeloReadinessRequest(BaseModel):
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: str = ""
-
 
 class ProjectionModeloReadiness(BaseModel):
     """Readiness for one modelo target across profile and ledger facts."""
@@ -550,7 +534,6 @@ class ProjectionModeloReadiness(BaseModel):
     ledger_checked_transaction_count: int = 0
     ledger_issues: tuple[LedgerPreflightIssue, ...] = ()
     ready: bool
-
 
 def _build_modelo_readiness(
     requests: tuple[ModeloReadinessRequest, ...],
@@ -612,7 +595,6 @@ def _build_modelo_readiness(
         )
     return tuple(reports)
 
-
 _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
     {
         "ledger_iva_aggregation",
@@ -620,7 +602,6 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
     }
 )
 _ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
-
 
 def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
     from ..core.resources import resources
@@ -636,7 +617,6 @@ def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
         return False
     return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
 
-
 def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> str:
     token = request.period.strip().upper()
     if token in {"1T", "2T", "3T", "4T"}:
@@ -648,7 +628,6 @@ def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> str:
     if len(token) == 2 and token.isdigit():
         return f"{request.filing_year}-{token}"
     return token
-
 
 def build_operator_state_projection(
     *,
@@ -742,7 +721,6 @@ def build_operator_state_projection(
         modelo_readiness=modelo_readiness,
         pending_obligations=pending_obligations,
     )
-
 
 __all__ = [
     "ModeloReadinessRequest",

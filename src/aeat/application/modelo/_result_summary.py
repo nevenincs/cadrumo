@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.errors import AeatError
 from ...core.logging import get_logger
@@ -27,9 +27,8 @@ from ...domain.calculations.registry._ids import CasillaId
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _log = get_logger(__name__)
-
 
 class ResultSummaryRow(BaseModel):
     """One headline casilla in a calculation result summary."""
@@ -47,7 +46,6 @@ class ResultSummaryRow(BaseModel):
     computed casilla the modelo's verification expectation tracks.
     """
 
-
 class CalculationResultSummary(BaseModel):
     """Distilled headline figures for a persisted calculation revision."""
 
@@ -57,7 +55,6 @@ class CalculationResultSummary(BaseModel):
     filing_year: int
     period: str
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
-
 
 def calculation_result_summary(revision: CalculationRevision) -> CalculationResultSummary | None:
     """Return the headline result summary for a persisted calculation revision.
@@ -142,7 +139,6 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
         period=work_unit.period,
         rows=tuple(rows),
     )
-
 
 __all__ = [
     "CalculationResultSummary",

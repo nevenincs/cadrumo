@@ -11,14 +11,17 @@ so no plaintext work-unit metadata lands on disk.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
-from ...adapters.persistence.storage.errors import (
-    ClassificationError,
-    EnvelopeVersionError,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import Envelope, SensitivityClass
+    from ...adapters.persistence.storage.errors import (
+        ClassificationError,
+        EnvelopeVersionError,
+    )
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ._errors import ModeloError
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._work_unit import WorkUnit, WorkUnitCatalogue
@@ -73,6 +76,9 @@ class WorkUnitCatalogueRepository:
                 domain.
         """
 
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+
         try:
             record = self._objects.load(
                 _WORK_UNIT_NAMESPACE,
@@ -102,6 +108,7 @@ class WorkUnitCatalogueRepository:
 
     def save(self, catalogue: WorkUnitCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         envelope = Envelope[WorkUnitCatalogue](
             schema_version=_WORK_UNIT_CATALOGUE_VERSION,

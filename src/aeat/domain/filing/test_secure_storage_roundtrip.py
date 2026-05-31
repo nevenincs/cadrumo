@@ -81,6 +81,7 @@ def _populated_draft() -> ModeloDraft:
         casilla_provenance=(
             ModeloCasillaProvenance(
                 casilla_id="iva.devengado",
+                formula_id="iva-cuota-devengada-formula",
                 legal_refs=("LIVA.art-92",),
                 source_refs=("AEAT.IVA.2025.casilla-01",),
             ),
@@ -142,6 +143,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
     assert len(loaded.casilla_provenance) == 1
     assert loaded.casilla_provenance[0].casilla_id == "iva.devengado"
+    assert loaded.casilla_provenance[0].formula_id == "iva-cuota-devengada-formula"
     assert loaded.notes == "Draft pending operator review"
     assert loaded.approved_at == datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
     assert loaded.approved_by == "operator-reviewer-1"

@@ -30,13 +30,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...domain.invoices import InvoiceKind
 from ._errors import FilterParseError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-"""Shared :class:`pydantic.ConfigDict` for filter records."""
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 __all__ = (
     "DeclaracionReviewFilterKey",

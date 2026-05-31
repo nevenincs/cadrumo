@@ -25,7 +25,7 @@ from ._errors import (
     AttachmentValidationError,
 )
 from ._models import Attachment, AttachmentCatalogue
-from ._repository import AttachmentStoreProtocol
+from ._protocols import AttachmentStoreProtocol
 
 __all__ = [
     "Attachment",

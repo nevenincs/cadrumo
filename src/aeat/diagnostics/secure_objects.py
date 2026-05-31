@@ -50,6 +50,6 @@ def register(app: typer.Typer) -> None:
         typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.namespace')}\t{namespace}")
         typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.count')}\t{len(report.rows)}")
         for row in report.rows:
-            typer.echo(f"{row.namespace}\t{row.object_key_digest}")
+            typer.echo(f"{row.namespace}\t{row.object_key_digest}")  # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW: typer.echo of {namespace}\t{object_key_digest} is structured machine output (tab-separated record), not user-facing prose; locale-key wrapping not applicable.
 
     app.add_typer(sub)

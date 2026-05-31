@@ -26,10 +26,17 @@ import getpass
 import os
 import subprocess
 from pathlib import Path
+from typing import Final
 
 from .logging import get_logger
 
 _log = get_logger(__name__)
+
+# Windows environment variable names used to locate icacls.exe and the
+# operator's domain-qualified username.  Named constants so grep surfaces
+# every usage site rather than having bare strings spread across the code.
+_SYSTEMROOT_ENV_VAR: Final[str] = "SYSTEMROOT"
+_USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
 
 
 def restrict_file_permissions(path: Path) -> None:
@@ -60,9 +67,14 @@ def restrict_file_permissions(path: Path) -> None:
         # the subprocess.run hits an unexpected OSError.
         try:
             username = getpass.getuser()
-            icacls_path = Path(os.environ.get("SYSTEMROOT", r"C:\\Windows")) / "System32" / "icacls.exe"
+            # os.environ.get allowlist: SYSTEMROOT / USERDOMAIN are Windows OS-integration
+            # variables, not AEAT-prefixed config.  There is no Settings field for them
+            # because they are OS-provided ambient context, not application configuration.
+            # The single-surface invariant test scanner only flags AEAT_* keys; these are
+            # intentionally read directly from the OS environment here.
+            icacls_path = Path(os.environ.get(_SYSTEMROOT_ENV_VAR, r"C:\\Windows")) / "System32" / "icacls.exe"
             candidates = [username]
-            userdomain = os.environ.get("USERDOMAIN")
+            userdomain = os.environ.get(_USERDOMAIN_ENV_VAR)
             if userdomain:
                 candidates.insert(0, f"{userdomain}\\{username}")
             result: subprocess.CompletedProcess[str] | None = None

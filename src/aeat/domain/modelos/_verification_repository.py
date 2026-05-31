@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._errors import ModeloError
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._verification_report import VerificationReport, VerificationReportCatalogue
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import Envelope, SensitivityClass
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _VERIFICATION_NAMESPACE = "aeat.domain.modelos.verification_reports"
@@ -44,6 +47,9 @@ class VerificationReportCatalogueRepository:
         return self._objects.exists(_VERIFICATION_NAMESPACE, _VERIFICATION_OBJECT_KEY)
 
     def load(self) -> VerificationReportCatalogue:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+
         try:
             record = self._objects.load(
                 _VERIFICATION_NAMESPACE,
@@ -71,6 +77,8 @@ class VerificationReportCatalogueRepository:
         return envelope.payload
 
     def save(self, catalogue: VerificationReportCatalogue) -> None:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
             written_at=datetime.now(UTC),

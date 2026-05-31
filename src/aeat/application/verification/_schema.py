@@ -15,12 +15,11 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...domain.calculations.registry._ids import CasillaId
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-"""Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class DiscrepancyCause(StrEnum):

@@ -44,8 +44,18 @@ def _question_for_profile_key(profile_key: str):
     return None
 
 
+_PROFILE_ERROR_LOCALE_KEYS: dict[str, str] = {
+    "profile_empty": "cli.diagnostics.profile.errors.profile_empty",
+    "ambiguous_profile": "cli.diagnostics.profile.errors.ambiguous_profile",
+    "unknown_profile": "cli.diagnostics.profile.errors.unknown_profile",
+    "no_active_profile": "cli.diagnostics.profile.errors.no_active_profile",
+    "unknown_profile_key": "cli.diagnostics.profile.errors.unknown_profile_key",
+}
+
+
 def _profile_bad_parameter(key: str, /, **context: object) -> typer.BadParameter:
-    return typer.BadParameter(tr(f"cli.diagnostics.profile.errors.{key}", **context))
+    locale_key = _PROFILE_ERROR_LOCALE_KEYS[key]
+    return typer.BadParameter(tr(locale_key, **context))
 
 
 def _resolve_target_profile(profile: str | None):

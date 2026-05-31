@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 from collections.abc import Awaitable
 from contextlib import asynccontextmanager, nullcontext
 from datetime import UTC, datetime
@@ -102,6 +101,7 @@ from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import AeatError as _AeatError
+from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
@@ -504,7 +504,11 @@ def select_declarations_for_capture(
     if expediente_id is not None:
         selected = tuple(row for row in selected if row.expediente_id == expediente_id)
     if expediente_id is not None and not selected:
-        raise LiveApplicationInputError(f"AEAT declaration register did not return expediente {expediente_id!r}")
+        raise LiveApplicationInputError(
+            message=f"AEAT declaration register did not return expediente {expediente_id!r}",
+            translated_message="live.errors.expediente_not_found",
+            context={"expediente_id": str(expediente_id)},
+        )
     if limit is not None:
         selected = selected[:limit]
     return selected
@@ -537,7 +541,10 @@ async def list_filed_data(
     """List filed declaration rows through the active AEAT session without downloading artefacts."""
 
     if year_from > year_to:
-        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
 
     session, settings = await _active_verified_session()
     rows: list[FiledDataListingRow] = []
@@ -812,7 +819,10 @@ async def capture_iva_compensation_history(
     """Capture filed Modelo 303s across years and verify secure history reload."""
 
     if year_from > year_to:
-        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
 
     session, settings = await _active_verified_session()
     return await _capture_iva_compensation_history_with_session(
@@ -1015,12 +1025,12 @@ def _decimal_text(value: Decimal | None) -> str | None:
 
 
 def _taxpayer_ref(taxpayer_nif: str) -> str:
-    digest = hashlib.sha256(taxpayer_nif.strip().upper().encode("utf-8")).hexdigest()
+    digest = _sha256_hex(taxpayer_nif.strip().upper().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
 def _evidence_ref(value: str) -> str:
-    digest = hashlib.sha256(value.strip().encode("utf-8")).hexdigest()
+    digest = _sha256_hex(value.strip().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
@@ -1053,7 +1063,10 @@ def _persist_iva_compensation_history_observations_strict(
     latest: dict[tuple[int, str], _FiledDeclaracionObservation] = {}
     for observation in observations:
         if observation.modelo != "303":
-            raise LiveApplicationInputError("IVA compensation history capture only accepts Modelo 303 observations")
+            raise LiveApplicationInputError(
+                message="IVA compensation history capture only accepts Modelo 303 observations",
+                translated_message="live.errors.iva_history_modelo_303_only",
+            )
         key = (observation.ejercicio, observation.period)
         current = latest.get(key)
         if current is None or (observation.presented_at, observation.expediente_id) > (
@@ -1370,7 +1383,10 @@ async def _capture_iva_remote_state_for_active_storage(
 
     async with _suppress_live_iva_playwright_cancellation_noise():
         if year_from > year_to:
-            raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+            raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
 
         settings = _load_settings()
         _AeatAccessGate(settings).require_live_read()
@@ -1602,7 +1618,7 @@ def _iva_remote_state_acquisition_manifest(
             *(surface.model_dump_json() for surface in surfaces),
         )
     )
-    digest = hashlib.sha256(manifest_seed.encode("utf-8")).hexdigest()
+    digest = _sha256_hex(manifest_seed.encode("utf-8"))
     timestamp = captured_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
     acquisition_id = f"live-iva-acquisition:{report.target_year}:{report.target_period}:{timestamp}:{digest}"
     return IvaRemoteStateAcquisitionManifest(

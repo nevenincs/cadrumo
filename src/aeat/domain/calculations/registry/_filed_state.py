@@ -21,7 +21,14 @@ __all__ = [
 
 
 class RegistryFiledStateDrift(BaseModel):
-    """One casilla whose local calculation does not match filed AEAT state."""
+    """One casilla whose local calculation does not match filed AEAT state.
+
+    ``formula_id``, ``legal_refs``, and ``source_refs`` carry the
+    regulatory grounding for the casilla from the calculation engine.
+    For formula-computed casillas these are populated from the
+    :class:`RegistryCalculationEntry`; for input or bound casillas they
+    default to ``None`` / empty tuples.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -29,6 +36,9 @@ class RegistryFiledStateDrift(BaseModel):
     local_value: Decimal
     filed_value: Decimal
     delta: Decimal
+    formula_id: str | None = None
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
 
 
 class RegistryFiledStateComparison(BaseModel):
@@ -60,7 +70,14 @@ def compare_calculation_to_filed_observation(
     *,
     required_casillas: Iterable[str],
 ) -> RegistryFiledStateComparison:
-    """Compare local registry calculation values against filed AEAT casillas."""
+    """Compare local registry calculation values against filed AEAT casillas.
+
+    Each :class:`RegistryFiledStateDrift` in the returned comparison
+    carries ``formula_id``, ``legal_refs``, and ``source_refs`` from the
+    :class:`RegistryCalculationEntry` for formula-computed casillas, so
+    the regulatory grounding for every drifted casilla is preserved in
+    the comparison result and propagates to CLI / audit surfaces.
+    """
 
     if calculation.modelo != observation.modelo:
         raise RegistryValidationError(
@@ -73,6 +90,7 @@ def compare_calculation_to_filed_observation(
 
     local_values = calculation.values
     filed_values = observation.casilla_values
+    entries_by_target = {entry.target: entry for entry in calculation.entries}
     missing_local = tuple(casilla_id for casilla_id in target_casillas if casilla_id not in local_values)
     missing_filed = tuple(casilla_id for casilla_id in target_casillas if casilla_id not in filed_values)
     comparable = tuple(
@@ -84,6 +102,9 @@ def compare_calculation_to_filed_observation(
             local_value=local_values[casilla_id],
             filed_value=filed_values[casilla_id],
             delta=local_values[casilla_id] - filed_values[casilla_id],
+            formula_id=entries_by_target[casilla_id].formula_id if casilla_id in entries_by_target else None,
+            legal_refs=entries_by_target[casilla_id].legal_refs if casilla_id in entries_by_target else (),
+            source_refs=entries_by_target[casilla_id].source_refs if casilla_id in entries_by_target else (),
         )
         for casilla_id in comparable
         if local_values[casilla_id] != filed_values[casilla_id]

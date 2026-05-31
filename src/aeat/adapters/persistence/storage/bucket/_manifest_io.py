@@ -15,6 +15,7 @@ import tomllib
 from datetime import datetime
 from pathlib import Path
 
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
 from ._errors import BucketValidationError
@@ -100,7 +101,7 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     target = manifest_path(paths)
     tmp = target.with_suffix(target.suffix + ".tmp")
     payload = _serialise_manifest(manifest)
-    tmp.write_text(payload, encoding="utf-8")
+    tmp.write_text(payload, encoding=_UTF_8_ENCODING)
     os.replace(tmp, target)
 
 
@@ -115,7 +116,7 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     """
 
     target = manifest_path(paths)
-    text = target.read_text(encoding="utf-8")
+    text = target.read_text(encoding=_UTF_8_ENCODING)
     # ``tomllib.loads`` is typed ``dict[str, Any]`` upstream by stdlib
     # convention; we narrow to ``dict[str, object]`` here so the
     # ``Any`` lasts a single expression and never escapes this

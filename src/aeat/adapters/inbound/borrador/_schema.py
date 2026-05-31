@@ -15,12 +15,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ..pdf._shared import ExtractedCasilla
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ArtefactKind(StrEnum):
     """The three Modelo 100 PDF artefact types the operator encounters.
@@ -37,20 +36,17 @@ class ArtefactKind(StrEnum):
     PREDECLARACION = "PREDECLARACION"
     DECLARACION = "DECLARACION"
 
-
 class BorradorParseMode(StrEnum):
     """Parser authority mode requested by the caller."""
 
     OBSERVED = "observed"
     REGISTRY_PROFILE = "registry_profile"
 
-
 class BorradorExtractionTarget(Protocol):
     """Per-target descriptor surface the parser reads from a profile."""
 
     @property
     def casilla_id(self) -> str: ...
-
 
 class BorradorExtractionProfile(Protocol):
     """Registry extraction-profile surface consumed by the parser."""
@@ -63,7 +59,6 @@ class BorradorExtractionProfile(Protocol):
 
     @property
     def min_coverage(self) -> Decimal: ...
-
 
 class BorradorObservation(BaseModel):
     """Observed Modelo 100 PDF data.

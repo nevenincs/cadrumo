@@ -225,8 +225,8 @@ def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisio
 
 def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     result = ModeloExportResult(
-        calculation_revision_id="r" + "1" * 63,
-        work_unit_id="w" + "2" * 63,
+        calculation_revision_id="a" * 64,
+        work_unit_id="b" * 64,
         bucket_id="bucket-operator",
         modelo="130",
         filing_year=2026,
@@ -252,6 +252,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     assert payload["casilla_provenance"] == [
         {
             "casilla_id": "03",
+            "formula_id": None,
             "legal_refs": ["ley-35-2006:art-101"],
             "source_refs": ["aeat-modelo-130-manual-2026"],
         }
@@ -271,7 +272,7 @@ def test_export_refuses_when_no_active_bucket(
     ):
         export_modelo_revision(
             ModeloExportCommand(
-                calculation_revision_id="r" + "0" * 63,
+                calculation_revision_id="0" * 64,
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
@@ -291,7 +292,7 @@ def test_export_refuses_unknown_revision(
     with pytest.raises(CalculationRevisionNotFoundError, match=r"no calculation revision"):
         export_modelo_revision(
             ModeloExportCommand(
-                calculation_revision_id="r" + "f" * 63,
+                calculation_revision_id="f" * 64,
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),

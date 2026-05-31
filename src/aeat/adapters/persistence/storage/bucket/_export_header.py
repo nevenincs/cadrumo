@@ -12,17 +12,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from .....core.errors import CoreValidationError
 from .....core.identity import BucketId
 from .....core.time._utc import _validate_utc_aware
 from ._errors import BucketValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SHA256_HEX_LEN = 64
-
 
 class ExportArchiveHeader(BaseModel):
     """Plaintext frontmatter for a sealed bucket-export archive."""
@@ -41,13 +40,13 @@ class ExportArchiveHeader(BaseModel):
         """Reject anything other than a lowercase hex SHA-256 digest."""
 
         if len(value) != _SHA256_HEX_LEN:
-            raise BucketValidationError("manifest_digest must be a 64-char SHA-256 hex string")
+            raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
         try:
             int(value, 16)
         except ValueError as exc:
-            raise BucketValidationError("manifest_digest must be hex") from exc
+            raise ValueError("manifest_digest must be hex") from exc
         if value != value.lower():
-            raise BucketValidationError("manifest_digest must be lowercase hex")
+            raise ValueError("manifest_digest must be lowercase hex")
         return value
 
     @field_validator("created_at")
@@ -56,7 +55,6 @@ class ExportArchiveHeader(BaseModel):
         try:
             return _validate_utc_aware(value)
         except CoreValidationError as exc:
-            raise BucketValidationError(str(exc)) from exc
-
+            raise ValueError(str(exc)) from exc
 
 __all__ = ["ExportArchiveHeader"]

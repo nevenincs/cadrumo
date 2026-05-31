@@ -15,7 +15,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import load_external_constants
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
 _DIAGNOSTIC_SENSITIVITY = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity
 _DIAGNOSTIC_SCHEMA_VERSION = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version

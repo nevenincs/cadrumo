@@ -4,6 +4,7 @@ from pathlib import Path
 import yaml
 
 from aeat.core.errors import AeatError
+from aeat.core.external_constants import UTF_8_ENCODING
 from aeat.core.logging import get_logger
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
@@ -41,31 +42,38 @@ class LocaleManager:
     def get_codebase_keys(self) -> set[str]:
         """Extract all concrete dotted translation keys from the codebase.
 
-        Combines the regex scanner (``tr("…")`` / ``t("…")`` literal
-        call sites) with the AST scanner's concrete-key extractor that
-        catches programmatic emissions like
-        ``WizardValidationError("wizard.errors.select_unknown")``.
+        Combines three discovery paths:
 
-        Dynamic namespaces (f-string and concatenation forms) are
-        returned by :meth:`get_codebase_namespaces` and checked
+        1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
+        2. AST scanner — programmatic emissions such as
+           ``WizardValidationError("wizard.errors.select_unknown")``,
+           ``message_key=`` kwargs, and ``build_entry`` portal keys.
+        3. F-string registry — bounded f-string patterns whose value sets
+           are fully known at import time (e.g. wizard choice labels
+           keyed by enum values). See :mod:`aeat.locales._fstring_registry`.
+
+        Dynamic namespaces (open-ended f-string and concatenation forms)
+        are returned by :meth:`get_codebase_namespaces` and checked
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
 
         from aeat.locales._ast_scanner import scan_source_tree
+        from aeat.locales._fstring_registry import get_registered_keys
 
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
             if py_file.name == "test_parity.py" or py_file.name == "manager.py":
                 continue
             try:
-                content = py_file.read_text(encoding="utf-8", errors="ignore")
+                content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
             except OSError as exc:
                 _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
                 continue
             for match in self.pattern.finditer(content):
                 keys.add(match.group(1))
         keys.update(scan_source_tree(self.src_dir))
+        keys.update(get_registered_keys())
         return keys
 
     def get_codebase_namespaces(self) -> set[str]:
@@ -95,7 +103,7 @@ class LocaleManager:
 
     def load_locale(self, path: Path) -> dict[str, LocaleNode]:
         """Load a locale YAML file strictly, failing on duplicates."""
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding=UTF_8_ENCODING) as f:
             loader = StrictUniqueKeyLoader(f)
             try:
                 data = loader.get_single_data()
@@ -148,7 +156,7 @@ class LocaleManager:
 
             new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
 
-            with open(f, "w", encoding="utf-8") as f_obj:
+            with open(f, "w", encoding=UTF_8_ENCODING) as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
     def _locale_path(self, locale: str) -> Path:
@@ -281,7 +289,7 @@ def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
 def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
     """Replace a single existing leaf line without rebuilding the whole YAML file."""
 
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
     stack: list[tuple[int, str]] = []
     key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
@@ -301,7 +309,7 @@ def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> Non
             newline = "\r\n" if line.endswith("\r\n") else "\n"
             replacement = match.group("indent") + key + ": " + _yaml_single_quoted(value) + newline
             lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
-            path.write_text("".join(lines), encoding="utf-8")
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
 
         if not rest.strip():
@@ -318,7 +326,7 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
 
     parent_parts = parts[:-1]
     leaf = parts[-1]
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
     stack: list[tuple[int, str]] = []
     key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
@@ -343,7 +351,7 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
                 insertion_index,
                 " " * (indent + 2) + leaf + ": " + _yaml_single_quoted(value) + newline,
             )
-            path.write_text("".join(lines), encoding="utf-8")
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
 
         if not rest.strip():
@@ -355,7 +363,7 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
 def _remove_existing_yaml_leaf(path: Path, parts: list[str]) -> None:
     """Remove a single existing leaf line without rebuilding the whole YAML file."""
 
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
     stack: list[tuple[int, str]] = []
     key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 
@@ -375,7 +383,7 @@ def _remove_existing_yaml_leaf(path: Path, parts: list[str]) -> None:
             if not rest.strip():
                 raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
             del lines[index : _yaml_leaf_end(lines, index, indent)]
-            path.write_text("".join(lines), encoding="utf-8")
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING)
             return
 
         if not rest.strip():

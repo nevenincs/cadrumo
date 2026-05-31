@@ -5,7 +5,7 @@ from __future__ import annotations
 import tomllib
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
@@ -14,6 +14,7 @@ from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core._bucket_pointer_io import pointer_path, read_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileRecord
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
@@ -34,8 +35,7 @@ ProfileHealthStatus = Literal[
 
 ProfileSource = Literal["none", "env_override", "pointer"]
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ActiveProfileHealth(BaseModel):
     """Redacted active-profile health snapshot."""
@@ -54,7 +54,6 @@ class ActiveProfileHealth(BaseModel):
     repairable_by_clearing_pointer: bool = False
     next_action: str = ""
 
-
 class ActiveProfileRepairResult(BaseModel):
     """Result of a safe active-profile repair probe/action."""
 
@@ -64,7 +63,6 @@ class ActiveProfileRepairResult(BaseModel):
     cleared_pointer: bool
     before: ActiveProfileHealth
     after: ActiveProfileHealth | None = None
-
 
 class ActiveProfileManifestStatusRepairResult(BaseModel):
     """Result of a safe manifest lifecycle-status repair probe/action."""
@@ -78,7 +76,6 @@ class ActiveProfileManifestStatusRepairResult(BaseModel):
     status: str = ""
     reason: str = ""
 
-
 _log = get_logger(__name__)
 
 _MANIFEST_HEALTH_EXCEPTIONS = (
@@ -89,7 +86,6 @@ _MANIFEST_HEALTH_EXCEPTIONS = (
     TypeError,
     ValueError,
 )
-
 
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
     """Return a redacted, non-secret health projection for the active profile."""
@@ -214,7 +210,6 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         ),
     )
 
-
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
     """Clear a degraded pointer-file active profile when explicitly confirmed."""
 
@@ -236,7 +231,6 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
         before=before,
         after=_assess_with_best_effort_session(),
     )
-
 
 def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileManifestStatusRepairResult:
     """Backfill a legacy active-bucket manifest status from the encrypted record."""
@@ -260,7 +254,7 @@ def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileMa
     record = _load_active_profile_record()
     status = BucketLifecycleStatus(record.status.value)
     paths = bucket_paths(load_settings().aeat_local_storage_root, before.active_profile)
-    payload = dict(tomllib.loads(manifest_path(paths).read_text(encoding="utf-8")))
+    payload = dict(tomllib.loads(manifest_path(paths).read_text(encoding=_UTF_8_ENCODING)))
     payload.setdefault("last_unlocked_at", None)
     payload.setdefault("idle_lock_minutes", None)
     payload["status"] = status.value
@@ -274,7 +268,6 @@ def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileMa
         status=status.value,
     )
 
-
 def _load_active_profile_record() -> UserProfileRecord:
     """Load the encrypted active-profile record or raise a precise refusal."""
 
@@ -285,7 +278,6 @@ def _load_active_profile_record() -> UserProfileRecord:
 
         raise ProfileNotFoundError("active profile record is missing; manifest status cannot be repaired")
     return record
-
 
 def _assess_with_best_effort_session() -> ActiveProfileHealth:
     """Assess profile health, opening the active bucket session when available."""
@@ -306,7 +298,6 @@ def _assess_with_best_effort_session() -> ActiveProfileHealth:
         # ImportError: defensive guard; the dynamic import of storage internals may fail.
         return before.model_copy(update={"profile_record_error": _compact_error(exc)})
 
-
 def _compact_error(exc: Exception) -> str:
     """Return a one-line diagnostic without SQL payload noise."""
 
@@ -315,7 +306,6 @@ def _compact_error(exc: Exception) -> str:
         exc = root
     message = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
     return f"{type(exc).__name__}: {message}"
-
 
 __all__ = [
     "ActiveProfileHealth",

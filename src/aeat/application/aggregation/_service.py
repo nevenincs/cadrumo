@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from ...core.logging import get_logger
 from ._counterpart import (
@@ -35,8 +35,7 @@ from ._retenciones import (
 from aeat.core.aggregation import AggregationSourceKind
 
 LOGGER = get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class PerModeloAggregationProvider(StrEnum):
     """Implemented provider families owned by ``aeat.application.aggregation``."""
@@ -44,7 +43,6 @@ class PerModeloAggregationProvider(StrEnum):
     RETENCIONES = "retenciones"
     COUNTERPART = "counterpart"
     FOREIGN_ASSETS = "foreign_assets"
-
 
 ACCEPTED_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
     AggregationSourceKind.LEDGER_TRANSACTION,
@@ -63,7 +61,6 @@ _RETENCIONES_MODELOS: tuple[str, ...] = ("111", "115", "123", "180", "190", "193
 _COUNTERPART_MODELOS: tuple[str, ...] = ("347", "349")
 _FOREIGN_ASSET_MODELOS: tuple[str, ...] = ("720",)
 
-
 class PerModeloAggregationProviderContract(BaseModel):
     """Backend-owned contract for one aggregation provider family."""
 
@@ -78,9 +75,11 @@ class PerModeloAggregationProviderContract(BaseModel):
     @classmethod
     def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
-            raise AggregationConfigError("provider modelos must be unique")
+            raise AggregationConfigError(
+                "provider modelos must be unique",
+                translated_message="aggregation.service.errors.provider_modelos_not_unique",
+            )
         return value
-
 
 class PerModeloAggregationLogFields(BaseModel):
     """Stable, non-secret log fields emitted by the aggregation service."""
@@ -108,7 +107,6 @@ class PerModeloAggregationLogFields(BaseModel):
             "result_row_count": self.result_row_count,
         }
 
-
 class PerModeloAggregationContract(BaseModel):
     """Complete backend contract consumed by current and future adapters."""
 
@@ -127,19 +125,27 @@ class PerModeloAggregationContract(BaseModel):
     ) -> tuple[PerModeloAggregationProviderContract, ...]:
         providers = tuple(provider.provider for provider in value)
         if len(providers) != len(set(providers)):
-            raise AggregationConfigError("per-modelo aggregation providers must be unique")
+            raise AggregationConfigError(
+                "per-modelo aggregation providers must be unique",
+                translated_message="aggregation.service.errors.per_modelo_providers_not_unique",
+            )
         modelos = tuple(modelo for provider in value for modelo in provider.modelos)
         if len(modelos) != len(set(modelos)):
-            raise AggregationConfigError("per-modelo aggregation modelos must be owned by exactly one provider")
+            raise AggregationConfigError(
+                "per-modelo aggregation modelos must be owned by exactly one provider",
+                translated_message="aggregation.service.errors.per_modelo_modelos_not_unique",
+            )
         return value
 
     @field_validator("accepted_source_kinds")
     @classmethod
     def _source_kinds_are_exact(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
         if value != ACCEPTED_SOURCE_KINDS:
-            raise AggregationConfigError("source kinds must match the accepted four-kind taxonomy")
+            raise AggregationConfigError(
+                "source kinds must match the accepted four-kind taxonomy",
+                translated_message="aggregation.service.errors.source_kinds_mismatch",
+            )
         return value
-
 
 class PerModeloAggregationCommand(BaseModel):
     """Command payload for a per-modelo aggregation run."""
@@ -165,7 +171,11 @@ class PerModeloAggregationCommand(BaseModel):
         )
         if invalid:
             names = ", ".join(candidate.value for candidate in invalid)
-            raise AggregationConfigError(f"observations for {names} cannot be supplied for modelo {self.modelo}")
+            raise AggregationConfigError(
+                f"observations for {names} cannot be supplied for modelo {self.modelo}",
+                translated_message="aggregation.service.errors.observations_mismatch",
+                context={"names": names, "modelo": self.modelo},
+            )
         return self
 
     @computed_field
@@ -175,9 +185,7 @@ class PerModeloAggregationCommand(BaseModel):
 
         return provider_for_modelo(self.modelo)
 
-
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
-
 
 class PerModeloAggregationResult(BaseModel):
     """Result envelope returned by the central per-modelo aggregation service."""
@@ -195,7 +203,10 @@ class PerModeloAggregationResult(BaseModel):
     @classmethod
     def _source_kinds_are_unique(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
         if len(value) != len(set(value)):
-            raise AggregationConfigError("result source_kinds must be unique")
+            raise AggregationConfigError(
+                "result source_kinds must be unique",
+                translated_message="aggregation.service.errors.result_source_kinds_not_unique",
+            )
         return value
 
     @model_validator(mode="after")
@@ -203,10 +214,14 @@ class PerModeloAggregationResult(BaseModel):
         if self.aggregation.modelo != self.modelo:
             raise AggregationConfigError(
                 f"aggregation modelo {self.aggregation.modelo!r} does not match result modelo {self.modelo!r}",
+                translated_message="aggregation.service.errors.envelope_modelo_mismatch",
+                context={"aggregation_modelo": self.aggregation.modelo, "result_modelo": self.modelo},
             )
         if self.aggregation.period != self.period:
             raise AggregationConfigError(
                 f"aggregation period {self.aggregation.period!r} does not match result period {self.period!r}",
+                translated_message="aggregation.service.errors.envelope_period_mismatch",
+                context={"aggregation_period": self.aggregation.period, "result_period": self.period},
             )
         expected_payload_types = {
             PerModeloAggregationProvider.RETENCIONES: RetencionesAggregation,
@@ -218,9 +233,13 @@ class PerModeloAggregationResult(BaseModel):
             raise AggregationConfigError(
                 f"provider {self.provider.value!r} does not match aggregation payload "
                 f"{type(self.aggregation).__name__!r}",
+                translated_message="aggregation.service.errors.envelope_provider_payload_mismatch",
+                context={
+                    "provider": self.provider.value,
+                    "payload_type": type(self.aggregation).__name__,
+                },
             )
         return self
-
 
 def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Build the immutable backend-owned aggregation contract."""
@@ -260,13 +279,11 @@ def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     )
     return contract
 
-
 @lru_cache(maxsize=1)
 def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Return the cached backend-owned aggregation contract."""
 
     return build_per_modelo_aggregation_contract()
-
 
 def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
     """Return the provider family for a supported modelo."""
@@ -288,7 +305,6 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
         context={"modelo": modelo},
         suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
     )
-
 
 def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
     """Run the central application aggregation service for one modelo."""
@@ -319,7 +335,6 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
     LOGGER.debug("ran per-modelo aggregation", extra=result.log_fields.as_extra())
     return result
 
-
 def _aggregate_retenciones(
     modelo: str,
     period: str,
@@ -335,7 +350,6 @@ def _aggregate_retenciones(
     }
     return dispatch[modelo](observations, period=period)
 
-
 def _aggregate_counterpart(
     modelo: str,
     period: str,
@@ -345,11 +359,9 @@ def _aggregate_counterpart(
         return aggregate_counterpart_347(observations, period=period)
     return aggregate_counterpart_349(observations, period=period)
 
-
 def _source_kinds_for_payload(payload: PerModeloAggregationPayload) -> tuple[AggregationSourceKind, ...]:
     source_kind_values = sorted({row.source_kind for row in payload.rollups})
     return tuple(AggregationSourceKind(value) for value in source_kind_values)
-
 
 def _observation_count_for_command(
     command: PerModeloAggregationCommand,
@@ -360,7 +372,6 @@ def _observation_count_for_command(
     if provider is PerModeloAggregationProvider.COUNTERPART:
         return len(command.counterpart_observations)
     return len(command.foreign_asset_observations)
-
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",

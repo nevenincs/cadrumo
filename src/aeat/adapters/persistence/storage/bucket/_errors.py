@@ -17,13 +17,8 @@ class BucketError(SecureStorageError):
     """Base class for every per-bucket lifecycle error."""
 
 
-class BucketValidationError(BucketError, ValueError):
-    """Raised when a bucket parameter or manifest field fails validation.
-
-    Inherits from both :class:`BucketError` and :class:`ValueError` to
-    remain compatible with Pydantic's field-validator contract while allowing
-    catch-all :class:`BucketError` handlers to detect validation failures.
-    """
+class BucketValidationError(BucketError):
+    """Raised when a bucket parameter or manifest field fails validation."""
 
 
 class NoActiveBucketError(BucketError):

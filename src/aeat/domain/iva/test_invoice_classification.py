@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import IvaLedgerObservation
-from aeat.domain.invoices._enums import IvaRate
+from aeat.domain.invoices import IvaRate
 from aeat.domain.iva import (
     InvoiceKind,
     IvaCategory,

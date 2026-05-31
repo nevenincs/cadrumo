@@ -10,10 +10,7 @@ environment variable the application reads.  These tests enforce that:
 
 from __future__ import annotations
 
-import os
 import re
-from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 from types import UnionType
 from typing import Union, get_args, get_origin
@@ -23,39 +20,11 @@ from pydantic_settings import SettingsConfigDict
 
 from aeat.core.config import PROJECT_ROOT, CertificateBackend, Settings
 from aeat.core.external_constants import load_external_constants
+from aeat.tests.env_scope import isolated_aeat_env as _isolated_aeat_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
-
-
-@contextmanager
-def _isolated_aeat_env(**overrides: str) -> Iterator[None]:
-    """Clear every AEAT_* env var, apply explicit overrides, restore on exit.
-
-    Replaces the historical ``for name in Settings.env_var_names():
-    monkeypatch.delenv(name, ...)`` loop plus follow-up ``monkeypatch.setenv``
-    calls per the project no-monkeypatch mandate (CLAUDE.md). These tests
-    exercise the pydantic-settings env-reading contract itself, so a
-    ContextVar-based ``override_settings`` does not apply — the validators
-    must see real env values. The helper saves both the upper-case and
-    lower-case slot for each Settings field name, since pydantic-settings
-    consults both, and restores on exit including on exception.
-    """
-    saved: dict[str, str | None] = {}
-    for name in Settings.env_var_names():
-        saved[name] = os.environ.pop(name, None)
-        saved[name.lower()] = os.environ.pop(name.lower(), None)
-    for name, value in overrides.items():
-        os.environ[name] = value
-    try:
-        yield
-    finally:
-        for name in overrides:
-            os.environ.pop(name, None)
-        for name, value in saved.items():
-            if value is not None:
-                os.environ[name] = value
 
 
 def _parse_env_example_vars() -> set[str]:

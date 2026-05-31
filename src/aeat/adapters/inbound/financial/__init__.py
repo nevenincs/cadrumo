@@ -10,7 +10,8 @@ See Also:
 
 from __future__ import annotations
 
-from ._decimal import canonical_decimal
+from aeat.domain._identifiers import canonical_decimal_string as canonical_decimal
+
 from .providers import (
     BankStatementParseError,
     CorpusVerificationSource,

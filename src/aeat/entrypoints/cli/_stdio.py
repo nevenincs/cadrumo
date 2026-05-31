@@ -31,6 +31,8 @@ import sys
 from collections.abc import Iterator
 from typing import Final, TextIO
 
+from ...core.external_constants import COLUMNS_ENV_VAR
+
 # Minimum render width for the help surface. The wizard `profile
 # create` / `edit` verbs expose ~40 flags, including long negatable
 # boolean flag pairs that carry both `--x` and `--no-x` in one
@@ -49,7 +51,7 @@ from typing import Final, TextIO
 _MIN_HELP_RENDER_COLUMNS = 240
 
 #: Environment variable key Rich uses to determine console column width.
-_COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
+_COLUMNS_ENV_VAR: Final[str] = COLUMNS_ENV_VAR
 
 #: argv tokens that request the help surface.
 _HELP_TOKENS = frozenset({"--help", "-h"})
@@ -77,6 +79,14 @@ def _ensure_help_render_width() -> Iterator[None]:
     The mutation is scoped to the ``with`` block: the original value of
     ``COLUMNS`` (or its absence) is restored on exit so the environment
     mutation does not leak into sibling processes or tests.
+
+    Tests that exercise the decision branches scope ``sys.argv`` and
+    ``os.environ[COLUMNS]`` via the centralized backend helpers in
+    :mod:`aeat.tests.env_scope` (``scoped_sys_argv`` /
+    ``scoped_env_var``) rather than rebinding process state directly.
+    Rich reads the env var from the live environment at render time,
+    so a DI-seam that bypassed the os.environ write would misrepresent
+    the production contract.
     """
 
     _original = os.environ.get(_COLUMNS_ENV_VAR)

@@ -29,7 +29,7 @@ import json
 import re
 import time
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -40,10 +40,12 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
-from .....core.time._clock import _now
+from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.time._clock import _now
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
+from .....domain.user_profile._errors import UserProfileError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
@@ -76,11 +78,14 @@ _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation
 _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
 _OWN_NAME_REPRESENTATION_ACTION: Final[str] = "representation-gate-own-name-continue"
 
+# Environment variable name referenced in operator-facing error messages.
+# Named constant so grepping for the env-var name surfaces every usage site.
+_CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "AEAT_CLAVE_MOVIL_DNI_NIE"
+
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 """Distinct from certificate metadata v1 so stale certificate objects are rejected."""
 
-CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
 _DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 
 
@@ -448,7 +453,7 @@ class ClaveMovilAuthProvider:
                             storage_state=persisted.storage_state,
                             metadata=refreshed_metadata,
                         )
-                    except Exception:
+                    except (OSError, AuthError):
                         log.warning(
                             "ClaveMovilAuthProvider: encrypted session refresh write failed;"
                             " session valid but deadline not persisted",
@@ -626,7 +631,7 @@ class ClaveMovilAuthProvider:
         raw = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie)
         if not raw:
             raise ClaveMovilConfigurationError(
-                "AEAT_CLAVE_MOVIL_DNI_NIE is not set; set it to your DNI or NIE "
+                f"{_CLAVE_MOVIL_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
                 "before running `aeat config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
@@ -797,7 +802,7 @@ class ClaveMovilAuthProvider:
             else:
                 context["identity_alignment"] = "mismatch"
             return context
-        except Exception as exc:
+        except (ImportError, KeyError, AttributeError, UserProfileError) as exc:
             log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
             return {
                 "active_profile_id": "",
@@ -1035,7 +1040,17 @@ class ClaveMovilAuthProvider:
         except Exception:
             # If the encrypted save fails, remove any partial object so the
             # next authenticate() call sees a clean slate and runs fresh.
-            self._invalidate_persisted(storage_state_path)
+            # The cleanup is wrapped so a secondary failure does not mask the
+            # original persist exception (mirrors the teardown pattern above).
+            try:
+                self._invalidate_persisted(storage_state_path)
+            except Exception as _cleanup_exc:
+                log.debug(
+                    "ClaveMovilAuthProvider: _invalidate_persisted during persist-failure cleanup"
+                    " suppressed: %s",
+                    _cleanup_exc,
+                    exc_info=True,
+                )
             raise
 
         session = AeatSession(
@@ -1502,7 +1517,7 @@ class ClaveMovilAuthProvider:
                 classification=SensitivityClass.SESSION,
                 schema_version=1,
                 written_at=_now(),
-                payload=json.dumps(payload, sort_keys=True, default=str).encode("utf-8"),
+                payload=json.dumps(payload, sort_keys=True, default=str).encode(UTF_8_ENCODING),
             )
             log.warning(
                 "ClaveMovilAuthProvider: encrypted diagnostic captured id=%s (url=%s reason=%s)",

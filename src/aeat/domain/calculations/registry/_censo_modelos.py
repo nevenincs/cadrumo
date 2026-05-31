@@ -7,7 +7,7 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from ....core.logging import get_logger
 from ....core.resources import resources
@@ -17,9 +17,8 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 CENSUS_MODELO_SERVICE_OWNER = "aeat.domain.calculations.registry"
 CENSUS_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
 CENSUS_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _LOGGER = get_logger(__name__)
-
 
 class CensoModeloRole(StrEnum):
     """Lifecycle role for census modelos under the registry foundation."""
@@ -27,14 +26,12 @@ class CensoModeloRole(StrEnum):
     ACTIVE_FOUNDATION = "active_foundation"
     HISTORICAL_METADATA = "historical_metadata"
 
-
 class CensoModeloEventKind(StrEnum):
     """Accepted event-triggered lifecycle kinds for active Modelo 036."""
 
     ALTA = "alta"
     MODIFICACION = "modificacion"
     BAJA = "baja"
-
 
 class CensoModeloFoundationLogFields(BaseModel):
     """Stable, non-secret log fields emitted by the census foundation service."""
@@ -64,7 +61,6 @@ class CensoModeloFoundationLogFields(BaseModel):
             "superseded_by": self.superseded_by or "",
         }
 
-
 @dataclass(frozen=True, slots=True)
 class CensoModeloOwnership:
     """Non-CLI ownership record for one census modelo code."""
@@ -76,12 +72,10 @@ class CensoModeloOwnership:
     active_work_unit_allowed: bool
     superseded_by: str | None = None
 
-
 _ACTIVE_CENSUS_MODELO = "036"
 _HISTORICAL_CENSUS_MODELO = "037"
 _HISTORICAL_037_SOURCE_REF = "boe-modelo-037-historical-suppression"
 _CENSUS_FOUNDATION_YEAR = 2025
-
 
 class CensoModeloFoundationContract(BaseModel):
     """Backend-owned service contract for census modelo foundation routing."""
@@ -119,7 +113,6 @@ class CensoModeloFoundationContract(BaseModel):
             raise RegistryValidationError("census foundation error codes must match the declared service contract")
         return value
 
-
 class CensoModeloFoundationCommand(BaseModel):
     """Command contract for resolving one census modelo foundation request."""
 
@@ -136,7 +129,6 @@ class CensoModeloFoundationCommand(BaseModel):
         if not ownership.active_work_unit_allowed and self.event_kind is not None:
             raise RegistryValidationError("historical census modelo 037 must not declare event_kind")
         return self
-
 
 class CensoModeloFoundationResult(BaseModel):
     """Result contract describing the registry-owned census foundation decision."""
@@ -200,12 +192,10 @@ class CensoModeloFoundationResult(BaseModel):
         if self.active_work_unit_allowed or self.superseded_by != "036":
             raise RegistryValidationError("modelo 037 result must be inactive and superseded by 036")
 
-
 def censo_modelo_ownership_map() -> tuple[CensoModeloOwnership, ...]:
     """Return the registry-owned census modelo ownership map."""
 
     return (censo_modelo_ownership(_ACTIVE_CENSUS_MODELO), censo_modelo_ownership(_HISTORICAL_CENSUS_MODELO))
-
 
 def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     """Build the immutable backend-owned census modelo foundation contract."""
@@ -227,13 +217,11 @@ def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     )
     return contract
 
-
 @lru_cache(maxsize=1)
 def get_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     """Return the cached backend-owned census modelo foundation contract."""
 
     return build_censo_modelo_foundation_contract()
-
 
 def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     """Return the census ownership record for an exact string modelo code."""
@@ -247,7 +235,6 @@ def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
         return _historical_037_ownership_from_registry(authority)
     raise RegistryValidationError(f"unknown census modelo code {modelo!r}; expected '036' or '037'")
 
-
 def _find_censo_modelo_ownership(modelo: str) -> CensoModeloOwnership | None:
     if not isinstance(modelo, str):
         raise RegistryValidationError("census modelo code must be a string")
@@ -257,7 +244,6 @@ def _find_censo_modelo_ownership(modelo: str) -> CensoModeloOwnership | None:
             raise RegistryValidationError(f"unknown census modelo code {modelo!r}; expected '036' or '037'")
         return None
     return censo_modelo_ownership(modelo)
-
 
 def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:
     try:
@@ -291,7 +277,6 @@ def _active_036_ownership_from_registry(authority: ValidatedRegistryAuthority) -
         active_work_unit_allowed=True,
     )
 
-
 def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthority) -> CensoModeloOwnership:
     try:
         authority.validate_modelo(_HISTORICAL_CENSUS_MODELO)
@@ -311,12 +296,10 @@ def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthorit
         superseded_by=_ACTIVE_CENSUS_MODELO,
     )
 
-
 def is_active_censo_modelo(modelo: str) -> bool:
     """Return whether a census modelo may create active work units."""
 
     return censo_modelo_ownership(modelo).active_work_unit_allowed
-
 
 def resolve_censo_modelo_foundation(command: CensoModeloFoundationCommand) -> CensoModeloFoundationResult:
     """Resolve one census modelo foundation command through the registry owner."""
@@ -334,7 +317,6 @@ def resolve_censo_modelo_foundation(command: CensoModeloFoundationCommand) -> Ce
     )
     _LOGGER.debug("resolved census modelo foundation", extra=result.log_fields.as_extra())
     return result
-
 
 def resolve_censo_modelo_work_unit_foundation(
     *,
@@ -358,7 +340,6 @@ def resolve_censo_modelo_work_unit_foundation(
             "active census modelo 036 work units require one of the census event periods: alta, modificacion, baja"
         ) from exc
     return resolve_censo_modelo_foundation(CensoModeloFoundationCommand.model_validate(payload))
-
 
 __all__ = [
     "CENSUS_MODELO_ERROR_CODES",

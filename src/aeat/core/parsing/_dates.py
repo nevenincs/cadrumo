@@ -162,3 +162,8 @@ def _parse_date(
         if on_error == "none":
             return None
         raise
+
+
+#: Public alias — cross-package callers must import ``parse_date`` rather than
+#: the private ``_parse_date`` implementation name.
+parse_date = _parse_date

@@ -17,10 +17,12 @@ import contextlib
 import hashlib
 import json
 import os
-from collections.abc import Iterator
+import typing
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time._clock import _now
 from ._errors import (
@@ -130,20 +132,23 @@ class LocalFileSystemProvider:
                 return entry
         return None
 
-    def _load_sidecar(self, sidecar_path: Path) -> dict[str, object]:
+    def _load_sidecar(self, sidecar_path: Path) -> Mapping[str, object]:
         try:
-            payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            raw = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, json.JSONDecodeError) as exc:
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
                 context={"sidecar_path": str(sidecar_path)},
             ) from exc
-        if not isinstance(payload, dict):
+        if not isinstance(raw, dict):
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is not a JSON object",
                 context={"sidecar_path": str(sidecar_path)},
             )
-        return payload
+        # CAST-RATIONALE-SIDECAR-MAPPING: json.loads returns Any; isinstance
+        # guard above confirms dict shape; cast narrows the static type to
+        # Mapping[str, object] without altering runtime behaviour.
+        return typing.cast(Mapping[str, object], raw)
 
     def put(
         self,
@@ -210,7 +215,7 @@ class LocalFileSystemProvider:
             "written_at": written_at.isoformat(),
         }
         try:
-            sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding="utf-8")
+            sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
         except OSError as exc:
             target_path.unlink(missing_ok=True)
             raise OutboundStoragePermissionError(

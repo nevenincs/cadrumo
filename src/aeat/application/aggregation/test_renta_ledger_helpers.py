@@ -23,7 +23,7 @@ import pytest
 
 from ...domain.renta import RentaExpenseDirection
 from ...domain.transactions import BusinessClassification
-from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
+from ...domain.transactions import TransactionDirection
 from ._errors import AggregationPeriodError
 from ._models import Period
 from ._renta_ledger import (
@@ -79,23 +79,23 @@ def test_resolve_annual_period_rejects_already_validated_quarterly_period() -> N
 
 def test_renta_direction_for_outgoing_maps_to_outgoing_expense() -> None:
     """OUTGOING flows out — always an expense."""
-    assert _renta_direction_for(LedgerTransactionDirection.OUTGOING, None) is RentaExpenseDirection.OUTGOING_EXPENSE
+    assert _renta_direction_for(TransactionDirection.OUTGOING, None) is RentaExpenseDirection.OUTGOING_EXPENSE
     assert (
-        _renta_direction_for(LedgerTransactionDirection.OUTGOING, "invoice-id-here")
+        _renta_direction_for(TransactionDirection.OUTGOING, "invoice-id-here")
         is RentaExpenseDirection.OUTGOING_EXPENSE
     )
 
 
 def test_renta_direction_for_incoming_with_invoice_is_a_refund() -> None:
     """An INCOMING row attached to an outbound invoice is a refund."""
-    assert _renta_direction_for(LedgerTransactionDirection.INCOMING, "invoice-id-here") is RentaExpenseDirection.REFUND
+    assert _renta_direction_for(TransactionDirection.INCOMING, "invoice-id-here") is RentaExpenseDirection.REFUND
 
 
 def test_renta_direction_for_incoming_without_invoice_is_unsupported() -> None:
     """An INCOMING row with no invoice anchor cannot map to a Renta
     expense direction — the helper must return None so the caller can
     flag the row as unsupported."""
-    assert _renta_direction_for(LedgerTransactionDirection.INCOMING, None) is None
+    assert _renta_direction_for(TransactionDirection.INCOMING, None) is None
 
 
 # ---------------------------------------------------------------------------

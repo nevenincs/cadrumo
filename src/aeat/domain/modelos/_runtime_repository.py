@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from typing import TYPE_CHECKING
+
 from ...core._bucket_pointer_io import resolve_active_bucket_id
 from ...core.i18n import tr
 from ._errors import ModeloError
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 
 def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: type[ModeloError]) -> str:
@@ -25,6 +28,7 @@ def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: ty
 
 def secure_objects_for_modelo_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return runtime-created secure-object storage for ``bucket_id``."""
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id)
 

@@ -14,40 +14,79 @@ import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,
+)
+from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.storage import MasterKeyProvider as _MasterKeyProvider
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
+)
+from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
+)
+from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
+)
+from ...domain.calculations.registry import (
     generate_parity_tape_path as _generate_parity_tape_path,
+)
+from ...domain.calculations.registry import (
     load_parity_scenario as _load_parity_scenario,
+)
+from ...domain.calculations.registry import (
     load_parity_tape as _load_parity_tape,
+)
+from ...domain.calculations.registry import (
     replay_parity_tape as _replay_parity_tape,
+)
+from ...domain.calculations.registry import (
     resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values,
+)
+from ...domain.calculations.registry import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
+)
+from ...domain.calculations.registry import (
     run_parity_scenario as _run_parity_scenario,
+)
+from ...domain.calculations.registry import (
     save_parity_tape as _save_parity_tape,
+)
+from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
 )
 from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
-from ...domain.calculations.registry._legal import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.calculations.registry._filed_state import (
     RegistryFiledStateComparison as _RegistryFiledStateComparison,
+)
+from ...domain.calculations.registry._filed_state import (
     compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
 )
 from ...domain.calculations.registry._groi_oracle import GroiOracle as _GroiOracle
+from ...domain.calculations.registry._legal import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.calculations.registry._live_parity import (
     CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
+)
+from ...domain.calculations.registry._live_parity import (
     LiveParityCatalogue as _LiveParityCatalogue,
+)
+from ...domain.calculations.registry._live_parity import (
     OracleEnvironment as _OracleEnvironment,
+)
+from ...domain.calculations.registry._live_parity import (
     audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
+)
+from ...domain.calculations.registry._live_parity import (
     collect_applicability_declarations as _collect_applicability_declarations,
+)
+from ...domain.calculations.registry._live_parity import (
     collect_orphan_oracle_ids as _collect_orphan_oracle_ids,
 )
-from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport
+from ...domain.calculations.registry._workbook_parity import (
+    WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport,
+)
 from ...domain.period import period_end_date as _period_end_date
 from ._corpus import (
     RegistryCitationArticleProjection,
@@ -267,11 +306,11 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
 
     match environment:
         case "production":
-            return "production"
+            return _OracleEnvironment.PRODUCTION
         case "test_environment":
-            return "test_environment"
+            return _OracleEnvironment.TEST_ENVIRONMENT
         case "both":
-            return "both"
+            return _OracleEnvironment.BOTH
         case _:
             raise RegistryApplicationInputError(
                 f"environment must be one of {sorted(get_args(_OracleEnvironment))!r}; "
@@ -285,8 +324,8 @@ def audit_registry_oracles(registry_root: Path, *, environment: str) -> Registry
     typed_environment = _typed_oracle_environment(environment)
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     oracle_catalogue = _LiveParityCatalogue()
-    oracle_catalogue.register(_AeatNifIvaCheckerOracle(), environment="production")
-    oracle_catalogue.register(_GroiOracle(), environment="production")
+    oracle_catalogue.register(_AeatNifIvaCheckerOracle(), environment=_OracleEnvironment.PRODUCTION)
+    oracle_catalogue.register(_GroiOracle(), environment=_OracleEnvironment.PRODUCTION)
     failures = _audit_registry_oracle_bindings(
         authority.modelos,
         oracle_catalogue,
@@ -402,7 +441,9 @@ def verify_registry_workbooks(
 
     previous_report = None
     if resume_from is not None:
-        previous_report = _WorkbookBackendVerificationReport.model_validate_json(resume_from.read_text(encoding="utf-8"))
+        previous_report = _WorkbookBackendVerificationReport.model_validate_json(
+            resume_from.read_text(encoding=_UTF_8_ENCODING)
+        )
     report = _verify_workbook_backend(
         root,
         scan_limit=limit,
@@ -411,7 +452,7 @@ def verify_registry_workbooks(
     )
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+        output.write_text(report.model_dump_json(indent=2), encoding=_UTF_8_ENCODING)
     return report
 
 

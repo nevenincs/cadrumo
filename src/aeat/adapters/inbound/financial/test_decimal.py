@@ -1,4 +1,4 @@
-"""Unit tests for :func:`aeat.adapters.inbound.financial._decimal.canonical_decimal`.
+"""Unit tests for the canonical decimal-string helper used in the financial ingest layer.
 
 Asserts the helper renders :class:`decimal.Decimal` values in the canonical
 fixed-point form expected by the financial-ingest layer: zeros collapse to
@@ -12,7 +12,7 @@ from decimal import Decimal
 
 import pytest
 
-from ._decimal import canonical_decimal
+from aeat.domain._identifiers import canonical_decimal_string as canonical_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

@@ -19,6 +19,11 @@ The tests cover three cases:
   decline mid-run reconfiguration) are skipped silently — the
   helper never crashes the CLI startup over an encoding-tuning
   step.
+
+Stream rebinding goes through the production helper's explicit
+``stdout=`` / ``stderr=`` kwargs (no ``sys.stdout`` patching). Help-
+surface argv and ``COLUMNS`` scope use the centralized backend helpers
+in :mod:`aeat.tests.env_scope`.
 """
 
 from __future__ import annotations
@@ -26,10 +31,6 @@ from __future__ import annotations
 import io
 import logging
 import os
-import sys
-from collections.abc import Iterator
-from contextlib import contextmanager
-from typing import IO
 
 import pytest
 
@@ -39,57 +40,9 @@ from aeat.entrypoints.cli._stdio import (
     _ensure_help_render_width,
     configure_stdio_for_utf8,
 )
+from aeat.tests.env_scope import scoped_env_var, scoped_sys_argv
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-
-# ---------------------------------------------------------------------------
-# Scoped state helpers — replace ``monkeypatch.setattr``/``setenv`` per the
-# project no-monkeypatch mandate (CLAUDE.md). Each helper snapshots the
-# process-global slot it touches and restores it on exit, matching the
-# semantics of pytest's MonkeyPatch but without the fixture indirection.
-# ---------------------------------------------------------------------------
-
-
-@contextmanager
-def _patched_stdio(stdout: IO[str] | None, stderr: IO[str] | None) -> Iterator[None]:
-    """Swap ``sys.stdout``/``sys.stderr`` for the with-block."""
-    saved_out, saved_err = sys.stdout, sys.stderr
-    sys.stdout = stdout  # type: ignore[assignment]
-    sys.stderr = stderr  # type: ignore[assignment]
-    try:
-        yield
-    finally:
-        sys.stdout = saved_out
-        sys.stderr = saved_err
-
-
-@contextmanager
-def _patched_argv(argv: list[str]) -> Iterator[None]:
-    """Swap ``sys.argv`` for the with-block."""
-    saved = sys.argv
-    sys.argv = argv
-    try:
-        yield
-    finally:
-        sys.argv = saved
-
-
-@contextmanager
-def _patched_env(name: str, value: str | None) -> Iterator[None]:
-    """Pin ``os.environ[name]`` (or remove if ``value is None``) for the block."""
-    prior = os.environ.get(name)
-    if value is None:
-        os.environ.pop(name, None)
-    else:
-        os.environ[name] = value
-    try:
-        yield
-    finally:
-        if prior is None:
-            os.environ.pop(name, None)
-        else:
-            os.environ[name] = prior
 
 
 class _ReconfigurableStream(io.StringIO):
@@ -132,8 +85,7 @@ def test_reconfigurable_streams_receive_utf8_replace() -> None:
 
     stdout = _ReconfigurableStream()
     stderr = _ReconfigurableStream()
-    with _patched_stdio(stdout, stderr):
-        configure_stdio_for_utf8()
+    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
     assert stdout.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
     assert stderr.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
@@ -148,8 +100,7 @@ def test_non_reconfigurable_streams_are_skipped_silently() -> None:
     stderr = _NonReconfigurableStream()
     assert not hasattr(stdout, "reconfigure")
 
-    with _patched_stdio(stdout, stderr):
-        configure_stdio_for_utf8()
+    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
 
 def test_reconfigure_failure_is_swallowed() -> None:
@@ -159,8 +110,7 @@ def test_reconfigure_failure_is_swallowed() -> None:
 
     stdout = _ReconfigureRefusingStream()
     stderr = _ReconfigureRefusingStream()
-    with _patched_stdio(stdout, stderr):
-        configure_stdio_for_utf8()
+    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
     assert stdout.reconfigure_calls == 1
     assert stderr.reconfigure_calls == 1
@@ -171,9 +121,7 @@ def test_configure_stdio_for_utf8_handles_none_streams() -> None:
     ``sys.stderr`` as ``None``. The helper must accept that without
     raising."""
 
-    with _patched_stdio(None, None):
-        assert sys.stdout is None and sys.stderr is None
-        result = configure_stdio_for_utf8()
+    result = configure_stdio_for_utf8(stdout=None, stderr=None)
     assert result is None
 
 
@@ -184,9 +132,8 @@ def test_configure_stdio_for_utf8_is_idempotent() -> None:
 
     stdout = _ReconfigurableStream()
     stderr = _ReconfigurableStream()
-    with _patched_stdio(stdout, stderr):
-        configure_stdio_for_utf8()
-        configure_stdio_for_utf8()
+    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
     # Both calls reach the underlying reconfigure call.
     assert stdout.reconfigure_calls == [
@@ -235,22 +182,22 @@ def test_help_invocation_below_floor_widens_columns() -> None:
     """
 
     with (
-        _patched_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
-        _patched_env("COLUMNS", "80"),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
+        scoped_env_var("COLUMNS", "80"),
     ):
         with _ensure_help_render_width():
-            assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+            assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
 
 
 def test_help_invocation_keeps_wider_columns() -> None:
     """A genuinely wide terminal keeps its real width on a help surface."""
 
     with (
-        _patched_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
-        _patched_env("COLUMNS", "300"),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
+        scoped_env_var("COLUMNS", "300"),
     ):
         with _ensure_help_render_width():
-            assert os.environ[_COLUMNS_ENV_VAR] == "300"
+            assert os.environ["COLUMNS"] == "300"
 
 
 def test_non_help_invocation_leaves_columns_untouched() -> None:
@@ -261,19 +208,19 @@ def test_non_help_invocation_leaves_columns_untouched() -> None:
     """
 
     with (
-        _patched_argv(["aeat", "config", "profile", "list"]),
-        _patched_env("COLUMNS", "80"),
+        scoped_sys_argv(["aeat", "config", "profile", "list"]),
+        scoped_env_var("COLUMNS", "80"),
     ):
         with _ensure_help_render_width():
-            assert os.environ[_COLUMNS_ENV_VAR] == "80"
+            assert os.environ["COLUMNS"] == "80"
 
 
 def test_non_help_invocation_without_columns_set() -> None:
     """A non-help invocation does not set COLUMNS when it was unset."""
 
     with (
-        _patched_argv(["aeat", "config", "profile", "list"]),
-        _patched_env("COLUMNS", None),
+        scoped_sys_argv(["aeat", "config", "profile", "list"]),
+        scoped_env_var("COLUMNS", None),
     ):
         with _ensure_help_render_width():
             assert "COLUMNS" not in os.environ
@@ -301,8 +248,8 @@ def test_columns_env_var_used_for_env_write() -> None:
     hold the floor value.
     """
     with (
-        _patched_argv(["aeat", "--help"]),
-        _patched_env(_COLUMNS_ENV_VAR, "80"),
+        scoped_sys_argv(["aeat", "--help"]),
+        scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         with _ensure_help_render_width():
             assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
@@ -317,8 +264,8 @@ def test_columns_env_var_used_for_env_read() -> None:
     """
     wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
     with (
-        _patched_argv(["aeat", "--help"]),
-        _patched_env(_COLUMNS_ENV_VAR, wide),
+        scoped_sys_argv(["aeat", "--help"]),
+        scoped_env_var(_COLUMNS_ENV_VAR, wide),
     ):
         with _ensure_help_render_width():
             assert os.environ[_COLUMNS_ENV_VAR] == wide
@@ -335,8 +282,8 @@ def test_columns_write_is_scoped_help_invocation() -> None:
     the mutation from leaking into sibling processes or subsequent test runs.
     """
     with (
-        _patched_argv(["aeat", "config", "profile", "create", "--help"]),
-        _patched_env(_COLUMNS_ENV_VAR, "80"),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "--help"]),
+        scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         before = os.environ[_COLUMNS_ENV_VAR]
         with _ensure_help_render_width():
@@ -352,8 +299,8 @@ def test_columns_write_is_scoped_help_invocation() -> None:
 def test_columns_write_is_scoped_unset_env() -> None:
     """When COLUMNS was absent before the block it must be absent again after exit."""
     with (
-        _patched_argv(["aeat", "--help"]),
-        _patched_env(_COLUMNS_ENV_VAR, None),
+        scoped_sys_argv(["aeat", "--help"]),
+        scoped_env_var(_COLUMNS_ENV_VAR, None),
     ):
         assert _COLUMNS_ENV_VAR not in os.environ
         with _ensure_help_render_width():
@@ -367,8 +314,8 @@ def test_columns_write_is_scoped_unset_env() -> None:
 def test_columns_write_not_scoped_on_non_help() -> None:
     """On a non-help invocation COLUMNS must not be touched at all."""
     with (
-        _patched_argv(["aeat", "app", "status"]),
-        _patched_env(_COLUMNS_ENV_VAR, "80"),
+        scoped_sys_argv(["aeat", "app", "status"]),
+        scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         before = os.environ[_COLUMNS_ENV_VAR]
         with _ensure_help_render_width():

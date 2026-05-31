@@ -139,6 +139,10 @@ def _root(
         if detail:
             typer.echo(render_cli_version_text(report))
         else:
+            # S539-DEFERRED: The short `aeat --version` line is machine-format
+            # semver (e.g. "aeat 1.2.3") consumed by CI tooling and package
+            # managers. AEAT policy treats semver output as machine-format, not
+            # operator text, so tr() wrapping is explicitly deferred here.
             typer.echo(f"{report.package_name} {report.package_version}")
         raise typer.Exit()
     if help_:

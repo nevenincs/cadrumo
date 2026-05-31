@@ -1270,4 +1270,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.adapters.inbound.financial.providers._base.FinancialProviderError",
+        ErrorCode(
+            code="ERROR_FINANCIAL_PROVIDER",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_financial_provider",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.inbound.financial.providers._base.FinancialProviderConfigError",
+        ErrorCode(
+            code="ERROR_FINANCIAL_PROVIDER_CONFIG",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_financial_provider_config",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

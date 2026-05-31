@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime, timedelta
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from . import (
@@ -29,15 +29,15 @@ from . import (
     OverviewPeriodState,
     build_overview_calendar,
 )
+from ._errors import OverviewAgendaError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _DEFAULT_HORIZON_DAYS = 14
 """Default forward window for `due_soon` partitioning."""
 
 _OVERDUE_LOOKBACK_DAYS = 90
 """How far back the overdue cohort is computed against."""
-
 
 class OverviewAgenda(BaseModel):
     """Outcome of ``build_overview_agenda``.
@@ -82,7 +82,6 @@ class OverviewAgenda(BaseModel):
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
 
-
 def build_overview_agenda(
     profile: TaxpayerProfile,
     *,
@@ -105,7 +104,7 @@ def build_overview_agenda(
     """
 
     if horizon_days <= 0:
-        raise ValueError(f"horizon_days must be positive; got {horizon_days}")
+        raise OverviewAgendaError(f"horizon_days must be positive; got {horizon_days}")
 
     window = OverviewCalendarRange(
         from_date=as_of - timedelta(days=_OVERDUE_LOOKBACK_DAYS),
@@ -155,7 +154,6 @@ def build_overview_agenda(
         taxpayer_model_declared=calendar.taxpayer_model_declared,
         incomplete_reason=calendar.incomplete_reason,
     )
-
 
 __all__ = [
     "OverviewAgenda",

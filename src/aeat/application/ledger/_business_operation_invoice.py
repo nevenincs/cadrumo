@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...core.time import _now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -292,7 +292,7 @@ def _load(
     if not path.exists():
         return []
     records: list[BusinessOperationInvoice] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding=UTF_8_ENCODING).splitlines():
         if not line.strip():
             continue
         records.append(BusinessOperationInvoice.model_validate_json(line))
@@ -309,7 +309,7 @@ def _save(
     payload = "\n".join(record.model_dump_json() for record in records)
     if payload:
         payload += "\n"
-    path.write_text(payload, encoding="utf-8")
+    path.write_text(payload, encoding=UTF_8_ENCODING)
 
 
 def _resolve_id(records: list[BusinessOperationInvoice], id_or_prefix: str) -> BusinessOperationInvoice:

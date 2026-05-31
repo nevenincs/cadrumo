@@ -22,14 +22,14 @@ import base64
 import secrets
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ..errors import KeyDerivationError, StorageValidationError
 
 if TYPE_CHECKING:
     from ..bucket._manifest import ManifestKdfParams
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SALT_BYTES = 16
 _OUTPUT_BYTES = 32
@@ -40,7 +40,6 @@ _MIN_TIME_COST = 2
 _MAX_TIME_COST = 16
 _MIN_PARALLELISM = 1
 _MAX_PARALLELISM = 8
-
 
 class KdfParams(BaseModel):
     """OWASP-baseline Argon2id parameters with strict validation.
@@ -103,6 +102,5 @@ class KdfParams(BaseModel):
         from ..bucket._manifest import ManifestKdfParams
 
         return ManifestKdfParams.model_validate(self.model_dump())
-
 
 __all__ = ["KdfParams"]

@@ -31,6 +31,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     Envelope,
 )
+from ...adapters.persistence.storage.bucket._errors import BucketValidationError
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.user_profile import (
@@ -94,7 +95,7 @@ def user_profile_value_object_key(profile_id: str) -> str:
 
     trimmed_profile = profile_id.strip()
     if not trimmed_profile:
-        raise ValueError("profile_id must not be blank")
+        raise BucketValidationError("profile_id must not be blank")
     return f"user-profile:{trimmed_profile}"
 
 
@@ -109,9 +110,9 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_profile:
-        raise ValueError("profile_id must not be blank")
+        raise BucketValidationError("profile_id must not be blank")
     if not trimmed_snapshot:
-        raise ValueError("snapshot_id must not be blank")
+        raise BucketValidationError("snapshot_id must not be blank")
     return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
@@ -121,7 +122,7 @@ class UserProfileLifecycleRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
-            raise ValueError("bucket_id must not be blank")
+            raise BucketValidationError("bucket_id must not be blank")
         # Bind to THIS bucket's own database when no repository is
         # injected — cross-bucket operations must address the named
         # bucket, not whichever profile is currently active.
@@ -219,7 +220,7 @@ class UserProfileSnapshotRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
-            raise ValueError("bucket_id must not be blank")
+            raise BucketValidationError("bucket_id must not be blank")
         # Bind to THIS bucket's own database when no repository is
         # injected — cross-bucket operations must address the named
         # bucket, not whichever profile is currently active.

@@ -19,7 +19,6 @@ from typing import Annotated, Self
 from pydantic import (
     BaseModel,
     BeforeValidator,
-    ConfigDict,
     Field,
     computed_field,
     field_serializer,
@@ -48,19 +47,12 @@ def _coerce_spending_category(value: object) -> object:
 
 _SpendingCategoryField = Annotated[SpendingCategory, BeforeValidator(_coerce_spending_category)]
 
+from ...core.aggregation import PeriodKind
 from ...core.i18n import Translatable as tr
 from ._errors import AggregationPeriodError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
-
-
-class PeriodKind(StrEnum):
-    """Authoritative period cadences used by the calculation registry."""
-
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    ANNUAL = "annual"
 
 
 class Quarter(StrEnum):
@@ -164,13 +156,21 @@ class Period(BaseModel):
     @model_validator(mode="after")
     def _validate_shape(self) -> Self:
         if self.kind is PeriodKind.QUARTERLY and self.quarter is None:
-            raise AggregationPeriodError(tr("aggregation.models.errors.quarter_required"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.quarter_required",
+            )
         if self.kind is PeriodKind.MONTHLY and self.month is None:
-            raise AggregationPeriodError(tr("aggregation.models.errors.month_required"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.month_required",
+            )
         if self.kind is PeriodKind.ANNUAL and (self.quarter is not None or self.month is not None):
-            raise AggregationPeriodError(tr("aggregation.models.errors.annual_period_mixed"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.annual_period_mixed",
+            )
         if self.quarter is not None and self.month is not None:
-            raise AggregationPeriodError(tr("aggregation.models.errors.period_type_ambiguous"))
+            raise AggregationPeriodError(
+                translated_message="aggregation.models.errors.period_type_ambiguous",
+            )
         return self
 
     @computed_field

@@ -117,7 +117,7 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
     return OutboundStorageNetworkError(detail, context=context)
 
 
-def _service_factory(credentials: object) -> Any:
+def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
     """Real Drive v3 service factory. Lazily imports google-api-python-client."""
 
     try:
@@ -160,12 +160,12 @@ class GoogleDriveProvider:
     def root_folder_id(self) -> str:
         return self._root_folder_id
 
-    def _get_service(self) -> Any:
+    def _get_service(self) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
         if self._service is None:
             self._service = _service_factory(self._credentials)
         return self._service
 
-    def _execute(self, request: Any, *, action: str) -> Any:
+    def _execute(self, request: Any, *, action: str) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
         try:
             return request.execute()
         except OutboundStorageError:
@@ -647,7 +647,7 @@ class GoogleDriveProvider:
         )
 
 
-def _build_media_body(payload: bytes) -> Any:
+def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
     """Build a `MediaIoBaseUpload` from `payload`. Lazy-imported."""
 
     try:

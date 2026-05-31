@@ -18,23 +18,24 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ...core.errors import AeatError
 from ...domain.calculations.registry._schema import RegistrySnapshot
-from ._errors import IvaWalletReconciliationError
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
+from ._errors import IvaWalletReconciliationError
 
 if TYPE_CHECKING:
     from ._binding_prefill import LocalIvaCompensationRecurrence
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
+_FILED_HISTORY_OBSERVATION: Final[str] = "filed_history_observation"
 _AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
     {
         "aeat_sede_justificante",
         "aeat_sede_iva_compensation_history",
-        "filed_history_observation",
+        _FILED_HISTORY_OBSERVATION,
     }
 )
 
@@ -60,6 +61,7 @@ type IvaCompensationDivergence = Literal[
     "filed_history_only",
     "wallet_stale",
     "override",
+    "first_period_zero",
     "missing",
 ]
 
@@ -252,6 +254,7 @@ def reconcile_iva_compensation_wallet(
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = _DEFAULT_MAX_WALLET_AGE_DAYS,
+    is_first_iva_period: bool = False,
 ) -> IvaCompensationReconciliationDecision:
     """Return the deterministic effective-value decision for casilla `110`.
 
@@ -259,6 +262,12 @@ def reconcile_iva_compensation_wallet(
     recurrence. Divergence between fresh wallet evidence and local
     recurrence blocks automatic calculation unless an override is
     recorded.
+
+    When ``is_first_iva_period=True`` and the selected amount is zero, the
+    decision maps to the non-blocking ``first_period_zero`` divergence.
+    Under LIVA art. 99.5 a taxpayer's first registered IVA period has no
+    prior compensation balance; zero is legally certain and does not require
+    operator review.
     """
 
     if wallet is not None:
@@ -297,6 +306,51 @@ def reconcile_iva_compensation_wallet(
             authority_sources=authority_sources,
             decided_at=when,
         )
+
+    if is_first_iva_period:
+        effective_zero = Decimal("0")
+        if wallet_amount is not None and wallet_amount == effective_zero and not stale_wallet:
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="aeat_wallet",
+                selected_amount=effective_zero,
+                wallet_amount=effective_zero,
+                local_recurrence_amount=local_recurrence_amount,
+                override_amount=None,
+                divergence="first_period_zero",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "First registered IVA filing period: casilla 110 is zero per LIVA art. 99.5. "
+                    "No prior compensation balance exists; zero is legally certain and non-blocking."
+                ),
+                wallet_captured_at=wallet_captured_at,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
+        if wallet_amount is None and local_recurrence_amount is not None and local_recurrence_amount == effective_zero:
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="local_recurrence",
+                selected_amount=effective_zero,
+                wallet_amount=None,
+                local_recurrence_amount=effective_zero,
+                override_amount=None,
+                divergence="first_period_zero",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "First registered IVA filing period: seeded-zero local record per LIVA art. 99.5. "
+                    "No prior compensation balance exists; zero is legally certain and non-blocking."
+                ),
+                wallet_captured_at=None,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
 
     if wallet_amount is None:
         if local_recurrence_amount is None:
@@ -485,7 +539,7 @@ def _authority_sources(
             amount=local_recurrence_amount,
             source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
         )
-        if recurrence_source.source_kind == "filed_history_observation":
+        if recurrence_source.source_kind == _FILED_HISTORY_OBSERVATION:
             sources.append(
                 IvaCompensationAuthoritySource(
                     source_kind="local_recurrence",
@@ -511,7 +565,7 @@ def _authority_sources(
 
 
 def _is_filed_history_source(source: IvaCompensationAuthoritySource | None) -> bool:
-    return source is not None and source.source_kind == "filed_history_observation"
+    return source is not None and source.source_kind == _FILED_HISTORY_OBSERVATION
 
 
 def _local_recurrence_authority_source(
@@ -526,7 +580,7 @@ def _local_recurrence_authority_source(
     source_periods = tuple(str(item) for item in recurrence.source_periods)
     resolved_at = recurrence.resolved_at
     source_kind: IvaCompensationAuthoritySourceKind = (
-        "filed_history_observation"
+        _FILED_HISTORY_OBSERVATION
         if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS
         else "local_recurrence"
     )

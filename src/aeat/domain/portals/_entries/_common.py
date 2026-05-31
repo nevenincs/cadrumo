@@ -17,6 +17,7 @@ from ....core.config import Settings
 from ....core.i18n import Translatable as tr
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
+from .._errors import PortalValidationError
 from .._metadata import PortalMetadata
 
 _URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
@@ -45,7 +46,7 @@ def _resolve_host(subdomain: Subdomain) -> str:
         return domains.legacy_www
     if subdomain is Subdomain.CLAVE_GOB:
         return domains.clave
-    raise ValueError(f"unsupported AEAT portal subdomain {subdomain!r}")
+    raise PortalValidationError(f"unsupported AEAT portal subdomain {subdomain!r}")
 
 
 def build_entry(
@@ -90,10 +91,10 @@ def build_entry(
         A validated, frozen :class:`PortalMetadata`.
     """
     if (url is None) == (path is None):
-        raise ValueError("build_entry: pass exactly one of `url=` or `path=`")
+        raise PortalValidationError("build_entry: pass exactly one of `url=` or `path=`")
     if path is not None:
         if not path.startswith("/"):
-            raise ValueError("build_entry: `path` must start with '/'")
+            raise PortalValidationError("build_entry: `path` must start with '/'")
         url = f"{_resolve_host(subdomain)}{path}"
     assert url is not None
     return PortalMetadata(

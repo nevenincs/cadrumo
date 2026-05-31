@@ -25,6 +25,7 @@ from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
+    FinancialValidationError,
     InvalidFinancialSourceError,
     ProviderValidation,
     build_raw_transaction,
@@ -185,7 +186,7 @@ class XlsxProvider(FinancialProvider):
                 best.lookup,
                 best.header_index,
             )
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN: openpyxl raises OSError (file I/O), ValueError (invalid cell values), KeyError (missing sheet/named range), IndexError (out-of-range row/column access), and TypeError (unexpected cell type); `_close_workbook_during_teardown` must run unconditionally on any failure before re-raising.
             _close_workbook_during_teardown(workbook)
             raise
 
@@ -357,7 +358,7 @@ def _parse_xlsx_row(
         currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
         description = _required_value(raw_fields, lookup, layout.columns.description, "description")
         counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
-    except ValueError as exc:
+    except (ValueError, FinancialValidationError) as exc:
         _logger.warning(
             "xlsx_provider: parse error row=%d file=%s",
             source_row_index,

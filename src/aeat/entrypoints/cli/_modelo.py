@@ -71,6 +71,7 @@ from ...domain.modelos._row_models import (
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.profile import parse_tax_region
+from ...domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611 as _compute_deduccion_maternidad_0611
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 _log = get_logger(__name__)
@@ -2659,15 +2660,6 @@ def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
     return hijo_id, meses
 
 
-def _compute_deduccion_maternidad_0611(meses_por_hijo: list[tuple[str, int]]) -> int:
-    """Compute Art. 81 LIRPF deducción maternidad from per-hijo meses pairs.
-
-    Formula: ``sum(min(meses × 100, 1_200))`` for each ``(hijo_id, meses)`` pair.
-    Returns an integer euros amount.
-    """
-    return sum(min(meses * 100, 1200) for _, meses in meses_por_hijo)
-
-
 def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     """Resolve a bare-numeric ``--casilla`` key to its qualified CasillaId.
 
@@ -5004,6 +4996,23 @@ def modelo_project(
     cuota_liquida_autonomica = engine_result.values.get("0596", Decimal("0"))
     cuota_resultante = engine_result.values.get("0597", Decimal("0"))
 
+    # Typed provenance for every formula-computed casilla in the M100
+    # projection.  The grounding rule requires every casilla observation
+    # emitted by a CLI surface to carry legal_refs, source_refs, and
+    # formula_id.  Non-computed (input/bound) casillas have no entry in
+    # engine_result.entries and do not appear here; their values are
+    # operator-supplied inputs already visible in the m130_accumulated block.
+    casilla_observations = [
+        {
+            "casilla_id": entry.target,
+            "value": str(entry.value),
+            "formula_id": entry.formula_id,
+            "legal_refs": list(entry.legal_refs),
+            "source_refs": list(entry.source_refs),
+        }
+        for entry in engine_result.entries
+    ]
+
     payload: dict[str, object] = {
         "operation": "modelo.project",
         "year": year,
@@ -5017,6 +5026,7 @@ def modelo_project(
             "rendimiento_neto": str(total_rendimiento_neto),
             "pagos_fraccionados": str(total_pagos_fraccionados),
         },
+        "casilla_observations": casilla_observations,
         "m100_projection": {
             "base_liquidable_general_0505": str(projected_rendimiento_neto),
             "pagos_fraccionados_0604": str(total_pagos_fraccionados),
@@ -5191,6 +5201,13 @@ def modelo_compare(
     # -- Build delta rows -----------------------------------------------------
     all_casilla_ids = sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values))
 
+    # Provenance from the latest revision's typed observations (year_b preferred;
+    # fall back to year_a for casillas that appear only in the older revision).
+    obs_by_id: dict[str, CasillaObservation] = {}
+    for rev in (rev_a, rev_b):
+        for obs in rev.observations:
+            obs_by_id[obs.casilla_id] = obs
+
     delta_rows: list[dict[str, object]] = []
     for cid in all_casilla_ids:
         val_a = rev_a.casilla_values.get(cid, Decimal("0"))
@@ -5202,6 +5219,7 @@ def modelo_compare(
         else:
             pct_change = None
 
+        obs_entry = obs_by_id.get(cid)
         delta_rows.append(
             {
                 "casilla_id": cid,
@@ -5211,6 +5229,9 @@ def modelo_compare(
                 "year_b_value": str(val_b),
                 "delta": str(delta),
                 "pct_change": pct_change,
+                "formula_id": obs_entry.formula_id if obs_entry is not None else None,
+                "legal_refs": list(obs_entry.legal_refs) if obs_entry is not None else [],
+                "source_refs": list(obs_entry.source_refs) if obs_entry is not None else [],
             }
         )
 
@@ -5328,7 +5349,16 @@ def iva_wallet_balance_cmd(
             "Declare a Modelo 303 carry-forward balance for a period that pre-dates "
             "local history. Use this once to seed the first period so subsequent "
             "M303 prefill resolves modelo-303-compensacion-pendiente-anteriores correctly. "
-            "Refuses if a record already exists for the period."
+            "Refuses if a record already exists for the period.\n\n"
+            "Two cases:\n\n"
+            "  --amount 0   True first-period: this is the taxpayer's first ever Modelo 303 "
+            "filing under this NIF. Casilla 110 is zero because no prior compensation "
+            "balance exists (LIVA art. 99.5, Ley 37/1992). The reconciliation layer "
+            "treats this as first_period_zero — non-blocking and legally certain.\n\n"
+            "  --amount X   Carry-in: the taxpayer has filed prior M303s under a different "
+            "tool or directly with AEAT. X is the compensacion pendiente de periodos "
+            "posteriores from the last filed M303. Subsequent periods carry this balance "
+            "forward as prior compensation."
         ),
     ),
 )

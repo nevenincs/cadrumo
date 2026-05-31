@@ -32,12 +32,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
+from aeat.core.resources import resources
+from aeat.domain.calculations.registry import CasillaObservation, calculate_registry_snapshot
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -292,4 +295,62 @@ def test_modelo_compare_m130_two_year_delta_rows(
         f"Casilla {_TAUTOLOGY_CASILLA} (gastos): both years supplied "
         f"{_GASTOS_BOTH}; expected delta=0, "
         f"got {row_tautology['delta']!r}. Anti-tautology check failed."
+    )
+
+
+def test_compare_delta_rows_carry_provenance() -> None:
+    """delta_rows produced by ``modelo compare`` carry formula_id / legal_refs /
+    source_refs from the typed CasillaObservation envelope.
+
+    This test exercises the ``obs_by_id`` lookup used inside ``modelo_compare``
+    directly against real M130 registry engine output, bypassing the CLI stack
+    that depends on wizard-catalogue registration.
+
+    Authority: AEAT DR 130 Instrucciones; IRPF Art. 99 (BOE-A-2006-20764).
+    """
+    authority = resources().modelos.authority
+    snap = authority.snapshot("130", filing_year=2026, period="1T")
+    engine_result = calculate_registry_snapshot(
+        snap,
+        inputs={
+            "01": Decimal("10000"),
+            "02": Decimal("4000"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        date_context={"filing_period": date(2026, 3, 31)},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+    )
+
+    # Simulate the obs_by_id lookup from modelo_compare.
+    obs_by_id: dict[str, CasillaObservation] = {
+        obs.casilla_id: obs for obs in engine_result.observations
+    }
+
+    # Computed casillas (03, 07, 19) must carry non-empty provenance.
+    for casilla_id in ("03", "07", "19"):
+        obs = obs_by_id.get(casilla_id)
+        assert obs is not None, f"Casilla {casilla_id!r} absent from engine_result.observations"
+        assert obs.formula_id, (
+            f"Computed casilla {casilla_id!r}: formula_id must be non-empty in compare delta_rows"
+        )
+        assert obs.legal_refs, (
+            f"Computed casilla {casilla_id!r}: legal_refs must be non-empty in compare delta_rows"
+        )
+        assert obs.source_refs, (
+            f"Computed casilla {casilla_id!r}: source_refs must be non-empty in compare delta_rows"
+        )
+
+    # Input casilla (01) must have empty formula_id (not formula-computed).
+    input_obs = obs_by_id.get("01")
+    assert input_obs is not None, "Casilla '01' (ingresos) must appear in observations"
+    assert input_obs.formula_id is None, (
+        "Input casilla '01' must have formula_id=None (not formula-computed)"
     )

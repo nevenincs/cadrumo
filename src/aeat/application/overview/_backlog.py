@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime, timedelta
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from . import (
@@ -29,11 +29,10 @@ from . import (
     build_overview_calendar,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""
-
 
 class OverviewBacklog(BaseModel):
     """Outcome of ``build_overview_backlog``.
@@ -71,7 +70,6 @@ class OverviewBacklog(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
-
 
 def build_overview_backlog(
     profile: TaxpayerProfile,
@@ -128,7 +126,6 @@ def build_overview_backlog(
         taxpayer_model_declared=calendar.taxpayer_model_declared,
         incomplete_reason=calendar.incomplete_reason,
     )
-
 
 __all__ = [
     "OverviewBacklog",

@@ -144,7 +144,7 @@ def _scrub_value(value: set[Any], *, key: str | None = ...) -> set[Any]: ...
 def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
 
 
-def _scrub_value(value: object, *, key: str | None = None) -> Any:
+def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL: implementation overload must return Any to subsume all concrete overload return types per mypy overload rules.
     """Recursively scrub sensitive values in common logging payload shapes."""
 
     if isinstance(value, str):

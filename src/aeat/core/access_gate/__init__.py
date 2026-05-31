@@ -121,7 +121,11 @@ class AeatAccessGate:
         """
         raise LiveSubmitForbiddenError()
 
-    def snapshot_env(self) -> AeatGateEnvSnapshot:
+    def snapshot_env(
+        self,
+        *,
+        pytest_current_test: str | None = None,
+    ) -> AeatGateEnvSnapshot:
         """Return a frozen snapshot of the gate-relevant variables.
 
         The AEAT-prefixed variable is read from the validated Settings
@@ -131,13 +135,25 @@ class AeatAccessGate:
         field, so it is read directly from ``os.environ`` as the only
         legitimate exception in this surface.
 
+        The ``pytest_current_test`` parameter is a DI seam for tests:
+        when ``None`` (production), the helper reads ``os.environ``;
+        when ``""``, the helper records the "absent" path; when any
+        other string, the helper records the explicit value. Tests
+        pass explicit values rather than mutating process-global env
+        through a hand-rolled scope helper.
+
         Returns:
             A :class:`AeatGateEnvSnapshot` capturing the current
             gate-relevant variables.
         """
+        resolved_pytest = (
+            os.environ.get(_PYTEST_CURRENT_TEST_ENV, "")
+            if pytest_current_test is None
+            else pytest_current_test
+        )
         return AeatGateEnvSnapshot(
             aeat_live_tests_enabled=self.settings.aeat_live_tests_enabled,
-            pytest_current_test=os.environ.get(_PYTEST_CURRENT_TEST_ENV, ""),
+            pytest_current_test=resolved_pytest,
         )
 
 
