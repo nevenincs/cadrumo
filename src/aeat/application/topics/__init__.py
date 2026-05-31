@@ -24,6 +24,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core.errors import AeatError as _AeatError
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -119,7 +120,7 @@ def _load_topic_catalogue_cached(
     topics: list[Topic] = []
     for filename, _byte_count, _modified_ns in fingerprint:
         path = target / filename
-        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+        raw = tomllib.loads(path.read_text(encoding=_UTF_8_ENCODING))
         slug = str(raw.get("slug") or path.stem)
         topics.append(
             Topic(

@@ -43,7 +43,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ValidationError
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
-from .....core.external_constants import BINARY_MIME_TYPE
+from .....core.external_constants import BINARY_MIME_TYPE, UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
@@ -347,7 +347,7 @@ class EncryptedBlobStore:
                 # the only gate that applies is the version ceiling.
                 try:
                     envelope = Envelope[BlobManifest].model_validate_json(
-                        manifest_path.read_text(encoding="utf-8"),
+                        manifest_path.read_text(encoding=_UTF_8_ENCODING),
                     )
                 except (OSError, ValueError, ValidationError):
                     # A single corrupted manifest must not break the

@@ -73,6 +73,7 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 
 _TAX_ID_FACT_PATH = "identity.tax_id"
 """Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
@@ -784,7 +785,7 @@ class ProfileRepository:
         target = pointer_path(self._root)
         if not target.is_file():
             return None
-        return target.read_text(encoding="utf-8")
+        return target.read_text(encoding=_UTF_8_ENCODING)
 
     def _restore_pointer_text(self, prior_text: str | None) -> None:
         """Restore the active-profile pointer to a previously captured state.
@@ -800,7 +801,7 @@ class ProfileRepository:
                 target.unlink()
             return
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(prior_text, encoding="utf-8")
+        target.write_text(prior_text, encoding=_UTF_8_ENCODING)
 
     def _active_pointer_targets(self, profile_id: str) -> bool:
         """Return whether the active-profile pointer aims at ``profile_id``."""

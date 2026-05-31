@@ -7,12 +7,13 @@ from collections.abc import Iterator
 from datetime import datetime
 from typing import cast
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -33,7 +34,6 @@ from .session import session_scope
 
 _log = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 _DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
 _DEFAULT_CONFLICT_POLICY = "last-write-wins"
 _SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (

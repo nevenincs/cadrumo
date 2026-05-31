@@ -25,6 +25,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -340,7 +341,7 @@ def capture_active_profile_pointer() -> str | None:
     target = pointer_path(load_settings().aeat_local_storage_root)
     if not target.is_file():
         return None
-    return target.read_text(encoding="utf-8")
+    return target.read_text(encoding=_UTF_8_ENCODING)
 
 
 def restore_active_profile_pointer(prior_text: str | None) -> None:
@@ -361,7 +362,7 @@ def restore_active_profile_pointer(prior_text: str | None) -> None:
             target.unlink()
         return
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(prior_text, encoding="utf-8")
+    target.write_text(prior_text, encoding=_UTF_8_ENCODING)
 
 
 def _refuse_duplicate_label(

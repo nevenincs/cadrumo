@@ -40,6 +40,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto._crypto import (
     KEY_SIZE,
     EncryptedBlob,
@@ -278,13 +279,13 @@ def save_wrapped_master_key(wrapped: WrappedMasterKey, path: Path) -> None:
     """
     from ._master_key import atomic_write_secure_bytes
 
-    payload = wrapped.model_dump_json().encode("utf-8")
+    payload = wrapped.model_dump_json().encode(_UTF_8_ENCODING)
     atomic_write_secure_bytes(path, payload)
 
 
 def load_wrapped_master_key(path: Path) -> WrappedMasterKey:
     """Read and validate a wrapped-master-key file."""
-    return WrappedMasterKey.model_validate_json(path.read_text(encoding="utf-8"))
+    return WrappedMasterKey.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
 
 
 __all__ = [
