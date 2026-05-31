@@ -23,7 +23,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
@@ -49,11 +49,19 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
-_DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
-_EXPAND_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
-_NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
+
+DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
+DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
+
+
+def _get_expand_timeout_ms() -> int:
+    return load_settings().aeat_browser_form_interaction_timeout_ms
+
+
+def _get_navigation_timeout_ms() -> int:
+    return load_settings().aeat_browser_navigation_timeout_ms
 
 
 @asynccontextmanager
