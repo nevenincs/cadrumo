@@ -278,7 +278,7 @@ def _build_runtime_schema_provider_cached(
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
     )
 
-def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:
+def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE: relative-path keyed for tree-walk change detection (distinct from filename-keyed canonical file_stat_fingerprint).
     paths = sorted((root / "legal").rglob("*.toml")) + sorted((root / "modelos").rglob("*.toml"))
     fingerprint: list[tuple[str, int, int]] = []
     for path in paths:

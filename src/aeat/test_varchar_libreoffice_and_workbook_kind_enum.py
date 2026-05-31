@@ -1,4 +1,4 @@
-"""Structural inventory: W10.P40 hardcoded-constant extraction gates.
+"""Hardcoded-constant extraction gates: VARCHAR(64), LibreOffice engine, WorkbookKind enum.
 
 Asserts that:
   (a) Zero bare "VARCHAR(64)" string literals survive as assignment RHS or
@@ -13,8 +13,7 @@ Asserts that:
       free-floating Literal aliases.
 
 These tests are purely structural (AST-level) and carry no numeric oracle;
-they enforce the extraction discipline agreed in W10.P40 rather than
-any runtime calculation.
+they enforce the extraction discipline rather than any runtime calculation.
 """
 
 from __future__ import annotations

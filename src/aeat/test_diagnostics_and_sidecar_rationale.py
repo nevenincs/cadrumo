@@ -1,4 +1,4 @@
-"""Aggregate tests asserting W11.P43 axis-finisher changes landed correctly.
+"""Diagnostics broad-except rationales, wizard locale routing, and sidecar Mapping return.
 
 Covers:
   (a) diagnostics.py BROAD-EXCEPT-RATIONALE markers present and complete

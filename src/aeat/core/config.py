@@ -996,7 +996,7 @@ class Settings(BaseSettings):
                 from ._bucket_pointer_io import read_pointer
 
                 pointer = read_pointer(self.aeat_local_storage_root)
-            except Exception:
+            except Exception:  # BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK: read_pointer raises OSError, json.JSONDecodeError, ValidationError on filesystem/encoding/schema drift; degrade to None for best-effort active-bucket resolution.
                 pointer = None
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()

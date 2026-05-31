@@ -52,6 +52,8 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 CENSUS_SOURCE_TAG: Final = "aeat_census_read"
 """``UserProfileFact.source`` value stamped on every census-derived fact."""
 
+_HOME_OFFICE_DEDUCTION_YEAR: Final[int] = 2025
+
 class CensoComparisonStatus(StrEnum):
     """Per-field comparison outcome between snapshot and profile.
 
@@ -353,7 +355,7 @@ class CensoSyncService:
         if total <= Decimal("0") or office < Decimal("0") or office > total:
             return ()
         raw_ratio = office / total
-        derived = derive_home_office_ratios_from_census(raw_ratio, year=2025)
+        derived = derive_home_office_ratios_from_census(raw_ratio, year=_HOME_OFFICE_DEDUCTION_YEAR)
         current = load_usage_ratios(bucket_id=self._bucket_id)
         seeded: list[str] = []
         merged_ratios = dict(current.ratios)
