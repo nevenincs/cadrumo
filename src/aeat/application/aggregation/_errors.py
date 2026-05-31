@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors import AeatError, CoreError
+from ...core.errors import AeatError, CoreError, CoreValidationError
 from ...core.i18n import Translatable as tr
 
 
@@ -67,8 +67,13 @@ class AggregationCategoryCoverageError(AggregationError):
     """Raised when a business transaction lacks category or profile coverage."""
 
 
-class AggregationValidationError(AggregationError, ValueError):
-    """Raised on invalid aggregation payload or state. Inherits from ValueError for Pydantic."""
+class AggregationValidationError(AggregationError, CoreValidationError):
+    """Raised on invalid aggregation payload or state.
+
+    Inherits from CoreValidationError (which itself inherits from CoreError
+    and ValueError) to participate in the shared CoreValidationError catch
+    surface and remain compatible with pydantic field validators.
+    """
 
 
 def t(message: str) -> tr:
