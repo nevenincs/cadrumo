@@ -73,10 +73,10 @@ Declare the UUIDv4 ProfileId alias in core/identity per Rule 1 clause (a) and Ru
 - [x] `W02.P04.S17` - lift the eighteen bare-string profile_id field declarations onto ProfileId per ADR Rule 6 and confirm pydantic shape enforcement at construction; `src/aeat/application/user_profile/__init__.py`.
 - [x] `W02.P04.S18` - lift the profile_id bare-string declarations onto ProfileId per ADR Rule 6 across the censo-sync and state-projection modules and the bucket-pointer and config modules under core; `src/aeat/application/user_profile/_censo_sync.py`.
 - [x] `W02.P04.S19` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the state-projection module; `src/aeat/application/state_projection.py`.
-- [ ] `W02.P04.S20` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the bucket-pointer module; `src/aeat/core/_bucket_pointer.py`.
-- [ ] `W02.P04.S21` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the settings module; `src/aeat/core/config.py`.
+- [x] `W02.P04.S20` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the bucket-pointer module; `src/aeat/core/_bucket_pointer.py`.
+- [x] `W02.P04.S21` - lift the profile_id bare-string declaration onto ProfileId per ADR Rule 6 in the settings module; `src/aeat/core/config.py`.
 - [x] `W02.P04.S22` - lift the profile_id bare-string declarations onto ProfileId per ADR Rule 6 across the storage runtime and runtime-repository modules; `src/aeat/adapters/persistence/storage/runtime.py`.
-- [ ] `W02.P04.S23` - add a real-behavior roundtrip test that populates a UserProfile with a non-default ProfileId, persists through the real SecureObjectRepository against the real SQLite engine, reloads, and asserts strict pydantic equality across the boundary; `src/aeat/application/user_profile/test_profile_roundtrip.py`.
+- [x] `W02.P04.S23` - add a real-behavior roundtrip test that populates a UserProfile with a non-default ProfileId, persists through the real SecureObjectRepository against the real SQLite engine, reloads, and asserts strict pydantic equality across the boundary; `src/aeat/application/user_profile/test_profile_roundtrip.py`.
 
 ### Phase `W02.P05` - promote SnapshotId in core/identity/_snapshot.py
 
