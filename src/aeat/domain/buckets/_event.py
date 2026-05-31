@@ -21,7 +21,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from ..profile._constants import ProfileName as _ProfileName
+from ..profile import ProfileName as _ProfileName
 from ._errors import BucketEventValidationError
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
