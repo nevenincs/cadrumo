@@ -234,9 +234,9 @@ Extract AuthSessionProtocol to application/auth/_protocols.py, migrate the 17 bi
 
 Extract IvaCompensationRepositoryProtocol to application/calculations/_ports.py, migrate the Google adapter to implement it, break the 17 bi-directional Google-adapter cycle edges (MIGRATE-002, RELOC-017, Rule 2 and Rule 8).
 
-- [ ] `W08.P21.S72` - declare IvaCompensationRepositoryProtocol in application/calculations/_ports.py capturing the interface used by application/calculations/_iva_compensation_history.py; `MIGRATE-002, Rule 8; `src/aeat/application/calculations/_ports.py`.
-- [ ] `W08.P21.S73` - update application/calculations/_iva_compensation_history.py to depend on IvaCompensationRepositoryProtocol and remove the adapters import; `MIGRATE-002, RELOC-017, Rule 2; `src/aeat/application/calculations/_iva_compensation_history.py`.
-- [ ] `W08.P21.S74` - migrate the 15 remaining Google adapter bi-directional cycle edges to depend inward on the Protocol and run the calculations test suite sequentially; `MIGRATE-002, Rule 2; `src/aeat/adapters/outbound/google/`.
+- [x] `W08.P21.S72` - declare IvaCompensationRepositoryProtocol in application/calculations/_ports.py capturing the interface used by application/calculations/_iva_compensation_history.py; `MIGRATE-002, Rule 8; `src/aeat/application/calculations/_ports.py`.
+- [x] `W08.P21.S73` - update application/calculations/_iva_compensation_history.py to depend on IvaCompensationRepositoryProtocol and remove the adapters import; `MIGRATE-002, RELOC-017, Rule 2; `src/aeat/application/calculations/_iva_compensation_history.py`.
+- [x] `W08.P21.S74` - migrate the 15 remaining Google adapter bi-directional cycle edges to depend inward on the Protocol and run the calculations test suite sequentially; `MIGRATE-002, Rule 2; `src/aeat/adapters/outbound/google/`.
 
 ### Phase `W08.P22` - application filing, ledger, and live error port extractions
 
