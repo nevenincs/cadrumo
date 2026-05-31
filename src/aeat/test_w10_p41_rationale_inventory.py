@@ -191,3 +191,71 @@ def test_scrub_value_overload_impl_carries_rationale() -> None:
         if _SCRUB_OVERLOAD_TOKEN not in ln
     ]
     assert not failures, "\n".join(failures)
+
+
+# ---------------------------------------------------------------------------
+# (f) S595 — adapters/outbound/storage/_google_drive.py build-factory markers
+# ---------------------------------------------------------------------------
+
+_GOOGLE_DRIVE_MODULE = _SRC / "adapters/outbound/storage/_google_drive.py"
+_GOOGLE_DRIVE_TOKEN = "ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY"
+
+# All def/method names that return Any due to the untyped googleapiclient Resource.
+_GOOGLE_DRIVE_ANY_RETURN_FUNCS = (
+    "_service_factory",
+    "_get_service",
+    "_execute",
+    "_build_media_body",
+)
+
+
+@pytest.mark.parametrize("func_name", _GOOGLE_DRIVE_ANY_RETURN_FUNCS)
+def test_google_drive_any_return_sites_carry_rationale(func_name: str) -> None:
+    """Each -> Any site in _google_drive.py must carry ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY.
+
+    googleapiclient.discovery.build() returns an untyped Resource object;
+    no stub narrows the concrete type, so -> Any is necessary at these 4 sites.
+    """
+    lines = _lines(_GOOGLE_DRIVE_MODULE)
+    lineno = _find_def_line(lines, func_name)
+    assert lineno is not None, (
+        f"_google_drive.py: could not locate def {func_name}"
+    )
+    def_line = lines[lineno - 1]
+    assert _GOOGLE_DRIVE_TOKEN in def_line, (
+        f"_google_drive.py:{lineno} def {func_name}: missing {_GOOGLE_DRIVE_TOKEN!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# (g) S597 — entrypoints/cli/_stdio.py stdlib-logger survivor enrollment
+# ---------------------------------------------------------------------------
+# _stdio.py intentionally uses ``logging.getLogger(__name__)`` (stdlib) rather
+# than ``aeat.core.logging.get_logger`` because the module runs before settings
+# are loaded — see the constraint comment at ``_LOGGER`` definition (lines
+# 150-155).  The rationale is documented inline; this ratchet asserts the
+# comment remains present so future refactors cannot silently remove the
+# documented justification.
+
+_STDIO_MODULE = _SRC / "entrypoints/cli/_stdio.py"
+_STDIO_LOGGER_TOKEN = "aeat.core.logging"
+_STDIO_RATIONALE_TOKEN = "before settings are loaded"
+
+
+def test_stdio_stdlib_logger_rationale_present() -> None:
+    """_stdio.py must carry an inline comment explaining why stdlib getLogger is used.
+
+    The module runs at the top of CLI startup, before settings are loaded,
+    so it cannot import aeat.core.logging without pulling project configuration
+    eagerly.  The rationale comment (referencing 'before settings are loaded')
+    must survive so future reviewers understand the intentional deviation.
+    """
+    source = _source(_STDIO_MODULE)
+    assert _STDIO_RATIONALE_TOKEN in source, (
+        f"entrypoints/cli/_stdio.py: missing rationale comment {_STDIO_RATIONALE_TOKEN!r} "
+        "— the inline explanation for stdlib getLogger usage has been removed"
+    )
+    assert "_LOGGER = logging.getLogger(__name__)" in source, (
+        "entrypoints/cli/_stdio.py: _LOGGER assignment not found — "
+        "stdlib logger survivor enrollment check requires this assignment"
+    )
