@@ -846,7 +846,7 @@ def config_list(ctx: typer.Context) -> None:
         for pointer in rows:
             marker = "*" if pointer.bucket_id == active else " "
             lines.append(f"{marker}\t{pointer.label}")
-    _emit_envelope(ctx, command="config.list", result=result, lines=lines)
+    _emit_envelope(ctx, command="config.profile.list", result=result, lines=lines)
 
 
 @profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
@@ -1542,7 +1542,7 @@ def config_status(ctx: typer.Context) -> None:
         result = ConfigStatusResult(active_profile=None, registered_profile=False, configured=False)
         _emit_envelope(
             ctx,
-            command="config.status",
+            command="config.profile.status",
             result=result,
             lines=(
                 tr("cli.config.status.empty_profile"),
@@ -1556,7 +1556,7 @@ def config_status(ctx: typer.Context) -> None:
         )
         _emit_envelope(
             ctx,
-            command="config.status",
+            command="config.profile.status",
             result=result,
             lines=(
                 f"profile\t{active_profile}",
@@ -1587,7 +1587,7 @@ def config_status(ctx: typer.Context) -> None:
         if profile_health.profile_record_error:
             lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
         lines.append(f"next_action\t{profile_health.next_action}")
-        _emit_envelope(ctx, command="config.status", result=result, lines=lines)
+        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -1609,7 +1609,7 @@ def config_status(ctx: typer.Context) -> None:
                 f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
                 f"next_action\taeat config profile edit {active_profile}",
             )
-        _emit_envelope(ctx, command="config.status", result=result, lines=lines)
+        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
     try:
         projection = project_answers(_get_setup_flow(), values)
@@ -1623,7 +1623,7 @@ def config_status(ctx: typer.Context) -> None:
         )
         _emit_envelope(
             ctx,
-            command="config.status",
+            command="config.profile.status",
             result=result,
             lines=(tr("cli.config.status.empty_profile"),),
         )
@@ -1642,7 +1642,7 @@ def config_status(ctx: typer.Context) -> None:
     )
     _emit_envelope(
         ctx,
-        command="config.status",
+        command="config.profile.status",
         result=result,
         lines=(
             f"profile\t{active_profile or ''}",
@@ -2279,7 +2279,7 @@ def apoderado_check(ctx: typer.Context) -> None:
         lines.append(f"represented_nif\t{result.represented_nif}")
         lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
 
-    _emit_envelope(ctx, command="config.apoderado.check", result=apoderado_result, lines=lines)
+    _emit_envelope(ctx, command="config.auth.apoderado.check", result=apoderado_result, lines=lines)
 
 
 @bucket_app.command("history", help=tr("cli.config.bucket.history_help"))

@@ -70,7 +70,7 @@ def list_citations_cmd(
     """List the normatives codified in the project's legal corpus."""
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
     typed = CitationListResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.citations.list", result=typed, lines=_citation_list_lines(report))
+    _emit_envelope(ctx, command="registry.citations.list", result=typed, lines=_citation_list_lines(report))
 
 
 @citations_app.command("view", help=tr("cli.registry.citations.view_help"))
@@ -88,7 +88,7 @@ def show_citation_cmd(
     """View one normative and, optionally, one cited article."""
     report = show_registry_citation(RegistryCitationShowCommand(normative_id=normative_id, articulo=articulo))
     typed = CitationShowResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.citations.show", result=typed, lines=_citation_show_lines(report))
+    _emit_envelope(ctx, command="registry.citations.view", result=typed, lines=_citation_show_lines(report))
 
 
 @citations_app.command("verify", help=tr("cli.registry.citations.verify_help"))
@@ -96,7 +96,7 @@ def verify_citations_cmd(ctx: typer.Context) -> None:
     """Verify the legal corpus against its own schema invariants."""
     report = verify_registry_citations()
     typed = CitationVerifyResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.citations.verify", result=typed, lines=_citation_verification_lines(report))
+    _emit_envelope(ctx, command="registry.citations.verify", result=typed, lines=_citation_verification_lines(report))
     if not report.passed:
         raise typer.Exit(code=1)
 
@@ -116,7 +116,7 @@ def list_manuals_cmd(
     """List AEAT Manual práctico records available on disk."""
     report = list_registry_manuals(RegistryManualsListCommand(manual=manual, year=year))
     typed = ManualListResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.manuals.list", result=typed, lines=_manuals_list_lines(report))
+    _emit_envelope(ctx, command="registry.manuals.list", result=typed, lines=_manuals_list_lines(report))
 
 
 @manuals_app.command("view", help=tr("cli.registry.manuals.view_help"))
@@ -142,7 +142,7 @@ def show_manual_cmd(
     """View one manual's metadata and, optionally, one section by id."""
     report = show_registry_manual(RegistryManualShowCommand(manual=manual, year=year, part=part, section=section))
     typed = ManualShowResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.manuals.show", result=typed, lines=_manual_show_lines(report))
+    _emit_envelope(ctx, command="registry.manuals.view", result=typed, lines=_manual_show_lines(report))
 
 
 @manuals_app.command("rules", help=tr("cli.registry.manuals.rules_help"))
@@ -168,7 +168,7 @@ def list_manual_rules_cmd(
     """List AEAT rule decisions for one manual / year / part."""
     report = list_registry_manual_rules(RegistryManualRulesCommand(manual=manual, year=year, part=part, kind=kind))
     typed = ManualRulesListResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.manuals.rules.list", result=typed, lines=_manual_rules_lines(report))
+    _emit_envelope(ctx, command="registry.manuals.rules", result=typed, lines=_manual_rules_lines(report))
 
 
 @manuals_app.command("verify", help=tr("cli.registry.manuals.verify_help"))
@@ -190,7 +190,7 @@ def verify_manual_cmd(
     """Verify one manual part against its schema and cross-reference contracts."""
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
     typed = ManualVerifyResult.model_validate(report.model_dump(mode="json"))
-    _emit_envelope(ctx, command="registry_corpus.manuals.verify", result=typed, lines=_manual_verification_lines(report))
+    _emit_envelope(ctx, command="registry.manuals.verify", result=typed, lines=_manual_verification_lines(report))
     if not report.passed:
         raise typer.Exit(code=1)
 
