@@ -179,20 +179,20 @@ Extract domain-layer repository Protocol declarations to domain/<agg>/_protocols
 
 For every domain/_repository.py file that imports from adapters/persistence/, extract the repository interface as a Protocol to domain/<agg>/_protocols.py, have the persistence adapter implement the Protocol, and remove the inbound import edge (MIGRATE-003, Rule 8). This Phase has the highest file-count in the plan: 89 domain files across all domain aggregates.
 
-- [ ] `W06.P16.S50` - extract the StorageRecord protocol shape for domain/transactions/_repository.py to domain/transactions/_protocols.py, update the repository to import from _protocols.py, remove the adapters/persistence import edge, and run the transactions test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/transactions/_protocols.py`.
-- [ ] `W06.P16.S51` - extract repository protocol for domain/invoices/_repository.py to domain/invoices/_protocols.py, remove the adapters import edge, and run the invoices test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/invoices/_protocols.py`.
-- [ ] `W06.P16.S52` - extract repository protocol for domain/attachments/_repository.py to domain/attachments/_protocols.py, remove the adapters import edge, and run the attachments test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/attachments/_protocols.py`.
-- [ ] `W06.P16.S53` - extract repository protocol for domain/modelos/_repository.py to domain/modelos/_protocols.py, remove the adapters import edge, and run the modelos test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/modelos/_protocols.py`.
-- [ ] `W06.P16.S54` - extract repository protocol for domain/buckets/_repository.py to domain/buckets/_protocols.py, remove the adapters import edge, and run the buckets test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/buckets/_protocols.py`.
-- [ ] `W06.P16.S55` - extract repository protocols for all remaining domain aggregate _repository.py files (domain/filing, domain/renta, domain/fincas, domain/deadlines, domain/iva, domain/profile, domain/submission, domain/calculations) to their respective _protocols.py modules, remove all adapters import edges, and run the sequential domain suite; `MIGRATE-003, Rule 8; `src/aeat/domain/`.
+- [x] `W06.P16.S50` - extract the StorageRecord protocol shape for domain/transactions/_repository.py to domain/transactions/_protocols.py, update the repository to import from _protocols.py, remove the adapters/persistence import edge, and run the transactions test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/transactions/_protocols.py`.
+- [x] `W06.P16.S51` - extract repository protocol for domain/invoices/_repository.py to domain/invoices/_protocols.py, remove the adapters import edge, and run the invoices test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/invoices/_protocols.py`.
+- [x] `W06.P16.S52` - extract repository protocol for domain/attachments/_repository.py to domain/attachments/_protocols.py, remove the adapters import edge, and run the attachments test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/attachments/_protocols.py`.
+- [x] `W06.P16.S53` - extract repository protocol for domain/modelos/_repository.py to domain/modelos/_protocols.py, remove the adapters import edge, and run the modelos test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/modelos/_protocols.py`.
+- [x] `W06.P16.S54` - extract repository protocol for domain/buckets/_repository.py to domain/buckets/_protocols.py, remove the adapters import edge, and run the buckets test suite; `MIGRATE-003, Rule 8; `src/aeat/domain/buckets/_protocols.py`.
+- [x] `W06.P16.S55` - extract repository protocols for all remaining domain aggregate _repository.py files (domain/filing, domain/renta, domain/fincas, domain/deadlines, domain/iva, domain/profile, domain/submission, domain/calculations) to their respective _protocols.py modules, remove all adapters import edges, and run the sequential domain suite; `MIGRATE-003, Rule 8; `src/aeat/domain/`.
 
 ### Phase `W06.P17` - SnapshotRepository conformance gate and SubjectTaxId annotation
 
 Make SnapshotRepository @runtime_checkable and add a non-tautological CI-gate test asserting isinstance for all three concrete live repositories (RELOC-040, Rule 9-A), then annotate SubjectTaxId on the three domain Protocol method signatures (PROMOTE-002) and expose AggregationSourceKind via core/__init__ (PROMOTE-004).
 
-- [ ] `W06.P17.S56` - mark SnapshotRepository with @runtime_checkable in application/live/_snapshot_base.py and add a non-tautological test asserting isinstance(repo, SnapshotRepository) for each of LiveBorradorRepository, LiveCensusRepository, and LiveExpedientesRepository; `RELOC-040, Rule 9-A; `src/aeat/application/live/_snapshot_base.py`.
-- [ ] `W06.P17.S57` - annotate SubjectTaxId on the method signatures of the three domain repository Protocols that declare bare-str subject_tax_id parameters; `PROMOTE-002, Rule 5; `src/aeat/domain/`.
-- [ ] `W06.P17.S58` - expose AggregationSourceKind via core/__init__.py or core/aggregation/__init__.py and update callers to the canonical import path; `PROMOTE-004, Rule 1; `src/aeat/core/__init__.py`.
+- [x] `W06.P17.S56` - mark SnapshotRepository with @runtime_checkable in application/live/_snapshot_base.py and add a non-tautological test asserting isinstance(repo, SnapshotRepository) for each of LiveBorradorRepository, LiveCensusRepository, and LiveExpedientesRepository; `RELOC-040, Rule 9-A; `src/aeat/application/live/_snapshot_base.py`.
+- [x] `W06.P17.S57` - annotate SubjectTaxId on the method signatures of the three domain repository Protocols that declare bare-str subject_tax_id parameters; `PROMOTE-002, Rule 5; `src/aeat/domain/`.
+- [x] `W06.P17.S58` - expose AggregationSourceKind via core/__init__.py or core/aggregation/__init__.py and update callers to the canonical import path; `PROMOTE-004, Rule 1; `src/aeat/core/__init__.py`.
 
 ## Wave `W07` - indirection and shim deletes
 
