@@ -917,3 +917,29 @@ Add ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR markers on 12 profile field_
 - [x] `W10.P41.S579` - extend test_w09_p38_rationale_inventory.py to cover _borrador_100.py in S559 mandate (currently omitted); `src/aeat/test_w09_p38_rationale_inventory.py`.
 - [x] `W10.P41.S580` - add ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL marker on core/logging.py:147 _scrub_value implementation overload; `src/aeat/core/logging.py`.
 - [x] `W10.P41.S581` - aggregate inventory test asserting all -> Any returns + **kwargs: Any signatures carry RATIONALE markers outside documented allowlist; `src/aeat/test_w10_p41_rationale_inventory.py`.
+
+## Wave `W11` - fix W11 regression + structural prevention of new-file canonical-bypass
+
+W11 audit broke the streak with 1 regression: locales/manager.py new file in commit 9407b2e93 introduced 9 bare utf-8 literals despite W7+W9 UTF_8_ENCODING enrollment. Root cause: UTF_8 inventory test scoped to existing files at test-write time, not AST-walking new files added later. W11 fixes the regression, closes 2 survivor clusters (_session_store ×8, _iva_compensation_wallet ×3), and structurally extends the inventory test to catch new files at every commit. Plus 4 axis-finisher Steps for A1/A3/A4 survivors. Counter resets to 0/3.
+
+### Phase `W11.P42` - A7 UTF_8 regression + structural prevention
+
+Fix locales/manager.py 9 bare utf-8 regression. Close _session_store.py ×8 + _iva_compensation_wallet.py ×3 survivor sites. Extend UTF_8 inventory test to AST-walk ALL production files (not a fixed allowlist) so new files added by any campaign immediately fail the test.
+
+- [ ] `W11.P42.S582` - fix regression: enroll locales/manager.py 9 bare utf-8 sites with UTF_8_ENCODING (commit 9407b2e93 bypass); `src/aeat/locales/manager.py`.
+- [ ] `W11.P42.S583` - close survivors at adapters/outbound/google/_session_store.py:44,59,71,86 + 4 more sites with UTF_8_ENCODING; `src/aeat/adapters/outbound/google/_session_store.py`.
+- [ ] `W11.P42.S584` - close survivors at sede/_iva_compensation_wallet.py:228,243,562 sha256.encode utf-8 sites; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
+- [ ] `W11.P42.S585` - extend test_utf8_enrollment_inventory.py to AST-walk all production files (not fixed allowlist) so new files trigger failure at every commit; `src/aeat/test_utf8_enrollment_inventory.py`.
+- [ ] `W11.P42.S586` - aggregate inventory test asserting zero new utf-8 bypass sites can be added; `src/aeat/test_w11_p42_utf8_regression_proof.py`.
+
+### Phase `W11.P43` - axis finishers: A1+A3+A4
+
+Add BROAD-EXCEPT-RATIONALE markers to 3 diagnostics.py except-Exception sites (lines 425, 429, 569, 761). Wrap wizard _commands.py:910 next tab-label through tr(). Investigate _PdfWord TypeAlias in declaracion/_parser.py:32 — replace with structured type. Wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic model.
+
+- [ ] `W11.P43.S587` - add BROAD-EXCEPT-RATIONALE markers on diagnostics.py:425,429 browser context+session teardown except sites; `src/aeat/application/diagnostics.py`.
+- [ ] `W11.P43.S588` - add BROAD-EXCEPT-RATIONALE marker on diagnostics.py:569 integrity-probe loop swallow; `src/aeat/application/diagnostics.py`.
+- [ ] `W11.P43.S589` - replace inline pragma comment with BROAD-EXCEPT-RATIONALE token at diagnostics.py:761; `src/aeat/application/diagnostics.py`.
+- [ ] `W11.P43.S590` - wrap wizard/_commands.py:910 next tab-label through tr() with new application.wizard.output_labels.next key; `src/aeat/application/wizard/_commands.py`.
+- [ ] `W11.P43.S591` - investigate _PdfWord TypeAlias at declaracion/_parser.py:32; `either move to canonical home or replace with structured TypedDict; `src/aeat/adapters/inbound/declaracion/_parser.py`.
+- [ ] `W11.P43.S592` - wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic SidecarMetadata model; `src/aeat/adapters/outbound/storage/_local.py`.
+- [ ] `W11.P43.S593` - aggregate test asserting axis finishers landed; `src/aeat/test_w11_p43_axis_finishers.py`.
