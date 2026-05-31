@@ -7,7 +7,7 @@ import json
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
@@ -65,8 +65,9 @@ def _get_session_store() -> SessionStoreProtocol:
         # The module-scope import was removed to break the import-time cycle.
         from ...adapters.outbound.aeat.auth import _session_store as _impl
 
-        configure_session_store(_impl)  # type: ignore[arg-type]
-    return _session_store_impl  # type: ignore[return-value]
+        configure_session_store(cast(SessionStoreProtocol, _impl))  # CAST-RATIONALE-MODULE-AS-PROTOCOL: _session_store module satisfies SessionStoreProtocol structurally; mypy cannot verify module-object protocol conformance without an explicit cast
+    assert _session_store_impl is not None
+    return _session_store_impl
 
 
 def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:

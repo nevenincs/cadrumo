@@ -3213,7 +3213,7 @@ def _classify_verification_outcome(
     return VerificationCompletenessStatus.BLOCKED, False
 
 
-def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: ignore[no-untyped-def]
+def _load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_id: str) -> WorkUnit:
     """Load a work unit by id, rejecting missing ids and DISCARDED state.
 
     Returns the work unit. Raises :class:`WorkUnitNotFoundError`
@@ -3235,7 +3235,7 @@ def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: 
     return work_unit
 
 
-def _resolve_registry_snapshot_for_work_unit(work_unit):  # type: ignore[no-untyped-def]
+def _resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
     """Resolve the registry snapshot for ``(modelo, filing_year, period)``.
 
     Both failure modes (registry root missing on disk, or the
