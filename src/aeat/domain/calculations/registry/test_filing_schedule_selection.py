@@ -81,3 +81,30 @@ def test_validator_rejects_schedule_periods_outside_revision_selector(
 
     with pytest.raises(RegistryValidationError, match="declares periods outside revision selector"):
         RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+
+
+def test_filing_schedule_predicate_with_unknown_field_is_reported_as_contract_error(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    modelo = registry_authority.modelo("111")
+    revision = modelo.revisions["2019-y-siguientes"]
+    schedule = next(s for s in revision.filing_schedules if s.profile_conditions)
+    bad_condition = schedule.profile_conditions[0].model_copy(
+        update={"field": "unknown_predicate_field"}
+    )
+    bad_schedule = schedule.model_copy(update={"profile_conditions": (bad_condition,)})
+    mutated_revision = revision.model_copy(
+        update={"filing_schedules": (bad_schedule, *revision.filing_schedules[1:])}
+    )
+    mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
+    schema = load_user_profile_schema()
+
+    report = validate_user_profile_registry_contract([mutated_modelo], schema)
+
+    matching = [
+        i
+        for i in report.issues
+        if i.surface == "filing_schedule" and i.selector == "unknown_predicate_field"
+    ]
+    assert matching, f"expected a filing_schedule issue for unknown_predicate_field; issues={report.issues}"
+    assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR
