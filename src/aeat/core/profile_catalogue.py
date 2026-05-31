@@ -29,6 +29,7 @@ class WizardCatalogueNotRegisteredError(CoreError):
     """Raised when a domain consumer accesses the catalogue before registration."""
 
     def __init__(self) -> None:
+        """Initialise with a fixed message directing the caller to register the catalogue."""
         super().__init__(
             "Wizard catalogue has not been registered. "
             "Call register_wizard_catalogue() at application startup before "

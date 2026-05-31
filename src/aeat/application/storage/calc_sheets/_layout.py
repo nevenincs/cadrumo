@@ -1,5 +1,4 @@
-"""Layout planner that maps every casilla, binding, and parameter of a
-`ModeloRevision` onto a Sheets cell address.
+"""Layout planner that maps every casilla, binding, and parameter of a ``ModeloRevision`` onto a Sheets cell address.
 
 The mapping is a pure function of the revision (and an optional
 filing date for temporal bracket filtering). Two engine runs over
@@ -82,11 +81,10 @@ class _BindingRow(BaseModel):
     label: str
 
 class BracketRanges(BaseModel):
-    """A1 ranges for the lower-bound, fixed-addition, and marginal-rate
-    columns of one bracket-table parameter in the `Tarifas` tab.
+    """A1 ranges for the lower-bound, fixed-addition, and marginal-rate columns of one bracket-table parameter.
 
-    The translator's `lookup_bracket` handler resolves a bracket
-    lookup against these ranges via:
+    These ranges occupy the ``Tarifas`` tab. The translator's ``lookup_bracket`` handler resolves a
+    bracket lookup against them via:
 
         INDEX(fixed_addition, MATCH(base, lower_bound, 1))
         + INDEX(marginal_rate, MATCH(base, lower_bound, 1))

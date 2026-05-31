@@ -1,5 +1,4 @@
-"""Modelo declaration export: write a verified-complete or filed
-calculation revision to a local AEAT-compatible file.
+"""Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
 `export_modelo_revision` accepts a calculation revision id, builds and
 approves a :class:`aeat.domain.filing.ModeloDraft` from the revision's
@@ -86,8 +85,7 @@ _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
 
 class ModeloExportCrossBucketRefusedError(ModeloError):
-    """Raised when the addressed revision's parent work unit belongs to
-    a bucket other than the active profile bucket.
+    """Raised when the addressed revision's parent work unit belongs to a bucket other than the active profile bucket.
 
     Bucket events must scope to the active bucket; allowing the service
     to emit into a foreign bucket would let any caller pollute another

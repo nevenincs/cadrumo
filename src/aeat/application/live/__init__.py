@@ -389,6 +389,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
 
     @property
     def filed_history_succeeded(self) -> bool:
+        """Return ``True`` when the filed-history surface outcome is ``SUCCEEDED``."""
         return any(
             outcome.surface is LiveIvaReadSurface.FILED_HISTORY and outcome.status is LiveIvaReadStatus.SUCCEEDED
             for outcome in self.outcomes
@@ -396,6 +397,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
 
     @property
     def wallet_succeeded(self) -> bool:
+        """Return ``True`` when the wallet-cartera surface outcome is ``SUCCEEDED``."""
         return any(
             outcome.surface is LiveIvaReadSurface.WALLET_CARTERA and outcome.status is LiveIvaReadStatus.SUCCEEDED
             for outcome in self.outcomes
@@ -455,9 +457,11 @@ class IvaRemoteStateAcquisitionManifestRepository(
     payload_type: ClassVar[type[IvaRemoteStateAcquisitionManifest]] = IvaRemoteStateAcquisitionManifest
 
     def __init__(self, *, objects: _SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, resolving the active bucket's secure-object store when no override is given."""
         super().__init__(objects=objects or _secure_object_repository_for_active_bucket())
 
     def extract_identifier(self, payload: IvaRemoteStateAcquisitionManifest) -> str:
+        """Return the acquisition's stable string identifier."""
         return payload.acquisition_id
 
 

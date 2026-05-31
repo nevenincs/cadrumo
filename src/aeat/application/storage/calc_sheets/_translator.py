@@ -1,5 +1,4 @@
-"""Closed-form translator from registry `FormulaExpression` ASTs to
-Google Sheets A1 formula strings.
+"""Closed-form translator from registry ``FormulaExpression`` ASTs to Google Sheets A1 formula strings.
 
 The translator is the parity contract: a registry op evaluates to the
 same per-casilla rounded Decimal locally and in Sheets if and only if

@@ -122,7 +122,9 @@ def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> N
 
 
 def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
-    """Pick up ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
+    """Pick up translation keys from call sites across multiple call patterns.
+
+    Handles ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
     constructor translation keys, ``build_entry(...)`` portal-catalogue
     translation keys, and ``message_key=`` / ``translated_message=``
     dotted-literal kwargs on any callee.
@@ -229,8 +231,10 @@ dot and carries at least one word segment before it (e.g. ``topic.``,
 
 
 def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
-    """Walk every f-string literal whose leading segment matches the
-    dotted-key shape and emit ``<prefix>.*`` namespace markers.
+    """Walk f-string literals and emit ``<prefix>.*`` namespace markers.
+
+    Walks every f-string literal whose leading segment matches the
+    dotted-key shape and emits ``<prefix>.*`` namespace markers.
 
     Covers both inline call sites (``tr(f"cli.registry.metrics.{x}")``)
     and the assignment form (``key = f"wizard.errors.{reason}"``)
@@ -260,8 +264,10 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
 
 
 def _extract_concat_prefixes(tree: ast.AST) -> set[str]:
-    """Walk ``tr(<literal> + <expr>)`` and ``t(<literal> + <expr>)``
-    concatenations and emit the literal-prefix ``.*`` marker.
+    """Walk string-concatenation call sites and emit literal-prefix ``.*`` markers.
+
+    Walks ``tr(<literal> + <expr>)`` and ``t(<literal> + <expr>)``
+    concatenations and emits the literal-prefix ``.*`` marker.
 
     Matches the dynamic-key pattern ``tr("cli.registry.metrics." + key)``
     where the literal carries the registered key prefix.

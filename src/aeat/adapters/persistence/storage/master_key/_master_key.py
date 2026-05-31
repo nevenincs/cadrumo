@@ -357,8 +357,7 @@ def _default_passphrase_callback() -> str:
 
 @runtime_checkable
 class KeyringClient(Protocol):
-    """Injection seam for the OS-keychain operations the master-key
-    provider depends on.
+    """Injection seam for the OS-keychain operations the master-key provider depends on.
 
     The real implementation wraps the third-party :mod:`keyring`
     module's ``get_password`` / ``set_password`` calls plus the
@@ -368,24 +367,20 @@ class KeyringClient(Protocol):
     """
 
     def probe_backend(self) -> None:
-        """Raise :class:`KeyringUnavailableError` when the active
-        backend cannot persist a master key (no-op fail / null
-        backends).
+        """Raise :class:`KeyringUnavailableError` when the active backend cannot persist a master key.
+
+        No-op fail / null backends trigger this error.
         """
 
     def get_password(self, service: str, username: str) -> str | None:
-        """Return the persisted password for ``(service, username)``
-        or ``None`` when the entry is absent.
-        """
+        """Return the persisted password for ``(service, username)``, or ``None`` when absent."""
 
     def set_password(self, service: str, username: str, password: str) -> None:
         """Persist ``password`` under ``(service, username)``."""
 
 
 class _RealKeyringClient:
-    """Default :class:`KeyringClient` backed by the third-party
-    ``keyring`` module.
-    """
+    """Default :class:`KeyringClient` backed by the third-party ``keyring`` module."""
 
     def probe_backend(self) -> None:
         try:

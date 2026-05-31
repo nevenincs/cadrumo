@@ -227,9 +227,7 @@ def compute_finca_aggregates(
 
 
 def _finca_is_active_for_period(finca: Finca, period_year: int) -> bool:
-    """Whether the finca was held during ``period_year`` AND is in an
-    arrendable use_type.
-    """
+    """Return True if the finca was held during ``period_year`` and has an arrendable use type."""
     if finca.use_type not in {UseType.VIVIENDA_ARRENDADA, UseType.LOCAL_COMERCIAL}:
         return False
     if finca.acquisition_date.year > period_year:
@@ -246,8 +244,9 @@ def _aggregate_finca(
     expense_repo: FincaGastoRepository,
     ledger_repo: FincaAmortizacionLedgerRepository,
 ) -> tuple[Decimal, Decimal, Decimal, Decimal, list[ContractTierAttribution]]:
-    """Compute (ingresos, gastos, amortization, reduccion_total,
-    [per-contract attribution]) for one finca.
+    """Compute income, expenses, amortization, total reduccion, and per-contract attribution for one finca.
+
+    Returns a 5-tuple of (ingresos, gastos, amortization, reduccion_total, contract_attributions).
     """
     if finca.id is None:
         raise FincaAggregationError("finca lacks persistent id")
@@ -351,8 +350,10 @@ def _compute_finca_amortization(
     total_dias_alquilados: int,
     ledger_repo: FincaAmortizacionLedgerRepository,
 ) -> Decimal:
-    """Compute the per-finca amortización for ``period_year``, threading
-    cumulative-through-prior-year from the ledger.
+    """Compute the per-finca amortización for ``period_year``.
+
+    Threads cumulative-through-prior-year deductions from the ledger to enforce
+    the acquisition-cost ceiling.
     """
     if finca.id is None:
         return Decimal("0.00")

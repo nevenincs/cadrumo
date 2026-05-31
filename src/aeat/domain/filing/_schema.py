@@ -197,6 +197,8 @@ def compute_modelo_draft_id(
         schema_version: The casilla DB version this draft was
             built against.
         values: The tuple of :class:`ModeloValue` records to hash.
+        binding_values: Optional tuple of :class:`ModeloBindingValue` records
+            included in the hash; defaults to an empty tuple.
 
     Returns:
         A 16-character lowercase hex SHA-256 prefix.

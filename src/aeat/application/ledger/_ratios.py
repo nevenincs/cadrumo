@@ -186,8 +186,7 @@ def validate_ratios_for_bucket(
 
 
 class RatiosCensoOverrideWarning(BaseModel):
-    """A non-fatal warning that the operator's per-category override
-    deviates from the legally-binding census-derived value.
+    """A non-fatal warning that the operator's per-category override deviates from the census-derived value.
 
     The census is the binding legal source of truth per the
     modelo-036-037-foundation ADR (2026-05-16 amendment). Operators

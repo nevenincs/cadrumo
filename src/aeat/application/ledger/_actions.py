@@ -1659,8 +1659,10 @@ def _build_split_child_transaction(
     actor: str,
     source_command: str,
 ) -> Transaction:
-    """Build one child Transaction. ``split_lineage`` is filled in by the caller
-    once all child ids are known so siblings can reference each other.
+    """Build one child Transaction.
+
+    ``split_lineage`` is filled in by the caller once all child ids are
+    known so siblings can reference each other.
     """
     parent_raw = parent.raw
     provider_transaction_id = f"split:{parent.transaction_id}:{index:04d}"

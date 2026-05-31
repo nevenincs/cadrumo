@@ -336,16 +336,15 @@ def _build_grid_resize_requests(
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[dict[str, Any]]:
-    """Compute one `updateSheetProperties` request per tab that needs
-    to grow beyond Sheets' default 1000-row / 26-column grid to hold
-    the plan's value + formula cells.
+    """Compute one ``updateSheetProperties`` request per tab that needs to grow beyond the default grid.
 
-    The function inspects every `SheetCellAddress` in the plan, finds
+    The function inspects every ``SheetCellAddress`` in the plan, finds
     the maximum row and column per tab, and emits a resize request
-    when either exceeds the default. Tabs already wide enough get no
-    request (Sheets accepts cell writes silently within the existing
-    grid bound). Resizes always *grow*; we never shrink, so a tab the
-    operator has manually expanded keeps its operator-set bound.
+    when either exceeds Sheets' default 1000-row / 26-column grid.
+    Tabs already wide enough get no request (Sheets accepts cell writes
+    silently within the existing grid bound). Resizes always *grow*;
+    we never shrink, so a tab the operator has manually expanded keeps
+    its operator-set bound.
     """
     default_rows = 1000
     default_columns = 26

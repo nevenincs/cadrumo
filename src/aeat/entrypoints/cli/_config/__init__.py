@@ -36,15 +36,15 @@ from ....application.diagnostics import (
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard._commands import build_wizard_command as _build_wizard_command
-from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
 from ....core.errors import AeatError as _AeatError
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
+from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
-from .._common import _emit
+from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
@@ -129,12 +129,16 @@ def repair_logs(
     lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.repair.logs_lines_help")),
 ) -> None:
     """Show the configured log file path and recent lines."""
+    from .._config_payloads import RepairLogsResult
+
     path = _default_log_file_path()
     tail = _tail_lines(path, lines) if path.exists() and lines > 0 else ()
-    _emit(
+    result = RepairLogsResult(path=str(path), lines=list(tail))
+    _emit_envelope(
         ctx,
-        {"path": str(path), "lines": tail},
-        (f"path\t{path}", *tail),
+        command="config.repair.logs",
+        result=result,
+        lines=(f"path\t{path}", *tail),
     )
 
 
@@ -153,6 +157,8 @@ def repair_quarantine(
     ``--dry-run`` previews the rows that would be quarantined without
     moving anything, consistent with ``reset-state --dry-run``.
     """
+    from .._config_payloads import QuarantineNamespacePayload, RepairQuarantineResult
+
     if not dry_run and not yes:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.repair.quarantine_requires_yes",
@@ -162,10 +168,14 @@ def repair_quarantine(
     # cleanly rather than crashing on the absent database URL
     # (disaster ADR Ruling 6).
     if _resolve_active_bucket_id() is None:
-        _emit(
+        result = RepairQuarantineResult(
+            dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile"
+        )
+        _emit_envelope(
             ctx,
-            {"dry_run": dry_run, "quarantined": 0, "retained": 0, "reason": "no-active-profile"},
-            (
+            command="config.repair.quarantine",
+            result=result,
+            lines=(
                 f"dry_run\t{str(dry_run).lower()}",
                 "quarantined\t0",
                 "retained\t0",
@@ -175,11 +185,24 @@ def repair_quarantine(
         return
     if dry_run:
         report = _preview_quarantine_unreadable_secure_objects()
-        payload = {"dry_run": True, **report.model_dump(mode="json")}
-        _emit(
+        result = RepairQuarantineResult(
+            dry_run=True,
+            unreadable_total=report.unreadable_total,
+            readable_total=report.readable_total,
+            namespaces=[
+                QuarantineNamespacePayload(
+                    namespace=item.namespace,
+                    readable=item.readable,
+                    unreadable=item.unreadable,
+                )
+                for item in report.namespaces
+            ],
+        )
+        _emit_envelope(
             ctx,
-            payload,
-            (
+            command="config.repair.quarantine",
+            result=result,
+            lines=(
                 "dry_run\ttrue",
                 f"would_quarantine\t{report.unreadable_total}",
                 f"would_retain\t{report.readable_total}",
@@ -192,10 +215,24 @@ def repair_quarantine(
         )
         return
     report = _quarantine_unreadable_secure_objects()
-    _emit(
+    result = RepairQuarantineResult(
+        dry_run=False,
+        unreadable_total=report.unreadable_total,
+        readable_total=report.readable_total,
+        namespaces=[
+            QuarantineNamespacePayload(
+                namespace=item.namespace,
+                readable=item.readable,
+                unreadable=item.unreadable,
+            )
+            for item in report.namespaces
+        ],
+    )
+    _emit_envelope(
         ctx,
-        {"dry_run": False, **report.model_dump(mode="json")},
-        (
+        command="config.repair.quarantine",
+        result=result,
+        lines=(
             "dry_run\tfalse",
             f"quarantined\t{report.unreadable_total}",
             f"retained\t{report.readable_total}",
@@ -260,6 +297,7 @@ def repair_reset_state(
 ) -> None:
     """Drop the unreadable workflow-state envelope and emit a reset event."""
     from ....application.workflow._persistence import fingerprint_workflow_state, reset_workflow_state
+    from .._config_payloads import RepairResetStateResult, WorkflowFingerprintPayload
 
     if not dry_run and not yes:
         raise _CliRefusedBoundaryError(
@@ -270,10 +308,12 @@ def repair_reset_state(
     # Report cleanly rather than crashing on the absent per-bucket
     # database (disaster ADR Ruling 6).
     if _resolve_active_bucket_id() is None:
-        _emit(
+        result = RepairResetStateResult(reset=False, reason="no-active-profile")
+        _emit_envelope(
             ctx,
-            {"reset": False, "reason": "no-active-profile"},
-            (
+            command="config.repair.reset_state",
+            result=result,
+            lines=(
                 "reset\tfalse",
                 "reason\tno active profile; nothing to reset",
             ),
@@ -281,7 +321,14 @@ def repair_reset_state(
         return
     if dry_run:
         fingerprint = fingerprint_workflow_state()
-        payload = {"dry_run": True, "fingerprint": fingerprint.model_dump(mode="json")}
+        fp = WorkflowFingerprintPayload(
+            schema_version=fingerprint.schema_version,
+            written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
+            byte_length=fingerprint.byte_length,
+            reason_class=fingerprint.reason_class,
+            recovered_bucket_id=fingerprint.recovered_bucket_id or None,
+        )
+        result = RepairResetStateResult(dry_run=True, fingerprint=fp)
         lines = (
             "dry_run\ttrue",
             f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
@@ -290,10 +337,17 @@ def repair_reset_state(
             f"reason_class\t{fingerprint.reason_class}",
             f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
         )
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.repair.reset_state", result=result, lines=lines)
         return
     fingerprint = reset_workflow_state()
-    payload = {"dry_run": False, "fingerprint": fingerprint.model_dump(mode="json")}
+    fp = WorkflowFingerprintPayload(
+        schema_version=fingerprint.schema_version,
+        written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
+        byte_length=fingerprint.byte_length,
+        reason_class=fingerprint.reason_class,
+        recovered_bucket_id=fingerprint.recovered_bucket_id or None,
+    )
+    result = RepairResetStateResult(dry_run=False, fingerprint=fp)
     lines = (
         "dry_run\tfalse",
         f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
@@ -302,7 +356,7 @@ def repair_reset_state(
         f"reason_class\t{fingerprint.reason_class}",
         f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.repair.reset_state", result=result, lines=lines)
 
 
 @repair_app.command(
@@ -639,12 +693,16 @@ def repair_connectivity(
     ] = "browser",
 ) -> None:
     """Probe outbound browser connectivity through the diagnostics backend."""
+    from .._config_payloads import RepairConnectivityResult
+
     del target
     status = _probe_browser_connectivity()
-    _emit(
+    result = RepairConnectivityResult(target="browser", status=status.model_dump(mode="json"))
+    _emit_envelope(
         ctx,
-        {"target": "browser", "status": status.model_dump(mode="json")},
-        _render_browser_connectivity_text(status).splitlines(),
+        command="config.repair.connectivity",
+        result=result,
+        lines=_render_browser_connectivity_text(status).splitlines(),
     )
 
 
@@ -764,22 +822,23 @@ def config_list(ctx: typer.Context) -> None:
     set without unlocking any bucket.
     """
     from ....application.workflow._profile_bucket_scan import list_profile_buckets
+    from .._config_payloads import ConfigListResult, ProfilePointerPayload
 
     active = _resolve_active_bucket_id()
     buckets = list_profile_buckets()
     rows = sorted(buckets.values(), key=lambda pointer: pointer.label.casefold())
     active_label = next((p.label for p in rows if p.bucket_id == active), None)
-    payload = {
-        "active_profile": active_label,
-        "profiles": [
-            {
-                "name": pointer.label,
-                "bucket_id": pointer.bucket_id,
-                "active": pointer.bucket_id == active,
-            }
+    result = ConfigListResult(
+        active_profile=active_label,
+        profiles=[
+            ProfilePointerPayload(
+                name=pointer.label,
+                bucket_id=pointer.bucket_id,
+                active=pointer.bucket_id == active,
+            )
             for pointer in rows
         ],
-    }
+    )
     if not rows:
         lines = [f"active_profile\t{active_label or '<none>'}", "profiles\t<none>"]
     else:
@@ -787,7 +846,7 @@ def config_list(ctx: typer.Context) -> None:
         for pointer in rows:
             marker = "*" if pointer.bucket_id == active else " "
             lines.append(f"{marker}\t{pointer.label}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.list", result=result, lines=lines)
 
 
 @profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
@@ -808,6 +867,8 @@ def config_profile_switch(
     _assert_profile_record_present(
         ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
     )
+    from .._config_payloads import ConfigProfileSwitchResult
+
     try:
         select_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -815,10 +876,12 @@ def config_profile_switch(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
         )
         raise typer.Exit(code=2) from exc
-    _emit(
+    result = ConfigProfileSwitchResult(active_profile=pointer.label)
+    _emit_envelope(
         ctx,
-        {"active_profile": pointer.label},
-        (f"active_profile\t{pointer.label}",),
+        command="config.profile.switch",
+        result=result,
+        lines=(f"active_profile\t{pointer.label}",),
     )
 
 
@@ -985,23 +1048,32 @@ def config_profile_show(
         )
         raise typer.Exit(code=2) from boundary
     from ....domain.user_profile import UserProfileStatus
+    from .._config_payloads import ConfigProfileShowResult, ProfileFactPayload, ProfileIssuePayload
 
     report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     is_tombstoned = record.status is UserProfileStatus.TOMBSTONED
     values = record_to_path_values(record)
-    payload = {
-        "profile_id": record.profile_id,
-        "display_name": record.display_name,
-        "status": record.status.value,
-        # A tombstoned profile is never "valid" as a live profile, no
-        # matter what the schema validator says about its fields — the
-        # readiness verdict must not contradict the status line.
-        "valid": not blocking and not is_tombstoned,
-        "schema_version": report.schema_version,
-        "issues": [issue.model_dump(mode="json") for issue in report.issues],
-        "facts": [{"path": path, "value": value} for path, value in sorted(values.items())],
-    }
+    result = ConfigProfileShowResult(
+        profile_id=record.profile_id,
+        display_name=record.display_name,
+        status=record.status.value,
+        valid=not blocking and not is_tombstoned,
+        schema_version=report.schema_version,
+        issues=[
+            ProfileIssuePayload(
+                severity=issue.severity.value,
+                code=issue.code,
+                path=issue.path,
+                message=issue.message,
+            )
+            for issue in report.issues
+        ],
+        facts=[
+            ProfileFactPayload(path=path, value=str(value))
+            for path, value in sorted(values.items())
+        ],
+    )
     lines: list[str] = []
     if is_tombstoned:
         lines.append("readiness\ttombstoned")
@@ -1015,7 +1087,7 @@ def config_profile_show(
     for issue in report.issues:
         lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
     lines.extend(f"{path}\t{value}" for path, value in sorted(values.items()))
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.profile.show", result=result, lines=lines)
     if blocking:
         raise typer.Exit(code=2)
 
@@ -1050,12 +1122,14 @@ def config_profile_delete(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": name},
         ) from exc
-    payload = {
-        "profile_id": record.profile_id,
-        "display_name": record.display_name,
-        "status": record.status.value,
-        "active_profile_cleared": deleting_active_profile,
-    }
+    from .._config_payloads import ConfigProfileDeleteResult
+
+    result = ConfigProfileDeleteResult(
+        profile_id=record.profile_id,
+        display_name=record.display_name,
+        status=record.status.value,
+        active_profile_cleared=deleting_active_profile,
+    )
     lines = [
         f"profile_id\t{record.profile_id}",
         f"display_name\t{record.display_name}",
@@ -1068,7 +1142,7 @@ def config_profile_delete(
         # silent no-active-profile state.
         lines.append("active_profile\t<none>")
         lines.append(f"notice\t{tr('cli.config.profile.delete_active_cleared')}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.profile.delete", result=result, lines=lines)
 
 
 @profile_app.command("duplicate", help=tr("cli.config.profile.duplicate_help"))
@@ -1123,14 +1197,18 @@ def config_profile_duplicate(
             context={"name": target},
         ) from exc
 
-    _emit(
+    from .._config_payloads import ConfigProfileDuplicateResult
+
+    result = ConfigProfileDuplicateResult(
+        source_profile_id=source_pointer.bucket_id,
+        target_profile_id=target_id,
+        display_name=display_name or target,
+    )
+    _emit_envelope(
         ctx,
-        {
-            "source_profile_id": source_pointer.bucket_id,
-            "target_profile_id": target_id,
-            "display_name": display_name or target,
-        },
-        (
+        command="config.profile.duplicate",
+        result=result,
+        lines=(
             f"source_profile_id\t{source_pointer.bucket_id}",
             f"target_profile_id\t{target_id}",
             f"display_name\t{display_name or target}",
@@ -1452,6 +1530,7 @@ def config_status(ctx: typer.Context) -> None:
     from ....application.workflow._persistence import workflow_state_repository
     from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
     from ....application.workflow._profile_health import assess_active_profile_health
+    from .._config_payloads import ConfigStatusResult
 
     profile_health = assess_active_profile_health()
     # The health snapshot carries the profile UUID; operators address
@@ -1460,30 +1539,26 @@ def config_status(ctx: typer.Context) -> None:
     _active_pointer = read_profile_bucket_by_id(active_uuid) if active_uuid else None
     active_profile = _active_pointer.label if _active_pointer is not None else active_uuid
     if profile_health.status == "none":
-        payload = {
-            "active_profile": None,
-            "registered_profile": False,
-            "configured": False,
-        }
-        _emit(
+        result = ConfigStatusResult(active_profile=None, registered_profile=False, configured=False)
+        _emit_envelope(
             ctx,
-            payload,
-            (
+            command="config.status",
+            result=result,
+            lines=(
                 tr("cli.config.status.empty_profile"),
                 f"next_action\t{profile_health.next_action}",
             ),
         )
         return
     if profile_health.status == "dangling_pointer":
-        payload = {
-            "active_profile": active_profile,
-            "registered_profile": False,
-            "configured": False,
-        }
-        _emit(
+        result = ConfigStatusResult(
+            active_profile=active_profile, registered_profile=False, configured=False
+        )
+        _emit_envelope(
             ctx,
-            payload,
-            (
+            command="config.status",
+            result=result,
+            lines=(
                 f"profile\t{active_profile}",
                 "readiness\tdangling_pointer",
                 "registered_profile\tmissing",
@@ -1492,13 +1567,13 @@ def config_status(ctx: typer.Context) -> None:
         )
         raise typer.Exit(code=2)
     if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
-        payload = {
-            "active_profile": active_profile,
-            "registered_profile": True,
-            "profile_record_present": False,
-            "configured": False,
-            "profile_record_error": profile_health.profile_record_error,
-        }
+        result = ConfigStatusResult(
+            active_profile=active_profile,
+            registered_profile=True,
+            profile_record_present=False,
+            configured=False,
+            profile_record_error=profile_health.profile_record_error,
+        )
         lines = [
             f"profile\t{active_profile}",
             f"readiness\t{profile_health.status}",
@@ -1512,18 +1587,18 @@ def config_status(ctx: typer.Context) -> None:
         if profile_health.profile_record_error:
             lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
         lines.append(f"next_action\t{profile_health.next_action}")
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.status", result=result, lines=lines)
         raise typer.Exit(code=2)
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     values = record_to_path_values(record)
     if not values.get("identity.tax_id") or not values.get("activities.description"):
-        payload = {
-            "active_profile": active_profile,
-            "tax_id_present": bool(values.get("identity.tax_id")),
-            "activity_present": bool(values.get("activities.description")),
-            "configured": False,
-        }
+        result = ConfigStatusResult(
+            active_profile=active_profile,
+            tax_id_present=bool(values.get("identity.tax_id")),
+            activity_present=bool(values.get("activities.description")),
+            configured=False,
+        )
         if active_profile is None:
             lines = (tr("cli.config.status.empty_profile"),)
         else:
@@ -1534,36 +1609,42 @@ def config_status(ctx: typer.Context) -> None:
                 f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
                 f"next_action\taeat config profile edit {active_profile}",
             )
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.status", result=result, lines=lines)
         return
     try:
         projection = project_answers(_get_setup_flow(), values)
     except ValidationError:
-        payload = {
-            "active_profile": active_profile,
-            "profile_id": active_uuid,
-            "tax_id_present": bool(values.get("identity.tax_id")),
-            "activity_present": bool(values.get("activities.description")),
-            "configured": False,
-        }
-        _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
+        result = ConfigStatusResult(
+            active_profile=active_profile,
+            profile_id=active_uuid,
+            tax_id_present=bool(values.get("identity.tax_id")),
+            activity_present=bool(values.get("activities.description")),
+            configured=False,
+        )
+        _emit_envelope(
+            ctx,
+            command="config.status",
+            result=result,
+            lines=(tr("cli.config.status.empty_profile"),),
+        )
         return
     # Operators address a profile by its display name; the immutable
     # bucket UUID is carried as a secondary `profile_id` field so the
     # report stays unambiguous after the UUID-identity cutover.
-    payload = {
-        "active_profile": active_profile,
-        "profile_id": active_uuid,
-        "tax_id_present": bool(values.get("identity.tax_id")),
-        "activity_present": bool(values.get("activities.description")),
-        "iva_regime": values.get("iva.regime", ""),
-        "tax_residence_ccaa": values.get("tax_residence.ccaa", ""),
-        "next_action": "aeat app overview status",
-    }
-    _emit(
+    result = ConfigStatusResult(
+        active_profile=active_profile,
+        profile_id=active_uuid,
+        tax_id_present=bool(values.get("identity.tax_id")),
+        activity_present=bool(values.get("activities.description")),
+        iva_regime=values.get("iva.regime", ""),
+        tax_residence_ccaa=values.get("tax_residence.ccaa", ""),
+        next_action="aeat app overview status",
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.status",
+        result=result,
+        lines=(
             f"profile\t{active_profile or ''}",
             f"profile_id\t{active_uuid or ''}",
             f"identity.tax_id\t{values.get('identity.tax_id', '<unset>')}",
@@ -1594,12 +1675,20 @@ def config_reset(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.reset.requires_yes",
         )
+    from .._config_payloads import ConfigResetResult
+
     scope_enum = _parse_config_reset_scope(scope)
     report = reset_config(scope_enum, confirmed=True)
-    _emit(
+    result = ConfigResetResult(
+        scope=report.scope.value,
+        removed_profile_ids=list(report.removed_profile_ids),
+        removed_auth_session=report.removed_auth_session,
+    )
+    _emit_envelope(
         ctx,
-        report.model_dump(mode="json"),
-        (
+        command="config.reset",
+        result=result,
+        lines=(
             f"scope\t{report.scope.value}",
             f"removed_profiles\t{len(report.removed_profile_ids)}",
             f"removed_auth\t{report.removed_auth_session}",
@@ -1621,9 +1710,10 @@ def auth_providers(
     """List supported authentication providers from the backend catalogue."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import list_operator_auth_providers
+    from .._config_payloads import AuthProvidersResult
 
     report = list_operator_auth_providers()
-    payload = report.model_dump(mode="json")
+    result = AuthProvidersResult(providers=report.model_dump(mode="json")["providers"])
     rows: list[str] = []
     for provider in report.providers:
         if provider.implemented:
@@ -1637,7 +1727,7 @@ def auth_providers(
                 f" ({tr('cli.config.auth.providers.status_unavailable_gloss')})"
             )
         rows.append(f"{provider.id}\t{status_token}\t{tr(str(provider.label))}")
-    _emit(ctx, payload, tuple(rows))
+    _emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
 
 
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
@@ -1684,26 +1774,41 @@ def auth_configure(
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
+    from .._config_payloads import AuthConfigureResult as _AuthConfigureResult
+
+    configure_result = result
+    auth_configure_payload = _AuthConfigureResult(
+        provider=configure_result.provider,
+        file=configure_result.file,
+        complete=configure_result.complete,
+        incomplete_reason=configure_result.incomplete_reason,
+        active_profile=configure_result.active_profile,
+        profile_tax_id_present=configure_result.profile_tax_id_present,
+        provider_identity_present=configure_result.provider_identity_present,
+        identity_alignment=configure_result.identity_alignment,
+        identity_alignment_detail=configure_result.identity_alignment_detail,
+        next_action=configure_result.next_action,
+    )
     lines = [
-        f"provider\t{result.provider}",
-        f"file\t{result.file}",
-        f"status\t{'configured' if result.complete else 'incomplete'}",
-        f"active_profile\t{result.active_profile}",
+        f"provider\t{configure_result.provider}",
+        f"file\t{configure_result.file}",
+        f"status\t{'configured' if configure_result.complete else 'incomplete'}",
+        f"active_profile\t{configure_result.active_profile}",
     ]
-    if not result.complete:
-        lines.append(f"incomplete_reason\t{result.incomplete_reason}")
-    if result.provider == "clave_movil":
+    if not configure_result.complete:
+        lines.append(f"incomplete_reason\t{configure_result.incomplete_reason}")
+    if configure_result.provider == "clave_movil":
         lines.extend(
             (
-                f"profile_tax_id\t{'present' if result.profile_tax_id_present else 'missing'}",
-                f"clave_identity\t{'present' if result.provider_identity_present else 'missing'}",
-                f"identity_alignment\t{result.identity_alignment}",
+                f"profile_tax_id\t{'present' if configure_result.profile_tax_id_present else 'missing'}",
+                f"clave_identity\t{'present' if configure_result.provider_identity_present else 'missing'}",
+                f"identity_alignment\t{configure_result.identity_alignment}",
             )
         )
-        if result.identity_alignment_detail:
-            lines.append(f"identity_alignment_detail\t{result.identity_alignment_detail}")
-    lines.append(f"next_action\t{result.next_action}")
-    _emit(ctx, result.model_dump(mode="json"), lines)
+        if configure_result.identity_alignment_detail:
+            lines.append(f"identity_alignment_detail\t{configure_result.identity_alignment_detail}")
+    lines.append(f"next_action\t{configure_result.next_action}")
+    _emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
 
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
@@ -1721,6 +1826,7 @@ def auth_status(
     """Show the configured local authentication state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import inspect_operator_auth
+    from .._config_payloads import AuthStatusResult
 
     try:
         result = inspect_operator_auth(provider)
@@ -1730,7 +1836,13 @@ def auth_status(
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")
-    _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
+    envelope_result = AuthStatusResult.model_validate(payload)
+    _emit_envelope(
+        ctx,
+        command="config.auth.status",
+        result=envelope_result,
+        lines=tuple(f"{key}\t{value}" for key, value in payload.items()),
+    )
 
 
 @auth_app.command("test", help=tr("cli.config.auth.test_help"))
@@ -1748,6 +1860,7 @@ def auth_test(
     """Render auth readiness through the application-owned auth state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, test_operator_auth
+    from .._config_payloads import AuthTestResult
 
     try:
         result = test_operator_auth(provider)
@@ -1762,7 +1875,13 @@ def auth_test(
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")
-    _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
+    envelope_result = AuthTestResult.model_validate(payload)
+    _emit_envelope(
+        ctx,
+        command="config.auth.test",
+        result=envelope_result,
+        lines=tuple(f"{key}\t{value}" for key, value in payload.items()),
+    )
 
 
 @auth_app.command("login", help=tr("cli.config.auth.login_help"))
@@ -1786,6 +1905,7 @@ def auth_login(
         AuthLoginNotEnabledError,
         AuthLoginPreconditionError,
     )
+    from .._config_payloads import AuthLoginResult
 
     try:
         result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
@@ -1802,7 +1922,13 @@ def auth_login(
     except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
-    _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
+    envelope_result = AuthLoginResult.model_validate(payload)
+    _emit_envelope(
+        ctx,
+        command="config.auth.login",
+        result=envelope_result,
+        lines=tuple(f"{key}\t{value}" for key, value in payload.items()),
+    )
 
 
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
@@ -1836,10 +1962,18 @@ def auth_clear(
             translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider or ""},
         ) from exc
-    _emit(
+    from .._config_payloads import AuthClearResult
+
+    clear_result = AuthClearResult(
+        removed_sessions=result.removed_sessions,
+        cleared_workflow_state=result.cleared_workflow_state,
+        cleared_locks=result.cleared_locks,
+    )
+    _emit_envelope(
         ctx,
-        result.model_dump(mode="json"),
-        (
+        command="config.auth.clear",
+        result=clear_result,
+        lines=(
             f"removed_sessions\t{result.removed_sessions}",
             f"cleared_workflow_state\t{result.cleared_workflow_state}",
             f"cleared_locks\t{result.cleared_locks}",
@@ -2119,6 +2253,8 @@ def apoderado_check(ctx: typer.Context) -> None:
             translated_message="cli.config.profile.no_active_profile",
         )
 
+    from .._config_payloads import ApoderadoCheckResult
+
     svc = ApoderadoService()
 
     try:
@@ -2129,7 +2265,12 @@ def apoderado_check(ctx: typer.Context) -> None:
         # render through resolve_error_message to keep the refusal text.
         raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
-    payload = result.model_dump(mode="json")
+    apoderado_result = ApoderadoCheckResult(
+        bucket_id=result.bucket_id,
+        configured=result.configured,
+        represented_nif=result.represented_nif if result.configured else None,
+        granted_scopes=list(result.granted_scopes) if result.configured else None,
+    )
     lines = [
         f"bucket_id\t{result.bucket_id}",
         f"configured\t{result.configured}",
@@ -2138,7 +2279,7 @@ def apoderado_check(ctx: typer.Context) -> None:
         lines.append(f"represented_nif\t{result.represented_nif}")
         lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
 
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.apoderado.check", result=apoderado_result, lines=lines)
 
 
 @bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
@@ -2207,21 +2348,23 @@ def bucket_history(
             actor_token=actor_token,
         )
     )
-    payload = {
-        "operation": "config.bucket.history",
-        "bucket_id": bucket_id,
-        "event_types": [t.value for t in selected] if selected else None,
-        "since": since_dt.isoformat() if since_dt else None,
-        "until": until_dt.isoformat() if until_dt else None,
-        "object_id": object_id_token,
-        "actor": actor_token,
-        "events": [_bucket_history_event_payload(event) for event in events],
-    }
+    from .._config_payloads import BucketHistoryResult
+
+    bucket_result = BucketHistoryResult(
+        operation="config.bucket.history",
+        bucket_id=bucket_id,
+        event_types=[t.value for t in selected] if selected else None,
+        since=since_dt.isoformat() if since_dt else None,
+        until=until_dt.isoformat() if until_dt else None,
+        object_id=object_id_token,
+        actor=actor_token,
+        events=[dict(_bucket_history_event_payload(event)) for event in events],
+    )
     lines = ["operation\tconfig.bucket.history", f"bucket_id\t{bucket_id}", f"event_count\t{len(events)}"] + [
         f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
         for e in events
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
 def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:

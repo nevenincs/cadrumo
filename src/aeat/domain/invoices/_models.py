@@ -397,8 +397,7 @@ class Invoice(BaseModel):
 
     @property
     def counterparty_eu_member_state(self) -> EUMemberState | None:
-        """Return the substrate-typed EUMemberState for the counterparty,
-        or ``None`` for non-EU counterparties.
+        """Return the substrate-typed EUMemberState for the counterparty, or ``None`` for non-EU.
 
         :attr:`counterparty_country` carries the raw uppercase ISO-3166-1
         alpha-2 code (validated at construction time). This typed
@@ -415,8 +414,7 @@ class Invoice(BaseModel):
 
     @property
     def counterparty_is_eu_member(self) -> bool:
-        """Return ``True`` iff the counterparty is in one of the 27 EU
-        Member States.
+        """Return ``True`` iff the counterparty is in one of the 27 EU Member States.
 
         Convenience predicate keyed off the substrate enum; equivalent
         to ``invoice.counterparty_eu_member_state is not None``.

@@ -54,6 +54,7 @@ class ProjectAnswersNotRegisteredError(CoreError):
     """Raised when domain code calls project_answers before registration."""
 
     def __init__(self) -> None:
+        """Initialise with a fixed message directing the caller to register the projection."""
         super().__init__(
             "project_answers has not been registered. "
             "Call register_project_answers() at application startup before "

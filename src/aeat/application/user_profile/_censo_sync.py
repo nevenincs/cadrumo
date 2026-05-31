@@ -321,9 +321,9 @@ class CensoSyncService:
     def _seed_home_office_usage_ratios_from_snapshot(
         self, snapshot: CensoSnapshot,
     ) -> tuple[str, ...]:
-        """Compute HOME_OFFICE per-category ratios from the snapshot's
-        vivienda_office facts and persist them into the usage-ratios
-        store. Returns the canonical category-id list that landed.
+        """Compute HOME_OFFICE per-category ratios from the snapshot's vivienda_office facts and persist them.
+
+        Returns the canonical category-id list that landed.
 
         Idempotent: if office_m2 / total_m2 are absent or the derived
         ratio matches what is already persisted, nothing is written and

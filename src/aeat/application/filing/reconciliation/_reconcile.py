@@ -269,6 +269,9 @@ def _derive_draft_totals(draft: ModeloDraft, *, total_casillas: Mapping[str, str
 
     Args:
         draft: The local draft whose totals would be derived.
+        total_casillas: Mapping from role key (``"ingresar"``,
+            ``"devolver"``) to casilla id, as declared by the active
+            registry snapshot.
 
     Returns:
         A :class:`_DraftTotals` with both fields set to ``None``.
@@ -342,6 +345,8 @@ def _normalise_period(
     Args:
         period: Raw period label from either side of the compare.
         ejercicio: Optional fiscal year from the AEAT-side justificante.
+        supported_periods: Set of canonical period tokens declared by
+            the active registry snapshot for the modelo under comparison.
 
     Returns:
         The stripped, lower-cased period label.

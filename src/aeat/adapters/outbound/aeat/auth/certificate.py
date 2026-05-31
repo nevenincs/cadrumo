@@ -205,6 +205,7 @@ class LoadedCertificate(BaseModel):
         return reference > self.not_after
 
     def __repr__(self) -> str:  # pragma: no cover - trivial
+        """Return a developer-readable string showing subject, issuer, thumbprint, and backend."""
         return (
             f"LoadedCertificate(subject={self.subject!r}, "
             f"issuer={self.issuer!r}, "
@@ -577,7 +578,7 @@ def _normalise_candidate(candidate: str) -> str:
 
 
 def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
-    """Return every attribute value in ``subject`` matching ``oid``.
+    r"""Return every attribute value in ``subject`` matching ``oid``.
 
     Parses the subject via
     :meth:`cryptography.x509.Name.from_rfc4514_string`, which handles
@@ -594,7 +595,7 @@ def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
 
 
 def extract_nif_from_subject(cert: LoadedCertificate) -> str:
-    """Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
+    r"""Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
 
     FNMT *persona física* certificates carry the subject's NIF or
     NIE in the ``serialNumber`` RDN (OID ``2.5.4.5``), optionally

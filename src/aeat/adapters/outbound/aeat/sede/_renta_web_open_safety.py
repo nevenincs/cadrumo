@@ -200,8 +200,7 @@ async def assert_click_target_safe(
 
 
 async def install_page_safety_net(page: Page) -> None:
-    """Attach page-level safety listeners that auto-dismiss dialogs and
-    block forbidden navigations.
+    """Attach page-level safety listeners that auto-dismiss dialogs and block forbidden navigations.
 
     Call once after page creation, before any user interaction. The
     listeners stay attached for the lifetime of the page.

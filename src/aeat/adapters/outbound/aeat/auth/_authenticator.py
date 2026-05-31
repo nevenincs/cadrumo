@@ -399,6 +399,14 @@ class AeatAuthenticator:
                 :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
                 :meth:`authenticate` time. Tests pass an in-process implementation here
                 to avoid the Playwright import path.
+            handshake_verifier: Optional callable used to confirm the
+                certificate handshake during login. Defaults to the
+                module-level :func:`verify_handshake`; tests inject a
+                purpose-built callable to exercise specific handshake outcomes.
+            navigation_timeout_ms: Playwright navigation timeout in
+                milliseconds applied to every page load during the
+                login flow. Defaults to
+                ``AEAT_LOGIN_NAVIGATION_TIMEOUT_MS``.
             certificate_health_check: Optional
                 :class:`CertificateHealthCheck` callable threaded
                 into :meth:`describe`. Defaults to the module-level

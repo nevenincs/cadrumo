@@ -122,8 +122,9 @@ class ProrrataKind(StrEnum):
 
 
 class InputClassification(StrEnum):
-    """How a specific input VAT amount maps to deductible activity under
-    prorrata especial (art. 103 LIVA).
+    """How a specific input VAT amount maps to deductible activity under prorrata especial.
+
+    Governed by art. 103 LIVA.
 
     * ``EXCLUSIVELY_DEDUCTIBLE`` — used only in operations that grant the
       right to deduct; 100% deductible.
@@ -339,8 +340,7 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
 
 
 def _compute_percentage_general(inputs: ProrrataInputs) -> Decimal:
-    """Apply LIVA art. 102.Uno + art. 102.Dos to produce the general
-    prorrata percentage.
+    """Apply LIVA art. 102.Uno and art. 102.Dos to produce the general prorrata percentage.
 
     Returns a ``Decimal`` between ``0`` and ``100`` inclusive, rounded up
     to the next whole integer. When total operations is zero the
@@ -396,9 +396,7 @@ def _deductible_percentage_for(
     classification: InputClassification,
     general_percentage: Decimal,
 ) -> Decimal:
-    """Map an input classification to its deductible percentage under
-    LIVA art. 103.
-    """
+    """Map an input classification to its deductible percentage under LIVA art. 103."""
     if classification is InputClassification.EXCLUSIVELY_DEDUCTIBLE:
         return Decimal("100")
     if classification is InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE:

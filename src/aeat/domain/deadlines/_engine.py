@@ -71,8 +71,7 @@ def _window_outside_activity_period(
     activity_start_date: date | None,
     activity_end_date: date | None,
 ) -> bool:
-    """Return True when an AEAT window falls entirely outside the
-    operator's census-declared activity period.
+    """Return True when an AEAT window falls entirely outside the operator's activity period.
 
     Two gates, both grounded in RGAT Arts. 9 / 11 (census activity
     start / end dates published on G313):

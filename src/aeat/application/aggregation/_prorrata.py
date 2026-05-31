@@ -202,9 +202,7 @@ def aggregate_provisional_prorrata(
     current_year: int,
     period: str,
 ) -> tuple[ProrrataResult, ProrrataAggregation]:
-    """Compute the provisional prorrata percentage for one period in
-    ``current_year``, derived from ``prior_year``'s actuals per LIVA art.
-    105.
+    """Compute the provisional prorrata percentage for ``current_year`` from ``prior_year``'s actuals (LIVA art. 105).
 
     The provisional percentage applies on every Modelo 303 quarter or
     month within ``current_year``. The same provisional may be reused
@@ -246,8 +244,7 @@ def aggregate_definitiva_prorrata(
     *,
     year: int,
 ) -> tuple[ProrrataResult, ProrrataAggregation]:
-    """Compute the definitiva prorrata percentage for year-end
-    regularisation under LIVA art. 109.
+    """Compute the definitiva prorrata percentage for year-end regularisation under LIVA art. 109.
 
     The definitiva uses the year's actual operations and produces the
     regularisation entry that lands on the Q4 Modelo 303 (casilla 44)

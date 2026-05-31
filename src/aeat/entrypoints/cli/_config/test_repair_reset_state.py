@@ -80,7 +80,9 @@ def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
     result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--dry-run"])
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "config.repair.reset_state"
+    payload = envelope["result"]
     assert payload["dry_run"] is True
     fingerprint = payload["fingerprint"]
     assert fingerprint["schema_version"] == 1
@@ -109,7 +111,9 @@ def test_reset_state_with_yes_deletes_row_emits_event_and_reload_is_empty() -> N
     result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--yes"])
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "config.repair.reset_state"
+    payload = envelope["result"]
     assert payload["dry_run"] is False
     # The seeded envelope is healthy, so the reset fingerprint records
     # ``readable`` — the operator reset a sound envelope deliberately,

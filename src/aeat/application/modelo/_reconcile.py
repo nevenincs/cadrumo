@@ -105,8 +105,7 @@ class ReconciliationEvidenceInvalidError(AeatError):
     """
 
 class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
-    """Raised when ``from_declaration`` is requested before the declaration
-    parser ships.
+    """Raised when ``from_declaration`` is requested before the declaration parser ships.
 
     The app-modelo-shape ADR amendment lists ``--from-declaration PATH``
     as a required surface variant. Until the parser lands, the service
@@ -114,8 +113,7 @@ class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """
 
 class ReconciliationCrossBucketRefusedError(AeatError):
-    """Raised when the addressed work unit belongs to a different bucket
-    than the active profile bucket.
+    """Raised when the addressed work unit belongs to a different bucket than the active profile bucket.
 
     The bucket-event-history ADR scopes every event to a bucket id.
     Allowing the service to emit into a non-active bucket would let any

@@ -153,8 +153,7 @@ async def _fetch_g313_census_with_storage_state(
 
 
 def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
-    """Project a :class:`CensoFactSet` into the dotted-key mapping the
-    snapshot store accepts.
+    """Project a :class:`CensoFactSet` into the dotted-key mapping the snapshot store accepts.
 
     Mirrors the ``model_selectors`` declarations in the schema so
     the snapshot path keys stay aligned with the user-profile schema

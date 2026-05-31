@@ -49,9 +49,10 @@ class WizardEditUnsupportedConsoleError(WizardUnsupportedConsoleError):
 
 
 def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
-    """Return the prompt_toolkit error classes that signal an
-    unsupported console host. Windows-only error is included when
-    importable; the OSError fallback covers POSIX TTY misconfiguration.
+    """Return the prompt_toolkit error classes that signal an unsupported console host.
+
+    The Windows-only error is included when importable; the OSError fallback
+    covers POSIX TTY misconfiguration.
     """
     error_types: list[type[BaseException]] = [OSError]
     try:

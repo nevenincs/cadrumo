@@ -1,5 +1,4 @@
-"""Strict records describing a Google Sheets workbook produced from a
-registry snapshot.
+"""Strict records describing a Google Sheets workbook produced from a registry snapshot.
 
 Every record is a frozen pydantic v2 model with `extra="forbid"` so that
 schema drift surfaces as validation failures at the moment the engine
