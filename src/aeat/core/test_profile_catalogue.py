@@ -126,8 +126,9 @@ def test_profile_catalogue_exports_are_callable() -> None:
     """All public symbols in aeat.core.profile_catalogue are importable and callable."""
 
     from aeat.core import profile_catalogue
+    from aeat.core.errors import CoreError
 
     assert callable(profile_catalogue.register_wizard_catalogue)
     assert callable(profile_catalogue.get_setup_flow)
     assert callable(profile_catalogue.get_wizard_flows)
-    assert issubclass(profile_catalogue.WizardCatalogueNotRegisteredError, RuntimeError)
+    assert issubclass(profile_catalogue.WizardCatalogueNotRegisteredError, CoreError)
