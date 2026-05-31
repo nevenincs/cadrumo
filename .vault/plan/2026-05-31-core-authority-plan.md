@@ -93,16 +93,16 @@ Consolidate the two M347 threshold declarations to core/external_constants.py as
 
 Delete all eight zero-consumer constants (DELETE-001..008) after ripgrep confirms zero callers in each case, satisfying the aeat-source-hygiene rule.
 
-- [ ] `W03.P07.S21` - delete SYSTEM_BUCKET_ID and WORKFLOW_STATE_OBJECT_ID from application/workflow/_events.py after ripgrep confirms zero callers; `DELETE-001, DELETE-002, aeat-source-hygiene; `src/aeat/application/workflow/_events.py`.
-- [ ] `W03.P07.S22` - delete DAYS_PER_YEAR from domain/fincas/_amortization_ledger.py after ripgrep confirms zero callers; `DELETE-003, aeat-source-hygiene; `src/aeat/domain/fincas/_amortization_ledger.py`.
-- [ ] `W03.P07.S23` - delete LATIN_1_ENCODING, PROVENANCE_SOURCE_MANUAL_CLI, and PDF_MIME_TYPE from core/external_constants.py after ripgrep confirms zero callers for each; `DELETE-004, DELETE-005, DELETE-006, aeat-source-hygiene; `src/aeat/core/external_constants.py`.
-- [ ] `W03.P07.S24` - delete ASSETS_AMORTIZATION_LEDGER_FILENAME, ASSETS_LEDGER_FILENAME, and INVENTORY_LEDGER_FILENAME from the storage profile assets modules after ripgrep confirms zero callers; `DELETE-007, DELETE-008, aeat-source-hygiene; `src/aeat/adapters/persistence/storage/profile/`.
+- [x] `W03.P07.S21` - delete SYSTEM_BUCKET_ID and WORKFLOW_STATE_OBJECT_ID from application/workflow/_events.py after ripgrep confirms zero callers; `DELETE-001, DELETE-002, aeat-source-hygiene; `src/aeat/application/workflow/_events.py`.
+- [x] `W03.P07.S22` - delete DAYS_PER_YEAR from domain/fincas/_amortization_ledger.py after ripgrep confirms zero callers; `DELETE-003, aeat-source-hygiene; `src/aeat/domain/fincas/_amortization_ledger.py`.
+- [x] `W03.P07.S23` - delete LATIN_1_ENCODING, PROVENANCE_SOURCE_MANUAL_CLI, and PDF_MIME_TYPE from core/external_constants.py after ripgrep confirms zero callers for each; `DELETE-004, DELETE-005, DELETE-006, aeat-source-hygiene; `src/aeat/core/external_constants.py`.
+- [x] `W03.P07.S24` - delete ASSETS_AMORTIZATION_LEDGER_FILENAME, ASSETS_LEDGER_FILENAME, and INVENTORY_LEDGER_FILENAME from the storage profile assets modules after ripgrep confirms zero callers; `DELETE-007, DELETE-008, aeat-source-hygiene; `src/aeat/adapters/persistence/storage/profile/`.
 
 ### Phase `W03.P08` - constant name-collision renames
 
 Eliminate constant name collisions: verify and delete the five zero-consumer constants in application/aggregation/_shared_issue_reasons.py (RENAME-006), disambiguate SCHEMA_VERSION to ASSETS_SCHEMA_VERSION and INVENTORY_SCHEMA_VERSION in the two domain/profile subpackages (RENAME-007), rename the two ERROR_CODES constants to domain-specific names (RENAME-009).
 
-- [ ] `W03.P08.S25` - verify zero callers via ripgrep then delete UNSUPPORTED_DIRECTION, UNSUPPORTED_CURRENCY, UNCLASSIFIED_BUSINESS_STATE, PERSONAL_TRANSACTION, and OUTSIDE_PERIOD from application/aggregation/_shared_issue_reasons.py; `RENAME-006, aeat-source-hygiene; `src/aeat/application/aggregation/_shared_issue_reasons.py`.
+- [x] `W03.P08.S25` - verify zero callers via ripgrep then delete UNSUPPORTED_DIRECTION, UNSUPPORTED_CURRENCY, UNCLASSIFIED_BUSINESS_STATE, PERSONAL_TRANSACTION, and OUTSIDE_PERIOD from application/aggregation/_shared_issue_reasons.py; `RENAME-006, aeat-source-hygiene; `src/aeat/application/aggregation/_shared_issue_reasons.py`.
 - [x] `W03.P08.S26` - rename SCHEMA_VERSION to ASSETS_SCHEMA_VERSION in domain/profile/assets/__init__.py and update the two call sites; `RENAME-007, Rule 4; `src/aeat/domain/profile/assets/__init__.py`.
 - [x] `W03.P08.S27` - rename SCHEMA_VERSION to INVENTORY_SCHEMA_VERSION in domain/profile/inventory/__init__.py and update its call sites; `RENAME-007, Rule 4; `src/aeat/domain/profile/inventory/__init__.py`.
 - [x] `W03.P08.S28` - rename application/aggregation/_service.py ERROR_CODES to AggregationErrorCodes and update the four caller references; `RENAME-009, Rule 4; `src/aeat/application/aggregation/_service.py`.
@@ -301,10 +301,10 @@ Extend src/aeat/diagnostics/test_identity_primitive_placement.py from 4 inherite
 
 Extend the diagnostics test from 4 to 10 cumulative clauses per Rule 11. One Step per new clause, each with its own anti-tautology proof (introduce a deliberate violation under a scratch path, observe the clause fires, revert). The 10-clause test must pass against the post-W10 codebase tree.
 
-- [ ] `W11.P28.S92` - implement Clause 5 asserting no domain.<a> module imports from domain.<b>._enums for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
-- [ ] `W11.P28.S93` - implement Clause 6 asserting no domain.<a> module imports from domain.<b>._constants for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
-- [ ] `W11.P28.S94` - implement Clause 7 asserting no domain.<a> module imports from domain.<b>._protocols for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
-- [ ] `W11.P28.S95` - implement Clause 8 asserting no production module imports a _-prefixed name from a cross-package module other than _ids.py, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W11.P28.S92` - implement Clause 5 asserting no domain.<a> module imports from domain.<b>._enums for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W11.P28.S93` - implement Clause 6 asserting no domain.<a> module imports from domain.<b>._constants for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W11.P28.S94` - implement Clause 7 asserting no domain.<a> module imports from domain.<b>._protocols for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W11.P28.S95` - implement Clause 8 asserting no production module imports a _-prefixed name from a cross-package module other than _ids.py, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [x] `W11.P28.S96` - implement Clause 9 asserting no two production modules outside the protect list declare an UPPER_SNAKE_CASE constant with the same name and same literal value, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [x] `W11.P28.S97` - implement Clause 10 asserting no pydantic field at a persisted or wire boundary ending in _kind, _status, or _state uses bare str with only a length/pattern constraint when a typed alias exists, with anti-tautology proof; `verify all 10 clauses pass as Wave W11 close gate; Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 

@@ -17,25 +17,29 @@ Implement Clause 6 asserting no `domain.<a>` module imports from `domain.<b>._co
 
 ## Status
 
-BLOCKED
+DONE
 
 ## Implementation
 
-Added `find_sibling_domain_constant_imports()` to `src/aeat/diagnostics/_identity_placement.py`.
-Anti-tautology proof `test_sibling_domain_constant_detector_flags_synthetic_violation` added.
+Fixed clause-6 violation:
+- `src/aeat/domain/buckets/_event.py:24` — changed from
+  `from ..profile._constants import ProfileName as _ProfileName` to
+  `from ..profile import ProfileName as _ProfileName` (public surface import).
 
-## Blocked reason
+`ProfileName` is already exported through `domain/profile/__init__.py`.
 
-1 production violation:
+Zero-violation assertion `test_no_sibling_domain_constant_imports` added to
+diagnostics test in S95 commit.
 
-- `src/aeat/domain/buckets/_event.py:24` — imports `ProfileName` from
-  `domain.profile._constants`. Owning wave: W03 (constant centralisation) or W04.
+## Action class
 
-## Commit
+MOVE (import path correction — no symbol relocation required)
 
-`8a08cac3f` — diagnostics(W11.P28): extend enforcement test to 10 clauses per Rule 11
+## Commits
+
+- `aded66ecf` — exec(core-authority): W11.P28.S93 clause-6 sibling-domain _constants fix
 
 ## Files touched
 
-- `src/aeat/diagnostics/_identity_placement.py`
-- `src/aeat/diagnostics/test_identity_primitive_placement.py`
+- `src/aeat/domain/buckets/_event.py`
+- `src/aeat/diagnostics/test_identity_primitive_placement.py` (clause-6 zero-violation test added in S95)
