@@ -93,5 +93,6 @@ def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket
 
 
 def test_active_transaction_catalogue_repository_rejects_missing_active_bucket() -> None:
-    with pytest.raises(LedgerNoActiveBucketError, match="No hay un perfil activo"):
+    with pytest.raises(LedgerNoActiveBucketError) as raised:
         active_transaction_catalogue_repository(WorkflowState())
+    assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"

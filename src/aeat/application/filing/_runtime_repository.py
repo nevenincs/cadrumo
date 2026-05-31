@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core._bucket_pointer_io import resolve_active_bucket_id
-from ...core.i18n import tr
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:
@@ -19,10 +18,14 @@ def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
         trimmed = bucket_id.strip()
         if trimmed:
             return trimmed
-        raise ModeloApplicationError(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise ModeloApplicationError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     active = resolve_active_bucket_id()
     if active is None:
-        raise ModeloApplicationError(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise ModeloApplicationError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     return active
 
 
