@@ -49,13 +49,11 @@ class ModeloAmendmentRepository:
     @property
     def bucket_id(self) -> str | None:
         """Return the profile bucket id when this repository resolved one."""
-
         return self._bucket_id
 
     @property
     def store_dir(self) -> Path:
         """Return a logical backend marker for diagnostic messages."""
-
         return Path("db://secure_objects") / _AMENDMENT_NAMESPACE
 
     def envelope_path_for(self, amendment_id: str) -> Path:
@@ -147,7 +145,6 @@ class ModeloAmendmentRepository:
 
     def iter_amendments(self) -> Iterator[ModeloAmendment]:
         """Yield every persisted amendment, in lexicographic id order."""
-
         for amendment_id in self.list_amendment_ids():
             payload = self.load(amendment_id)
             if payload is not None:

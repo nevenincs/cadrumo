@@ -154,7 +154,6 @@ def aggregate_renta_income_ledger_from_repositories(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate cumulative M130 income."""
-
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -227,7 +226,6 @@ def _classify_income_transaction(
     cumulative_end: date,
 ) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue:
     """Filter one ledger transaction against the M130 income pipeline."""
-
     transaction_id = transaction.transaction_id
 
     if transaction.direction is not TransactionDirection.INCOMING:

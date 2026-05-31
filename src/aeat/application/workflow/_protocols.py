@@ -22,7 +22,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ...adapters.outbound.aeat.export import ModeloDraftLike
+from ...domain.submission._protocols import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
 from ...domain.deadlines import Schedule, TaxpayerProfile
 

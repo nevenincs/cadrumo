@@ -118,7 +118,6 @@ def derive_verification_report_id(
     verified_by: str,
 ) -> str:
     """Deterministic 64-char SHA-256 id for a verification report."""
-
     payload = {
         "calculation_revision_id": calculation_revision_id.strip(),
         "run_at": run_at.isoformat(),
@@ -195,7 +194,6 @@ class VerificationReportCatalogue(BaseModel):
 
     def for_calculation_revision(self, calculation_revision_id: str) -> tuple[VerificationReport, ...]:
         """Return every report against one calculation revision, ordered by run_at."""
-
         matching = tuple(r for r in self.reports.values() if r.calculation_revision_id == calculation_revision_id)
         return tuple(sorted(matching, key=lambda r: r.run_at))
 

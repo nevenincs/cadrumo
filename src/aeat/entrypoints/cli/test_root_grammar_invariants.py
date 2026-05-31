@@ -27,7 +27,7 @@ def _isolated_state(tmp_path: Path) -> Iterator[None]:
 
 def test_root_does_not_register_bare_reconcile_alias() -> None:
     """`aeat reconcile` is not a root verb; reconcile only lives
-    under `aeat app modelo` per the apex CLI shape."""
+    under `aeat app modelo`."""
 
     result = invoke_cached_cli(["reconcile", "--help"])
     assert result.exit_code != 0, result.output

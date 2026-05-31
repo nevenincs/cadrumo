@@ -26,10 +26,10 @@ from ...domain.filing import (
     ModeloApprovalBasis,
     ModeloDraft,
     ModeloDraftError,
-    ModeloDraftStatus,
     ModeloValidator,
     derive_validation_status,
 )
+from ...domain.submission._protocols import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
 
 _logger = get_logger(__name__)
@@ -90,6 +90,8 @@ def compute_current_approval_basis(
     Args:
         draft: The :class:`aeat.domain.filing.ModeloDraft` whose basis
             is being computed.
+        bucket_id: Stable bucket identifier; used to load the persisted
+            transaction catalogue when no override is supplied.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional override of the persisted
@@ -101,7 +103,6 @@ def compute_current_approval_basis(
     Returns:
         A freshly computed :class:`ModeloApprovalBasis`.
     """
-
     catalogue = transaction_catalogue if transaction_catalogue is not None else _load_transaction_catalogue(bucket_id)
     profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
     return ModeloApprovalBasis(
@@ -125,7 +126,6 @@ def compute_review_checksum(approval_basis: ModeloApprovalBasis) -> str:
     Returns:
         Lowercase hex SHA-256 of the basis's canonical JSON dump.
     """
-
     return _sha256_payload(approval_basis.model_dump(mode="json"))
 
 
@@ -145,6 +145,8 @@ def approval_stale_reasons(
 
     Args:
         draft: The :class:`aeat.domain.filing.ModeloDraft` to inspect.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`compute_current_approval_basis`.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
@@ -154,7 +156,6 @@ def approval_stale_reasons(
         Tuple of :class:`ModeloApprovalStaleReason` values in
         evaluation order; empty when the basis is fresh.
     """
-
     if draft.approval_basis is None:
         return ()
 
@@ -197,6 +198,8 @@ def approve_draft(
     Args:
         draft: The draft to approve. Must be
             :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`compute_current_approval_basis`.
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
@@ -209,11 +212,9 @@ def approve_draft(
         A new :class:`ModeloDraft` with approval metadata populated.
 
     Raises:
-        :exc:`aeat.domain.filing.ModeloDraftError`: When
-            ``approved_by`` is blank or the draft is not in
-            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
+        ModeloDraftError: When ``approved_by`` is blank or the draft is
+            not in :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
     """
-
     normalized_approver = approved_by.strip()
     if not normalized_approver:
         raise ModeloDraftError("approved_by must not be blank")
@@ -267,7 +268,6 @@ def unapprove_draft(
         ``status`` set to the validation status derived from
         :attr:`ModeloDraft.findings`.
     """
-
     timestamp = unapproved_at or datetime.now(tz=UTC)
     updated = draft.model_copy(
         update={
@@ -302,6 +302,8 @@ def refresh_review_status(
 
     Args:
         draft: The draft to refresh.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`approval_stale_reasons`.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
@@ -313,7 +315,6 @@ def refresh_review_status(
         Either ``draft`` unchanged (when no transition was needed) or a
         new :class:`ModeloDraft` with the appropriate status update.
     """
-
     timestamp = refreshed_at or datetime.now(tz=UTC)
     has_review_metadata = _has_review_metadata(draft)
     if draft.status in _DOWNSTREAM_STATUSES:
@@ -389,7 +390,6 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
     Returns:
         A lowercase imperative phrase suitable for inline UI display.
     """
-
     match reason:
         case ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
             return "approval basis version changed"

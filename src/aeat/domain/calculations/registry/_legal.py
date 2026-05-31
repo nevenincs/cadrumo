@@ -55,7 +55,6 @@ def verify_legal_reference(
     explicit registry audit calls (``verify_registry_tree``,
     ``test_catalogue_verification``).
     """
-
     if reference.article is None:
         return
     source = _SOURCE_BY_KIND.get(reference.kind)
@@ -87,7 +86,6 @@ def verify_legal_catalogue(
     skipped for all references; key/id alignment and known-bad citation
     checks still run.
     """
-
     failures: list[str] = []
     for ref_id, reference in legal.items():
         if ref_id != reference.id:

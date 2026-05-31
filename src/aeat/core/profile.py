@@ -54,6 +54,7 @@ class ProjectAnswersNotRegisteredError(CoreError):
     """Raised when domain code calls project_answers before registration."""
 
     def __init__(self) -> None:
+        """Initialise with a fixed message directing the caller to register the projection."""
         super().__init__(
             "project_answers has not been registered. "
             "Call register_project_answers() at application startup before "
@@ -69,6 +70,7 @@ class ProjectAnswersFn(Protocol):
     Domain code depends only on this protocol.
     """
 
+    # KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR: WizardFlow type lives in aeat.application.wizard; importing here would create circular dependency.
     def __call__(self, flow: Any, values: Mapping[str, str]) -> BaseModel:
         """Project canonical-token values into the typed answers model."""
         ...  # pragma: no cover
@@ -85,7 +87,6 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     defined). A second call with an identical callable is a no-op; a second
     call with a different callable raises :class:`RuntimeError`.
     """
-
     if _PROJECT_ANSWERS_SLOT:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
             return
@@ -99,16 +100,20 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
 def get_project_answers() -> ProjectAnswersFn:
     """Return the registered project_answers implementation.
 
+    Returns:
+        The :class:`ProjectAnswersFn` registered via
+        :func:`register_project_answers`.
+
     Raises:
         ProjectAnswersNotRegisteredError: When the application layer has not yet
             called :func:`register_project_answers`.
     """
-
     if not _PROJECT_ANSWERS_SLOT:
         raise ProjectAnswersNotRegisteredError()
     return _PROJECT_ANSWERS_SLOT[0]
 
 
+# KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR: WizardFlow type lives in aeat.application.wizard; importing here would create circular dependency.
 def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     """Invoke the registered project_answers implementation.
 
@@ -117,10 +122,16 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     ``aeat.core.profile`` so they never acquire a direct dependency on
     ``aeat.application.wizard._persistence``.
 
-    Raises:
-        ProjectAnswersNotRegisteredError: When registration has not occurred.
-    """
+    Args:
+        flow: The wizard flow descriptor identifying which flow to
+            project answers for.
+        values: Mapping of canonical token keys to raw string values
+            collected from the wizard.
 
+    Returns:
+        A typed answers model instance produced by the registered
+        implementation.
+    """
     return get_project_answers()(flow, values)
 
 

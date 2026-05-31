@@ -151,7 +151,6 @@ def aggregate_prorrata_inputs(
     Raises :class:`AggregationPeriodError` if ``year`` is outside the
     supported window (2000-2100).
     """
-
     if year < 2000 or year > 2100:
         raise AggregationPeriodError(
             t("aggregation.prorrata.errors.year_out_of_range"),
@@ -203,9 +202,7 @@ def aggregate_provisional_prorrata(
     current_year: int,
     period: str,
 ) -> tuple[ProrrataResult, ProrrataAggregation]:
-    """Compute the provisional prorrata percentage for one period in
-    ``current_year``, derived from ``prior_year``'s actuals per LIVA art.
-    105.
+    """Compute the provisional prorrata percentage for ``current_year`` from ``prior_year``'s actuals (LIVA art. 105).
 
     The provisional percentage applies on every Modelo 303 quarter or
     month within ``current_year``. The same provisional may be reused
@@ -221,7 +218,6 @@ def aggregate_provisional_prorrata(
     not strictly greater than ``prior_year``, or when ``period`` is not
     a valid in-year token (``Q1``..``Q4`` or ``M01``..``M12``).
     """
-
     if current_year <= prior_year:
         raise AggregationValidationError(
             t("aggregation.prorrata.errors.current_year_not_after_prior"),
@@ -248,8 +244,7 @@ def aggregate_definitiva_prorrata(
     *,
     year: int,
 ) -> tuple[ProrrataResult, ProrrataAggregation]:
-    """Compute the definitiva prorrata percentage for year-end
-    regularisation under LIVA art. 109.
+    """Compute the definitiva prorrata percentage for year-end regularisation under LIVA art. 109.
 
     The definitiva uses the year's actual operations and produces the
     regularisation entry that lands on the Q4 Modelo 303 (casilla 44)
@@ -257,7 +252,6 @@ def aggregate_definitiva_prorrata(
     ``period=None`` and ``kind=DEFINITIVA``; the calculator's
     :class:`ProrrataResult` validator accepts that combination.
     """
-
     aggregation = aggregate_prorrata_inputs(current_year_operations, year=year)
     result = compute_prorrata_general(
         aggregation.inputs,

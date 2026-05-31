@@ -214,20 +214,9 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
 
 def test_try_load_certificate_metadata_does_not_swallow_unrelated_exceptions() -> None:
     """_try_load_certificate_metadata propagates RuntimeError (not in the narrow catch)."""
-    import importlib
-    import sys
-    from pathlib import Path
-    from unittest.mock import patch
-
-    from aeat.application.auth import _operator as operator_mod
-    from aeat.core.config import Settings
-
     # We only verify that the function is importable and the except clause is narrow.
     # The real certificate load path requires a PKCS#12 file; we exercise the guard via
     # the password=None early-exit path (returns None without exception).
-    settings = Settings()
-    # No certificate path configured in test environment: password will be None → returns None
-    # This exercises the happy-path guard, confirming the function signature is intact.
     from aeat.application.auth._operator import _try_load_certificate_metadata
     result = _try_load_certificate_metadata.__doc__
     assert result is not None  # function exists and has a docstring

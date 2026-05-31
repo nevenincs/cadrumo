@@ -1,5 +1,4 @@
-"""Strict records describing a Google Sheets workbook produced from a
-registry snapshot.
+"""Strict records describing a Google Sheets workbook produced from a registry snapshot.
 
 Every record is a frozen pydantic v2 model with `extra="forbid"` so that
 schema drift surfaces as validation failures at the moment the engine
@@ -75,7 +74,6 @@ _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$")
 
 def _column_index_to_letters(column: int) -> str:
     """Translate a 1-based column index to A, B, ..., Z, AA, AB, ..."""
-
     if column < 1:
         raise CalcSheetsRecordError("column index must be 1-based and positive")
     letters: list[str] = []
@@ -120,7 +118,6 @@ class SheetCellAddress(BaseModel):
 
     def qualified(self) -> str:
         """Return the cross-tab A1 reference (`'Tab Name'!A1`)."""
-
         # Sheets A1 syntax single-quotes the sheet name and escapes
         # inner apostrophes by doubling them. The tab enum values do
         # not contain apostrophes today, but the escape is applied

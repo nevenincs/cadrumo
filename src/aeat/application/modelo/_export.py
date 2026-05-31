@@ -1,5 +1,4 @@
-"""Modelo declaration export: write a verified-complete or filed
-calculation revision to a local AEAT-compatible file.
+"""Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
 `export_modelo_revision` accepts a calculation revision id, builds and
 approves a :class:`aeat.domain.filing.ModeloDraft` from the revision's
@@ -86,8 +85,7 @@ _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
 
 class ModeloExportCrossBucketRefusedError(ModeloError):
-    """Raised when the addressed revision's parent work unit belongs to
-    a bucket other than the active profile bucket.
+    """Raised when the addressed revision's parent work unit belongs to a bucket other than the active profile bucket.
 
     Bucket events must scope to the active bucket; allowing the service
     to emit into a foreign bucket would let any caller pollute another
@@ -201,13 +199,19 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     because every modelo fichero-BOE envelope declares ``surnames`` and
     ``name`` as required header fields.
 
+    Args:
+        bucket_id: The active profile bucket id whose persisted profile
+            facts are read for the operator name.
+
+    Returns:
+        A ``(surnames, name)`` tuple of non-blank strings.
+
     Raises:
         ModeloExportError: When the active bucket has no persisted
             profile, or the profile omits either name fact. The export
             cannot fabricate a placeholder name — the operator must
             populate the profile first.
     """
-
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import UserProfileLifecycleRepository
     from ..user_profile._projections import record_to_path_values
@@ -238,7 +242,6 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
 
 def _ddmmaaaa(value: date) -> str:
     """Render a date as the AEAT ``ddmmaaaa`` fixed-width header token."""
-
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 def _compose_export_headers(
@@ -262,7 +265,6 @@ def _compose_export_headers(
     ``required`` by the layout and missing, so over-supplying optional
     keys is safe — the renderer ignores headers a layout never reads.
     """
-
     surnames, name = _operator_name_facts(work_unit.bucket_id)
     period_start = period_start_date(filing_year, registry_period)
     period_end = period_end_date(filing_year, registry_period)
@@ -306,11 +308,16 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
     while ``build_draft`` parses a canonical token. This helper
     normalises whichever shape the work unit carries into both.
 
+    Args:
+        work_unit: The work unit whose period token is to be normalised.
+
+    Returns:
+        A ``(filing_year, registry_period, canonical_period)`` tuple.
+
     Raises:
         ModeloExportError: When the work unit's period token cannot
             be mapped to a registry period.
     """
-
     period = work_unit.period
     if len(period) == 2 and period.endswith("T") and period[0].isdigit():
         canonical = f"{work_unit.filing_year}Q{period[0]}"
@@ -350,7 +357,6 @@ def export_modelo_revision(
     with the calculation revision id, work unit id, output path,
     byte size, and file digest captured in the payload.
     """
-
     from ..workflow._models import resolve_active_bucket_id
 
     active_bucket_id = resolve_active_bucket_id()

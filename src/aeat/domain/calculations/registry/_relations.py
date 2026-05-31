@@ -43,7 +43,6 @@ def relation_source_requirements(
     period: str,
 ) -> tuple[RegistryRelationSourceRequirement, ...]:
     """Return source declarations needed to resolve relations for a filing."""
-
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
@@ -113,7 +112,6 @@ def resolve_relation_values(
     ``external_outputs`` is keyed by relation id. Aggregation defaults to copy;
     ``{"op": "sum"}`` sums tuple values for annual summaries.
     """
-
     relations = tuple(_active_relations(revision, period=period))
     relation_ids = {relation.id for relation in relations}
     unknown = sorted(set(external_outputs).difference(relation_ids))
@@ -146,7 +144,6 @@ def resolve_relation_values_from_observations(
     period: str,
 ) -> dict[str, Decimal]:
     """Resolve relation values from normalized filed-declaration observations."""
-
     available = tuple(observations)
     external_outputs: dict[str, Decimal | tuple[Decimal, ...]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
@@ -178,7 +175,6 @@ def materialize_relation_binding_values(
     bound casillas can consume a relation-backed value without duplicating
     relation resolution in the application layer.
     """
-
     values: dict[str, Decimal] = {}
     for relation in _active_relations(revision, period=period):
         if relation.id not in relation_values:
@@ -237,7 +233,6 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
     (``01``..``12``). Offsets wrap across calendar-year boundaries and return
     the period plus the relative year delta.
     """
-
     offset = relation.source_period_offset_from_target
     if offset is None:
         return None

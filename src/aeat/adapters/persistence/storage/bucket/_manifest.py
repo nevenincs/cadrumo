@@ -136,7 +136,6 @@ class BucketManifest(BaseModel):
         manifest round-trips while the public constructor still
         type-checks an explicit :class:`BucketLifecycleStatus`.
         """
-
         if isinstance(value, BucketLifecycleStatus):
             return value
         if isinstance(value, str):

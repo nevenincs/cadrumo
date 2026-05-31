@@ -37,7 +37,7 @@ def _normalize_hex_digest(value: str, *, field_name: str) -> str:
         The validated digest, lowercased and stripped of surrounding whitespace.
 
     Raises:
-        ValueError: When ``value`` is not a 64-character hex string.
+        AttachmentValidationError: When ``value`` is not a 64-character hex string.
     """
     normalized = value.strip().lower()
     if len(normalized) != 64 or any(char not in _HEX_DIGITS for char in normalized):
@@ -56,7 +56,7 @@ def _dedupe_preserve_order(values: Iterable[object], *, field_name: str) -> tupl
         Deduplicated tuple of trimmed identifiers in first-seen order.
 
     Raises:
-        ValueError: When any element is not a string or is blank.
+        AttachmentValidationError: When any element is not a string or is blank.
     """
     seen: dict[str, None] = {}
     for raw in values:

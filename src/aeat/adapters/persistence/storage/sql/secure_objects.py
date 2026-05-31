@@ -196,6 +196,7 @@ class SecureObjectRepository:
         engine: Engine | None = None,
         namespace_registry: StorageHierarchyRegistry | None = None,
     ) -> None:
+        """Bind the repository to ``engine`` and ensure the secure_objects table exists."""
         self._engine = engine or get_engine()
         self._namespace_registry = namespace_registry
         # `inspect(mapped_class).local_table` is a `Table` at runtime, but the
@@ -210,7 +211,6 @@ class SecureObjectRepository:
 
     def _ensure_table_revision_metadata_columns(self, table_name: str) -> None:
         """Add nullable revision metadata columns to a pre-existing table."""
-
         existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
         missing = tuple(
             (name, column_type)
@@ -240,7 +240,6 @@ class SecureObjectRepository:
 
     def _is_duplicate_column_race(self, table_name: str, column_name: str, exc: OperationalError) -> bool:
         """Return whether an ``ALTER TABLE ADD COLUMN`` failed after a concurrent add."""
-
         if "duplicate column" not in str(exc.orig).lower():
             return False
         existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
@@ -248,7 +247,6 @@ class SecureObjectRepository:
 
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""
-
         with self._engine.begin() as connection:
             connection.execute(
                 text(
@@ -279,12 +277,10 @@ class SecureObjectRepository:
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
         """Return the namespace registry bound to this repository, if any."""
-
         return self._namespace_registry
 
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
         """Return the registry contract for ``namespace`` when policy is bound."""
-
         if self._namespace_registry is None:
             return None
         try:
@@ -405,7 +401,6 @@ class SecureObjectRepository:
         the active-gate at the CLI root callback already refused
         non-exempt verbs that lack a session.
         """
-
         from datetime import UTC, datetime
 
         from ..errors import SessionExpiredError
@@ -426,7 +421,6 @@ class SecureObjectRepository:
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""
-
         with session_scope(self._engine) as session:
             row_id = session.execute(
                 select(_orm.SecureObjectRow.id).where(
@@ -477,7 +471,6 @@ class SecureObjectRepository:
             `(namespace ASC, object_key ASC)` so consumers can
             checkpoint progress deterministically.
         """
-
         with session_scope(self._engine) as session:
             stmt = text(
                 "SELECT id, namespace, object_key, classification, schema_version, "
@@ -701,7 +694,6 @@ class SecureObjectRepository:
         exposes the HMAC lookup digest plus storage metadata needed by repair
         diagnostics.
         """
-
         with session_scope(self._engine) as session:
             stmt = (
                 text(
@@ -766,7 +758,6 @@ class SecureObjectRepository:
         should iterate :meth:`list_records` and read IDs from decrypted
         payloads.
         """
-
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(_orm.SecureObjectRow.object_key)
@@ -830,9 +821,23 @@ class SecureObjectRepository:
         failures and decide how to report them; nothing is auto-deleted.
 
         Args:
-            batch_size: SQLAlchemy `yield_per` chunk size for the raw row
+            namespace: The storage namespace whose rows are scanned.
+            expected_class: The :class:`SensitivityClass` all rows in this
+                namespace must carry; rows with a differing classification
+                are yielded as :class:`SecureObjectUnreadable`.
+            max_supported_version: Rows whose ``schema_version`` exceeds
+                this ceiling are yielded as :class:`SecureObjectUnreadable`
+                so callers can detect forward-migration gaps.
+            batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
-                while preserving deterministic `(object_key ASC)` order.
+                while preserving deterministic ``(object_key ASC)`` order.
+
+        Yields:
+            One :class:`SecureObjectListItem` per stored row — either a
+            :class:`SecureObjectRecord` or a :class:`SecureObjectUnreadable`.
+
+        Raises:
+            StorageValidationError: When ``batch_size`` is less than 1.
         """
         if batch_size < 1:
             raise StorageValidationError(f"batch_size must be at least 1; got {batch_size}")
@@ -954,7 +959,6 @@ class SecureObjectRepository:
         max_supported_version: int,
     ) -> SecureObjectRecord | None:
         """Load and decrypt one object, returning ``None`` when absent."""
-
         self._check_session_freshness()
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
@@ -1011,7 +1015,6 @@ class SecureObjectRepository:
 
     def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
         """Encrypt and upsert several payloads in one SQL unit of work."""
-
         if not writes:
             return
         self._check_session_freshness()
@@ -1066,10 +1069,17 @@ class SecureObjectRepository:
             schema_version: Envelope schema version captured on the row.
             written_at: Timezone-aware datetime captured on the row.
             payload: Plaintext envelope bytes (the column encrypts).
+            write_provenance: Human-readable string identifying the write
+                origin (e.g. caller module or operation name). Defaults to
+                the repository's default provenance marker.
+            source_event_id: Optional opaque identifier of the domain event
+                that triggered this write; stored verbatim for audit trails.
+            expected_revision_id: Optional optimistic-concurrency guard; when
+                supplied the upsert is rejected if the row's current revision
+                does not match.
 
         Raises:
-            :exc:`ValueError`: If ``hashed_object_key`` is not exactly
-                32 bytes (the size :class:`HashedLookup` requires).
+            StorageValidationError: When ``hashed_object_key`` is not exactly 32 bytes.
             :exc:`RepositoryError`: On underlying SQL integrity errors.
         """
         if len(hashed_object_key) != 32:
@@ -1322,7 +1332,6 @@ class SecureObjectRepository:
         column; callers use this to fingerprint an envelope they intend
         to discard (e.g. the workflow-state reset recovery path).
         """
-
         # Resolve the row id through the ORM so the HashedLookup column
         # binding hashes ``object_key`` consistently with the rest of
         # the repository, then read the raw row through ``text()`` so
@@ -1358,7 +1367,6 @@ class SecureObjectRepository:
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""
-
         self._check_session_freshness()
         with session_scope(self._engine) as session:
             # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:

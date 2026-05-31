@@ -24,10 +24,8 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors import BaseSeverity
-from ...domain.filing import (
-    ModeloDraft,
-    ModeloDraftStatus,
-)
+from ...domain.filing import ModeloDraft
+from ...domain.submission._protocols import ModeloDraftStatus
 from .errors import ModeloCalculateError
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -181,10 +179,6 @@ def summarise_calculation(
 
     Returns:
         A frozen :class:`DeclaracionCalculateSummary`.
-
-    Raises:
-        ModeloCalculateError: When ``repair_hints`` violates the
-            ``RESOLVE_BLOCKERS`` invariant.
     """
     counts: dict[BaseSeverity, int] = {
         BaseSeverity.INFO: 0,

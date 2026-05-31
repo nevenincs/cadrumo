@@ -57,7 +57,6 @@ class WizardCondition(BaseModel):
     @model_validator(mode="after")
     def _validate_exactly_one_clause(self) -> WizardCondition:
         """Exactly one of ``equals`` / ``contains`` must be declared."""
-
         declared = [name for name, value in (("equals", self.equals), ("contains", self.contains)) if value is not None]
         if len(declared) != 1:
             raise ValueError(
@@ -133,7 +132,6 @@ class WizardFlow(BaseModel):
     @model_validator(mode="after")
     def _validate_translatable_prefix(self) -> WizardFlow:
         """Every ``Translatable`` in the flow must start with ``wizard.<flow.id>.``."""
-
         expected = f"wizard.{self.id}."
         offenders: list[str] = []
         for value, location in _walk_translatables(self):
@@ -149,7 +147,6 @@ class WizardFlow(BaseModel):
     @model_validator(mode="after")
     def _validate_unique_question_ids(self) -> WizardFlow:
         """Question ids must be unique across the entire flow."""
-
         seen: set[str] = set()
         duplicates: list[str] = []
         for section in self.sections:
@@ -170,7 +167,6 @@ class WizardFlow(BaseModel):
         so the runtime has the parent answer in hand when it evaluates
         visibility.
         """
-
         seen: dict[str, int] = {}
         index = 0
         for section in self.sections:
@@ -205,7 +201,6 @@ def iter_conditions(
     :class:`WizardVisibility` (OR of clauses) — into a flat tuple so
     consumers iterate one uniform sequence.
     """
-
     if visible_when is None:
         return ()
     if isinstance(visible_when, WizardCondition):
@@ -215,7 +210,6 @@ def iter_conditions(
 
 def _walk_translatables(flow: WizardFlow) -> list[tuple[tr, str]]:
     """Yield every ``Translatable`` in ``flow`` with a dotted-path location."""
-
     result: list[tuple[tr, str]] = []
     result.append((flow.title, f"{flow.id}.title"))
     result.append((flow.description, f"{flow.id}.description"))

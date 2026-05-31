@@ -67,7 +67,6 @@ def _ensure_sqlite_parent(url: str) -> None:
     Args:
         url: A SQLAlchemy URL. No-op for non-SQLite URLs and ``:memory:``.
     """
-
     parsed = make_url(_normalize_sqlite_url(url))
     database = parsed.database
     if database and database != ":memory:":
@@ -112,8 +111,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
         A new SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
 
     Raises:
-        :exc:`aeat.adapters.persistence.storage.errors.StorageError`: If the
-            configured URL is empty or cannot be parsed.
+        StorageError: When the configured URL is empty or cannot be parsed.
     """
     url = settings.aeat_database_url
     if not url:

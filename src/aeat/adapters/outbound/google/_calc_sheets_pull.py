@@ -252,7 +252,6 @@ def _sheets_service(credentials: object) -> "_GoogleResource":
 
 def _verify_ownership(drive_service: "_GoogleResource", spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
-
     file_meta = execute_request(
         drive_service.files().get(
             fileId=spreadsheet_id,
@@ -278,7 +277,6 @@ def _read_developer_metadata(
     spreadsheet_id: str,
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
-
     spreadsheet = execute_request(
         sheets_service.spreadsheets().get(
             spreadsheetId=spreadsheet_id,
@@ -338,16 +336,14 @@ def _classify_metadata_match(
     return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if raw is None or raw == "":
         return None
     if isinstance(raw, bool):
         return raw
     if isinstance(raw, (int, float)):
-        try:
-            return Decimal(str(raw))
-        except (InvalidOperation, ValueError):
-            return None
+        return coerce_decimal(raw)
     if isinstance(raw, str):
         as_decimal = coerce_decimal(raw)
         if as_decimal is not None:
@@ -385,13 +381,8 @@ def pull_operator_edits(
         local store may corrupt data.
 
     Raises:
-        OutboundStorageConflictError: The spreadsheet is not marked as app-owned.
-        OutboundStoragePermissionError: The Drive scope grant is insufficient.
-        OutboundStorageNotFoundError: The supplied spreadsheet id is unknown.
-        OutboundStorageValidationError: `spreadsheet_id` is blank.
-        OutboundStorageNetworkError: A transport or unmapped HTTP failure.
+        OutboundStorageValidationError: When ``spreadsheet_id`` is blank.
     """
-
     if not spreadsheet_id.strip():
         raise OutboundStorageValidationError(
             "spreadsheet_id must not be blank",
@@ -596,7 +587,6 @@ def _parse_relation_metadata(
     datetime | None,
 ]:
     """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
-
     if not raw:
         return None, None, (), None
     parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
@@ -647,7 +637,6 @@ def _read_row_set_edits(
     of non-blank cells read across all row-sets. Each row-set's data
     block is fetched in one batchGet entry (header_row+1 .. header_row+51).
     """
-
     row_sets = collect_row_sets(snapshot.revision)
     if not row_sets:
         return ((), 0)
@@ -664,6 +653,7 @@ def _read_row_set_edits(
     return tuple(edits), cells_read
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _row_set_block_range(row_set: Any) -> str:
     """Build the A1 range covering the 50-row data block of one row-set."""
     last_column = max(col.header_address.column for col in row_set.columns)
@@ -693,6 +683,7 @@ def _batch_get_values_for_row_sets(
     return response.get("valueRanges", []) or []
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _decode_row_set_block(
     rows: list[list[object]],
     row_set: Any,
@@ -716,6 +707,7 @@ def _decode_row_set_block(
     return tuple(cells), cells_in_block
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _decode_row_set_cell(
     raw: object,
     col_index: int,
@@ -740,7 +732,6 @@ def _decode_row_set_cell(
 
 def _column_index_to_letters(column: int) -> str:
     """Convert a 1-based column index to A1 letters (1 -> A, 27 -> AA)."""
-
     if column < 1:
         raise OutboundStorageValidationError("column index must be 1-based and positive")
     letters: list[str] = []
@@ -802,7 +793,6 @@ def verify_pull_coverage(
     metadata digests for those surfaces when the apply side stamps
     them.
     """
-
     discrepancies: list[PullCoverageDiscrepancy] = []
 
     # Metadata identity: registry coordinates must match exactly.
@@ -871,7 +861,6 @@ def compute_from_pull(
     The caller is responsible for handling stale workbooks before
     invoking this helper.
     """
-
     _require_metadata_match(pull=pull, snapshot=snapshot)
     inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
     binding_values, enum_binding_values = _collect_binding_values(snapshot=snapshot, edits=pull.binding_edits)

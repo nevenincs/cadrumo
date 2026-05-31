@@ -121,6 +121,12 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
 
     Returns:
         The deserialised API response payload.
+
+    Raises:
+        OutboundStorageError: Re-raised unchanged when a nested call already raised a typed error.
+        OutboundStoragePermissionError: On HTTP 401 or 403 responses.
+        OutboundStorageNotFoundError: On HTTP 404 responses.
+        OutboundStorageNetworkError: On any other transport or unmapped HTTP failure.
     """
     try:
         result: GoogleApiResponseBody = request.execute()

@@ -117,7 +117,6 @@ class _DiagnosticPayload(BaseModel):
 
 def list_auth_diagnostics() -> AuthDiagnosticListReport:
     """List readable encrypted Cl@ve auth diagnostics without exposing page bodies."""
-
     rows = tuple(
         sorted(
             (_summary_from_payload(_payload(record.payload)) for record in _diagnostic_records()),
@@ -130,7 +129,6 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id, redacting sensitive bodies."""
-
     record = _secure_objects().load(
         _DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
@@ -157,7 +155,6 @@ def record_auth_diagnostic_phone_state(
     phone_state: str,
 ) -> AuthDiagnosticReportResult | None:
     """Attach the operator-observed Cl@ve app state to an encrypted diagnostic."""
-
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
         raise AuthDiagnosticPhoneStateError(
             phone_state, context={"phone_state": phone_state}

@@ -134,10 +134,8 @@ def _corrupt_bucket_db(tmp_path: Path) -> None:
     A real on-disk corruption is the authentic trigger for a non-
     ``AeatError`` failure in ``_read_profile_record`` — SQLAlchemy
     raises ``DatabaseError`` / ``OperationalError`` when it tries to
-    open the corrupted file. This drives the same catch-all branch
-    the prior ``monkeypatch.setattr`` test exercised, without
-    patching a module attribute (per the project no-monkeypatch
-    mandate, CLAUDE.md).
+    open the corrupted file. This drives the catch-all branch that
+    wraps non-``AeatError`` exceptions into ``ConfigBoundaryError``.
 
     Layout per ``_bucket_session.py``:
     ``<storage_root>/buckets/<bucket_id>/db/aeat.db``.
@@ -160,8 +158,8 @@ def test_non_aeat_error_in_profile_show_read_wraps_to_config_boundary_error(tmp_
 
     The non-AeatError is triggered by a real on-disk corruption of the
     per-bucket SQLite database (SQLAlchemy raises DatabaseError, not an
-    AeatError subclass). This exercises the same catch arm as the prior
-    ``monkeypatch.setattr`` shim without patching a module attribute.
+    AeatError subclass), exercising the catch-all wrap into
+    ConfigBoundaryError.
     """
     _create_profile("boundary-probe")
     _corrupt_bucket_db(tmp_path)

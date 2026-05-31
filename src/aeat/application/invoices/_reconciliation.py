@@ -58,7 +58,6 @@ def reconcile_invoice_catalogues(
         A typed result containing suggestions, mutated catalogues when
         applied, and every skipped suggestion with its backend reason.
     """
-
     suggestions = suggest_reconciliations(invoices, transactions)
     if not apply or not suggestions:
         return InvoiceReconciliationResult(
@@ -119,7 +118,6 @@ def reconcile_invoice_repositories(
     optional mutation, and persistence so entrypoints can remain a thin
     rendering layer.
     """
-
     invoices_repo = invoice_repository or InvoiceCatalogueRepository()
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = reconcile_invoice_catalogues(

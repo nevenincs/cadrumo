@@ -11,7 +11,7 @@ consistent across commands.
 
 from __future__ import annotations
 
-import logging
+import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no logger instantiated.
 from collections.abc import Mapping
 from enum import StrEnum
 
@@ -82,7 +82,6 @@ def resolve_log_level(
             active simultaneously, or if ``AEAT_LOG_LEVEL`` carries a
             value outside the :class:`LogLevel` vocabulary.
     """
-
     selected_flags = sum((quiet, verbose, debug))
     if selected_flags > 1:
         raise LogLevelResolutionError(tr("cli.log_levels.errors.flags_mutually_exclusive"))
@@ -127,7 +126,6 @@ def apply_to_root_logger(level: LogLevel) -> None:
     Args:
         level: Target CLI log level.
     """
-
     set_log_level(_STDERR_LOG_LEVEL_BY_CLI_LEVEL[level])
 
 

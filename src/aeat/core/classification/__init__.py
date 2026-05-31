@@ -344,12 +344,6 @@ def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
         The default policy. The returned record is frozen and shared;
         callers must not mutate it. Per-record overrides are made by
         constructing a fresh :class:`ClassificationPolicy`.
-
-    Raises:
-        KeyError: If ``sensitivity`` is not a known class. The
-            :class:`SensitivityClass` enum is closed, so this is only
-            possible if a future class is added without updating the
-            default policy table.
     """
     return _DEFAULT_POLICY_TABLE[sensitivity]
 
@@ -362,9 +356,6 @@ def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassific
     Returns:
         The default output policy. The returned record is frozen and
         shared.
-
-    Raises:
-        KeyError: If ``output`` is not a known output class.
     """
     return _DEFAULT_OUTPUT_POLICY_TABLE[output]
 

@@ -7,43 +7,41 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core.time._clock import _now as _utc_now
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.resources import resources as _resources
+from ...core.time._clock import _now as _utc_now
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
+)
+from ...domain.calculations.registry import (
     RegistrySnapshot as _RegistrySnapshot,
+)
+from ...domain.calculations.registry import (
     RegistrySnapshotError as _RegistrySnapshotError,
+)
+from ...domain.calculations.registry import (
     RegistrySnapshotRef as _RegistrySnapshotRef,
+)
+from ...domain.calculations.registry import (
     RegistryValidationError as _RegistryValidationError,
+)
+from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
+)
+from ...domain.calculations.registry import (
     enum_consumed_binding_ids as _enum_consumed_binding_ids,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
-    AmendmentKind,
-    CasillaChange,
-    CasillaCollection,
     CasillaDelta,
     CasillaInputs,
-    CasillaSchema,
     CasillaSchemaProvider,
     DeadlineChecker,
-    DeadlineStatus,
-    FilingValidationError,
-    ModeloAmendmentError,
-    ModeloAmendmentValidationError,
-    ModeloApprovalBasis,
     ModeloBindingValue,
     ModeloBuilderError,
     ModeloCasillaProvenance,
     ModeloCode,
-    ModeloComputationError,
     ModeloDraft,
-    ModeloDraftError,
-    ModeloDraftStatus,
-    ModeloIdentity,
-    ModeloImportError,
     ModeloInputs,
     ModeloProfile,
     ModeloScalar,
@@ -58,9 +56,14 @@ from ...domain.filing import (
 )
 from ...domain.period import (
     PeriodValidationError as _PeriodValidationError,
+)
+from ...domain.period import (
     parse_canonical_period as _parse_canonical_period,
+)
+from ...domain.period import (
     period_end_date as _period_end_date,
 )
+from ...domain.submission import ModeloDraftStatus
 from ._calculate import (
     DeclaracionCalculateNextAction,
     DeclaracionCalculateSummary,
@@ -117,11 +120,13 @@ def build_draft(
         deadline_checker: Optional deadline checker.
         fail_on_warning: Raise when validation produces any warning or error.
 
+    Returns:
+        A fully constructed and validated :class:`ModeloDraft`.
+
     Raises:
         ModeloBuilderError: If the registry has no matching snapshot,
             inputs are malformed, or strict validation fails.
     """
-
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
     snapshot_ref = _RegistrySnapshotRef(
@@ -450,6 +455,8 @@ def validate_draft(
 
     Args:
         draft: The draft to re-validate.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`refresh_review_status` after validation.
         schema_provider: Resolves the casilla collection for the
             draft's modelo.
         deadline_checker: Optional deadline check Protocol implementation.
@@ -499,8 +506,8 @@ def iter_findings(
         or exceeds the threshold, in declaration order.
 
     Raises:
-        ValueError: When ``severity_at_least`` is not a known
-            severity name.
+        ModeloCalculateError: When ``severity_at_least`` is not a known
+            severity name (``"INFO"``, ``"WARNING"``, or ``"ERROR"``).
     """
     try:
         threshold = _SEVERITY_RANK[_BaseSeverity[severity_at_least]]
@@ -513,49 +520,24 @@ def iter_findings(
 
 __all__ = [
     "APPROVAL_BASIS_VERSION",
-    "AmendmentKind",
-    "CasillaChange",
-    "CasillaCollection",
     "CasillaDelta",
     "CasillaInputs",
-    "CasillaSchema",
-    "CasillaSchemaProvider",
-    "DeadlineChecker",
-    "DeadlineStatus",
     "DeclaracionCalculateNextAction",
     "DeclaracionCalculateSummary",
     "DeclaracionExportFormat",
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
-    "FilingValidationError",
     "JustificanteImportResult",
-    "ModeloAmendmentError",
-    "ModeloAmendmentValidationError",
     "ModeloApplicationError",
-    "ModeloApprovalBasis",
     "ModeloApprovalStaleReason",
-    "ModeloBindingValue",
-    "ModeloBuilderError",
     "ModeloCalculateError",
-    "ModeloCasillaProvenance",
     "ModeloCode",
-    "ModeloComputationError",
-    "ModeloDraft",
-    "ModeloDraftError",
-    "ModeloDraftStatus",
     "ModeloHistory",
     "ModeloHistoryEntry",
-    "ModeloIdentity",
-    "ModeloImportError",
     "ModeloInputs",
     "ModeloOperatorProfile",
-    "ModeloProfile",
     "ModeloScalar",
-    "ModeloValidationFinding",
-    "ModeloValidator",
-    "ModeloValue",
-    "ModeloValueKind",
     "apply_validation",
     "approval_stale_reasons",
     "approve_draft",

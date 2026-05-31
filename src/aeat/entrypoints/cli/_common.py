@@ -60,13 +60,10 @@ def _emit_envelope(
 ) -> None:
     """Render a typed result through :class:`SchemaEnvelope` for JSON or as text lines.
 
-    The per-command incremental migration path ratified by the
-    linkage-design-audit ADR Decision 3 lifts emit sites from the
-    bare-payload :func:`_emit` shape to the envelope shape one verb at
-    a time. JSON mode goes through :func:`emit_json_success` so the
-    payload is wrapped in ``{"schema_version": ..., "command": ...,
-    "result": ..., "warnings": ...}``; text mode keeps the existing
-    line iterator unchanged so terminal output is unaffected.
+    JSON mode goes through :func:`emit_json_success` so the payload is
+    wrapped in ``{"schema_version": ..., "command": ..., "result": ...,
+    "warnings": ...}``; text mode keeps the existing line iterator
+    unchanged so terminal output is unaffected.
 
     Args:
         ctx: Typer context (used to discover the requested output format).
@@ -74,12 +71,11 @@ def _emit_envelope(
             ``@register_schema(...)`` argument on the result model).
         result: The strict-validated payload model to surface as
             ``envelope.result``. Must be a pydantic model registered
-            under ``command`` so :data:`MIGRATED_COMMANDS` conformance
-            holds.
+            under ``command`` in :data:`SCHEMA_REGISTRY`; the CLI
+            conformance gate enforces this at test time.
         lines: Iterable of pre-formatted text lines (used unchanged
             for text mode).
     """
-
     from ...core.json_contract import emit_json_success
 
     if _format_of(ctx) == "json":
@@ -104,7 +100,6 @@ def _no_active_profile_refusal() -> Exception:
     this same translated refusal so first-contact guidance is
     consistent across the CLI surface.
     """
-
     from ._errors import CliRefusedBoundaryError
 
     return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
@@ -214,7 +209,6 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 
 def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
-
     from ...application.workflow import NoActiveProfileError, active_bucket_id_or_raise
 
     try:
@@ -347,7 +341,6 @@ def activate_subcommand_output_language(ctx: typer.Context, language: str | None
     Settings field directly and drop the cached language so any ``tr()``
     fired during the verb body resolves to the requested locale.
     """
-
     if language is None:
         return
     from ...core.config import override_settings

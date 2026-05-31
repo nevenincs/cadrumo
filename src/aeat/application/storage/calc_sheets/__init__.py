@@ -1,6 +1,7 @@
-"""Schema-to-sheet engine that translates a `RegistrySnapshot` into a
-Google Sheets workbook whose formulas evaluate, in Sheets, to the same
-per-casilla rounded values that the local registry runtime produces.
+"""Google Sheets export engine for modelo registry snapshots.
+
+Translates a ``RegistrySnapshot`` into a workbook whose formulas produce the same per-casilla
+rounded values as the local registry runtime.
 
 The package exposes three layers:
 

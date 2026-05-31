@@ -106,15 +106,18 @@ class RegistryCasillaCollection:
     schema_version: str
 
     def __iter__(self) -> object:
+        """Iterate over the contained :class:`RegistryCasillaSchema` instances."""
         return iter(self.casillas)
 
     def get(self, casilla_id: str) -> CasillaSchema | None:
+        """Return the schema for ``casilla_id``, or ``None`` if absent."""
         for casilla in self.casillas:
             if casilla.id == casilla_id:
                 return casilla
         return None
 
     def all(self) -> Sequence[CasillaSchema]:
+        """Return all casilla schemas in declaration order."""
         return self.casillas
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +147,7 @@ class RegistrySchemaProvider:
     subviews: dict[str, RegistryModeloSubview]
 
     def get_collection(self, modelo: str) -> CasillaCollection:
+        """Return the casilla collection for ``modelo``; raises :exc:`ModeloBuilderError` when absent."""
         try:
             return self.collections[modelo]
         except KeyError as exc:
@@ -151,7 +155,6 @@ class RegistrySchemaProvider:
 
     def get_subview(self, modelo: str) -> RegistryModeloSubview:
         """Return the validated registry subview backing ``modelo``."""
-
         try:
             return self.subviews[modelo]
         except KeyError as exc:
@@ -222,7 +225,6 @@ def build_runtime_schema_provider(
     modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaProvider:
     """Build the production schema provider from validated registry TOML."""
-
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
     resolved_source_root = (source_root or bundled_path()).resolve()
     selected_ids = _normalize_modelo_selection(modelos)
@@ -276,7 +278,7 @@ def _build_runtime_schema_provider_cached(
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
     )
 
-def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:
+def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE: relative-path keyed for tree-walk change detection (distinct from filename-keyed canonical file_stat_fingerprint).
     paths = sorted((root / "legal").rglob("*.toml")) + sorted((root / "modelos").rglob("*.toml"))
     fingerprint: list[tuple[str, int, int]] = []
     for path in paths:

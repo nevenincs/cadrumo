@@ -99,7 +99,6 @@ def run_registry_calculation_scenario(
     source_root: Path,
 ) -> RegistryScenarioRunReport:
     """Execute ``scenario`` against the registry calculator and compare outputs."""
-
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     try:
         authority.modelo(scenario.modelo)
@@ -137,7 +136,6 @@ def run_registry_calculation_scenario(
 
 def assert_registry_scenario_matches(report: RegistryScenarioRunReport) -> None:
     """Raise with comparison details unless the scenario matched exactly."""
-
     if report.status == "match":
         return
     details = "\n".join(

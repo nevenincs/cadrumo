@@ -49,6 +49,13 @@ class UnmatchedPlaceholderError(CoreError):
     """
 
     def __init__(self, *, key: str, name: str, rendered: str) -> None:
+        """Initialise with the translation key, placeholder name, and partial render.
+
+        Args:
+            key: The locale translation key that triggered the error.
+            name: The placeholder name that survived substitution.
+            rendered: The partially-rendered string at the time of detection.
+        """
         super().__init__(
             f"unmatched placeholder {{{name!r}}} in locale key {key!r}: {rendered!r}"
         )
@@ -109,7 +116,6 @@ def output_language() -> str:
 
 def clear_output_language_cache() -> None:
     """Invalidate cached language resolution after profile/config writes."""
-
     global _OUTPUT_LANGUAGE_CACHE_VERSION
     _OUTPUT_LANGUAGE_CACHE_VERSION += 1
     _cached_output_language.cache_clear()
@@ -208,6 +214,11 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
 
     Returns:
         The translated string.
+
+    Raises:
+        UnmatchedPlaceholderError: When strict-placeholder mode is
+            active and the rendered string still contains an
+            un-interpolated ``{name}`` token.
     """
     if "locale" not in kwargs or kwargs["locale"] is None:
         kwargs["locale"] = output_language()
@@ -270,7 +281,6 @@ def _humanise_key(translation_key: str) -> str:
     final segment so the help screen stays operator-readable until a
     real translation is written.
     """
-
     last = translation_key.rsplit(".", 1)[-1]
     stripped = last.removesuffix("_help")
     if not stripped:

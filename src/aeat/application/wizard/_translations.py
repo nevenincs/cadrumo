@@ -31,7 +31,6 @@ _FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_fl
 
 def _walk_keys(flows: Iterable[WizardFlow]) -> tuple[str, ...]:
     """Return every translation key referenced by ``flows``."""
-
     keys: list[str] = []
     for flow in flows:
         keys.append(str(flow.title))
@@ -76,7 +75,6 @@ def _resolves_in(locale: str, key: str) -> bool:
     miss unambiguous: an unresolved key renders exactly the
     sentinel, a resolved one renders its translation.
     """
-
     rendered = tr(key, locale=locale, default=_UNRESOLVED_SENTINEL)
     return rendered != _UNRESOLVED_SENTINEL
 
@@ -88,7 +86,6 @@ def audit_wizard_translations() -> tuple[str, ...]:
     locale=...)`` returns the raw key itself (the python-i18n
     fallback behaviour).
     """
-
     keys = _walk_keys(WIZARD_FLOWS)
     missing: list[str] = []
     for key in keys:
@@ -115,7 +112,6 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
     are walked by :func:`audit_wizard_translations` through the wizard
     descriptor catalogue instead.
     """
-
     keys: set[str] = set()
     for module in _cli_entrypoints_root().rglob("*.py"):
         # Test modules cite translation-key prefixes in assertions
@@ -138,7 +134,6 @@ def audit_cli_translations() -> tuple[str, ...]:
     the literal key text as the value, both of which surface as raw key
     strings in operator-facing help output.
     """
-
     missing: list[str] = []
     for key in cli_keys_referenced_in_source():
         for locale in _LOCALES:

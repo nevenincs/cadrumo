@@ -21,7 +21,6 @@ def normalise_corpus_text(text: str) -> str:
     that AEAT's manuals use as math notation) and other unbalanced
     angle brackets do not inadvertently swallow long spans of prose.
     """
-
     decoded = html.unescape(text).replace("\xa0", " ")
     without_tags = _HTML_TAG_RE.sub(" ", decoded)
     without_marks = _COMBINING_MARK_RE.sub("", unicodedata.normalize("NFKD", without_tags))

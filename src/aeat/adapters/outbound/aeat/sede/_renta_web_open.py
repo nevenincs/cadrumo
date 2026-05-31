@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page, ViewportSize
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -30,11 +30,16 @@ from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
-_VIEWPORT_DEFAULTS = Settings()
-_DEFAULT_VIEWPORT: ViewportSize = {
-    "width": _VIEWPORT_DEFAULTS.aeat_browser_viewport_width,
-    "height": _VIEWPORT_DEFAULTS.aeat_browser_viewport_height,
-}
+DEFAULT_VIEWPORT_WIDTH: int = 1920
+DEFAULT_VIEWPORT_HEIGHT: int = 1080
+
+
+def _get_default_viewport() -> ViewportSize:
+    settings = load_settings()
+    return {
+        "width": settings.aeat_browser_viewport_width,
+        "height": settings.aeat_browser_viewport_height,
+    }
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
@@ -120,7 +125,6 @@ async def collect_renta_web_open_observation(
     settings: Settings | None = None,
 ) -> RentaWebOpenObservation:
     """Open the anonymous simulator, create a synthetic declaration, and scrape summary rows."""
-
     live_payload = parse_renta_web_open_live_payload(payload)
     browser_session = await default_browser_session_factory(settings or Settings())
     context = None
@@ -172,7 +176,7 @@ async def _open_renta_web_open_session(browser_session, *, live_payload):  # typ
     page: _Page = _raw_page
     await install_page_safety_net(page)
     await _playwright_stage(
-        page.set_viewport_size(_DEFAULT_VIEWPORT),
+        page.set_viewport_size(_get_default_viewport()),
         stage="set-viewport",
         description="Renta WEB Open viewport",
         timeout_ms=live_payload.timeout_ms,
@@ -245,7 +249,6 @@ async def _scrape_renta_web_open_values(  # type: ignore[no-untyped-def]
 
 def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | None:
     """Extract one Spanish-formatted numeric value from Renta WEB Open summary text."""
-
     normalized_label = _normalize_summary_text(label)
     lines = [_normalize_summary_text(line) for line in body_text.splitlines()]
     for index, line in enumerate(lines):
@@ -273,7 +276,6 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
     the search button and the navigation button; clicking "Ir a la
     página" navigates the form to the page containing that casilla.
     """
-
     # Expand the secondary toolbar (idempotent — already expanded is fine).
     # If the locator isn't visible (toolbar already expanded), skip silently
     # without clicking — _click_expected raises rather than no-ops, which is
@@ -320,7 +322,6 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
 
 async def _navigate_to_resumen(page: Page, *, timeout_ms: int) -> None:
     """Return to the Resumen view after editing form casillas."""
-
     await _click_expected(
         page.locator('button:has-text("Resumen")').first,
         stage="navigate-to-resumen",
@@ -344,7 +345,6 @@ async def _locate_casilla_input(page: Page, casilla_number: str, *, timeout_ms: 
     nearby label text. ZK form widgets carry the casilla number as a
     sibling span/label rather than on the input itself.
     """
-
     # Fast path: the navigation auto-focuses the casilla input.
     focused_input = page.locator("input:focus").first
     try:
@@ -368,7 +368,6 @@ async def _apply_casilla_overrides(
     fills the auto-focused input (or the input near the casilla number's
     label) with the requested value.
     """
-
     for casilla_number, value in overrides.items():
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
         locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
@@ -393,7 +392,6 @@ async def _scrape_casilla_form_value(
     and returns the raw string. Returns None when the locator does not
     resolve (the casilla may be on a page that requires upstream inputs).
     """
-
     try:
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
     except SedeNavigationError as exc:

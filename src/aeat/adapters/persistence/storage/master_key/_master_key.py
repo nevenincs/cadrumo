@@ -169,9 +169,8 @@ class MasterKeyProvider(Protocol):
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
 
-        Raises:
-            MasterKeyUnavailableError: If the master key cannot be
-                acquired from this provider.
+        Returns:
+            The 32-byte AES-256 master key for the active session.
         """
         ...
 
@@ -357,8 +356,7 @@ def _default_passphrase_callback() -> str:
 
 @runtime_checkable
 class KeyringClient(Protocol):
-    """Injection seam for the OS-keychain operations the master-key
-    provider depends on.
+    """Injection seam for the OS-keychain operations the master-key provider depends on.
 
     The real implementation wraps the third-party :mod:`keyring`
     module's ``get_password`` / ``set_password`` calls plus the
@@ -368,21 +366,20 @@ class KeyringClient(Protocol):
     """
 
     def probe_backend(self) -> None:
-        """Raise :class:`KeyringUnavailableError` when the active
-        backend cannot persist a master key (no-op fail / null
-        backends)."""
+        """Raise :class:`KeyringUnavailableError` when the active backend cannot persist a master key.
+
+        No-op fail / null backends trigger this error.
+        """
 
     def get_password(self, service: str, username: str) -> str | None:
-        """Return the persisted password for ``(service, username)``
-        or ``None`` when the entry is absent."""
+        """Return the persisted password for ``(service, username)``, or ``None`` when absent."""
 
     def set_password(self, service: str, username: str, password: str) -> None:
         """Persist ``password`` under ``(service, username)``."""
 
 
 class _RealKeyringClient:
-    """Default :class:`KeyringClient` backed by the third-party
-    ``keyring`` module."""
+    """Default :class:`KeyringClient` backed by the third-party ``keyring`` module."""
 
     def probe_backend(self) -> None:
         try:
@@ -487,7 +484,6 @@ class KeyringMasterKeyProvider:
         (or raises ``NoKeyringError``) but never persists the value, so
         the master key would be lost on the next process restart.
         """
-
         self._client.probe_backend()
 
     def get_master_key(self) -> bytes:
@@ -503,7 +499,6 @@ class KeyringMasterKeyProvider:
         create storage implicitly. Explicit enrollment calls
         :meth:`provision_master_key`.
         """
-
         try:
             from keyring.errors import KeyringError
         except ImportError as exc:  # pragma: no cover - keyring is a hard dep
@@ -520,7 +515,6 @@ class KeyringMasterKeyProvider:
 
     def provision_master_key(self) -> bytes:
         """Mint and persist a new keychain master key for explicit enrollment."""
-
         try:
             from keyring.errors import KeyringError
         except ImportError as exc:  # pragma: no cover - keyring is a hard dep
@@ -731,11 +725,16 @@ class FileFallbackMasterKeyProvider:
         """Mint the file-fallback master key for explicit enrollment.
 
         Args:
-            force: When true, replace complete existing material. This
-                is reserved for explicit re-provision flows; normal
-                enrollment leaves it false and refuses existing state.
-        """
+            force: When True, replace complete existing material. Reserved for
+                explicit re-provision flows; normal enrollment leaves it False.
 
+        Returns:
+            The newly minted 32-byte master key.
+
+        Raises:
+            SecretAlreadyExistsError: When the store is already provisioned and ``force`` is False.
+            MasterKeyMaterialMissingError: When the store is in a torn state.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         passphrase = self._resolve_passphrase()
         lock_target = self._store_dir / "master.lock"
@@ -982,8 +981,10 @@ class EphemeralMasterKeyProvider:
         """Construct a provider with an optional fixed key.
 
         Args:
-            key: Optional 32-byte key. When ``None``, a fresh random
-                key is minted.
+            key: Optional 32-byte key. When ``None``, a fresh random key is minted.
+
+        Raises:
+            SecretStoreError: When ``key`` is provided but is not exactly 32 bytes.
         """
         if key is None:
             key = secrets.token_bytes(KEY_SIZE)
@@ -1043,7 +1044,6 @@ class EphemeralMasterKeyProvider:
 
 def _bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the separated keystore path for one bucket's wrapped DEK."""
-
     from .._namespace_registry import BUCKET_DEK_FILENAME
     from ..bucket._keystore_paths import keystore_path, validate_keystore_separation
 
@@ -1058,7 +1058,6 @@ def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
     before lifecycle-status was introduced) so that a session can still be
     opened to allow the repair command to backfill the missing field.
     """
-
     from ..bucket._layout import bucket_paths
     from ..bucket._manifest_io import read_manifest
     from ..errors import StorageValidationError
@@ -1130,7 +1129,6 @@ def _write_wrapped_bucket_dek(path: Path, wrapped) -> None:
 
 def _idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
     """Resolve the idle window from the bucket manifest, falling back to settings."""
-
     from ..bucket._layout import bucket_paths
     from ..bucket._manifest_io import read_manifest
 
@@ -1144,7 +1142,6 @@ def _idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minu
 
 def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
     """Extract profile tax-id facts from a decrypted user-profile envelope."""
-
     try:
         doc = EnvelopeDocument.model_validate_json(envelope_payload)
     except (UnicodeDecodeError, ValueError):
@@ -1161,7 +1158,6 @@ def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
 
 def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) -> None:
     """Refuse unsecured activation when the active bucket carries a real profile."""
-
     from .....core.config import load_settings
     from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
     from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
@@ -1227,7 +1223,6 @@ def _load_or_mint_bucket_dek(
     for a bucket that already has encrypted rows would make those rows
     unrecoverable.
     """
-
     from ..bucket._manifest import BucketKeySchedule
     from ._dek_wrap import unwrap_dek, wrap_dek
 
@@ -1315,7 +1310,6 @@ def _provider_enter(
     ``provider._session`` and ``provider._activation_cm`` so the
     matching ``_provider_exit`` can tear them down.
     """
-
     from datetime import UTC, datetime
 
     from .....core.config import load_settings
@@ -1388,7 +1382,6 @@ def _provider_exit(
     the case where ``_provider_enter`` raised before fully populating
     them.
     """
-
     activation = provider._activation_cm
     session = provider._session
     provider._activation_cm = None
@@ -1413,7 +1406,6 @@ def activate_master_key_provider(
     the active-profile pointer does not exist until the transaction
     completes.
     """
-
     _provider_enter(
         provider,
         fallback_bucket_id=fallback_bucket_id,
@@ -1571,9 +1563,9 @@ def get_master_key_provider(
         A live provider instance honouring the resolved backend.
 
     Raises:
-        KeyringUnavailableError: When the resolved backend is
-            ``keyring`` and no usable keychain is detected.
         SecretStoreError: When ``backend`` is not a known value.
+        UnsecuredModeRefusedError: When the unsecured backend is selected with a real tax id.
+        MasterKeyKeychainLockedError: When the keyring backend detects no usable keychain.
     """
     from .....core.config import SecretStoreBackend, load_settings  # local import to avoid cycles
 

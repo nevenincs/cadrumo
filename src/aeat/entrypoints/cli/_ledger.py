@@ -75,7 +75,7 @@ from ...core.logging import get_logger
 from ._common import (
     _bad,
     _canonical_period,
-    _emit,
+    _emit_envelope,
     _no_active_profile_refusal,
     _parse_iso_date,
     _profile_to_taxpayer,
@@ -134,7 +134,6 @@ def _validate_import_provider(provider: str) -> str:
     the operator does not have to discover the set by trial and error
     (cluster D / persona testimonials, ledger import surface).
     """
-
     normalised = provider.strip().lower()
     if normalised not in _known_import_providers():
         raise _bad(
@@ -164,7 +163,6 @@ def _validate_category_id(category_id: str | None) -> str | None:
     here refuses an unknown id immediately and points at
     ``aeat app ledger categories`` for the recognised catalogue.
     """
-
     if category_id is None:
         return None
     trimmed = category_id.strip()
@@ -199,7 +197,6 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     the operator sees the actual illegal field combination rather than
     a misleading repair hint.
     """
-
     details = "; ".join(_format_validation_error(item) for item in error.errors())
     return _bad(
         tr(
@@ -247,7 +244,6 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     string. Four distinct refusal keys are emitted depending on which
     invariant was violated.
     """
-
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
@@ -285,20 +281,26 @@ def _emit_update_result(
     result_transaction: Transaction,
     bucket_id: str,
     events: tuple[str, ...],
+    *,
+    command: str,
+    result_cls: type,
 ) -> None:
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
-    payload = {
-        "bucket_id": bucket_id,
-        "transaction_id": result_transaction.transaction_id,
-        "bucket_event_ids": list(events),
-        "review_status": review_status,
-        "transaction": transaction_payload.model_dump(mode="python"),
-    }
-    _emit(
+    result = result_cls.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "transaction_id": result_transaction.transaction_id,
+            "bucket_event_ids": list(events),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command=command,
+        result=result,
+        lines=[
             f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
@@ -407,17 +409,22 @@ def ledger_add(
         command,
         transaction_repository=transaction_repository,
     )
+    from ._ledger_payloads import LedgerAddResult
+
     transaction_payload = ledger_transaction_payload(result.transaction)
-    payload = {
-        "bucket_id": result.ref.bucket_id,
-        "transaction_id": result.ref.transaction_id,
-        "bucket_event_ids": list(result.bucket_event_ids),
-        "transaction": transaction_payload.model_dump(mode="python"),
-    }
-    _emit(
+    add_result = LedgerAddResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.ref.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.add",
+        result=add_result,
+        lines=[
             f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
@@ -480,7 +487,9 @@ def ledger_update(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerUpdateResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.update", result_cls=LedgerUpdateResult)
 
 
 @app.command("classify", help=tr("cli.ledger.classify.help"))
@@ -574,9 +583,19 @@ def ledger_classify(
                 ),
             )
         ]
+        from ._ledger_payloads import LedgerClassifyResult
+
         for failure in result.failures:
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
-        _emit(ctx, payload, lines)
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")  # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id\treason), not user-facing prose.
+        classify_result = LedgerClassifyResult.model_validate(
+            {
+                "total": result.total,
+                "applied": result.applied,
+                "skipped": result.skipped,
+                "failures": [f.model_dump(mode="json") for f in result.failures],
+            }
+        )
+        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
         return
 
     # Single-transaction mode: --id and --classification are required
@@ -630,9 +649,33 @@ def ledger_classify(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    from ._ledger_payloads import LedgerClassifyResult
+
     if reaffirm:
         typer.echo(tr("cli.ledger.classify.reaffirmed"))
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    transaction_payload = ledger_transaction_payload(result.transaction)
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = LedgerClassifyResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        }
+    )
+    _emit_envelope(
+        ctx,
+        command="ledger.classify",
+        result=classify_result,
+        lines=[
+            f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+        ],
+    )
 
 
 @app.command("categories", help=tr("cli.ledger.categories.help"))
@@ -653,7 +696,6 @@ def ledger_categories(ctx: typer.Context) -> None:
     ``--category-id``; ``ledger check`` / ``ledger preflight`` do not
     flag a pure-income transaction as ``missing_category``.
     """
-
     families: list[dict[str, object]] = []
     # The first column is the literal `--category-id` value; the second
     # is the family it belongs to. An earlier `family<TAB>id` layout
@@ -678,12 +720,20 @@ def ledger_categories(ctx: typer.Context) -> None:
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
     lines.append(tr("cli.ledger.categories.income_note"))
-    payload = {
-        "families": families,
-        "category_ids": [category.value for category in SpendingCategory],
-        "income_requires_category": False,
-    }
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerCategoriesResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.categories",
+        result=LedgerCategoriesResult.model_validate(
+            {
+                "families": families,
+                "category_ids": [category.value for category in SpendingCategory],
+                "income_requires_category": False,
+            }
+        ),
+        lines=lines,
+    )
 
 
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))
@@ -740,7 +790,9 @@ def ledger_allocate(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerAllocateResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.allocate", result_cls=LedgerAllocateResult)
 
 
 @app.command("attach", help=tr("cli.ledger.attach.help"))
@@ -772,7 +824,9 @@ def ledger_attach(
         source_command="aeat app ledger attach",
         transaction_repository=transaction_repository,
     )
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerAttachResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.attach", result_cls=LedgerAttachResult)
 
 
 @app.command("archive", help=tr("cli.ledger.archive.help"))
@@ -797,7 +851,9 @@ def ledger_archive(
         source_command="aeat app ledger archive",
         transaction_repository=transaction_repository,
     )
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerArchiveResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.archive", result_cls=LedgerArchiveResult)
 
 
 @app.command("stash", help=tr("cli.ledger.stash.help"))
@@ -822,7 +878,9 @@ def ledger_stash(
         source_command="aeat app ledger stash",
         transaction_repository=transaction_repository,
     )
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
+    from ._ledger_payloads import LedgerStashResult
+
+    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.stash", result_cls=LedgerStashResult)
 
 
 @app.command("remove", help=tr("cli.ledger.remove.help"))
@@ -849,11 +907,13 @@ def ledger_remove(
         source_command="aeat app ledger remove",
         transaction_repository=transaction_repository,
     )
-    payload = report.model_dump(mode="json")
-    _emit(
+    from ._ledger_payloads import LedgerRemoveResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.remove",
+        result=LedgerRemoveResult.model_validate(report.model_dump(mode="json")),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
             f"{tr('cli.ledger.labels.id')}\t{report.transaction_id}",
             f"{tr('cli.ledger.labels.removed')}\t{report.removed}",
@@ -883,11 +943,13 @@ def ledger_reset(
         source_command="aeat app ledger reset",
         transaction_repository=transaction_repository,
     )
-    payload = report.model_dump(mode="json")
-    _emit(
+    from ._ledger_payloads import LedgerResetResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.reset",
+        result=LedgerResetResult.model_validate(report.model_dump(mode="json")),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
             f"{tr('cli.ledger.labels.rows')}\t{len(report.removed_transaction_ids)}",
             f"{tr('cli.ledger.labels.reset')}\t{report.reset}",
@@ -946,17 +1008,21 @@ def ledger_split(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    payload = {
-        "bucket_id": result.bucket_id,
-        "parent_transaction_id": result.parent_transaction_id,
-        "split_group_id": result.split_group_id,
-        "child_transaction_ids": list(result.child_transaction_ids),
-        "bucket_event_id": result.bucket_event_id,
-    }
-    _emit(
+    from ._ledger_payloads import LedgerSplitResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.split",
+        result=LedgerSplitResult.model_validate(
+            {
+                "bucket_id": result.bucket_id,
+                "parent_transaction_id": result.parent_transaction_id,
+                "split_group_id": result.split_group_id,
+                "child_transaction_ids": list(result.child_transaction_ids),
+                "bucket_event_id": result.bucket_event_id,
+            }
+        ),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
             f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
@@ -994,18 +1060,22 @@ def ledger_merge(
         reason=reason,
         transaction_repository=transaction_repository,
     )
-    payload = {
-        "bucket_id": result.bucket_id,
-        "split_group_id": result.split_group_id,
-        "parent_transaction_id": result.parent_transaction_id,
-        "merged_transaction_id": result.merged_transaction_id,
-        "source_child_ids": list(result.source_child_ids),
-        "bucket_event_id": result.bucket_event_id,
-    }
-    _emit(
+    from ._ledger_payloads import LedgerMergeResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.merge",
+        result=LedgerMergeResult.model_validate(
+            {
+                "bucket_id": result.bucket_id,
+                "split_group_id": result.split_group_id,
+                "parent_transaction_id": result.parent_transaction_id,
+                "merged_transaction_id": result.merged_transaction_id,
+                "source_child_ids": list(result.source_child_ids),
+                "bucket_event_id": result.bucket_event_id,
+            }
+        ),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
             f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
@@ -1072,7 +1142,6 @@ def ledger_link(
     ),
 ) -> None:
     """Bind a transaction to invoice / evidence references in one call."""
-
     from ...application.invoices import link_invoice_transaction_repositories
     from ...domain.invoices import InvoiceCatalogueRepository
     from ...domain.invoices._errors import InvoiceLinkError
@@ -1157,7 +1226,14 @@ def ledger_link(
         lines.append(f"invoice_id\t{invoice_id}")
     if evidence_id is not None:
         lines.append(f"evidence_id\t{evidence_id}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerLinkResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.link",
+        result=LedgerLinkResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @app.command(
@@ -1183,7 +1259,6 @@ def ledger_check(
     ),
 ) -> None:
     """Surface ledger anomalies for the addressed bucket without mutating state."""
-
     from ...application.ledger._preflight import (
         LedgerPreflightIssue,
         preflight_transaction_catalogue,
@@ -1207,6 +1282,8 @@ def ledger_check(
             if (tx.raw.value_date or tx.raw.booked_date) is not None
         },
     )
+    from ._ledger_payloads import LedgerCheckResult
+
     if not years:
         payload = {
             "bucket_id": bucket_id,
@@ -1222,7 +1299,12 @@ def ledger_check(
             "issues\t0",
             "ready\ttrue",
         ]
-        _emit(ctx, payload, lines)
+        _emit_envelope(
+            ctx,
+            command="ledger.check",
+            result=LedgerCheckResult.model_validate(payload),
+            lines=lines,
+        )
         return
 
     aggregated_issues: list[LedgerPreflightIssue] = []
@@ -1255,7 +1337,12 @@ def ledger_check(
     ]
     for issue in aggregated_issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(
+        ctx,
+        command="ledger.check",
+        result=LedgerCheckResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @app.command(
@@ -1281,7 +1368,6 @@ def ledger_preflight(
     ),
 ) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
-
     from ...application.ledger._preflight import preflight_ledger_tax_readiness
 
     transaction_repository = _tx_repo(_state())
@@ -1301,7 +1387,14 @@ def ledger_preflight(
     ]
     for issue in report.issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerPreflightResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.preflight",
+        result=LedgerPreflightResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @app.command("history", help=tr("cli.ledger.history.help"))
@@ -1324,19 +1417,27 @@ def ledger_history(
         include_split_siblings=include_split_siblings,
     )
     matches = _collect_ledger_history_events(object_ids)
-    payload = {
-        "bucket_id": transaction_repository.bucket_id,
-        "transaction_id": resolved_id,
-        "event_count": len(matches),
-        "events": [event.model_dump(mode="json") for event in matches],
-    }
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
         f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
         f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
     ]
     lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerHistoryResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.history",
+        result=LedgerHistoryResult.model_validate(
+            {
+                "bucket_id": transaction_repository.bucket_id,
+                "transaction_id": resolved_id,
+                "event_count": len(matches),
+                "events": [event.model_dump(mode="json") for event in matches],
+            }
+        ),
+        lines=lines,
+    )
 
 
 def _history_object_ids(
@@ -1411,12 +1512,15 @@ def ledger_export(
         ),
         transaction_repository=transaction_repository,
     )
-    payload = result.model_dump(mode="json", exclude={"payload"})
-    payload["output_path"] = str(output)
-    _emit(
+    export_payload = result.model_dump(mode="json", exclude={"payload"})
+    export_payload["output_path"] = str(output)
+    from ._ledger_payloads import LedgerExportResult as LedgerExportResultSchema
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.export",
+        result=LedgerExportResultSchema.model_validate(export_payload),
+        lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
             f"{tr('cli.ledger.labels.rows')}\t{result.row_count}",
@@ -1458,10 +1562,13 @@ def ledger_list(ctx: typer.Context) -> None:
             f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
             f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
         )
-    _emit(
+    from ._ledger_payloads import LedgerListResult
+
+    _emit_envelope(
         ctx,
-        {"bucket_id": transaction_repository.bucket_id, "rows": rows},
-        lines,
+        command="ledger.list",
+        result=LedgerListResult.model_validate({"bucket_id": transaction_repository.bucket_id, "rows": rows}),
+        lines=lines,
     )
 
 
@@ -1515,7 +1622,14 @@ def ledger_view(
         f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
-    _emit(ctx, result_payload.model_dump(mode="python"), lines)
+    from ._ledger_payloads import LedgerViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.view",
+        result=LedgerViewResult.model_validate(result_payload.model_dump(mode="json")),
+        lines=lines,
+    )
 
 
 @app.command("status", help=tr("cli.ledger.status.help"))
@@ -1566,7 +1680,14 @@ def ledger_status(
             lines.append(
                 _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
             )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerStatusResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.status",
+        result=LedgerStatusResult.model_validate(report.model_dump(mode="json")),
+        lines=lines,
+    )
 
 
 def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str, detail: str) -> str:
@@ -1602,15 +1723,19 @@ def ledger_track(
         transaction_id=resolved_id,
         transaction_repository=transaction_repository,
     )
-    payload = {
-        "bucket_id": result.ref.bucket_id,
-        "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="python"),
-        "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="python"),
-    }
-    _emit(
+    from ._ledger_payloads import LedgerTrackResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        [
+        command="ledger.track",
+        result=LedgerTrackResult.model_validate(
+            {
+                "bucket_id": result.ref.bucket_id,
+                "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
+                "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
+            }
+        ),
+        lines=[
             f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
             f"{tr('cli.ledger.labels.lifecycle_state')}\t{result.transaction.lifecycle_state.value}",
             f"{tr('cli.ledger.labels.created_event_id')}\t{result.transaction.created_event_id or '-'}",
@@ -1668,7 +1793,7 @@ def ledger_import(
         ),
         transaction_repository=transaction_repository,
     )
-    payload = result.model_dump(mode="json")
+    import_payload = result.model_dump(mode="json")
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
@@ -1680,11 +1805,11 @@ def ledger_import(
         # the imported/skipped counts above are not read as a no-op.
         dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
         lines.append(dry_run_notice)
-        payload["dry_run_notice"] = dry_run_notice
+        import_payload["dry_run_notice"] = dry_run_notice
     empty_import_notice = _empty_import_notice(result)
     if empty_import_notice is not None:
         lines.append(empty_import_notice)
-        payload["empty_import_notice"] = empty_import_notice
+        import_payload["empty_import_notice"] = empty_import_notice
     if result.likely_duplicates > 0:
         # Cross-format duplicate suspicion: same date and amount as an
         # existing row but a divergent narrative. The row is imported;
@@ -1695,13 +1820,16 @@ def ledger_import(
             f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
         )
         lines.append(likely_duplicate_notice)
-        payload["likely_duplicate_notice"] = likely_duplicate_notice
+        import_payload["likely_duplicate_notice"] = likely_duplicate_notice
     if verbose or verify:
         lines.extend(_validation_lines(result.validation, result.source))
-    _emit(
+    from ._ledger_payloads import LedgerImportResult as LedgerImportResultSchema
+
+    _emit_envelope(
         ctx,
-        payload,
-        lines,
+        command="ledger.import",
+        result=LedgerImportResultSchema.model_validate(import_payload),
+        lines=lines,
     )
 
 
@@ -1717,7 +1845,6 @@ def _empty_import_notice(result: LedgerSourceImportResult) -> str | None:
     documented column format. A dry run is excluded because zero
     imports is the expected outcome of a dry run.
     """
-
     if result.dry_run or result.imported > 0:
         return None
     if result.skipped > 0:
@@ -1775,28 +1902,33 @@ def ledger_review(
         ),
         transaction_repository=transaction_repository,
     )
+    from ._ledger_payloads import LedgerReviewResult
+
     if record_id is not None:
         if not result.rows:
-            _emit(
+            _emit_envelope(
                 ctx,
-                {"rows": [], "filters": list(result.filters)},
-                [tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
+                command="ledger.review",
+                result=LedgerReviewResult.model_validate({"rows": [], "filters": list(result.filters)}),
+                lines=[tr("cli.ledger.review.header"), tr("cli.ledger.review.no_rows")],
             )
             return
         row = result.rows[0]
-        payload = {
-            "id": row.id,
-            "date": row.date,
-            "amount": row.amount,
-            "description": row.description,
-            "review_status": row.status,
-            "transaction": row.transaction,
-            "verbose": verbose,
-        }
-        _emit(
+        _emit_envelope(
             ctx,
-            payload,
-            [
+            command="ledger.review",
+            result=LedgerReviewResult.model_validate(
+                {
+                    "id": row.id,
+                    "date": row.date,
+                    "amount": row.amount,
+                    "description": row.description,
+                    "review_status": row.status,
+                    "transaction": row.transaction.model_dump(mode="json") if row.transaction is not None else None,
+                    "verbose": verbose,
+                }
+            ),
+            lines=[
                 f"{tr('cli.ledger.labels.id')}\t{row.id}",
                 f"{tr('cli.ledger.labels.date')}\t{row.date}",
                 f"{tr('cli.ledger.labels.amount')}\t{row.amount}",
@@ -1804,10 +1936,6 @@ def ledger_review(
             ],
         )
         return
-    payload = {
-        "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
-        "filters": list(result.filters),
-    }
     lines: list[str] = [tr("cli.ledger.review.header")]
     review_ids = tuple(row.id for row in result.rows)
     review_width = compute_display_id_width(review_ids)
@@ -1817,7 +1945,17 @@ def ledger_review(
     )
     if not result.rows:
         lines.append(tr("cli.ledger.review.no_rows"))
-    _emit(ctx, payload, lines)
+    _emit_envelope(
+        ctx,
+        command="ledger.review",
+        result=LedgerReviewResult.model_validate(
+            {
+                "rows": [row.model_dump(mode="json", exclude_none=True) for row in result.rows],
+                "filters": list(result.filters),
+            }
+        ),
+        lines=lines,
+    )
 
 
 ratios_app = typer.Typer(
@@ -1830,7 +1968,6 @@ app.add_typer(ratios_app, name="ratios")
 
 def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
-
     from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise
 
@@ -1848,7 +1985,6 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     are still allowed in that state but census-override warnings stay
     silent because there is no profile to look up snapshots against.
     """
-
     from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
 
@@ -1874,7 +2010,6 @@ def _emit_ratios_event(
     from secure-object snapshots. ``prior`` is ``None`` on a first
     set; ``new`` is ``None`` on unset.
     """
-
     from datetime import UTC, datetime
 
     from ...domain.buckets import (
@@ -1938,15 +2073,22 @@ def _resolve_source_jurisdiction(
     and foreign-source income distinctly so a silent ES default would
     quietly include foreign-source amounts in the IRPF base).
 
-    Returns:
-        - The operator-supplied value (after stripping) when present.
-        - ``"ES"`` when the profile is RESIDENT_IRPF / GENERAL and no
-          operator value was given.
-        - Raises ``typer.BadParameter`` via :func:`_bad` for
-          NON_RESIDENT_IRNR or RESIDENT_IRPF / IMPATRIADO when no
-          operator value was given.
-    """
+    Args:
+        operator_value: Operator-supplied jurisdiction string, or ``None``
+            when the flag was omitted.
+        fiscal_residency: Resolved fiscal-residency classification from
+            the active profile, or ``None`` when unavailable.
+        irpf_special_regime: Resolved IRPF special-regime classification
+            from the active profile, or ``None`` when unavailable.
 
+    Returns:
+        The operator-supplied value when present, or ``"ES"`` when the
+        profile is RESIDENT_IRPF / GENERAL and no operator value was given.
+
+    Raises:
+        _bad: When the profile is NON_RESIDENT_IRNR or RESIDENT_IRPF /
+            IMPATRIADO and no operator value was given.
+    """
     if operator_value is not None:
         return operator_value
     if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
@@ -1972,7 +2114,6 @@ def _resolve_business_pct_with_census(
     HOME_OFFICE transactions and explicit-override flows are not
     perturbed.
     """
-
     from ...application.ledger._ratios import census_business_pct_for
     from ...application.user_profile import CensoSyncService
     from ...domain.categories import SpendingCategory
@@ -2006,7 +2147,6 @@ def _emit_ratios_census_override_warning(
     planned change — but downstream auditors get a typed record of
     the divergence.
     """
-
     from datetime import UTC, datetime
 
     from ...domain.buckets import (
@@ -2107,7 +2247,14 @@ def ratios_list(ctx: typer.Context) -> None:
     if census_mismatch is not None:
         lines.append(f"census_mismatch\t{census_mismatch}")
     lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RatiosListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.list",
+        result=RatiosListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @ratios_app.command(
@@ -2155,10 +2302,13 @@ def ratios_set(
         if warning is not None:
             _emit_ratios_census_override_warning(bucket_id=bucket_id, warning=warning)
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
-    _emit(
+    from ._ledger_payloads import RatiosSetResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
+        command="ledger.ratios.set",
+        result=RatiosSetResult.model_validate(payload),
+        lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
     )
 
 
@@ -2197,7 +2347,14 @@ def ratios_unset(
         new=None,
     )
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": ""}
-    _emit(ctx, payload, (f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"))
+    from ._ledger_payloads import RatiosUnsetResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.unset",
+        result=RatiosUnsetResult.model_validate(payload),
+        lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"),
+    )
 
 
 @ratios_app.command(
@@ -2223,7 +2380,14 @@ def ratios_eligible(ctx: typer.Context) -> None:
         lines.append(
             f"{row.category.value}\t{row.proportionality_kind}\tdefault={default or '-'}\toverride={override_marker}"
         )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RatiosEligibleResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.eligible",
+        result=RatiosEligibleResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @ratios_app.command(
@@ -2250,7 +2414,14 @@ def ratios_validate(ctx: typer.Context) -> None:
     for finding in report.findings:
         detail = f"\t{finding.detail}" if finding.detail else ""
         lines.append(f"finding\t{finding.category.value}\t{finding.kind}{detail}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RatiosValidateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.validate",
+        result=RatiosValidateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 def _business_invoice_payload(record) -> dict[str, object]:
@@ -2389,7 +2560,14 @@ def payable_invoice_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.add",
+        result=PayableInvoiceAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @payable_invoice_app.command(
@@ -2403,7 +2581,14 @@ def payable_invoice_view(
 ) -> None:
     bucket_id = _ratios_bucket_id()
     record = _payable_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    from ._ledger_payloads import PayableInvoiceViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.view",
+        result=PayableInvoiceViewResult.model_validate(_business_invoice_payload(record)),
+        lines=_business_invoice_text_lines(record),
+    )
 
 
 @payable_invoice_app.command(
@@ -2423,7 +2608,14 @@ def payable_invoice_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.list",
+        result=PayableInvoiceListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @payable_invoice_app.command(
@@ -2468,7 +2660,14 @@ def payable_invoice_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceUpdateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.update",
+        result=PayableInvoiceUpdateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @payable_invoice_app.command(
@@ -2496,7 +2695,14 @@ def payable_invoice_remove(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceRemoveResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.remove",
+        result=PayableInvoiceRemoveResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 collectible_invoice_app = typer.Typer(
@@ -2601,7 +2807,14 @@ def collectible_invoice_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.add",
+        result=CollectibleInvoiceAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @collectible_invoice_app.command(
@@ -2616,7 +2829,14 @@ def collectible_invoice_view(
 ) -> None:
     bucket_id = _ratios_bucket_id()
     record = _collectible_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    from ._ledger_payloads import CollectibleInvoiceViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.view",
+        result=CollectibleInvoiceViewResult.model_validate(_business_invoice_payload(record)),
+        lines=_business_invoice_text_lines(record),
+    )
 
 
 @collectible_invoice_app.command(
@@ -2637,7 +2857,14 @@ def collectible_invoice_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.list",
+        result=CollectibleInvoiceListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @collectible_invoice_app.command(
@@ -2684,7 +2911,14 @@ def collectible_invoice_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceUpdateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.update",
+        result=CollectibleInvoiceUpdateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @collectible_invoice_app.command(
@@ -2714,7 +2948,14 @@ def collectible_invoice_remove(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceRemoveResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.remove",
+        result=CollectibleInvoiceRemoveResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 app.add_typer(payable_invoice_app, name="payable-invoice")
@@ -2770,7 +3011,14 @@ def inventory_list(ctx: typer.Context) -> None:
             f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
             f"opening={row.opening_stock}\tmovements={row.movement_count}"
         )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import InventoryListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.list",
+        result=InventoryListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @inventory_app.command(
@@ -2805,10 +3053,13 @@ def inventory_create(
     ledger = result.ledger
     payload = ledger.model_dump(mode="json")
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit(
+    from ._ledger_payloads import InventoryCreateResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="ledger.inventory.create",
+        result=InventoryCreateResult.model_validate(payload),
+        lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
             f"year\t{ledger.year}",
@@ -2897,10 +3148,13 @@ def inventory_movement_add(
     ledger = result.ledger
     payload = ledger.model_dump(mode="json")
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit(
+    from ._ledger_payloads import InventoryMovementAddResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="ledger.inventory.movement.add",
+        result=InventoryMovementAddResult.model_validate(payload),
+        lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
             f"year\t{ledger.year}",
@@ -2929,10 +3183,13 @@ def inventory_valuation_preview(
     preview = result.preview
     payload = preview.model_dump(mode="json")
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit(
+    from ._ledger_payloads import InventoryValuationPreviewResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="ledger.inventory.valuation.preview",
+        result=InventoryValuationPreviewResult.model_validate(payload),
+        lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{preview.actividad_id}",
             f"year\t{preview.year}",
@@ -3043,7 +3300,14 @@ def evidence_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.add",
+        result=EvidenceAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @evidence_app.command(
@@ -3064,7 +3328,14 @@ def evidence_view(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
     )
-    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+    from ._ledger_payloads import EvidenceViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.view",
+        result=EvidenceViewResult.model_validate(_evidence_payload(record)),
+        lines=_evidence_text_lines(record),
+    )
 
 
 @evidence_app.command(
@@ -3090,7 +3361,14 @@ def evidence_list(ctx: typer.Context) -> None:
             f"{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t"
             f"{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}"
         )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.list",
+        result=EvidenceListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @evidence_app.command(
@@ -3132,7 +3410,14 @@ def evidence_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceUpdateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.update",
+        result=EvidenceUpdateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @evidence_app.command(
@@ -3160,7 +3445,14 @@ def evidence_remove(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceRemoveResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.remove",
+        result=EvidenceRemoveResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -3261,7 +3553,14 @@ def rule_add(
         f"classification\t{rule.classification.value}",
         f"priority\t{rule.priority}",
     ]
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RuleAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.add",
+        result=RuleAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @rule_app.command(
@@ -3339,7 +3638,14 @@ def rule_apply(
         ]
         for row in would_match:
             lines.append(f"  match\t{row['transaction_id'][:16]}...\t{row['classification']}")
-        _emit(ctx, payload, lines)
+        from ._ledger_payloads import RuleApplyResult
+
+        _emit_envelope(
+            ctx,
+            command="ledger.rule.apply",
+            result=RuleApplyResult.model_validate(payload),
+            lines=lines,
+        )
         return
 
     from ...application.ledger._actions import apply_classification_rules
@@ -3375,7 +3681,14 @@ def rule_apply(
     ]
     for row in result.applied:
         lines.append(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RuleApplyResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.apply",
+        result=RuleApplyResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @rule_app.command(
@@ -3410,4 +3723,11 @@ def rule_list(ctx: typer.Context) -> None:
         lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
     for r in rules:
         lines.append(f"{r.priority}\t{r.classification.value}\t{r.description_pattern}\t{r.rule_id[:16]}...")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RuleListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.list",
+        result=RuleListResult.model_validate(payload),
+        lines=lines,
+    )

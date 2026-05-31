@@ -225,7 +225,6 @@ class RegistryRevisionInventory(NamedTuple):
 
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
     """Load the registry tree and return stable read-only inventory counts."""
-
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     modelos = authority.modelos
     catalogues = authority.catalogues
@@ -260,7 +259,6 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     every legal reference — the checks that the production authority skips
     so that pending corpus annotations never abort user-facing workflows.
     """
-
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     authority.validate_registry()
     # Run the strict corpus-text check that the production authority omits.
@@ -303,7 +301,6 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
     the contract change at the validator rather than letting the
     cast silently widen.
     """
-
     match environment:
         case "production":
             return _OracleEnvironment.PRODUCTION
@@ -320,7 +317,6 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
 
 def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
     """Audit registered live-parity oracles against every registry cross-reference."""
-
     typed_environment = _typed_oracle_environment(environment)
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     oracle_catalogue = _LiveParityCatalogue()
@@ -353,7 +349,6 @@ def verify_filed_state(
     master_key_provider: _MasterKeyProvider | None = None,
 ) -> FiledStateVerificationReport:
     """Compare a local registry calculation to a captured filed observation."""
-
     filed_observation = _load_filed_observation(observation_path, master_key_provider=master_key_provider)
     registry_observation = _registry_observation_from_filed_declaration(filed_observation)
     source_observations = tuple(
@@ -438,7 +433,6 @@ def verify_registry_workbooks(
     output: Path | None = None,
 ) -> _WorkbookBackendVerificationReport:
     """Run workbook backend verification and optionally persist the JSON report."""
-
     previous_report = None
     if resume_from is not None:
         previous_report = _WorkbookBackendVerificationReport.model_validate_json(
@@ -465,7 +459,6 @@ def run_registry_parity(
     output: Path | None = None,
 ):
     """Run one stored parity scenario and archive the resulting tape."""
-
     scenario = _load_parity_scenario(scenario_path)
     tape = _run_parity_scenario(
         scenario,
@@ -485,7 +478,6 @@ def replay_registry_parity(
     source_root: Path,
 ):
     """Replay one archived parity tape against the current registry runtime."""
-
     tape = _load_parity_tape(tape_path)
     return _replay_parity_tape(
         tape,

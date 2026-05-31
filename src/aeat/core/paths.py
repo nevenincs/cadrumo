@@ -36,7 +36,6 @@ def resolve_project_path(value: str | Path) -> Path:
     Returns:
         The fully resolved absolute :class:`pathlib.Path`.
     """
-
     candidate = Path(value).expanduser()
     if candidate.is_absolute():
         return candidate.resolve()
@@ -53,7 +52,6 @@ def normalize_project_relative_path(value: Path | None) -> Path | None:
         ``None`` when ``value`` is ``None``; otherwise the resolved
         absolute path produced by :func:`resolve_project_path`.
     """
-
     if value is None:
         return None
     return resolve_project_path(value)
@@ -71,7 +69,6 @@ def normalize_project_relative_str(value: str) -> str:
         The resolved absolute path as a string, or the original empty
         string.
     """
-
     if not value:
         return value
     return str(resolve_project_path(value))
@@ -93,10 +90,9 @@ def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) ->
         The resolved absolute path inside ``root``.
 
     Raises:
-        ValueError: When ``relative_path`` is malformed or when the
-            resolved path escapes ``root``.
+        CoreValidationError: When ``relative_path`` is malformed or
+            when the resolved path escapes ``root``.
     """
-
     if "\\" in relative_path:
         raise CoreValidationError(f"{context} must use forward slashes only")
     pure = PurePosixPath(relative_path)
@@ -128,10 +124,9 @@ def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Pat
         The resolved absolute path of the JSON sidecar.
 
     Raises:
-        ValueError: When ``record_id`` is not a simple filename token
-            or the resolved path escapes ``root``.
+        CoreValidationError: When ``record_id`` is not a simple
+            filename token or the resolved path escapes ``root``.
     """
-
     if not _SAFE_FILE_TOKEN_RE.fullmatch(record_id):
         raise CoreValidationError(f"{context} must be a simple filename token")
     resolved_root = root.resolve()
@@ -141,3 +136,23 @@ def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Pat
     except ValueError as exc:  # pragma: no cover - defensive
         raise CoreValidationError(f"{context} escapes the owning root") from exc
     return resolved
+
+
+def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
+    """Return a cache-key fingerprint triple for a single file.
+
+    The triple ``(name, size_bytes, mtime_ns)`` is a stable, low-cost
+    proxy for file identity used by file-backed loader caches. Any
+    in-place modification that changes size or mtime invalidates the
+    cache without requiring a full content hash.
+
+    Args:
+        path: The file to fingerprint. Must be an existing, stat-able
+            path.
+
+    Returns:
+        ``(path.name, stat.st_size, stat.st_mtime_ns)``. ``path.stat()``
+        propagates ``OSError`` when the file is unreadable or disappears.
+    """
+    stat = path.stat()
+    return (path.name, stat.st_size, stat.st_mtime_ns)

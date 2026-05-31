@@ -37,7 +37,6 @@ def load_assets() -> tuple[AssetRecord, ...]:
     Returns:
         Tuple of persisted asset records, empty when the ledger is absent.
     """
-
     return AssetsLedgerRepository().load().assets
 
 
@@ -50,7 +49,6 @@ def save_assets(assets: tuple[AssetRecord, ...]) -> Path:
     Returns:
         Logical secure-object marker for the persisted ledger.
     """
-
     repository = AssetsLedgerRepository()
     repository.save(AssetsLedgerDocument(assets=assets))
     return repository.envelope_path
@@ -64,12 +62,7 @@ def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
 
     Returns:
         The updated ledger document including the newly inserted asset.
-
-    Raises:
-        :exc:`aeat.domain.profile.errors.AssetRecordError`: When ``asset.identifier``
-            is already present in the ledger.
     """
-
     return AssetsLedgerRepository().add(asset)
 
 
@@ -79,7 +72,6 @@ def load_amortizacion_ledger() -> AmortizacionLedger:
     Returns:
         Persisted amortizacion ledger or an empty one when no envelope exists.
     """
-
     return AmortizacionLedgerRepository().load()
 
 
@@ -92,7 +84,6 @@ def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
     Returns:
         Logical secure-object marker for the persisted ledger.
     """
-
     repository = AmortizacionLedgerRepository()
     repository.save(ledger)
     return repository.envelope_path
@@ -102,18 +93,17 @@ class AssetsLedgerRepository:
     """Governed repository for the encrypted assets ledger."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, defaulting to the active-bucket secure object store."""
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-
         return Path("db://secure_objects") / _ASSETS_NAMESPACE / ASSETS_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-
         return Path("db://secure_objects") / _ASSETS_NAMESPACE / "assets-ledger.lock"
 
     def load(self) -> AssetsLedgerDocument:
@@ -123,10 +113,8 @@ class AssetsLedgerRepository:
             Decrypted assets ledger document.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.AssetRecordError`: When the
-                envelope exists but cannot be loaded or decrypted.
+            AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
         """
-
         try:
             record = self._objects.load(
                 _ASSETS_NAMESPACE,
@@ -146,7 +134,6 @@ class AssetsLedgerRepository:
         Args:
             document: Ledger document to encrypt and write.
         """
-
         self._save_unlocked(document)
         _log.info("saved %d asset records to secure object %s", len(document.assets), self._object_key)
 
@@ -160,10 +147,8 @@ class AssetsLedgerRepository:
             The ledger document including the new asset.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.AssetRecordError`: When an asset
-                with the same :attr:`AssetRecord.identifier` already exists.
+            AssetRecordError: When an asset with the same identifier already exists.
         """
-
         current = self._load_unlocked()
         if any(existing.identifier == asset.identifier for existing in current.assets):
             raise AssetRecordError(
@@ -203,18 +188,17 @@ class AmortizacionLedgerRepository:
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, defaulting to the active-bucket secure object store."""
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-
         return Path("db://secure_objects") / _AMORTIZACION_NAMESPACE / ASSETS_AMORTIZATION_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-
         return Path("db://secure_objects") / _AMORTIZACION_NAMESPACE / "assets-amortization-ledger.lock"
 
     def load(self) -> AmortizacionLedger:
@@ -224,10 +208,8 @@ class AmortizacionLedgerRepository:
             Decrypted amortizacion ledger.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.AssetRecordError`: When the
-                envelope exists but cannot be loaded or decrypted.
+            AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
         """
-
         try:
             record = self._objects.load(
                 _AMORTIZACION_NAMESPACE,
@@ -247,7 +229,6 @@ class AmortizacionLedgerRepository:
         Args:
             ledger: Amortizacion ledger to encrypt and write.
         """
-
         self._save_unlocked(ledger)
         _log.info("saved amortizacion ledger to secure object %s", self._object_key)
 

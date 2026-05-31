@@ -236,8 +236,8 @@ def parse_waf_challenge(
         http_status: The observed HTTP status code.
         headers: Case-insensitive mapping of response headers.
         html: The response body.
-        rate_limit_retry_after_default: Ignored; see
-            :func:`parse_mantenimiento_banner`.
+        rate_limit_retry_after_default: Ignored; reserved for interface parity.
+        _lowered: Pre-computed lowercased ``html``; computed from ``html`` when omitted.
 
     Returns:
         A populated :class:`SiteHealthStatus` or ``None`` when the

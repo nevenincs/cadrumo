@@ -284,14 +284,6 @@ class SecretStore:
         Returns:
             The :class:`aeat.adapters.persistence.storage.blob_store.BlobReference`
             for the freshly written blob.
-
-        Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.RetentionPolicyError`:
-                When ``record.expires_at`` is required by the class's
-                retention policy and absent.
-            :exc:`aeat.adapters.persistence.storage.errors.SecretAlreadyExistsError`:
-                When the key already exists and ``overwrite`` is
-                ``False``.
         """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(self._lock_target()):
@@ -366,8 +358,7 @@ class SecretStore:
             The decrypted :class:`SecretRecord`.
 
         Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.SecretNotFoundError`:
-                When no record exists for ``key``.
+            SecretNotFoundError: When no record exists for ``key``.
         """
         digest = self._digest(key)
         index = self._read_index()
@@ -389,8 +380,7 @@ class SecretStore:
             key: The natural key string passed to :meth:`put`.
 
         Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.SecretNotFoundError`:
-                When no record exists for ``key``.
+            SecretNotFoundError: When no record exists for ``key``.
         """
         digest = self._digest(key)
         with exclusive_file_lock(self._lock_target()):
@@ -446,12 +436,6 @@ class SecretStore:
             The :class:`aeat.adapters.persistence.storage.blob_store.BlobReference`
             of the rotated blob.
 
-        Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.SecretNotFoundError`:
-                When no record exists for ``key``.
-            :exc:`aeat.adapters.persistence.storage.errors.RetentionPolicyError`:
-                When the policy requires explicit expiry and
-                ``expires_at`` is ``None``.
         """
         # Atomic rotate sequence: get -> build -> put-locked, all under
         # the store-wide lock so a concurrent rotate / put / delete

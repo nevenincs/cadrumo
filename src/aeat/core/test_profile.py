@@ -115,19 +115,34 @@ def test_profiles_no_deferred_application_imports() -> None:
 
 
 def test_project_answers_raises_before_registration() -> None:
-    """get_project_answers() must raise ProjectAnswersNotRegisteredError when slot is empty."""
-    from aeat.core.profile import (
-        _PROJECT_ANSWERS_SLOT,
-        ProjectAnswersNotRegisteredError,
-        get_project_answers,
+    """get_project_answers() must raise ProjectAnswersNotRegisteredError when slot is empty.
+
+    Run as a subprocess to guarantee a clean import state regardless of test
+    execution order — the slot may already be populated in-process when
+    _persistence has been imported by an earlier test.
+    """
+    import subprocess
+    import sys
+    import textwrap
+
+    script = textwrap.dedent("""\
+        from aeat.core.profile import get_project_answers, ProjectAnswersNotRegisteredError
+        raised = False
+        try:
+            get_project_answers()
+        except ProjectAnswersNotRegisteredError:
+            raised = True
+        assert raised, "ProjectAnswersNotRegisteredError was not raised"
+    """)
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
-
-    # Only test this when the slot is empty (i.e. application layer not yet loaded).
-    if _PROJECT_ANSWERS_SLOT:
-        pytest.skip("project_answers already registered in this process — isolation not possible")
-
-    with pytest.raises(ProjectAnswersNotRegisteredError):
-        get_project_answers()
+    assert result.returncode == 0, (
+        f"Subprocess raised unexpected error.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+    )
 
 
 def test_project_answers_registered_after_persistence_import() -> None:

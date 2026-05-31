@@ -45,7 +45,6 @@ def profile_resolvable_binding_ids(
     bucket has no profile — the caller then treats every non-constant
     binding as missing, which is the correct conservative answer.
     """
-
     authority = _resources_authority()
     resolved_period = period if period is not None else _annual_period_for_year(
         authority, modelo=modelo, filing_year=filing_year
@@ -69,7 +68,6 @@ def profile_resolvable_binding_ids(
 
 def _resources_authority() -> ValidatedRegistryAuthority:
     """Return the registry authority via the central resource registry."""
-
     from ...core.resources import resources
 
     return resources().modelos.authority
@@ -86,7 +84,6 @@ def _annual_period_for_year(
     resolves. The binding *set* is revision-wide, so the period choice
     does not change which bindings the revision declares.
     """
-
     try:
         definition = authority.validate_modelo(modelo.strip())
     except (RegistrySnapshotError, RegistryValidationError):

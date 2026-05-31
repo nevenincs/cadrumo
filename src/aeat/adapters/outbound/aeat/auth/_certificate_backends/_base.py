@@ -43,9 +43,12 @@ class _CertBackend(ABC):
     ) -> None:
         """Validate that ``context`` is configured for ``cert``.
 
+        Args:
+            cert: The loaded PKCS#12 certificate to validate against.
+            context: The browser or HTTP context to check.
+
         Raises:
-            aeat.adapters.outbound.aeat.auth.certificate.CertificateError: When the backend
-                rejects the context or cannot enforce the contract.
+            CertificateError: When the backend rejects the context or cannot enforce the contract.
         """
 
     @abstractmethod

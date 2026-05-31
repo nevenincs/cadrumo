@@ -22,7 +22,6 @@ def _default_manager() -> LocaleManager:
 @app.command("audit")
 def audit() -> None:
     """Print codebase-to-locale drift for every locale file."""
-
     manager = _default_manager()
     codebase_keys = manager.get_codebase_keys()
     namespace_prefixes = tuple(
@@ -61,7 +60,6 @@ def scaffold(
     ] = False,
 ) -> None:
     """Update locale files so they match concrete codebase translation keys."""
-
     if check:
         audit()
         return
@@ -85,7 +83,6 @@ def set_value(
     ],
 ) -> None:
     """Set one locale string leaf."""
-
     try:
         path = _default_manager().set_locale_value(locale, key, value)
     except LocaleError as exc:
@@ -105,7 +102,6 @@ def remove_value(
     ],
 ) -> None:
     """Remove one locale string leaf."""
-
     try:
         path = _default_manager().remove_locale_value(locale, key)
     except LocaleError as exc:

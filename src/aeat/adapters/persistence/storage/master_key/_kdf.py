@@ -40,7 +40,6 @@ def derive_kek(passphrase: bytes, kdf_params: ManifestKdfParams) -> bytes:
         KeyDerivationError: If `kdf_params.algorithm` is not `argon2id` or
             `kdf_params.output_length` is not 32.
     """
-
     if kdf_params.algorithm != "argon2id":
         raise KeyDerivationError(
             f"unsupported KDF algorithm {kdf_params.algorithm!r}; expected 'argon2id'",

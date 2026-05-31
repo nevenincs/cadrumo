@@ -112,6 +112,10 @@ def read_env_file(path: Path) -> dict[str, str]:
     Returns:
         Mapping of variable name to its raw string value. Returns an
         empty mapping if the file does not exist.
+
+    Raises:
+        CoreValidationError: When a non-comment, non-blank line does
+            not contain an ``=`` separator.
     """
     if not path.exists():
         return {}

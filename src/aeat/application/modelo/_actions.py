@@ -56,7 +56,7 @@ from ...domain.calculations.registry import (
     materialize_relation_binding_values,
 )
 from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
-from ...domain.filing import ModeloDraftStatus
+from ...domain.submission import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -163,11 +163,10 @@ def _emit_bucket_event(
     object_id: str,
     payload: Mapping[str, str],
 ) -> BucketEvent:
-    """Append one event to the bucket-event-history catalogue and
-    return the persisted record. Content-addressed: re-emitting an
-    identical event is a no-op.
-    """
+    """Append one event to the bucket-event-history catalogue and return the persisted record.
 
+    Content-addressed: re-emitting an identical event is a no-op.
+    """
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
         event_type=event_type,
@@ -193,7 +192,7 @@ def _emit_bucket_event(
     return event
 
 
-from ..workflow._errors import WorkflowInputMismatchError  # re-exported for callers
+from ..workflow import WorkflowInputMismatchError
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -235,8 +234,7 @@ class VerificationReportNotFoundError(ModeloError, KeyError):
 
 
 class AmendmentEvidenceMissingError(ModeloError):
-    """Raised when the modelo-amend path is asked to amend a filing
-    record that carries no imported official evidence.
+    """Raised when the modelo-amend path is asked to amend a filing record that carries no imported official evidence.
 
     The amend path is gated on ``external_evidence`` being populated
     on the baseline filing record. A locally-computed filing record
@@ -246,14 +244,14 @@ class AmendmentEvidenceMissingError(ModeloError):
 
 
 class AmendmentTargetStateError(ModeloError):
-    """Raised when the modelo-amend path is asked to amend a filing
-    record that is not in ``CURRENT`` status (e.g., it was already
-    superseded by a later filing)."""
+    """Raised when the modelo-amend path is asked to amend a filing record that is not in ``CURRENT`` status.
+
+    For example, when it was already superseded by a later filing.
+    """
 
 
 class StoredCalculationDriftError(ModeloError):
-    """Raised when the verify path detects that a persisted calculation revision
-    has drifted from its content-addressed id.
+    """Raised when a persisted calculation revision has drifted from its content-addressed id.
 
     The ``calculation_revision_id`` is a SHA-256 hash of
     ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``.
@@ -265,9 +263,10 @@ class StoredCalculationDriftError(ModeloError):
 
 
 class ExternalModeloImportError(ModeloError):
-    """Raised when the external-filing import path cannot persist an
-    imported baseline (e.g., empty casilla values, missing evidence
-    reference)."""
+    """Raised when the external-filing import path cannot persist an imported baseline.
+
+    Examples: empty casilla values, missing evidence reference.
+    """
 
 
 #: Legal anchors for the modelo workflow gate. The gate enforces
@@ -330,16 +329,15 @@ class ModeloWorkflowGateError(ModeloError):
         CLI error boundary's ``vars(error)`` context merge never picks
         it up and renders its raw Python repr to the operator.
         """
-
         return self._result
 
 
 class AmendmentOverrideCasillaError(ModeloError):
-    """Raised when an amendment override targets a casilla id the
-    registry does not declare for the baseline's modelo / filing
-    year / period. The corrected revision is the legal basis of the
-    complementaria filing — fabricated casilla ids cannot be silently
-    accepted."""
+    """Raised when an amendment override targets a casilla id the registry does not declare for the baseline's modelo.
+
+    The corrected revision is the legal basis of the complementaria
+    filing — fabricated casilla ids cannot be silently accepted.
+    """
 
 
 class AmendmentVerificationRefusedError(ModeloError):
@@ -350,7 +348,8 @@ class AmendmentVerificationRefusedError(ModeloError):
     baseline's modelo / filing year / period must be present in the
     corrected map. Amend refuses rather than persisting an
     incomplete complementaria because the corrected revision is the
-    legal basis of the filing."""
+    legal basis of the filing.
+    """
 
 
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
@@ -373,7 +372,6 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
     ``"2026P1"``).  This is the single producer of that mapping, used by
     the workflow gate and by run-id resolution so they cannot diverge.
     """
-
     if work_unit.period.endswith("T") and len(work_unit.period) == 2:
         quarter = work_unit.period[0]
         return f"{work_unit.filing_year}Q{quarter}"
@@ -584,6 +582,9 @@ def create_work_unit(
         name: Optional display name; defaults to
             ``<modelo>-<year>-<period>``.
         actor: Actor label recorded on the creation bucket event.
+        causante_ccaa: Optional autonomous community of the causante
+            (deceased / estate origin) when the filing is an estate
+            declaration. Persisted on the work unit for CCAA-split logic.
         repository: Repository override for testing; defaults to
             the canonical ``WorkUnitCatalogueRepository``.
         bucket_event_repository: Bucket-event repository override for
@@ -594,7 +595,6 @@ def create_work_unit(
     Returns:
         The persisted :class:`aeat.domain.modelos.WorkUnit`.
     """
-
     _reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     _reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
     repo = repository or WorkUnitCatalogueRepository()
@@ -657,7 +657,6 @@ def list_work_units(
     by ``(bucket_id, filing_year, modelo, period)`` so consumers
     see a stable ordering across calls without re-sorting.
     """
-
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     units = tuple(
@@ -686,13 +685,21 @@ def get_work_unit(
 ) -> WorkUnit:
     """Return one work unit by id.
 
+    Args:
+        work_unit_id: The stable content-addressed id of the work unit
+            to retrieve.
+        repository: Optional repository override; defaults to a fresh
+            :class:`WorkUnitCatalogueRepository`.
+
+    Returns:
+        The :class:`WorkUnit` record for ``work_unit_id``.
+
     Raises:
         WorkUnitNotFoundError: When no work unit lives under
             ``work_unit_id``. ``KeyError`` is in the base classes
             so callers that prefer the Python idiom can still
             ``except KeyError``.
     """
-
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     unit = catalogue.get(work_unit_id)
@@ -721,7 +728,6 @@ def rename_work_unit(
     the prior / new name so the audit trail captures who initiated the
     rename.
     """
-
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()
@@ -780,13 +786,24 @@ def discard_work_unit(
     / year / period. A ``modelo.work_unit.discarded`` bucket event
     is emitted alongside the state transition.
 
+    Args:
+        work_unit_id: The stable id of the work unit to discard.
+        actor: Operator identifier recorded in the audit trail.
+        reason: Optional human-readable discard reason.
+        repository: Optional work-unit catalogue repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        clock: Optional UTC timestamp override for the discard event.
+
+    Returns:
+        The updated :class:`WorkUnit` in ``DISCARDED`` state.
+
     Raises:
         WorkUnitNotFoundError: When ``work_unit_id`` is absent.
         WorkUnitAlreadyDiscardedError: When the unit is already
             in ``DISCARDED`` state. Idempotent retries would
             corrupt the audit trail.
     """
-
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()
@@ -839,15 +856,13 @@ def discard_work_unit(
 
 def _canonical_decimal_str(value: Decimal) -> str:
     """Stable string form of a Decimal for content-addressing."""
-
     if value.is_zero():
         return "0"
     return format(value.normalize(), "f")
 
 
 class CalculationRegistryUnavailableError(ModeloError):
-    """Raised when the registry snapshot for a work unit's
-    (modelo, year, period) cannot be resolved at calculate time.
+    """Raised when the registry snapshot for a work unit's (modelo, year, period) cannot be resolved at calculate time.
 
     The calculate path runs the registry's formula engine against
     the snapshot; if no snapshot exists for the work unit's axis
@@ -940,7 +955,6 @@ def calculate_modelo_revision(
     ``verify_modelo_revision`` and ``file_modelo_revision``
     explicitly to advance through the lifecycle.
     """
-
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
@@ -1184,7 +1198,6 @@ def _apply_iva_compensation_decision_binding(
     decision: object | None,
 ) -> None:
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values."""
-
     if modelo != "303":
         return
     binding_id = "modelo-303-compensacion-pendiente-anteriores"
@@ -1325,6 +1338,7 @@ def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
         )
 
 
+# ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION: concrete type is IvaWalletCompensationDecision but direct import creates a cross-module cycle; helper accesses .divergence/.reason via duck-typed protocol.
 def _iva_wallet_blocked_message(decision: Any) -> str:
     divergence = str(decision.divergence)
     reason = str(decision.reason)
@@ -1440,7 +1454,6 @@ def calculate_modelo_revision_from_bucket_aggregation(
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
-
     from ...domain.calculations.registry import RegistrySnapshotError
     from ..aggregation import (
         CalculationSourceContext,
@@ -1569,7 +1582,6 @@ def _resolve_profile_bindings_for_calculation(
     CCAA; without this step the operator would have to re-type a fact
     the profile already holds.
     """
-
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
 
     caller_owned = (
@@ -1624,7 +1636,6 @@ def _reject_binding_channel_mismatch(
     by ``typed_enum`` alone lands in the wrong channel. This guard
     rejects the mismatch at the binding boundary with a clear message.
     """
-
     enum_consumed = enum_consumed_binding_ids(revision)
     misrouted_to_decimal = sorted(set(binding_values) & enum_consumed)
     if misrouted_to_decimal:
@@ -1649,7 +1660,6 @@ def _reject_binding_channel_mismatch(
 
 def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
     """Return whether any formula expression references ``binding_id``."""
-
     return any(binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas)
 
 
@@ -1805,7 +1815,6 @@ def _resolve_declaration_period_inputs(
     calculate path projects them onto the matching semantic-role
     casillas here, before the engine runs.
     """
-
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.INFORMATIONAL:
@@ -1863,8 +1872,7 @@ def _reject_caller_overrides_of_source_bindings(
     caller_binding_values: Mapping[str, Decimal],
     caller_casilla_inputs: Mapping[str, Decimal],
 ) -> None:
-    """Refuse caller-supplied bindings or casilla inputs that collide with
-    values bucket source resolvers own.
+    """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
 
     Bucket-aggregation calculation derives source-owned binding values
     (and the casillas bound to them) from bucket substrate. Letting a
@@ -1873,7 +1881,6 @@ def _reject_caller_overrides_of_source_bindings(
     to aggregate. Both collisions are rejected before any value reaches
     the engine.
     """
-
     rejected_bindings = sorted(
         set(caller_binding_values).intersection(_source_owned_binding_ids(revision, owned_sources))
     )
@@ -1909,7 +1916,6 @@ def list_calculation_revisions(
     chronological revision chain for one work unit is contiguous
     and stable across calls.
     """
-
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
     revisions = tuple(
@@ -1924,7 +1930,6 @@ def get_calculation_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
 ) -> CalculationRevision:
     """Return one calculation revision by id, or raise."""
-
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
     revision = catalogue.get(calculation_revision_id)
@@ -1949,13 +1954,22 @@ def mark_revision_verificado_completo(
     transition the revision is immutable; subsequent calculation
     work on the same work unit must produce a new revision.
 
+    Args:
+        calculation_revision_id: The id of the draft revision to promote.
+        actor: Operator identifier stamped as ``verified_by``.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        clock: Optional UTC timestamp override for ``verified_at``.
+
+    Returns:
+        The updated :class:`CalculationRevision` in ``VERIFICADO_COMPLETO`` state.
+
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
             absent.
         CalculationRevisionStateError: When the revision is not
             currently in ``DRAFT`` state.
     """
-
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
     existing = catalogue.get(calculation_revision_id)
@@ -1989,7 +2003,6 @@ def _registry_root() -> Path:
     resolution independent of the caller's working directory and
     keeps the editable-install and built-wheel surfaces in sync.
     """
-
     from ...core.resources import bundled_path
 
     return bundled_path("registry", "aeat")
@@ -2011,7 +2024,6 @@ def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
     the opaque registry-snapshot miss). Catch the typo at the boundary
     with a clear listing of the valid revision ids for the modelo.
     """
-
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -2031,10 +2043,10 @@ def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
 def _reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: str) -> None:
     """Refuse a work-unit create that names a period the revision does not declare.
 
-    Cross-domain-continuity W02.P12.S220 (persona R7-003): M202 currently
-    accepts ``--period 1T`` at create then fails calculate with
-    no-revision-for-period; period validation must fire at create using
-    the revision's declared period catalogue.
+    M202 accepts ``--period 1T`` at create but fails calculate with
+    no-revision-for-period when the period is not in the revision's catalogue;
+    period validation must fire at create time using the revision's declared
+    period catalogue.
 
     The revision's ``filing_schedules`` carry the declared periods per
     period-kind (monthly / quarterly / annual / ad_hoc). The union of
@@ -2045,7 +2057,6 @@ def _reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period
     via :func:`_reject_unknown_revision`; this helper re-loads the modelo
     definition lazily and is safe to call independently.
     """
-
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -2088,7 +2099,6 @@ def _reject_incomplete_amendment_casillas(
     the same required-input contract that a fresh calculate → verify
     → file path satisfies.
     """
-
     required_optional = _required_input_casillas_for_revision(modelo=modelo, filing_year=filing_year, period=period)
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
@@ -2122,7 +2132,6 @@ def _normalize_casilla_input_aliases(
     through verbatim so the engine still raises its unknown-casilla
     refusal. A canonical ``id`` always wins over an alias collision.
     """
-
     if not casilla_inputs:
         return dict(casilla_inputs)
     alias_map = input_casilla_alias_map(revision)
@@ -2137,7 +2146,6 @@ def _reject_unknown_override_casillas(
     overrides: Mapping[str, Decimal],
 ) -> None:
     """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
-
     if not overrides:
         return
 
@@ -2177,7 +2185,6 @@ def _reject_unknown_import_casillas(
     casilla_values: Mapping[str, Decimal],
 ) -> RegistrySnapshot:
     """Refuse imported casilla ids the registry does not declare and return the resolved snapshot."""
-
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
     )
@@ -2213,7 +2220,6 @@ def _external_filing_observations(
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
     """Build registry-grounded observations for externally imported casilla values."""
-
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     return tuple(
         _casilla_observation_for(
@@ -2248,7 +2254,6 @@ def _required_input_casillas_for_revision(
     implementation treats them as informational because the
     bindings layer is responsible for them.
     """
-
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
     )
@@ -2288,7 +2293,6 @@ def _verification_predicates_for_revision(
     returning an empty tuple here is safe — the caller never reaches
     predicate evaluation in that case.
     """
-
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -2305,8 +2309,7 @@ def _verification_predicates_for_revision(
 
 
 def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
-    """Raise StoredCalculationDriftError when the revision's stored payload
-    does not match its content-addressed id or has internal observation drift.
+    """Check revision integrity; raise :exc:`StoredCalculationDriftError` on content-address or observation drift.
 
     Two checks run:
 
@@ -2480,8 +2483,8 @@ def _evaluate_predicate_expression(
     if m:
         # cap_le_when_positive(["limited_id", "ceiling_id"]) — when the
         # ceiling casilla is strictly positive, the limited casilla value
-        # MUST NOT exceed the ceiling. P08.S47/S48: enforces AEAT cap rules
-        # like Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
+        # MUST NOT exceed the ceiling, enforcing AEAT cap rules like
+        # Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
         # caso podrá figurar... un importe superior a la cantidad positiva
         # consignada".
         ids = _parse_predicate_casilla_ids(m.group("ids"))
@@ -2555,7 +2558,7 @@ def _resolve_m210_rate(
 
     2. **Per-row absent, no treaty country** — the baseline parameter
        is loaded but has no row for the requested ``tipo_renta`` (e.g.
-       pension, deferred under task #229 corpus-blocking) AND the
+       pension, not yet covered in the registry baseline corpus) AND the
        profile declares no ``country_of_fiscal_residence``. The helper
        returns ``(None, [finding])`` with the
        ``m210-baseline-tipo-deferred`` BLOCKING kind, citing the
@@ -2719,7 +2722,6 @@ def _rewrite_m210_sentinels(
     upstream and is therefore the discriminator the resolution
     helper must consume here.
     """
-
     findings: list[ModeloVerificationFinding] = []
     rewritten: list[CasillaObservation] = []
     for obs in observations:
@@ -2874,19 +2876,37 @@ def verify_modelo_revision(
        to the verification-report catalogue.  Failed attempts are persisted
        so the audit trail records why the transition was refused.
 
+    Args:
+        calculation_revision_id: The id of the draft revision to verify.
+        actor: Operator identifier stamped as ``verified_by``.
+        workflow_profile: The taxpayer profile used to evaluate workflow gate
+            conditions.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        verification_repository: Optional verification-report catalogue
+            repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        iva_compensation_decision_repository: Optional IVA wallet decision
+            repository override.
+        workflow_engine: Optional workflow engine override for the preflight gate.
+        workflow_runs_dir: Optional workflow runs directory override.
+        settings: Optional settings override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The persisted :class:`VerificationReport` for the revision.
+
     Raises:
         CalculationRevisionNotFoundError: When the revision id is absent.
         CalculationRevisionStateError: When the revision is not in BORRADOR
             state.  Re-verifying a verified-complete or filed revision is
             rejected; the operator must produce a fresh calculation revision
             (which lands as a new draft).
-        StoredCalculationDriftError: When the content-address or observation
-            provenance check fails, indicating storage corruption or
-            tampering.
-        ModeloWorkflowGateError: When the workflow preflight gate aborts
-            before the verified-complete transition.
+        WorkUnitNotFoundError: When the revision's parent work unit cannot
+            be loaded.
     """
-
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
@@ -3104,8 +3124,7 @@ def _dt12_reduccion_advisory_finding(
     revision: object,
     casilla_values: Mapping[str, Decimal],
 ) -> ModeloVerificationFinding | None:
-    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when a large trabajo income is
-    present but no trabajo reducción has been declared.
+    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when large trabajo income is present but no reducción is declared.
 
     The check is advisory only (WARNING severity); it does not block VERIFICADO_COMPLETO.
     Heuristic: casilla with semantic_role ``irpf_rendimiento_trabajo_importe_integro_dinerario``
@@ -3113,7 +3132,6 @@ def _dt12_reduccion_advisory_finding(
     Returns ``None`` when the advisory does not apply or when the snapshot revision
     does not carry the required semantic roles (non-M100 modelos).
     """
-
     ingreso_id: str | None = None
     reduccion_id: str | None = None
     for casilla in getattr(revision, "casillas", ()):
@@ -3339,7 +3357,6 @@ def _amendment_observations(
     Every casilla in ``corrected_values`` must be declared on the
     snapshot revision, mirroring :func:`_build_typed_observations`.
     """
-
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
     observations: list[CasillaObservation] = []
@@ -3407,6 +3424,32 @@ def file_modelo_revision(
     7. Advance the work unit's ``filed_calculation_revision_id``
        and ``current_filing_record_id`` pointers.
 
+    Args:
+        calculation_revision_id: The id of the verified-complete revision
+            to file.
+        actor: Operator identifier recorded in the filing record and audit
+            trail.
+        workflow_profile: The taxpayer profile used to evaluate workflow
+            gate conditions.
+        notes: Optional operator-supplied filing notes.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        filing_repository: Optional filing-record catalogue repository
+            override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        iva_compensation_decision_repository: Optional IVA wallet decision
+            repository override.
+        workflow_engine: Optional workflow engine override for the preflight
+            gate.
+        workflow_runs_dir: Optional workflow runs directory override.
+        settings: Optional settings override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
+
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
             absent.
@@ -3414,10 +3457,7 @@ def file_modelo_revision(
             ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
-        ModeloWorkflowGateError: When the workflow/preflight gate
-            aborts before filing-state mutation.
     """
-
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
@@ -3604,7 +3644,6 @@ def list_filing_records(
     is true. Results are sorted by ``(bucket_id, filing_year,
     modelo, period, filed_at)``.
     """
-
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
     records = tuple(
@@ -3627,7 +3666,6 @@ def get_filing_record(
     filing_repository: ModeloRecordCatalogueRepository | None = None,
 ) -> ModeloRecord:
     """Return one filing record by id, or raise."""
-
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
@@ -3648,7 +3686,6 @@ def list_verification_reports(
 
     Results are sorted by ``(calculation_revision_id, run_at)``.
     """
-
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     catalogue = vr_repo.load()
     reports = tuple(
@@ -3665,7 +3702,6 @@ def get_verification_report(
     verification_repository: VerificationReportCatalogueRepository | None = None,
 ) -> VerificationReport:
     """Return one verification report by id, or raise."""
-
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)
@@ -3715,6 +3751,28 @@ def amend_modelo_revision(
     6. Emit a ``modelo.amended`` bucket event linking the new
        filing record to the baseline.
 
+    Args:
+        from_filing_record_id: The id of the baseline filing record to amend.
+            Must be CURRENT and carry ``external_evidence``.
+        overrides: Casilla-id to Decimal mapping of corrected values to merge
+            over the baseline revision's casilla map.
+        amendment_kind: Whether the amendment is ``COMPLEMENTARIA`` or
+            ``SUSTITUTIVA``.
+        reason: Operator-supplied explanation for the amendment, recorded in
+            the revision and bucket event.
+        actor: Operator identifier recorded in the audit trail.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        filing_repository: Optional filing-record catalogue repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The newly created :class:`ModeloRecord` in ``CURRENT`` status for the
+        amendment.
+
     Raises:
         ModeloRecordNotFoundError: When ``from_filing_record_id`` is
             absent from the catalogue.
@@ -3724,8 +3782,11 @@ def amend_modelo_revision(
             in ``CURRENT`` status.
         WorkUnitNotFoundError: When the work unit referenced by the
             baseline record cannot be loaded.
+        CalculationRevisionNotFoundError: When the baseline calculation
+            revision referenced by the filing record is absent.
+        CalculationRevisionStateError: When the amendment overrides
+            produce a duplicate revision id already present in the catalogue.
     """
-
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
@@ -3962,13 +4023,35 @@ def import_external_filing_evidence(
 
     The amend path consumes records produced here as its baseline.
 
+    Args:
+        work_unit_id: The stable id of the work unit to attach the imported
+            filing to.
+        casilla_values: The AEAT-attested casilla values from the imported
+            filing. Must be non-empty.
+        evidence_kind: The kind of external evidence being imported (e.g.
+            justificante, borrador).
+        evidence_reference_id: The AEAT-issued reference identifier for the
+            imported filing. Must be non-blank after stripping.
+        actor: Operator identifier recorded in the audit trail. Defaults to
+            ``"aeat-import"``.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        filing_repository: Optional filing-record catalogue repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
+
     Raises:
         WorkUnitNotFoundError: when ``work_unit_id`` is absent.
         WorkUnitMutationRefusedError: when the work unit is discarded.
-        ExternalModeloImportError: when ``casilla_values`` is empty or
-            ``evidence_reference_id`` is empty.
+        ExternalModeloImportError: when ``casilla_values`` is empty,
+            ``evidence_reference_id`` is blank, or the derived revision id
+            already exists in the catalogue.
     """
-
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()

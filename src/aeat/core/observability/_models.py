@@ -315,9 +315,6 @@ def _require_tz_aware(value: datetime) -> datetime:
 
     Returns:
         The same datetime, unmodified, when it is UTC-aware.
-
-    Raises:
-        CoreValidationError: When ``value`` is naive or not in UTC.
     """
     return _validate_utc_aware(value)
 

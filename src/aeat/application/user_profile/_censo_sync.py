@@ -2,10 +2,9 @@
 
 `CensoSyncService` exposes the four-verb surface the CLI mounts under
 ``aeat config profile census {refresh, show, compare, apply}``. AEAT is
-the binding legal source of truth per the 2026-05-16 amendment to the
-modelo-036-037-foundation ADR; this service is the only path that
-captures census facts into the secure store and stamps them onto the
-operator's profile.
+the binding legal source of truth for census data; this service is the
+only path that captures census facts into the secure store and stamps
+them onto the operator's profile.
 
 The service composes:
 
@@ -52,6 +51,8 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 CENSUS_SOURCE_TAG: Final = "aeat_census_read"
 """``UserProfileFact.source`` value stamped on every census-derived fact."""
+
+_HOME_OFFICE_DEDUCTION_YEAR: Final[int] = 2025
 
 class CensoComparisonStatus(StrEnum):
     """Per-field comparison outcome between snapshot and profile.
@@ -161,7 +162,6 @@ class CensoSyncService:
         operator's NIF, so the caller should re-run after enrolment
         (or confirm the certificate is registered against the NIF).
         """
-
         facts = dict(fact_source())
         if not facts:
             raise CensoNotAvailableError(
@@ -187,13 +187,17 @@ class CensoSyncService:
         into a :class:`CensoFactSet`, projects it into the dotted
         snapshot mapping, and captures via :meth:`refresh_census`.
 
-        Raises:
-            :exc:`CensoNotAvailableError`: when AEAT publishes no
-                census for the operator's NIF (empty CensoFactSet).
-            Any auth-layer or sede-layer error: propagated for the CLI
-                handler to surface.
-        """
+        Args:
+            profile_id: The profile id the captured census snapshot is
+                scoped to.
 
+        Returns:
+            The persisted :class:`CensoSnapshot` for the profile.
+
+        Raises:
+            CensoNotAvailableError: when AEAT publishes no census for
+                the operator's NIF (empty CensoFactSet).
+        """
         from ...adapters.outbound.aeat.sede._censo_live import (
             G313_LAUNCHER_URL,
             census_fact_set_to_mapping,
@@ -230,7 +234,6 @@ class CensoSyncService:
         snapshot_id: str | None = None,
     ) -> CensoSnapshot:
         """Return one snapshot — the latest ACTIVE by default."""
-
         if snapshot_id is not None:
             return self._snapshots.resolve_snapshot(snapshot_id)
         active = self._snapshots.latest_active(profile_id=profile_id)
@@ -253,7 +256,6 @@ class CensoSyncService:
         census-tracked path, classified into matches / diverges /
         profile_only / census_only.
         """
-
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         profile = self._load_profile_or_empty(profile_id)
         profile_facts = _profile_facts_by_path(profile)
@@ -286,7 +288,6 @@ class CensoSyncService:
         Raises :exc:`CensoApplyConflictError` when the profile is
         absent — there is nothing to stamp facts onto.
         """
-
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         if not self._profiles.exists(profile_id):
             raise CensoApplyConflictError(
@@ -326,16 +327,15 @@ class CensoSyncService:
     def _seed_home_office_usage_ratios_from_snapshot(
         self, snapshot: CensoSnapshot,
     ) -> tuple[str, ...]:
-        """Compute HOME_OFFICE per-category ratios from the snapshot's
-        vivienda_office facts and persist them into the usage-ratios
-        store. Returns the canonical category-id list that landed.
+        """Compute HOME_OFFICE per-category ratios from the snapshot's vivienda_office facts and persist them.
+
+        Returns the canonical category-id list that landed.
 
         Idempotent: if office_m2 / total_m2 are absent or the derived
         ratio matches what is already persisted, nothing is written and
         the empty tuple is returned. Operator-set overrides on
         non-HOME_OFFICE categories are preserved.
         """
-
         from ...domain.usage_ratios import (
             UsageRatioProfile,
             derive_home_office_ratios_from_census,
@@ -355,7 +355,7 @@ class CensoSyncService:
         if total <= Decimal("0") or office < Decimal("0") or office > total:
             return ()
         raw_ratio = office / total
-        derived = derive_home_office_ratios_from_census(raw_ratio, year=2025)
+        derived = derive_home_office_ratios_from_census(raw_ratio, year=_HOME_OFFICE_DEDUCTION_YEAR)
         current = load_usage_ratios(bucket_id=self._bucket_id)
         seeded: list[str] = []
         merged_ratios = dict(current.ratios)
@@ -385,7 +385,6 @@ class CensoSyncService:
         either ``vivienda_office.total_m2`` / ``vivienda_office.office_m2``
         is absent / non-decimal / zero.
         """
-
         snapshot = self._snapshots.latest_active(profile_id=profile_id)
         if snapshot is None:
             return None
@@ -412,7 +411,6 @@ def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:
     string-only (see :class:`aeat.application.live._censo`); the
     profile's typed values are coerced via ``str()`` for the diff.
     """
-
     if profile is None:
         return {}
     return {fact.path: _coerce_to_str(fact.value) for fact in profile.facts}

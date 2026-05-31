@@ -51,7 +51,6 @@ _SENTINEL_DATE = date.min
 
 def _shared_schema() -> ProfileSchemaDefinition:
     """Return the canonical schema, loaded once per process."""
-
     global _SHARED_SCHEMA
     if _SHARED_SCHEMA is None:
         _SHARED_SCHEMA = load_user_profile_schema()
@@ -76,7 +75,6 @@ def build_lifecycle_service(
     profile existed — every ``register`` then crashed before its
     first event landed.
     """
-
     from ...domain.buckets import BucketEventHistoryRepository
     from ._repository import _secure_objects_for_bucket
 
@@ -103,7 +101,6 @@ def _write_active_profile_pointer(bucket_id: str) -> None:
     process invocation resolves the active profile from the pointer
     before any encrypted state row needs to load.
     """
-
     from ...core.config import load_settings
 
     settings = load_settings()
@@ -116,7 +113,6 @@ def _write_active_profile_pointer(bucket_id: str) -> None:
 @contextmanager
 def profile_create_storage_span(profile_id: str):
     """Open the first-profile storage span for a bucket being created."""
-
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ...adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
     from ...core.config import override_settings
@@ -151,7 +147,6 @@ def profile_create_storage_span(profile_id: str):
 @contextmanager
 def profile_storage_session(profile_id: str):
     """Open a storage session scoped to ``profile_id`` for application-owned writes."""
-
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ...core.config import override_settings
 
@@ -169,7 +164,6 @@ def _clear_active_profile_pointer() -> None:
     the next CLI invocation reports no active profile rather than
     pointing at a tombstoned record.
     """
-
     from ...core._bucket_pointer_io import pointer_path
     from ...core.config import load_settings
 
@@ -225,7 +219,6 @@ def register_active_profile(
     ``try``/``except`` around the span cover the steps the repository's
     own rollback cannot see (engine open, master-key activation).
     """
-
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.create(
         label=display_name,
@@ -248,7 +241,6 @@ def register_active_profile(
 
 def _append_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
     """Append a PROFILE_ACTIVATED event to the active bucket-event catalogue."""
-
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -295,7 +287,6 @@ def _append_profile_activated_event(*, profile_id: str, active_profile: str | No
 
 def select_profile_with_lifecycle_span(profile_id: str) -> None:
     """Select ``profile_id`` inside an application-owned bucket session."""
-
     from ..workflow._models import resolve_active_bucket_id
     from ..workflow._persistence import workflow_state_repository
 
@@ -306,7 +297,6 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
 
 def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     """Tombstone ``profile_id`` inside an application-owned bucket session."""
-
     with profile_storage_session(profile_id):
         aggregate = ProfileRepository().delete(profile_id)
     return aggregate.record
@@ -314,7 +304,6 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
 
 def logout_active_profile() -> str | None:
     """Clear the active profile pointer and return the profile that was logged out."""
-
     from ..workflow._models import resolve_active_bucket_id
 
     before = resolve_active_bucket_id()
@@ -335,7 +324,6 @@ def capture_active_profile_pointer() -> str | None:
     master-key activation) would otherwise strand the pointer at a
     profile whose record was never persisted.
     """
-
     from ...core._bucket_pointer_io import pointer_path
 
     target = pointer_path(load_settings().aeat_local_storage_root)
@@ -353,7 +341,6 @@ def restore_active_profile_pointer(prior_text: str | None) -> None:
     captured bytes are written back, so a failed create leaves the
     pointer exactly as it was found.
     """
-
     from ...core._bucket_pointer_io import pointer_path
 
     target = pointer_path(load_settings().aeat_local_storage_root)
@@ -376,7 +363,6 @@ def _refuse_duplicate_label(
     profile data into the existing bucket, so the create is refused and
     the operator is routed to ``switch`` or ``delete``.
     """
-
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
     if read_profile_bucket(display_name) is None:
@@ -394,7 +380,6 @@ def _require_registered_label(display_name: str) -> None:
     re-runs the wizard against an *existing* profile, so an unknown
     label is an operator error, not an implicit create.
     """
-
     from ..workflow._profile_bucket_scan import read_profile_bucket
 
     if read_profile_bucket(display_name) is None:
@@ -421,7 +406,6 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     this call best-effort, since a residual directory there must not
     mask the original registration failure.
     """
-
     import gc
     import shutil
 
@@ -463,7 +447,6 @@ def select_profile(
     profile load + integrity check + active-profile pointer write live
     solely in :meth:`ProfileRepository.select`.
     """
-
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.select(profile_id)  # raises ProfileNotFoundError if missing
     updated = state.model_copy(update={"updated_at": utc_now()})
@@ -478,7 +461,6 @@ def set_active_field(
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
     """Upsert one fact on the active profile and append a WorkflowEvent."""
-
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.edit_field(
@@ -503,7 +485,6 @@ def set_active_fields(
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
     """Upsert several facts on the active profile in sequence."""
-
     updated = state
     for fact in facts:
         updated = set_active_field(updated, fact, secure_objects=secure_objects, schema=schema)
@@ -527,7 +508,6 @@ def remove_active_profile(
     cross-store tombstone (encrypted-record tombstone + active-profile
     pointer clear) lives solely in :meth:`ProfileRepository.delete`.
     """
-
     profile_id = _require_active(state)
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     repository.delete(profile_id)
@@ -542,7 +522,6 @@ def read_active_profile(
     schema: ProfileSchemaDefinition | None = None,
 ) -> UserProfileRecord | None:
     """Return the active :class:`UserProfileRecord`, or ``None`` when none is selected."""
-
     from ..workflow._models import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
@@ -563,7 +542,6 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
     the same path (effective-dated windows) resolve to the
     chronologically last :attr:`UserProfileFact.valid_from`.
     """
-
     if record is None:
         return None
     matches = [fact for fact in record.facts if fact.path == path and fact.value is not None]
@@ -579,7 +557,6 @@ def _require_active(state: WorkflowState) -> str:
     Reads through the precedence chain (Settings > pointer file >
     `state.active_profile` while the field migration is in flight).
     """
-
     from ..workflow._models import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
@@ -609,7 +586,6 @@ def rename_profile(
     record AND manifest — lives solely in :meth:`ProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
     """
-
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     aggregate = repository.rename(profile_id, new_label=new_label)
     return aggregate.record

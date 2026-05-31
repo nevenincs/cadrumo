@@ -136,10 +136,7 @@ def _gather_observations(
     repository: CalculationObservationRepository,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
 ) -> tuple[_GatheredObservation, ...]:
-    """Walk every previous_filing binding in the revision and pull
-    matching observations from the local store.
-    """
-
+    """Walk every previous_filing binding in the revision and pull matching observations from the local store."""
     needed: dict[tuple[str, int, str], _GatheredObservation] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
@@ -167,7 +164,6 @@ def _observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-
     snapshot = resources().modelos.authority.snapshot(
         "303",
         filing_year=state.filing_year,
@@ -262,10 +258,9 @@ def resolve_bindings_from_local_store(
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
     captured_at: datetime | None = None,
 ) -> BindingPrefillReport:
-    """Resolve every `previous_filing` binding the revision declares
-    against observations in the local store.
+    """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
-    Returns a `BindingPrefillReport` carrying the resolved
+    Returns a ``BindingPrefillReport`` carrying the resolved
     `binding_values` mapping (suitable for passing through
     `calculate_registry_snapshot`'s `binding_values=` argument) plus
     a tuple of `PrefilledBinding` records with provenance per entry.
@@ -275,7 +270,6 @@ def resolve_bindings_from_local_store(
     enforcement (refusing the export when prior filings are missing)
     is the caller's choice via the prefill report's coverage.
     """
-
     repo = repository if repository is not None else CalculationObservationRepository()
     iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
     when = captured_at if captured_at is not None else datetime.now(UTC)
@@ -343,7 +337,6 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     reconciliation; they must not use it directly as the effective value while
     fresh AEAT wallet evidence exists.
     """
-
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
         from ..modelo._actions import ModeloApplicabilityFilterError
 

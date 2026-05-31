@@ -52,7 +52,6 @@ if TYPE_CHECKING:
 
 def __getattr__(name: str) -> tuple[ProfileKey, ...]:
     """Lazily resolve ``PROFILE_KEYS`` so the wizard catalogue can import first."""
-
     if name == "PROFILE_KEYS":
         from ._keys import PROFILE_KEYS
 
@@ -138,7 +137,6 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
 def parse_tax_region(raw: str) -> CCAA:
     """Parse a CLI/user tax-region token into the closed ``CCAA`` enum."""
-
     normalized = _normalize_region_token(raw)
     if normalized in _FORAL_ALIASES:
         raise ForalRegimeError(raw)

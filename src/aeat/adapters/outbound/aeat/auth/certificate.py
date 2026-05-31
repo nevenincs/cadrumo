@@ -31,7 +31,9 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
+from pydantic import BaseModel, Field, PrivateAttr, SecretStr
+
+from aeat.core._models import STRICT_FROZEN_CONFIG
 
 from .....core.access_gate import AeatLiveReadNotEnabledError
 from .....core.config import CertificateBackend
@@ -148,7 +150,7 @@ class CertificateBundle(BaseModel):
         backend: Which backend should consume this bundle.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     path: Path
     password: SecretStr
@@ -178,7 +180,7 @@ class LoadedCertificate(BaseModel):
         backend: Backend this cert should be handed to.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     subject: str
     issuer: str
@@ -200,11 +202,15 @@ class LoadedCertificate(BaseModel):
         Args:
             now: Timezone-aware reference time. Defaults to
                 :func:`datetime.now` in UTC.
+
+        Returns:
+            True when the certificate has expired relative to ``now``.
         """
         reference = now if now is not None else datetime.now(UTC)
         return reference > self.not_after
 
     def __repr__(self) -> str:  # pragma: no cover - trivial
+        """Return a developer-readable string showing subject, issuer, thumbprint, and backend."""
         return (
             f"LoadedCertificate(subject={self.subject!r}, "
             f"issuer={self.issuer!r}, "
@@ -239,7 +245,7 @@ class CertificateHealth(BaseModel):
         evaluated_at: Timezone-aware reference timestamp.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     subject: str
     issuer: str
@@ -268,7 +274,7 @@ class HandshakeResult(BaseModel):
             ``success=False``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     success: bool
     status_code: int
@@ -507,8 +513,10 @@ def health(
         A frozen :class:`CertificateHealth` record.
 
     Raises:
-        CertificatePasswordError: Empty or wrong passphrase.
-        CertificateLoadError: PKCS#12 bytes cannot be parsed.
+        CertificateExpiredError: When the certificate has expired and the raw bytes
+            cannot be re-decoded for the health report.
+        CertificateLoadError: When the PKCS#12 bytes cannot be re-decoded for an
+            expired-cert health report.
     """
     bundle = CertificateBundle(
         path=path,
@@ -577,7 +585,7 @@ def _normalise_candidate(candidate: str) -> str:
 
 
 def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
-    """Return every attribute value in ``subject`` matching ``oid``.
+    r"""Return every attribute value in ``subject`` matching ``oid``.
 
     Parses the subject via
     :meth:`cryptography.x509.Name.from_rfc4514_string`, which handles
@@ -594,7 +602,7 @@ def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
 
 
 def extract_nif_from_subject(cert: LoadedCertificate) -> str:
-    """Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
+    r"""Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
 
     FNMT *persona física* certificates carry the subject's NIF or
     NIE in the ``serialNumber`` RDN (OID ``2.5.4.5``), optionally
@@ -688,11 +696,6 @@ def preload_into_browser_context(
         cert: The :class:`LoadedCertificate` to verify against ``context``.
         context: A Playwright ``BrowserContext`` duck-typed via
             :class:`_BrowserContextLike`.
-
-    Raises:
-        CertificateError: When the selected backend rejects the context
-            (for example, when the Playwright backend is asked to
-            retrofit a cert after construction, which is not supported).
     """
     backend = _select_backend(cert.backend)
     backend.preload(cert, context)

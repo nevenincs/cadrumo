@@ -51,7 +51,6 @@ _PROFILE_LIFECYCLE_ACTOR = "aeat.application.user_profile"
 
 def _paths_payload(facts: tuple[UserProfileFact, ...]) -> dict[str, str]:
     """Return bounded path summary payload for a bucket event."""
-
     paths = sorted({fact.path for fact in facts})
     encoded = "\n".join(paths).encode("utf-8")
     return {"path_count": str(len(paths)), "paths_sha256": hashlib.sha256(encoded).hexdigest()}
@@ -75,7 +74,6 @@ class ProfileLifecycleService:
 
     def register(self, command: RegisterProfileCommand) -> ProfileLifecycleResult:
         """Register a new active profile aggregate."""
-
         if self._repository.exists(command.profile_id):
             raise ProfileAlreadyExistsError(
                 f"profile {command.profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
@@ -109,12 +107,10 @@ class ProfileLifecycleService:
 
     def read(self, profile_id: str) -> UserProfileRecord:
         """Return the live profile aggregate or raise :class:`ProfileNotFoundError`."""
-
         return self._repository.load(profile_id)
 
     def list_profiles(self) -> ProfileListResult:
         """List every profile currently visible in the active bucket."""
-
         listings: list[ProfileListing] = []
         for record in self._iter_profiles():
             listings.append(
@@ -133,7 +129,6 @@ class ProfileLifecycleService:
 
     def edit_field(self, command: EditProfileFieldCommand) -> ProfileLifecycleResult:
         """Upsert one effective-dated fact into a profile aggregate."""
-
         record = self._repository.load(command.profile_id)
         new_fact = UserProfileFact(
             path=command.path,
@@ -158,7 +153,6 @@ class ProfileLifecycleService:
 
     def edit_section(self, command: EditProfileSectionCommand) -> ProfileLifecycleResult:
         """Replace every fact in one schema section with the supplied facts."""
-
         record = self._repository.load(command.profile_id)
         retained = tuple(fact for fact in record.facts if not fact.path.startswith(f"{command.section_key}."))
         merged = self._merge_facts(retained, command.facts)
@@ -174,7 +168,6 @@ class ProfileLifecycleService:
 
     def remove(self, command: RemoveProfileCommand) -> ProfileLifecycleResult:
         """Tombstone the live root. Immutable filing snapshots are retained."""
-
         record = self._repository.load(command.profile_id)
         tombstoned = record.tombstone()
         self._repository.save(tombstoned)
@@ -200,7 +193,6 @@ class ProfileLifecycleService:
         held in the plaintext bucket manifest; the service contract is
         record-only.
         """
-
         source = self._repository.load(command.profile_id)
         if source.status is not UserProfileStatus.ACTIVE:
             raise ProfileNotFoundError(
@@ -226,7 +218,6 @@ class ProfileLifecycleService:
 
     def duplicate(self, command: DuplicateProfileCommand) -> ProfileLifecycleResult:
         """Copy an existing live profile under a new id and display name."""
-
         if self._repository.exists(command.target_profile_id):
             raise ProfileAlreadyExistsError(
                 f"profile {command.target_profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
@@ -327,7 +318,6 @@ class ProfileLifecycleService:
         service consumes a public surface instead of reaching for the
         repository's private secure-object reference.
         """
-
         return self._repository.iter_records()
 
 

@@ -297,6 +297,10 @@ class WorkflowEngine:
 
         Returns:
             A fully populated :class:`WorkflowResult`.
+
+        Raises:
+            WorkflowInputMismatchError: When ``resumed_from`` is supplied
+                but is not a valid 16-character lowercase hex run id.
         """
         if resumed_from is not None:
             stripped = resumed_from.strip()
@@ -1256,8 +1260,7 @@ class WorkflowEngine:
         steps: list[WorkflowStep],
     ) -> NoReturn:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
-
-        # CAST-RATIONALE-WORKFLOW-ENGINE-SITE-HEALTH-STATUS:
+        # CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS:
         # ``SiteHealthError`` types its payload through the structural
         # ``SiteHealthStatusLike`` protocol so ``core.errors`` need not
         # import the browser adapter. Every site-health failure raised

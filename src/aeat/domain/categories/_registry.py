@@ -11,7 +11,9 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
+from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
+from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, IvaDeductibilityHint
@@ -29,7 +31,6 @@ from ._spending_category import SpendingCategory
 
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
     """Load one year-keyed spending-category profile TOML file."""
-
     resolved = path.resolve()
     try:
         stat = resolved.stat()
@@ -85,17 +86,11 @@ def load_category_profile_registry(
     override is supplied; the ``bundled_path`` boundary is the
     single resolution surface.
     """
-
     target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
-    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
     return _load_category_profile_registry_cached(str(resolved), fingerprint)
-
-
-def _file_fingerprint(path: Path) -> tuple[str, int, int]:
-    stat = path.stat()
-    return (path.name, stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=8)
@@ -119,7 +114,6 @@ def _load_category_profile_registry_cached(
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
     """Return the exact category profile registry for ``year``."""
-
     profiles = load_category_profile_registry().get(year)
     if profiles is None:
         raise CategoryValidationError(f"no category profile registry registered for year={year}")
@@ -221,7 +215,10 @@ def _decimal_or_none(value: object) -> Decimal | None:
         return value
     if isinstance(value, bool | float):
         raise CategoryValidationError("decimal profile values must not be booleans or floats")
-    return Decimal(str(value))
+    coerced = coerce_decimal(value)
+    if coerced is None:
+        raise CategoryValidationError(f"decimal profile value {value!r} could not be parsed")
+    return coerced
 
 
 def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:

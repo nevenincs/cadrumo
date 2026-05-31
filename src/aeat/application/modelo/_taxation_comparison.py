@@ -129,7 +129,6 @@ def compare_taxation_modes(
     declare a ``declaration_type`` binding or lacks the cuota casillas
     required to build the differential.
     """
-
     decl_binding = _declaration_type_binding_id(snapshot)
     if decl_binding is None:
         raise TaxationComparisonError(

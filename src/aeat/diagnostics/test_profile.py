@@ -20,12 +20,12 @@ from aeat.core.i18n import tr
 from aeat.diagnostics.__main__ import app
 from aeat.tests.secure_sql import isolated_profile_storage_root
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
 
 def _unset_placeholder() -> str:
     """Resolve the locale-authoritative unset placeholder at call time."""
     return tr("cli.diagnostics.profile.unset_placeholder")
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture

@@ -1,5 +1,4 @@
-"""Closed-form translator from registry `FormulaExpression` ASTs to
-Google Sheets A1 formula strings.
+"""Closed-form translator from registry ``FormulaExpression`` ASTs to Google Sheets A1 formula strings.
 
 The translator is the parity contract: a registry op evaluates to the
 same per-casilla rounded Decimal locally and in Sheets if and only if
@@ -81,7 +80,6 @@ def translate_formula(
     yet wrapped in ROUND(). It is the raw arithmetic body the engine
     will rounded-wrap based on the target casilla's rounding rule.
     """
-
     return _translate(expression, layout=layout)
 
 
@@ -214,7 +212,6 @@ def _bracket_lookup_formula(*, base_a1: str, parameter: ParameterId, layout: She
     layout planner pre-sorts the emitted bracket rows and filters them
     by snapshot date so the MATCH contract holds.
     """
-
     ranges = layout.bracket_ranges.get(parameter)
     if ranges is None:
         raise TranslationError(
@@ -263,7 +260,6 @@ def _translate_lookup_bracket_by_ccaa(
     `SWITCH` returns `#N/A` for an unmapped CCAA — that mirrors the
     runtime's `RegistryValidationError` for missing dispatch keys.
     """
-
     if len(expression.args) != 3:
         raise TranslationError(
             "lookup_bracket_by_ccaa expects 3 args (base, ccaa_binding, dispatch_table)",
@@ -310,7 +306,6 @@ def _translate_lookup_parameter_by_entity_type(
     returns `#N/A` for an unmapped enum key — matching the runtime's
     `RegistryValidationError` semantics.
     """
-
     if len(expression.args) != 3:
         raise TranslationError(
             "lookup_parameter_by_entity_type expects 3 args (placeholder, binding, dispatch_table)",

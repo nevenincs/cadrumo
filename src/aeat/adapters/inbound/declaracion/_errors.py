@@ -48,6 +48,15 @@ class DeclaracionParseError(PdfModeloImportError):
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
     ) -> None:
+        """Initialise with an optional human-readable message and structured coverage fields.
+
+        Args:
+            message: Optional human-readable description of the failure.
+            missing: Casilla IDs that produced no hit in the PDF.
+            malformed: Casilla IDs whose captured value could not be parsed.
+            ambiguous: Casilla IDs that matched more than one region.
+            coverage: Fraction of target casillas successfully extracted.
+        """
         super().__init__(message)
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed

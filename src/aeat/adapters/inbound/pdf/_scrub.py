@@ -39,8 +39,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from aeat.core._models import STRICT_FROZEN_CONFIG
 from ._errors import PdfModeloImportError
 from ._utils import sha256_file
 
@@ -90,7 +91,7 @@ class ScrubError(PdfModeloImportError):
 class ScrubSidecar(BaseModel):
     """Provenance + consent record for one scrubbed L2 fixture file."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     original_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     scrubbed_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")

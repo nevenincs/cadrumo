@@ -389,6 +389,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
 
     @property
     def filed_history_succeeded(self) -> bool:
+        """Return ``True`` when the filed-history surface outcome is ``SUCCEEDED``."""
         return any(
             outcome.surface is LiveIvaReadSurface.FILED_HISTORY and outcome.status is LiveIvaReadStatus.SUCCEEDED
             for outcome in self.outcomes
@@ -396,6 +397,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
 
     @property
     def wallet_succeeded(self) -> bool:
+        """Return ``True`` when the wallet-cartera surface outcome is ``SUCCEEDED``."""
         return any(
             outcome.surface is LiveIvaReadSurface.WALLET_CARTERA and outcome.status is LiveIvaReadStatus.SUCCEEDED
             for outcome in self.outcomes
@@ -455,9 +457,11 @@ class IvaRemoteStateAcquisitionManifestRepository(
     payload_type: ClassVar[type[IvaRemoteStateAcquisitionManifest]] = IvaRemoteStateAcquisitionManifest
 
     def __init__(self, *, objects: _SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, resolving the active bucket's secure-object store when no override is given."""
         super().__init__(objects=objects or _secure_object_repository_for_active_bucket())
 
     def extract_identifier(self, payload: IvaRemoteStateAcquisitionManifest) -> str:
+        """Return the acquisition's stable string identifier."""
         return payload.acquisition_id
 
 
@@ -497,7 +501,6 @@ def select_declarations_for_capture(
     limit: int | None = None,
 ) -> tuple[_Declaracion, ...]:
     """Select filed-declaration rows for capture from one register query."""
-
     selected = declarations
     if period is not None:
         selected = tuple(row for row in selected if row.period.upper() == period.upper())
@@ -516,7 +519,6 @@ def select_declarations_for_capture(
 
 def filed_data_listing_row(declaration: _Declaracion) -> FiledDataListingRow:
     """Map one AEAT declaration-register row into the application report shape."""
-
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,
@@ -539,7 +541,6 @@ async def list_filed_data(
     year_to: int,
 ) -> FiledDataListingReport:
     """List filed declaration rows through the active AEAT session without downloading artefacts."""
-
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -581,7 +582,6 @@ async def capture_filed_data(
     limit: int | None = None,
 ) -> FiledDataCaptureReport:
     """Capture filed-declaration artefacts through the active AEAT session."""
-
     session, _settings = await _active_verified_session()
     store = _FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
@@ -647,7 +647,6 @@ async def capture_source_filed_data(
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
     """Capture filed observations required by a target filing's registry dependencies."""
-
     from ...core.resources import resources as _resources
 
     session, settings = await _active_verified_session()
@@ -737,7 +736,6 @@ def persist_filed_calculation_observation(
     repository: _CalculationObservationRepository | None = None,
 ) -> str:
     """Promote one AEAT filed-declaration observation into calculation history."""
-
     registry_observation = _registry_observation_from_filed_declaration(observation)
     registry_observation = _with_derived_303_compensation_available(registry_observation)
     repo = repository if repository is not None else _CalculationObservationRepository()
@@ -760,7 +758,6 @@ def list_iva_compensation_history(
     as_of_year: int | None = None,
 ) -> IvaCompensationHistoryReport:
     """List profile-local IVA compensation history derived from filed Modelo 303 observations."""
-
     repo = repository if repository is not None else _IvaCompensationHistoryRepository()
     decision_repo = decision_repository if decision_repository is not None else _IvaWalletDecisionRepository()
     states = repo.list_periods()
@@ -788,7 +785,6 @@ def load_iva_remote_state(
     decision_repository: _IvaWalletDecisionRepository | None = None,
 ) -> IvaRemoteStateStoredEvidenceReport:
     """Reload stored remote IVA evidence from the active profile without contacting AEAT."""
-
     history = list_iva_compensation_history(
         repository=repository,
         decision_repository=decision_repository,
@@ -817,7 +813,6 @@ async def capture_iva_compensation_history(
     output_root: Path,
 ) -> IvaCompensationHistoryCaptureReport:
     """Capture filed Modelo 303s across years and verify secure history reload."""
-
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -843,7 +838,6 @@ async def _capture_iva_compensation_history_with_session(
     output_root: Path,
 ) -> IvaCompensationHistoryCaptureReport:
     """Capture filed Modelo 303s using an already-acquired AEAT session."""
-
     store = _FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
@@ -1038,7 +1032,6 @@ def _persist_latest_filed_calculation_observations(
     observations: tuple[_FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist only the latest captured observation per modelo/year/period."""
-
     latest: dict[tuple[str, int, str], _FiledDeclaracionObservation] = {}
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
@@ -1059,7 +1052,6 @@ def _persist_iva_compensation_history_observations_strict(
     observations: tuple[_FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
-
     latest: dict[tuple[int, str], _FiledDeclaracionObservation] = {}
     for observation in observations:
         if observation.modelo != "303":
@@ -1096,7 +1088,6 @@ def _persist_iva_compensation_history_observations_strict(
 
 def _latest_declarations_by_period(declarations: tuple[_Declaracion, ...]) -> tuple[_Declaracion, ...]:
     """Return one latest accepted declaration per period from register rows."""
-
     latest: dict[str, _Declaracion] = {}
     for declaration in declarations:
         current = latest.get(declaration.period)
@@ -1132,7 +1123,6 @@ def _with_derived_303_compensation_available(
     observation: _RegistryModeloObservation,
 ) -> _RegistryModeloObservation:
     """Add the internal Modelo 303 carry-forward value from official filed casillas."""
-
     if observation.modelo != "303":
         return observation
     target_id = "iva.compensacion-disponible-fin-periodo"
@@ -1189,7 +1179,6 @@ def persist_and_reconcile_iva_compensation_wallet(
     actually survived the encrypted storage boundary, not only the in-memory
     result returned by the browser driver.
     """
-
     store = _FiledDeclaracionObservationStore(output_root)
     path = store.persist_iva_wallet_observation(observation)
     reloaded = store.load_iva_wallet_observation(path)
@@ -1283,6 +1272,10 @@ async def capture_notifications(*, bucket_id: str):
        repository so this function stays unit-testable against
        a stubbed snapshot.
 
+    Args:
+        bucket_id: The active profile bucket id the notification snapshot
+            is scoped to.
+
     Returns:
         A tuple of (snapshot_id, fetched_row_count, persisted_at).
     """
@@ -1309,7 +1302,6 @@ async def capture_iva_compensation_wallet(
     AEAT session, including Cl@ve Móvil approval when the auth provider
     requires it.
     """
-
     session, settings = await _active_verified_session(
         operation="live-iva-wallet-read",
         target_url=_PRE303_PRESENTATION_SERVICE_URL,
@@ -1334,7 +1326,6 @@ async def _capture_iva_compensation_wallet_with_session(
     output_root: Path | None = None,
 ) -> IvaWalletCaptureReport:
     """Capture and persist the wallet with an already-acquired AEAT session."""
-
     observation: _IvaCompensationWalletObservation = await _fetch_iva_compensation_wallet(
         session,
         target_year=target_year,
@@ -1356,7 +1347,6 @@ async def capture_iva_remote_state(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation."""
-
     active_bucket_id = _resolve_active_bucket_id()
     storage_span = _profile_storage_session(active_bucket_id) if active_bucket_id else nullcontext()
     with storage_span:
@@ -1380,7 +1370,6 @@ async def _capture_iva_remote_state_for_active_storage(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Run the combined read while the profile bucket session is active."""
-
     async with _suppress_live_iva_playwright_cancellation_noise():
         if year_from > year_to:
             raise LiveApplicationInputError(
@@ -1475,7 +1464,6 @@ async def _await_live_iva_surface[T](
     timeout_ms: int,
 ) -> T:
     """Bound one combined live IVA read surface with a typed timeout."""
-
     try:
         return await asyncio.wait_for(awaitable, timeout=timeout_ms / 1000)
     except TimeoutError as exc:
@@ -1489,7 +1477,6 @@ async def _await_live_iva_surface[T](
 @asynccontextmanager
 async def _suppress_live_iva_playwright_cancellation_noise():
     """Suppress Playwright TargetClosed loop noise caused by bounded live-surface cancellation."""
-
     loop = asyncio.get_running_loop()
     previous_handler = loop.get_exception_handler()
 
@@ -1535,7 +1522,6 @@ def build_iva_remote_state_acquisition_report(
     wallet_error: BaseException | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Build the redacted combined acquisition report from surface results."""
-
     auth = _auth_outcome(auth_result=auth_result, error=auth_error)
     outcomes = (
         _surface_outcome(
@@ -1572,7 +1558,6 @@ def persist_iva_remote_state_acquisition_report(
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest:
     """Persist a redacted encrypted manifest for a live IVA acquisition report."""
-
     resolved_captured_at = captured_at if captured_at is not None else datetime.now(UTC)
     manifest = _iva_remote_state_acquisition_manifest(report, captured_at=resolved_captured_at)
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
@@ -1586,7 +1571,6 @@ def load_iva_remote_state_acquisition_manifest(
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest | None:
     """Load one encrypted live IVA acquisition manifest by id."""
-
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return repo.load(acquisition_id)
 
@@ -1596,7 +1580,6 @@ def list_iva_remote_state_acquisition_manifests(
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> tuple[IvaRemoteStateAcquisitionManifest, ...]:
     """List encrypted live IVA acquisition manifests for the active profile."""
-
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return tuple(sorted(repo.iter_records(), key=lambda item: item.captured_at, reverse=True))
 

@@ -49,9 +49,8 @@ _LEAK_MARKERS: tuple[str, ...] = (
 def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
     """A pristine storage root: no pointer, no database, no buckets.
 
-    Uses ``override_settings`` (ContextVar-backed, live-tests-friendly)
-    instead of monkeypatch.setenv per the project no-monkeypatch mandate
-    in CLAUDE.md (aeat-local-execution + aeat-quality-gates rules).
+    Output-language is pinned to English via ``override_settings`` so
+    locale-resolved CLI output stays deterministic for assertions.
     """
 
     with override_settings(aeat_output_language="en"):

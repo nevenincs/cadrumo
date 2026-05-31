@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from ...domain.filing._protocols import ModeloInputs
-from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus
+from ...domain.filing._schema import ModeloDraft
+from ...domain.submission import ModeloDraftStatus
 from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
@@ -33,7 +34,6 @@ def build_registry_filing_draft(
     filing_year: int = 2026,
 ) -> ModeloDraft:
     """Build a filing draft through the validated registry runtime path."""
-
     runtime_period = _runtime_period(period, filing_year=filing_year)
     snapshot_year, registry_period_token = _snapshot_year_and_token(runtime_period)
     schema_provider = build_runtime_schema_provider(
@@ -87,7 +87,6 @@ def build_registry_filing_draft_from_decimals(
     filing_year: int = 2026,
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime."""
-
     coerced: dict[str, Decimal] = {}
     for casilla_id, raw in casilla_decimals.items():
         coerced[casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)

@@ -38,5 +38,4 @@ type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_
 
 def is_registry_id(value: str) -> bool:
     """Return whether ``value`` is a stable registry id."""
-
     return re.fullmatch(_REF_RE, value) is not None

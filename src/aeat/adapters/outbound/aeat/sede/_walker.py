@@ -23,7 +23,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
@@ -34,6 +34,7 @@ from ._browser_constants import (
     PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
+from ._declarations import DEFAULT_NAVIGATION_TIMEOUT_MS
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -49,11 +50,18 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
-_DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
-_EXPAND_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
-_NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
+
+DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
+
+
+def _get_expand_timeout_ms() -> int:
+    return load_settings().aeat_browser_form_interaction_timeout_ms
+
+
+def _get_navigation_timeout_ms() -> int:
+    return load_settings().aeat_browser_navigation_timeout_ms
 
 
 @asynccontextmanager
@@ -69,11 +77,16 @@ async def _open_browser_page(
     goto, target navigation, request.get, etc.) and the context manager
     cleans up on exit even if the body raises.
 
-    Raises:
-        SedeNavigationError: When the session has no persisted auth
-            state (the operator has not configured authentication under ``aeat config auth``).
-    """
+    Args:
+        session: Authenticated AEAT session whose storage-state path carries valid cookies.
+        settings: Settings instance used for browser factory configuration.
 
+    Yields:
+        A ``(context, page)`` tuple ready for navigation.
+
+    Raises:
+        SedeNavigationError: When the session has no persisted auth state.
+    """
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(
@@ -123,7 +136,6 @@ async def walk_expedientes_tree(
 
     Raises:
         SedeNavigationError: If ``goto`` or a required expansion fails.
-        SedeParseError: If the ResumenVlt page cannot be parsed.
     """
     settings = settings or Settings()
     async with _open_browser_page(session, settings) as (_context, page):
@@ -165,7 +177,6 @@ async def resolve_justificante_ref(
 
     Raises:
         SedeNavigationError: If the detail page cannot be loaded.
-        SedeParseError: If the detail HTML does not expose a CSV link.
     """
     settings = settings or Settings()
     detail_url = str(expediente.detail_url)
@@ -218,7 +229,6 @@ async def capture_justificante(
 
     Raises:
         SedeNavigationError: On goto failures.
-        SedeParseError: On detail-HTML extraction failures.
         JustificanteFetchError: On PDF download failures.
     """
     settings = settings or Settings()
@@ -274,9 +284,17 @@ async def find_expediente(
 ) -> Expediente:
     """Convenience lookup: first expediente matching ``(modelo, ejercicio)``.
 
+    Args:
+        session: Authenticated AEAT session.
+        modelo: Modelo code to filter on (e.g. ``"100"``).
+        ejercicio: Tax year to match.
+        settings: Optional :class:`Settings` override.
+
+    Returns:
+        The first :class:`Expediente` whose ``ejercicio`` matches.
+
     Raises:
-        ExpedienteNotFoundError: If no expediente in the corpus
-            matches the filter.
+        ExpedienteNotFoundError: If no expediente in the corpus matches the filter.
     """
     expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
     for expediente in expedientes:

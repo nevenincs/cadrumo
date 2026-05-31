@@ -93,7 +93,7 @@ class XlsxProvider(FinancialProvider):
             if workbook is not None:
                 try:
                     workbook.close()
-                except Exception as close_exc:
+                except Exception as close_exc:  # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN: openpyxl raises OSError/ValueError/KeyError/IndexError/TypeError; teardown must run unconditionally.
                     _logger.debug(
                         "xlsx provider: workbook.close() after validate_source failed (%s)",
                         close_exc,
@@ -279,7 +279,6 @@ def _best_layout_match_for_worksheet(
     worksheet: Worksheet,
 ) -> tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None:
     """Return the best (score, header_index, row, lookup, layout) the worksheet matches, or ``None``."""
-
     sample_rows = [
         [coerce_cell_text(cell) for cell in row]
         for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)

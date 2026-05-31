@@ -86,6 +86,12 @@ class FilterClause(BaseModel):
 def parse_filter_clause(raw: str) -> FilterClause:
     """Parse one raw ``KEY=VALUE`` string into a :class:`FilterClause`.
 
+    Args:
+        raw: The raw ``KEY=VALUE`` token supplied by the operator.
+
+    Returns:
+        A validated :class:`FilterClause` with the parsed key and value.
+
     Raises:
         FilterParseError: When the token is missing ``=``, has an
             empty key, or has an empty value. The error carries the
@@ -267,6 +273,13 @@ def _enum_value_or_raise[E: StrEnum](
             Used for :class:`aeat.domain.invoices.InvoiceKind`, whose
             members are lowercase (``issued`` / ``received``) so that
             operators may pass either case on the command line.
+
+    Returns:
+        The matching enum member.
+
+    Raises:
+        FilterParseError: When the clause value is not a valid member
+            of ``enum_cls``.
     """
     candidate = clause.value.lower() if case_fold else clause.value
     valid = {member.value for member in enum_cls}

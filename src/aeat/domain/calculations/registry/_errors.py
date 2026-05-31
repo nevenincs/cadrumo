@@ -1,17 +1,14 @@
 """Registry error types for AEAT legal calculation definitions.
 
-Per `2026-05-26-linkage-design-audit-adr` (decision 2:
-``registry-error-typed-context-factories``), this module provides
-classmethod factories on :class:`RegistryValidationError` and
-:class:`RegistrySnapshotError` for each canonical raise scenario.
-The factory pattern pins the context-dict keys downstream consumers
+This module provides classmethod factories on :class:`RegistryValidationError`
+and :class:`RegistrySnapshotError` for each canonical raise scenario. The
+factory pattern pins the context-dict keys downstream consumers
 (``aeat.core.errors._registry`` template renderer, CLI JSON emit via
 ``SchemaEnvelope``, i18n locales referencing keys by name) rely on.
 
-The existing ``raise RegistryValidationError(message, context=...)``
-shape stays valid for one-off scenarios that haven't been promoted to
-canonical factories yet (the 4-key tail per the research note);
-migration is additive and non-breaking.
+The existing ``raise RegistryValidationError(message, context=...)`` shape
+stays valid for one-off scenarios that haven't been promoted to canonical
+factories yet; migration is additive and non-breaking.
 """
 
 from __future__ import annotations
@@ -280,10 +277,10 @@ class RegistrySnapshotError(RegistryError):
 
 
 class CasillaConstraintViolationError(RegistryError):
-    """Raised when a computed casilla value falls outside its declared
-    `casilla.constraints` (sign, min_value, max_value).
+    """Raised when a computed casilla value falls outside its declared constraints.
 
-    The error envelope carries `casilla_id`, the offending `value`, the
-    offended constraint clause, and the casilla's `legal_refs` so the
+    The constraint set is ``casilla.constraints`` (sign, min_value, max_value).
+    The error envelope carries ``casilla_id``, the offending ``value``, the
+    offended constraint clause, and the casilla's ``legal_refs`` so the
     operator sees the BOE permalink that justifies the rule.
     """

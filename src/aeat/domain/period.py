@@ -76,7 +76,6 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
     Raises:
         PeriodValidationError: When ``period`` is none of the accepted shapes.
     """
-
     if match := _QUARTER_PERIOD_RE.fullmatch(period):
         return int(match.group("year")), f"{match.group('quarter')}T"
     if match := _MONTH_PERIOD_RE.fullmatch(period):
@@ -111,7 +110,6 @@ def period_start_date(filing_year: int, registry_period: str) -> date:
     Raises:
         PeriodValidationError: When ``registry_period`` is not a recognised shape.
     """
-
     if registry_period == "1T":
         return date(filing_year, 1, 1)
     if registry_period == "2T":
@@ -153,7 +151,6 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
     Raises:
         PeriodValidationError: When ``registry_period`` is not a recognised shape.
     """
-
     if registry_period == "1T":
         return date(filing_year, 3, 31)
     if registry_period == "2T":

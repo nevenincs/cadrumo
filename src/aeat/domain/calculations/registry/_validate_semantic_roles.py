@@ -44,7 +44,6 @@ def _collect_role_observations(
     modelos: Iterable[ModeloDefinition],
 ) -> Mapping[str, list[_RoleObservation]]:
     """Group every casilla declaring a ``semantic_role`` by that role."""
-
     grouped: dict[str, list[_RoleObservation]] = defaultdict(list)
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -59,7 +58,6 @@ def _collect_role_observations(
 
 def _constraints_signature(constraints: object) -> tuple[object, ...]:
     """Return a hashable signature for compatibility comparison."""
-
     if constraints is None:
         return ()
     fields = (
@@ -80,7 +78,6 @@ def _validate_semantic_role_consistency(
     document order; subsequent divergences are reported as
     validation failures.
     """
-
     failures: list[str] = []
     for role, observations in _collect_role_observations(modelos).items():
         canonical = observations[0]
@@ -116,7 +113,6 @@ def _validate_semantic_role_cardinality(
     If the role later becomes shared, the singleton marker becomes
     stale and validation fails until the marker is removed.
     """
-
     failures: list[str] = []
     for role, observations in _collect_role_observations(modelos).items():
         if len(observations) == 1:
@@ -144,19 +140,16 @@ def _emit_semantic_role_typo_twin_warnings(
     ``taxpayer-nif``); this surface flags them without blocking
     snapshot load.
     """
-
     emit_grouped_semantic_role_typo_twin_warnings(_collect_role_observations(modelos))
 
 
-# Plan C W05 validator hard-flip surface (semantic_role requirement).
-#
-# Each entry is (label_pattern, expected_role). A casilla whose label
-# matches the pattern must declare the expected semantic_role; missing
-# declarations raise RegistryValidationError at snapshot build. The set
-# starts conservative - only patterns where corpus rollout is provably
-# complete should land here. Modellers extending this set must run a
-# discovery audit first to confirm all in-corpus casillas already carry
-# the role.
+# Enforced semantic_role requirements: each entry is (label_pattern,
+# expected_role). A casilla whose label matches the pattern must declare
+# the expected semantic_role; missing declarations raise
+# RegistryValidationError at snapshot build. The set starts conservative
+# — only patterns where corpus rollout is provably complete should land
+# here. Modellers extending this set must run a discovery audit first to
+# confirm all in-corpus casillas already carry the role.
 #
 # Today's enforcement set:
 # - "Ejercicio al que se refiere la declaracion" -> filing_year
@@ -191,7 +184,6 @@ def _validate_required_role_declarations(
     build failure. Start the set narrow and widen as role rollouts
     complete.
     """
-
     failures: list[str] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -230,7 +222,6 @@ def collect_casillas_by_semantic_role(
     consumes the same accessor through
     :func:`_collect_role_observations` internally.
     """
-
     grouped: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
     for modelo in modelos:
         for revision in modelo.revisions.values():

@@ -170,7 +170,6 @@ def merge_source_resolutions(
     resolver_id: str = "source_mesh",
 ) -> CalculationSourceResolution:
     """Merge resolver outputs and reject ambiguous ownership."""
-
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
     relation_values: dict[str, Decimal] = {}
@@ -220,7 +219,6 @@ def collect_unhandled_source_diagnostics(
     manual_sources: frozenset[str] = frozenset({"manual_input"}),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return diagnostics for revision bindings with no enrolled resolver."""
-
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in revision.bindings:
         source = str(binding.source)
@@ -244,7 +242,6 @@ def storage_degradation_resolution(
     error: BaseException,
 ) -> CalculationSourceResolution:
     """Return an empty source resolution carrying secure-storage degradation diagnostics."""
-
     normalized_sources = tuple(sorted({source.strip() for source in source_kinds if source.strip()}))
     _log.debug(
         "source mesh resolver storage degradation resolver_id=%s source_kinds=%s error_type=%s",

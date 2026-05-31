@@ -33,7 +33,6 @@ def render_prompt(definition: PromptDefinition, values: Mapping[str, str]) -> st
         LLMConfigError: When ``values`` does not provide every template
             variable referenced by ``definition.template``.
     """
-
     try:
         return definition.template.format_map(values)
     except KeyError as exc:  # pragma: no cover - defensive error path

@@ -48,8 +48,8 @@ def generate_rule_id(
         A deterministic lower-case kebab-case rule identifier.
 
     Raises:
-        ValueError: If ``ordinal`` is not a positive integer or any of
-            the identifier components is empty after slugging.
+        ManualValidationError: If ``ordinal`` is not a positive integer or
+            any of the identifier components is empty after slugging.
     """
     if ordinal < 1:
         raise ManualValidationError(f"ordinal must be >= 1, got {ordinal}")

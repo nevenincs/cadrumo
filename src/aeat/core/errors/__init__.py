@@ -27,13 +27,19 @@ class SiteHealthEvidenceLike(Protocol):
     """
 
     @property
-    def url(self) -> object: ...
+    def url(self) -> object:
+        """URL that was probed during the health check."""
+        ...
 
     @property
-    def http_status(self) -> object: ...
+    def http_status(self) -> object:
+        """HTTP status code returned by the probed URL."""
+        ...
 
     @property
-    def detected_markers(self) -> Sequence[object]: ...
+    def detected_markers(self) -> Sequence[object]:
+        """Sequence of markers detected in the response that triggered classification."""
+        ...
 
 
 @runtime_checkable
@@ -52,16 +58,24 @@ class SiteHealthStatusLike(Protocol):
     """
 
     @property
-    def state(self) -> object: ...
+    def state(self) -> object:
+        """Classified site-health state (e.g. mantenimiento, WAF challenge, rate limit)."""
+        ...
 
     @property
-    def evidence(self) -> SiteHealthEvidenceLike: ...
+    def evidence(self) -> SiteHealthEvidenceLike:
+        """Evidence block used to classify the detected state."""
+        ...
 
     @property
-    def observed_at(self) -> datetime: ...
+    def observed_at(self) -> datetime:
+        """Timestamp at which the health check observation was recorded."""
+        ...
 
     @property
-    def retry_after_seconds(self) -> int | None: ...
+    def retry_after_seconds(self) -> int | None:
+        """Suggested retry delay in seconds, or ``None`` when not provided."""
+        ...
 
 
 class AeatError(Exception):
@@ -71,7 +85,6 @@ class AeatError(Exception):
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Bind a registered :class:`ErrorCode` to each declared subclass."""
-
         super().__init_subclass__(**kwargs)
         from ._registry import bind_error_code
 
@@ -94,7 +107,6 @@ class AeatError(Exception):
             suggestion: Optional copy-paste recovery command override.
             translated_message: Optional multilingual message override.
         """
-
         if message is None:
             super().__init__()
         else:
@@ -202,7 +214,6 @@ class SiteHealthError(AeatError):
                 the detected non-OK state. The concrete record is the
                 adapter-layer ``SiteHealthStatus``.
         """
-
         state = status.state
         state_value = getattr(state, "value", state)
         evidence = status.evidence

@@ -53,7 +53,6 @@ class FiledDeclaracionObservationStore:
         body: bytes,
     ) -> FiledDeclaracionArtefact:
         """Persist one captured artefact and return metadata with its storage reference."""
-
         if not artefact.storage_ref and not body:
             raise SedeValidationError("cannot persist an empty filed-declaration artefact")
         if body and len(body) != artefact.byte_count:
@@ -76,7 +75,6 @@ class FiledDeclaracionObservationStore:
 
     def load_artefact(self, storage_ref: str) -> bytes:
         """Return plaintext artefact bytes from an encrypted storage reference."""
-
         digest = _parse_storage_ref(storage_ref)
         with self._crypto_scope():
             record = self._repository.load(
@@ -91,7 +89,6 @@ class FiledDeclaracionObservationStore:
 
     def persist_observation(self, observation: FiledDeclaracionObservation) -> Path:
         """Persist a normalized observation manifest and return its logical object path."""
-
         object_key = self._observation_key(
             observation.modelo,
             observation.ejercicio,
@@ -117,7 +114,6 @@ class FiledDeclaracionObservationStore:
 
     def load_observation(self, path: Path) -> FiledDeclaracionObservation:
         """Load and decrypt a normalized filed-declaration observation."""
-
         object_key = Path(path).name
         with self._crypto_scope():
             record = self._repository.load(
@@ -143,7 +139,6 @@ class FiledDeclaracionObservationStore:
 
     def persist_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> Path:
         """Persist a read-only IVA wallet observation and return its logical path."""
-
         object_key = self._iva_wallet_observation_key(
             observation.taxpayer_nif,
             observation.target_year,
@@ -169,7 +164,6 @@ class FiledDeclaracionObservationStore:
 
     def load_iva_wallet_observation(self, path: Path) -> IvaCompensationWalletObservation:
         """Load and decrypt an IVA wallet observation."""
-
         object_key = Path(path).name
         with self._crypto_scope():
             record = self._repository.load(
@@ -195,7 +189,6 @@ class FiledDeclaracionObservationStore:
 
     def list_iva_wallet_observations(self) -> tuple[IvaCompensationWalletObservation, ...]:
         """Return stored IVA wallet observations from the active encrypted backend."""
-
         observations: list[IvaCompensationWalletObservation] = []
         with self._crypto_scope():
             records = self._repository.list_records(

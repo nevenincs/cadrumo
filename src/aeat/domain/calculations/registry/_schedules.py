@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Final
 
 from ._errors import RegistryValidationError
 from ._schema import ModeloRevision, ModeloScheduleDefinition, ProfilePredicateDefinition
@@ -13,6 +14,9 @@ __all__ = [
     "profile_condition_matches",
 ]
 
+_IVA_REGIME_PATH: Final[str] = "iva.regime"
+_TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
+
 
 def applicable_filing_schedules(
     revision: ModeloRevision,
@@ -21,7 +25,6 @@ def applicable_filing_schedules(
     period: str | None = None,
 ) -> tuple[ModeloScheduleDefinition, ...]:
     """Return filing schedules whose profile predicates match the supplied facts."""
-
     matched: list[ModeloScheduleDefinition] = []
     for schedule in revision.filing_schedules:
         if period is not None and period not in schedule.periods:
@@ -78,10 +81,16 @@ def _mapping_get(m: Mapping, key: str) -> object:
 def _resolve_profile_fact(profile_facts: object, field: str) -> object:
     if isinstance(profile_facts, Mapping) and field in profile_facts:
         return _mapping_get(profile_facts, field)
-    if field == "iva.regime" and hasattr(profile_facts, "iva_regime"):
+    # Schema predicate path "iva.regime" maps to the TaxpayerProfile.iva_regime
+    # attribute.  The dotted path form is what the TOML registry declares; the
+    # attribute name is what the Python dataclass exposes without nesting.
+    if field == _IVA_REGIME_PATH and hasattr(profile_facts, "iva_regime"):
         _attr = "iva_regime"
         return getattr(profile_facts, _attr)
-    if field == "taxpayer.entity_type" and hasattr(profile_facts, "entity_type"):
+    # Schema predicate path "taxpayer.entity_type" maps to
+    # TaxpayerProfile.entity_type.  The "taxpayer." prefix is the namespace used
+    # in the registry TOML; the attribute is a flat field on the profile object.
+    if field == _TAXPAYER_ENTITY_TYPE_PATH and hasattr(profile_facts, "entity_type"):
         return profile_facts.entity_type
     current: object = profile_facts
     for part in field.split("."):

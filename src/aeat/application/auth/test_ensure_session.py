@@ -125,13 +125,10 @@ def _settings(tmp_path: Path) -> Settings:
     """Build a validated Settings instance with the cl@ve-movil identity pinned.
 
     Direct constructor kwargs route the values through the pydantic
-    validator chain; the previous ``model_copy(update=...)`` form
-    bypassed validators (pydantic v2 semantics) and was a hand-rolled
-    state-shape that the project no-monkeypatch / centralized-API
-    mandate (CLAUDE.md) discourages. The autouse ``_active_profile``
-    fixture pins the same identity through ``override_settings`` for
-    the ContextVar layer; this helper produces an explicit Settings
-    instance to pass into functions that take ``settings`` as a kwarg.
+    validator chain. The autouse ``_active_profile`` fixture pins the
+    same identity through ``override_settings`` for the ContextVar
+    layer; this helper produces an explicit Settings instance to pass
+    into functions that take ``settings`` as a kwarg.
     """
     return Settings(
         aeat_clave_movil_dni_nie=SecretStr("12345678Z"),

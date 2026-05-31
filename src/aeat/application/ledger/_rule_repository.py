@@ -29,7 +29,6 @@ class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificat
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         """Return all stored rules in application order: (priority asc, created_at asc)."""
-
         return tuple(sorted(self.iter_records(), key=lambda r: (r.priority, r.created_at)))
 
 

@@ -68,8 +68,7 @@ class Modelo100ObservedV2025Extractor:
             with observed casillas extracted.
 
         Raises:
-            :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
-                When required header fields are missing, or when a
+            BorradorParseError: When required header fields are missing, or when a
                 ``DECLARACION`` artefact lacks a CSV stamp.
         """
         pages = extract_pages_text(pdf_path)

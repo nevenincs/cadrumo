@@ -11,3 +11,9 @@ class RentaError(AeatError):
 
 class RentaValidationError(RentaError, ValueError):
     """Raised on invalid Renta field values. Inherits from ValueError for Pydantic."""
+
+
+__all__ = [
+    "RentaError",
+    "RentaValidationError",
+]

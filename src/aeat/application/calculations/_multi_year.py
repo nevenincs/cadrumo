@@ -96,7 +96,6 @@ class MultiYearResolver:
         expect chronological order (e.g. quarter 1T → 4T summing
         for an annual modelo) can iterate directly.
         """
-
         requested_years = tuple(request.current_year - offset for offset in range(1, request.years_back + 1))
         observations: list[RegistryModeloObservation] = []
         for payload in self._repository.iter_modelo(request.modelo):
@@ -184,7 +183,6 @@ def resolve_prior_year_observations(
     Equivalent to constructing `MultiYearResolver(repository=...)`
     and calling `resolve(MultiYearResolutionRequest(...))`.
     """
-
     resolver = MultiYearResolver(repository=repository)
     request = MultiYearResolutionRequest(
         modelo=modelo,

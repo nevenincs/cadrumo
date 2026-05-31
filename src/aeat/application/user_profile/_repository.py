@@ -58,7 +58,6 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     the runtime verifies the active session and constructs the
     bucket-local secure-object repository.
     """
-
     from ...adapters.persistence.storage import inspect_bucket_storage_runtime
     from ...core.config import load_settings
 
@@ -78,7 +77,6 @@ def _clear_output_language_cache() -> None:
     language. Importing lazily so persistence cannot block on the i18n
     module.
     """
-
     try:
         from ...core.i18n._render import clear_output_language_cache
     except Exception:  # pragma: no cover - cache invalidation must never block persistence
@@ -92,7 +90,6 @@ def user_profile_value_object_key(profile_id: str) -> str:
     A profile bucket holds exactly one live profile-value record, so
     the key is single-segment: the immutable ``profile_id`` (UUIDv4).
     """
-
     trimmed_profile = profile_id.strip()
     if not trimmed_profile:
         raise BucketValidationError("profile_id must not be blank")
@@ -106,7 +103,6 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     the ``snapshot_id`` discriminator; the first segment is the
     immutable ``profile_id`` (UUIDv4).
     """
-
     trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_profile:
@@ -189,7 +185,6 @@ class UserProfileLifecycleRepository:
         this iterator to list live profiles without reaching for the
         repository's private secure-object reference.
         """
-
         for raw in self._objects.list_records(
             USER_PROFILE_VALUE_NAMESPACE,
             expected_class=_USER_PROFILE_VALUE_SENSITIVITY,

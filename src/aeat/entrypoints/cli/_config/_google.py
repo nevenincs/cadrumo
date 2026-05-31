@@ -91,14 +91,31 @@ from ....application.storage.calc_sheets import (
     build_export_plan,
 )
 from ....core.config import load_settings
+from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
 from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from .._common import _emit
+from .._common import _emit, _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._google_payloads import (
+    GoogleFolderGetResult,
+    GoogleFolderSetResult,
+    GoogleLoginResult,
+    GoogleLogoutResult,
+    GoogleRegisterResult,
+    GoogleStatusResult,
+    GoogleSyncCalcExportResult,
+    GoogleSyncCalcPullResult,
+    GoogleSyncCalcVerifyDivergencePayload,
+    GoogleSyncCalcVerifyResult,
+    GoogleSyncFailedManifestPayload,
+    GoogleSyncFailedObjectPayload,
+    GoogleSyncProbeResult,
+    GoogleSyncPushResult,
+)
 
 google_app = typer.Typer(
     name="google",
@@ -139,7 +156,6 @@ def _refusal_detail(exc: GoogleAuthError | OutboundStorageError) -> str:
     bubble up from the Google adapter with only a positional English
     `message` keep `str(exc)` — the adapter boundary owns that text.
     """
-
     translated_message = getattr(exc, "translated_message", None)
     if translated_message is not None:
         context = getattr(exc, "context", None) or {}
@@ -158,7 +174,6 @@ def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBo
     an unrecognised type falls back to the generic ``auth_failed``
     frame.
     """
-
     suffix = _GOOGLE_ERROR_KEY_SUFFIX.get(type(exc).__name__, "auth_failed")
     # Static-key inventory: cli.config.google.errors.{validation,client_not_registered,
     # client_revoked,token_revoked,token_expired,scope_insufficient,network,
@@ -179,7 +194,7 @@ class OAuthClientPayload(TypedDict):
     ``web`` variant is rejected by :func:`_coerce_client_json`.
     """
 
-    installed: dict[str, Any]
+    installed: dict[str, Any]  # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use.
 
 
 class _OAuthClientWrapper(BaseModel):
@@ -193,7 +208,7 @@ class _OAuthClientWrapper(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
-    installed: dict[str, Any]
+    installed: dict[str, Any]  # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use.
 
 
 def _coerce_client_json(path: Path) -> OAuthClient:
@@ -204,7 +219,6 @@ def _coerce_client_json(path: Path) -> OAuthClient:
     applications. Only the Desktop ("installed") shape is accepted;
     other shapes raise `GoogleAuthValidationError`.
     """
-
     try:
         raw = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
@@ -257,7 +271,6 @@ def google_register(
     ),
 ) -> None:
     """Register a Cloud Console Desktop OAuth client for the active profile."""
-
     try:
         active = resolve_active_profile()
         client = _coerce_client_json(client_json)
@@ -265,16 +278,16 @@ def google_register(
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
 
-    payload = {
-        "operation": "config.google.register",
-        "profile": active,
-        "client_id": client.client_id,
-        "project_id": client.project_id,
-    }
-    _emit(
+    typed = GoogleRegisterResult(
+        profile=active,
+        client_id=client.client_id,
+        project_id=client.project_id,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.register",
+        result=typed,
+        lines=(
             "operation\tconfig.google.register",
             f"profile\t{active}",
             f"client_id\t{client.client_id}",
@@ -293,7 +306,6 @@ def google_login(
     ),
 ) -> None:
     """Run the loopback IP + PKCE consent flow (or refresh an existing credential)."""
-
     try:
         active = resolve_active_profile()
         client = load_client(active)
@@ -311,16 +323,16 @@ def google_login(
                     context={"profile": active},
                     suggestion="aeat config google login",
                 )
-            payload = {
-                "operation": "config.google.login",
-                "profile": active,
-                "mode": "refresh-only",
-                "account_email": metadata.account_email,
-            }
-            _emit(
+            typed_refresh = GoogleLoginResult(
+                profile=active,
+                mode="refresh-only",
+                account_email=metadata.account_email,
+            )
+            _emit_envelope(
                 ctx,
-                payload,
-                (
+                command="config.google.login",
+                result=typed_refresh,
+                lines=(
                     "operation\tconfig.google.login",
                     f"profile\t{active}",
                     "mode\trefresh-only",
@@ -334,17 +346,17 @@ def google_login(
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
 
-    payload = {
-        "operation": "config.google.login",
-        "profile": active,
-        "mode": "consent",
-        "account_email": metadata.account_email,
-        "granted_scopes": list(metadata.granted_scopes),
-    }
-    _emit(
+    typed_consent = GoogleLoginResult(
+        profile=active,
+        mode="consent",
+        account_email=metadata.account_email,
+        granted_scopes=list(metadata.granted_scopes),
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.login",
+        result=typed_consent,
+        lines=(
             "operation\tconfig.google.login",
             f"profile\t{active}",
             "mode\tconsent",
@@ -359,7 +371,6 @@ def google_status(
     ctx: typer.Context,
 ) -> None:
     """Report the current Google OAuth session state for the active profile."""
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -367,18 +378,17 @@ def google_status(
 
     client = load_client(active)
     metadata = load_metadata(active)
-    payload: dict[str, object] = {
-        "operation": "config.google.status",
-        "profile": active,
-        "client_registered": client is not None,
-        "client_id": client.client_id if client is not None else None,
-        "session_present": metadata is not None,
-        "account_email": metadata.account_email if metadata is not None else None,
-        "granted_scopes": list(metadata.granted_scopes) if metadata is not None else [],
-        "issued_at": metadata.issued_at.isoformat() if metadata is not None else None,
-        "last_refresh_at": metadata.last_refresh_at.isoformat() if metadata is not None else None,
-        "reauth_required": metadata.reauth_required if metadata is not None else None,
-    }
+    typed_status = GoogleStatusResult(
+        profile=active,
+        client_registered=client is not None,
+        client_id=client.client_id if client is not None else None,
+        session_present=metadata is not None,
+        account_email=metadata.account_email if metadata is not None else None,
+        granted_scopes=list(metadata.granted_scopes) if metadata is not None else [],
+        issued_at=metadata.issued_at.isoformat() if metadata is not None else None,
+        last_refresh_at=metadata.last_refresh_at.isoformat() if metadata is not None else None,
+        reauth_required=metadata.reauth_required if metadata is not None else None,
+    )
     lines = [
         "operation\tconfig.google.status",
         f"profile\t{active}",
@@ -397,7 +407,7 @@ def google_status(
                 *tuple(f"scope\t{scope}" for scope in metadata.granted_scopes),
             )
         )
-    _emit(ctx, payload, tuple(lines))
+    _emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
 
 
 @google_app.command("logout", help=tr("cli.config.google.logout_help"))
@@ -410,24 +420,23 @@ def google_logout(
     subsequent `aeat config google login` can re-acquire a session
     without the operator re-importing the Cloud Console JSON.
     """
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
 
     token_removed, metadata_removed = delete_session(active)
-    payload = {
-        "operation": "config.google.logout",
-        "profile": active,
-        "token_removed": token_removed,
-        "metadata_removed": metadata_removed,
-        "client_preserved": True,
-    }
-    _emit(
+    typed_logout = GoogleLogoutResult(
+        profile=active,
+        token_removed=token_removed,
+        metadata_removed=metadata_removed,
+        client_preserved=True,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.logout",
+        result=typed_logout,
+        lines=(
             "operation\tconfig.google.logout",
             f"profile\t{active}",
             f"token_removed\t{token_removed}",
@@ -450,7 +459,6 @@ def google_folder_set(
     folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
 ) -> None:
     """Persist the Drive root folder id under the active profile."""
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -458,15 +466,12 @@ def google_folder_set(
 
     config = DriveConfig(root_folder_id=folder_id.strip())
     save_drive_config(active, config)
-    payload = {
-        "operation": "config.google.folder.set",
-        "profile": active,
-        "root_folder_id": config.root_folder_id,
-    }
-    _emit(
+    folder_set_result = GoogleFolderSetResult(profile=active, root_folder_id=config.root_folder_id)
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.folder.set",
+        result=folder_set_result,
+        lines=(
             "operation\tconfig.google.folder.set",
             f"profile\t{active}",
             f"root_folder_id\t{config.root_folder_id}",
@@ -479,23 +484,22 @@ def google_folder_get(
     ctx: typer.Context,
 ) -> None:
     """Show the persisted Drive root folder id for the active profile."""
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
 
     config = load_drive_config(active)
-    payload = {
-        "operation": "config.google.folder.get",
-        "profile": active,
-        "configured": config is not None,
-        "root_folder_id": config.root_folder_id if config is not None else None,
-    }
-    _emit(
+    folder_get_result = GoogleFolderGetResult(
+        profile=active,
+        configured=config is not None,
+        root_folder_id=config.root_folder_id if config is not None else None,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.folder.get",
+        result=folder_get_result,
+        lines=(
             "operation\tconfig.google.folder.get",
             f"profile\t{active}",
             f"configured\t{config is not None}",
@@ -530,7 +534,6 @@ def google_sync_probe(
     resolves to a real folder, and (when `--no-read-only`) a sentinel
     file round-trips into `_probe/`.
     """
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -555,21 +558,21 @@ def google_sync_probe(
     # OR the persisted DriveConfig may have supplied it; the provider
     # is the single resolved source of truth.
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
-    payload = {
-        "operation": "config.google.sync.probe",
-        "profile": active,
-        "provider_kind": report.provider_kind.value,
-        "reachable": report.reachable,
-        "writable": report.writable,
-        "read_only": report.read_only,
-        "root_folder_present": report.root_folder_present,
-        "root_folder_id": resolved_root_folder_id,
-        "detail": report.detail,
-    }
-    _emit(
+    probe_result = GoogleSyncProbeResult(
+        profile=active,
+        provider_kind=report.provider_kind.value,
+        reachable=report.reachable,
+        writable=report.writable,
+        read_only=report.read_only,
+        root_folder_present=report.root_folder_present,
+        root_folder_id=resolved_root_folder_id,
+        detail=report.detail,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.sync.probe",
+        result=probe_result,
+        lines=(
             "operation\tconfig.google.sync.probe",
             f"profile\t{active}",
             f"provider_kind\t{report.provider_kind.value}",
@@ -591,7 +594,6 @@ def _object_key_hmac(namespace: str, object_key: bytes) -> str:
     sha256(namespace + object_key); a per-profile keyed HMAC for
     unlinkability lands alongside P04 (snapshot escrow + HKDF).
     """
-
     return remote_mirror_object_key_hmac(namespace, object_key)
 
 
@@ -602,7 +604,6 @@ def _label_for(namespace: str) -> str:
     sanitised to alnum/dash/underscore. Per-namespace registered
     label-derivers override this default once they ship.
     """
-
     leaf = namespace.rsplit(".", 1)[-1] or "obj"
     safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in leaf)
     return safe[:32] or "obj"
@@ -701,7 +702,6 @@ def google_sync_push(
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
     key never leaves the host — only ciphertext reaches Drive.
     """
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -731,24 +731,27 @@ def google_sync_push(
     manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
     manifest_failed = mirror_result["failed_manifests"]
 
-    payload: dict[str, object] = {
-        "operation": "config.google.sync.push",
-        "profile": active,
-        "root_folder_id": resolved_root_folder_id,
-        "dry_run": dry_run,
-        "namespace_filter": namespace_filter,
-        "limit": limit,
-        "pushed_total": sum(pushed_by_ns.values()),
-        "skipped_total": sum(skipped_by_ns.values()),
-        "failed_total": len(failed),
-        "manifest_pushed_total": len(manifest_pushed_by_ns),
-        "manifest_failed_total": len(manifest_failed),
-        "pushed_by_namespace": pushed_by_ns,
-        "skipped_by_namespace": skipped_by_ns,
-        "failed_objects": [{"namespace": ns, "hmac": h, "error": err} for ns, h, err in failed],
-        "manifest_pushed_by_namespace": manifest_pushed_by_ns,
-        "failed_manifests": [{"namespace": ns, "error": err} for ns, err in manifest_failed],
-    }
+    push_result = GoogleSyncPushResult(
+        profile=active,
+        root_folder_id=resolved_root_folder_id,
+        dry_run=dry_run,
+        namespace_filter=namespace_filter,
+        limit=limit,
+        pushed_total=sum(pushed_by_ns.values()),
+        skipped_total=sum(skipped_by_ns.values()),
+        failed_total=len(failed),
+        manifest_pushed_total=len(manifest_pushed_by_ns),
+        manifest_failed_total=len(manifest_failed),
+        pushed_by_namespace=dict(pushed_by_ns),
+        skipped_by_namespace=dict(skipped_by_ns),
+        failed_objects=[
+            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed
+        ],
+        manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
+        failed_manifests=[
+            GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed
+        ],
+    )
     lines: list[str] = [
         "operation\tconfig.google.sync.push",
         f"profile\t{active}",
@@ -768,7 +771,7 @@ def google_sync_push(
         lines.append(f"namespace\t{ns}\tpushed={pushed}\tskipped={skipped}")
     for ns, h, err in failed:
         lines.append(f"failed\t{ns}\t{h[:16]}\t{err}")
-    _emit(ctx, payload, tuple(lines))
+    _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines))
 
 
 calc_app = typer.Typer(
@@ -780,7 +783,6 @@ calc_app = typer.Typer(
 
 def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
-
     settings = load_settings()
     credentials = _build_google_credentials(profile=profile)
     root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
@@ -822,8 +824,9 @@ def google_sync_calc_export(
         help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
     ),
 ) -> None:
-    """Export the registry calculation surface for a modelo + period to a real
-    Google Sheets workbook under the operator's `aeat-vault/`.
+    """Export the registry calculation surface for a modelo + period to a Google Sheets workbook.
+
+    Writes the workbook to the operator's ``aeat-vault/`` directory.
 
     Materialises Entradas (operator inputs), Cálculos (formula cells with
     per-casilla ROUND-wrapped Decimal parity), Procedencia (audit trail),
@@ -839,7 +842,6 @@ def google_sync_calc_export(
     local store the flag is a no-op and the workbook ships with blank
     relation cells the operator fills by hand.
     """
-
     from ....application.calculations import resolve_relations_from_local_store
 
     try:
@@ -875,28 +877,28 @@ def google_sync_calc_export(
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    payload = {
-        "operation": "config.google.sync.calc.export",
-        "profile": active,
-        "modelo": snapshot.modelo.id,
-        "revision": snapshot.revision.id,
-        "period": snapshot.period,
-        "year": snapshot.filing_year,
-        "engine_version": plan.metadata.engine_version,
-        "registry_sha": plan.metadata.registry_sha,
-        "root_folder_id": root_folder_id,
-        "folder_id": result.folder_id,
-        "spreadsheet_id": result.spreadsheet_id,
-        "spreadsheet_url": result.spreadsheet_url,
-        "value_cells_written": result.value_cells_written,
-        "formula_cells_written": result.formula_cells_written,
-        "protected_ranges_written": result.protected_ranges_written,
-        "tab_count": result.tab_count,
-    }
-    _emit(
+    export_result = GoogleSyncCalcExportResult(
+        profile=active,
+        modelo=snapshot.modelo.id,
+        revision=snapshot.revision.id,
+        period=snapshot.period,
+        year=snapshot.filing_year,
+        engine_version=plan.metadata.engine_version,
+        registry_sha=plan.metadata.registry_sha,
+        root_folder_id=root_folder_id,
+        folder_id=result.folder_id,
+        spreadsheet_id=result.spreadsheet_id,
+        spreadsheet_url=result.spreadsheet_url,
+        value_cells_written=result.value_cells_written,
+        formula_cells_written=result.formula_cells_written,
+        protected_ranges_written=result.protected_ranges_written,
+        tab_count=result.tab_count,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.sync.calc.export",
+        result=export_result,
+        lines=(
             "operation\tconfig.google.sync.calc.export",
             f"profile\t{active}",
             f"modelo\t{snapshot.modelo.id}",
@@ -942,7 +944,6 @@ def google_sync_calc_verify(
     backend↔Sheets parity is checked; verdict surfaces as
     `inconclusive` in that case.
     """
-
     from decimal import Decimal
 
     from ....application.storage.calc_sheets._parity_harness import (
@@ -970,7 +971,7 @@ def google_sync_calc_verify(
         def _to_decimal_map(node: object) -> dict[str, Decimal]:
             if not isinstance(node, dict):
                 return {}
-            return {str(k): Decimal(str(v)) for k, v in node.items()}
+            return {str(k): coerce_decimal(v) or Decimal("0") for k, v in node.items()}
 
         scenario = OperatorInputScenario(
             inputs_by_number=_to_decimal_map(raw.get("inputs_by_number")),
@@ -983,30 +984,29 @@ def google_sync_calc_verify(
 
     report = verify_modelo_parity(snapshot, scenario, credentials=credentials, root_folder_id=root_folder_id)
 
-    payload: dict[str, object] = {
-        "operation": "config.google.sync.calc.verify",
-        "profile": active,
-        "modelo": report.modelo_id,
-        "revision": report.revision_id,
-        "period": report.period,
-        "year": report.filing_year,
-        "spreadsheet_id": report.spreadsheet_id,
-        "spreadsheet_url": report.spreadsheet_url,
-        "verdict": report.verdict,
-        "aeat_oracle_present": report.aeat_oracle_present,
-        "computed_count": len(report.casillas),
-        "divergence_count": len(report.divergences),
-        "divergences": [
-            {
-                "casilla": c.casilla_number,
-                "label": c.label,
-                "local": str(c.local) if c.local is not None else None,
-                "sheets": str(c.sheets) if c.sheets is not None else None,
-                "aeat": str(c.aeat) if c.aeat is not None else None,
-            }
+    verify_result = GoogleSyncCalcVerifyResult(
+        profile=active,
+        modelo=report.modelo_id,
+        revision=report.revision_id,
+        period=report.period,
+        year=report.filing_year,
+        spreadsheet_id=report.spreadsheet_id,
+        spreadsheet_url=report.spreadsheet_url,
+        verdict=report.verdict,
+        aeat_oracle_present=report.aeat_oracle_present,
+        computed_count=len(report.casillas),
+        divergence_count=len(report.divergences),
+        divergences=[
+            GoogleSyncCalcVerifyDivergencePayload(
+                casilla=c.casilla_number,
+                label=c.label,
+                local=str(c.local) if c.local is not None else None,
+                sheets=str(c.sheets) if c.sheets is not None else None,
+                aeat=str(c.aeat) if c.aeat is not None else None,
+            )
             for c in report.divergences
         ],
-    }
+    )
     lines: list[str] = [
         "operation\tconfig.google.sync.calc.verify",
         f"profile\t{active}",
@@ -1022,7 +1022,7 @@ def google_sync_calc_verify(
     ]
     for div in report.divergences:
         lines.append(f"divergence\t{div.casilla_number}\tlocal={div.local}\tsheets={div.sheets}\taeat={div.aeat}")
-    _emit(ctx, payload, tuple(lines))
+    _emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
 
 
 @calc_app.command("pull", help=tr("cli.config.google.sync.calc.pull_help"))
@@ -1058,7 +1058,6 @@ def google_sync_calc_pull(
     the workbook was compiled against a different registry slice;
     callers should refuse to apply stale edits to the local store.
     """
-
     from ....adapters.outbound.google._calc_sheets_pull import (
         compute_from_pull,
         pull_operator_edits,
@@ -1196,7 +1195,8 @@ def google_sync_calc_pull(
         )
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
-    _emit(ctx, payload, tuple(lines))
+    pull_result = GoogleSyncCalcPullResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
 
 
 def _assemble_pull_observations(

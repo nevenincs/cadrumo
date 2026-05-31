@@ -107,7 +107,6 @@ class IvaCompensationDecimalParseError(AeatError, ValueError):
 
 def iva_compensation_period_key(filing_year: int, period: str) -> str:
     """Return the latest-state key for one Modelo 303 period."""
-
     safe_repository_id(period, context="period")
     if not 2000 <= filing_year <= 2099:
         raise IvaCompensationYearRangeError(f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]")
@@ -137,7 +136,6 @@ def build_iva_compensation_carry_forward_report(
     application recorded for that same period, matching Modelo 303's
     prior-balance-before-new-generation shape.
     """
-
     if not 2000 <= as_of_year <= 2099:
         raise IvaCompensationYearRangeError(f"IVA compensation as_of_year {as_of_year} out of supported range [2000, 2099]")
     ordered = tuple(sorted(states, key=lambda item: (item.filing_year, _period_sort_key(item.period))))
@@ -194,7 +192,6 @@ def enforce_iva_compensation_four_year_window(
     report: IvaCompensationCarryForwardReport,
 ) -> IvaCompensationCarryForwardReport:
     """Refuse remaining IVA compensation lots beyond the four-year window."""
-
     expired = tuple(
         lot
         for lot in report.lots
@@ -222,17 +219,14 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
 
     def load_period(self, filing_year: int, period: str) -> IvaCompensationPeriodState | None:
         """Return latest stored state for one period."""
-
         return self.load(iva_compensation_period_key(filing_year, period))
 
     def save_period(self, state: IvaCompensationPeriodState) -> None:
         """Persist latest stored state for one period."""
-
         self.save(state)
 
     def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
         """Return all stored states in chronological filing order."""
-
         return tuple(sorted(self.iter_records(), key=lambda item: (item.filing_year, _period_sort_key(item.period))))
 
 _SEED_STATUS = "seeded"
@@ -258,7 +252,6 @@ def seed_iva_compensation_period(
     Raises ``IvaCompensationSeedConflictError`` if a state already exists for
     the specified period — seeding must not overwrite an existing record.
     """
-
     repo = repository if repository is not None else IvaCompensationHistoryRepository()
     existing = repo.load_period(filing_year, period)
     if existing is not None:
@@ -291,7 +284,6 @@ def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
     """Build one IVA compensation history state from a filed Modelo 303 observation."""
-
     if observation.modelo != "303":
         raise IvaCompensationModeloError(
             "IVA compensation history only accepts Modelo 303 observations"

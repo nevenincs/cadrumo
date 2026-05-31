@@ -130,7 +130,6 @@ class RentaLedgerExpenseAggregation(BaseModel):
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
         """Return the frozen mapping of binding-ready casilla totals."""
-
         return self.casilla_aggregation.casilla_values
 
     @field_serializer("observations")
@@ -159,7 +158,6 @@ def aggregate_renta_ledger_expenses_from_repositories(
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses."""
-
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -191,7 +189,6 @@ def aggregate_renta_ledger_expenses(
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations."""
-
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.year
     profiles = resources().category_profiles.get(resolved_profile_year)
@@ -270,12 +267,11 @@ def _classify_renta_transaction(
             reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
         )
-    # W05.P23 FU-W05-E (S321): use the EUR-projected amount for the
-    # business gate so a non-EUR row that passed the
-    # is_non_eur_without_conversion check (because value_in_eur is set)
-    # contributes its pre-converted EUR equivalent rather than its
-    # raw foreign-currency amount.  EUR rows are unaffected: their
-    # value_in_eur is None and effective_eur_amount falls back to
+    # Use the EUR-projected amount for the business gate so a non-EUR row
+    # that passed the is_non_eur_without_conversion check (because
+    # value_in_eur is set) contributes its pre-converted EUR equivalent
+    # rather than its raw foreign-currency amount.  EUR rows are unaffected:
+    # their value_in_eur is None and effective_eur_amount falls back to
     # raw.amount.
     eur_amount = effective_eur_amount(transaction)
     business_amount = _business_amount(

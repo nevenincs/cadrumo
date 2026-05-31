@@ -50,7 +50,6 @@ def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
     (ADR D2).  The recipient re-encrypts each object under their own
     bucket DEK via the standard repository save path on import.
     """
-
     from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
     from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
@@ -116,7 +115,6 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
             ``bundle.bundle_schema_version`` is not in
             ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS``.
     """
-
     if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
         raise UnsupportedBundleSchemaVersionError(
             f"bundle_schema_version {bundle.bundle_schema_version!r} is not supported; "

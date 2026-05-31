@@ -53,8 +53,7 @@ class AnthropicAdapter(_ProviderAdapter):
             timeout_s: Default per-request timeout passed to the SDK.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`: When
-                ``api_key`` is empty.
+            LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
             msg = "AEAT_LLM_ANTHROPIC_API_KEY must be set for the Anthropic provider."
@@ -79,14 +78,9 @@ class AnthropicAdapter(_ProviderAdapter):
             echoed by the server, token usage, and the provider's request id.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm._errors.LLMRateLimitError`: On
-                ``429`` responses; the ``retry-after`` header (when
-                present) is forwarded.
-            :exc:`aeat.adapters.outbound.llm._errors.LLMProviderError`: On
-                authentication failures, bad requests, connection /
-                timeout failures, and non-2xx API status codes.
+            LLMProviderError: On authentication failures, bad requests, connection
+                or timeout failures, and non-2xx API status codes.
         """
-
         user_message: MessageParam = {"role": "user", "content": request.prompt}
         messages: tuple[MessageParam, ...] = (user_message,)
         metadata: MetadataParam = {"user_id": request.request_id}

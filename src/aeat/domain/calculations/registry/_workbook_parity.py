@@ -26,6 +26,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.config import Settings as _Settings
+from ....core.decimal import coerce_decimal
 from ....core.errors import CoreError
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
@@ -233,7 +234,6 @@ class WorkbookModeloCoverage(WorkbookParityModel):
     @property
     def passed(self) -> bool:
         """Return True if all workbooks are supported and scanned successfully."""
-
         return self.unsupported_xls_count == 0 and self.failed_count == 0
 
 
@@ -253,13 +253,11 @@ class WorkbookBackendVerificationReport(WorkbookParityModel):
     @property
     def backend_exists(self) -> bool:
         """Return whether discovery and guardable reports exist."""
-
         return self.workbook_count > 0 and self.scanned_count + self.unsupported_xls_count + self.failed_count > 0
 
     @property
     def passed(self) -> bool:
         """Return True if all workbooks are supported and scanned successfully."""
-
         return self.unsupported_xls_count == 0 and self.failed_count == 0
 
 
@@ -273,7 +271,6 @@ class WorkbookScanOptions:
 
 def discover_workbooks(root: Path) -> tuple[Path, ...]:
     """Return every official workbook artefact below ``root``."""
-
     resolved = root.resolve()
     if not resolved.exists():
         raise RegistryValidationError(f"workbook root does not exist: {root}")
@@ -282,7 +279,6 @@ def discover_workbooks(root: Path) -> tuple[Path, ...]:
 
 def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None = None) -> WorkbookArtefactReport:
     """Scan one workbook and classify formula coverage."""
-
     opts = options or WorkbookScanOptions()
     started = time.monotonic()
     resolved_root = root.resolve()
@@ -450,7 +446,6 @@ def inventory_workbook_coverage(
     previous_reports: Iterable[WorkbookArtefactReport] = (),
 ) -> tuple[WorkbookArtefactReport, ...]:
     """Scan official workbook artefacts and return deterministic coverage reports."""
-
     paths = discover_workbooks(root)
     if limit is not None:
         paths = paths[:limit]
@@ -475,7 +470,6 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     fallback: if no runner is locatable, it raises so the caller surfaces the
     missing dependency instead of silently downgrading evidence quality.
     """
-
     from ....core.config import load_settings
 
     settings_configured = load_settings().aeat_libreoffice_executable
@@ -518,7 +512,6 @@ def run_workbook_with_libreoffice(
     executable: str | None = None,
 ) -> Mapping[str, Decimal | int | str | bool | None]:
     """Run a local XLSX workbook with LibreOffice headless and return outputs."""
-
     runner = _resolve_libreoffice_runner(executable)
     resolved = workbook_path.resolve()
     if not resolved.is_file():
@@ -586,7 +579,6 @@ def convert_binary_xls_with_libreoffice(
     executable: str | None = None,
 ) -> WorkbookConversionReport:
     """Convert one official binary XLS in isolated storage and classify it."""
-
     started = time.monotonic()
     context = _binary_xls_conversion_context(workbook_path, root=root)
     runner = _resolve_libreoffice_runner(executable)
@@ -644,7 +636,6 @@ def converted_binary_xls_with_libreoffice(
     executable: str | None = None,
 ) -> Iterator[Path]:
     """Yield a temporary XLSX converted from official binary XLS input."""
-
     context = _binary_xls_conversion_context(workbook_path, root=root)
     runner = _resolve_libreoffice_runner(executable)
     try:
@@ -739,7 +730,6 @@ def run_registry_workbook_parity(
     executable: str | None = None,
 ) -> WorkbookParityRunReport:
     """Execute one registry-vs-workbook parity comparison with shared inputs."""
-
     if workbook.workbook_kind != WorkbookKind.FORMULA_FORM:
         raise RegistryValidationError(
             f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle"
@@ -808,7 +798,6 @@ def run_registry_workbook_parity(
 
 def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> WorkbookCellRef:
     """Parse a workbook cell reference from registry configuration."""
-
     match = _CELL_REF_VALUE_PATTERN.match(value)
     if not match:
         raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
@@ -824,7 +813,6 @@ def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> 
 
 def _resolve_libreoffice_runner(executable: str | None) -> Path:
     """Locate a LibreOffice executable, raising explicitly when none is available."""
-
     if executable is None:
         from ....core.config import load_settings
 
@@ -867,7 +855,6 @@ def run_workbook_with_excel_com(
     The workbook is opened read-only, link updates are disabled, alerts are
     disabled, and it is closed with ``SaveChanges=False``.
     """
-
     if _detect_excel_com_clsid() is None:
         raise RegistryValidationError("Excel COM automation is not registered")
     resolved = workbook_path.resolve()
@@ -915,7 +902,6 @@ def compare_registry_to_workbook(
     tolerance: Decimal = Decimal("0"),
 ) -> WorkbookParityRunReport:
     """Build a deterministic parity comparison report from already-computed values."""
-
     comparisons: list[WorkbookParityComparison] = []
     for output_id in sorted(set(expected_workbook_values) | set(actual_registry_values)):
         expected = expected_workbook_values.get(output_id)
@@ -958,7 +944,6 @@ def verify_workbook_backend(
     require_formula_runner: bool = False,
 ) -> WorkbookBackendVerificationReport:
     """Verify that the workbook parity backend can discover and classify artefacts."""
-
     reports = inventory_workbook_coverage(
         root,
         options=WorkbookScanOptions(per_file_timeout_seconds=per_file_timeout_seconds),
@@ -991,7 +976,6 @@ def verify_workbook_backend(
 
 def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> None:
     """Raise when discovery could not inspect every workbook artefact."""
-
     failed_statuses = {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}
     failed = tuple(item for item in report.reports if item.scan_status in failed_statuses)
     if failed:
@@ -1008,7 +992,6 @@ def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationRepo
     retained as a documentation surface and a defensive guard against future
     schema drift; it never fails on a freshly produced report.
     """
-
     # `WorkbookRunnerStatus` is a single-value literal, so the only way this can
     # fail is if a caller hand-builds a report with a hand-mutated runner; that
     # is intentionally left as an explicit error path rather than silent.
@@ -1065,7 +1048,8 @@ def _raise_if_timed_out(started: float, timeout_seconds: float, relative: str) -
 
 
 def _elapsed_decimal(started: float) -> Decimal:
-    return Decimal(str(round(time.monotonic() - started, 6)))
+    elapsed = coerce_decimal(round(time.monotonic() - started, 6), default=Decimal("0"))
+    return elapsed if elapsed is not None else Decimal("0")
 
 
 def _classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
@@ -1293,7 +1277,8 @@ def _coerce_excel_result(value: object) -> Decimal | int | str | bool | None:
     if isinstance(value, int):
         return value
     if isinstance(value, float):
-        return Decimal(str(value))
+        coerced = coerce_decimal(value)
+        return coerced if coerced is not None else str(value)
     return str(value)
 
 

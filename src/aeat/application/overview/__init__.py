@@ -628,6 +628,9 @@ def build_overview_calendar(
             :class:`aeat.domain.deadlines.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
             a default :class:`_DeadlineEngine` is constructed.
+        raw_values: Optional mapping of casilla id to raw value, forwarded
+            to the engine for user-state annotation. When ``None``, the
+            engine uses an empty mapping.
         show_suppressed: When ``True``, populate
             :attr:`OverviewCalendar.suppressed_entries` with the
             obligations filtered out by a non-``APPLICABLE``
@@ -774,7 +777,6 @@ def build_filing_obligation_advisories(
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
     evidence of a mandatory obligation is present.
     """
-
     if raw_values is None:
         return ()
 
@@ -816,8 +818,10 @@ def overview_status_report_from_projection(
         raw_values: Optional profile raw values mapping. When supplied,
             used to evaluate filing-obligation advisories (e.g., the
             Art. 96.3 LIRPF multiple-pagadores rule).
-    """
 
+    Returns:
+        An :class:`OverviewStatusReport` derived from the projection.
+    """
     return OverviewStatusReport(
         active_profile=projection.active_profile.profile_id,
         active_profile_name=projection.active_profile.label,
@@ -845,7 +849,6 @@ def build_overview_status_report(
     every other operator surface — including the ``modelo work`` work
     units the old assembly never read.
     """
-
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(state=state)
@@ -854,7 +857,6 @@ def build_overview_status_report(
 
 def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     """Render ``OverviewStatusReport`` as stable tab-separated text rows."""
-
     lines = [
         f"profile\t{report.active_profile_name or report.active_profile or ''}",
         f"profile_id\t{report.active_profile or ''}",

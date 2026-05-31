@@ -224,7 +224,6 @@ def register_default(
     environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
 ) -> None:
     """Register the GROI Spanish-ROI oracle under the requested environment."""
-
     catalogue.register(GroiOracle(), environment=environment)
 
 

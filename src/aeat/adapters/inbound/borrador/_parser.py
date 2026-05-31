@@ -50,12 +50,9 @@ def parse_borrador(
         with observed casilla rows extracted.
 
     Raises:
-        :exc:`aeat.adapters.inbound.borrador._errors.ArtefactNotRecognisedError`:
-            When the PDF has no recognisable VISTA PREVIA / BORRADOR /
-            CSV marker and ``artefact_kind_override`` is not supplied.
-        :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
-            Base class for other parse errors (PDF not found, empty text,
-            missing header fields).
+        BorradorParseError: When the PDF has no recognisable VISTA PREVIA / BORRADOR /
+            CSV marker and ``artefact_kind_override`` is not supplied, or for other
+            parse errors (PDF not found, empty text, missing header fields).
     """
     path = Path(pdf_path)
     if parse_mode is BorradorParseMode.REGISTRY_PROFILE and extraction_profile is None:

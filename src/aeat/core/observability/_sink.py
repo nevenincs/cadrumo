@@ -22,7 +22,7 @@ competing sinks attached to the root logger at the same time.
 from __future__ import annotations
 
 import json
-import logging
+import logging  # LOGGING-STDLIB-RATIONALE-SINK-HANDLER: JsonlRunSink subclasses logging.Handler and accepts logging.LogRecord; stdlib import is required by ABC contract.
 import os
 import threading
 from pathlib import Path
@@ -121,7 +121,7 @@ class JsonlRunSink(logging.Handler):
             self.handleError(record)
 
     def _open(self) -> TextIO:
-        """Lazily open the JSONL file in append mode.
+        r"""Lazily open the JSONL file in append mode.
 
         ``newline=""`` disables the Python text-mode newline translation
         (CRLF on Windows) so ``events.jsonl`` stays byte-stable across

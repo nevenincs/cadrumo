@@ -1,8 +1,8 @@
 """Regression tests for pago-fraccionado period consistency across CLI verbs.
 
 Drives the real ``aeat`` CLI against an isolated encrypted backend to
-pin the period-unification fix (W01.P07.S25-S29): every pago-fraccionado
-clave (``1P`` / ``2P`` / ``3P``) that ``modelo work create`` accepts must
+pin the period-unification contract: every pago-fraccionado clave
+(``1P`` / ``2P`` / ``3P``) that ``modelo work create`` accepts must
 also be accepted by ``modelo work verify`` without an
 ``invalid registry period`` error.
 

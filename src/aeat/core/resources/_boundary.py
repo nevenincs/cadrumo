@@ -41,7 +41,6 @@ def packaged_data(*parts: str) -> Traversable:
         iterate via ``iterdir``. Use :func:`as_path` when a real
         on-disk :class:`pathlib.Path` is required.
     """
-
     node: Traversable = _PACKAGE_DATA
     for part in parts:
         node = node.joinpath(part)
@@ -66,7 +65,6 @@ def bundled_path(*parts: str) -> Path:
         A :class:`pathlib.Path` whose lifetime spans the running
         process. Callers MUST treat the path as read-only.
     """
-
     return _RESOURCE_STACK.enter_context(as_file(packaged_data(*parts)))
 
 
@@ -89,6 +87,5 @@ def as_path(node: Traversable) -> Iterator[Path]:
         ``with`` block. Callers MUST NOT retain the path beyond the
         context manager's exit.
     """
-
     with as_file(node) as path:
         yield path

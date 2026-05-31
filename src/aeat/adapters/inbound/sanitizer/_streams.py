@@ -146,7 +146,7 @@ def _rewrite_page(
             continue
 
         new_operands = _rewrite_text_show_operands(
-            # CAST-RATIONALE-SANITIZER-PIKEPDF-OPERANDS: pikepdf's
+            # CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST: pikepdf's
             # ``ContentStreamInstruction.operands`` is the private QPDF
             # ``_ObjectList`` type; it is a runtime sequence but is not
             # statically typed as ``Sequence[...]``, so the cast is
@@ -184,9 +184,10 @@ def _rewrite_text_show_operands(
     instruction_index: int,
     edits: list[Replacement],
 ) -> list[PikepdfObject | int | float] | None:
-    """Rewrite text-show operands for one instruction. Returns ``None`` when
-    nothing changed, otherwise the full new operand list."""
+    """Rewrite text-show operands for one instruction.
 
+    Returns ``None`` when nothing changed, otherwise the full new operand list.
+    """
     if operator in (_TJ, _QUOTE):
         return _rewrite_single_string_at(
             operands,

@@ -225,7 +225,7 @@ class AeatSection(_Frozen):
     domains: AeatDomains
     sede_paths: AeatSedePaths
     clave_movil: AeatClaveMovilSurface
-    pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")
+    pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")  # ANY-RETURN-RATIONALE-PRE303-RAW-STAGING: raw TOML parse staging slot; cached_property converts to typed AeatPre303Surface boundary model.
     help_pages: AeatHelpPages
     oracles: AeatOracles
     live_safety: AeatLiveSafety
@@ -241,7 +241,6 @@ class AeatSection(_Frozen):
         in a :class:`~aeat.core.errors.CoreValidationError` carrying an
         operator-facing recovery hint.
         """
-
         try:
             return AeatPre303Surface.model_validate(self.pre303_raw)
         except ValidationError as exc:
@@ -354,7 +353,6 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     ``importlib.resources`` so the resolution path is identical
     under editable installs and built wheels.
     """
-
     if path is not None:
         with path.open("rb") as handle:
             payload = tomllib.load(handle)

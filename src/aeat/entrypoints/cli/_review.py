@@ -4,7 +4,7 @@ import typer
 
 from ...application.review import ReviewError, ReviewQueueReport, ReviewState, project_review_item, project_review_queue
 from ...application.review._operator import ReviewQueueRow
-from ._common import _bad, _emit
+from ._common import _bad, _emit, _emit_envelope
 from ...core.i18n import tr
 from ._review_payloads import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 
@@ -16,7 +16,6 @@ def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
     :class:`ReviewQueueRowPayload` shape; downstream JSON consumers
     rely on the registry rather than the application-side record.
     """
-
     return ReviewQueueRowPayload(
         item_id=row.item_id,
         kind=row.kind,
@@ -63,7 +62,6 @@ def review_queue(
     ),
 ) -> None:
     """List read-only review queue rows."""
-
     try:
         resolved_state = ReviewState(state.strip().lower())
         report = project_review_queue(kinds=kinds, source_kinds=source_kinds, state=resolved_state, modelo=modelo)
@@ -74,10 +72,11 @@ def review_queue(
     typed_result = ReviewQueueResult(
         rows=tuple(_row_to_payload(row) for row in report.rows),
     )
-    _emit(
+    _emit_envelope(
         ctx,
-        typed_result.model_dump(mode="json"),
-        _queue_lines(report, explain=explain),
+        command="review.queue",
+        result=typed_result,
+        lines=_queue_lines(report, explain=explain),
     )
 
 
@@ -98,7 +97,6 @@ def review_show(
     ),
 ) -> None:
     """View one read-only review queue item."""
-
     try:
         row = project_review_item(item_id)
     except ReviewError as exc:
@@ -118,7 +116,7 @@ def review_show(
             f"{tr('cli.review.labels.legal_refs', default='legal_refs')}\t"
             f"{', '.join(row.legal_refs)}"
         )
-    _emit(ctx, typed_result.model_dump(mode="json"), lines)
+    _emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 
 def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[str]:

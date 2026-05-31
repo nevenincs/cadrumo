@@ -71,7 +71,6 @@ def activate_session(session: BucketSession) -> Iterator[None]:
             the column-level encryption key for the duration of the
             block.
     """
-
     token = _active_session.set(session)
     try:
         yield
@@ -87,13 +86,14 @@ def get_active_master_key() -> bytes:
     AES-256-GCM key for the row-ciphertext layer — the KEK only ever
     unwraps the DEK during :meth:`BucketSession.open`.
 
-    Raises:
-        NoActiveBucketSessionError: When no :func:`activate_session`
-            block is currently active on the calling thread or task.
-            The diagnostic points the operator at ``aeat config
-            profile switch NAME``.
-    """
+    Returns:
+        The 32-byte DEK used for AES-256-GCM column-level encryption.
 
+    Raises:
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
+    """
     session = _active_session.get()
     if session is None:
         raise NoActiveBucketSessionError(
@@ -110,7 +110,6 @@ def get_active_master_key() -> bytes:
 
 def has_active_bucket_session() -> bool:
     """Return whether an active :class:`BucketSession` is bound."""
-
     return _active_session.get() is not None
 
 

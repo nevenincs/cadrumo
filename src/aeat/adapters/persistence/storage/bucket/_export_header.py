@@ -38,7 +38,6 @@ class ExportArchiveHeader(BaseModel):
     @classmethod
     def _check_manifest_digest(cls, value: str) -> str:
         """Reject anything other than a lowercase hex SHA-256 digest."""
-
         if len(value) != _SHA256_HEX_LEN:
             raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
         try:

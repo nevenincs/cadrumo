@@ -75,7 +75,6 @@ def assemble_work_unit_history(
     not), and b) discover every calculation revision, verification
     report, and filing record id that belongs to its lifecycle.
     """
-
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()

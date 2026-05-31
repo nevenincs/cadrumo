@@ -346,13 +346,11 @@ class TestAttemptDiagnostics:
                     enforce_unique_tax_id=False,
                 )
             )
-            settings = Settings().model_copy(
-                update={
-                    "aeat_clave_movil_dni_nie": SecretStr("X1234567L"),
-                    "aeat_clave_movil_nie_soporte": SecretStr("support-marker"),
-                    "aeat_clave_prefer_non_qr": True,
-                    "aeat_clave_movil_timeout_ms": 120_000,
-                }
+            settings = Settings(
+                aeat_clave_movil_dni_nie=SecretStr("X1234567L"),
+                aeat_clave_movil_nie_soporte=SecretStr("support-marker"),
+                aeat_clave_prefer_non_qr=True,
+                aeat_clave_movil_timeout_ms=120_000,
             )
 
             context = ClaveMovilAuthProvider(settings)._attempt_context()

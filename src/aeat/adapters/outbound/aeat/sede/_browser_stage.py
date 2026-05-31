@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Awaitable
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    import logging
 
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -69,7 +71,6 @@ async def run_playwright_stage[T](
     timeout_is_shape_change: bool = False,
 ) -> T:
     """Await a Playwright operation and emit uniform Sede failure modes."""
-
     try:
         return await operation
     except PlaywrightTimeoutError as exc:

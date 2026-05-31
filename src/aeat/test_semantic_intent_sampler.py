@@ -1,28 +1,27 @@
 """Audit gate: semantic-intent drift sampler.
 
-S219 enumeration — 20 random production-test pairings sampled for intent drift:
-  Semantic-intent drift is the pattern where a test asserts an incidental
-  implementation detail (shape, field count, repr string) rather than the
-  intended domain behaviour (correct calculation, valid state transition,
-  enforced constraint).  Such tests pass even when the behaviour they were
-  meant to guard is broken.
+Samples 20 random production-test pairings for intent drift.  Semantic-
+intent drift is the pattern where a test asserts an incidental
+implementation detail (shape, field count, repr string) rather than the
+intended domain behaviour (correct calculation, valid state transition,
+enforced constraint).  Such tests pass even when the behaviour they
+were meant to guard is broken.
 
-  Sampling methodology (deterministic seed 47):
-    - Collect all test_*.py files under src/aeat/.
-    - For each sampled file, record the test function names.
-    - Drift indicators: function names containing ONLY shape/structural
-      keywords without any domain-behaviour keywords are candidates for
-      manual review as Wave 2 follow-ups.
+Sampling methodology (deterministic seed 47):
+  - Collect all test_*.py files under src/aeat/.
+  - For each sampled file, record the test function names.
+  - Drift indicators: function names containing ONLY shape/structural
+    keywords without any domain-behaviour keywords are candidates for
+    manual review.
 
-  Wave 2 follow-up Steps from S219 enumeration pass:
-    The sampler records suspect function names for human review.  The test
-    itself does NOT fail on suspected drift — it only asserts the sampler
-    ran reproducibly and produced a stable, non-empty sample.  Human review
-    of the output is the gate, not the test.
+The sampler records suspect function names for human review.  The test
+itself does NOT fail on suspected drift — it only asserts the sampler
+ran reproducibly and produced a stable, non-empty sample.  Human review
+of the output is the gate, not the test.
 
-S220 assertion — this file provides the real-behavior test that verifies the
-  sampler runs deterministically against a fixed seed and produces a stable
-  20-file sample from the test corpus.
+This file provides the real-behavior test that verifies the sampler
+runs deterministically against a fixed seed and produces a stable
+20-file sample from the test corpus.
 """
 
 from __future__ import annotations
@@ -145,9 +144,9 @@ def _sample_test_files(seed: int, size: int) -> list[Path]:
 def test_sampler_produces_stable_deterministic_sample() -> None:
     """The sampler must produce the same 20-file list on every run.
 
-    Verifies S220: a fixed seed must yield a stable sample regardless of
-    run order.  If the test corpus grows, the sample may shift (the full
-    sorted list changes), but within a given corpus state the sample is
+    A fixed seed must yield a stable sample regardless of run order.
+    If the test corpus grows, the sample may shift (the full sorted
+    list changes), but within a given corpus state the sample is
     reproducible.
     """
     all_files = _collect_test_files()
@@ -187,9 +186,9 @@ def test_sampler_output_covers_multiple_packages() -> None:
 def test_sampler_records_drift_candidates_without_failing() -> None:
     """Drift-candidate functions are recorded; the test itself does not fail on them.
 
-    Verifies S219: the sampler surfaces function names that may have
-    semantic-intent drift for human review.  The presence of drift candidates
-    is expected — they are Wave 2 follow-up targets, not immediate failures.
+    The sampler surfaces function names that may have semantic-intent
+    drift for human review.  The presence of drift candidates is
+    expected — they are review targets, not immediate failures.
 
     This test asserts only that the drift-detection heuristic runs without
     error and produces a reproducible, non-crashing output.
@@ -204,6 +203,6 @@ def test_sampler_records_drift_candidates_without_failing() -> None:
                 drift_candidates.append((rel, name))
 
     # The sampler must complete without raising.  The candidate list may be
-    # empty (all sampled tests are well-named) or non-empty (Wave 2 review
+    # empty (all sampled tests are well-named) or non-empty (review
     # targets).  Both outcomes are acceptable at this gate.
     assert isinstance(drift_candidates, list)

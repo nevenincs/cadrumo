@@ -15,7 +15,6 @@ def _active_bucket_id_for_source(
     include_process_pointer: bool,
 ) -> str | None:
     """Resolve the active bucket for ``source`` without ignoring scoped settings."""
-
     override = (source.aeat_active_profile or "").strip()
     if override:
         return override
@@ -34,13 +33,11 @@ def secure_object_repository_for_bucket(
     settings: Settings | None = None,
 ) -> SecureObjectRepository:
     """Return a bucket-attached secure-object repository through storage runtime."""
-
     return inspect_bucket_storage_runtime(bucket_id, settings or load_settings()).secure_object_repository()
 
 
 def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
     """Return a bucket-attached repository for the selected active profile."""
-
     from ....core._bucket_pointer_io import resolve_active_bucket_id
     from ....core.i18n import tr
 
@@ -69,7 +66,6 @@ def secure_object_repository_for_active_bucket_or_default_route(
     from ``secure_object_repository_for_bucket`` instead of falling
     back to a bare repository.
     """
-
     source = settings or load_settings()
     bucket_id = _active_bucket_id_for_source(
         source,
@@ -93,7 +89,6 @@ def secure_object_repository_for_cold_bootstrap_state(
     ``secure_object_repository_for_bucket`` so route/session mismatches
     fail closed at the storage runtime boundary.
     """
-
     from ....core._bucket_pointer_io import resolve_active_bucket_id
     from ....core.i18n import tr
 

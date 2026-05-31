@@ -1,4 +1,4 @@
-"""Cross-platform best-effort file-permission hardening for auth state.
+r"""Cross-platform best-effort file-permission hardening for auth state.
 
 Both the FNMT-certificate-backed authenticator and the Cl@ve Móvil
 provider persist session-state JSON containing bearer-equivalent
@@ -40,7 +40,7 @@ _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
 
 
 def restrict_file_permissions(path: Path) -> None:
-    """Best-effort restrict ``path`` to the operator's user account.
+    r"""Best-effort restrict ``path`` to the operator's user account.
 
     POSIX: calls :func:`os.chmod` with mode ``0o600``.
 

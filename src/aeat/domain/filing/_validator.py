@@ -227,7 +227,6 @@ def derive_validation_status(
     findings: tuple[ModeloValidationFinding, ...],
 ) -> ModeloDraftStatus:
     """Return the machine validation status implied by ``findings``."""
-
     has_error = any(f.severity is BaseSeverity.ERROR for f in findings)
     has_warning = any(f.severity is BaseSeverity.WARNING for f in findings)
     if has_error:

@@ -275,7 +275,6 @@ class ProfileImportResult(BaseModel):
 
 def __getattr__(name: str):
     """Lazy-import the service modules to keep the contract surface light."""
-
     if name == "ProfileLifecycleService":
         from ._lifecycle import ProfileLifecycleService
 
@@ -344,6 +343,7 @@ __all__ = [
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
     "UserProfileFactValue",
+    "ProfileId",
     "ProfileImportResult",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",

@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from ....core.config import Settings as _Settings
+from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
@@ -135,7 +136,6 @@ def _build_operator_inputs(
     scenario: OperatorInputScenario,
 ) -> tuple[OperatorInputs, dict[CasillaId, Decimal]]:
     """Translate casilla-number-keyed scenario inputs into casilla-id-keyed."""
-
     by_number = {casilla.number: casilla.id for casilla in snapshot.revision.casillas}
     operator_input_records: list[OperatorInput] = []
     inputs_by_id: dict[CasillaId, Decimal] = {}
@@ -179,7 +179,6 @@ def _seed_inputs_into_sheet(
     Relations and tariff parameter values are pre-stamped by the
     engine on plan apply, so they need no additional write here.
     """
-
     by_number = {casilla.number: casilla.id for casilla in snapshot.revision.casillas}
     address_by_casilla = {cell.casilla: cell.address for cell in plan.value_cells if cell.casilla is not None}
     # Re-derive the binding-row addresses from the layout. The plan
@@ -225,7 +224,6 @@ def _read_sheets_computed(
     plan: SheetExportPlan,
 ) -> dict[CasillaId, Decimal]:
     """Read every formula cell back from `Cálculos` and return its value."""
-
     if not plan.formula_cells:
         return {}
     # Sort formula cells by row so the resulting range is contiguous.
@@ -253,13 +251,13 @@ def _read_sheets_computed(
         cell_value = row[0]
         if cell_value in (None, ""):
             continue
-        try:
-            row_to_value[row_number] = Decimal(str(cell_value))
-        except (ValueError, ArithmeticError):
+        coerced = coerce_decimal(cell_value)
+        if coerced is None:
             # Sheets returned an error cell ("#ERROR!", "#N/A", ...).
             # Leave the row absent so the caller flags it as a
             # divergence rather than silently coercing.
             continue
+        row_to_value[row_number] = coerced
     return {cell.casilla: row_to_value[cell.address.row] for cell in sorted_cells if cell.address.row in row_to_value}
 
 def _compute_local(
@@ -313,7 +311,6 @@ def verify_modelo_parity(
     snapshot's process-local cache. The local Decimal runtime is
     invoked once and consulted only for comparison.
     """
-
     from ....adapters.outbound.google._calc_sheets_apply import apply_export_plan
 
     operator_inputs, inputs_by_id = _build_operator_inputs(snapshot, scenario)

@@ -399,6 +399,14 @@ class AeatAuthenticator:
                 :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
                 :meth:`authenticate` time. Tests pass an in-process implementation here
                 to avoid the Playwright import path.
+            handshake_verifier: Optional callable used to confirm the
+                certificate handshake during login. Defaults to the
+                module-level :func:`verify_handshake`; tests inject a
+                purpose-built callable to exercise specific handshake outcomes.
+            navigation_timeout_ms: Playwright navigation timeout in
+                milliseconds applied to every page load during the
+                login flow. Defaults to
+                ``AEAT_LOGIN_NAVIGATION_TIMEOUT_MS``.
             certificate_health_check: Optional
                 :class:`CertificateHealthCheck` callable threaded
                 into :meth:`describe`. Defaults to the module-level
@@ -462,6 +470,9 @@ class AeatAuthenticator:
         Args:
             url: Optional override. When omitted, the authenticator
                 uses :attr:`Settings.aeat_certificate_verify_url`.
+
+        Returns:
+            A :class:`HandshakeResult` with the probe outcome.
         """
         target = url or self._settings.aeat_certificate_verify_url
         cert = self.load_certificate()
@@ -481,8 +492,6 @@ class AeatAuthenticator:
     ) -> AeatSession:
         """Produce an authenticated :class:`AeatSession`.
 
-        Steps:
-
         The method first attempts to resume a previously captured
         Playwright ``storage_state``. If that persisted state is
         missing, malformed, stale, certificate-mismatched, or fails
@@ -490,11 +499,18 @@ class AeatAuthenticator:
         falls back to a fresh certificate handshake plus browser
         login flow.
 
+        Args:
+            browser_session: Optional existing browser session to reuse.
+            target_url: Optional override URL for the authentication target.
+
+        Returns:
+            An authenticated :class:`AeatSession` ready for use.
+
         Raises:
-            CertificateError: Any of the cert load / health / handshake
-                errors propagate unchanged.
-            AeatLoginAssertionError: When the browser session factory
-                returns a context missing the thumbprint marker.
+            AeatLoginAssertionError: When the browser session factory returns a context
+                missing the thumbprint marker, or when the login probe fails.
+            Exception: Re-raised when storage-state capture fails after a successful
+                context creation.
         """
         async with self._lock:
             if self._active_session is not None:
@@ -731,7 +747,6 @@ class AeatAuthenticator:
         target_url: str | None = None,
     ) -> AeatLoginAssertion:
         """Provider-protocol alias for :meth:`verify_login`."""
-
         return await self.verify_login(session, target_url=target_url)
 
     async def capture_storage_state(self, session: AeatSession) -> Path:
@@ -1163,7 +1178,6 @@ class AeatAuthenticator:
 
     def _load_persisted_browser_session(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         """Load encrypted browser session state or invalidate the logical path."""
-
         try:
             persisted = _session_store.load(storage_state_path)
         except (AuthValidationError, ValidationError) as exc:

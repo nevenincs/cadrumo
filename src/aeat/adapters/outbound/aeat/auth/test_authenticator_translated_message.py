@@ -49,10 +49,10 @@ from . import (
 from ._providers import AuthProviderKind
 from .certificate import CertificateBundle
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
 if TYPE_CHECKING:
     pass
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _AUTHENTICATOR_LOCALE_KEYS = [
     "adapters.auth.authenticator.errors.already_active",

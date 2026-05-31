@@ -141,13 +141,11 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
         ``operation_date`` so observations without invoices still get a
         deterministic anchor.
         """
-
         return self.invoice_issue_date if self.invoice_issue_date is not None else self.operation_date
 
     @property
     def sign(self) -> Literal[-1, 1]:
         """Return +1 for expenses and -1 for linked corrections."""
-
         if self.direction is RentaExpenseDirection.OUTGOING_EXPENSE:
             return 1
         return -1
@@ -246,7 +244,6 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
 
 def normalize_spending_category(value: SpendingCategory | str) -> SpendingCategory:
     """Normalize persisted category identifiers to closed enum members."""
-
     if isinstance(value, SpendingCategory):
         return value
     return SpendingCategory(value)
@@ -258,7 +255,6 @@ def evaluate_renta_deductibility(
     context: RentaDeductibilityContext,
 ) -> RentaDeductibilityResult:
     """Evaluate one classified ledger fact against its category profile."""
-
     if profile.category is not fact.category:
         raise RentaValidationError(
             f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}"
@@ -341,7 +337,6 @@ def build_renta_deductible_expense_observation(
     tax_year: int,
 ) -> RentaDeductibleExpenseObservation:
     """Build a first-slice Modelo 100 observation from an eligible result."""
-
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category is not result.category:

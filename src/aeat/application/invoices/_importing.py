@@ -11,9 +11,11 @@ from typing import Any, NotRequired, TypedDict
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
-from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.invoices._errors import InvoiceValidationError
+from ...domain.iva import InvoiceKind
 
 
 class InvoiceRowPayload(TypedDict, total=False):
@@ -59,7 +61,6 @@ class InvoiceImportResult(BaseModel):
 
 def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple[Invoice, ...]:
     """Parse JSON or CSV invoice payloads into validated invoice models."""
-
     kind = _coerce_kind(default_kind)
     candidates = _decode_invoice_payload(raw)
     invoices: list[Invoice] = []
@@ -81,7 +82,6 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
 
 def merge_invoice_import(catalogue: InvoiceCatalogue, invoices: Sequence[Invoice]) -> InvoiceImportResult:
     """Merge imported invoices into ``catalogue`` without duplicating IDs."""
-
     existing = dict(catalogue.invoices)
     imported = 0
     skipped = 0
@@ -107,7 +107,6 @@ def import_invoices_from_path(
     repository: InvoiceCatalogueRepository | None = None,
 ) -> InvoiceImportResult:
     """Import invoices from ``path`` through the secure invoice repository."""
-
     invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
     if dry_run:
         return InvoiceImportResult(rows=len(invoices), dry_run=True)
@@ -133,13 +132,15 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     return tuple(InvoiceRowPayload(**dict(row)) for row in reader)  # type: ignore[misc]
 
 
-def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
+def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:  # ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: parse-stage slot assembled from CSV/JSON decode before Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field names but dict mutation is required for the line-synthesis back-fill.
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return
-    base = Decimal(str(payload["base_total"]))
+    base = coerce_decimal(payload["base_total"])
+    if base is None:
+        raise InvoiceValidationError(f"invoice base_total {payload['base_total']!r} is not a decimal")
     rate_raw = str(payload["iva_rate"])
     rate = _IVA_RATE_ALIASES.get(rate_raw, rate_raw)
-    iva_amount = Decimal(str(payload.get("iva_total", "0")))
+    iva_amount = coerce_decimal(payload.get("iva_total"), default=Decimal("0")) or Decimal("0")
     payload["lines"] = [
         {
             "description": "Imported invoice line",

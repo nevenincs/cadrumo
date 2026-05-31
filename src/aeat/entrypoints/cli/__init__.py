@@ -42,7 +42,8 @@ from ._command_suggestions import (
 from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
-from ._common import _FORMAT_TEXT, _emit
+from ._common import _FORMAT_TEXT, _emit, _emit_envelope
+from ._root_payloads import AppRootResult, RootStatusResult
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._errors import write_stderr as _write_stderr
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
@@ -151,7 +152,8 @@ def _root(
         from ...application.operator_surface import build_help_document, render_help_text
 
         document = build_help_document("root")
-        _emit(ctx, document, render_help_text(document).splitlines())
+        typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
         raise typer.Exit()
     # Wire the active-profile output-language resolver into ``core.i18n``
     # before any subcommand renders prose. Importing the side-effect
@@ -184,17 +186,18 @@ def _root(
             # require an active session the operator has not yet
             # established — the F1 / F2 deadlock the disaster ADR
             # closes.
-            _emit(ctx, landing, render_cli_root_landing_lines(landing))
+            typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
+            _emit_envelope(ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing))
             raise typer.Exit()
         workflow_state = workflow_state_repository().load()
         overview_report = build_overview_status_report(state=workflow_state)
-        _emit(ctx, overview_report, render_cli_root_landing_lines(landing))
+        typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
         raise typer.Exit()
 
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     """Resolve ``--profile`` to a bucket id and set the active-profile override."""
-
     from ...application.workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
@@ -233,7 +236,6 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     runner invocations, so this guard does not misclassify cached
     Typer tests that do not populate the console-script argv shape.
     """
-
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...application.workflow._models import resolve_active_bucket_id
@@ -286,7 +288,6 @@ def _full_invocation_verb_path() -> str | None:
     so ``"config profile create alice"`` matches the exempt entry
     ``"config profile create"``.
     """
-
     import sys
     from pathlib import Path
 
@@ -366,12 +367,12 @@ def _app_root(
     help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
 ) -> None:
     """Render app-level workflow help when requested."""
-
     if help_ or ctx.invoked_subcommand is None:
         from ...application.operator_surface import build_help_document, render_help_text
 
         document = build_help_document("app")
-        _emit(ctx, document, render_help_text(document).splitlines())
+        typed_app = AppRootResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
         raise typer.Exit()
 
 
@@ -399,7 +400,6 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
 
 def _lazy(group_name: str, name: str, module_name: str) -> None:
     """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
-
     _register_lazy_subcommand(
         group_name,
         _LazySubcommand(name, _lazy_loader(module_name, name), decorate=_decorate_typer_app),
@@ -426,10 +426,12 @@ _decorate_typer_app(app)
 
 
 def main() -> None:
-    """Console-script entry point. Pins ``prog_name`` so Typer's usage
-    lines say ``aeat`` even when the launcher is ``aeat.EXE`` on Windows."""
+    """Console-script entry point.
 
+    Pins ``prog_name`` so Typer's usage lines say ``aeat`` even when the
+    launcher is ``aeat.EXE`` on Windows.
+    """
     app(prog_name="aeat")
 
 
-__all__ = ["app", "main"]
+__all__ = ["AppRootResult", "RootStatusResult", "app", "main", "tr"]

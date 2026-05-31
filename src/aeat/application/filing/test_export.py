@@ -88,7 +88,7 @@ def _approved_registry_draft():
             "08": Decimal("0"),
             "10": Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
@@ -223,7 +223,7 @@ def _approved_modelo_131_historical_registry_draft():
             "05": Decimal("250"),
             "08": Decimal("3"),
             "09": Decimal("2"),
-            "11": Decimal("1"),
+            "modelo-131-2019-2023-resultados-negativos-anteriores": Decimal("1"),
             "12": Decimal("0.50"),
             "14": Decimal("0.25"),
         },
@@ -1075,7 +1075,9 @@ def _approved_modelo_303_registry_draft():
             tax_id="12345678Z",
             display_name="Export registry test",
         ),
-        inputs={},
+        inputs={
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
         schema_provider=provider,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})

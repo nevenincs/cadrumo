@@ -42,7 +42,18 @@ _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 # Documented boundary-mock sites.
 # Format: (repo-relative path, module imported).
 # Each entry requires a one-line justification comment here AND in the source.
-_DOCUMENTED_BOUNDARY_MOCKS: frozenset[tuple[str, str]] = frozenset()
+_DOCUMENTED_BOUNDARY_MOCKS: frozenset[tuple[str, str]] = frozenset(
+    {
+        # The narrowed-except handler tests inject side-effects into the
+        # certificate health-check probe to prove that an unexpected
+        # exception type is converted to AuthValidationError, while a
+        # documented CertificateError flows through cleanly. The real
+        # health-check probe requires a valid PKCS#12 file we deliberately
+        # exclude from unit tests; patch.object on the bound method is the
+        # narrowest boundary stub that proves the narrowed handler.
+        ("src/aeat/test_except_clause_narrowing.py", "unittest.mock"),
+    }
+)
 
 # Import module names that constitute a mock library usage.
 _MOCK_MODULE_PREFIXES = ("unittest.mock", "pytest_mock")

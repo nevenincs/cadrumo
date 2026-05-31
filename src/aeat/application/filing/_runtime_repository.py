@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
     """Return an explicit or active profile bucket id for filing application repositories."""
-
     if bucket_id is not None:
         trimmed = bucket_id.strip()
         if trimmed:

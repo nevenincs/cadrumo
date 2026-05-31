@@ -34,12 +34,10 @@ def _json_output(result: Result) -> str:
 def _isolate(tmp_path: Path) -> None:
     """Test-isolation hook (no-op today).
 
-    Historically used ``monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE")`` to
-    scrub ambient env-var leakage. That defence is unnecessary now that
-    every test pins language via ``override_settings(...)`` or the
-    ``--output-language`` CLI flag; an ambient env value would be
-    shadowed by both surfaces. Kept as a marker so future env-isolation
-    concerns can re-thread the helper without churning every call site.
+    Every test pins language via ``override_settings(...)`` or the
+    ``--output-language`` CLI flag; both surfaces shadow ambient env
+    values. Kept as a marker so future env-isolation concerns can
+    re-thread the helper without churning every call site.
     """
 
     _ = tmp_path  # reserved for future per-test isolation hooks

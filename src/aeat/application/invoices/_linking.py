@@ -38,7 +38,6 @@ def link_invoice_transaction_catalogues(
     transaction_id: str,
 ) -> InvoiceTransactionLinkResult:
     """Return catalogues where the invoice and transaction cite each other."""
-
     canonical_transaction_id = _canonical_transaction_id(transactions, transaction_id)
     updated_invoices = link_transaction(invoices, invoice_id, canonical_transaction_id)
     updated_transactions = link_invoice(transactions, canonical_transaction_id, invoice_id)
@@ -63,7 +62,6 @@ def link_invoice_transaction_repositories(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> InvoiceTransactionLinkResult:
     """Persist a bidirectional invoice link through the backend repositories."""
-
     invoices_repo = invoice_repository or InvoiceCatalogueRepository()
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = link_invoice_transaction_catalogues(
@@ -79,7 +77,6 @@ def link_invoice_transaction_repositories(
 
 def _canonical_transaction_id(catalogue: TransactionCatalogue, transaction_id: str) -> str:
     """Return the catalogue key accepted by transaction services."""
-
     if transaction_id in catalogue:
         return transaction_id
     normalized = transaction_id.strip().lower()

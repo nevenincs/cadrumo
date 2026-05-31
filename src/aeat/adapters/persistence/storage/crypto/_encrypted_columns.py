@@ -81,10 +81,6 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
 
     Returns:
         The decrypted plaintext bytes.
-
-    Raises:
-        DecryptionError: If the AEAD tag fails to verify or the wire form
-            is malformed.
     """
     blob = EncryptedBlob.from_wire(wire)
     key = _resolve_master_key()
@@ -252,6 +248,9 @@ class HashedLookup(TypeDecorator[bytes]):
 
         Returns:
             32 raw bytes — the deterministic lookup digest.
+
+        Raises:
+            StorageValidationError: When ``plaintext`` is not a string.
         """
         if not isinstance(plaintext, str):
             raise StorageValidationError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")

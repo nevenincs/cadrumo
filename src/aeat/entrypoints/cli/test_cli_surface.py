@@ -34,6 +34,25 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _json(result) -> dict:
+    """Parse a CLI JSON result, unwrapping the emit-envelope when present.
+
+    ``_emit_envelope`` (W05.P18 and the parallel ledger.import migration)
+    wraps typed CLI payloads in ``{"schema_version", "command", "result",
+    "warnings"}``. Tests that assert against the typed payload should
+    read the inner ``result`` directly; legacy ``_emit`` callers emit a
+    bare payload, which this helper passes through unchanged. Pattern
+    mirrors the equivalent ``_json`` in test_cli_workflow_verification.py
+    (commit e707fe8a8, #83).
+    """
+    payload = json.loads(result.output)
+    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
+        inner = payload["result"]
+        if isinstance(inner, dict):
+            return inner
+    return payload
+
+
 def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Clear ambient auth env vars for tests that interact with auth CLI surfaces."""
     for name in (
@@ -150,13 +169,13 @@ def test_app_ledger_import_dry_run_does_not_persist(
     )
     dry = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"])
     assert dry.exit_code == 0
-    payload = json.loads(dry.output)
-    assert payload["dry_run"] is True
+    result = _json(dry)
+    assert result["dry_run"] is True
     # The dry run previews what a real import would add - one row here -
     # but persists nothing: the overview still reports zero transactions.
-    assert payload["imported"] == 1
+    assert result["imported"] == 1
     after = _invoke(["--format", "json", "app", "overview", "status"])
-    assert json.loads(after.output)["transactions"] == 0
+    assert _json(after)["transactions"] == 0
 
 
 def _run_ledger_cli_json(args: list[str]) -> dict[str, object]:

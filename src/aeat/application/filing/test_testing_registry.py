@@ -8,7 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...domain.filing._errors import ModeloBuilderError
-from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValueKind
+from ...domain.filing._schema import ModeloDraft, ModeloValueKind
+from ...domain.submission import ModeloDraftStatus
 from ._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

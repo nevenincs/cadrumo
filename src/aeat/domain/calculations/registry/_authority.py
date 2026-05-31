@@ -35,7 +35,6 @@ class ValidatedRegistryAuthority:
     @classmethod
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable authority instance."""
-
         resolved_root = root.expanduser().resolve()
         return _load_authority(
             resolved_root,
@@ -45,7 +44,6 @@ class ValidatedRegistryAuthority:
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
         """Return a modelo definition by id."""
-
         try:
             return self._modelos_by_id[modelo_id]
         except KeyError as exc:
@@ -53,7 +51,6 @@ class ValidatedRegistryAuthority:
 
     def validate_modelo(self, modelo_id: str) -> ModeloDefinition:
         """Validate one modelo once and return its definition."""
-
         modelo = self.modelo(modelo_id)
         if not self._registry_validated and modelo_id not in self._validated_modelos:
             self._validator.validate_modelo(modelo)
@@ -62,7 +59,6 @@ class ValidatedRegistryAuthority:
 
     def validate_registry(self) -> None:
         """Validate the full registry tree once."""
-
         if self._registry_validated:
             return
         self._validator.validate_registry(self.modelos)
@@ -79,7 +75,6 @@ class ValidatedRegistryAuthority:
         revision_id: str | None = None,
     ) -> RegistrySnapshot:
         """Return a cached validated snapshot for one filing context."""
-
         key = (modelo_id, filing_year, period, on, revision_id)
         cached = self._snapshots.get(key)
         if cached is not None:
@@ -103,7 +98,6 @@ class ValidatedRegistryAuthority:
         modelos: tuple[str, ...] | None = None,
     ) -> tuple[_DeadlineWindow, ...]:
         """Return validated deadline windows registered for ``year``."""
-
         out: list[_DeadlineWindow] = []
         for modelo in self._selected_modelos(modelos):
             candidates = tuple(

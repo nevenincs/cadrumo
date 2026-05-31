@@ -77,13 +77,11 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
 
 def implemented_auth_provider_ids() -> tuple[str, ...]:
     """Return provider ids accepted by auth commands that need an implementation."""
-
     return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE if entry.implemented)
 
 
 def known_auth_provider_ids() -> tuple[str, ...]:
     """Return every recognized provider id, including reserved slots."""
-
     return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE)
 
 
@@ -92,6 +90,13 @@ def get_auth_provider(provider_id: str) -> AuthProviderListing:
 
     Provider ids are exact. Legacy spellings and unavailable providers
     are rejected instead of being carried as compatibility paths.
+
+    Args:
+        provider_id: The provider identifier to look up (case-insensitive,
+            leading/trailing whitespace stripped before comparison).
+
+    Returns:
+        The matching :class:`AuthProviderListing` from the catalogue.
 
     Raises:
         KeyError: When ``provider_id`` is not in the catalogue. The

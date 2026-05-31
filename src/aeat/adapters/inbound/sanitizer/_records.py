@@ -31,7 +31,7 @@ def _validate_iban_shape(value: str) -> str:
         The uppercased input.
 
     Raises:
-        ValueError: If the input is not a 24-character ES-prefixed
+        SanitizerValidationError: If the input is not a 24-character ES-prefixed
             string whose mod-97 check fails.
     """
     candidate = value.replace(" ", "").upper()
@@ -61,7 +61,7 @@ def _validate_amount_shape(value: str) -> str:
         The input verbatim.
 
     Raises:
-        ValueError: If the string is not the AEAT
+        SanitizerValidationError: If the string is not the AEAT
             ``<thousands>,<cents>`` shape.
     """
     if "," not in value:

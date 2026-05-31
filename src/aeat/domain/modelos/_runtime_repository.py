@@ -14,7 +14,6 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: type[ModeloError]) -> str:
     """Return an explicit or active profile bucket id for modelo repositories."""
-
     if bucket_id is not None:
         trimmed = bucket_id.strip()
         if trimmed:

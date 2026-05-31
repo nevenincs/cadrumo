@@ -62,7 +62,6 @@ class WorkflowStateResetEvent(BaseModel):
 
 def _payload_from_event(event: WorkflowStateResetEvent) -> dict[str, str]:
     """Project the typed event payload onto the bucket-event mapping."""
-
     fp = event.fingerprint
     payload: dict[str, str] = {
         "reason_class": fp.reason_class,
@@ -92,7 +91,6 @@ def emit_workflow_state_reset(
     The event is recorded against the recovered bucket id when one
     survives on the fingerprint, or against the system bucket otherwise.
     """
-
     occurred_at = utc_now()
     event_model = WorkflowStateResetEvent(
         fingerprint=fingerprint,

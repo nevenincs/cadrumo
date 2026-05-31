@@ -110,6 +110,7 @@ def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _find_folder(
     drive: Any,
     *,
@@ -158,6 +159,7 @@ def _find_folder(
     return None
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _create_folder(
     drive: Any,
     *,
@@ -178,6 +180,7 @@ def _create_folder(
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _ensure_folder(
     drive: Any,
     *,
@@ -191,6 +194,7 @@ def _ensure_folder(
     return created["id"]
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _find_spreadsheet(
     drive: Any,
     *,
@@ -229,6 +233,7 @@ def _find_spreadsheet(
     return None
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _create_spreadsheet(
     drive: Any,
     sheets: Any,
@@ -319,7 +324,6 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
     sees the per-record column titles ready to receive their tipo-2
     detail rows (perceptores on 190, foreign assets on 720, etc.).
     """
-
     data: list[dict[str, Any]] = []
     for row_set in row_sets:
         for column in row_set.columns:
@@ -337,18 +341,16 @@ def _build_grid_resize_requests(
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[dict[str, Any]]:
-    """Compute one `updateSheetProperties` request per tab that needs
-    to grow beyond Sheets' default 1000-row / 26-column grid to hold
-    the plan's value + formula cells.
+    """Compute one ``updateSheetProperties`` request per tab that needs to grow beyond the default grid.
 
-    The function inspects every `SheetCellAddress` in the plan, finds
+    The function inspects every ``SheetCellAddress`` in the plan, finds
     the maximum row and column per tab, and emits a resize request
-    when either exceeds the default. Tabs already wide enough get no
-    request (Sheets accepts cell writes silently within the existing
-    grid bound). Resizes always *grow*; we never shrink, so a tab the
-    operator has manually expanded keeps its operator-set bound.
+    when either exceeds Sheets' default 1000-row / 26-column grid.
+    Tabs already wide enough get no request (Sheets accepts cell writes
+    silently within the existing grid bound). Resizes always *grow*;
+    we never shrink, so a tab the operator has manually expanded keeps
+    its operator-set bound.
     """
-
     default_rows = 1000
     default_columns = 26
     # Generous headroom in case the operator pastes additional notes
@@ -453,7 +455,6 @@ def _build_cell_constraint_requests(
        justify it. Operators see the grounding even before they
        attempt invalid input.
     """
-
     requests: list[dict[str, Any]] = []
     for constraint in constraints:
         sheet_id = sheet_id_by_tab.get(constraint.address.tab.value)
@@ -504,7 +505,6 @@ def _condition_for_constraint(constraint: SheetCellConstraint) -> dict[str, Any]
     ``dict[str, Any]`` is the irreducible Sheets API request shape;
     see the rationale on ``_find_folder`` above.
     """
-
     lower = constraint.min_value
     upper = constraint.max_value
     if constraint.sign == "non_negative":
@@ -602,7 +602,6 @@ def _build_cell_note_requests(
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[dict[str, Any]]:
     """Emit `updateCells` requests with cell notes for any value cell that has one."""
-
     requests: list[dict[str, Any]] = []
     for cell in value_cells:
         if cell.note is None:
@@ -689,17 +688,8 @@ def apply_export_plan(
         A `CalcSheetsApplyResult` with the spreadsheet's id and URL.
 
     Raises:
-        OutboundStoragePermissionError: The Drive scope grant is insufficient
-            (HTTP 401 / 403 mapped from `googleapiclient.errors.HttpError`).
-        OutboundStorageNotFoundError: The supplied root folder id does not exist
-            or is not visible to the operator (HTTP 404).
-        OutboundStorageConflictError: A folder or spreadsheet matching the
-            engine's target name exists but is not marked as app-owned.
-        OutboundStorageNetworkError: A transport or unmapped HTTP failure.
-        OutboundStorageValidationError: The plan is internally inconsistent or
-            the supplied `root_folder_id` is blank.
+        OutboundStorageValidationError: When the supplied ``root_folder_id`` is blank.
     """
-
     if not root_folder_id.strip():
         raise OutboundStorageValidationError(
             "root_folder_id must not be blank",

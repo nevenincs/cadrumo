@@ -99,12 +99,6 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
         ``RATE_4`` / ``RATE_10`` / ``RATE_21`` slots; ``None`` for
         :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT`.
 
-    Raises:
-        IvaRateNotFoundError: If the substrate has no rate for the
-            requested slot at ``on_date``. This indicates registry
-            drift (e.g. asking for a rate before its
-            ``effective_from`` window) and must be fixed by updating
-            the registry rather than by hardcoding a fallback here.
     """
     if rate is IvaRate.RATE_0:
         return Decimal("0")

@@ -1,8 +1,7 @@
 """Audit gate: persistence-boundary roundtrip coverage.
 
-S217 enumeration — persistence boundaries touched by W01.P01..P08 fix Steps:
-  The following boundaries were identified as touched by P01-P08 execution
-  and each has at least one roundtrip test (per aeat-roundtrip-discipline.md).
+Tracks the persistence boundaries the codebase exposes; each has at
+least one roundtrip test (per aeat-roundtrip-discipline.md).
 
   Boundary -> roundtrip test file:
   - SecureObjectRepository (SQL encrypted storage)
@@ -37,13 +36,10 @@ S217 enumeration — persistence boundaries touched by W01.P01..P08 fix Steps:
   - Registry corpus round-trip gate
       -> src/aeat/domain/calculations/registry/test_corpus_round_trip_gate.py
 
-S218 assertion — this file provides the real-behavior test that asserts every
-  declared boundary has its roundtrip test file present on disk.  New boundaries
-  added by future Steps must be registered here alongside a roundtrip test or
-  the gate will fail.
-
-No Wave 2 follow-up Steps were generated from the S217 enumeration pass:
-  all known P01-P08 boundaries have at least one roundtrip test.
+This file provides the real-behavior test that asserts every
+declared boundary has its roundtrip test file present on disk.  New
+boundaries must be registered here alongside a roundtrip test or the
+gate will fail.
 """
 
 from __future__ import annotations

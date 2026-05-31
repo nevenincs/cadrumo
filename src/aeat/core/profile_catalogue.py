@@ -29,6 +29,7 @@ class WizardCatalogueNotRegisteredError(CoreError):
     """Raised when a domain consumer accesses the catalogue before registration."""
 
     def __init__(self) -> None:
+        """Initialise with a fixed message directing the caller to register the catalogue."""
         super().__init__(
             "Wizard catalogue has not been registered. "
             "Call register_wizard_catalogue() at application startup before "
@@ -60,6 +61,7 @@ _SETUP_FLOW_SLOT: list[Any] = []
 _WIZARD_FLOWS_SLOT: list[tuple[Any, ...]] = []
 
 
+# KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR: same circular-import rationale as core/profile.py KWARGS-ANY markers.
 def register_wizard_catalogue(
     setup_flow: Any,
     wizard_flows: tuple[Any, ...],
@@ -74,7 +76,6 @@ def register_wizard_catalogue(
     Calling with *different* objects raises :class:`RuntimeError` to
     prevent accidental re-registration from a different source.
     """
-
     if _SETUP_FLOW_SLOT:
         if _SETUP_FLOW_SLOT[0] is setup_flow and _WIZARD_FLOWS_SLOT[0] is wizard_flows:
             return
@@ -90,11 +91,14 @@ def register_wizard_catalogue(
 def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
     """Return the registered ``SETUP_FLOW`` descriptor.
 
+    Returns:
+        The concrete ``SETUP_FLOW`` descriptor registered by the
+        application layer.
+
     Raises:
         WizardCatalogueNotRegisteredError: When the application layer has
             not yet called :func:`register_wizard_catalogue`.
     """
-
     if not _SETUP_FLOW_SLOT:
         raise WizardCatalogueNotRegisteredError()
     return _SETUP_FLOW_SLOT[0]
@@ -103,11 +107,14 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wi
 def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
     """Return the registered ``WIZARD_FLOWS`` tuple.
 
+    Returns:
+        Tuple of concrete wizard-flow descriptors registered by the
+        application layer.
+
     Raises:
         WizardCatalogueNotRegisteredError: When the application layer has
             not yet called :func:`register_wizard_catalogue`.
     """
-
     if not _WIZARD_FLOWS_SLOT:
         raise WizardCatalogueNotRegisteredError()
     return _WIZARD_FLOWS_SLOT[0]

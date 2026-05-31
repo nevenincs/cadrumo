@@ -164,7 +164,6 @@ def describe_certificate_provider(
     critical_days: int,
 ) -> AuthProviderDescription:
     """Build an :class:`AuthProviderDescription` from a loaded certificate."""
-
     health = evaluate_loaded_certificate_health(
         cert,
         warn_days=warn_days,

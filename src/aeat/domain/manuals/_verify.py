@@ -258,7 +258,7 @@ def raise_on_errors(report: ManualVerificationReport) -> None:
         report: Report produced by :func:`verify_manual_dir`.
 
     Raises:
-        :exc:`ManualReviewRequiredError`: When the report contains any
+        ManualReviewRequiredError: When the report contains any
             ``error``-level issues.
     """
     if not report.ok:

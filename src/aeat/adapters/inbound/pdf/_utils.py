@@ -20,7 +20,6 @@ def sha256_file(path: Path) -> str:
     cleanly. Use this instead of inline ``hashlib.sha256(path.read_bytes())``
     when you need a stable digest of an on-disk artefact.
     """
-
     digest = hashlib.sha256()
     with path.open("rb") as fh:
         for chunk in iter(lambda: fh.read(_HASH_CHUNK_SIZE), b""):

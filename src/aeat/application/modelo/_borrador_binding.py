@@ -107,7 +107,6 @@ def resolve_modelo_100_borrador_bindings(
     contribute bindings explicitly marked ``aeat_prefilled`` by the
     registry revision passed to the service.
     """
-
     if command.borrador_snapshot_id is None:
         return Modelo100BorradorBindingResult()
 

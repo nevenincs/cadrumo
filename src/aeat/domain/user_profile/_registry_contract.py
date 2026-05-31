@@ -65,24 +65,20 @@ class UserProfileRegistryContractReport(BaseModel):
     @property
     def errors(self) -> tuple[UserProfileRegistryContractIssue, ...]:
         """Blocking contract failures."""
-
         return tuple(issue for issue in self.issues if issue.severity is UserProfileRegistryContractSeverity.ERROR)
 
     @property
     def warnings(self) -> tuple[UserProfileRegistryContractIssue, ...]:
         """Non-blocking coverage gaps retained for rollout hardening."""
-
         return tuple(issue for issue in self.issues if issue.severity is UserProfileRegistryContractSeverity.WARNING)
 
     @property
     def valid(self) -> bool:
         """Return whether all blocking selector references resolve."""
-
         return not self.errors
 
 def build_user_profile_selector_index(schema: ProfileSchemaDefinition) -> UserProfileSelectorIndex:
     """Build the profile selector namespaces declared by the TOML schema."""
-
     profile_selectors: set[str] = set(schema.field_paths)
     schedule_predicates: set[str] = set()
     export_headers: set[str] = set()
@@ -110,7 +106,6 @@ def validate_user_profile_registry_contract(
     non-profile operational headers that will move behind an export-context
     backend rather than a live taxpayer profile fact.
     """
-
     index = build_user_profile_selector_index(schema)
     checked_modelos: list[str] = []
     issues: list[UserProfileRegistryContractIssue] = []

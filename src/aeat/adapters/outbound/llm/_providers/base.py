@@ -100,7 +100,6 @@ def parse_retry_after(value: str | None) -> float | None:
         Number of seconds to wait, or ``None`` when the value is missing or
         not a plain numeric string.
     """
-
     if value is None:
         return None
     try:
@@ -117,7 +116,6 @@ def raise_rate_limit(message: str, retry_after: str | None) -> None:
         retry_after: Raw ``Retry-After`` header value supplied by the provider.
 
     Raises:
-        :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: Always raised.
+        LLMRateLimitError: Always raised with the parsed retry hint.
     """
-
     raise LLMRateLimitError(message, retry_after_seconds=parse_retry_after(retry_after))

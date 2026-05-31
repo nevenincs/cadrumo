@@ -1,6 +1,4 @@
-"""Application-layer calculation utilities — observation repository and
-the multi-year resolver that lets relation / binding pre-resolution
-consult prior years' filings.
+"""Application-layer calculation utilities: observation repository and multi-year resolver for prior-year inputs.
 
 The runtime calc engine (`aeat.domain.calculations.registry._formula_runtime`)
 takes pre-resolved `relation_values` and `binding_values` mappings.
@@ -65,6 +63,10 @@ from ._row_set_assembly import (
     assemble_related_party_observations,
     assemble_withholding_observations,
 )
+
+# Resolve forward reference: BindingPrefillReport is TYPE_CHECKING-only inside
+# _iva_wallet_reconciliation due to a circular import; rebuild after both modules load.
+IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
     "AssembledObservations",

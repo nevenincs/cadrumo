@@ -68,8 +68,10 @@ class LLMClient:
 
         Returns:
             The provider response enriched with cache and cost metadata.
-        """
 
+        Raises:
+            Exception: Re-raised after logging when the LLM provider adapter fails.
+        """
         provider = request.provider_override or self._default_provider()
         model = request.model_override or self._default_model(provider)
         request_id = self._request_id(request)
@@ -177,7 +179,6 @@ class LLMClient:
         Returns:
             The underlying secret string, or an empty string when unset.
         """
-
         return "" if value is None else value.get_secret_value()
 
     @staticmethod
@@ -190,7 +191,6 @@ class LLMClient:
         Returns:
             Stable SHA-256 request identifier.
         """
-
         payload = request.model_dump(mode="json", exclude_none=True)
         material = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
         return hashlib.sha256(material.encode("utf-8")).hexdigest()

@@ -3,9 +3,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
-from ._schema import ModeloRevision
+from ._schema import (
+    AlgorithmBindingDefinition,
+    AlgorithmProviderDefinition,
+    ApplicationLinkDefinition,
+    CasillaDefinition,
+    ConstructDefinition,
+    DataBindingDefinition,
+    DeadlineWindowDefinition,
+    DependencyClassificationDefinition,
+    ExportLayoutDefinition,
+    ExtractionProfileDefinition,
+    FormulaDefinition,
+    LiveCrossReferenceDecision,
+    ModeloRevision,
+    ModeloScheduleDefinition,
+    ParameterDefinition,
+    RelationDefinition,
+    SupportRemovalDecisionDefinition,
+    VerificationExpectationDefinition,
+    WorkbookParityReference,
+)
 from ._validate_revision_identity import _collect_record_id_lists, _resolvable_casilla_references
 
 
@@ -20,26 +39,26 @@ class RevisionValidationContext:
     application_link_ids: list[str]
     deadline_window_ids: list[str]
     filing_schedule_ids: list[str]
-    casilla_by_id: dict[str, Any]
-    formula_by_id: dict[str, Any]
-    binding_by_id: dict[str, Any]
-    relation_by_id: dict[str, Any]
-    parameter_by_id: dict[str, Any]
-    provider_by_id: dict[str, Any]
-    algorithm_binding_by_id: dict[str, Any]
-    export_layout_by_id: dict[str, Any]
-    extraction_profile_by_id: dict[str, Any]
-    cross_reference_by_id: dict[str, Any]
-    workbook_parity_by_id: dict[str, Any]
-    verification_expectation_by_id: dict[str, Any]
-    application_link_by_id: dict[str, Any]
-    deadline_window_by_id: dict[str, Any]
-    filing_schedule_by_id: dict[str, Any]
-    support_removal_decision_by_id: dict[str, Any]
-    construct_by_id: dict[str, Any]
-    dependency_classification_by_id: dict[str, Any]
+    casilla_by_id: dict[str, CasillaDefinition]
+    formula_by_id: dict[str, FormulaDefinition]
+    binding_by_id: dict[str, DataBindingDefinition]
+    relation_by_id: dict[str, RelationDefinition]
+    parameter_by_id: dict[str, ParameterDefinition]
+    provider_by_id: dict[str, AlgorithmProviderDefinition]
+    algorithm_binding_by_id: dict[str, AlgorithmBindingDefinition]
+    export_layout_by_id: dict[str, ExportLayoutDefinition]
+    extraction_profile_by_id: dict[str, ExtractionProfileDefinition]
+    cross_reference_by_id: dict[str, LiveCrossReferenceDecision]
+    workbook_parity_by_id: dict[str, WorkbookParityReference]
+    verification_expectation_by_id: dict[str, VerificationExpectationDefinition]
+    application_link_by_id: dict[str, ApplicationLinkDefinition]
+    deadline_window_by_id: dict[str, DeadlineWindowDefinition]
+    filing_schedule_by_id: dict[str, ModeloScheduleDefinition]
+    support_removal_decision_by_id: dict[str, SupportRemovalDecisionDefinition]
+    construct_by_id: dict[str, ConstructDefinition]
+    dependency_classification_by_id: dict[str, DependencyClassificationDefinition]
     casillas: set[str]
-    formulas: dict[str, Any]
+    formulas: dict[str, FormulaDefinition]
     bindings: set[str]
     relations: set[str]
     parameters: set[str]
@@ -49,7 +68,31 @@ class RevisionValidationContext:
     exported_casillas: set[str]
 
     @property
-    def construct_member_objects(self) -> dict[str, dict[str, Any]]:
+    def construct_member_objects(
+        self,
+    ) -> dict[
+        str,
+        dict[
+            str,
+            CasillaDefinition
+            | FormulaDefinition
+            | ParameterDefinition
+            | DataBindingDefinition
+            | AlgorithmProviderDefinition
+            | AlgorithmBindingDefinition
+            | RelationDefinition
+            | ExportLayoutDefinition
+            | ExtractionProfileDefinition
+            | LiveCrossReferenceDecision
+            | WorkbookParityReference
+            | VerificationExpectationDefinition
+            | ApplicationLinkDefinition
+            | DeadlineWindowDefinition
+            | ModeloScheduleDefinition
+            | SupportRemovalDecisionDefinition
+            | DependencyClassificationDefinition,
+        ],
+    ]:
         return {
             "casilla": self.casilla_by_id,
             "formula": self.formula_by_id,

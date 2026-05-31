@@ -131,10 +131,6 @@ def materialise_secret(
 
     Yields:
         :class:`Path` to the materialised file.
-
-    Raises:
-        SecretNotFoundError: If no record exists for ``key`` (raised
-            from :meth:`SecretStore.get`).
     """
     active_store = store if store is not None else get_secret_store()
     record = active_store.get(key)
@@ -179,9 +175,6 @@ def export_to_temp_path(
 
     Returns:
         A ``(path, cleanup)`` tuple.
-
-    Raises:
-        SecretNotFoundError: If no record exists for ``key``.
     """
     active_store = store if store is not None else get_secret_store()
     record = active_store.get(key)

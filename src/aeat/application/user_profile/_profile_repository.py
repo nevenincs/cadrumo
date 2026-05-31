@@ -84,7 +84,6 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
     Returns :data:`None` when no ``identity.tax_id`` fact is present or
     it carries no value, so a profile without a tax id never collides.
     """
-
     for fact in facts:
         if fact.path == _TAX_ID_FACT_PATH and fact.value is not None:
             text = str(fact.value).strip().upper()
@@ -100,7 +99,6 @@ def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
     surfaces here as a :class:`ValueError` (the enum lookup rejects an
     unknown value) rather than silently mismatching.
     """
-
     return BucketLifecycleStatus(status.value)
 
 def _default_kdf_params() -> ManifestKdfParams:
@@ -111,7 +109,6 @@ def _default_kdf_params() -> ManifestKdfParams:
     bucket will be enrolled under so a future cost-bump is
     non-breaking. The salt is freshly minted per bucket.
     """
-
     return KdfParams.default().to_manifest_params()
 
 class ProfileSummary(BaseModel):
@@ -160,7 +157,6 @@ class ProfileRepository:
                 lifecycle service. ``None`` resolves the canonical
                 process-shared schema.
         """
-
         self._root = root if root is not None else load_settings().aeat_local_storage_root
         self._secure_objects = secure_objects
         self._schema = schema
@@ -212,16 +208,28 @@ class ProfileRepository:
         profile with no record) is unreachable because the pointer
         write and the record write are one unit of work.
 
+        Args:
+            label: Operator-visible display name for the new profile.
+            facts: Initial profile fact sequence. Defaults to empty.
+            profile_id: Optional explicit UUID. When ``None``, a fresh
+                UUID is minted.
+            enforce_unique_tax_id: When ``True`` (default), refuses a
+                create whose tax id is already carried by a live profile.
+            routing_profile_id: Optional routing assertion; must match
+                ``profile_id`` when supplied.
+
         Returns:
             The assembled :class:`ProfileAggregate`.
 
         Raises:
             ProfileNotFoundError: If the profile already carries a
                 manifest (it is already a registered profile).
-            ProfileAlreadyRegisteredError: If the label is already
-                carried by a live profile.
+            AeatError: If an error occurs during the all-or-nothing write.
+            OSError: If a filesystem error occurs during directory staging.
+            UserProfileValidationError: If the routing profile id does not
+                match the resolved profile id.
+            ValidationError: If the encrypted record fails schema validation.
         """
-
         resolved_id = profile_id if profile_id is not None else new_profile_id()
         if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
             raise UserProfileValidationError(
@@ -339,13 +347,16 @@ class ProfileRepository:
         manifest, and the record all agree on the UUID and on the
         lifecycle status, then builds the :class:`ProfileAggregate`.
 
+        Args:
+            profile_id: The UUID of the profile to load.
+
+        Returns:
+            The assembled :class:`ProfileAggregate` for the profile.
+
         Raises:
             ProfileNotFoundError: If the bucket directory or manifest
                 is absent.
-            ProfileIntegrityError: If the stores disagree on the UUID
-                or on the lifecycle status.
         """
-
         paths = bucket_paths(self._root, profile_id)
         if not manifest_path(paths).is_file():
             raise ProfileNotFoundError(
@@ -390,7 +401,6 @@ class ProfileRepository:
         active-profile pointer is not touched — selecting a profile is
         a distinct operation.
         """
-
         paths = bucket_paths(self._root, aggregate.profile_id)
         current_manifest = read_manifest(paths)
         write_manifest(
@@ -428,13 +438,19 @@ class ProfileRepository:
         :class:`ProfileIntegrityError` rather than being relabelled in
         a torn state.
 
+        Args:
+            profile_id: The UUID of the profile to rename.
+            new_label: The new operator-visible display name.
+
+        Returns:
+            The updated :class:`ProfileAggregate` with the new label.
+
         Raises:
-            ProfileNotFoundError: If the profile is not registered.
-            ProfileIntegrityError: If the stores disagree on the UUID.
             ProfileAlreadyRegisteredError: If ``new_label`` is already
                 carried by another live profile.
+            UserProfileValidationError: If ``new_label`` is blank after
+                stripping.
         """
-
         from ..workflow._profile_bucket_scan import read_profile_bucket
         from ._orchestration import ProfileAlreadyRegisteredError
 
@@ -508,12 +524,12 @@ class ProfileRepository:
         :class:`ProfileIntegrityError` on the next load — reclaiming a
         drifted profile is the ``repair`` surface's domain.
 
-        Raises:
-            ProfileNotFoundError: If the profile is not registered.
-            ProfileIntegrityError: If the stores disagree on the UUID
-                or on the lifecycle status.
-        """
+        Args:
+            profile_id: The UUID of the profile to tombstone.
 
+        Returns:
+            The updated :class:`ProfileAggregate` with tombstoned status.
+        """
         aggregate = self.load(profile_id)
         if self._active_pointer_targets(profile_id):
             self._clear_pointer()
@@ -551,12 +567,16 @@ class ProfileRepository:
         profile so the operator cannot unknowingly work inside a
         deleted profile.
 
+        Args:
+            profile_id: The UUID of the profile to activate.
+
+        Returns:
+            The :class:`ProfileAggregate` for the newly active profile.
+
         Raises:
             ProfileNotFoundError: If the profile is not registered, or
                 is registered but tombstoned.
-            ProfileIntegrityError: If the stores disagree on the UUID.
         """
-
         aggregate = self.load(profile_id)
         if aggregate.status is UserProfileStatus.TOMBSTONED:
             raise ProfileNotFoundError(
@@ -581,7 +601,6 @@ class ProfileRepository:
         are included so callers that need the full inventory (repair,
         audit) see them; live-surface callers filter on ``status``.
         """
-
         buckets_root = self._root / BUCKETS_DIRNAME
         if not buckets_root.is_dir():
             return ()
@@ -631,7 +650,6 @@ class ProfileRepository:
         case-insensitively. The refusal fires before any store write,
         so there is no staged state to roll back.
         """
-
         from ..workflow._profile_bucket_scan import read_profile_bucket
         from ._orchestration import ProfileAlreadyRegisteredError
 
@@ -662,7 +680,6 @@ class ProfileRepository:
         registering. Duplicate detection still fires against all readable
         profiles in the scan.
         """
-
         new_tax_id = _canonical_tax_id(facts)
         if new_tax_id is None:
             return
@@ -711,7 +728,6 @@ class ProfileRepository:
         construction it is reused; otherwise the repository resolves the
         per-bucket engine from settings.
         """
-
         return UserProfileLifecycleRepository(bucket_id=profile_id, objects=self._secure_objects)
 
     def _lifecycle_service(self, profile_id: str) -> ProfileLifecycleService:
@@ -722,7 +738,6 @@ class ProfileRepository:
         PROFILE_BUCKET_CREATED / PROFILE_TOMBSTONED audit events; this
         repository composes it inside the cross-store unit of work.
         """
-
         from ._orchestration import build_lifecycle_service
 
         return build_lifecycle_service(
@@ -743,7 +758,6 @@ class ProfileRepository:
         helper provisions afresh when nothing exists, and otherwise
         idempotently completes the ``db/ blobs/ audit/`` subtree.
         """
-
         paths = bucket_paths(self._root, profile_id)
         if not paths.bucket_dir.exists():
             provision_bucket_directory(self._root, profile_id)
@@ -763,7 +777,6 @@ class ProfileRepository:
         mask the original failure being re-raised, and a directory
         with no secure-object row is detectable, reclaimable garbage.
         """
-
         import gc
         import shutil
 
@@ -781,7 +794,6 @@ class ProfileRepository:
 
     def _read_pointer_text(self) -> str | None:
         """Return the raw active-profile pointer text, or ``None`` if absent."""
-
         target = pointer_path(self._root)
         if not target.is_file():
             return None
@@ -794,7 +806,6 @@ class ProfileRepository:
         was found: if there was no pointer it is removed, otherwise its
         prior bytes are written back.
         """
-
         target = pointer_path(self._root)
         if prior_text is None:
             if target.is_file():
@@ -805,7 +816,6 @@ class ProfileRepository:
 
     def _active_pointer_targets(self, profile_id: str) -> bool:
         """Return whether the active-profile pointer aims at ``profile_id``."""
-
         from ...core._bucket_pointer_io import read_pointer
 
         pointer = read_pointer(self._root)
@@ -813,7 +823,6 @@ class ProfileRepository:
 
     def _clear_pointer(self) -> None:
         """Remove the active-profile pointer file if present."""
-
         target = pointer_path(self._root)
         if target.is_file():
             target.unlink()

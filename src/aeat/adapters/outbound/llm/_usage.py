@@ -53,7 +53,6 @@ class UsageRecorder:
             Persistable usage record carrying the response text and accounting
             metadata.
         """
-
         return UsageRecord(
             prompt_id=prompt_id,
             caller=caller,
@@ -86,8 +85,7 @@ class UsageRecorder:
             Logical daily usage path for operator display only.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm.LLMCacheError`: When the JSONL
-                file cannot be appended to.
+            LLMCacheError: When the storage write fails.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
@@ -126,7 +124,6 @@ class UsageRecorder:
         Returns:
             Loaded usage records in file-iteration order.
         """
-
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
@@ -159,7 +156,6 @@ class UsageRecorder:
             Aggregate usage summary covering entries, total tokens, and
             estimated cost.
         """
-
         records = self.load_records(since=since, until=until)
         total_cost = sum((record.cost_estimate_usd for record in records), start=Decimal("0"))
         return UsageSummary(
@@ -173,12 +169,10 @@ class UsageRecorder:
 
     def _logical_root(self) -> str:
         """Return the stable logical usage partition."""
-
         return self.root_dir.resolve().as_posix()
 
     def _object_key_for(self, record: UsageRecord) -> str:
         """Return a unique natural key for one usage record append."""
-
         return "|".join(
             (
                 self._logical_root(),

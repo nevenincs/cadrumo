@@ -48,7 +48,7 @@ def _hash_tree(
     *,
     excluded_dirs: frozenset[Path],
 ) -> str:
-    """Hash a directory tree as a sorted list of ``(rel_path, sha256)`` pairs.
+    r"""Hash a directory tree as a sorted list of ``(rel_path, sha256)`` pairs.
 
     Uses :func:`os.walk` with top-down directory pruning so excluded
     subtrees are never descended — on a workstation with tens of GB

@@ -21,7 +21,6 @@ class BrowserError(AeatError):
         translated_message: str | None = None,
     ) -> None:
         """Construct a browser error with a stable failure-mode tag."""
-
         enriched_context = dict(context) if context is not None else {}
         if failure_mode is not None:
             failure_mode_value = (

@@ -48,8 +48,8 @@ _FAST_REPAIR_VERBS: tuple[tuple[str, ...], ...] = (
 def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
     """A pristine storage root: no pointer, no database, no buckets.
 
-    Uses ``override_settings`` (ContextVar-backed, live-tests-friendly)
-    per the project no-monkeypatch mandate (CLAUDE.md).
+    Output-language is pinned to English via ``override_settings`` so
+    locale-resolved CLI output stays deterministic for assertions.
     """
 
     from aeat.core.config import override_settings

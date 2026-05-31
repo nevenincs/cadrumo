@@ -71,8 +71,7 @@ def _window_outside_activity_period(
     activity_start_date: date | None,
     activity_end_date: date | None,
 ) -> bool:
-    """Return True when an AEAT window falls entirely outside the
-    operator's census-declared activity period.
+    """Return True when an AEAT window falls entirely outside the operator's activity period.
 
     Two gates, both grounded in RGAT Arts. 9 / 11 (census activity
     start / end dates published on G313):
@@ -87,7 +86,6 @@ def _window_outside_activity_period(
     Windows that straddle either date stay on the schedule — the
     operator may still owe a return covering the active fraction.
     """
-
     if activity_start_date is not None and closes_on < activity_start_date:
         return True
     return activity_end_date is not None and opens_on > activity_end_date
@@ -162,13 +160,9 @@ class DeadlineEngine:
             applies to ``profile`` for ``year``.
 
         Raises:
-            :exc:`aeat.domain.deadlines.NoDeadlineWindowsError`: If no
-                validated registry deadline windows are registered for
-                ``year`` — the benign data gap callers degrade around.
-            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If
-                the registry fails validation or a profile condition
-                cannot be evaluated — a genuine integrity fault that
-                must not be masked.
+            NoDeadlineWindowsError: If no validated registry deadline windows
+                are registered for ``year`` — the benign data gap callers
+                degrade around.
         """
         reference_today = today or date.today()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
@@ -258,7 +252,6 @@ class DeadlineEngine:
 
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
         """Return registry-backed deadline applicability text for ``modelo``."""
-
         selected_year = year or date.today().year
         windows = [
             window
@@ -280,7 +273,6 @@ class DeadlineEngine:
 
     def applies_to(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> bool:
         """Return whether registry deadline conditions match for ``modelo``."""
-
         selected_year = year or date.today().year
         return any(
             code == modelo
@@ -460,17 +452,14 @@ def compute_obligation_schedule(
         The :class:`Schedule` of obligations applicable to ``profile``
         for ``today``'s fiscal year.
     """
-
     return engine.compute(profile, today.year, today=today)
 
 
 def applies_to(profile: TaxpayerProfile, modelo: str) -> bool:
     """Return whether registry deadline conditions match for ``modelo``."""
-
     return DeadlineEngine().applies_to(profile, modelo)
 
 
 def explain(profile: TaxpayerProfile, modelo: str) -> str:
     """Return registry-backed deadline applicability text for ``modelo``."""
-
     return DeadlineEngine().explain(profile, modelo)

@@ -33,7 +33,6 @@ TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-
     from ...adapters.persistence.storage import inspect_bucket_storage_runtime
     from ...core.config import load_settings
 
@@ -48,7 +47,6 @@ def transaction_catalogue_object_key(bucket_id: str) -> str:
     must qualify with ``(bucket_id, tx_id)``; ``tx_id`` alone is unique
     only within one bucket.
     """
-
     trimmed = bucket_id.strip()
     if not trimmed:
         raise LedgerStorageError(
@@ -109,22 +107,26 @@ class TransactionCatalogueRepository:
     @property
     def bucket_id(self) -> str:
         """Return the profile bucket id this repository is bound to."""
-
         return self._bucket_id
 
     def exists(self) -> bool:
         """Return whether this bucket's transaction catalogue has been persisted."""
-
         return self._objects.exists(TX_BUCKET_NAMESPACE, self._object_key)
 
     def load(self) -> TransactionCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
+        Returns:
+            The deserialised :class:`TransactionCatalogue`, or a fresh empty
+            instance when no database object is present.
+
         Raises:
             ClassificationError: If the persisted object's class is not
-                FINANCIAL.
+                ``SensitivityClass.FINANCIAL``.
             EnvelopeVersionError: If the persisted object's schema version is
                 higher than the consumer supports.
+            StoredTransactionDriftError: If the persisted payload fails
+                pydantic schema validation on deserialization.
         """
         from ...adapters.persistence.storage.envelope._envelope import Envelope
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -219,7 +221,6 @@ class TransactionCatalogueRepository:
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work."""
-
         self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
         _log.info(
             "saved transaction catalogue bucket_id=%s object_key=%s entries=%d extra_writes=%d",

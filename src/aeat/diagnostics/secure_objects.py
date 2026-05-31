@@ -21,7 +21,6 @@ from ..core.i18n import tr
 
 def register(app: typer.Typer) -> None:
     """Mount the ``secure-objects`` sub-app onto ``app``."""
-
     sub = typer.Typer(
         name="secure-objects",
         help=tr("cli.diagnostics.secure_objects.help"),

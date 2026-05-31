@@ -189,7 +189,6 @@ def family_for(category: SpendingCategory) -> SpendingCategoryFamily:
         KeyError: If ``category`` is not registered in
             :data:`CATEGORY_FAMILY_MEMBERS`.
     """
-
     for family, members in CATEGORY_FAMILY_MEMBERS.items():
         if category in members:
             return family
@@ -205,5 +204,4 @@ def categories_for_family(family: SpendingCategoryFamily) -> tuple[SpendingCateg
     Returns:
         Tuple of :class:`SpendingCategory` members in the family.
     """
-
     return CATEGORY_FAMILY_MEMBERS[family]

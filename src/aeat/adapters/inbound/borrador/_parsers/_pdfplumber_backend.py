@@ -22,11 +22,6 @@ def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
 
     Returns:
         A tuple of stripped per-page text strings, in page order.
-
-    Raises:
-        :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
-            When pdfplumber cannot open the file, or when every page is
-            empty (suggesting a scan-only or XFA PDF).
     """
     return extract_pages_text_from_path(
         pdf_path,

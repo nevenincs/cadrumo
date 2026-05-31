@@ -383,10 +383,6 @@ async def fetch_notifications_summary(
 
     Returns:
         A :class:`NotificationsSnapshot` parsed from the live HTML.
-
-    Raises:
-        SedeNavigationError: If the session has no persisted browser state
-            or the navigation fails.
     """
     return await _fetch_and_parse(
         session,
@@ -409,10 +405,6 @@ async def fetch_notifications_query(
 
     Returns:
         A :class:`NotificationsSnapshot` parsed from the live HTML.
-
-    Raises:
-        SedeNavigationError: If the session has no persisted browser state
-            or the navigation fails.
     """
     return await _fetch_and_parse(
         session,

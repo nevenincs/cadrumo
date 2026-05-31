@@ -1637,6 +1637,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.renta._maritime_exemption.MaritimeExemptionInactiveError",
+        ErrorCode(
+            code="REFUSED_RENTA_MARITIME_EXEMPTION_INACTIVE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_renta_maritime_exemption_inactive",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.renta._maritime_exemption.ProfileCompletenessError",
+        ErrorCode(
+            code="ERROR_RENTA_PROFILE_COMPLETENESS_WARNING",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_renta_profile_completeness_warning",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.user_profile._errors.UserProfileError",
         ErrorCode(
             code="ERROR_USER_PROFILE",

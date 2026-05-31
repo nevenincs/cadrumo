@@ -89,7 +89,6 @@ _MANIFEST_HEALTH_EXCEPTIONS = (
 
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
     """Return a redacted, non-secret health projection for the active profile."""
-
     settings = load_settings()
     override = (settings.aeat_active_profile or "").strip()
     pointer = None if override else read_pointer(settings.aeat_local_storage_root)
@@ -212,7 +211,6 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
 
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
     """Clear a degraded pointer-file active profile when explicitly confirmed."""
-
     before = _assess_with_best_effort_session()
     should_clear = before.repairable_by_clearing_pointer and before.status in {
         "dangling_pointer",
@@ -234,7 +232,6 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
 
 def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileManifestStatusRepairResult:
     """Backfill a legacy active-bucket manifest status from the encrypted record."""
-
     before = _assess_with_best_effort_session()
     if before.status != "manifest_unreadable" or before.active_profile is None:
         return ActiveProfileManifestStatusRepairResult(
@@ -270,7 +267,6 @@ def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileMa
 
 def _load_active_profile_record() -> UserProfileRecord:
     """Load the encrypted active-profile record or raise a precise refusal."""
-
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     if record is None:
@@ -281,7 +277,6 @@ def _load_active_profile_record() -> UserProfileRecord:
 
 def _assess_with_best_effort_session() -> ActiveProfileHealth:
     """Assess profile health, opening the active bucket session when available."""
-
     before = assess_active_profile_health()
     if before.status != "profile_record_unreadable" or "NoActiveBucketSessionError" not in before.profile_record_error:
         return before
@@ -300,7 +295,6 @@ def _assess_with_best_effort_session() -> ActiveProfileHealth:
 
 def _compact_error(exc: Exception) -> str:
     """Return a one-line diagnostic without SQL payload noise."""
-
     root = getattr(exc, "orig", None)
     if isinstance(root, Exception):
         exc = root

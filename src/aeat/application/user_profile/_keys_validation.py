@@ -72,7 +72,6 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     ``values`` is keyed by canonical schema path
     (``identity.tax_id``, ``preferences.output_language`` etc.).
     """
-
     entries = _get_profile_keys()
     required_keys = tuple(
         entry.key
@@ -100,7 +99,6 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
 
 def list_profile_key_records() -> tuple[ProfileKey, ...]:
     """Return the full :data:`PROFILE_KEYS` tuple in registry order."""
-
     return _get_profile_keys()
 
 def list_profile_value_rows(
@@ -109,7 +107,6 @@ def list_profile_value_rows(
     include_unset: bool = False,
 ) -> tuple[ProfileValueRow, ...]:
     """Return schema-backed profile rows for display surfaces."""
-
     rows: list[ProfileValueRow] = []
     for entry in _get_profile_keys():
         value = values.get(entry.key)

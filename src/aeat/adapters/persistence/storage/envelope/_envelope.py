@@ -174,6 +174,9 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     Args:
         envelope: The envelope to write.
         path: Destination file. Parent directory is created if absent.
+
+    Raises:
+        OSError: When the temporary file or atomic replace operation fails.
     """
     target = path.resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -390,6 +393,9 @@ def save_encrypted_envelope(
             ``b"aeat.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
             ciphertext substitution fails.
+
+    Raises:
+        OSError: When the temporary file or atomic replace operation fails.
     """
     target = path.resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -459,6 +465,9 @@ def load_encrypted_envelope[PayloadT: BaseModel](
         max_supported_version: Highest inner-envelope schema version
             the consumer supports.
         migrators: Optional ordered tuple of forward migrators.
+
+    Returns:
+        The decrypted and version-migrated inner :class:`Envelope`.
 
     Raises:
         ClassificationError: If the cipher envelope's class differs

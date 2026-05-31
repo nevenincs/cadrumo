@@ -88,7 +88,12 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
 
     verdict = verify_declaracion(
         filing,
-        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
     )
 
     assert verdict.registry_snapshot_id == "registry:130:2019-y-siguientes"
@@ -109,7 +114,12 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
 
     verdict = verify_declaracion(
         filing,
-        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
     )
 
     assert verdict.status is VerificationStatus.NEEDS_REVIEW

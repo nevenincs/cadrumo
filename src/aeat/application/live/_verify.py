@@ -38,6 +38,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObject
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.time import _now
+from ._errors import LiveApplicationInputError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -79,9 +80,9 @@ def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:
     trimmed_bucket = bucket_id.strip()
     trimmed_observation = observation_id.strip()
     if not trimmed_bucket:
-        raise AeatError("bucket_id must not be blank")
+        raise LiveApplicationInputError("bucket_id must not be blank")
     if not trimmed_observation:
-        raise AeatError("observation_id must not be blank")
+        raise LiveApplicationInputError("observation_id must not be blank")
     return f"verify-observation:{trimmed_bucket}:{trimmed_observation}"
 
 
@@ -102,7 +103,7 @@ class VerifyObservationRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
-            raise AeatError("bucket_id must not be blank")
+            raise LiveApplicationInputError("bucket_id must not be blank")
         self._bucket_id = trimmed
         self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
 
@@ -121,12 +122,12 @@ class VerifyObservationRepository:
             return None
         observation = self._observation_from_record(record, requested_observation_id=observation_id)
         if observation.bucket_id != self._bucket_id:
-            raise AeatError(
+            raise LiveApplicationInputError(
                 f"verify observation bucket_id={observation.bucket_id!r} "
                 f"does not match repository bucket {self._bucket_id!r}"
             )
         if observation.observation_id != observation_id:
-            raise AeatError(
+            raise LiveApplicationInputError(
                 f"verify observation id={observation.observation_id!r} "
                 f"does not match requested observation {observation_id!r}"
             )
@@ -147,7 +148,7 @@ class VerifyObservationRepository:
 
     def save(self, observation: VerifyObservation) -> None:
         if observation.bucket_id != self._bucket_id:
-            raise AeatError(
+            raise LiveApplicationInputError(
                 f"verify observation bucket_id={observation.bucket_id!r} "
                 f"does not match repository bucket {self._bucket_id!r}"
             )

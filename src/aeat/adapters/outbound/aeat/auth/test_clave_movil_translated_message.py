@@ -33,10 +33,10 @@ from ._authenticator import AeatLoginAssertionError
 from ._clave_movil import ClaveMovilAuthProvider, _ClaveMovilSessionMetadata
 from ._providers import AuthProviderKind
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
 if TYPE_CHECKING:
     pass
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _CLAVE_MOVIL_LOCALE_KEYS = [
     "adapters.auth.clave_movil.errors.no_persisted_session",

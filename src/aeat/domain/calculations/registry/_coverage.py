@@ -51,7 +51,6 @@ class ModelLawCoverageLedger(CoverageModel):
     @property
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
         """Return evidence tiers that have no supporting registry evidence."""
-
         return tuple(gate for gate in self.gates if gate.status == "gap")
 
 
@@ -65,7 +64,6 @@ class RegistryCoverageAudit(CoverageModel):
     @property
     def ok(self) -> bool:
         """Return whether every mandatory model-law evidence tier is covered."""
-
         return not self.required_gate_failures
 
 
@@ -82,7 +80,6 @@ def audit_registry_model_law_coverage(
     Executable parity remains a reported gap unless an official safe calculator
     or formula workbook exists for the revision.
     """
-
     modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
     RegistryValidator(catalogues, source_root=source_root).validate_registry(modelo_tuple)
 
@@ -120,7 +117,6 @@ def audit_registry_model_law_coverage(
 
 def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCoverageLedger:
     """Build the four-tier coverage ledger for a validated registry snapshot."""
-
     return ModelLawCoverageLedger(
         modelo=snapshot.modelo.id,
         revision=snapshot.revision.id,

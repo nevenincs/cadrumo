@@ -30,6 +30,7 @@ from aeat.application.live._snapshot_base import (
     enforce_snapshot_state_invariants,
 )
 from aeat.core.errors import AeatError
+from aeat.core.identity import BucketId
 from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -48,7 +49,7 @@ class ProbeSnapshot(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     snapshot_id: str = Field(min_length=1, max_length=128)
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     axis_label: str = Field(min_length=1, max_length=64)
     captured_at: datetime
     payload_text: str

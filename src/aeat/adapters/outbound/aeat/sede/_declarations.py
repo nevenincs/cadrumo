@@ -43,7 +43,7 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 # the M100 routing referential-integrity gate runs on this declarations path.
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.time._clock import _now
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -104,7 +104,6 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
-_DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
@@ -112,10 +111,27 @@ _COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
 _COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
 _COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
 _DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
-_NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
-_FORM_INTERACTION_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
-_BUSCAR_SETTLE_MS = _DEFAULTS.aeat_browser_buscar_settle_ms
-_VER_CLICK_TIMEOUT_MS = _DEFAULTS.aeat_browser_ver_click_timeout_ms
+
+DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
+DEFAULT_FORM_INTERACTION_TIMEOUT_MS: int = 10_000
+DEFAULT_BUSCAR_SETTLE_MS: int = 2_000
+DEFAULT_VER_CLICK_TIMEOUT_MS: int = 5_000
+
+
+def _get_navigation_timeout_ms() -> int:
+    return load_settings().aeat_browser_navigation_timeout_ms
+
+
+def _get_form_interaction_timeout_ms() -> int:
+    return load_settings().aeat_browser_form_interaction_timeout_ms
+
+
+def _get_buscar_settle_ms() -> int:
+    return load_settings().aeat_browser_buscar_settle_ms
+
+
+def _get_ver_click_timeout_ms() -> int:
+    return load_settings().aeat_browser_ver_click_timeout_ms
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",
@@ -224,9 +240,6 @@ async def shared_playwright(
     Yields:
         A live :class:`Playwright` instance. Cleaned up automatically
         on exit.
-
-    Raises:
-        SedeNavigationError: When the session has no encrypted browser state.
     """
     storage_state_for_session(session)
     async with shared_playwright_runtime() as pw:
@@ -243,7 +256,6 @@ class DeclaracionesRegisterSession:
 
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
         """Return filed-declaration rows for one ``(modelo, ejercicio)`` query."""
-
         if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
                 "DeclaracionesRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
@@ -268,7 +280,6 @@ class DeclaracionesRegisterSession:
         artefact_sink: FiledDeclaracionArtefactSink | None = None,
     ) -> FiledDeclaracionObservation:
         """Capture a normalized filed-declaration observation using the active page."""
-
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
         if not await _drive_search(
@@ -305,7 +316,6 @@ async def open_declarations_register(
     playwright: Playwright | None = None,
 ) -> AsyncIterator[DeclaracionesRegisterSession]:
     """Open one browser context for repeated filed-declaration register reads."""
-
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
         context,
@@ -410,12 +420,6 @@ async def walk_declarations_register(
     Returns:
         Tuple of :class:`Declaracion` records, one per filing row.
         Empty when AEAT returns "No se han encontrado resultados".
-
-    Raises:
-        SedeNavigationError: When the form fails to load, the
-            modelo / ejercicio cannot be selected, or Buscar does not
-            settle within the timeout.
-        SedeParseError: When the result table cannot be parsed.
     """
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
@@ -457,7 +461,7 @@ async def _drive_search(
         await page.goto(
             _LISTING_URL,
             wait_until=_WAIT_NETWORKIDLE,
-            timeout=_NAVIGATION_TIMEOUT_MS,
+            timeout=_get_navigation_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -483,12 +487,12 @@ async def _drive_search(
     try:
         await page.get_by_text("Modelo (*)", exact=True).first.wait_for(
             state="visible",
-            timeout=_FORM_INTERACTION_TIMEOUT_MS,
+            timeout=_get_form_interaction_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
             "declaraciones register form did not render the 'Modelo (*)' "
-            f"label within {_FORM_INTERACTION_TIMEOUT_MS}ms; "
+            f"label within {_get_form_interaction_timeout_ms()}ms; "
             "session likely expired or AEAT served a maintenance page",
             translated_message=tr("adapters.sede.errors.form_render_timeout"),
         ) from exc
@@ -516,7 +520,7 @@ async def _drive_search(
             page.locator("button.z-button")
             .filter(has_text="Buscar")
             .click(
-                timeout=_FORM_INTERACTION_TIMEOUT_MS,
+                timeout=_get_form_interaction_timeout_ms(),
             )
         )
     except PlaywrightError as exc:
@@ -524,7 +528,7 @@ async def _drive_search(
             f"clicking Buscar failed: {exc}",
             translated_message="adapters.sede.errors.playwright_buscar_click_failed",
         ) from exc
-    await page.wait_for_timeout(_BUSCAR_SETTLE_MS)
+    await page.wait_for_timeout(_get_buscar_settle_ms())
     return True
 
 
@@ -540,7 +544,7 @@ async def _select_combobox_value(
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
         _assert_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
-        await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+        await button.click(timeout=_get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"opening combobox after label {label_text!r} failed: {exc}",
@@ -561,7 +565,7 @@ async def _select_combobox_value(
     target = matching_options.first
     try:
         _assert_read_browser_action(f"select-option-{option_match}", policy=read_policy)
-        await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+        await target.click(timeout=_get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"selecting option {option_match!r} for {label_text!r} failed: {exc}",
@@ -805,26 +809,21 @@ async def capture_declaration(
 
     Args:
         session: Authenticated AEAT session.
-        declaration: The Declaracion row to capture, typically
-            obtained from :func:`walk_declarations_register`.
+        declaration: The Declaracion row to capture, typically obtained from
+            :func:`walk_declarations_register`.
         settings: Optional :class:`Settings` override.
-        playwright: Optional pre-started Playwright instance
-            (typically from :func:`shared_playwright`). Reused
-            across the call to amortise the ~1s startup cost in
-            bulk sweeps. When ``None``, a fresh instance is started
+        playwright: Optional pre-started Playwright instance (typically from
+            :func:`shared_playwright`). When ``None`` a fresh instance is started
             and torn down per call.
 
     Returns:
-        A :class:`SedeCapture` whose ``ref`` carries the resolved
-        CSV / cotejo URL / PDF URL and whose ``pdf_bytes`` carries
-        the raw response body.
+        A :class:`SedeCapture` whose ``ref`` carries the resolved CSV / cotejo URL /
+        PDF URL and whose ``pdf_bytes`` carries the raw response body.
 
     Raises:
         SedeNavigationError: When the form drive or row click fails.
-        SedeParseError: When the cotejo URL cannot be parsed for
-            its CSV.
-        JustificanteFetchError: When the PDF GET returns non-2xx,
-        an empty body, or a non-PDF content type.
+        JustificanteFetchError: When the PDF GET returns a non-2xx status code,
+            an empty body, or an unexpected content type.
     """
     read_policy = _read_guard_policy_from_snapshot(_registry_snapshot_for_declaration(declaration))
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
@@ -853,10 +852,10 @@ async def capture_declaration(
 
         try:
             async with context.expect_page(
-                timeout=_VER_CLICK_TIMEOUT_MS,
+                timeout=_get_ver_click_timeout_ms(),
             ) as new_page_info:
                 _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
-                await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+                await ver_button.click(timeout=_get_form_interaction_timeout_ms())
             cotejo_page = await new_page_info.value
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -867,7 +866,7 @@ async def capture_declaration(
         try:
             await cotejo_page.wait_for_load_state(
                 _WAIT_DOMCONTENTLOADED,
-                timeout=_NAVIGATION_TIMEOUT_MS,
+                timeout=_get_navigation_timeout_ms(),
             )
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -1158,7 +1157,6 @@ async def capture_previous_filing_observations(
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
     """Capture filed declarations required by registry previous-filing bindings."""
-
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
@@ -1195,7 +1193,6 @@ async def capture_relation_source_observations(
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
     """Capture filed declarations required by registry cross-model relations."""
-
     required_outputs: dict[tuple[str, int, str], set[str]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
         for source_period in requirement.periods:
@@ -1236,7 +1233,6 @@ def _select_authoritative_declaration(
     context: str,
 ) -> Declaracion:
     """Select the latest accepted register row for one filed period."""
-
     if not declarations:
         raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period!r} found no filed declaration")
     active = tuple(row for row in declarations if row.estado.upper() == "ALTA")
@@ -1409,7 +1405,6 @@ def _observed_modelo_303_casillas_from_submitted_file(
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
     """Parse official Modelo 303 page-03 fixed-width result fields."""
-
     text = body.decode(_SEDE_BODY_ENCODING, errors="replace")
     page_start = text.find(_MODELO_303_PAGE_03_TAG)
     if page_start < 0:
@@ -1446,7 +1441,6 @@ def _observed_modelo_303_casillas_from_submitted_file(
 
 def _parse_modelo_303_money(raw: str, *, casilla_id: str) -> Decimal:
     """Parse AEAT fixed-width 15+2 money, with leading ``N`` for negatives."""
-
     value = raw.strip()
     if not value:
         return Decimal("0.00")
@@ -1521,7 +1515,6 @@ def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
 ) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into registry binding input."""
-
     if not observation.extraction_coverage:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
@@ -1570,7 +1563,6 @@ def _with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from filed casillas 87 and 69."""
-
     target_id = "iva.compensacion-disponible-fin-periodo"
     if observation.modelo != "303" or any(casilla.casilla_id == target_id for casilla in observation.casillas):
         return observation
@@ -1626,7 +1618,6 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     period: str,
 ) -> dict[str, Decimal]:
     """Resolve registry previous-filing bindings from filed AEAT observations."""
-
     return resolve_previous_filing_binding_values(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
@@ -1643,7 +1634,6 @@ def resolve_relation_values_from_filed_declarations(
     period: str,
 ) -> dict[str, Decimal]:
     """Resolve registry cross-model relation values from filed AEAT observations."""
-
     return resolve_relation_values_from_observations(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
@@ -1663,9 +1653,9 @@ async def _capture_row_pdf_artefact(
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
-        async with context.expect_page(timeout=_VER_CLICK_TIMEOUT_MS) as new_page_info:
+        async with context.expect_page(timeout=_get_ver_click_timeout_ms()) as new_page_info:
             _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
-            await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+            await button.click(timeout=_get_form_interaction_timeout_ms())
         cotejo_page = await new_page_info.value
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -1673,7 +1663,7 @@ async def _capture_row_pdf_artefact(
         ) from exc
 
     try:
-        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_NAVIGATION_TIMEOUT_MS)
+        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_get_navigation_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"PDF artefact page did not settle for {declaration.expediente_id!r}: {exc}",
@@ -1720,9 +1710,9 @@ async def _capture_submitted_file_artefact(
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
-        async with page.expect_download(timeout=_VER_CLICK_TIMEOUT_MS) as download_info:
+        async with page.expect_download(timeout=_get_ver_click_timeout_ms()) as download_info:
             _assert_read_browser_action("download-filed-data-file", policy=read_policy)
-            await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+            await button.click(timeout=_get_form_interaction_timeout_ms())
         download = await download_info.value
         path = await download.path()
     except PlaywrightError as exc:
@@ -1781,9 +1771,7 @@ def _assert_read_browser_action(
 
 
 def _row_locator_for_expediente(page: Page, *, expediente_id: str):
-    """Return a Playwright locator pointing at the listitem whose
-    ``Expediente`` cell text equals ``expediente_id``.
-    """
+    """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``."""
     return page.locator(".z-listitem").filter(
         has=page.locator(".z-listcell").filter(has_text=expediente_id),
     )

@@ -88,7 +88,6 @@ def resolve_per_modelo_registry_binding_values(
     revision declares canonical counterpart binding sources, in which case
     refusing is safer than pretending a provider exists.
     """
-
     result = aggregate_per_modelo(command)
     counterpart_sources = _counterpart_binding_sources(revision)
     if not counterpart_sources:

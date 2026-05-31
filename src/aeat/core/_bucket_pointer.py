@@ -36,7 +36,6 @@ class BucketPointer(BaseModel):
         ``schema_version``. The output ends with a trailing newline so the
         atomic write-then-rename helper produces a POSIX-clean file.
         """
-
         # Hand-formatted to keep the dependency footprint minimal and the
         # output deterministic; the format is fixed at two scalar keys.
         bucket_id_escaped = self.bucket_id.replace("\\", "\\\\").replace('"', '\\"')
@@ -46,12 +45,13 @@ class BucketPointer(BaseModel):
     def from_toml(cls, text: str) -> BucketPointer:
         """Parse the single-document TOML representation back into a record.
 
-        Raises:
-            ValueError: If the TOML payload is malformed or fails strict
-                pydantic validation (unknown keys, wrong types, empty
-                ``bucket_id``, non-positive ``schema_version``).
-        """
+        Args:
+            text: Raw TOML string to parse, expected to carry
+                ``bucket_id`` and ``schema_version`` scalar keys.
 
+        Returns:
+            A validated :class:`BucketPointer` instance.
+        """
         payload = tomllib.loads(text)
         return cls.model_validate(payload)
 

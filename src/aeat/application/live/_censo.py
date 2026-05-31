@@ -1,9 +1,8 @@
 """Application-live persistence for captured Modelo 036 census snapshots.
 
 `CensoSnapshot` holds the AEAT-side census facts the operator's
-profile must mirror per the 2026-05-16 amendment to the
-modelo-036-037-foundation ADR. AEAT is the binding legal source of
-truth; the local profile is a cache that must be kept honest.
+profile must mirror. AEAT is the binding legal source of truth for
+census data; the local profile is a cache that must be kept honest.
 
 The snapshot pattern mirrors :mod:`aeat.application.live._borrador_100`:
 content-addressed snapshot ids, encrypted SQLite persistence under a
@@ -129,7 +128,6 @@ class CensoSnapshot(BaseModel):
 
 def census_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one bucket's census snapshot."""
-
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
@@ -151,7 +149,6 @@ def derive_census_snapshot_id(
     at instant, same source, same fact values) produce the same id;
     re-saving is then a no-op via :meth:`CensoSnapshotService.refresh`.
     """
-
     return derive_snapshot_id_from_json(
         {
             "profile_id": profile_id.strip(),
@@ -327,7 +324,6 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         source / values) is a no-op: the existing snapshot is loaded
         and returned without supersession.
         """
-
         return self._capture_with_lifecycle(
             profile_id=profile_id,
             captured_at=captured_at,
@@ -369,7 +365,6 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         not delete the secure object; it transitions the state so
         downstream consumers ignore the snapshot.
         """
-
         trimmed_actor = discarded_by.strip()
         if not trimmed_actor:
             raise LiveApplicationInputError("discarded_by must not be blank")

@@ -6,7 +6,6 @@ from ...core.i18n import tr
 
 def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     """Render overview status as operator-facing CLI text."""
-
     lines: list[str] = [
         tr("cli.overview.status.title"),
         "",
@@ -33,7 +32,6 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     work-modelo when transactions exist, continue the modelo flow when
     work units are already in progress.
     """
-
     if report.work_units > 0:
         return (
             tr(
@@ -150,7 +148,6 @@ def _storage_lines(report: OverviewStatusReport) -> tuple[str, ...]:
 
 def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     """Return advisory lines for filing obligations derived from the profile."""
-
     if not report.filing_obligation_advisories:
         return ()
     lines: list[str] = [""]

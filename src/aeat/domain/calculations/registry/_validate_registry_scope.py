@@ -25,7 +25,6 @@ from ._validate_semantic_roles import (
 
 def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
     """Validate cross-model and corpus-wide registry invariants."""
-
     modelo_tuple = tuple(modelos)
     failures: list[str] = []
     modelo_ids = [modelo.id for modelo in modelo_tuple]
@@ -42,8 +41,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     failures.extend(_validate_semantic_role_cardinality(modelo_tuple))
     failures.extend(_validate_required_role_declarations(modelo_tuple))
     failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
-    # Governing ADR: 2026-05-27-schema-hardening-casilla-continuity-contract-adr
-    # D3. This is the surface-scoped strict continuity gate; it complements,
+    # This is the surface-scoped strict continuity gate; it complements,
     # but does not replace, the overlap-aware repeated-id hard gate above.
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
@@ -53,7 +51,6 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
 
 def _validate_binding_selector_shapes(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
     """Validate binding selector discriminators at registry-tree scope."""
-
     from ._bindings import validate_binding_selector_shape
 
     failures: list[str] = []

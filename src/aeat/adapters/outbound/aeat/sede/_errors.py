@@ -32,7 +32,6 @@ class SedeError(AeatError):
         translated_message: str | None = None,
     ) -> None:
         """Construct a Sede error with optional stable failure-mode context."""
-
         enriched_context = dict(context) if context is not None else {}
         if failure_mode is not None:
             failure_mode_value = failure_mode.value if isinstance(failure_mode, SedeFailureMode) else str(failure_mode)

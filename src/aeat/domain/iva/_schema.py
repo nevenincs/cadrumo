@@ -159,7 +159,7 @@ def _require_translatable(translatable: tr, field_name: str) -> None:
         field_name: Dotted field name surfaced in the error message.
 
     Raises:
-        :exc:`ValueError`: If the translation key is missing or empty.
+        IvaValidationError: If the translation key is missing or empty.
     """
     if not translatable:
         raise IvaValidationError(f"{field_name}: missing authoritative translation key")
@@ -176,8 +176,7 @@ class _IvaStrictFrozen(BaseModel):
 
 
 class _IvaStrictMutable(BaseModel):
-    """Strict validation but mutable; used for aggregate catalogues that the
-    loader populates incrementally."""
+    """Strict validation mixin with mutable config for incrementally populated catalogues."""
 
     model_config = ConfigDict(
         strict=True,

@@ -47,7 +47,6 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
             `aeat_secret_store_backend=unsecured` AND `tax_id` parses
             as a real Spanish tax identifier per `looks_like_real_tax_id`.
     """
-
     settings = load_settings()
     if settings.aeat_secret_store_backend is not SecretStoreBackend.UNSECURED:
         return
@@ -70,7 +69,6 @@ def resolve_active_tax_id(profile_id: str) -> str:
     identity tax-id fact. Used by the orchestrator to feed
     `check_unsecured_mode_safety`.
     """
-
     from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
     from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
 
@@ -113,7 +111,6 @@ def credentials_to_records(
             pydantic `ValidationError` so the CLI can surface a
             concrete remediation hint.
     """
-
     missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in granted_scopes)
     if missing:
         raise GoogleAuthScopeInsufficientError(
@@ -146,18 +143,7 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
 
     Returns:
         A `(OAuthToken, OAuthMetadata)` pair ready for persistence.
-
-    Raises:
-        GoogleAuthUnsecuredModeRefusedError: Per `check_unsecured_mode_safety`.
-        GoogleAuthScopeInsufficientError: Per `credentials_to_records`.
-        GoogleAuthLoopbackBindError: When the loopback HTTP receiver
-            fails to bind a port (typically port-exhaustion).
-        GoogleAuthBrowserOpenError: When the OS launcher refuses to
-            open the consent URL (typically headless environments).
-        GoogleAuthNetworkError: When the OAuth or token endpoint is
-            unreachable.
     """
-
     check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
     refresh_token, token_uri, account_email, granted_scopes = _run_local_server(client)
     return credentials_to_records(
@@ -176,7 +162,6 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
     missing transitive dependency surfaces as a typed
     `GoogleAuthNetworkError` rather than an opaque ImportError.
     """
-
     try:
         from google_auth_oauthlib.flow import InstalledAppFlow
     except ImportError as exc:
@@ -252,14 +237,18 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
     `openid` + `userinfo.email` scopes for Google to include the
     `email` claim in the id_token.
 
-    Raises:
-        GoogleAuthScopeInsufficientError: When the credential carries
-            no `id_token` (the operator did not consent to the
-            openid+email scopes the OAuth client requested).
-        GoogleAuthNetworkError: When `google.oauth2.id_token` is not
-            importable or the verification HTTP fetch fails.
-    """
+    Args:
+        credentials: Google credentials object carrying ``id_token`` and ``scopes``.
+        audience: OAuth client ID used as the expected ``aud`` claim.
 
+    Returns:
+        The verified email address extracted from the ID token payload.
+
+    Raises:
+        GoogleAuthScopeInsufficientError: When the credential carries no ``id_token``.
+        GoogleAuthNetworkError: When ``google.oauth2.id_token`` is not importable
+            or the verification HTTP fetch fails.
+    """
     id_token_jwt = getattr(credentials, "id_token", None)
     if id_token_jwt is None:
         raise GoogleAuthScopeInsufficientError(

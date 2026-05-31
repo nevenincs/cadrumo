@@ -41,7 +41,6 @@ def compute_display_id_width(transaction_ids: Iterable[str]) -> int:
         below by :data:`MINIMUM_DISPLAY_ID_WIDTH` and above by
         :data:`_FULL_ID_LENGTH`.
     """
-
     ids = tuple(transaction_ids)
     if not ids:
         return MINIMUM_DISPLAY_ID_WIDTH
@@ -69,7 +68,6 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
             candidates so the operator can disambiguate by lengthening
             their prefix.
     """
-
     normalized = (prefix or "").strip().lower()
     if not normalized:
         raise TransactionIdPrefixError("transaction id prefix is empty")

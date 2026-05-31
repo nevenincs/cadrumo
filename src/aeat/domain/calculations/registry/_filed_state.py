@@ -78,7 +78,6 @@ def compare_calculation_to_filed_observation(
     the regulatory grounding for every drifted casilla is preserved in
     the comparison result and propagates to CLI / audit surfaces.
     """
-
     if calculation.modelo != observation.modelo:
         raise RegistryValidationError(
             f"cannot compare calculation modelo {calculation.modelo!r} "

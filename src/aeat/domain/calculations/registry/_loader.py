@@ -21,13 +21,10 @@ from ._schema import (
     SourceReference,
 )
 
-# Governing ADRs:
-# - 2026-05-19-modelo-registry-fragment-architecture-adr: fragments are an
-#   authoring layout only; this loader compiles them into complete runtime
-#   ModeloRevision objects before validation.
-# - 2026-05-27-schema-hardening-casilla-continuity-contract-adr D2: continuity
-#   evolution records are generic revision append records, not M100-specific
-#   loader behavior.
+# Registry TOML fragments are an authoring layout only; this loader compiles
+# them into complete runtime ModeloRevision objects before validation.
+# Continuity evolution records are generic revision append records, not
+# modelo-specific loader behaviour.
 _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     {
         "parameters",
@@ -131,7 +128,6 @@ def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
 
 def load_modelo_file(path: Path) -> ModeloDefinition:
     """Load one modelo TOML file into strict schema objects."""
-
     resolved = path.resolve()
     stat = resolved.stat()
     return _load_modelo_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
@@ -147,7 +143,6 @@ def _load_modelo_file_cached(path: str, byte_count: int, modified_ns: int) -> Mo
 
 def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, object]) -> ModeloDefinition:
     """Validate a merged modelo TOML payload into a ModeloDefinition."""
-
     _reject_local_catalogues(source_path, data)
     if "modelo" not in data:
         raise RegistryLoadError(f"{source_path}: missing [modelo] table")
@@ -190,7 +185,6 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     Public API stays identical to ``load_modelo_file``: callers receive
     the same ``ModeloDefinition`` regardless of on-disk layout.
     """
-
     resolved = directory.resolve()
     if not resolved.is_dir():
         raise RegistryLoadError(f"{resolved}: modelo directory does not exist")
@@ -208,7 +202,6 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
 
 def load_modelo_path(path: Path) -> ModeloDefinition:
     """Load a modelo from either supported on-disk layout."""
-
     resolved = path.resolve()
     if resolved.is_file():
         return load_modelo_file(resolved)
@@ -219,7 +212,6 @@ def load_modelo_path(path: Path) -> ModeloDefinition:
 
 def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
     """Load a modelo from a discovered source descriptor."""
-
     if source.layout == "single_file":
         return load_modelo_file(source.path)
     return load_modelo_directory(source.path)
@@ -449,7 +441,6 @@ def _merge_table_array_fragments(
     append_array_fields: frozenset[str],
 ) -> tuple[object, ...]:
     """Merge fragment table arrays by ``id``, appending explicitly mergeable arrays."""
-
     items: list[object] = list(existing)
     index_by_id: dict[str, int] = {}
     for index, item in enumerate(items):
@@ -534,7 +525,6 @@ def _reject_duplicate_appended_table_ids(
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
     """Load one shared legal/source catalogue TOML file."""
-
     resolved = path.resolve()
     stat = resolved.stat()
     return _load_catalogue_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
@@ -617,9 +607,11 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
 
     Returns:
         Frozen mapping of parameter-id → :class:`LegalParameter`.
-        Duplicates across files raise :class:`RegistryLoadError`.
-    """
 
+    Raises:
+        RegistryLoadError: When duplicate parameter ids are found across
+            multiple TOML files in ``root/legal/``.
+    """
     resolved = root.resolve()
     legal_dir = resolved / "legal"
     parameters: dict[str, LegalParameter] = {}
@@ -642,7 +634,6 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
     A single modelo cannot exist in both layouts simultaneously; the
     loader raises ``RegistryLoadError`` if both forms are present.
     """
-
     resolved = root.resolve()
     fingerprints = _collect_registry_tree_fingerprints(resolved)
     return _load_registry_tree_cached(str(resolved), fingerprints)
@@ -656,7 +647,6 @@ def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
     per-revision files, and fragmented revision directories without
     special-casing a modelo id.
     """
-
     resolved = modelos_dir.resolve()
     sources: list[ModeloSource] = []
     seen_modelo_ids: dict[str, ModeloSource] = {}

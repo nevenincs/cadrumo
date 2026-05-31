@@ -45,13 +45,11 @@ def _poll_interval_seconds() -> float:
 
 def lock_path(paths: BucketPaths) -> Path:
     """Return the canonical lockfile path for the bucket."""
-
     return paths.bucket_dir / BUCKET_LOCK_FILENAME
 
 
 def _read_pid(target: Path) -> int | None:
     """Read the recorded PID from the lockfile, ``None`` on any IO failure."""
-
     try:
         text = target.read_text(encoding=UTF_8_ENCODING).strip()
     except (FileNotFoundError, PermissionError):
@@ -72,7 +70,6 @@ def _pid_is_alive(pid: int) -> bool:
     exists but belongs to another user) is treated as alive: from this
     process's perspective the lock cannot be safely reclaimed.
     """
-
     if pid <= 0:
         return False
     if os.name == "nt":
@@ -117,7 +114,6 @@ def _try_create_lock(target: Path, pid: int) -> bool:
     Returns ``True`` when the lockfile was created and the PID written,
     ``False`` when another process already holds the lockfile.
     """
-
     flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
     try:
         fd = os.open(target, flags, 0o644)
@@ -132,7 +128,6 @@ def _try_create_lock(target: Path, pid: int) -> bool:
 
 def _reclaim_if_stale(target: Path) -> None:
     """Remove the lockfile if the recorded PID is no longer a live process."""
-
     pid = _read_pid(target)
     if pid is None or not _pid_is_alive(pid):
         with contextlib.suppress(FileNotFoundError):
@@ -152,7 +147,6 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
         BucketBusyError: When the lockfile is held by a live process and
             the wait window expires.
     """
-
     target = lock_path(paths)
     paths.bucket_dir.mkdir(parents=True, exist_ok=True)
     pid = os.getpid()
@@ -176,7 +170,6 @@ def release_lock(paths: BucketPaths) -> None:
     a foreign lockfile is left alone so a stale-reclaim race cannot delete
     another process's lock.
     """
-
     target = lock_path(paths)
     pid = _read_pid(target)
     if pid is None:

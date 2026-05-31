@@ -1,5 +1,4 @@
-"""Layout planner that maps every casilla, binding, and parameter of a
-`ModeloRevision` onto a Sheets cell address.
+"""Layout planner that maps every casilla, binding, and parameter of a ``ModeloRevision`` onto a Sheets cell address.
 
 The mapping is a pure function of the revision (and an optional
 filing date for temporal bracket filtering). Two engine runs over
@@ -82,11 +81,10 @@ class _BindingRow(BaseModel):
     label: str
 
 class BracketRanges(BaseModel):
-    """A1 ranges for the lower-bound, fixed-addition, and marginal-rate
-    columns of one bracket-table parameter in the `Tarifas` tab.
+    """A1 ranges for the lower-bound, fixed-addition, and marginal-rate columns of one bracket-table parameter.
 
-    The translator's `lookup_bracket` handler resolves a bracket
-    lookup against these ranges via:
+    These ranges occupy the ``Tarifas`` tab. The translator's ``lookup_bracket`` handler resolves a
+    bracket lookup against them via:
 
         INDEX(fixed_addition, MATCH(base, lower_bound, 1))
         + INDEX(marginal_rate, MATCH(base, lower_bound, 1))
@@ -132,7 +130,6 @@ class SheetLayout(BaseModel):
         this to compile a `FormulaExpression` casilla leaf into an A1
         reference.
         """
-
         if casilla in self.calculos_cells:
             return self.calculos_cells[casilla]
         if casilla in self.entradas_cells:
@@ -219,7 +216,6 @@ def _select_active_brackets(
     engine emits to `Tarifas` are exactly the rows the runtime would
     consult for the same base value on the same filing date.
     """
-
     active = tuple(
         entry
         for entry in definition.brackets
@@ -241,8 +237,11 @@ def plan_layout(
             the `Tarifas` rows the engine emits match the registry
             runtime's `_resolve_bracket` selection. When `None`, every
             bracket entry is emitted in `lower_bound` order.
-    """
 
+    Returns:
+        A :class:`SheetLayout` carrying cell addresses for every casilla,
+        binding, parameter, and relation defined on the revision.
+    """
     value_column = _ENTRADAS_VALUE_COLUMN
     anchor_column = _TARIFFS_ANCHOR_COLUMN
 

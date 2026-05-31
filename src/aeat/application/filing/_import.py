@@ -95,8 +95,6 @@ def import_filing_from_justificante(
         ``submission``, and any advisory warnings.
 
     Raises:
-        JustificanteParseError: If the PDF cannot be parsed.
-        JustificanteCsvNotFoundError: If the PDF has no CSV.
         ModeloImportError: If the modelo has no registered builder or
             the printed period cannot be canonicalised.
     """
@@ -161,6 +159,8 @@ def _normalise_period(
             input.
         raw_period: The period as printed on the justificante
             (``"1T"``, ``"12"``, ``"0A"``, ``"2026Q1"``, ...).
+        schema_provider: Registry-backed schema provider used to look
+            up the supported period tokens for the given modelo.
 
     Returns:
         The canonical period string.

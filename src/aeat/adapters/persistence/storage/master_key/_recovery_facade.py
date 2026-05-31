@@ -66,7 +66,6 @@ class MintedRecovery(BaseModel):
 
 def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRecord:
     """Split the GCM wire shape into the `RecoveryRecord` field set."""
-
     ciphertext_with_tag = blob.ciphertext
     ciphertext = ciphertext_with_tag[:-_GCM_TAG_BYTES]
     tag = ciphertext_with_tag[-_GCM_TAG_BYTES:]
@@ -81,7 +80,6 @@ def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRe
 
 def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
     """Re-assemble an `EncryptedBlob` from the typed envelope fields."""
-
     nonce = base64.b64decode(envelope.nonce_b64.encode("ascii"), validate=True)
     ciphertext = base64.b64decode(envelope.wrapped_dek_b64.encode("ascii"), validate=True)
     tag = base64.b64decode(envelope.tag_b64.encode("ascii"), validate=True)
@@ -94,7 +92,6 @@ def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecover
     the 24-word mnemonic the operator must record. The mnemonic is the
     only handle on the recovery KEK; this function does NOT persist it.
     """
-
     recovery_key: RecoveryKey = generate_recovery_key()
     wrapped: WrappedMasterKey = wrap_master_key(master_key=dek, recovery_key=recovery_key)
     blob = wrapped.to_blob()
@@ -107,20 +104,20 @@ def unwrap_recovery_envelope(
     mnemonic: str,
     decoder: Callable[[str], bytes] | None = None,
 ) -> bytes:
-    """Decode `mnemonic` and unwrap `envelope` to recover the 32-byte DEK.
+    """Decode ``mnemonic`` and unwrap ``envelope`` to recover the 32-byte DEK.
+
+    Args:
+        envelope: The persisted :class:`RecoveryRecord` to unwrap.
+        mnemonic: The 24-word BIP-39 mnemonic supplied by the operator.
+        decoder: Optional override for mnemonic decoding; production callers omit it.
+
+    Returns:
+        The recovered 32-byte data-encryption key.
 
     Raises:
-        RecoveryVerificationError: If the mnemonic does not decode or
-            the AEAD tag check fails. The error never echoes the typed
-            words; only the position of any decoding failure surfaces
-            (per the `decode_mnemonic` contract).
-
-    The ``decoder`` parameter is a DI seam for the narrowed-except
-    test that asserts a non-``StorageValidationError`` exception
-    propagates unchanged; production callers omit it and the central
-    ``decode_mnemonic`` is used.
+        RecoveryVerificationError: When the mnemonic does not decode or the AEAD tag
+            check fails.
     """
-
     resolved_decoder = decoder or decode_mnemonic
     try:
         entropy = resolved_decoder(mnemonic)
@@ -143,7 +140,6 @@ def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool
     verb. Catches `RecoveryVerificationError` and surfaces a boolean
     so the CLI renders the outcome without leaking detail.
     """
-
     try:
         unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     except RecoveryVerificationError:
@@ -166,7 +162,6 @@ def open_session_from_recovery(
     the function unwraps the DEK from the recovery envelope and yields
     a live session bound to `bucket_id`.
     """
-
     dek = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     return BucketSession.open(
         bucket_id=bucket_id,

@@ -1,3 +1,5 @@
+"""Locale file management: loading, scaffolding, and structural health checks."""
+
 import re
 from pathlib import Path
 
@@ -20,7 +22,19 @@ class LocaleError(AeatError):
 class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
 
-    def construct_mapping(self, node, deep=False):
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
+        """Construct a mapping node, raising ``LocaleError`` on duplicate keys.
+
+        Args:
+            node: The YAML mapping node to construct.
+            deep: Whether to construct values recursively before returning.
+
+        Returns:
+            A plain ``dict`` of the mapping's key-value pairs.
+
+        Raises:
+            LocaleError: When a duplicate key is found in the mapping node.
+        """
         mapping = {}
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
@@ -35,6 +49,12 @@ class LocaleManager:
     """API for managing locale files, scaffolding, and structural health."""
 
     def __init__(self, src_dir: Path, locales_dir: Path):
+        """Initialise the manager with the source tree and locale file directory.
+
+        Args:
+            src_dir: Root directory of the Python source tree to scan for translation keys.
+            locales_dir: Directory containing ``*.yml`` locale files.
+        """
         self.src_dir = src_dir
         self.locales_dir = locales_dir
         self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)
@@ -57,7 +77,6 @@ class LocaleManager:
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
-
         from aeat.locales._ast_scanner import scan_source_tree
         from aeat.locales._fstring_registry import get_registered_keys
 
@@ -84,7 +103,6 @@ class LocaleManager:
         Each marker passes the parity check when at least one
         concrete locale key starts with its prefix.
         """
-
         from aeat.locales._ast_scanner import scan_namespace_markers
 
         return scan_namespace_markers(self.src_dir)
@@ -161,7 +179,6 @@ class LocaleManager:
 
     def _locale_path(self, locale: str) -> Path:
         """Resolve a locale code to a contained locale file path."""
-
         if locale != Path(locale).name or Path(locale).suffix:
             raise LocaleError(f"Invalid locale code: {locale!r}")
         allowed_locales = {path.stem for path in self.locales_dir.glob("*.yml")}
@@ -180,7 +197,6 @@ class LocaleManager:
 
     def set_locale_value(self, locale: str, dotted_key: str, value: str) -> Path:
         """Set one locale leaf while preserving the YAML layout."""
-
         locale_path = self._locale_path(locale)
         parts = dotted_key.split(".")
         if not dotted_key or any(not part for part in parts):
@@ -206,7 +222,6 @@ class LocaleManager:
 
     def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
         """Remove one existing locale leaf while preserving the YAML layout."""
-
         locale_path = self._locale_path(locale)
         parts = dotted_key.split(".")
         if not dotted_key or any(not part for part in parts):
@@ -268,14 +283,12 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
 
 def _yaml_single_quoted(value: str) -> str:
     """Render a scalar as a YAML single-quoted string."""
-
     escaped = value.replace("'", "''")
     return "'" + escaped + "'"
 
 
 def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
     """Return the slice end for a scalar leaf and its indented continuation."""
-
     end = start + 1
     key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):")
     while end < len(lines):
@@ -288,7 +301,6 @@ def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
 
 def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
     """Replace a single existing leaf line without rebuilding the whole YAML file."""
-
     lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
     stack: list[tuple[int, str]] = []
     key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
@@ -320,7 +332,6 @@ def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> Non
 
 def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
     """Append a missing leaf below an existing mapping parent."""
-
     if len(parts) < 2:
         raise LocaleError(f"Cannot append top-level locale leaf: {'.'.join(parts)!r}")
 
@@ -362,7 +373,6 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
 
 def _remove_existing_yaml_leaf(path: Path, parts: list[str]) -> None:
     """Remove a single existing leaf line without rebuilding the whole YAML file."""
-
     lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
     stack: list[tuple[int, str]] = []
     key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
@@ -394,7 +404,6 @@ def _remove_existing_yaml_leaf(path: Path, parts: list[str]) -> None:
 
 def _preferred_newline(lines: list[str], fallback_index: int) -> str:
     """Return the newline style used near ``fallback_index``."""
-
     if lines:
         sample = lines[min(fallback_index, len(lines) - 1)]
         if sample.endswith("\r\n"):
@@ -404,7 +413,6 @@ def _preferred_newline(lines: list[str], fallback_index: int) -> str:
 
 def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str]:
     """Return leaf locale values keyed by dotted path."""
-
     flattened: dict[str, str] = {}
     for key, value in mapping.items():
         path = f"{prefix}.{key}" if prefix else str(key)
@@ -417,5 +425,4 @@ def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> di
 
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
     """Return whether a dotted locale key belongs to a dynamic namespace."""
-
     return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)

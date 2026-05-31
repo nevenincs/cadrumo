@@ -30,7 +30,6 @@ def _to_httpurl(value: str) -> HttpUrl:
 
 def _resolve_host(subdomain: Subdomain) -> str:
     """Return the absolute origin (``https://host``) for a portal subdomain."""
-
     domains = Settings.external_constants().aeat.domains
     if subdomain is Subdomain.SEDE:
         return domains.sede
@@ -89,6 +88,10 @@ def build_entry(
 
     Returns:
         A validated, frozen :class:`PortalMetadata`.
+
+    Raises:
+        PortalValidationError: If neither or both of ``url`` and ``path``
+            are supplied, or if ``path`` does not start with ``/``.
     """
     if (url is None) == (path is None):
         raise PortalValidationError("build_entry: pass exactly one of `url=` or `path=`")

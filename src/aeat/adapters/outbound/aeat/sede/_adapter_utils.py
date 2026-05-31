@@ -27,7 +27,6 @@ _WHITESPACE_RE = compile(r"\s+")
 
 def normalize_response_text(text: str) -> str:
     """Casefold + strip diacritics + collapse whitespace for marker matching."""
-
     if not text:
         return ""
     decomposed = normalize("NFKD", text)

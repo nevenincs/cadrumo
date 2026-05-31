@@ -26,6 +26,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 from ._models import RecargoBand, Recovery
@@ -47,7 +48,6 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
         DeadlineValidationError: When the TOML cannot be read, is
             malformed, is missing rows, or carries an invalid band.
     """
-
     target = path if path is not None else _DEFAULT_BRACKET_PATH
     resolved = target.resolve()
     try:
@@ -58,6 +58,13 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
 
 
 @lru_cache(maxsize=16)
+def _required_decimal(value: object) -> Decimal:
+    coerced = coerce_decimal(value)
+    if coerced is None:
+        raise ValueError(f"could not parse decimal: {value!r}")
+    return coerced
+
+
 def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoBand, ...]:
     del byte_count, modified_ns
     target = Path(path)
@@ -76,7 +83,7 @@ def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> 
                 id=str(row["id"]),
                 min_days_late=int(row["min_days_late"]),
                 max_days_late=int(row["max_days_late"]) if row.get("max_days_late") not in (None, "") else None,
-                surcharge_pct=Decimal(str(row["surcharge_pct"])),
+                surcharge_pct=_required_decimal(row["surcharge_pct"]),
                 interest_applies=bool(row.get("interest_applies", False)),
                 legal_ref=str(row["legal_ref"]),
             )
@@ -100,10 +107,9 @@ def resolve_recargo_band(days_late: int, bands: Sequence[RecargoBand]) -> Recarg
         The matching :class:`RecargoBand`.
 
     Raises:
-        ValueError: When ``days_late < 1`` or no band's window covers
-            the value (which would indicate a TOML gap).
+        DeadlineValidationError: When ``days_late < 1`` or no band's window
+            covers the value (which would indicate a TOML gap).
     """
-
     if days_late < 1:
         raise DeadlineValidationError(f"resolve_recargo_band: days_late must be >= 1; got {days_late}")
     for band in bands:
@@ -133,7 +139,6 @@ def build_recovery_for_overdue(
         A :class:`Recovery` carrying the resolved band, the legal
         reference, and a runnable next-action command.
     """
-
     resolved = resolve_recargo_band(
         days_late,
         bands if bands is not None else load_recargo_bands(),

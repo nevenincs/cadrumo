@@ -89,7 +89,6 @@ class Borrador100Snapshot(BaseModel):
 
 def borrador_100_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one bucket's Modelo 100 borrador snapshot."""
-
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
@@ -112,7 +111,6 @@ def derive_borrador_100_snapshot_id(
     snapshot ids remain valid: routing through
     ``derive_snapshot_id_from_json`` does not change the hashed bytes.
     """
-
     return derive_snapshot_id_from_json(
         {
             "modelo": "100",

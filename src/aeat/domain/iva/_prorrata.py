@@ -122,8 +122,9 @@ class ProrrataKind(StrEnum):
 
 
 class InputClassification(StrEnum):
-    """How a specific input VAT amount maps to deductible activity under
-    prorrata especial (art. 103 LIVA).
+    """How a specific input VAT amount maps to deductible activity under prorrata especial.
+
+    Governed by art. 103 LIVA.
 
     * ``EXCLUSIVELY_DEDUCTIBLE`` — used only in operations that grant the
       right to deduct; 100% deductible.
@@ -304,7 +305,6 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
     proportionality/usage-ratio substrate intentionally fail this
     parser; callers must keep both concepts separate.
     """
-
     normalized = reference_id.strip()
     parts = normalized.split(":")
     if len(parts) not in (4, 5) or parts[0] != "prorrata":
@@ -340,8 +340,7 @@ def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
 
 
 def _compute_percentage_general(inputs: ProrrataInputs) -> Decimal:
-    """Apply LIVA art. 102.Uno + art. 102.Dos to produce the general
-    prorrata percentage.
+    """Apply LIVA art. 102.Uno and art. 102.Dos to produce the general prorrata percentage.
 
     Returns a ``Decimal`` between ``0`` and ``100`` inclusive, rounded up
     to the next whole integer. When total operations is zero the
@@ -351,7 +350,6 @@ def _compute_percentage_general(inputs: ProrrataInputs) -> Decimal:
     typically carried over from the prior year by the application layer
     before this function is reached; this branch is a defence-in-depth).
     """
-
     total = inputs.operaciones_con_derecho_deduccion + inputs.operaciones_sin_derecho_deduccion
     if total == 0:
         return Decimal("100")
@@ -378,7 +376,6 @@ def compute_prorrata_general(
     supported range or when ``kind``/``period`` combination is
     inconsistent.
     """
-
     _validate_year(year)
     percentage = _compute_percentage_general(inputs)
     try:
@@ -399,9 +396,7 @@ def _deductible_percentage_for(
     classification: InputClassification,
     general_percentage: Decimal,
 ) -> Decimal:
-    """Map an input classification to its deductible percentage under
-    LIVA art. 103."""
-
+    """Map an input classification to its deductible percentage under LIVA art. 103."""
     if classification is InputClassification.EXCLUSIVELY_DEDUCTIBLE:
         return Decimal("100")
     if classification is InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE:
@@ -421,7 +416,6 @@ def classify_input_deduction(
     :func:`compute_prorrata_general` for the same window; it only enters
     the calculation when the classification is ``COMMON``.
     """
-
     if input_vat_amount < 0:
         raise ProrrataInputError(f"input_vat_amount must be non-negative, got {input_vat_amount}")
     if general_percentage < 0 or general_percentage > 100:
@@ -451,7 +445,6 @@ def is_especial_mandatory(
     if the general deduction is positive (the general regime would over-
     deduct without bound).
     """
-
     if deduction_under_general < 0 or deduction_under_especial < 0:
         raise ProrrataInputError("deduction amounts must be non-negative")
     if deduction_under_especial == 0:
@@ -490,7 +483,6 @@ def requires_sectoral_separation(sectors: Sequence[ProrrataSector]) -> bool:
     than two members returns ``False`` because the threshold cannot
     apply.
     """
-
     if len(sectors) < 2:
         return False
     _ensure_unique_sectors(sectors)
@@ -514,7 +506,6 @@ def compute_sectoral_prorrata(
     :func:`requires_sectoral_separation`; this calculator runs once the
     caller has decided separation is required.
     """
-
     if not sectors:
         raise ProrrataSectorError("sectors sequence must not be empty")
     _ensure_unique_sectors(sectors)
@@ -546,7 +537,6 @@ def sum_deductible_amounts(
     390) totals after running :func:`classify_input_deduction` for each
     purchase invoice evidence row.
     """
-
     return sum((entry.deductible_amount for entry in deductions), Decimal("0"))
 
 

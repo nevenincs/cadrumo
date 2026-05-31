@@ -47,6 +47,8 @@ class ReviewQueue:
 
         Args:
             settings: Loaded :class:`aeat.core.config.Settings`.
+            bucket_id: Active bucket identifier used to scope the query
+                to the correct operator profile.
             kinds: Optional set of :class:`ReviewItemKind` to include.
                 ``None`` (default) means every kind. The argument is a
                 ``frozenset`` so callers cannot mutate it after passing.

@@ -36,7 +36,6 @@ def resolve_active_profile() -> str:
             `context` payload naming the resolution attempt for
             renderers.
     """
-
     resolved = resolve_active_bucket_id()
     if resolved is not None and resolved.strip():
         return resolved.strip()

@@ -41,11 +41,8 @@ def parse_justificante(
         pydantic v2 record.
 
     Raises:
-        :exc:`aeat.domain.justificante._errors.JustificanteParseError`: If
-            the file is missing, cannot be opened, or does not contain the
-            required fields.
-        :exc:`aeat.domain.justificante._errors.JustificanteCsvNotFoundError`:
-            If the PDF contains no CSV (Código Seguro de Verificación).
+        JustificanteParseError: If the file is missing, cannot be opened, or does not
+            contain the required fields.
     """
     pdf_path = Path(pdf_path)
     if not pdf_path.is_file():

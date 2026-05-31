@@ -67,9 +67,6 @@ _INJECTION_KEYWORDS: frozenset[str] = frozenset(
     }
 )
 
-_LEGACY_DEFAULT_REPOSITORY_EXCEPTIONS: frozenset[str] = frozenset()
-
-
 def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -> None:
     """Ephemeral keys must not write through the process-default SQL repository."""
 
@@ -87,9 +84,7 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
             continue
         relative_path = path.relative_to(root)
         violations.extend(
-            _Violation(relative_path, line, constructor)
-            for line, constructor in risky_calls
-            if relative_path.as_posix() not in _LEGACY_DEFAULT_REPOSITORY_EXCEPTIONS
+            _Violation(relative_path, line, constructor) for line, constructor in risky_calls
         )
 
     assert not violations, "\n".join(
@@ -99,33 +94,6 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
             *tuple(f"{violation.path}:{violation.line} {violation.constructor}" for violation in violations),
         )
     )
-
-
-def test_legacy_default_repository_exceptions_still_exist() -> None:
-    """Every temporary exception must name an existing active violation."""
-
-    root = _repo_root()
-    missing_files = tuple(
-        path
-        for path in sorted(_LEGACY_DEFAULT_REPOSITORY_EXCEPTIONS)
-        if not (root / path).exists()
-    )
-    stale_files: list[str] = []
-    for path in sorted(_LEGACY_DEFAULT_REPOSITORY_EXCEPTIONS):
-        test_path = root / path
-        if not test_path.exists():
-            continue
-        tree = ast.parse(test_path.read_text(encoding="utf-8"), filename=str(test_path))
-        has_default_repository_violation = (
-            _uses_ephemeral_master_key(tree)
-            and bool(_default_sql_backed_constructor_calls(tree))
-            and not _has_autouse_temp_database_isolation(tree)
-        )
-        if not has_default_repository_violation:
-            stale_files.append(path)
-
-    assert not missing_files, "\n".join(missing_files)
-    assert not stale_files, "\n".join(stale_files)
 
 
 def test_database_operating_passphrases_use_core_test_setting() -> None:

@@ -49,7 +49,6 @@ class LLMCache:
         Returns:
             Deterministic cache key components.
         """
-
         prompt_material = "\n".join([request.system or "", request.prompt])
         args_payload = {
             "max_tokens": request.max_tokens,
@@ -74,8 +73,10 @@ class LLMCache:
 
         Returns:
             Cached response when present, otherwise `None`.
-        """
 
+        Raises:
+            LLMCacheError: When the cached payload is present but cannot be parsed.
+        """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
@@ -125,6 +126,10 @@ class LLMCache:
 
         Returns:
             Persisted cache entry model.
+
+        Raises:
+            LLMCacheError: When redaction produces a non-dict result or the storage
+                write fails with an OS-level error.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
@@ -192,6 +197,9 @@ class LLMCache:
 
         Returns:
             Number of removed cache objects.
+
+        Raises:
+            LLMCacheError: When a cache entry cannot be parsed during iteration.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
@@ -229,12 +237,6 @@ class LLMCache:
         Returns:
             Logical path for displaying the cache entry location. The cache
             itself is persisted in encrypted SQL secure objects.
-
-        Raises:
-            LLMCacheError: When the model identifier contains path-
-                traversal segments (``..``, leading dots), backslashes,
-                drive letters, NUL bytes, or other characters that
-                would compose a path outside ``root_dir``.
         """
         # Sanitise the operator-controllable model string before path
         # composition. ``model_override`` flows through provider
@@ -250,7 +252,6 @@ class LLMCache:
 
     def _object_key_for(self, key: CacheKey) -> str:
         """Return the natural secure-object key for a cache key."""
-
         sanitised_model = self._sanitise_model_for_path(key.model)
         return "|".join(
             (
@@ -264,12 +265,10 @@ class LLMCache:
 
     def _logical_root(self) -> str:
         """Return the stable logical cache partition."""
-
         return self.root_dir.resolve().as_posix()
 
     def _payload_for_entry(self, entry: Mapping[str, object]) -> bytes:
         """Wrap a redacted entry with its logical partition before encryption."""
-
         payload = {
             "logical_root": self._logical_root(),
             "entry": entry,
@@ -278,15 +277,13 @@ class LLMCache:
 
     def _entry_from_payload(self, payload: bytes) -> CachedEntry:
         """Decode a secure-object payload into a cached entry."""
-
-        decoded = json.loads(payload.decode("utf-8"))
+        decoded = json.loads(payload.decode("utf-8"))  # JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT: secure-object payload is opaque bytes from SQLAlchemy; downstream re-serialisation guards type at storage boundary.
         if decoded.get("logical_root") != self._logical_root():
             raise LLMCacheError("LLM cache payload belongs to a different logical partition")
         return CachedEntry.model_validate_json(json.dumps(decoded["entry"]))
 
     def _payload_root_matches(self, payload: bytes) -> bool:
         """Return whether ``payload`` belongs to this cache partition."""
-
         try:
             decoded = json.loads(payload.decode("utf-8"))
         except (ValueError, TypeError):

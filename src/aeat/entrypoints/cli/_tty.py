@@ -47,14 +47,12 @@ class NonTtyRefusedError(AeatError):
         Args:
             suggestion: Recovery hint to attach to the refusal message.
         """
-
         super().__init__(suggestion=suggestion.strip() or None)
         self.suggestion: str = suggestion
 
 
 def _isatty(stream: object) -> bool:
     """Return :data:`True` when ``stream`` exposes a truthy ``isatty()``."""
-
     isatty = getattr(stream, "isatty", None)
     if not callable(isatty):
         return False
@@ -66,19 +64,16 @@ def _isatty(stream: object) -> bool:
 
 def is_stdout_tty() -> bool:
     """Return whether stdout is attached to an interactive terminal."""
-
     return _isatty(sys.stdout)
 
 
 def is_stderr_tty() -> bool:
     """Return whether stderr is attached to an interactive terminal."""
-
     return _isatty(sys.stderr)
 
 
 def is_stdin_tty() -> bool:
     """Return whether stdin is attached to an interactive terminal."""
-
     return _isatty(sys.stdin)
 
 
@@ -99,7 +94,6 @@ def should_use_color(*, no_color: bool | None = None) -> bool:
     Returns:
         :data:`True` when colour output is appropriate.
     """
-
     settings = Settings()
     resolved_no_color = current_cli_flag("no_color") or bool(no_color)
     if resolved_no_color or settings.no_color:
@@ -131,7 +125,6 @@ def should_show_rich_progress(
         :data:`True` when both stdout and stderr are interactive and no
         suppressing flag is active.
     """
-
     resolved_quiet = current_cli_flag("quiet") or bool(quiet)
     resolved_json_mode = current_cli_flag("json") or bool(json_mode)
     resolved_no_progress = current_cli_flag("no_progress") or bool(no_progress)
@@ -149,7 +142,6 @@ def refuse_if_stdin_non_tty(suggestion: str) -> None:
     Raises:
         NonTtyRefusedError: When stdin is not a TTY.
     """
-
     if not is_stdin_tty():
         raise NonTtyRefusedError(suggestion)
 

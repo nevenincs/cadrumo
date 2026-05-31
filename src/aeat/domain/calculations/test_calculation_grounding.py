@@ -1,35 +1,22 @@
 """Audit gate: calculation-test expected-value grounding.
 
-S213 enumeration — tautological patterns in calculation tests:
-  Every calculation test that asserts a hardcoded Decimal against a
-  registry formula must source that value from an external authority
-  (AEAT workbook, BOE worked example, live oracle replay, registry
-  fixture). Tests that hand-compute the same arithmetic the registry
-  performs are tautological; they prove only that Python arithmetic
-  works, not that the registry formula is correct against AEAT.
+Tautological patterns in calculation tests are forbidden: every
+calculation test that asserts a hardcoded Decimal against a registry
+formula must source that value from an external authority (AEAT
+workbook, BOE worked example, live oracle replay, registry fixture).
+Tests that hand-compute the same arithmetic the registry performs are
+tautological; they prove only that Python arithmetic works, not that
+the registry formula is correct against AEAT.
 
-S214 assertion — this file provides the real-behavior test that verifies
-  the existing AST-based tautology gate in test_tautology_gate.py is
-  present and non-vacuous (i.e. it scans a non-empty set of test
-  functions and did not silently become a no-op through a rename or
-  deletion of the scanned fixtures).
+This file provides the real-behavior test that verifies the existing
+AST-based tautology gate in ``test_tautology_gate.py`` is present and
+non-vacuous (i.e. it scans a non-empty set of test functions and did
+not silently become a no-op through a rename or deletion of the
+scanned fixtures).
 
-Wave 2 follow-ups recorded (S213 enumeration):
-  - Any test that asserts ``Decimal("X")`` where X equals the result
-    of evaluating the registry formula against the test's own synthetic
-    inputs is tautological. The existing gate in test_tautology_gate.py
-    catches and rejects these at CI time. As of the S213 enumeration
-    pass the gate's ``_TAUTOLOGY_WAIVERS`` frozenset is EMPTY, meaning
-    no waiver has been granted without documented external-authority
-    grounding. All known tautological patterns were eliminated in P01-P08.
-  - The hand-summed aggregation scanner (``_HAND_SUMMED_WAIVERS``) lists
-    nine documented waivers, each paired with an explicit external-authority
-    justification comment. These are NOT Wave 2 follow-ups; they are
-    legitimate and documented.
-
-No additional Wave 2 follow-up Steps are generated from this enumeration
-pass because the existing gate has already surfaced and eliminated all
-known patterns.
+The hand-summed aggregation scanner (``_HAND_SUMMED_WAIVERS``) lists
+documented waivers, each paired with an explicit external-authority
+justification comment.
 """
 
 from __future__ import annotations

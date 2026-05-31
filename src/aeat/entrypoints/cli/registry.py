@@ -19,8 +19,9 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.resources import bundled_path
 from ...domain.calculations.registry._live_parity import OracleEnvironment as _OracleEnvironment
-from ._common import _emit
+from ._common import _emit, _emit_envelope
 from ._registry_corpus import citations_app, manuals_app
+from ._registry_payloads import RegistryInspectResult, RegistryVerifyResult
 
 app = typer.Typer(
     name="registry",
@@ -88,13 +89,28 @@ def inspect_registry_cmd(
     ] = None,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
-
     registry_root = _resolve_registry_root(registry_root)
     report = inspect_registry_tree(registry_root)
-    _emit(
+    typed = RegistryInspectResult(
+        modelo_count=report.modelo_count,
+        revision_count=report.revision_count,
+        legal_reference_count=report.legal_reference_count,
+        source_reference_count=report.source_reference_count,
+        casilla_count=report.casilla_count,
+        formula_count=report.formula_count,
+        extraction_profile_count=report.extraction_profile_count,
+        cross_reference_count=report.cross_reference_count,
+        workbook_parity_ref_count=report.workbook_parity_ref_count,
+        verification_expectation_count=report.verification_expectation_count,
+        application_link_count=report.application_link_count,
+        application_link_surfaces=list(report.application_link_surfaces),
+        modelos=list(report.modelos),
+    )
+    _emit_envelope(
         ctx,
-        report,
-        (
+        command="registry.inspect",
+        result=typed,
+        lines=(
             _metric_line("modelo_count", report.modelo_count),
             _metric_line("revision_count", report.revision_count),
             _metric_line("legal_reference_count", report.legal_reference_count),
@@ -138,13 +154,29 @@ def verify_registry_cmd(
     ] = None,
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
-
     registry_root = _resolve_registry_root(registry_root)
     report = verify_registry_tree(registry_root, source_root=_resolve_source_root(source_root))
-    _emit(
+    typed_verify = RegistryVerifyResult(
+        verified=report.verified,
+        modelo_count=report.modelo_count,
+        revision_count=report.revision_count,
+        legal_reference_count=report.legal_reference_count,
+        source_reference_count=report.source_reference_count,
+        casilla_count=report.casilla_count,
+        formula_count=report.formula_count,
+        extraction_profile_count=report.extraction_profile_count,
+        cross_reference_count=report.cross_reference_count,
+        workbook_parity_ref_count=report.workbook_parity_ref_count,
+        verification_expectation_count=report.verification_expectation_count,
+        application_link_count=report.application_link_count,
+        application_link_surfaces=list(report.application_link_surfaces),
+        modelos=list(report.modelos),
+    )
+    _emit_envelope(
         ctx,
-        report,
-        (
+        command="registry.verify",
+        result=typed_verify,
+        lines=(
             _metric_line("verified", report.verified),
             _metric_line("modelo_count", report.modelo_count),
             _metric_line("revision_count", report.revision_count),
@@ -192,7 +224,6 @@ def audit_oracles_cmd(
     underlying catalogue error. Exit code is non-zero when failures
     exist so CI / pre-deploy pipelines can gate on a clean audit.
     """
-
     registry_root = _resolve_registry_root(registry_root)
     report = audit_registry_oracles(registry_root, environment=environment)
     lines = [
@@ -269,7 +300,6 @@ def verify_filed_state_cmd(
     ] = None,
 ) -> None:
     """Verify local registry calculation output against captured filed state."""
-
     report = verify_filed_state(
         observation_path=observation_path,
         source_observation_paths=tuple(source_observation_paths or ()),
@@ -341,7 +371,6 @@ def verify_workbooks_cmd(
     ] = None,
 ) -> None:
     """Run the read-only workbook parity backend verification."""
-
     report = verify_registry_workbooks(
         root=_resolve_workbook_root(root),
         limit=limit,
@@ -423,7 +452,6 @@ def run_parity_cmd(
     ] = None,
 ) -> None:
     """Run one stored parity scenario and archive the resulting tape."""
-
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
         registry_root=_resolve_registry_root(registry_root),
@@ -481,7 +509,6 @@ def replay_parity_cmd(
     ] = None,
 ) -> None:
     """Replay one archived parity tape against the current registry runtime."""
-
     report = replay_registry_parity(
         tape_path=tape_path,
         registry_root=_resolve_registry_root(registry_root),

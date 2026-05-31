@@ -77,6 +77,11 @@ class BrowserSession:
         Args:
             provisioner: Optional auth-provider hook used to decorate
                 the new context call.
+            storage_state_path: Optional path to a Playwright storage-state
+                JSON file; passed directly to ``browser.new_context``.
+            storage_state: Optional in-memory storage state mapping passed
+                directly to ``browser.new_context``; takes precedence over
+                ``storage_state_path`` when both are supplied.
 
         Returns:
             A configured BrowserContext with evasion strategies
@@ -298,10 +303,6 @@ class BrowserSession:
         Safe to call multiple times. The caller still owns any previously
         returned :class:`BrowserContext` objects and should close them before
         closing the session.
-
-        Raises:
-            BrowserError: If the retained browser cannot be closed. The
-                browser handle is preserved so the caller can retry cleanup.
         """
         async with self._lifecycle_lock:
             await self._close_browser_locked()
@@ -325,12 +326,10 @@ class BrowserSession:
             response — e.g. cached navigations).
 
         Raises:
-            SiteHealthError: Either when the parser suite classifies
-                the response as non-OK, or when the underlying
-                ``page.goto`` fails with a transport-level error
-                (DNS / TCP / TLS / Playwright timeout). In the latter
-                case the error carries a sentinel HTTP status of
-                ``599`` and a ``transport-error:<exc-type>`` marker.
+            SiteHealthError: When the parser suite classifies the response as non-OK,
+                or when ``page.goto`` fails with a transport-level error
+                (DNS / TCP / TLS / Playwright timeout).
+            BrowserError: When reading the page content after navigation fails.
         """
         logger.info("browser navigate starting url=%s", url)
         try:
@@ -415,6 +414,9 @@ class BrowserSession:
         Args:
             url: The target URL that failed to load.
             exc: The transport-layer exception raised by Playwright.
+            failure_mode: The :class:`BrowserFailureMode` variant that
+                describes the kind of transport failure; embedded as a
+                ``failure-mode:<value>`` marker in the returned status.
 
         Returns:
             A populated :class:`SiteHealthStatus` carrying state

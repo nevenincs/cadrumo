@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 def storage_state_for_session(session: AeatSession) -> dict[str, object]:
     """Return decrypted Playwright storage state for an authenticated session."""
-
     if session.storage_state_path is None:
         raise SedeNavigationError(
             "AeatSession has no persisted auth session; run `aeat config auth status` first",

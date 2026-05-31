@@ -84,6 +84,12 @@ class StoredProfileDriftError(UserProfileError):
     """
 
     def __init__(self, profile_id: str, error: ValidationError) -> None:
+        """Initialise the drift error with profile identity and the validation failure.
+
+        Args:
+            profile_id: Identifier of the profile whose record failed validation.
+            error: The underlying :exc:`pydantic.ValidationError` from deserialization.
+        """
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
             context={"profile_id": profile_id, "recovery": "aeat config repair"},

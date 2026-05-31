@@ -287,10 +287,7 @@ def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     """
     from aeat.core.resources import resources
 
-    try:
-        snapshot_303 = resources().modelos.authority.snapshot("303", filing_year=2025, period="3T")
-    except Exception:
-        pytest.skip("M303 2025 3T snapshot unavailable; skipping structural guard test")
+    snapshot_303 = resources().modelos.authority.snapshot("303", filing_year=2025, period="3T")
 
     with pytest.raises(TaxationComparisonError, match="declaration-type"):
         compare_taxation_modes(

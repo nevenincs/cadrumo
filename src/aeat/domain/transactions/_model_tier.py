@@ -103,7 +103,7 @@ on."""
 # the current default over exhaustive historical IDs — this is a floor
 # for operator's choices, not an archive.
 #
-# Tier placement rationale (2026-04):
+# Tier placement rationale:
 # - claude-haiku, gemini-flash, gpt-4o-mini: fast/cheap, ~LOW.
 # - claude-sonnet, gemini-pro, gpt-4o, codex default: solid single-shot, MEDIUM.
 # - claude-opus, gemini-ultra, o3/o4, codex-high: top-tier reasoning, HIGH.

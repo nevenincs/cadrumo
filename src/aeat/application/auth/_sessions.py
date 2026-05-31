@@ -17,7 +17,6 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time._utc import _validate_utc_aware
 from . import AuthProviderKind, select_provider
-from ._protocols import SessionStoreProtocol
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -25,6 +24,7 @@ from ._acquisition_lock import (
     auth_lock_ttl_seconds,
     clear_auth_acquisition_lock,
 )
+from ._protocols import SessionStoreProtocol
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
@@ -53,7 +53,7 @@ def configure_session_store(store: SessionStoreProtocol) -> None:
     Called by the entrypoints layer (or test fixtures) to bind the concrete
     adapter implementation before any session function is invoked.
     """
-    global _session_store_impl  # noqa: PLW0603
+    global _session_store_impl
     _session_store_impl = store
 
 
@@ -62,7 +62,7 @@ def _get_session_store() -> SessionStoreProtocol:
         # Lazily import the concrete adapter implementation on first call.
         # This import runs at runtime (not TYPE_CHECKING), so it is not hidden.
         # The module-scope import was removed to break the import-time cycle.
-        from ...adapters.outbound.aeat.auth import _session_store as _impl  # noqa: PLC0415
+        from ...adapters.outbound.aeat.auth import _session_store as _impl
 
         configure_session_store(_impl)  # type: ignore[arg-type]
     return _session_store_impl  # type: ignore[return-value]
@@ -70,7 +70,6 @@ def _get_session_store() -> SessionStoreProtocol:
 
 def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
     """Return a non-secret diagnostic suffix for a failed live assertion."""
-
     parts = [
         f"status={getattr(assertion, 'status_code', None)}",
         f"error={getattr(assertion, 'error_message', None)!r}",
@@ -165,7 +164,6 @@ def storage_state_paths(
     kind: AuthProviderKind | None = None,
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``."""
-
     from ..workflow._models import require_active_bucket_id
 
     resolved = kind or AuthProviderKind.CERTIFICATE
@@ -176,7 +174,6 @@ def storage_state_paths(
 
 def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
     """Load persisted AEAT session metadata for ``kind`` or the active provider."""
-
     if kind is None and settings.aeat_auth_provider is not None:
         kind = AuthProviderKind(settings.aeat_auth_provider.value)
     if kind is not None:
@@ -196,7 +193,6 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
 
 def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
     """Remove persisted encrypted sessions for ``kind`` or every supported provider."""
-
     removed: list[Path] = []
     kinds = [kind] if kind is not None else list(AuthProviderKind)
     for candidate_kind in kinds:
@@ -215,7 +211,6 @@ async def require_verified_aeat_session(
     target_url: str | None = None,
 ) -> AeatSession:
     """Return a verified active AEAT session without exposing provider mechanics."""
-
     provider_kind = _resolve_provider_kind(settings, kind)
     expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     persisted = load_persisted_session(settings, kind)
@@ -283,7 +278,6 @@ async def ensure_authenticated_aeat_session(
     5. optionally delete persisted session state for ``fresh``;
     6. authenticate and verify through the selected provider.
     """
-
     provider_kind = _resolve_provider_kind(settings, kind)
     expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     reset_status = (
@@ -420,7 +414,6 @@ def _provider_neutral_session_metadata(raw: dict[str, object]) -> PersistedAuthS
     common reuse contract, so this function validates and narrows that
     metadata instead of treating adapter-owned fields as corruption.
     """
-
     return PersistedAuthSession.model_validate(
         {
             "provider_kind": AuthProviderKind(str(raw["provider_kind"])),
@@ -466,7 +459,6 @@ def _assert_active_profile_identity_matches_provider(
     provider_kind: AuthProviderKind,
 ) -> str | None:
     """Fail closed before live auth can bind one taxpayer's session to another profile."""
-
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
     provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)
@@ -597,11 +589,11 @@ async def _close_provider(provider: AuthProvider) -> None:
         return
     try:
         result = close()
-    except Exception:
+    except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
         _logger.warning("provider close raised", exc_info=True)
         return
     if asyncio.iscoroutine(result):
         try:
             await result
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
             _logger.warning("provider async close raised", exc_info=True)

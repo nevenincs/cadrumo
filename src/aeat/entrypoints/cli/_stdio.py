@@ -59,7 +59,6 @@ _HELP_TOKENS = frozenset({"--help", "-h"})
 
 def _help_surface_requested() -> bool:
     """Return whether the current invocation renders a ``--help`` surface."""
-
     return any(token in _HELP_TOKENS for token in sys.argv[1:])
 
 
@@ -88,7 +87,6 @@ def _ensure_help_render_width() -> Iterator[None]:
     so a DI-seam that bypassed the os.environ write would misrepresent
     the production contract.
     """
-
     _original = os.environ.get(_COLUMNS_ENV_VAR)
 
     if not _help_surface_requested():
@@ -144,8 +142,18 @@ def _set_windows_console_utf8() -> None:
         k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         k32.SetConsoleOutputCP(65001)
         k32.SetConsoleCP(65001)
-    except Exception:
-        pass  # best-effort; non-fatal if ctypes or windll is unavailable
+    except Exception as exc:
+        # Best-effort: non-fatal when ctypes or windll is unavailable
+        # (redirected / piped output where code-page switching is a
+        # no-op). Surface the cause at debug level so diagnostic
+        # captures see why the console code page was not switched —
+        # silent ``pass`` would hide a real misconfiguration on
+        # genuine Windows consoles where this is expected to work.
+        _LOGGER.debug(
+            "windows console UTF-8 switch skipped: %s: %s",
+            type(exc).__name__,
+            exc,
+        )
 
 # ``aeat.core.logging`` cannot be imported at this layer without
 # pulling the project's configuration eagerly; this module runs at
@@ -167,7 +175,6 @@ def _reconfigure_stream(stream: TextIO | None) -> None:
     crashing the CLI startup over an encoding-tuning step is the
     wrong trade-off.
     """
-
     if stream is None:
         return
     reconfigure = getattr(stream, "reconfigure", None)
@@ -202,7 +209,6 @@ def configure_stdio_for_utf8(
     against a synthetic stream pass it in directly instead of
     monkeypatching ``sys``.
     """
-
     _set_windows_console_utf8()
     with _ensure_help_render_width():
         _reconfigure_stream(sys.stdout if stdout is None else stdout)

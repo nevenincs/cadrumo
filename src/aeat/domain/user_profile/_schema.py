@@ -188,12 +188,10 @@ class ProfileSchemaDefinition(BaseModel):
     @property
     def field_paths(self) -> tuple[str, ...]:
         """Canonical dotted field paths declared by the schema."""
-
         return tuple(f"{section.key}.{field.key}" for section in self.sections for field in section.fields)
 
     def section(self, key: str) -> ProfileSectionDefinition:
         """Return a section by canonical section key."""
-
         for section in self.sections:
             if section.key == key:
                 return section
@@ -201,7 +199,6 @@ class ProfileSchemaDefinition(BaseModel):
 
     def field(self, path: _FieldPath) -> ProfileFieldDefinition:
         """Return a field by canonical dotted path."""
-
         section_key, field_key = path.split(".", 1)
         section = self.section(section_key)
         for field in section.fields:

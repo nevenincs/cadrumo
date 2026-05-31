@@ -62,12 +62,17 @@ def test_user_profile_singleton_loads_real_schema() -> None:
 
 
 def test_topics_singleton_loads_real_catalogue() -> None:
+    from aeat.application.topics import TopicCatalogue
+
     repo = TopicCatalogueRepository()
 
     result = repo.singleton
 
-    assert result is not None
-    assert repo.singleton is result
+    assert isinstance(result, TopicCatalogue), (
+        f"Expected TopicCatalogue, got {type(result).__name__}"
+    )
+    assert len(result.topics) > 0, "Topic catalogue must contain at least one topic"
+    assert repo.singleton is result  # cached identity
 
 
 def test_recargo_bands_singleton_loads_real_tuple() -> None:
@@ -91,13 +96,19 @@ def test_iva_rate_table_singleton_loads_real_mapping() -> None:
 
 
 def test_legal_parameters_singleton_loads_real_mapping() -> None:
+    from aeat.domain.calculations.registry._schema import LegalParameter
+
     repo = LegalParameterRepository()
 
     result = repo.singleton
 
-    assert result is not None
-    assert len(result) > 0  # at least one declared parameter
-    assert repo.singleton is result
+    assert len(result) > 0, "Legal parameter mapping must contain at least one entry"
+    first_key, first_value = next(iter(result.items()))
+    assert isinstance(first_key, str) and first_key, "Mapping keys must be non-empty strings"
+    assert isinstance(first_value, LegalParameter), (
+        f"Mapping values must be LegalParameter, got {type(first_value).__name__}"
+    )
+    assert repo.singleton is result  # cached identity
 
 
 def test_singleton_clear_cache_forces_reload() -> None:

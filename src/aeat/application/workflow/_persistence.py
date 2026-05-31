@@ -88,7 +88,6 @@ class WorkflowStateRepository:
 
     def load(self) -> WorkflowState:
         """Load state or return an empty payload when absent."""
-
         record = self._objects.load(
             _STATE_NAMESPACE,
             _STATE_OBJECT_KEY,
@@ -118,7 +117,6 @@ class WorkflowStateRepository:
 
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""
-
         write = self.to_secure_object_write(state)
         self._objects.save_many((write,))
         _clear_output_language_cache()
@@ -132,7 +130,6 @@ class WorkflowStateRepository:
         bucket-event-history catalogue) via a single
         :meth:`SecureObjectRepository.save_many` call.
         """
-
         from ...adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 
         try:
@@ -187,7 +184,6 @@ class WorkflowStateRepository:
         metadata rather than crashing on the absent database
         (disaster ADR Ruling 6).
         """
-
         try:
             metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
         except StorageError:
@@ -256,7 +252,6 @@ class WorkflowStateRepository:
         without a trail. The fingerprint never carries plaintext
         envelope content.
         """
-
         fingerprint = self.fingerprint_state(reason_class=reason_class)
         self._emit_reset(fingerprint=fingerprint, actor=actor, source=source)
         self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
@@ -266,7 +261,6 @@ class WorkflowStateRepository:
 
     def update(self, fn: Callable[[WorkflowState], WorkflowState]) -> WorkflowState:
         """Load, transform, save, and return the updated state."""
-
         state = self.load()
         updated = fn(state)
         self.save(updated)
@@ -281,7 +275,6 @@ class WorkflowRunRepository:
 
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
-
         run_id = _validate_run_id(result.run_id)
         marker_dir = runs_dir or Settings().aeat_workflow_runs_dir
         envelope = Envelope[WorkflowResult](
@@ -302,7 +295,6 @@ class WorkflowRunRepository:
 
     def load(self, run_id: str) -> WorkflowResult:
         """Load one persisted workflow result from the secure backend."""
-
         safe_run_id = _validate_run_id(run_id)
         record = self._objects.load(
             _RUN_NAMESPACE,
@@ -329,7 +321,6 @@ class WorkflowRunRepository:
 
     def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
         """List persisted workflow runs newest-first, optionally filtered by date."""
-
         records = self._objects.list_records(
             _RUN_NAMESPACE,
             expected_class=_RUN_SENSITIVITY,
@@ -358,7 +349,6 @@ def workflow_state_repository() -> WorkflowStateRepository:
     exception: it receives an explicit bare :class:`SecureObjectRepository`
     so bootstrap-exempt recovery reads can still observe an absent state.
     """
-
     from ...core._bucket_pointer_io import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
@@ -376,7 +366,6 @@ def reset_workflow_state(
     reason_class: str | None = None,
 ) -> WorkflowStateResetFingerprint:
     """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`."""
-
     return workflow_state_repository().reset_workflow_state(
         actor=actor,
         source=source,
@@ -386,7 +375,6 @@ def reset_workflow_state(
 
 def fingerprint_workflow_state(*, reason_class: str | None = None) -> WorkflowStateResetFingerprint:
     """Module-level helper around :meth:`WorkflowStateRepository.fingerprint_state`."""
-
     return workflow_state_repository().fingerprint_state(reason_class=reason_class)
 
 
@@ -409,17 +397,14 @@ def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
     ``runs_dir`` remains part of the API as a logical marker path for callers
     and tests, but no plaintext run file is written there.
     """
-
     return WorkflowRunRepository().save(result, runs_dir=runs_dir)
 
 
 def load_run(run_id: str) -> WorkflowResult:
     """Load one persisted workflow result from the secure backend."""
-
     return WorkflowRunRepository().load(run_id)
 
 
 def list_runs(*, since: date | None = None) -> tuple[WorkflowResult, ...]:
     """List persisted workflow runs newest-first, optionally filtered by date."""
-
     return WorkflowRunRepository().list(since=since)

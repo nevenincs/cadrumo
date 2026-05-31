@@ -54,7 +54,7 @@ def validate_spanish_tax_id(value: str) -> str:
         The uppercased, whitespace-trimmed identifier.
 
     Raises:
-        ValueError: If the identifier is malformed or the checksum fails.
+        IdentityError: If the identifier is malformed or the checksum fails.
     """
     normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:

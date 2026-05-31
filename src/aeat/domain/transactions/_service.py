@@ -51,9 +51,6 @@ def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_i
 
     Returns:
         A fresh immutable catalogue with the linked invoice.
-
-    Raises:
-        TransactionNotFoundError: If ``transaction_id`` is missing.
     """
     transaction = _require_transaction(catalogue, transaction_id)
     updated_transaction = _validate_transaction_update(
@@ -106,11 +103,6 @@ def set_classification(
     Returns:
         A fresh immutable catalogue with updated classification metadata.
 
-    Raises:
-        TransactionNotFoundError: If ``transaction_id`` is missing.
-        TransactionCatalogueError: If the resulting transaction payload
-            fails validation (invalid percentage, invalid classified_by
-            shape, out-of-range confidence).
     """
     transaction = _require_transaction(catalogue, transaction_id)
     now = _now()

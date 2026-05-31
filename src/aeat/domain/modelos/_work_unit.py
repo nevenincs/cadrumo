@@ -107,7 +107,6 @@ def derive_work_unit_id(
     same four-axis key see the same identifier without
     round-tripping through storage.
     """
-
     components = (
         bucket_id.strip(),
         modelo.strip().upper(),

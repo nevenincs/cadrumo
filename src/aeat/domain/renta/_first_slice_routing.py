@@ -37,7 +37,6 @@ FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str] = {
 
 def expected_casilla_for_category(category: SpendingCategory) -> str | None:
     """Return the routed casilla id for ``category``, or ``None`` if outside the first slice."""
-
     return FIRST_SLICE_EXPENSE_CASILLAS.get(category)
 
 
@@ -49,7 +48,6 @@ def first_slice_target_casillas() -> frozenset[str]:
     the modelo-100 registry. A casilla id removed from the registry
     without a corresponding update here is a snapshot-build error.
     """
-
     return frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values())
 
 

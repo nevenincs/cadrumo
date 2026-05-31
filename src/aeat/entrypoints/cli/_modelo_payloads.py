@@ -175,12 +175,12 @@ class FormulaPayload(OutputSchema):
 
 
 @register_schema("modelo.work.create")
-@register_schema("modelo.work.reuse")
 class WorkCreateResult(OutputSchema):
     # ``operation`` is either ``modelo.work.create`` (a fresh unit was
     # created) or ``modelo.work.reuse`` (an existing unit matching the
     # natural-key tuple was returned unchanged); the same shape covers
-    # both lanes so the command surface keeps a single typed contract.
+    # both lanes so the command surface keeps a single typed contract
+    # and a single envelope-registry key.
     operation: str = "modelo.work.create"
     status: str
     status_message: str
@@ -401,7 +401,7 @@ class ModeloRecordListResult(OutputSchema):
     records: list[ModeloRecordPayload]
 
 
-@register_schema("modelo.filing_record.show")
+@register_schema("modelo.filing_record.view")
 class ModeloRecordShowResult(OutputSchema):
     operation: str = "modelo.filing_record.show"
     filing_record_id: FilingRecordId
@@ -430,7 +430,7 @@ class VerificationReportListResult(OutputSchema):
     reports: list[VerificationReportPayload]
 
 
-@register_schema("modelo.verification_report.show")
+@register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
@@ -453,6 +453,553 @@ class FormulasResult(OutputSchema):
     period: str | None = None
     formula_count: int
     rows: tuple[FormulaPayload, ...]
+
+
+# ---------------------------------------------------------------------------
+# P13 – audit / history verb schemas
+# ---------------------------------------------------------------------------
+
+
+class EvidenceRecordRefPayload(OutputSchema):
+    """One record reference entry inside an evidence bundle manifest."""
+
+    object_type: str
+    object_id: str
+    content_sha256: str
+    payload_size_bytes: int
+
+
+class EvidenceBundleCheckFindingPayload(OutputSchema):
+    """One check outcome from a bundle verification pass."""
+
+    check: str
+    passed: bool
+    detail: str = ""
+
+
+@register_schema("modelo.audit.show")
+class ModeloAuditShowResult(OutputSchema):
+    """Evidence bundle manifest render result (audit show)."""
+
+    operation: str = "modelo.audit.show"
+    bundle_id: str
+    manifest_version: int
+    bucket_id: str
+    work_unit_id: str
+    calculation_revision_id: str | None = None
+    filing_record_id: str | None = None
+    verification_state: str
+    completeness_ratio: float
+    records: list[EvidenceRecordRefPayload]
+    created_at: str
+    notes: str = ""
+
+
+@register_schema("modelo.audit.check")
+class ModeloAuditCheckResult(OutputSchema):
+    """Evidence bundle integrity re-verification result (audit check)."""
+
+    operation: str = "modelo.audit.check"
+    bundle_id: str
+    verification_state: str
+    completeness_ratio: float
+    findings: list[EvidenceBundleCheckFindingPayload]
+
+
+@register_schema("modelo.audit.export")
+class ModeloAuditExportResult(OutputSchema):
+    """Evidence bundle ZIP export result (audit export).
+
+    Uses output path reference + record count instead of raw bytes so
+    the JSON envelope never persists binary content.
+    """
+
+    operation: str = "modelo.audit.export"
+    bucket_id: str
+    bundle_id: str
+    output: str
+    verification_state: str
+    records: int
+
+
+@register_schema("modelo.audit.replay")
+class ModeloAuditReplayResult(OutputSchema):
+    """Evidence bundle replay result (audit replay)."""
+
+    operation: str = "modelo.audit.replay"
+    bundle_id: str
+    verification_state: str
+    completeness_ratio: float
+    findings: list[EvidenceBundleCheckFindingPayload]
+
+
+class WorkUnitHistoryEventPayload(OutputSchema):
+    """One event row in a work-unit history stream."""
+
+    event_id: str
+    occurred_at: str
+    event_type: str
+    object_type: str
+    object_id: str
+    actor: str
+    payload: dict[str, str]
+
+
+@register_schema("modelo.work.history")
+class WorkHistoryResult(OutputSchema):
+    """Work-unit event history result."""
+
+    operation: str = "modelo.work.history"
+    bucket_id: str
+    work_unit_id: str
+    event_count: int
+    events: list[WorkUnitHistoryEventPayload]
+
+
+class WorkflowRunPayload(OutputSchema):
+    """One workflow run row in the runs listing."""
+
+    run_id: str
+    modelo: str | None
+    period: str | None
+    final_stage: str
+    aborted_reason: str | None
+    started_at: str
+
+
+@register_schema("modelo.work.runs")
+class WorkRunsResult(OutputSchema):
+    """Workflow runs listing result."""
+
+    operation: str = "modelo.work.runs"
+    run_count: int
+    runs: list[WorkflowRunPayload]
+
+
+# ---------------------------------------------------------------------------
+# P14 – record-query verb schemas (schemas for list/show already existed)
+# ---------------------------------------------------------------------------
+
+
+@register_schema("modelo.filing_record.import")
+class FilingRecordImportResult(OutputSchema):
+    """Filing record created by importing external AEAT evidence."""
+
+    operation: str = "modelo.filing_record.import"
+    evidence_kind: str
+    evidence_reference_id: str
+    filing_record_id: str
+    work_unit_id: str
+    calculation_revision_id: str
+    bucket_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    filed_at: str
+    filed_by: str
+    notes: str | None = None
+    aeat_accepted: bool | None = None
+    status: str
+    superseded_at: str | None = None
+    superseded_by_filing_record_id: str | None = None
+    kind: str = "internal_filing"
+    live_submission: bool = False
+
+
+# ---------------------------------------------------------------------------
+# P15 – registry-projection verb schemas
+# ---------------------------------------------------------------------------
+
+
+class ModeloRowPayload(OutputSchema):
+    """One modelo row in the list modelos output."""
+
+    code: str
+    title: str
+    cadence: str
+    tax_domain: str
+    revision_count: int
+
+
+@register_schema("modelo.list")
+class ModeloListResult(OutputSchema):
+    """List modelos result."""
+
+    operation: str = "modelo.list"
+    year_filter: int | None = None
+    modelo_count: int
+    modelos: list[ModeloRowPayload]
+
+
+@register_schema("modelo.describe")
+class ModeloDescribeResult(OutputSchema):
+    """Describe modelo result."""
+
+    operation: str = "modelo.describe"
+    code: str
+    title: str
+    official_name: str
+    tax_domain: str
+    cadence: str
+    revision: str
+    revision_ids: list[str]
+    periods: list[str]
+    casilla_count: int
+    binding_count: int
+    formula_count: int
+
+
+class CasillaRowPayload(OutputSchema):
+    """One casilla row in the casillas output."""
+
+    casilla_id: str
+    number: str
+    input_kind: str
+    required: bool
+    label: str
+
+
+@register_schema("modelo.casillas")
+class ModeloCasillasResult(OutputSchema):
+    """Casillas listing result."""
+
+    operation: str = "modelo.casillas"
+    modelo: str
+    revision: str
+    casilla_count: int
+    rows: list[CasillaRowPayload]
+
+
+class BindingRowPayload(OutputSchema):
+    """One binding row in the bindings list/preview output."""
+
+    modelo: str
+    revision: str
+    filing_year: int | None
+    period: str | None
+    binding_id: str
+    source: str
+    readiness: str
+    typed_enum: str | None
+    input_channel: str
+    borrador_capable: bool
+
+
+@register_schema("modelo.bindings.list")
+class ModeloBindingsListResult(OutputSchema):
+    """Bindings list result."""
+
+    operation: str = "modelo.bindings.list"
+    modelo_filter: str | None
+    year_filter: int | None
+    period_filter: str | None
+    missing_filter: bool
+    binding_count: int
+    bindings: list[dict[str, object]]
+
+
+class BindingPreviewRowPayload(OutputSchema):
+    """One binding preview row with optional override value."""
+
+    binding_id: str
+    source: str
+    readiness: str
+    typed_enum: str | None
+    override: str | None
+
+
+@register_schema("modelo.bindings.preview")
+class ModeloBindingsPreviewResult(OutputSchema):
+    """Bindings preview result."""
+
+    operation: str = "modelo.bindings.preview"
+    modelo: str
+    revision: str
+    filing_year: int | None
+    period: str | None
+    override_count: int
+    binding_count: int
+    bindings: list[BindingPreviewRowPayload]
+
+
+# ---------------------------------------------------------------------------
+# P16 – singleton verb schemas
+# ---------------------------------------------------------------------------
+
+
+@register_schema("modelo.export")
+class ModeloExportResult(OutputSchema):
+    """Modelo export result (path reference only — no raw bytes in envelope).
+
+    Represents the fichero-BOE write receipt using output_path, byte_size,
+    and file_sha256 instead of raw binary content.
+    """
+
+    operation: str = "modelo.export"
+    work_unit_id: str
+    calculation_revision_id: str
+    bucket_id: str
+    modelo: str
+    filing_year: int
+    period: str
+    output_path: str
+    byte_size: int
+    file_sha256: str
+    format: str
+    bucket_event_id: str
+
+
+class DeltaRowPayload(OutputSchema):
+    """One casilla comparison row in the compare output."""
+
+    casilla_id: str
+    label: str
+    section: str
+    year_a_value: str
+    year_b_value: str
+    delta: str
+    pct_change: str | None
+    formula_id: str | None = None
+    legal_refs: list[str] = []
+    source_refs: list[str] = []
+
+
+class CompareSectionPayload(OutputSchema):
+    """One section grouping in the compare output."""
+
+    section: str
+    rows: list[DeltaRowPayload]
+
+
+@register_schema("modelo.compare")
+class ModeloCompareResult(OutputSchema):
+    """Year-over-year modelo comparison result."""
+
+    operation: str = "modelo.compare"
+    modelo: str
+    year_a: int
+    year_b: int
+    year_a_revision_id: str
+    year_b_revision_id: str
+    year_a_is_draft: bool
+    year_b_is_draft: bool
+    sections: list[CompareSectionPayload]
+    delta_rows: list[DeltaRowPayload]
+
+
+class ModeloLifecycleEventPayload(OutputSchema):
+    """One bucket event in the modelo history output."""
+
+    event_id: str
+    event_type: str
+    occurred_at: str
+    actor: str
+    object_type: str
+    object_id: str
+    payload: dict[str, str]
+
+
+@register_schema("modelo.history")
+class ModeloHistoryResult(OutputSchema):
+    """Chronological modelo lifecycle history result."""
+
+    operation: str = "modelo.history"
+    modelo: str
+    year: int | None
+    period: str | None
+    count: int
+    events: list[ModeloLifecycleEventPayload]
+
+
+class CasillaObservationPayload(OutputSchema):
+    """One typed casilla observation in the project result."""
+
+    casilla_id: str
+    value: str
+    formula_id: str | None = None
+    legal_refs: list[str] = []
+    source_refs: list[str] = []
+
+
+class M130AccumulatedPayload(OutputSchema):
+    """Accumulated M130 aggregation inputs for the project result."""
+
+    ingresos: str
+    gastos: str
+    rendimiento_neto: str
+    pagos_fraccionados: str
+
+
+class M100ProjectionPayload(OutputSchema):
+    """Projected M100 output casillas in the project result."""
+
+    base_liquidable_general_0505: str
+    pagos_fraccionados_0604: str
+    cuota_integra_estatal_0545: str
+    cuota_integra_autonomica_0546: str
+    cuota_liquida_estatal_0595: str
+    cuota_liquida_autonomica_0596: str
+    cuota_resultante_0597: str
+
+
+@register_schema("modelo.project")
+class ModeloProjectResult(OutputSchema):
+    """Year-end M100 projection from M130 quarterly filings."""
+
+    operation: str = "modelo.project"
+    year: int
+    ccaa: str
+    quarters_filed: int
+    quarters_available: list[str]
+    is_extrapolated: bool
+    m130_accumulated: M130AccumulatedPayload
+    casilla_observations: list[CasillaObservationPayload]
+    m100_projection: M100ProjectionPayload
+
+
+class ModeloReadinessMissingRequirementPayload(OutputSchema):
+    """One missing profile requirement in the readiness result."""
+
+    section_key: str
+    field_key: str
+    selector: str
+
+
+class LedgerIssuePayload(OutputSchema):
+    """One ledger issue in the readiness result."""
+
+    transaction_id: str
+    reason: str
+    detail: str
+
+
+@register_schema("modelo.readiness")
+class ModeloReadinessResult(OutputSchema):
+    """Active-profile modelo readiness report."""
+
+    operation: str = "modelo.readiness"
+    profile_id: str
+    modelo: str
+    revision_id: str
+    filing_year: int
+    period: str
+    ready: bool
+    profile_ready: bool
+    missing: list[ModeloReadinessMissingRequirementPayload]
+    ledger_preflight_required: bool
+    ledger_ready: bool | None
+    ledger_period: str | None
+    ledger_checked_transaction_count: int
+    ledger_issues: list[LedgerIssuePayload]
+
+
+@register_schema("modelo.iva_wallet.balance")
+class IvaWalletBalanceResult(OutputSchema):
+    """IVA compensation carry-forward wallet balance."""
+
+    operation: str = "modelo.iva_wallet.balance"
+    as_of_year: int
+    total_balance: str
+    lot_count: int
+    next_expiry_year: int | None
+    unallocated_applied_amount: str
+
+
+@register_schema("modelo.iva_wallet.seed")
+class IvaWalletSeedResult(OutputSchema):
+    """IVA compensation period seed confirmation."""
+
+    operation: str = "modelo.iva_wallet.seed"
+    filing_year: int
+    period: str
+    taxpayer_nif: str
+    amount: str
+    status: str
+
+
+@register_schema("modelo.work.resume")
+class WorkResumeResult(OutputSchema):
+    """Workflow resume precondition and context result."""
+
+    operation: str = "modelo.work.resume"
+    prior_workflow_run_id: str
+    modelo: str
+    period: str
+    aborted_reason: str
+    obligation: dict[str, object]
+
+
+@register_schema("modelo.aggregate")
+class ModeloAggregateResult(OutputSchema):
+    """Per-modelo aggregation result."""
+
+    operation: str = "modelo.aggregate"
+    modelo: str
+    period: str
+    provider: str
+    observation_count: int
+    source_kinds: list[str]
+    result_row_count: int
+
+
+@register_schema("modelo.work.preview_maritime_exemption")
+class WorkPreviewMaritimeExemptionResult(OutputSchema):
+    """Result payload for ``aeat app modelo work preview-maritime-exemption``.
+
+    Surfaces the maritime worker IRPF exemption resolution for the active
+    profile: typed CasillaObservation rows carrying ``legal_refs`` and
+    ``source_refs`` (the canonical contract per aeat-calculation-grounding)
+    alongside a flat ``casilla_values`` projection for human readability.
+
+    The ``retmar_mandatory_filing`` flag mirrors the RETMAR completeness
+    gate: when ``True`` the operator is informed via the RETMAR warning
+    message that all RETMAR-registered workers must file IRPF regardless
+    of income level (Ley 47/2015 BOE-A-2015-11346). The DA 41 inactive
+    refusal raises ``MaritimeExemptionInactiveError`` and is rendered
+    through the CLI error boundary; this payload is not emitted in that
+    branch.
+    """
+
+    operation: str = "modelo.work.preview_maritime_exemption"
+    worker_class: str | None = None
+    vessel_flag: str | None = None
+    waters_type: str | None = None
+    vessel_registry: str | None = None
+    retmar_registered: bool = False
+    retmar_mandatory_filing: bool = False
+    retmar_warning: str | None = None
+    casilla_values: dict[str, str] = Field(default_factory=dict)
+    observations: list[CasillaObservationPayload] = Field(default_factory=list)
+
+
+class ModeloReconciliationDiffPayload(OutputSchema):
+    """One per-casilla disagreement surfaced in a reconciliation report."""
+
+    field_name: str
+    work_unit_value: str = ""
+    evidence_value: str = ""
+    kind: str
+
+
+@register_schema("modelo.reconcile")
+@register_schema("modelo.reconcile_from_justificante")
+class ModeloReconcileResult(OutputSchema):
+    """Result payload for ``modelo reconcile`` and ``reconcile-from-justificante``.
+
+    Both verbs share the :class:`ModeloReconciliationReport` shape from
+    the application service: a work-unit-level verdict, the bucket
+    scope, the external-evidence source kind and path, the per-casilla
+    diff list, the reconciliation timestamp, and an optional narrative.
+    """
+
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
+    source_kind: str
+    source_path: str
+    verdict: str
+    diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
+    reconciled_at: str
+    narrative: str = ""
 
 
 @register_schema("modelo.work.compare_taxation")
@@ -478,14 +1025,49 @@ class WorkCompareTaxationResult(OutputSchema):
 
 
 __all__ = [
+    "BindingPreviewRowPayload",
+    "BindingRowPayload",
     "CalculationRevisionPayload",
+    "CasillaObservationPayload",
+    "CasillaRowPayload",
+    "CompareSectionPayload",
+    "DeltaRowPayload",
+    "EvidenceBundleCheckFindingPayload",
+    "EvidenceRecordRefPayload",
+    "FilingRecordImportResult",
     "FindingPayload",
     "FormulaPayload",
     "FormulasResult",
+    "IvaWalletBalanceResult",
+    "IvaWalletSeedResult",
+    "LedgerIssuePayload",
+    "M100ProjectionPayload",
+    "M130AccumulatedPayload",
+    "ModeloAggregateResult",
+    "ModeloAuditCheckResult",
+    "ModeloAuditExportResult",
+    "ModeloAuditReplayResult",
+    "ModeloAuditShowResult",
+    "ModeloBindingsListResult",
+    "ModeloBindingsPreviewResult",
+    "ModeloCasillasResult",
+    "ModeloCompareResult",
+    "ModeloDescribeResult",
+    "ModeloExportResult",
+    "ModeloHistoryResult",
+    "ModeloLifecycleEventPayload",
+    "ModeloListResult",
+    "ModeloProjectResult",
+    "ModeloReadinessMissingRequirementPayload",
+    "ModeloReadinessResult",
+    "ModeloReconcileResult",
+    "ModeloReconciliationDiffPayload",
     "ModeloRecordListResult",
     "ModeloRecordPayload",
     "ModeloRecordShowResult",
+    "ModeloRowPayload",
     "ObservationPayload",
+    "ResultSummaryRowPayload",
     "VerificationReportListResult",
     "VerificationReportPayload",
     "VerificationReportShowResult",
@@ -495,10 +1077,16 @@ __all__ = [
     "WorkCreateResult",
     "WorkDiscardResult",
     "WorkFileResult",
+    "WorkHistoryResult",
     "WorkListResult",
+    "WorkPreviewMaritimeExemptionResult",
     "WorkRenameResult",
+    "WorkResumeResult",
     "WorkRevisionsResult",
+    "WorkRunsResult",
     "WorkStatusResult",
+    "WorkUnitHistoryEventPayload",
     "WorkUnitPayload",
     "WorkVerifyResult",
+    "WorkflowRunPayload",
 ]

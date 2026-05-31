@@ -38,12 +38,8 @@ def zeroise(buffer: object) -> None:
             runtime with :exc:`TypeError`.
 
     Raises:
-        TypeError: If `buffer` is not a `bytearray`. Passing an
-            immutable `bytes` is a contract violation because Python
-            cannot overwrite immutable bytes; the caller must own a
-            mutable buffer to begin with.
+        MasterKeyTypeError: When ``buffer`` is not a ``bytearray``.
     """
-
     if not isinstance(buffer, bytearray):
         raise MasterKeyTypeError(
             f"zeroise() requires a bytearray; got {type(buffer).__name__}. "

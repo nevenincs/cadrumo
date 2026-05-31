@@ -97,15 +97,6 @@ def parse_declaracion(
         A strict :class:`DeclaracionObservation` populated with the extracted
         casillas, warnings, and provenance metadata.
 
-    Raises:
-        :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
-            When auto-detection fails and the caller did not supply both
-            ``modelo_override`` and ``año_override``.
-        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
-            For other parse errors (PDF not found, empty text, required
-            header field missing, override conflicts with detected
-            metadata, malformed casilla values, or missing extraction
-            coverage).
     """
     path = Path(pdf_path)
     pages = extract_pages_text(path)
@@ -138,7 +129,6 @@ def parse_declaracion_bytes(
     source_root: Path | None = None,
 ) -> DeclaracionObservation:
     """Parse declaración PDF bytes without writing them to a plaintext temp file."""
-
     pages = extract_pages_text_from_bytes(pdf_bytes, source_label=source_label)
     digest = sha256(pdf_bytes).hexdigest()
     return _parse_declaracion_pages(
@@ -238,6 +228,8 @@ def _resolve_template(
 
     Args:
         path: Path to the source PDF.
+        pages: Optional tuple of page-number strings used to restrict text
+            extraction to specific pages; ``None`` extracts all pages.
         modelo_override: Explicit modelo identifier or ``None``.
         template_revision_override: Explicit revision string or ``None``.
         año_override: Explicit four-digit tax year or ``None``.
@@ -246,11 +238,9 @@ def _resolve_template(
         The resolved :class:`TemplateRevision`.
 
     Raises:
-        :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
-            When detection fails and the caller did not supply both
+        TemplateNotDetectedError: When detection fails and the caller did not supply both
             modelo and año.
-        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
-            When an override conflicts with the detected metadata.
+        DeclaracionParseError: When an override conflicts with the detected metadata.
     """
     if modelo_override and año_override and template_revision_override:
         return TemplateRevision(
@@ -476,7 +466,6 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
     Each dict has ``text``, ``x0``, ``x1``, ``top``, ``bottom`` keys from
     pdfplumber's :meth:`Page.extract_words`.  Empty pages yield an empty list.
     """
-
     import pdfplumber
 
     try:
@@ -506,7 +495,6 @@ def _find_bbox_casilla_hits(
     Ambiguous matches (multiple anchors on a page) are returned as multiple
     entries so the caller can detect and report them as ``ambiguous``.
     """
-
     assert target.bbox_anchor is not None  # enforced by model_validator
     anchor_spec: BboxAnchorSpec = target.bbox_anchor
     box_re = re.compile(anchor_spec.box_number_pattern)
@@ -567,8 +555,11 @@ def _resolve_value_word(
             words whose ``x0`` is at most this value.  Useful in multi-column
             layouts where an empty cell would otherwise match the next column's
             box number.
-    """
 
+    Returns:
+        The matched value word, or ``None`` if no candidate satisfies the offset
+        and proximity constraints.
+    """
     anchor_top = anchor_word["top"]
     anchor_x1 = anchor_word["x1"]
 
@@ -627,7 +618,6 @@ def _find_column_x_range(
     and returns the bounding x-range of those header words.  When no match
     is found, returns ``(0.0, float("inf"))`` (no constraint).
     """
-
     matches = [w for w in words if w["text"].lower() == column_anchor.lower()]
     if not matches:
         return (0.0, float("inf"))
@@ -654,7 +644,6 @@ def _find_casilla_hits(
     Returns a list of ``(1-based page number, captured raw value)`` tuples.
     ``"bbox_anchored"`` targets must use :func:`_find_bbox_casilla_hits` instead.
     """
-
     if target.match_strategy == "numeric_casilla":
         pattern = re.compile(
             rf"(?m)^\s*{re.escape(target.casilla_id)}\b[^\n]*?\s+{SPANISH_AMOUNT_GROUP}\s*$",

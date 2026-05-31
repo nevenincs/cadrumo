@@ -19,6 +19,7 @@ from typing import Protocol, runtime_checkable
 
 from ofxparse import OfxParser
 
+from .....core.decimal import coerce_decimal
 from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
@@ -129,7 +130,7 @@ class OfxProvider(FinancialProvider):
                     name = (getattr(transaction, "type", None) or "").strip().upper()
                     description = memo or payee or name or "OFX transaction"
                     posted_at = getattr(transaction, "date", None)
-                    amount = Decimal(str(getattr(transaction, "amount", "0")))
+                    amount = coerce_decimal(getattr(transaction, "amount", None), default=Decimal("0")) or Decimal("0")
                     booked_date = parse_date_value(posted_at, day_first=False)
                 except (ValueError, FinancialValidationError) as exc:
                     _logger.warning(

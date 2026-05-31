@@ -202,7 +202,6 @@ def register_default(
     environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
 ) -> None:
     """Register the AEAT NIF-IVA adapter under the requested environment."""
-
     catalogue.register(AeatNifIvaCheckerOracle(), environment=environment)
 
 

@@ -85,7 +85,6 @@ def t(message: str) -> tr:
     Returns:
         A :class:`aeat.core.i18n.tr` marker for the key.
     """
-
     return tr(message)
 
 

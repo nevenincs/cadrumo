@@ -148,7 +148,7 @@ class BusinessOperationInvoice(BaseModel):
     The ``source_kind`` discriminator binds the record to one of the two
     locked source-kind taxonomy values. ``invoice_id`` is the noun-group's
     full_id; mutating verbs accept either ``invoice_id`` or any
-    unambiguous prefix per the 2026-05-14 transaction-identity amendment.
+    unambiguous prefix for partial-id matching.
 
     Intracom fields (``country_code``, ``eu_vat_id``, ``operation_type``)
     are ``None`` for domestic invoices and are set for EU intracomunitaria

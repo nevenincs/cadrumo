@@ -33,8 +33,7 @@ def _flush_or_wrap(session: Session, kind: str) -> None:
         kind: Short label describing the record type for the error message.
 
     Raises:
-        :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`: If
-            the flush raises :class:`sqlalchemy.exc.IntegrityError`.
+        RepositoryError: When the flush raises ``IntegrityError``.
     """
     try:
         session.flush()
@@ -73,9 +72,8 @@ class SqlRecordRepository[RecordT](ABC):
         Args:
             record_id: Primary-key value to fetch.
 
-        Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.RepositoryError`:
-                If no row with ``record_id`` exists.
+        Returns:
+            The typed record matching ``record_id``.
         """
 
     @abstractmethod
@@ -114,6 +112,12 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
 
     def get(self, record_id: int) -> ModeloCatalogueRecord:
         """Return the record with surrogate id ``record_id``.
+
+        Args:
+            record_id: Surrogate primary-key value to look up.
+
+        Returns:
+            The matching :class:`ModeloCatalogueRecord`.
 
         Raises:
             RepositoryError: When no row matches.
@@ -166,6 +170,12 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
 
     def get(self, record_id: int) -> PortalRecord:
         """Return the record with surrogate id ``record_id``.
+
+        Args:
+            record_id: Surrogate primary-key value to look up.
+
+        Returns:
+            The matching :class:`PortalRecord`.
 
         Raises:
             RepositoryError: When no row matches.
@@ -240,6 +250,12 @@ class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
 
     def get(self, record_id: int) -> CorpusArtifactRecord:
         """Return the record with surrogate id ``record_id``.
+
+        Args:
+            record_id: Surrogate primary-key value to look up.
+
+        Returns:
+            The matching :class:`CorpusArtifactRecord`.
 
         Raises:
             RepositoryError: When no row matches.

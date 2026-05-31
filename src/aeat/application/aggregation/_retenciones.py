@@ -262,8 +262,7 @@ def aggregate_retenciones_123(
     *,
     period: str,
 ) -> RetencionesAggregation:
-    """Aggregate Modelo 123 (retenciones sobre rendimientos del capital mobiliario:
-    intereses, dividendos, otros).
+    """Aggregate Modelo 123 (retenciones sobre rendimientos del capital mobiliario: intereses, dividendos, otros).
 
     In-scope schemes: CAPITAL_INTEREST, CAPITAL_DIVIDEND, CAPITAL_OTHER.
     """
