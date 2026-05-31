@@ -20,7 +20,7 @@ from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
 from ..calculations.registry._ids import BindingId, CasillaId
 from ..calculations.registry._schema import RegistrySnapshotRef
-from ..submission._protocols import ModeloDraftStatus
+from ..submission import ModeloDraftStatus
 
 APPROVAL_BASIS_VERSION = "review-basis-v1"
 
