@@ -307,7 +307,7 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
 
 def test_aeat_workflow_root_command_is_unknown() -> None:
     """`aeat workflow ...` is not a registered root: workflow orchestration is
-    folded under `aeat app modelo` per apex §4.3 + §8."""
+    folded under `aeat app modelo`."""
     result = invoke_cached_cli(["workflow", "--help"])
     assert result.exit_code != 0
 
@@ -321,7 +321,7 @@ def test_aeat_run_root_command_is_unknown() -> None:
 
 def test_app_modelo_preflight_verb_is_unknown() -> None:
     """No standalone `aeat app modelo preflight` verb exists. Preflight runs
-    inside `verify` / `file` actions per apex §8 backend exit-cap mandate."""
+    inside `verify` / `file` actions per the backend exit-cap mandate."""
     result = invoke_cached_cli(["app", "modelo", "preflight", "--help"])
     assert result.exit_code != 0
 

@@ -201,10 +201,10 @@ def test_audit_workflow_end_to_end_show_check_export_replay(cli_runner: CliRunne
 
 def test_audit_help_text_uses_accepted_vocabulary(cli_runner: CliRunner) -> None:
     """Each audit verb's help text must use the operator vocabulary
-    ratified by the apex CLI ADR §10A — bundle / manifest / evidence /
-    replay / verification (or their Spanish equivalents in the default
-    locale: paquete / manifiesto / evidencia / reproducir / verificar) —
-    and must never imply live AEAT submission or remote contact."""
+    bundle / manifest / evidence / replay / verification (or their
+    Spanish equivalents in the default locale: paquete / manifiesto
+    / evidencia / reproducir / verificar) — and must never imply live
+    AEAT submission or remote contact."""
 
     forbidden_en = ("submit ", "submission", "send to aeat", "upload to aeat", "live filing", "telematic")
     forbidden_es = ("enviar a aeat", "subir a aeat", "presentar telemáticamente")
