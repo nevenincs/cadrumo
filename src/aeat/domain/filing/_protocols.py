@@ -221,3 +221,30 @@ A workflow inputs-provider that only ever yields flat scalars still
 satisfies this contract, so the workflow layer re-exports this symbol
 rather than defining a narrower divergent alias.
 """
+
+
+@runtime_checkable
+class ModeloDraftRepositoryProtocol(Protocol):
+    """Narrow domain-facing contract for the filing-draft repository.
+
+    :class:`aeat.domain.filing.ModeloDraftRepository` structurally conforms
+    to this Protocol; domain service code that only needs to load or save
+    drafts should depend inward on this port.
+    """
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+        ...
+
+    def load(self, record_id: str) -> object:
+        """Load a persisted draft by id, or return ``None`` if absent."""
+        ...
+
+    def save(self, payload: object) -> None:
+        """Persist ``payload`` in the encrypted object store."""
+        ...
+
+    def list_draft_ids(self) -> tuple[str, ...]:
+        """Return every draft id persisted in this repository."""
+        ...

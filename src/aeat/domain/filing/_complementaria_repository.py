@@ -11,10 +11,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ...core.time._clock import _now
 from ._amendment import (
@@ -23,6 +21,11 @@ from ._amendment import (
     ModeloSustitutiva,
 )
 from ._runtime_repository import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
@@ -57,18 +60,22 @@ class ModeloAmendmentRepository:
 
     def envelope_path_for(self, amendment_id: str) -> Path:
         """Return a logical object marker for ``amendment_id``."""
+        from ...adapters.persistence.storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / amendment_id
 
     def lock_target_for(self, amendment_id: str) -> Path:
         """Return a logical lock marker; SQL transactions govern writes."""
+        from ...adapters.persistence.storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / f"{amendment_id}.lock"
 
     def load(self, amendment_id: str) -> ModeloAmendment | None:
         """Return the persisted amendment or ``None`` if absent."""
+        from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
         safe_repository_id(amendment_id, context="amendment_id")
         record = self._objects.load(
@@ -94,6 +101,7 @@ class ModeloAmendmentRepository:
 
     def save(self, amendment: BaseAmendment) -> None:
         """Persist ``amendment`` in the encrypted database object store."""
+        from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
         envelope = Envelope[BaseAmendment](
@@ -115,6 +123,7 @@ class ModeloAmendmentRepository:
 
     def delete(self, amendment_id: str) -> bool:
         """Remove the persisted amendment for ``amendment_id``."""
+        from ...adapters.persistence.storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         deleted = self._objects.delete(_AMENDMENT_NAMESPACE, amendment_id)
@@ -124,6 +133,7 @@ class ModeloAmendmentRepository:
 
     def list_amendment_ids(self) -> tuple[str, ...]:
         """Return every amendment id persisted in this repository."""
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         ids: list[str] = []
         for record in self._objects.list_records(
@@ -145,7 +155,5 @@ class ModeloAmendmentRepository:
 
 
 __all__ = [
-    "ClassificationError",
-    "EnvelopeVersionError",
     "ModeloAmendmentRepository",
 ]
