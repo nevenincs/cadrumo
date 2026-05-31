@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from functools import lru_cache
 
+from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.logging import get_logger
 from ...domain._identifiers import canonical_decimal_string
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
@@ -546,7 +547,7 @@ def _schema_formula_fingerprint(
 
 
 def _sha256_payload(payload: object) -> str:
-    return hashlib.sha256(_canonical_json_bytes(payload)).hexdigest()
+    return _sha256_hex(_canonical_json_bytes(payload))
 
 
 def _canonical_json_bytes(payload: object) -> bytes:

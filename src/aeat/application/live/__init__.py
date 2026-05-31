@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import hashlib
 from collections.abc import Awaitable
 from contextlib import asynccontextmanager, nullcontext
 from datetime import UTC, datetime
@@ -102,6 +101,7 @@ from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import AeatError as _AeatError
+from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
@@ -1015,12 +1015,12 @@ def _decimal_text(value: Decimal | None) -> str | None:
 
 
 def _taxpayer_ref(taxpayer_nif: str) -> str:
-    digest = hashlib.sha256(taxpayer_nif.strip().upper().encode("utf-8")).hexdigest()
+    digest = _sha256_hex(taxpayer_nif.strip().upper().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
 def _evidence_ref(value: str) -> str:
-    digest = hashlib.sha256(value.strip().encode("utf-8")).hexdigest()
+    digest = _sha256_hex(value.strip().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 
 
@@ -1602,7 +1602,7 @@ def _iva_remote_state_acquisition_manifest(
             *(surface.model_dump_json() for surface in surfaces),
         )
     )
-    digest = hashlib.sha256(manifest_seed.encode("utf-8")).hexdigest()
+    digest = _sha256_hex(manifest_seed.encode("utf-8"))
     timestamp = captured_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
     acquisition_id = f"live-iva-acquisition:{report.target_year}:{report.target_period}:{timestamp}:{digest}"
     return IvaRemoteStateAcquisitionManifest(

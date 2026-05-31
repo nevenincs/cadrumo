@@ -39,7 +39,6 @@ cannot silently ship without the declaration.
 from __future__ import annotations
 
 import csv
-import hashlib
 import unicodedata
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
@@ -53,6 +52,7 @@ from pydantic import BaseModel, ConfigDict
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors import AeatError
+from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 
@@ -334,7 +334,7 @@ class FinancialProvider(ABC):
     @staticmethod
     def _compute_sha256(source_bytes: bytes) -> str:
         """Return the lowercase SHA-256 digest of the source bytes."""
-        return hashlib.sha256(source_bytes).hexdigest()
+        return _sha256_hex(source_bytes)
 
     def _build_provenance(
         self,
