@@ -71,6 +71,7 @@ from ...domain.modelos._row_models import (
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.profile import parse_tax_region
+from ...domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611 as _compute_deduccion_maternidad_0611
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 _log = get_logger(__name__)
@@ -2657,15 +2658,6 @@ def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
             )
         )
     return hijo_id, meses
-
-
-def _compute_deduccion_maternidad_0611(meses_por_hijo: list[tuple[str, int]]) -> int:
-    """Compute Art. 81 LIRPF deducción maternidad from per-hijo meses pairs.
-
-    Formula: ``sum(min(meses × 100, 1_200))`` for each ``(hijo_id, meses)`` pair.
-    Returns an integer euros amount.
-    """
-    return sum(min(meses * 100, 1200) for _, meses in meses_por_hijo)
 
 
 def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
