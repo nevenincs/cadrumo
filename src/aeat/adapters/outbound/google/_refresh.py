@@ -55,7 +55,6 @@ def is_token_expired(
     start), which always returns True so the caller acquires a fresh
     access token from the refresh-token grant.
     """
-
     if access_token_expiry is None:
         return True
     return now + buffer >= access_token_expiry
@@ -77,7 +76,6 @@ def detect_testing_project_warning(
     - A previous refresh already crossed the warning threshold (so we
       don't spam the operator on every refresh once the window opens).
     """
-
     elapsed = now - issued_at
     if elapsed < TESTING_PROJECT_WARN_AFTER:
         return None
@@ -98,7 +96,6 @@ def mark_reauth_required(metadata: OAuthMetadata) -> OAuthMetadata:
     Used after `invalid_grant` so subsequent commands can surface the
     re-consent advisory without re-running the failed refresh.
     """
-
     return metadata.model_copy(update={"reauth_required": True})
 
 
@@ -138,7 +135,6 @@ def refresh_credentials(
             and only `aeat config google login` can recover.
         GoogleAuthNetworkError: When the token endpoint is unreachable.
     """
-
     if metadata.reauth_required:
         raise GoogleAuthExpiredError(
             "google OAuth credential is marked reauth_required; refresh path is closed",
@@ -188,7 +184,6 @@ def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str
         GoogleAuthRevokedError: Maps Google's `invalid_grant` response.
         GoogleAuthNetworkError: Maps transport failures.
     """
-
     try:
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials

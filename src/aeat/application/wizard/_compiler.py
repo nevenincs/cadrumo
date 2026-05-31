@@ -36,7 +36,6 @@ def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
         WizardCompileError: When two profile-bound questions across the
             catalogue declare the same ``profile_key``.
     """
-
     by_id = {question.id: question for question in _iter_catalogue_questions(flows)}
     keys: dict[str, ProfileKey] = {}
     for question in _iter_catalogue_questions(flows):
@@ -110,7 +109,6 @@ def _resolve_condition(
     representation, so the conditional-requirement projection is left
     empty; the key is still emitted as ``OPTIONAL``.
     """
-
     if isinstance(condition, WizardVisibility):
         return None, None
     if condition.equals is None:

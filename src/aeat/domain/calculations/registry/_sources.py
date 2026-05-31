@@ -13,7 +13,6 @@ from ._schema import SourceReference
 
 def verify_source_file(root: Path, source: SourceReference) -> None:
     """Verify one source reference against the local repository filesystem."""
-
     repo_root = root.resolve()
     path = _resolve_corpus_path(repo_root, source)
     if repo_root not in path.parents and path != repo_root:
@@ -52,7 +51,6 @@ def _source_file_fingerprint(path: str, byte_count: int, modified_ns: int) -> tu
 
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:
     """Verify every source reference in a source catalogue mapping."""
-
     verified: set[tuple[Path, int, str]] = set()
     for source in sources.values():
         key = ((root / source.corpus_path).resolve(), source.bytes, source.sha256)

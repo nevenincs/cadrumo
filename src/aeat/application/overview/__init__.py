@@ -774,7 +774,6 @@ def build_filing_obligation_advisories(
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
     evidence of a mandatory obligation is present.
     """
-
     if raw_values is None:
         return ()
 
@@ -817,7 +816,6 @@ def overview_status_report_from_projection(
             used to evaluate filing-obligation advisories (e.g., the
             Art. 96.3 LIRPF multiple-pagadores rule).
     """
-
     return OverviewStatusReport(
         active_profile=projection.active_profile.profile_id,
         active_profile_name=projection.active_profile.label,
@@ -845,7 +843,6 @@ def build_overview_status_report(
     every other operator surface — including the ``modelo work`` work
     units the old assembly never read.
     """
-
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(state=state)
@@ -854,7 +851,6 @@ def build_overview_status_report(
 
 def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     """Render ``OverviewStatusReport`` as stable tab-separated text rows."""
-
     lines = [
         f"profile\t{report.active_profile_name or report.active_profile or ''}",
         f"profile_id\t{report.active_profile or ''}",

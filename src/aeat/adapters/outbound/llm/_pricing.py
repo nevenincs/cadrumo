@@ -52,7 +52,6 @@ def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, outp
         :data:`decimal.Decimal('0')` for the local provider and unknown
         models.
     """
-
     if provider is LLMProvider.LOCAL:
         return _ZERO
     normalized_model = model.lower()

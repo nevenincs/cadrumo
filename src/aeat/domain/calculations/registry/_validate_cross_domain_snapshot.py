@@ -38,7 +38,6 @@ def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> Non
     peer-domain module re-imported in a fresh interpreter (or under
     test reload) does not stack duplicate checks.
     """
-
     if check not in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         _CROSS_DOMAIN_SNAPSHOT_CHECKS.append(check)
 
@@ -69,7 +68,6 @@ def check_cross_domain_snapshot_routing(
     known-required gate, fail loudly so the missing registration
     surfaces at snapshot build instead of as a later runtime KeyError.
     """
-
     casilla_ids = frozenset(checker.casilla_ids)
     if snapshot.modelo.id == "100" and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         checker.failures.append(

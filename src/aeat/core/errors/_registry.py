@@ -82,7 +82,6 @@ _TEXT_PREFIX: dict[ErrorCategory, str] = {
 
 def _category_text_prefix(category: ErrorCategory) -> str:
     """Return the sentence-case stderr prefix for ``category``."""
-
     return _TEXT_PREFIX[category]
 
 
@@ -148,7 +147,6 @@ def register(code: ErrorCode) -> ErrorCode:
     Raises:
         ValueError: If a duplicate code identifier is encountered.
     """
-
     existing = _ERROR_REGISTRY_MUTABLE.get(code.code)
     if existing is not None and existing != code:
         raise ValueError(f"duplicate ErrorCode registration for {code.code!r}")
@@ -171,7 +169,6 @@ def _flush_deferred_binds() -> None:
     defined during the circular-import window (before
     _DECLARED_CODE_BY_QUALNAME was ready) are bound on first runtime use.
     """
-
     if not _DEFERRED_BIND:
         return
     still_pending: set[type[BaseException]] = set()
@@ -206,7 +203,6 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
         :exc:`ValueError` if the mapping is available and contains no
         entry for this class.
     """
-
     bound = _CLASS_CODE_REGISTRY.get(error_type)
     if bound is not None:
         return bound
@@ -236,7 +232,6 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
     ``_DECLARED_CODE_BY_QUALNAME`` was populated are bound here on first
     runtime use.
     """
-
     _flush_deferred_binds()
     error_type = error if isinstance(error, type) else type(error)
     code = _CLASS_CODE_REGISTRY.get(error_type)
@@ -247,7 +242,6 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
 
 def resolve_output_language() -> str:
     """Resolve the configured output language, defaulting to ``es``."""
-
     try:
         from ..i18n import output_language
 
@@ -269,7 +263,6 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
     dropped entirely — they are implementation detail (e.g. widget
     prompt identifiers) and must not appear in operator-facing output.
     """
-
     if not context:
         return None
     scrubbed: dict[str, str] = {}
@@ -290,7 +283,6 @@ def build_error_envelope(
     trace_id: str | None = None,
 ) -> ErrorEnvelope:
     """Build the deterministic JSON stderr envelope for ``error``."""
-
     code = get_registered_error_code(error)
     merged_context = _merge_error_context(error, context)
     return ErrorEnvelope(
@@ -311,7 +303,6 @@ def render_error_text(
     context: Mapping[str, object] | None = None,
 ) -> str:
     """Render the human-readable stderr payload for ``error``."""
-
     code = get_registered_error_code(error)
     prefix = _category_text_prefix(code.category)
     message = resolve_error_message(error, code)
@@ -334,7 +325,6 @@ def render_error_json(
     trace_id: str | None = None,
 ) -> str:
     """Serialize ``error`` to a deterministic single-line JSON document."""
-
     envelope = build_error_envelope(error, context=context, trace_id=trace_id)
     payload = {"error": envelope.model_dump(mode="json")}
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
@@ -342,7 +332,6 @@ def render_error_json(
 
 def get_error_exit_code(category: ErrorCategory) -> int:
     """Return the canonical process exit code for ``category``."""
-
     return {
         ErrorCategory.ERROR: 1,
         ErrorCategory.REFUSED: 2,
@@ -362,7 +351,6 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -
     through the i18n backend, which falls back to the key itself when
     no matching translation exists.
     """
-
     resolved_code = code or get_registered_error_code(error)
     from ..i18n import tr
 
@@ -386,7 +374,6 @@ def _coerce_interpolation_kwargs(
     `{value}` placeholders see the same Decimal / int / str the
     error site recorded.
     """
-
     if context is None:
         return {}
     safe: dict[str, object] = {}
@@ -398,7 +385,6 @@ def _coerce_interpolation_kwargs(
 
 def get_error_suggestion(error: BaseException, code: ErrorCode | None = None) -> str | None:
     """Resolve the copy-paste recovery command for ``error``."""
-
     resolved_code = code or get_registered_error_code(error)
     suggestion = getattr(error, "suggestion", None)
     if isinstance(suggestion, str) and suggestion:
@@ -447,7 +433,6 @@ def _stringify_context_value(value: object) -> str:
     stable ``<type-name>`` placeholder so the operator never sees a raw
     object dump regardless of which error class produced the context.
     """
-
     if value is None:
         return "null"
     if isinstance(value, bool):

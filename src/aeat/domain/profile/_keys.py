@@ -94,7 +94,6 @@ class ProfileKey(BaseModel):
         Raises:
             KeyError: When the normalised form is not in the registry.
         """
-
         canonical = normalise_key(raw)
         try:
             return _by_key()[canonical]
@@ -116,7 +115,6 @@ def register_profile_keys(keys: tuple[ProfileKey, ...]) -> None:
     function twice with different tuples raises a :class:`RuntimeError`
     so the registration stays single-writer.
     """
-
     if _PROFILE_KEYS_CACHE:
         if _PROFILE_KEYS_CACHE[0] == keys:
             return
@@ -133,7 +131,6 @@ def _build_profile_keys() -> tuple[ProfileKey, ...]:
     ``aeat.application.wizard._catalogue`` cannot deadlock at module-
     load time. The result is cached for the lifetime of the process.
     """
-
     from ...application.wizard._compiler import compile_profile_keys
 
     return compile_profile_keys(get_wizard_flows())
@@ -154,7 +151,6 @@ def _by_key() -> dict[str, ProfileKey]:
 
 def __getattr__(name: str) -> tuple[ProfileKey, ...]:
     """Lazily resolve ``PROFILE_KEYS`` at first attribute access."""
-
     if name == "PROFILE_KEYS":
         return _profile_keys()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
@@ -170,7 +166,6 @@ def get_profile_key(key: str) -> ProfileKey:
     Raises:
         KeyError: When the normalised form is not in the registry.
     """
-
     return ProfileKey.from_key(key)
 
 

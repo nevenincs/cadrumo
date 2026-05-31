@@ -243,7 +243,6 @@ class DeclaracionesRegisterSession:
 
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
         """Return filed-declaration rows for one ``(modelo, ejercicio)`` query."""
-
         if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
                 "DeclaracionesRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
@@ -268,7 +267,6 @@ class DeclaracionesRegisterSession:
         artefact_sink: FiledDeclaracionArtefactSink | None = None,
     ) -> FiledDeclaracionObservation:
         """Capture a normalized filed-declaration observation using the active page."""
-
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
         if not await _drive_search(
@@ -305,7 +303,6 @@ async def open_declarations_register(
     playwright: Playwright | None = None,
 ) -> AsyncIterator[DeclaracionesRegisterSession]:
     """Open one browser context for repeated filed-declaration register reads."""
-
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
         context,
@@ -1158,7 +1155,6 @@ async def capture_previous_filing_observations(
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
     """Capture filed declarations required by registry previous-filing bindings."""
-
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
@@ -1195,7 +1191,6 @@ async def capture_relation_source_observations(
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
     """Capture filed declarations required by registry cross-model relations."""
-
     required_outputs: dict[tuple[str, int, str], set[str]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
         for source_period in requirement.periods:
@@ -1236,7 +1231,6 @@ def _select_authoritative_declaration(
     context: str,
 ) -> Declaracion:
     """Select the latest accepted register row for one filed period."""
-
     if not declarations:
         raise SedeParseError(f"{context} {modelo!r}/{ejercicio}/{period!r} found no filed declaration")
     active = tuple(row for row in declarations if row.estado.upper() == "ALTA")
@@ -1409,7 +1403,6 @@ def _observed_modelo_303_casillas_from_submitted_file(
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
     """Parse official Modelo 303 page-03 fixed-width result fields."""
-
     text = body.decode(_SEDE_BODY_ENCODING, errors="replace")
     page_start = text.find(_MODELO_303_PAGE_03_TAG)
     if page_start < 0:
@@ -1446,7 +1439,6 @@ def _observed_modelo_303_casillas_from_submitted_file(
 
 def _parse_modelo_303_money(raw: str, *, casilla_id: str) -> Decimal:
     """Parse AEAT fixed-width 15+2 money, with leading ``N`` for negatives."""
-
     value = raw.strip()
     if not value:
         return Decimal("0.00")
@@ -1521,7 +1513,6 @@ def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
 ) -> RegistryModeloObservation:
     """Convert a filed-declaration observation into registry binding input."""
-
     if not observation.extraction_coverage:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "
@@ -1570,7 +1561,6 @@ def _with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from filed casillas 87 and 69."""
-
     target_id = "iva.compensacion-disponible-fin-periodo"
     if observation.modelo != "303" or any(casilla.casilla_id == target_id for casilla in observation.casillas):
         return observation
@@ -1626,7 +1616,6 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     period: str,
 ) -> dict[str, Decimal]:
     """Resolve registry previous-filing bindings from filed AEAT observations."""
-
     return resolve_previous_filing_binding_values(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
@@ -1643,7 +1632,6 @@ def resolve_relation_values_from_filed_declarations(
     period: str,
 ) -> dict[str, Decimal]:
     """Resolve registry cross-model relation values from filed AEAT observations."""
-
     return resolve_relation_values_from_observations(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),

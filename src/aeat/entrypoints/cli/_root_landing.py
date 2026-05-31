@@ -8,7 +8,6 @@ from ...core.i18n import tr
 
 def render_cli_root_landing_lines(landing: RootLandingReport) -> tuple[str, ...]:
     """Render the bare ``aeat`` invocation as a CLI landing screen."""
-
     lines: list[str] = [
         tr("cli.root.landing.headline"),
         tr("cli.root.landing.tagline"),

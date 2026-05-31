@@ -99,7 +99,6 @@ def _load_rates() -> LivaArt161RecargoRates:
 
 def _rates_from_catalogue(parameters: Mapping[str, object]) -> LivaArt161RecargoRates:
     """Build the typed LIVA art. 161 rate record from validated registry entries."""
-
     try:
         general_raw = _parameter_value(parameters, _GENERAL_PARAM_ID)
         reducido_raw = _parameter_value(parameters, _REDUCIDO_PARAM_ID)

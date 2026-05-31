@@ -139,7 +139,6 @@ def parse_g313_html(html: str) -> CensoFactSet:
     change and must surface to the operator rather than silently drop
     the value.
     """
-
     extracted = _label_value_table(html)
     return CensoFactSet(
         fiscal_address_cadastral_reference=_parse_cadastral(
@@ -186,7 +185,6 @@ def _label_value_table(html: str) -> dict[str, str]:
     fragment as the value. Tolerates labels rendered with or without a
     trailing colon.
     """
-
     text = _WS_RE.sub(" ", _TAG_RE.sub(" ", html)).strip()
     table: dict[str, str] = {}
     for label in _G313_LABELS.values():
@@ -207,7 +205,6 @@ def _take_value_token(after: str) -> str:
     Stops at the next known label so a value-less label cell does not
     swallow the next field's value.
     """
-
     other_labels = sorted(_G313_LABELS.values(), key=lambda label: len(label), reverse=True)
     cutoff = len(after)
     for other in other_labels:

@@ -30,7 +30,6 @@ def _to_httpurl(value: str) -> HttpUrl:
 
 def _resolve_host(subdomain: Subdomain) -> str:
     """Return the absolute origin (``https://host``) for a portal subdomain."""
-
     domains = Settings.external_constants().aeat.domains
     if subdomain is Subdomain.SEDE:
         return domains.sede

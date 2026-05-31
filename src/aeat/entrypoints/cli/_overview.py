@@ -138,7 +138,6 @@ def overview_calendar(
     ),
 ) -> None:
     """Render the deadline calendar over the supplied window."""
-
     from ...application.user_profile._projections import record_to_values
 
     rng = OverviewCalendarRange(
@@ -222,7 +221,6 @@ def _overview_calendar_all_profiles(
     calls :func:`build_overview_calendar` once per profile. Unreadable
     buckets are skipped with a warning line; they do not abort the scan.
     """
-
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
     from ...application.user_profile._orchestration import profile_storage_session
     from ...application.user_profile._profile_repository import ProfileRepository
@@ -339,7 +337,6 @@ def overview_agenda(
     ),
 ) -> None:
     """Surface the operator's next-due obligation with cohort breakdowns."""
-
     from ...application.overview._agenda import build_overview_agenda
     from ...application.user_profile._projections import record_to_values
 
@@ -435,7 +432,6 @@ def overview_backlog(
     ),
 ) -> None:
     """Surface the operator's past-due backlog without mutating state."""
-
     from ...application.overview._backlog import build_overview_backlog
     from ...application.user_profile._projections import record_to_values
 
@@ -505,7 +501,6 @@ def overview_explain(
     ),
 ) -> None:
     """Explain why a modelo does or does not apply to the active profile."""
-
     from ...application.overview._errors import OverviewExplainError
     from ...application.overview._explain import build_overview_explain
 

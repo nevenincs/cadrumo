@@ -19,7 +19,6 @@ from __future__ import annotations
 
 def normalise_key(value: str) -> str:
     """Return the canonical form of a profile key for registry lookup."""
-
     return value.strip().lower().replace("-", ".")
 
 

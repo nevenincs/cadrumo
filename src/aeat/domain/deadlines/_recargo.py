@@ -47,7 +47,6 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
         DeadlineValidationError: When the TOML cannot be read, is
             malformed, is missing rows, or carries an invalid band.
     """
-
     target = path if path is not None else _DEFAULT_BRACKET_PATH
     resolved = target.resolve()
     try:
@@ -103,7 +102,6 @@ def resolve_recargo_band(days_late: int, bands: Sequence[RecargoBand]) -> Recarg
         ValueError: When ``days_late < 1`` or no band's window covers
             the value (which would indicate a TOML gap).
     """
-
     if days_late < 1:
         raise DeadlineValidationError(f"resolve_recargo_band: days_late must be >= 1; got {days_late}")
     for band in bands:
@@ -133,7 +131,6 @@ def build_recovery_for_overdue(
         A :class:`Recovery` carrying the resolved band, the legal
         reference, and a runnable next-action command.
     """
-
     resolved = resolve_recargo_band(
         days_late,
         bands if bands is not None else load_recargo_bands(),

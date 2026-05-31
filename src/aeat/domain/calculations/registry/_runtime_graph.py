@@ -9,7 +9,6 @@ from ._schema import FormulaExpression, ModeloRevision
 
 def expression_casilla_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all casilla ids referenced by a formula expression."""
-
     refs: list[str] = []
     _collect_casilla_refs(expression, refs)
     return tuple(refs)
@@ -17,7 +16,6 @@ def expression_casilla_refs(expression: FormulaExpression) -> tuple[str, ...]:
 
 def expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all relation ids referenced by a formula expression."""
-
     refs: list[str] = []
     _collect_relation_refs(expression, refs)
     return tuple(refs)
@@ -25,7 +23,6 @@ def expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
 
 def expression_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all binding ids referenced by a formula expression."""
-
     refs: list[str] = []
     _collect_binding_refs(expression, refs)
     return tuple(refs)
@@ -40,7 +37,6 @@ def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ..
     own collector so callers can populate the ``date_binding_values``
     channel selectively.
     """
-
     refs: list[str] = []
     _collect_date_binding_refs(expression, refs)
     return tuple(refs)
@@ -54,7 +50,6 @@ def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
     ``lookup_bracket_by_ccaa`` op; dispatch_table values reference
     parameters just like the direct leaf.
     """
-
     refs: list[str] = []
     _collect_parameter_refs(expression, refs)
     return tuple(refs)
@@ -142,7 +137,6 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[str]:
     ``binding ... has no supplied value``; this query is the
     authoritative discriminator that prevents that mismatch.
     """
-
     refs: list[str] = []
     for formula in revision.formulas:
         _collect_enum_dispatch_binding_refs(formula.expression, refs)
@@ -205,7 +199,6 @@ def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
     canonical ``id``. The canonical ``id`` always wins a collision so
     the canonical handle is never shadowed by an alias.
     """
-
     canonical_ids = {casilla.id for casilla in revision.casillas}
     number_counts: dict[str, int] = {}
     form_number_counts: dict[str, int] = {}
@@ -236,7 +229,6 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
     occurrence. For single-segment modelos the resolution is the
     identity and the ordering is unchanged.
     """
-
     resolver = _casilla_reference_resolver(revision)
     computed_targets = {resolver.get(formula.target, formula.target) for formula in revision.formulas}
     sorter: TopologicalSorter[str] = TopologicalSorter()

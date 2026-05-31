@@ -65,7 +65,6 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     resolved, or when the modelo declares no verification expectation —
     the caller then renders only the full casilla table.
     """
-
     casilla_values = revision.casilla_values
     try:
         work_unit = get_work_unit(str(revision.work_unit_id))

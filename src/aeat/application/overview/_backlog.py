@@ -93,7 +93,6 @@ def build_overview_backlog(
     is ``LATE``. Filed obligations are excluded by the state mapping;
     the engine surfaces them as ``FILED`` rather than ``OVERDUE``.
     """
-
     resolved_as_of = as_of or date.today()
     resolved_from = from_date or (resolved_as_of - timedelta(days=_DEFAULT_LOOKBACK_DAYS))
     resolved_to = to_date or resolved_as_of

@@ -113,7 +113,6 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
     plus the flat deadline facts. Surfacing them here lets the operator
     see which facts the answer depends on.
     """
-
     facts: dict[str, _ProfileFactValue] = {}
     for field_name in _DEADLINE_RELEVANT_FIELDS:
         if not hasattr(profile, field_name):
@@ -150,7 +149,6 @@ def _modelo_is_registered(modelo: str) -> bool:
     a registry-data gap the CLI should degrade gracefully around rather
     than crash on.
     """
-
     from ...core.resources import resources
     from ...core.resources._errors import ResourceNotFoundError
 
@@ -189,7 +187,6 @@ def build_overview_explain(
             unknown to the registry, or when the deadline engine fails
             for a reason other than a missing deadline-window dataset.
     """
-
     if not modelo.strip():
         raise OverviewExplainError(tr("application.overview.explain.errors.modelo_blank"))
     resolved_year = year or date.today().year
@@ -242,7 +239,6 @@ def _scheduling_rationale(
     degrades gracefully around. A genuinely unknown modelo identifier
     is left for :func:`build_overview_explain` to refuse.
     """
-
     deadline_engine = engine or DeadlineEngine()
     try:
         return deadline_engine.explain(profile, modelo, year=year)

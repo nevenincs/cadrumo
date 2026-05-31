@@ -135,7 +135,6 @@ def _validate_import_provider(provider: str) -> str:
     the operator does not have to discover the set by trial and error
     (cluster D / persona testimonials, ledger import surface).
     """
-
     normalised = provider.strip().lower()
     if normalised not in _known_import_providers():
         raise _bad(
@@ -165,7 +164,6 @@ def _validate_category_id(category_id: str | None) -> str | None:
     here refuses an unknown id immediately and points at
     ``aeat app ledger categories`` for the recognised catalogue.
     """
-
     if category_id is None:
         return None
     trimmed = category_id.strip()
@@ -200,7 +198,6 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     the operator sees the actual illegal field combination rather than
     a misleading repair hint.
     """
-
     details = "; ".join(_format_validation_error(item) for item in error.errors())
     return _bad(
         tr(
@@ -248,7 +245,6 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     string. Four distinct refusal keys are emitted depending on which
     invariant was violated.
     """
-
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
@@ -701,7 +697,6 @@ def ledger_categories(ctx: typer.Context) -> None:
     ``--category-id``; ``ledger check`` / ``ledger preflight`` do not
     flag a pure-income transaction as ``missing_category``.
     """
-
     families: list[dict[str, object]] = []
     # The first column is the literal `--category-id` value; the second
     # is the family it belongs to. An earlier `family<TAB>id` layout
@@ -1148,7 +1143,6 @@ def ledger_link(
     ),
 ) -> None:
     """Bind a transaction to invoice / evidence references in one call."""
-
     from ...application.invoices import link_invoice_transaction_repositories
     from ...domain.invoices import InvoiceCatalogueRepository
     from ...domain.invoices._errors import InvoiceLinkError
@@ -1259,7 +1253,6 @@ def ledger_check(
     ),
 ) -> None:
     """Surface ledger anomalies for the addressed bucket without mutating state."""
-
     from ...application.ledger._preflight import (
         LedgerPreflightIssue,
         preflight_transaction_catalogue,
@@ -1357,7 +1350,6 @@ def ledger_preflight(
     ),
 ) -> None:
     """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
-
     from ...application.ledger._preflight import preflight_ledger_tax_readiness
 
     transaction_repository = _tx_repo(_state())
@@ -1828,7 +1820,6 @@ def _empty_import_notice(result: LedgerSourceImportResult) -> str | None:
     documented column format. A dry run is excluded because zero
     imports is the expected outcome of a dry run.
     """
-
     if result.dry_run or result.imported > 0:
         return None
     if result.skipped > 0:
@@ -1952,7 +1943,6 @@ app.add_typer(ratios_app, name="ratios")
 
 def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
-
     from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise
 
@@ -1970,7 +1960,6 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     are still allowed in that state but census-override warnings stay
     silent because there is no profile to look up snapshots against.
     """
-
     from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
 
@@ -1996,7 +1985,6 @@ def _emit_ratios_event(
     from secure-object snapshots. ``prior`` is ``None`` on a first
     set; ``new`` is ``None`` on unset.
     """
-
     from datetime import UTC, datetime
 
     from ...domain.buckets import (
@@ -2068,7 +2056,6 @@ def _resolve_source_jurisdiction(
           NON_RESIDENT_IRNR or RESIDENT_IRPF / IMPATRIADO when no
           operator value was given.
     """
-
     if operator_value is not None:
         return operator_value
     if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
@@ -2094,7 +2081,6 @@ def _resolve_business_pct_with_census(
     HOME_OFFICE transactions and explicit-override flows are not
     perturbed.
     """
-
     from ...application.ledger._ratios import census_business_pct_for
     from ...application.user_profile import CensoSyncService
     from ...domain.categories import SpendingCategory
@@ -2128,7 +2114,6 @@ def _emit_ratios_census_override_warning(
     planned change — but downstream auditors get a typed record of
     the divergence.
     """
-
     from datetime import UTC, datetime
 
     from ...domain.buckets import (

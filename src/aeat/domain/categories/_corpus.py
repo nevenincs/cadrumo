@@ -11,7 +11,6 @@ from ._spending_category import SpendingCategory
 
 def load_category_profiles_from_manual(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
     """Load reviewed spending-category profiles for ``year``."""
-
     return resolve_category_profiles(year)
 
 

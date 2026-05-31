@@ -8,7 +8,6 @@ from ._models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLand
 
 def build_help_document(surface: HelpSurface | str) -> HelpDocument:
     """Return the curated help document for ``surface``."""
-
     resolved = HelpSurface(surface)
     if resolved is HelpSurface.ROOT:
         return _root_help()
@@ -19,7 +18,6 @@ def build_help_document(surface: HelpSurface | str) -> HelpDocument:
 
 def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
     """Return the bare-invocation landing report for the current profile state."""
-
     if active_profile:
         return RootLandingReport(
             active_profile=active_profile,
@@ -35,7 +33,6 @@ def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
 
 def render_help_text(document: HelpDocument) -> str:
     """Render a curated help document as terminal-safe plain text."""
-
     lines: list[str] = [document.heading, ""]
     for paragraph in document.paragraphs:
         lines.append(paragraph)
@@ -52,7 +49,6 @@ def render_help_text(document: HelpDocument) -> str:
 
 def render_root_landing_text(report: RootLandingReport) -> str:
     """Render the bare-invocation landing report."""
-
     return tr("cli.operator_surface.landing.text_template", message=report.message, command=report.command)
 
 

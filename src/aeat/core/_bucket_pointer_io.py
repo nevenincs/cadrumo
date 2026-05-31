@@ -20,7 +20,6 @@ _POINTER_FILENAME = "active-profile"
 
 def pointer_path(root: Path) -> Path:
     """Return the canonical pointer-file path under the AEAT root."""
-
     return root / _POINTER_FILENAME
 
 
@@ -37,7 +36,6 @@ def read_pointer(root: Path) -> BucketPointer | None:
             key, a wrong type, or a malformed payload.
         tomllib.TOMLDecodeError: If the TOML is unparsable.
     """
-
     target = pointer_path(root)
     if not target.is_file():
         return None
@@ -72,7 +70,6 @@ def resolve_active_bucket_id() -> str | None:
     bucket through this function, so it must sit at or below the adapter
     layer to keep the dependency direction acyclic.
     """
-
     from .config import load_settings
 
     settings = load_settings()
@@ -93,7 +90,6 @@ def write_pointer(root: Path, pointer: BucketPointer) -> None:
     previous good pointer or the new good pointer on disk, never a torn
     intermediate. The AEAT root is created lazily if absent.
     """
-
     target = pointer_path(root)
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(target.suffix + ".tmp")

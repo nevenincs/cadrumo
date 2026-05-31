@@ -156,7 +156,6 @@ def _emit_revision_payload_failures(
     revision: ModeloRevision,
 ) -> None:
     """Reject registry revisions that carry no casilla payload at all."""
-
     if revision.casillas:
         return
     failures.append(

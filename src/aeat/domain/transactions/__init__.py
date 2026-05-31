@@ -98,7 +98,8 @@ _LAZY_REPOSITORY_NAMES = frozenset(
 def __getattr__(name: str):
     """Lazy-import the persistence repository so importing this package does
     not eagerly pull in SQLAlchemy + Alembic (whose plugin setup logs to
-    stderr and breaks JSON-pipe-safety contracts in CLI test scope)."""
+    stderr and breaks JSON-pipe-safety contracts in CLI test scope).
+    """
     if name in _LAZY_REPOSITORY_NAMES:
         from . import _repository
 

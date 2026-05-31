@@ -983,7 +983,6 @@ class Settings(BaseSettings):
         database is a placeholder that real per-profile data never
         lands in.
         """
-
         if self.aeat_database_url:
             return self
         bucket_id = (self.aeat_active_profile or "").strip()
@@ -1039,7 +1038,6 @@ class Settings(BaseSettings):
         ``mode="after"`` guarantees ``aeat_local_storage_root`` is
         already populated when this runs.
         """
-
         if "aeat_token_dir" in self.model_fields_set:
             return self
         object.__setattr__(
@@ -1071,7 +1069,6 @@ class Settings(BaseSettings):
         ``mode="after"`` guarantees ``aeat_local_storage_root`` is
         already populated when this runs.
         """
-
         if "aeat_log_dir" in self.model_fields_set:
             return self
         object.__setattr__(
@@ -1173,7 +1170,6 @@ class Settings(BaseSettings):
         so callers reach third-party hostnames, AEAT service paths, OAuth
         scopes, and LLM endpoints through a single accessor.
         """
-
         from .external_constants import load_external_constants
 
         return load_external_constants()
@@ -1214,7 +1210,6 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
         """Anchor repo-relative path settings to ``PROJECT_ROOT``."""
-
         return normalize_project_relative_path(value)
 
 
@@ -1226,7 +1221,6 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
     """Classify the effective primary SQL route for write guards."""
-
     resolved = settings or load_settings()
     database_url = resolved.aeat_database_url
     database_path = _sqlite_database_path(database_url)
@@ -1269,7 +1263,6 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     fail-closed: a caller cannot convert an operator-supplied SQL URL
     into a bucket route by passing a bucket id.
     """
-
     trimmed = bucket_id.strip()
     if not trimmed:
         raise CoreValidationError("bucket_id must not be blank")
@@ -1316,7 +1309,6 @@ def load_settings() -> Settings:
     ``.env``. The fresh construction preserves the historical contract
     that callers see every monkeypatched env var in test contexts.
     """
-
     override = _settings_override.get()
     if override is not None:
         return override
@@ -1343,7 +1335,6 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     OpenSSL passphrase, browser driver) continue to use the real
     environment.
     """
-
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override

@@ -36,7 +36,6 @@ class BucketPointer(BaseModel):
         ``schema_version``. The output ends with a trailing newline so the
         atomic write-then-rename helper produces a POSIX-clean file.
         """
-
         # Hand-formatted to keep the dependency footprint minimal and the
         # output deterministic; the format is fixed at two scalar keys.
         bucket_id_escaped = self.bucket_id.replace("\\", "\\\\").replace('"', '\\"')
@@ -51,7 +50,6 @@ class BucketPointer(BaseModel):
                 pydantic validation (unknown keys, wrong types, empty
                 ``bucket_id``, non-positive ``schema_version``).
         """
-
         payload = tomllib.loads(text)
         return cls.model_validate(payload)
 

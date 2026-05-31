@@ -46,7 +46,6 @@ CONFIG_RESET_SCOPE_CLI_VALUES: tuple[str, ...] = tuple(scope.value.lower() for s
 
 def parse_config_reset_scope(raw: str) -> ConfigResetScope:
     """Parse a CLI reset-scope token into the backend enum."""
-
     return ConfigResetScope(raw.strip().upper())
 
 
@@ -87,7 +86,6 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
     Returns:
         A :class:`ConfigResetReport` summarising what was cleared.
     """
-
     if not confirmed:
         raise ConfigResetUnconfirmedError("config reset refused: confirmed must be True (run with --yes from the CLI)")
 

@@ -53,7 +53,6 @@ def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
     unsupported console host. Windows-only error is included when
     importable; the OSError fallback covers POSIX TTY misconfiguration.
     """
-
     error_types: list[type[BaseException]] = [OSError]
     try:
         from prompt_toolkit.output.win32 import NoConsoleScreenBufferError as _Win32NoConsole
@@ -124,7 +123,6 @@ class ScriptedPrompter:
             WizardScriptOverflowError: When the deque holds unconsumed
                 canonical tokens at flow end.
         """
-
         if self._answers:
             context = {"remaining": tuple(self._answers)}
             raise WizardScriptOverflowError(
@@ -135,7 +133,6 @@ class ScriptedPrompter:
 
 def _render_choice(choice: WizardChoice) -> questionary.Choice:
     """Render a :class:`WizardChoice` into a ``questionary.Choice``."""
-
     return questionary.Choice(
         title=tr(str(choice.label)),
         value=choice.value,
@@ -162,7 +159,6 @@ class QuestionaryPrompter:
 
     def prepare(self, flow: WizardFlow) -> None:
         """Verify prompt support and explain the setup flow before progress starts."""
-
         self._ensure_interactive_environment()
         question_total = sum(len(section.questions) for section in flow.sections)
         required_total = sum(1 for section in flow.sections for question in section.questions if question.required)
@@ -183,12 +179,10 @@ class QuestionaryPrompter:
         so the message is handled by the configured logging pipeline and
         any registered secret-scrubbing filters.
         """
-
         _log.info("wizard.progress text=%r", text)
 
     def _ensure_interactive_environment(self) -> None:
         """Fail before progress when this process cannot host an interactive prompt."""
-
         if self._input is not None or self._output is not None:
             return
         if not sys.stdin.isatty():
@@ -308,7 +302,6 @@ class QuestionaryPrompter:
 
 def _stringify(value: object) -> str:
     """Coerce questionary's return value into a canonical-token string."""
-
     if value is None:
         return ""
     return str(value)

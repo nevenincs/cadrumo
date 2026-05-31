@@ -370,11 +370,13 @@ class KeyringClient(Protocol):
     def probe_backend(self) -> None:
         """Raise :class:`KeyringUnavailableError` when the active
         backend cannot persist a master key (no-op fail / null
-        backends)."""
+        backends).
+        """
 
     def get_password(self, service: str, username: str) -> str | None:
         """Return the persisted password for ``(service, username)``
-        or ``None`` when the entry is absent."""
+        or ``None`` when the entry is absent.
+        """
 
     def set_password(self, service: str, username: str, password: str) -> None:
         """Persist ``password`` under ``(service, username)``."""
@@ -382,7 +384,8 @@ class KeyringClient(Protocol):
 
 class _RealKeyringClient:
     """Default :class:`KeyringClient` backed by the third-party
-    ``keyring`` module."""
+    ``keyring`` module.
+    """
 
     def probe_backend(self) -> None:
         try:
@@ -487,7 +490,6 @@ class KeyringMasterKeyProvider:
         (or raises ``NoKeyringError``) but never persists the value, so
         the master key would be lost on the next process restart.
         """
-
         self._client.probe_backend()
 
     def get_master_key(self) -> bytes:
@@ -503,7 +505,6 @@ class KeyringMasterKeyProvider:
         create storage implicitly. Explicit enrollment calls
         :meth:`provision_master_key`.
         """
-
         try:
             from keyring.errors import KeyringError
         except ImportError as exc:  # pragma: no cover - keyring is a hard dep
@@ -520,7 +521,6 @@ class KeyringMasterKeyProvider:
 
     def provision_master_key(self) -> bytes:
         """Mint and persist a new keychain master key for explicit enrollment."""
-
         try:
             from keyring.errors import KeyringError
         except ImportError as exc:  # pragma: no cover - keyring is a hard dep
@@ -735,7 +735,6 @@ class FileFallbackMasterKeyProvider:
                 is reserved for explicit re-provision flows; normal
                 enrollment leaves it false and refuses existing state.
         """
-
         self._store_dir.mkdir(parents=True, exist_ok=True)
         passphrase = self._resolve_passphrase()
         lock_target = self._store_dir / "master.lock"
@@ -1043,7 +1042,6 @@ class EphemeralMasterKeyProvider:
 
 def _bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the separated keystore path for one bucket's wrapped DEK."""
-
     from .._namespace_registry import BUCKET_DEK_FILENAME
     from ..bucket._keystore_paths import keystore_path, validate_keystore_separation
 
@@ -1058,7 +1056,6 @@ def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
     before lifecycle-status was introduced) so that a session can still be
     opened to allow the repair command to backfill the missing field.
     """
-
     from ..bucket._layout import bucket_paths
     from ..bucket._manifest_io import read_manifest
     from ..errors import StorageValidationError
@@ -1130,7 +1127,6 @@ def _write_wrapped_bucket_dek(path: Path, wrapped) -> None:
 
 def _idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minutes: int) -> int:
     """Resolve the idle window from the bucket manifest, falling back to settings."""
-
     from ..bucket._layout import bucket_paths
     from ..bucket._manifest_io import read_manifest
 
@@ -1144,7 +1140,6 @@ def _idle_minutes_for_bucket(*, storage_root: Path, bucket_id: str, default_minu
 
 def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
     """Extract profile tax-id facts from a decrypted user-profile envelope."""
-
     try:
         doc = EnvelopeDocument.model_validate_json(envelope_payload)
     except (UnicodeDecodeError, ValueError):
@@ -1161,7 +1156,6 @@ def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
 
 def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) -> None:
     """Refuse unsecured activation when the active bucket carries a real profile."""
-
     from .....core.config import load_settings
     from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
     from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
@@ -1227,7 +1221,6 @@ def _load_or_mint_bucket_dek(
     for a bucket that already has encrypted rows would make those rows
     unrecoverable.
     """
-
     from ..bucket._manifest import BucketKeySchedule
     from ._dek_wrap import unwrap_dek, wrap_dek
 
@@ -1315,7 +1308,6 @@ def _provider_enter(
     ``provider._session`` and ``provider._activation_cm`` so the
     matching ``_provider_exit`` can tear them down.
     """
-
     from datetime import UTC, datetime
 
     from .....core.config import load_settings
@@ -1388,7 +1380,6 @@ def _provider_exit(
     the case where ``_provider_enter`` raised before fully populating
     them.
     """
-
     activation = provider._activation_cm
     session = provider._session
     provider._activation_cm = None
@@ -1413,7 +1404,6 @@ def activate_master_key_provider(
     the active-profile pointer does not exist until the transaction
     completes.
     """
-
     _provider_enter(
         provider,
         fallback_bucket_id=fallback_bucket_id,

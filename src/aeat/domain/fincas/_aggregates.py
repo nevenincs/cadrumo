@@ -247,7 +247,8 @@ def _aggregate_finca(
     ledger_repo: FincaAmortizacionLedgerRepository,
 ) -> tuple[Decimal, Decimal, Decimal, Decimal, list[ContractTierAttribution]]:
     """Compute (ingresos, gastos, amortization, reduccion_total,
-    [per-contract attribution]) for one finca."""
+    [per-contract attribution]) for one finca.
+    """
     if finca.id is None:
         raise FincaAggregationError("finca lacks persistent id")
     contracts = contract_repo.list_for_finca(finca.id)

@@ -85,7 +85,6 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     defined). A second call with an identical callable is a no-op; a second
     call with a different callable raises :class:`RuntimeError`.
     """
-
     if _PROJECT_ANSWERS_SLOT:
         if _PROJECT_ANSWERS_SLOT[0] is fn:
             return
@@ -103,7 +102,6 @@ def get_project_answers() -> ProjectAnswersFn:
         ProjectAnswersNotRegisteredError: When the application layer has not yet
             called :func:`register_project_answers`.
     """
-
     if not _PROJECT_ANSWERS_SLOT:
         raise ProjectAnswersNotRegisteredError()
     return _PROJECT_ANSWERS_SLOT[0]
@@ -120,7 +118,6 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     Raises:
         ProjectAnswersNotRegisteredError: When registration has not occurred.
     """
-
     return get_project_answers()(flow, values)
 
 

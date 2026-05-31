@@ -69,7 +69,6 @@ def _coerce_profile_fact_value(value: object) -> object:
     against the canonical Decimal and ISO date shapes and promotes them
     back to the original Python type before the union resolves.
     """
-
     if isinstance(value, str) and _DATE_STRING_RE.fullmatch(value):
         try:
             return _parse_iso8601_date(value) or value
@@ -110,12 +109,10 @@ def new_profile_id() -> str:
     on it. The operator-chosen display name is a fully decoupled
     mutable label with no role in any key or path.
     """
-
     return str(uuid4())
 
 def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
     """Create a deterministic-shape but unique snapshot id."""
-
     instant = created_at or utc_now()
     return f"{profile_id}:{instant.strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}"
 
@@ -177,7 +174,6 @@ class UserProfileRecord(BaseModel):
 
     def tombstone(self, *, removed_at: datetime | None = None) -> UserProfileRecord:
         """Return a tombstoned copy of the live profile root."""
-
         instant = removed_at or utc_now()
         return self.model_copy(
             update={
@@ -213,7 +209,6 @@ class UserProfileSnapshot(BaseModel):
         guarantee at the boundary: the persisted hash MUST match the
         persisted facts.
         """
-
         derived = _derive_canonical_hash(
             schema_id=self.schema_id,
             schema_version=self.schema_version,
@@ -237,7 +232,6 @@ class UserProfileSnapshot(BaseModel):
         created_at: datetime | None = None,
     ) -> UserProfileSnapshot:
         """Create an immutable snapshot from a live profile record."""
-
         if profile.status is not UserProfileStatus.ACTIVE:
             raise UserProfileValidationError("cannot snapshot a tombstoned profile")
         instant = created_at or utc_now()
@@ -316,7 +310,6 @@ def _derive_canonical_hash(
     sides anchors the content-addressing invariant — there is only
     one place where the canonical payload shape is defined.
     """
-
     payload = _canonical_payload(
         {
             "schema_id": schema_id,

@@ -109,7 +109,6 @@ def output_language() -> str:
 
 def clear_output_language_cache() -> None:
     """Invalidate cached language resolution after profile/config writes."""
-
     global _OUTPUT_LANGUAGE_CACHE_VERSION
     _OUTPUT_LANGUAGE_CACHE_VERSION += 1
     _cached_output_language.cache_clear()
@@ -270,7 +269,6 @@ def _humanise_key(translation_key: str) -> str:
     final segment so the help screen stays operator-readable until a
     real translation is written.
     """
-
     last = translation_key.rsplit(".", 1)[-1]
     stripped = last.removesuffix("_help")
     if not stripped:

@@ -23,7 +23,6 @@ def resolve_active_profile_output_language() -> str | None:
     events — and returns ``None`` when there is no active profile or no
     language fact, so the caller falls back to the settings default.
     """
-
     from ..workflow._persistence import workflow_state_repository
     from ._orchestration import fact_value
 

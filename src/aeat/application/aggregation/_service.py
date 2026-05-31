@@ -96,7 +96,6 @@ class PerModeloAggregationLogFields(BaseModel):
 
     def as_extra(self) -> Mapping[str, object]:
         """Return a logging ``extra`` payload with stable field names."""
-
         return {
             "service_name": self.service_name,
             "modelo": self.modelo,
@@ -182,7 +181,6 @@ class PerModeloAggregationCommand(BaseModel):
     @property
     def provider(self) -> PerModeloAggregationProvider:
         """Return the provider family selected by ``modelo``."""
-
         return provider_for_modelo(self.modelo)
 
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
@@ -243,7 +241,6 @@ class PerModeloAggregationResult(BaseModel):
 
 def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Build the immutable backend-owned aggregation contract."""
-
     providers = (
         PerModeloAggregationProviderContract(
             provider=PerModeloAggregationProvider.RETENCIONES,
@@ -282,12 +279,10 @@ def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
 @lru_cache(maxsize=1)
 def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Return the cached backend-owned aggregation contract."""
-
     return build_per_modelo_aggregation_contract()
 
 def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
     """Return the provider family for a supported modelo."""
-
     if modelo != modelo.strip():
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.errors.unsupported_modelo"),
@@ -308,7 +303,6 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
 
 def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
     """Run the central application aggregation service for one modelo."""
-
     provider = provider_for_modelo(command.modelo)
     if provider is PerModeloAggregationProvider.RETENCIONES:
         aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)

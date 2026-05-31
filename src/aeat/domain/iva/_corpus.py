@@ -15,7 +15,6 @@ def load_iva_rules_from_manual(
     settings: Settings | None = None,
 ) -> IvaCatalogue:
     """Load the reviewed VAT catalogue for ``year``."""
-
     del settings
     return resolve_catalogue(on=date(year, 1, 1))
 

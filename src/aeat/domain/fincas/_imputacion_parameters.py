@@ -86,7 +86,6 @@ def _parameters_from_catalogue(
     parameters: Mapping[str, object],
 ) -> LirpfArt85ImputacionParameters:
     """Build the typed art. 85 parameter record from validated registry entries."""
-
     try:
         recent_raw = _parameter_value(parameters, _RECENT_REVISION_PARAM_ID)
         old_raw = _parameter_value(parameters, _OLD_OR_NO_REVISION_PARAM_ID)
@@ -108,7 +107,6 @@ def _parameters_from_catalogue(
 
 def _parameter_value(parameters: Mapping[str, object], parameter_id: str) -> str:
     """Return one legal-parameter value from the validated registry mapping."""
-
     value = getattr(parameters[parameter_id], "value", None)
     if not isinstance(value, str):
         raise FincaValidationError(f"LIRPF art. 85 parameter {parameter_id!r} has no string value")

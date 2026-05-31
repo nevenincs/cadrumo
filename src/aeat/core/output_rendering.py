@@ -46,7 +46,6 @@ def render_command_output(
     lines: Iterable[str],
 ) -> RenderedCommandOutput:
     """Render a payload or line iterator according to the root output format."""
-
     try:
         output_format = OutputFormat(format_name.strip().lower() or OutputFormat.TEXT.value)
     except ValueError as exc:
@@ -93,7 +92,6 @@ def jsonable_output_payload(payload: object) -> object:
     handed a pre-parsed dict. The roundtrip tests in
     ``aeat.core.test_json_envelope_roundtrip`` pin the correct usage.
     """
-
     if isinstance(payload, BaseModel):
         return jsonable_output_payload(payload.model_dump(mode="python"))
     if isinstance(payload, dict):

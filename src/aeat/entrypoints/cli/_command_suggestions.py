@@ -96,7 +96,6 @@ class LazySubcommand:
         ``resolve_command`` then ``get_command``) imports the module
         exactly once.
         """
-
         if self._command is None:
             typer_instance = self._factory()
             if self._decorate is not None:
@@ -124,7 +123,6 @@ def register_lazy_subcommand(group_name: str, lazy: LazySubcommand) -> None:
     The owning :class:`AeatTyperGroup` imports the command module only
     when the subcommand is first resolved through ``get_command``.
     """
-
     _LAZY_REGISTRY.setdefault(group_name, {})[lazy.name] = lazy
 
 
@@ -144,7 +142,6 @@ class AeatTyperGroup(TyperGroup):
 
     def _lazy_table(self) -> dict[str, LazySubcommand]:
         """Return the lazy-subcommand table for this group, if any."""
-
         return _LAZY_REGISTRY.get(self.name or "", {})
 
     def list_commands(self, ctx: click.Context) -> list[str]:
@@ -156,7 +153,6 @@ class AeatTyperGroup(TyperGroup):
         per-command import happens later, in :meth:`get_command`, and
         only for the command actually selected.
         """
-
         eager = super().list_commands(ctx)
         lazy = self._lazy_table()
         merged = [*eager, *(name for name in lazy if name not in eager)]
@@ -170,7 +166,6 @@ class AeatTyperGroup(TyperGroup):
         module and the application layer it pulls — exactly once, the
         first time that subtree is dispatched into.
         """
-
         eager = super().get_command(ctx, cmd_name)
         if eager is not None:
             return eager
@@ -201,7 +196,6 @@ def _synonym_hint(group_name: str | None, token: str) -> str | None:
     Returns :data:`None` when the group declares no synonym table or
     the token is not a known synonym.
     """
-
     if group_name is None:
         return None
     table = _COMMAND_SYNONYMS.get(group_name)

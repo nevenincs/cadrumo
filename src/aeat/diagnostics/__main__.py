@@ -26,7 +26,6 @@ register_profile(app)
 
 def main() -> None:
     """Run the diagnostics Typer app."""
-
     app()
 
 

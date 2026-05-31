@@ -194,7 +194,6 @@ def _root(
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     """Resolve ``--profile`` to a bucket id and set the active-profile override."""
-
     from ...application.workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
@@ -233,7 +232,6 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     runner invocations, so this guard does not misclassify cached
     Typer tests that do not populate the console-script argv shape.
     """
-
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...application.workflow._models import resolve_active_bucket_id
@@ -286,7 +284,6 @@ def _full_invocation_verb_path() -> str | None:
     so ``"config profile create alice"`` matches the exempt entry
     ``"config profile create"``.
     """
-
     import sys
     from pathlib import Path
 
@@ -366,7 +363,6 @@ def _app_root(
     help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
 ) -> None:
     """Render app-level workflow help when requested."""
-
     if help_ or ctx.invoked_subcommand is None:
         from ...application.operator_surface import build_help_document, render_help_text
 
@@ -399,7 +395,6 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
 
 def _lazy(group_name: str, name: str, module_name: str) -> None:
     """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
-
     _register_lazy_subcommand(
         group_name,
         _LazySubcommand(name, _lazy_loader(module_name, name), decorate=_decorate_typer_app),
@@ -427,8 +422,8 @@ _decorate_typer_app(app)
 
 def main() -> None:
     """Console-script entry point. Pins ``prog_name`` so Typer's usage
-    lines say ``aeat`` even when the launcher is ``aeat.EXE`` on Windows."""
-
+    lines say ``aeat`` even when the launcher is ``aeat.EXE`` on Windows.
+    """
     app(prog_name="aeat")
 
 

@@ -316,7 +316,6 @@ class RegistryQueryService:
         resolves — so the reported binding ids are the ones the
         calculation will accept.
         """
-
         definition = self._authority.validate_modelo(modelo.strip())
         covering = [
             revision
@@ -446,7 +445,6 @@ class RegistryQueryService:
 
 def parse_modelo_period(raw: str) -> tuple[int, str]:
     """Return ``(filing_year, registry_period)`` for a user-facing period."""
-
     candidate = raw.strip()
     match = _PERIOD_RE.fullmatch(candidate)
     if match is None:
@@ -469,7 +467,6 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
     the channel is ``enum`` only for bindings a dispatch op consumes
     as a string enum key, ``decimal`` for every other binding.
     """
-
     enum_consumed = enum_consumed_binding_ids(revision)
     return tuple(
         ModeloBindingRow(

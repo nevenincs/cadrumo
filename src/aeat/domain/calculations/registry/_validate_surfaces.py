@@ -87,7 +87,6 @@ def validate_workbook_parity_section(
 # runtime evaluator reference it.
 def _predicate_operator_name(expression: str) -> str | None:
     """Return the leading operator name of a predicate expression, or None."""
-
     stripped = expression.strip()
     paren_idx = stripped.find("(")
     if paren_idx <= 0:

@@ -151,7 +151,6 @@ class RegistrySchemaProvider:
 
     def get_subview(self, modelo: str) -> RegistryModeloSubview:
         """Return the validated registry subview backing ``modelo``."""
-
         try:
             return self.subviews[modelo]
         except KeyError as exc:
@@ -222,7 +221,6 @@ def build_runtime_schema_provider(
     modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaProvider:
     """Build the production schema provider from validated registry TOML."""
-
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
     resolved_source_root = (source_root or bundled_path()).resolve()
     selected_ids = _normalize_modelo_selection(modelos)

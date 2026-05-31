@@ -40,7 +40,6 @@ def resolve_filing_closes_on(modelo: str, filing_year: int, period: str) -> date
         The :class:`~datetime.date` on which the filing window closes,
         or ``None`` if not found.
     """
-
     return _resolve_closes_on_cached(modelo, filing_year, period)
 
 

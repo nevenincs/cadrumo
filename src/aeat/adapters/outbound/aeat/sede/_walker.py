@@ -73,7 +73,6 @@ async def _open_browser_page(
         SedeNavigationError: When the session has no persisted auth
             state (the operator has not configured authentication under ``aeat config auth``).
     """
-
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(

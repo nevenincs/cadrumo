@@ -65,7 +65,6 @@ class AuthAcquisitionLockStatus(BaseModel):
     @property
     def locked(self) -> bool:
         """Return True when another live process should block auth acquisition."""
-
         return self.state is AuthAcquisitionLockState.HELD
 
 
@@ -75,7 +74,6 @@ class AuthAcquisitionLockedError(AeatError):
 
 def auth_acquisition_lock_path(settings: Settings, kind: AuthProviderKind) -> Path:
     """Return the profile/provider-scoped lock path."""
-
     from ..workflow._models import require_active_bucket_id
 
     return settings.aeat_token_dir / f"{require_active_bucket_id()}-{kind.value}-auth.lock"
@@ -88,7 +86,6 @@ def inspect_auth_acquisition_lock(
     now: datetime | None = None,
 ) -> AuthAcquisitionLockStatus:
     """Return the current acquisition-lock health without mutating it."""
-
     path = auth_acquisition_lock_path(settings, kind)
     reference = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     if not path.exists():
@@ -129,7 +126,6 @@ def clear_auth_acquisition_lock(
     reason: str = "operator-reset",
 ) -> AuthAcquisitionLockStatus:
     """Remove the acquisition lock and return the pre-reset status."""
-
     status = inspect_auth_acquisition_lock(settings, kind)
     if status.state is not AuthAcquisitionLockState.ABSENT:
         _remove_lock_file(status.path)
@@ -156,7 +152,6 @@ def acquire_auth_acquisition_lock(
     atomic-create attempt. A live lock is never waited on or retried:
     callers fail early so they do not issue a duplicate Cl@ve petition.
     """
-
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
     now = datetime.now(UTC)
@@ -210,7 +205,6 @@ def acquire_auth_acquisition_lock(
 
 def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
     """Return the acquisition-lock TTL for a provider."""
-
     if kind is AuthProviderKind.CLAVE_MOVIL:
         return int(settings.aeat_clave_movil_timeout_ms / 1000) + settings.aeat_auth_clave_movil_lock_buffer_s
     return settings.aeat_auth_certificate_lock_ttl_s

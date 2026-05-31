@@ -45,7 +45,6 @@ def taxpayer_profile_from_mapping(
     on-prompt validation. Missing identity fields fall back to
     ``tax_id_default`` / ``iva_regime_default``.
     """
-
     # Coerce mixed-typed mappings to canonical-token strings before the
     # descriptor's projection runs.
     canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
@@ -182,7 +181,6 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
     15 percent override, which requires telling ``None`` apart from
     ``False`` at the typed boundary.
     """
-
     if raw is None or raw == "":
         return None
     token = raw.strip().lower()
@@ -226,7 +224,6 @@ def _parse_days_in_spain(canonical: dict[str, str]) -> dict[int, int]:
     into a ``{year: days}`` dict so the deadline engine and profile-health
     checks can evaluate the Art. 9 LIRPF 183-day residency threshold.
     """
-
     result: dict[int, int] = {}
     prefix = "taxpayer_type.days_in_spain_"
     for key, raw in canonical.items():
@@ -254,7 +251,6 @@ def _resolve_income_categories(raw: str) -> frozenset[IrpfIncomeCategory]:
     comma-separated string the CHECKBOX widget produces; this projects
     it into the typed ``frozenset`` ``TaxpayerProfile`` declares.
     """
-
     tokens = [token.strip() for token in raw.split(",") if token.strip()]
     return frozenset(IrpfIncomeCategory(token) for token in tokens)
 
@@ -272,7 +268,6 @@ def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | N
     A blank string means the operator has not declared fiscal residency
     (treated as RESIDENT_IRPF by engine consumers); typed ``None`` signals that.
     """
-
     if raw == "" or raw is None:
         return None
     if isinstance(raw, FiscalResidency):
@@ -282,7 +277,6 @@ def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | N
 
 def _coerce_country_code(raw: str) -> str | None:
     """Normalise a raw country-code token to upper-case or None when absent."""
-
     if not raw or raw.strip() == "":
         return None
     return raw.strip().upper()
@@ -295,7 +289,6 @@ def _resolve_special_regime(raw: IrpfSpecialRegime | str) -> IrpfSpecialRegime |
     (equivalent to the general case); the typed ``None`` signals that
     to downstream consumers.
     """
-
     if raw == "" or raw is None:
         return None
     if isinstance(raw, IrpfSpecialRegime):

@@ -205,7 +205,6 @@ class WorkflowState(BaseModel):
         fallback). The bucket id and profile name are 1:1 by orchestration
         convention, so the resolved id is the lifecycle-service read key.
         """
-
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:
             return None
@@ -220,7 +219,6 @@ class WorkflowState(BaseModel):
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the active profile's secure bucket id via the precedence chain."""
-
         return resolve_active_bucket_id()
 
 
@@ -230,7 +228,6 @@ def active_bucket_id_or_raise() -> str:
     Bucket-scoped repositories use this helper at construction time so
     application services refuse to operate when no profile is selected.
     """
-
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         from ._errors import NoActiveProfileError
@@ -259,7 +256,6 @@ def require_active_bucket_id() -> str:
     :func:`resolve_active_bucket_id` and supply their own fallback
     label so a missing profile remains diagnosable.
     """
-
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         from ._errors import NoActiveProfileError
@@ -276,7 +272,6 @@ def active_transaction_catalogue_repository(
     objects: SecureObjectRepository | None = None,
 ) -> TransactionCatalogueRepository:
     """Return the transaction catalogue repository for the active profile bucket."""
-
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
     from ._errors import NoActiveProfileError
 

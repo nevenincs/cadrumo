@@ -50,7 +50,6 @@ def build_complementaria(
     schema_provider: CasillaSchemaProvider,
 ) -> ModeloComplementaria:
     """Build and persist a complementaria from a submitted filing."""
-
     original_submission = _submitted_original(original)
     original_draft = _load_original_draft(original_submission.draft_id)
     if original_draft.modelo != original_submission.modelo or original_draft.period != original_submission.period:

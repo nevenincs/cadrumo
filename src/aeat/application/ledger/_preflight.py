@@ -80,7 +80,6 @@ def preflight_ledger_tax_readiness(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> LedgerPreflightReport:
     """Load a bucket-local catalogue and report modelo-readiness gaps."""
-
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise TransactionValidationError(
@@ -100,7 +99,6 @@ def preflight_transaction_catalogue(
     transactions: TransactionCatalogue,
 ) -> LedgerPreflightReport:
     """Report missing ledger facts without mutating the transaction catalogue."""
-
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     issues: list[LedgerPreflightIssue] = []
     checked = 0
@@ -142,7 +140,6 @@ def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     by direction and never reads a spending category, so it must not
     be flagged as ``missing_category``.
     """
-
     if transaction.direction is TransactionDirection.OUTGOING:
         return True
     return (

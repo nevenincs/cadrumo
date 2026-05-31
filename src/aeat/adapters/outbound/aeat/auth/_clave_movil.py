@@ -134,7 +134,6 @@ class ClaveMovilApprovalTimeoutError(AuthError):
         translated_message: str | None = None,
     ) -> None:
         """Construct a Cl@ve Móvil authentication failure with stable mode context."""
-
         enriched_context = dict(context) if context is not None else {}
         if failure_mode is not None:
             failure_mode_value = (
@@ -216,7 +215,6 @@ def _classify_identity(raw: str) -> str:
 
 def _extract_verification_code_from_html(html: str) -> str | None:
     """Return the visible Cl@ve Móvil verification code from rendered HTML."""
-
     text = _HTML_TAG_RE.sub(" ", html.replace("\xa0", " "))
     normalized = " ".join(text.split())
     match = _VERIFICATION_CODE_TEXT_RE.search(normalized)
@@ -664,7 +662,6 @@ class ClaveMovilAuthProvider:
 
     def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
         """Return True for a protected AEAT page reached after Cl@ve dispatch."""
-
         external = self._settings.external_constants()
         surface = external.aeat.clave_movil
         try:
@@ -1265,7 +1262,6 @@ class ClaveMovilAuthProvider:
         used_non_qr_fallback: bool,
     ) -> None:
         """Require an AEAT-observed Cl@ve waiting state before waiting further."""
-
         await self._raise_if_pending_request_error(page)
         current_url = getattr(page, "url", "") or ""
         surface = self._clave_surface()
@@ -1358,7 +1354,6 @@ class ClaveMovilAuthProvider:
 
     async def _cancel_pending_auth_request(self, page: BrowserPageLike) -> None:
         """Best-effort cancellation for a Cl@ve request left open by timeout."""
-
         current_url = getattr(page, "url", "") or ""
         if self._clave_surface().obtener_clave_movil_path_marker not in current_url:
             return
@@ -1533,7 +1528,6 @@ class ClaveMovilAuthProvider:
     @staticmethod
     def _exception_already_has_diagnostic(exc: Exception) -> bool:
         """Return whether an auth exception already carries a diagnostic id."""
-
         context = getattr(exc, "context", None)
         if not isinstance(context, dict):
             return False
@@ -1581,7 +1575,6 @@ class ClaveMovilAuthProvider:
 
     async def _continue_own_name_representation(self, page: BrowserPageLike) -> None:
         """Continue only through AEAT's authenticated own-name selector."""
-
         assert_remote_operation_allowed(
             _auth_browser_action_policy(self._settings),
             RemoteOperation(kind="browser_action", action=_OWN_NAME_REPRESENTATION_ACTION),

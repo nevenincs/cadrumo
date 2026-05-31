@@ -76,7 +76,6 @@ class LocalAdapter(_ProviderAdapter):
             :exc:`aeat.adapters.outbound.llm.LLMProviderError`: When the
                 runtime returns any other HTTP error status.
         """
-
         messages: list[dict[str, str]] = []
         if request.system is not None:
             messages.append({"role": "system", "content": request.system})

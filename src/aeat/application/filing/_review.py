@@ -101,7 +101,6 @@ def compute_current_approval_basis(
     Returns:
         A freshly computed :class:`ModeloApprovalBasis`.
     """
-
     catalogue = transaction_catalogue if transaction_catalogue is not None else _load_transaction_catalogue(bucket_id)
     profiles = category_profiles if category_profiles is not None else resolve_category_profiles(2025)
     return ModeloApprovalBasis(
@@ -125,7 +124,6 @@ def compute_review_checksum(approval_basis: ModeloApprovalBasis) -> str:
     Returns:
         Lowercase hex SHA-256 of the basis's canonical JSON dump.
     """
-
     return _sha256_payload(approval_basis.model_dump(mode="json"))
 
 
@@ -154,7 +152,6 @@ def approval_stale_reasons(
         Tuple of :class:`ModeloApprovalStaleReason` values in
         evaluation order; empty when the basis is fresh.
     """
-
     if draft.approval_basis is None:
         return ()
 
@@ -213,7 +210,6 @@ def approve_draft(
             ``approved_by`` is blank or the draft is not in
             :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
     """
-
     normalized_approver = approved_by.strip()
     if not normalized_approver:
         raise ModeloDraftError("approved_by must not be blank")
@@ -267,7 +263,6 @@ def unapprove_draft(
         ``status`` set to the validation status derived from
         :attr:`ModeloDraft.findings`.
     """
-
     timestamp = unapproved_at or datetime.now(tz=UTC)
     updated = draft.model_copy(
         update={
@@ -313,7 +308,6 @@ def refresh_review_status(
         Either ``draft`` unchanged (when no transition was needed) or a
         new :class:`ModeloDraft` with the appropriate status update.
     """
-
     timestamp = refreshed_at or datetime.now(tz=UTC)
     has_review_metadata = _has_review_metadata(draft)
     if draft.status in _DOWNSTREAM_STATUSES:
@@ -389,7 +383,6 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
     Returns:
         A lowercase imperative phrase suitable for inline UI display.
     """
-
     match reason:
         case ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
             return "approval basis version changed"

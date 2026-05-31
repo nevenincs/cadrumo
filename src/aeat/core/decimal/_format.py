@@ -36,12 +36,12 @@ def format_decimal(
         meaning ``None`` input is treated as a programming error and raises
         ``TypeError``.
 
-    Returns
+    Returns:
     -------
     str
         Fixed-point string representation of *value*.
 
-    Examples
+    Examples:
     --------
     >>> from decimal import Decimal
     >>> format_decimal(Decimal("12.34"))

@@ -32,19 +32,16 @@ class PersistedBrowserSession(BaseModel):
     @property
     def storage_state_sha256(self) -> str:
         """Return the canonical SHA-256 of the Playwright storage state."""
-
         return _storage_state_sha256(self.storage_state)
 
 
 def exists(path: Path) -> bool:
     """Return whether a browser session exists for logical ``path``."""
-
     return _repository().exists(_SESSION_NAMESPACE, _key(path))
 
 
 def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
     """Persist ``storage_state`` and ``metadata`` encrypted at SESSION class."""
-
     payload = PersistedBrowserSession(
         storage_state=storage_state,
         metadata=metadata,
@@ -62,7 +59,6 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
 
 def load(path: Path) -> PersistedBrowserSession | None:
     """Load a persisted browser session for logical ``path``."""
-
     record = _repository().load(
         _SESSION_NAMESPACE,
         _key(path),
@@ -76,13 +72,11 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
 def delete(path: Path) -> bool:
     """Delete persisted browser session state for logical ``path``."""
-
     return _repository().delete(_SESSION_NAMESPACE, _key(path))
 
 
 def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
     """Return the canonical SHA-256 of a Playwright storage-state payload."""
-
     return _storage_state_sha256(storage_state)
 
 

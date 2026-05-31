@@ -207,7 +207,6 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
             cannot fabricate a placeholder name — the operator must
             populate the profile first.
     """
-
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import UserProfileLifecycleRepository
     from ..user_profile._projections import record_to_path_values
@@ -238,7 +237,6 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
 
 def _ddmmaaaa(value: date) -> str:
     """Render a date as the AEAT ``ddmmaaaa`` fixed-width header token."""
-
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 def _compose_export_headers(
@@ -262,7 +260,6 @@ def _compose_export_headers(
     ``required`` by the layout and missing, so over-supplying optional
     keys is safe — the renderer ignores headers a layout never reads.
     """
-
     surnames, name = _operator_name_facts(work_unit.bucket_id)
     period_start = period_start_date(filing_year, registry_period)
     period_end = period_end_date(filing_year, registry_period)
@@ -310,7 +307,6 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
         ModeloExportError: When the work unit's period token cannot
             be mapped to a registry period.
     """
-
     period = work_unit.period
     if len(period) == 2 and period.endswith("T") and period[0].isdigit():
         canonical = f"{work_unit.filing_year}Q{period[0]}"
@@ -350,7 +346,6 @@ def export_modelo_revision(
     with the calculation revision id, work unit id, output path,
     byte size, and file digest captured in the payload.
     """
-
     from ..workflow._models import resolve_active_bucket_id
 
     active_bucket_id = resolve_active_bucket_id()

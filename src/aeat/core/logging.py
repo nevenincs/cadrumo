@@ -77,7 +77,6 @@ _DEFAULT_LOG_FILE_NAME = "aeat.log"
 
 def _normalise_log_key(key: str) -> str:
     """Return a canonical, separator-stable representation of ``key``."""
-
     camel_split = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
     collapsed = re.sub(r"[^A-Za-z0-9]+", "_", camel_split)
     return collapsed.strip("_").lower()
@@ -85,13 +84,11 @@ def _normalise_log_key(key: str) -> str:
 
 def _looks_sensitive_key(key: str | None) -> bool:
     """Return whether ``key`` should have its value redacted."""
-
     return key is not None and _normalise_log_key(key) in _SENSITIVE_KEY_SET
 
 
 def _redacted_value(key: str | None, value: str) -> str:
     """Return the stable redaction marker for a sensitive value."""
-
     if key is not None and "serial" in key.lower():
         suffix = value[-4:] if len(value) >= 4 else "????"
         return f"<cert:....{suffix}>"
@@ -100,7 +97,6 @@ def _redacted_value(key: str | None, value: str) -> str:
 
 def _scrub_text(value: str, *, key: str | None = None) -> str:
     """Redact sensitive fragments from a free-form string."""
-
     if not value:
         return value
     if _looks_sensitive_key(key):
@@ -146,7 +142,6 @@ def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
 
 def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL: implementation overload must return Any to subsume all concrete overload return types per mypy overload rules.
     """Recursively scrub sensitive values in common logging payload shapes."""
-
     if isinstance(value, str):
         return _scrub_text(value, key=key)
     if isinstance(value, Mapping):
@@ -164,7 +159,6 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
 
 def _scrub_positional_args(message: str, args: tuple[Any, ...]) -> tuple[Any, ...]:
     """Scrub tuple-style logging args using keys inferred from ``message``."""
-
     placeholders = list(_PERCENT_PLACEHOLDER_RE.finditer(message))
     return tuple(
         _scrub_value(arg, key=placeholders[index].group("key") if index < len(placeholders) else None)
@@ -267,7 +261,6 @@ def default_log_file_path() -> Path:
     rather than mixing every session's records into a single
     system-wide file.
     """
-
     from .config import load_settings
 
     log_dir = load_settings().aeat_log_dir

@@ -25,7 +25,6 @@ def emit_grouped_semantic_role_typo_twin_warnings(
     grouped: Mapping[str, Sequence[_RoleObservationLike]],
 ) -> None:
     """Warn when a ``semantic_role`` value appears on exactly one casilla."""
-
     typo_index = _build_semantic_role_typo_index(grouped.keys())
     for role, observations in grouped.items():
         if len(observations) != 1:

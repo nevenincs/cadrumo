@@ -143,7 +143,6 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     the full declaration require the modelo-specific declaration
     parser that has not shipped yet.
     """
-
     if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             tr("application.modelo.errors.reconcile_declaration_unsupported"),

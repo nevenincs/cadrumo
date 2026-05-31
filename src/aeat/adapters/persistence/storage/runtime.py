@@ -93,7 +93,6 @@ class StorageRuntime(BaseModel):
 
     def require_ready(self) -> None:
         """Raise when this runtime cannot serve profile-bound storage."""
-
         if self.readiness.ready:
             return
 
@@ -108,7 +107,6 @@ class StorageRuntime(BaseModel):
 
     def secure_object_repository(self) -> SecureObjectRepository:
         """Create a bucket-attached secure-object repository for this runtime."""
-
         self.require_ready()
         self._require_current_active_session()
         from .sql.engine import get_engine
@@ -123,7 +121,6 @@ class StorageRuntime(BaseModel):
 
     def _require_current_active_session(self) -> None:
         """Refuse repository construction when the live session drifted."""
-
         active = _active_session.get()
         if active is None:
             raise _runtime_not_ready_error(
@@ -180,7 +177,6 @@ def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) 
 
 def _settings_output_language() -> str:
     """Resolve locale without consulting active-profile storage."""
-
     try:
         return load_settings().aeat_output_language
     except (AttributeError, KeyError, ValueError):
@@ -192,7 +188,6 @@ def inspect_storage_runtime(
     now: datetime | None = None,
 ) -> StorageRuntime:
     """Return the current profile-bound secure-storage runtime state."""
-
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
     checked_at = now or datetime.now(UTC)
@@ -303,7 +298,6 @@ def inspect_bucket_storage_runtime(
     carry an explicit primary database route, the runtime reports that
     route as unready instead of synthesizing a clean bucket route.
     """
-
     trimmed = bucket_id.strip()
     if not trimmed:
         raise StorageValidationError("bucket_id must not be blank")

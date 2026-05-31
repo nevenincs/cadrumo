@@ -118,7 +118,6 @@ def derive_filing_record_id(
     the same id, which is impossible in practice — the timestamp
     guarantees uniqueness.
     """
-
     payload = {
         "work_unit_id": work_unit_id.strip(),
         "calculation_revision_id": calculation_revision_id.strip(),
@@ -233,7 +232,6 @@ class ModeloRecordCatalogue(BaseModel):
         returns a superseded record — callers must iterate
         :attr:`records` directly to walk audit history.
         """
-
         for record in self.records.values():
             if record.status is not ModeloRecordStatus.VIGENTE:
                 continue
@@ -255,7 +253,6 @@ class ModeloRecordCatalogue(BaseModel):
         period: str,
     ) -> tuple[ModeloRecord, ...]:
         """Return every filing record for a tuple, ordered by filed_at."""
-
         matching = tuple(
             record
             for record in self.records.values()

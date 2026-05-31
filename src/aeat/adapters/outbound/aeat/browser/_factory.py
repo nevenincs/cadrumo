@@ -83,7 +83,6 @@ class DefaultBrowserSession:
 
     async def navigate(self, page: Page, url: str) -> Response | None:
         """Navigate through the central BrowserSession health-probed path."""
-
         return await self._session.navigate(page, url)
 
     async def close(self) -> None:
@@ -132,7 +131,6 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
 
 async def create_browser_session(settings: Settings, profile: Profile) -> DefaultBrowserSession:
     """Start Playwright and return a wrapped :class:`BrowserSession` for ``profile``."""
-
     playwright = await _start_playwright()
     try:
         session = BrowserSession(
@@ -160,7 +158,6 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
 @asynccontextmanager
 async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
     """Yield a centrally owned Playwright runtime for bulk browser workflows."""
-
     playwright = await _start_playwright()
     try:
         yield playwright
@@ -186,7 +183,6 @@ async def opened_browser_page(
     storage_state: dict[str, Any] | None = None,
 ) -> AsyncIterator[tuple[Page, BrowserContext]]:
     """Yield a central :class:`BrowserSession` page/context pair and close both."""
-
     browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
     context = await browser_session.create_context(
         provisioner=provisioner,
@@ -210,7 +206,6 @@ async def opened_browser_page(
 
 async def _start_playwright() -> Playwright:
     """Start the single browser-base Playwright runtime."""
-
     from playwright.async_api import async_playwright
 
     playwright_manager = async_playwright()

@@ -319,7 +319,6 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
     sees the per-record column titles ready to receive their tipo-2
     detail rows (perceptores on 190, foreign assets on 720, etc.).
     """
-
     data: list[dict[str, Any]] = []
     for row_set in row_sets:
         for column in row_set.columns:
@@ -348,7 +347,6 @@ def _build_grid_resize_requests(
     grid bound). Resizes always *grow*; we never shrink, so a tab the
     operator has manually expanded keeps its operator-set bound.
     """
-
     default_rows = 1000
     default_columns = 26
     # Generous headroom in case the operator pastes additional notes
@@ -453,7 +451,6 @@ def _build_cell_constraint_requests(
        justify it. Operators see the grounding even before they
        attempt invalid input.
     """
-
     requests: list[dict[str, Any]] = []
     for constraint in constraints:
         sheet_id = sheet_id_by_tab.get(constraint.address.tab.value)
@@ -504,7 +501,6 @@ def _condition_for_constraint(constraint: SheetCellConstraint) -> dict[str, Any]
     ``dict[str, Any]`` is the irreducible Sheets API request shape;
     see the rationale on ``_find_folder`` above.
     """
-
     lower = constraint.min_value
     upper = constraint.max_value
     if constraint.sign == "non_negative":
@@ -602,7 +598,6 @@ def _build_cell_note_requests(
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[dict[str, Any]]:
     """Emit `updateCells` requests with cell notes for any value cell that has one."""
-
     requests: list[dict[str, Any]] = []
     for cell in value_cells:
         if cell.note is None:
@@ -699,7 +694,6 @@ def apply_export_plan(
         OutboundStorageValidationError: The plan is internally inconsistent or
             the supplied `root_folder_id` is blank.
     """
-
     if not root_folder_id.strip():
         raise OutboundStorageValidationError(
             "root_folder_id must not be blank",

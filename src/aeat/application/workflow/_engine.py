@@ -1256,7 +1256,6 @@ class WorkflowEngine:
         steps: list[WorkflowStep],
     ) -> NoReturn:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
-
         # CAST-RATIONALE-WORKFLOW-ENGINE-SITE-HEALTH-STATUS:
         # ``SiteHealthError`` types its payload through the structural
         # ``SiteHealthStatusLike`` protocol so ``core.errors`` need not

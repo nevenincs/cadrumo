@@ -35,7 +35,6 @@ class ConfigBoundaryError(CoreError):
             error: The unexpected exception raised inside the config
                 command handler.
         """
-
         first_line = str(error).splitlines()[0] if str(error) else type(error).__name__
         original = f"{type(error).__name__}: {first_line}"
         super().__init__(

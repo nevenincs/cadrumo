@@ -75,7 +75,6 @@ def resources() -> ResourceRegistry:
     Settings between cases call ``resources.cache_clear()`` to
     rebuild with the new values.
     """
-
     from ..config import load_settings
 
     settings = load_settings()

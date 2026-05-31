@@ -85,7 +85,6 @@ class CliValidationBoundaryError(AeatError):
             error: The pydantic validation error raised inside the
                 Typer callback.
         """
-
         super().__init__(
             translated_message="errors.refused.refused_cli_validation_boundary",
             context={
@@ -115,7 +114,6 @@ class CliUnexpectedBoundaryError(AeatError):
             error: The unexpected exception raised inside the Typer
                 callback.
         """
-
         # The recovery hint points at the engineer-surface diagnostic
         # report rather than `aeat config repair`. The repair family is
         # bootstrap-exempt but state-touching and may itself fail under
@@ -157,7 +155,6 @@ class CliStoredDataValidationBoundaryError(AeatError):
             error: The pydantic validation error raised while loading a
                 stored profile record.
         """
-
         super().__init__(
             translated_message="errors.storage.stored_data_validation_boundary",
             context={
@@ -208,7 +205,6 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     Returns:
         Wrapped callback with the original signature preserved.
     """
-
     existing = _WRAPPED_CALLBACKS.get(id(callback))
     if existing is not None and _is_memoised_wrapper(existing):
         # Safe: _WRAPPED_CALLBACKS stores only the _wrapped closure produced
@@ -291,7 +287,6 @@ def decorate_typer_app(
             segments) that must remain undecorated. Useful for callbacks
             that intentionally manage their own error reporting.
     """
-
     skip_set = set(skip_paths)
     _decorate_typer_node(app, prefix=(), skip_paths=skip_set)
 
@@ -311,7 +306,6 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
         stream: Optional target stream to write to instead of
             :data:`sys.stderr`. Primarily useful in tests.
     """
-
     target = sys.stderr if stream is None else stream
     redacted_text = redact_for_cli_output(text)
     if _supports_reconfigure(target):
@@ -340,7 +334,6 @@ def _emit_error_and_exit(error: AeatError) -> Never:
     writes the payload through :func:`write_stderr`, and raises
     :class:`typer.Exit` with the category-mapped exit code.
     """
-
     code = get_registered_error_code(error)
     payload = render_error_json(error) if json_output_requested() else render_error_text(error)
     write_stderr(payload)
@@ -361,7 +354,6 @@ def error_boundary_under_test() -> Iterator[None]:
         :data:`None`. The context's only purpose is the side effect on
         the internal flag.
     """
-
     token: Token[bool] = _UNDER_TEST.set(True)
     try:
         yield
@@ -376,7 +368,6 @@ def _decorate_typer_node(
     skip_paths: set[tuple[str, ...]],
 ) -> None:
     """Recursively decorate every command/group callback under ``app``."""
-
     registered_callback = app.registered_callback
     if (
         registered_callback is not None
@@ -400,7 +391,6 @@ def _decorate_typer_node(
 
 def _callback_name(callback: Callable[..., object] | None) -> str:
     """Return a stable name for a Typer callback, even if it's a callable class."""
-
     if callback is None:
         return "<unknown>"
     if inspect.isfunction(callback):
@@ -421,13 +411,11 @@ def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
 
 def _is_wrap_candidate(callback: object) -> TypeGuard[Callable[..., object]]:
     """Narrow ``callback`` to a plain function suitable for wrapping."""
-
     return inspect.isfunction(callback)
 
 
 def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     """Narrow ``stream`` to a text stream that exposes ``reconfigure``."""
-
     return hasattr(stream, "reconfigure")
 
 
@@ -444,7 +432,6 @@ def _unwrap_aeat_error(error: BaseException) -> AeatError | None:
 
     The walk is depth-bounded to avoid pathological cycles.
     """
-
     seen: set[int] = set()
     current: BaseException | None = error
     depth = 0
@@ -468,7 +455,6 @@ def _is_click_control_flow(error: Exception) -> bool:
     Recognises :exc:`click.ClickException`, :exc:`click.exceptions.Exit`,
     :exc:`click.Abort`, and :exc:`typer.Exit`.
     """
-
     return isinstance(error, (click.ClickException, click.exceptions.Exit, click.Abort, typer.Exit))
 
 

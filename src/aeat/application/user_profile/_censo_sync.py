@@ -161,7 +161,6 @@ class CensoSyncService:
         operator's NIF, so the caller should re-run after enrolment
         (or confirm the certificate is registered against the NIF).
         """
-
         facts = dict(fact_source())
         if not facts:
             raise CensoNotAvailableError(
@@ -193,7 +192,6 @@ class CensoSyncService:
             Any auth-layer or sede-layer error: propagated for the CLI
                 handler to surface.
         """
-
         from ...adapters.outbound.aeat.sede._censo_live import (
             G313_LAUNCHER_URL,
             census_fact_set_to_mapping,
@@ -230,7 +228,6 @@ class CensoSyncService:
         snapshot_id: str | None = None,
     ) -> CensoSnapshot:
         """Return one snapshot — the latest ACTIVE by default."""
-
         if snapshot_id is not None:
             return self._snapshots.resolve_snapshot(snapshot_id)
         active = self._snapshots.latest_active(profile_id=profile_id)
@@ -253,7 +250,6 @@ class CensoSyncService:
         census-tracked path, classified into matches / diverges /
         profile_only / census_only.
         """
-
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         profile = self._load_profile_or_empty(profile_id)
         profile_facts = _profile_facts_by_path(profile)
@@ -286,7 +282,6 @@ class CensoSyncService:
         Raises :exc:`CensoApplyConflictError` when the profile is
         absent — there is nothing to stamp facts onto.
         """
-
         snapshot = self.show_census(profile_id=profile_id, snapshot_id=snapshot_id)
         if not self._profiles.exists(profile_id):
             raise CensoApplyConflictError(
@@ -335,7 +330,6 @@ class CensoSyncService:
         the empty tuple is returned. Operator-set overrides on
         non-HOME_OFFICE categories are preserved.
         """
-
         from ...domain.usage_ratios import (
             UsageRatioProfile,
             derive_home_office_ratios_from_census,
@@ -385,7 +379,6 @@ class CensoSyncService:
         either ``vivienda_office.total_m2`` / ``vivienda_office.office_m2``
         is absent / non-decimal / zero.
         """
-
         snapshot = self._snapshots.latest_active(profile_id=profile_id)
         if snapshot is None:
             return None
@@ -412,7 +405,6 @@ def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:
     string-only (see :class:`aeat.application.live._censo`); the
     profile's typed values are coerced via ``str()`` for the diff.
     """
-
     if profile is None:
         return {}
     return {fact.path: _coerce_to_str(fact.value) for fact in profile.facts}

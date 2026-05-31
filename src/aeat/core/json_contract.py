@@ -144,7 +144,6 @@ def emit_json_document(
         sort_keys: Whether to render mapping keys in lexicographic order.
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
-
     target = sys.stdout if stream is None else stream
     if isinstance(target, _ReconfigurableStream):
         try:
@@ -190,7 +189,6 @@ def emit_json_success(
         sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
-
     envelope_payload = redact_structured_for_cli_output(
         {
             "schema_version": "1",
@@ -233,7 +231,6 @@ def register_schema(command_path: str) -> Callable[[RegisteredSchema], Registere
             decorated class is not a strict schema subclass, or when the
             path is already bound to a different schema.
     """
-
     normalized_path = command_path.strip()
     if not normalized_path:
         raise OutputSchemaError("command_path must not be blank")

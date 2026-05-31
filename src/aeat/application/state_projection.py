@@ -226,7 +226,6 @@ def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
     active session required); returns ``None`` when no profile is
     active or the manifest cannot be located.
     """
-
     if bucket_id is None:
         return None
     from .workflow._profile_bucket_scan import read_profile_bucket_by_id
@@ -244,7 +243,6 @@ def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
 
 def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfile:
     """Project the profile-health assessment into the projection sub-record."""
-
     return ProjectionActiveProfile(
         profile_id=health.active_profile,
         label=_resolve_active_profile_label(health.active_profile),
@@ -264,7 +262,6 @@ def _certificate_path_resolves(certificate_path: str) -> bool:
     reporting ``certificate path not configured``. Resolving the path
     here keeps ``configured`` coherent with that health summary.
     """
-
     if not certificate_path:
         return False
     try:
@@ -282,7 +279,6 @@ def _provider_configured(state: WorkflowState) -> bool:
     flag must stay consistent with
     ``health_summary: certificate path not configured``.
     """
-
     auth = state.auth
     if not auth.provider:
         return False
@@ -309,7 +305,6 @@ def _build_auth_readiness(
     ``configured: True`` can never co-exist with
     ``health_summary: certificate path not configured``.
     """
-
     auth = state.auth
     normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
     provider = normalized_request or auth.provider or ""
@@ -409,7 +404,6 @@ def _resolve_health_severity(
     certificate corrupt, expired, or unreadable) so a benign pending
     or undeclared state can never be paired with the loudest severity.
     """
-
     if backend_severity:
         return backend_severity
     if not provider:
@@ -426,7 +420,6 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
     With no active profile bucket there is no bucket database to open,
     so the counters are all zero without touching the encrypted stores.
     """
-
     if bucket_id is None:
         return ProjectionWorkspaceSummary()
 
@@ -457,7 +450,6 @@ def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     Mirrors the CLI ``_profile_to_taxpayer`` helper so the deadline
     engine receives the same profile shape every surface would compute.
     """
-
     from ..domain.deadlines import taxpayer_profile_from_mapping
     from .user_profile._projections import record_to_values
 
@@ -479,7 +471,6 @@ def _build_pending_obligations(
     compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
     """
-
     try:
         schedule: Schedule = compute_obligation_schedule(
             DeadlineEngine(), profile, today=today
@@ -546,7 +537,6 @@ def _build_modelo_readiness(
     active; a profile-load failure for a target is surfaced by the
     caller, not swallowed here.
     """
-
     if not requests or active_profile_id is None:
         return ()
 
@@ -675,7 +665,6 @@ def build_operator_state_projection(
         The fully-populated :class:`OperatorStateProjection`. Building
         it mutates no store.
     """
-
     reference_today = today or date.today()
     active_bucket_id = resolve_active_bucket_id()
     has_active_profile = active_bucket_id is not None

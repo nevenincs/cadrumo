@@ -59,7 +59,6 @@ class InvoiceImportResult(BaseModel):
 
 def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple[Invoice, ...]:
     """Parse JSON or CSV invoice payloads into validated invoice models."""
-
     kind = _coerce_kind(default_kind)
     candidates = _decode_invoice_payload(raw)
     invoices: list[Invoice] = []
@@ -81,7 +80,6 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
 
 def merge_invoice_import(catalogue: InvoiceCatalogue, invoices: Sequence[Invoice]) -> InvoiceImportResult:
     """Merge imported invoices into ``catalogue`` without duplicating IDs."""
-
     existing = dict(catalogue.invoices)
     imported = 0
     skipped = 0
@@ -107,7 +105,6 @@ def import_invoices_from_path(
     repository: InvoiceCatalogueRepository | None = None,
 ) -> InvoiceImportResult:
     """Import invoices from ``path`` through the secure invoice repository."""
-
     invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
     if dry_run:
         return InvoiceImportResult(rows=len(invoices), dry_run=True)

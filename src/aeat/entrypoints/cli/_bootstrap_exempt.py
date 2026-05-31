@@ -70,7 +70,6 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
             workflow state and therefore requires a session when
             an active profile resolves.
     """
-
     if verb_path is None:
         return False
     normalised = verb_path.strip()

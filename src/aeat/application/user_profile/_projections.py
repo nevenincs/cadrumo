@@ -45,7 +45,6 @@ def _render_fact_value(value: object) -> str:
     as falsey, so a boolean fact must be lowercased here before the
     projection's flat-string contract is built.
     """
-
     if isinstance(value, bool):
         return "true" if value else "false"
     return str(value)
@@ -53,7 +52,6 @@ def _render_fact_value(value: object) -> str:
 
 def _selector_index(schema: ProfileSchemaDefinition) -> dict[str, tuple[str, ...]]:
     """Map ``section.field`` paths to their declared ``model_selectors`` tuple."""
-
     index: dict[str, tuple[str, ...]] = {}
     for section in schema.sections:
         for field in section.fields:
@@ -76,7 +74,6 @@ def facts_to_values(
     ``tax.id``. Facts whose path is not in the schema fall through
     untranslated.
     """
-
     selector_index = _selector_index(schema or _default_schema())
     values: dict[str, str] = {}
     for fact in facts:
@@ -95,7 +92,6 @@ def record_to_values(
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
     """Project a live profile record into the legacy flat values mapping."""
-
     return facts_to_values(record.facts, schema=schema)
 
 
@@ -105,7 +101,6 @@ def snapshot_to_values(
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
     """Project an immutable filing snapshot into the legacy flat values mapping."""
-
     return facts_to_values(snapshot.facts, schema=schema)
 
 
@@ -117,7 +112,6 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     path as the key. The mapping is what the wizard catalogue,
     :func:`validate_profile_values`, and CLI status surfaces consume.
     """
-
     if record is None:
         return {}
     return {fact.path: _render_fact_value(fact.value) for fact in record.facts if fact.value is not None}
@@ -137,7 +131,6 @@ def projection_for_taxpayer(
     :func:`taxpayer_profile_from_mapping` so canonical-token semantics
     stay in lockstep with the wizard descriptor.
     """
-
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = record_to_path_values(facts)
     else:

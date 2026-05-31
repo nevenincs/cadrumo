@@ -49,7 +49,6 @@ def _confirm(
     visible_when: WizardCondition | WizardVisibility | None = None,
 ) -> WizardQuestion:
     """Build a CONFIRM question that persists into ``profile_key``."""
-
     return WizardQuestion(
         id=qid,
         profile_key=profile_key,

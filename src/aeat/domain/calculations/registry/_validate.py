@@ -144,7 +144,6 @@ class RegistryValidator:
 
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
         """Validate every modelo and the cross-model relation graph."""
-
         modelo_tuple = tuple(modelos)
         cache_key = (
             tuple(id(modelo) for modelo in modelo_tuple),

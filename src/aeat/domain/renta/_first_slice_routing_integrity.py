@@ -32,7 +32,6 @@ def check_first_slice_routing(modelo_id: str, casilla_ids: frozenset[str]) -> li
     registry validator prefixes each failure with the snapshot
     coordinates and raises a single ``RegistryValidationError``.
     """
-
     if modelo_id != "100":
         return []
     missing = first_slice_target_casillas() - casilla_ids

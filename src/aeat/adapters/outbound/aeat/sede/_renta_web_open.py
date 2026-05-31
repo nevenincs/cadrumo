@@ -120,7 +120,6 @@ async def collect_renta_web_open_observation(
     settings: Settings | None = None,
 ) -> RentaWebOpenObservation:
     """Open the anonymous simulator, create a synthetic declaration, and scrape summary rows."""
-
     live_payload = parse_renta_web_open_live_payload(payload)
     browser_session = await default_browser_session_factory(settings or Settings())
     context = None
@@ -245,7 +244,6 @@ async def _scrape_renta_web_open_values(  # type: ignore[no-untyped-def]
 
 def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | None:
     """Extract one Spanish-formatted numeric value from Renta WEB Open summary text."""
-
     normalized_label = _normalize_summary_text(label)
     lines = [_normalize_summary_text(line) for line in body_text.splitlines()]
     for index, line in enumerate(lines):
@@ -273,7 +271,6 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
     the search button and the navigation button; clicking "Ir a la
     página" navigates the form to the page containing that casilla.
     """
-
     # Expand the secondary toolbar (idempotent — already expanded is fine).
     # If the locator isn't visible (toolbar already expanded), skip silently
     # without clicking — _click_expected raises rather than no-ops, which is
@@ -320,7 +317,6 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
 
 async def _navigate_to_resumen(page: Page, *, timeout_ms: int) -> None:
     """Return to the Resumen view after editing form casillas."""
-
     await _click_expected(
         page.locator('button:has-text("Resumen")').first,
         stage="navigate-to-resumen",
@@ -344,7 +340,6 @@ async def _locate_casilla_input(page: Page, casilla_number: str, *, timeout_ms: 
     nearby label text. ZK form widgets carry the casilla number as a
     sibling span/label rather than on the input itself.
     """
-
     # Fast path: the navigation auto-focuses the casilla input.
     focused_input = page.locator("input:focus").first
     try:
@@ -368,7 +363,6 @@ async def _apply_casilla_overrides(
     fills the auto-focused input (or the input near the casilla number's
     label) with the requested value.
     """
-
     for casilla_number, value in overrides.items():
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
         locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
@@ -393,7 +387,6 @@ async def _scrape_casilla_form_value(
     and returns the raw string. Returns None when the locator does not
     resolve (the casilla may be on a page that requires upstream inputs).
     """
-
     try:
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
     except SedeNavigationError as exc:

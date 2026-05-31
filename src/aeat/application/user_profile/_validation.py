@@ -52,12 +52,10 @@ class ProfileValidationService:
 
     def validate_record(self, record: UserProfileRecord) -> ProfileValidationReport:
         """Validate every fact on a profile against the schema."""
-
         return self._build_report(record.profile_id, record.facts)
 
     def validate_facts(self, profile_id: str, facts: Iterable[UserProfileFact]) -> ProfileValidationReport:
         """Validate a free-standing collection of facts (e.g. a registration command)."""
-
         return self._build_report(profile_id, tuple(facts))
 
     def _build_report(
@@ -110,7 +108,6 @@ class ProfileValidationService:
         plain garbage (``not-a-date``) without any hand-rolled
         calendar maths.
         """
-
         if field.type is not ProfileFieldType.DATE or fact.value is None:
             return ()
         if isinstance(fact.value, date):
@@ -129,7 +126,6 @@ class ProfileValidationService:
         fact: UserProfileFact,
     ) -> ProfileValidationIssue:
         """Build the ERROR issue for a date field carrying a non-date value."""
-
         return ProfileValidationIssue(
             severity=BaseSeverity.ERROR,
             code="invalid_date_value",

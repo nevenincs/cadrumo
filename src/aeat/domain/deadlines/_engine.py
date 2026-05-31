@@ -87,7 +87,6 @@ def _window_outside_activity_period(
     Windows that straddle either date stay on the schedule — the
     operator may still owe a return covering the active fraction.
     """
-
     if activity_start_date is not None and closes_on < activity_start_date:
         return True
     return activity_end_date is not None and opens_on > activity_end_date
@@ -258,7 +257,6 @@ class DeadlineEngine:
 
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
         """Return registry-backed deadline applicability text for ``modelo``."""
-
         selected_year = year or date.today().year
         windows = [
             window
@@ -280,7 +278,6 @@ class DeadlineEngine:
 
     def applies_to(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> bool:
         """Return whether registry deadline conditions match for ``modelo``."""
-
         selected_year = year or date.today().year
         return any(
             code == modelo
@@ -460,17 +457,14 @@ def compute_obligation_schedule(
         The :class:`Schedule` of obligations applicable to ``profile``
         for ``today``'s fiscal year.
     """
-
     return engine.compute(profile, today.year, today=today)
 
 
 def applies_to(profile: TaxpayerProfile, modelo: str) -> bool:
     """Return whether registry deadline conditions match for ``modelo``."""
-
     return DeadlineEngine().applies_to(profile, modelo)
 
 
 def explain(profile: TaxpayerProfile, modelo: str) -> str:
     """Return registry-backed deadline applicability text for ``modelo``."""
-
     return DeadlineEngine().explain(profile, modelo)

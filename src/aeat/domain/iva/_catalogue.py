@@ -19,7 +19,6 @@ from .errors import IvaCatalogueError
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
     """Load one VAT catalogue TOML file."""
-
     resolved = path.resolve()
     try:
         stat = resolved.stat()
@@ -69,7 +68,6 @@ def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
     no override is supplied; the ``bundled_path`` boundary is the
     single resolution surface.
     """
-
     target = root if root is not None else bundled_path("registry", "aeat", "iva", "catalogues")
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
@@ -103,7 +101,6 @@ def _load_iva_catalogues_cached(
 
 def resolve_catalogue(*, on: date) -> IvaCatalogue:
     """Return the exact VAT catalogue for ``on``."""
-
     catalogue = load_iva_catalogues().get(on.year)
     if catalogue is None:
         raise IvaCatalogueError(f"no VAT catalogue registered for year={on.year}")

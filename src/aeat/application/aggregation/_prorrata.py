@@ -151,7 +151,6 @@ def aggregate_prorrata_inputs(
     Raises :class:`AggregationPeriodError` if ``year`` is outside the
     supported window (2000-2100).
     """
-
     if year < 2000 or year > 2100:
         raise AggregationPeriodError(
             t("aggregation.prorrata.errors.year_out_of_range"),
@@ -221,7 +220,6 @@ def aggregate_provisional_prorrata(
     not strictly greater than ``prior_year``, or when ``period`` is not
     a valid in-year token (``Q1``..``Q4`` or ``M01``..``M12``).
     """
-
     if current_year <= prior_year:
         raise AggregationValidationError(
             t("aggregation.prorrata.errors.current_year_not_after_prior"),
@@ -257,7 +255,6 @@ def aggregate_definitiva_prorrata(
     ``period=None`` and ``kind=DEFINITIVA``; the calculator's
     :class:`ProrrataResult` validator accepts that combination.
     """
-
     aggregation = aggregate_prorrata_inputs(current_year_operations, year=year)
     result = compute_prorrata_general(
         aggregation.inputs,

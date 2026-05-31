@@ -135,7 +135,6 @@ def _build_operator_inputs(
     scenario: OperatorInputScenario,
 ) -> tuple[OperatorInputs, dict[CasillaId, Decimal]]:
     """Translate casilla-number-keyed scenario inputs into casilla-id-keyed."""
-
     by_number = {casilla.number: casilla.id for casilla in snapshot.revision.casillas}
     operator_input_records: list[OperatorInput] = []
     inputs_by_id: dict[CasillaId, Decimal] = {}
@@ -179,7 +178,6 @@ def _seed_inputs_into_sheet(
     Relations and tariff parameter values are pre-stamped by the
     engine on plan apply, so they need no additional write here.
     """
-
     by_number = {casilla.number: casilla.id for casilla in snapshot.revision.casillas}
     address_by_casilla = {cell.casilla: cell.address for cell in plan.value_cells if cell.casilla is not None}
     # Re-derive the binding-row addresses from the layout. The plan
@@ -225,7 +223,6 @@ def _read_sheets_computed(
     plan: SheetExportPlan,
 ) -> dict[CasillaId, Decimal]:
     """Read every formula cell back from `Cálculos` and return its value."""
-
     if not plan.formula_cells:
         return {}
     # Sort formula cells by row so the resulting range is contiguous.
@@ -313,7 +310,6 @@ def verify_modelo_parity(
     snapshot's process-local cache. The local Decimal runtime is
     invoked once and consulted only for comparison.
     """
-
     from ....adapters.outbound.google._calc_sheets_apply import apply_export_plan
 
     operator_inputs, inputs_by_id = _build_operator_inputs(snapshot, scenario)

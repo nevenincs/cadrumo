@@ -31,7 +31,6 @@ class LabelArtifactFinding:
 
 def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tuple[LabelArtifactFinding, ...]:
     """Return advisory findings for obvious unresolved label extraction artifacts."""
-
     findings: list[LabelArtifactFinding] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -52,7 +51,6 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
 
 def validate_no_label_artifacts(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
     """Return failures for unresolved casilla label formatting placeholders."""
-
     return tuple(
         f"modelo {finding.modelo_id} revision {finding.revision_id} casilla {finding.casilla_id}: "
         f"label contains unresolved {finding.artifact} {finding.placeholder_token!r}: {finding.label!r}"

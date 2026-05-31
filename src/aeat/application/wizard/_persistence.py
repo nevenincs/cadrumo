@@ -34,7 +34,6 @@ the create-vs-edit branch; it is never re-derived at runtime."""
 
 def _canonicalise(question: WizardQuestion, value: object) -> str:
     """Render ``value`` as the canonical token used by the persistence layer."""
-
     if value is None:
         return ""
     if isinstance(value, bool):
@@ -56,7 +55,6 @@ def _question_by_id(flow: WizardFlow) -> Mapping[str, WizardQuestion]:
 
 def _field_to_question(flow: WizardFlow) -> Mapping[str, WizardQuestion]:
     """Build ``answers_model`` field name → ``WizardQuestion`` map."""
-
     table: dict[str, WizardQuestion] = {}
     for section in flow.sections:
         for question in section.questions:
@@ -78,7 +76,6 @@ def serialise_answers(
     those question ids — the patch behaviour the ``edit`` verb relies
     on so an unsupplied field is never written back at its default.
     """
-
     typed = answers.model_dump()
     mapping = _field_to_question(flow)
     result: dict[str, str] = {}
@@ -124,7 +121,6 @@ def persist_answers(
     supplied for ``"edit"``; it is ignored for ``"create"``, which
     always registers the full set.
     """
-
     from ...domain.user_profile import UserProfileFact
 
     if mode == "create":
@@ -166,7 +162,6 @@ def persist_patch(
     question with no ``profile_key`` is not a profile fact and is
     skipped.
     """
-
     from ...domain.user_profile import UserProfileFact
     from ._widgets import validate_widget_answer
 
@@ -190,7 +185,6 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
     or the answers model's own field default; the answers model then
     runs its strict validation.
     """
-
     questions = _question_by_id(flow)
     typed: dict[str, object] = {}
     for question in questions.values():
@@ -204,7 +198,6 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
 
 def _resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> str | None:
     """Resolve the canonical token to project for ``question``."""
-
     if question.profile_key is not None:
         candidate = values.get(question.profile_key)
         if candidate is not None:
@@ -224,7 +217,6 @@ def _parse_canonical(question: WizardQuestion, raw: str) -> object:
     would round-trip to a stored ``"false"`` token and reload as a
     declared decline.
     """
-
     answer_type = question.answer_type
     if answer_type is bool:
         if raw == "" and not (question.required and question.visible_when is None):

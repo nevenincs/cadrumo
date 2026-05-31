@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -112,23 +112,29 @@ async def _locate(
         stage=stage,
         description=description,
         timeout_ms=timeout_ms,
-        probe_timeout_ms=_SELECTOR_PROBE_TIMEOUT_MS,
+        probe_timeout_ms=_get_selector_probe_timeout_ms(),
         surface_label="NIF-IVA",
         shape_suggestion=_nif_iva_shape_suggestion(),
     )
 
 
-# Default timeout per Playwright stage (milliseconds). Each navigation +
-# form-fill + result-scrape stage gets this budget; the live driver runs
-# under the remote-state guard's pre-flighted operation list and the
-# total wall-clock budget is governed by the caller.
-_TIMEOUT_DEFAULTS = Settings()
-DEFAULT_NIF_IVA_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
-_SELECTOR_PROBE_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_selector_probe_timeout_ms
-_DEFAULT_VIEWPORT: ViewportSize = {
-    "width": _TIMEOUT_DEFAULTS.aeat_browser_viewport_width,
-    "height": _TIMEOUT_DEFAULTS.aeat_browser_viewport_height,
-}
+def _get_timeout_defaults() -> int:
+    return load_settings().aeat_browser_navigation_timeout_ms
+
+
+def _get_selector_probe_timeout_ms() -> int:
+    return load_settings().aeat_browser_selector_probe_timeout_ms
+
+
+def _get_default_viewport() -> ViewportSize:
+    settings = load_settings()
+    return {
+        "width": settings.aeat_browser_viewport_width,
+        "height": settings.aeat_browser_viewport_height,
+    }
+
+
+DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
 _COUNTRY_SELECTORS: tuple[str, ...] = (
     'select[name*="pais" i]',
     'select[id*="pais" i]',
@@ -286,7 +292,6 @@ async def collect_nif_iva_check_observations(
     authorise), iterates the declared NIFs alphabetically, and returns
     one observation per NIF.
     """
-
     del payload
     if not expected:
         raise RegistryValidationError("collect_nif_iva_check_observations requires at least one expected NIF")
@@ -307,7 +312,7 @@ async def collect_nif_iva_check_observations(
             )
         page: _Page = _raw_page
         await _playwright_stage(
-            page.set_viewport_size(_DEFAULT_VIEWPORT),
+            page.set_viewport_size(_get_default_viewport()),
             stage="set-viewport",
             description="NIF-IVA viewport",
             timeout_ms=timeout_ms,
@@ -391,7 +396,6 @@ async def collect_nif_iva_check_observations(
 
 async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
     """Wait for the country and VAT-number controls to become interactive."""
-
     _assert_query_browser_action("open-nif-iva-form")
     await _locate(
         page,
@@ -416,7 +420,6 @@ async def _check_single_nif(
     timeout_ms: int,
 ) -> Literal["valid", "invalid", "unknown"]:
     """Submit one NIF query and scrape the rendered verdict."""
-
     _assert_query_browser_action(f"check-nif-{nif}")
     country_code, vat_number = _split_vies_nif(nif)
     await _select_country_code(page, country_code, timeout_ms=timeout_ms)
@@ -446,7 +449,6 @@ def is_aeat_auth_gate_redirect(current_url: str) -> bool:
     it stays specific to that exact failure mode. Other AEAT errors are
     intentionally not matched.
     """
-
     if not current_url:
         return False
     parsed = urlsplit(current_url)
@@ -464,7 +466,6 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
     explicit negative verdicts win over generic positive words such as
     ``válido`` so phrases like ``no válido`` cannot be misclassified.
     """
-
     normalized = normalize_response_text(body_text)
     if not normalized:
         return "unknown"

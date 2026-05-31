@@ -66,7 +66,6 @@ def parse_export_payload(
     sources: Mapping[str, SourceReference] | None = None,
 ) -> ParsedExportPayload:
     """Parse a complete AEAT payload according to a registry export layout."""
-
     if layout.format == "xml_dictionary":
         return _parse_xml_dictionary_payload(layout, payload, source_root=source_root, sources=sources)
 

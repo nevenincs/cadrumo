@@ -21,13 +21,11 @@ def _browser_locale_default() -> str | None:
     instantiated) confines any settings-data drift to the code path
     that genuinely needs the browser adapter.
     """
-
     return _Settings().aeat_browser_locale
 
 
 def _browser_timezone_default() -> str | None:
     """Resolve the default browser timezone lazily (see :func:`_browser_locale_default`)."""
-
     return _Settings().aeat_browser_timezone
 
 

@@ -61,7 +61,6 @@ class StorageProvider(Protocol):
             OutboundStorageQuotaError: Backend quota exhausted.
             OutboundStorageNetworkError: Endpoint unreachable.
         """
-
         ...
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
@@ -74,7 +73,6 @@ class StorageProvider(Protocol):
             OutboundStoragePermissionError: Credentials lack read scope.
             OutboundStorageNetworkError: Endpoint unreachable.
         """
-
         ...
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
@@ -84,7 +82,6 @@ class StorageProvider(Protocol):
             OutboundStoragePermissionError: Credentials lack delete scope.
             OutboundStorageNetworkError: Endpoint unreachable.
         """
-
         ...
 
     def iter_namespaces(self) -> Iterator[str]:
@@ -94,7 +91,6 @@ class StorageProvider(Protocol):
         `_inbound`, `_workspace`, `_probe`, `_sync-state` when they
         exist on the backend.
         """
-
         ...
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
@@ -105,7 +101,6 @@ class StorageProvider(Protocol):
             OutboundStoragePermissionError: Credentials lack listing scope.
             OutboundStorageNetworkError: Endpoint unreachable.
         """
-
         ...
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
@@ -122,7 +117,6 @@ class StorageProvider(Protocol):
             via the report's `reachable` / `writable` fields and
             `detail` string.
         """
-
         ...
 
 

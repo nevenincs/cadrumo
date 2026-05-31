@@ -60,7 +60,6 @@ def _build_google_credentials(*, profile: str) -> Credentials:
     Imports the upstream library lazily so unit tests for the local /
     in-memory backends do not pay the cost.
     """
-
     from ..google._session_store import load_client, load_token
 
     client = load_client(profile)
@@ -116,7 +115,6 @@ def _resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
 
     Returns the empty string when neither source is configured.
     """
-
     from ..google._session_store import load_drive_config
 
     if settings.aeat_google_drive_root_folder_id:
@@ -147,7 +145,6 @@ def get_storage_provider(
             or the profile lacks the records the chosen backend needs.
         GoogleAuthProfileUnboundError: When no profile is bound.
     """
-
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)
     profile = _resolve_profile()

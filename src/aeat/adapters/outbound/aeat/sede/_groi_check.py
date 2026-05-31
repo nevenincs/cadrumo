@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -72,13 +72,23 @@ logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
 _GROI_HOST = urlsplit(_EXTERNAL.aeat.oracles.groi_check).netloc
 
-_TIMEOUT_DEFAULTS = Settings()
-DEFAULT_GROI_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
-_SELECTOR_PROBE_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_selector_probe_timeout_ms
-_DEFAULT_VIEWPORT: ViewportSize = {
-    "width": _TIMEOUT_DEFAULTS.aeat_browser_viewport_width,
-    "height": _TIMEOUT_DEFAULTS.aeat_browser_viewport_height,
-}
+def _get_timeout_defaults() -> int:
+    return load_settings().aeat_browser_navigation_timeout_ms
+
+
+def _get_selector_probe_timeout_ms() -> int:
+    return load_settings().aeat_browser_selector_probe_timeout_ms
+
+
+def _get_default_viewport() -> ViewportSize:
+    settings = load_settings()
+    return {
+        "width": settings.aeat_browser_viewport_width,
+        "height": settings.aeat_browser_viewport_height,
+    }
+
+
+DEFAULT_GROI_TIMEOUT_MS: int = 30000
 
 # Form selectors verified against live HTML capture (2026-05-07):
 # ``<input id="nif" name="nif" type="text" maxlength="9" size="9">``
@@ -138,7 +148,7 @@ async def _locate(
         stage=stage,
         description=description,
         timeout_ms=timeout_ms,
-        probe_timeout_ms=_SELECTOR_PROBE_TIMEOUT_MS,
+        probe_timeout_ms=_get_selector_probe_timeout_ms(),
         surface_label="GROI",
         shape_suggestion=_groi_shape_suggestion(),
     )
@@ -245,7 +255,6 @@ class GroiSedeDriver:
         the GROI oracle wrapper compares against the caller's expected
         verdicts.
         """
-
         result = self.collect(payload, expected=expected)
         values: dict[str, str] = {
             observation.nif.upper(): str(observation.verdict) for observation in result.observations
@@ -265,7 +274,6 @@ async def collect_groi_observations(
     browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
 ) -> GroiResult:
     """Drive the GROI form per declared NIF and return one observation each."""
-
     del payload
     if not expected:
         raise RegistryValidationError("collect_groi_observations requires at least one expected NIF")
@@ -286,7 +294,7 @@ async def collect_groi_observations(
             )
         page: _Page = _raw_page
         await _playwright_stage(
-            page.set_viewport_size(_DEFAULT_VIEWPORT),
+            page.set_viewport_size(_get_default_viewport()),
             stage="set-viewport",
             description="GROI viewport",
             timeout_ms=timeout_ms,
@@ -337,7 +345,6 @@ async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
     retargeted the form to a different action (e.g., a write endpoint
     masquerading under the same URL), the driver refuses to submit.
     """
-
     _assert_query_browser_action("open-groi-form")
     await _locate(
         page,
@@ -397,7 +404,6 @@ async def _check_single_nif(
     timeout_ms: int,
 ) -> Literal["valid", "invalid", "unknown"]:
     """Fill the form with one NIF, submit, scrape the rendered verdict."""
-
     _assert_query_browser_action(f"check-nif-{nif}")
     nif_input = await _locate(
         page,
@@ -449,7 +455,6 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
     2026-05-07. Negative markers are checked first so explicit
     rejection cannot be misclassified by a generic positive token.
     """
-
     normalized = normalize_response_text(body_text)
     if not normalized:
         return "unknown"

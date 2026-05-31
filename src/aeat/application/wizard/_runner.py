@@ -45,7 +45,6 @@ def _clause_satisfied(clause: WizardCondition, canonical: Mapping[str, str]) -> 
     exact, case-sensitive token match; ``contains`` splits the parent's
     comma-joined CHECKBOX answer into a token set and tests membership.
     """
-
     parent = canonical.get(clause.question_id)
     if parent is None:
         return False
@@ -72,8 +71,8 @@ def _condition_satisfied(
     an unambiguous declaration of intent, so the question is collected
     even when its ``visible_when`` gate would otherwise hide it — the
     gate governs interactive prompting and the demand for a value, not
-    whether an explicitly-given value is honoured."""
-
+    whether an explicitly-given value is honoured.
+    """
     if question.visible_when is None:
         return True
     if question.id in force_visible:
@@ -83,7 +82,6 @@ def _condition_satisfied(
 
 def _emit(prompter: Prompter, text: str) -> None:
     """Emit ``text`` through the prompter if it carries the optional hook."""
-
     hook = getattr(prompter, "emit_progress", None)
     if callable(hook):
         hook(text)
@@ -91,7 +89,6 @@ def _emit(prompter: Prompter, text: str) -> None:
 
 def _prepare(prompter: Prompter, flow: WizardFlow) -> None:
     """Let interactive prompters validate and introduce the flow before progress."""
-
     hook = getattr(prompter, "prepare", None)
     if callable(hook):
         hook(flow)
@@ -112,7 +109,6 @@ def _section_progress_total(
     visible after a later answer in the same section is conservatively
     excluded; the running total then ticks up as it is revealed.
     """
-
     remaining = sum(
         1
         for question in section.questions
@@ -147,7 +143,6 @@ def run_flow(
     Returns:
         A validated instance of ``flow.answers_model``.
     """
-
     defaults_map: Mapping[str, str] = defaults or {}
     canonical: dict[str, str] = {}
     typed: dict[str, object] = {}

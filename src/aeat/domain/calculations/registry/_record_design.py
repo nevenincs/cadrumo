@@ -75,7 +75,6 @@ class _WorkbookHeader:
 
 def extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return fixed-width field rows from a supported official record-design source."""
-
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design source not found: {path}")
@@ -103,7 +102,6 @@ def _extract_record_design_cached(
 
 def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return the official fixed-width field rows described by workbook ``path``."""
-
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design workbook not found: {path}")
@@ -113,7 +111,6 @@ def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
 
 def extract_record_design_xls_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return official fixed-width field rows from a legacy binary XLS workbook."""
-
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design XLS workbook not found: {path}")
@@ -201,7 +198,6 @@ def _ignore_openpyxl_header_footer_metadata_warnings() -> Iterator[None]:
 
 def extract_record_design_pdf(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return fixed-width field rows extracted from an official AEAT PDF."""
-
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
@@ -227,7 +223,6 @@ def extract_record_design_pdf_bytes(
     source_label: str = "in-memory record-design PDF",
 ) -> tuple[RecordDesignSheet, ...]:
     """Return fixed-width field rows extracted from PDF bytes."""
-
     return _extract_record_design_pdf_stream(BytesIO(pdf_bytes), source_label=source_label)
 
 
@@ -1278,7 +1273,6 @@ def _selector_is_cross_modelo(
     self-binding or a ``previous_period`` self-relation), and those
     casillas belong in the modelo's own calculation closure.
     """
-
     source_modelo = selector.get("source_modelo")
     if source_modelo is None:
         return False
@@ -1332,7 +1326,6 @@ def calculation_closure_numbers(
     a calculation that names a casilla the registry never declared — the
     Modelo 200 defect class — still surfaces in the closure.
     """
-
     id_to_number = {casilla.id: casilla.number for casilla in revision.casillas}
 
     def _as_number(token: str) -> str:
@@ -1408,7 +1401,6 @@ def calculation_closure_identities(
     semantic-slug and short-ordinal casilla numbers the other
     calculation-bearing modelos use.
     """
-
     by_id = {casilla.id: casilla for casilla in revision.casillas}
     by_number: dict[str, list[CasillaDefinition]] = {}
     for casilla in revision.casillas:
@@ -1509,7 +1501,6 @@ def derive_calculation_completeness_casillas(
     parses the multi-megabyte Diseño corpus and must never run on the
     snapshot-build path.
     """
-
     declared_identities = {
         (casilla.segmento, casilla.number) for casilla in revision.casillas
     }
@@ -1581,7 +1572,6 @@ def derive_diseno_coverage_casillas(
     This is an off-load-path tool: it parses the multi-megabyte Diseño
     corpus and must never run on the snapshot-build path.
     """
-
     sheets = extract_record_design(path)
     if multi_segment:
         seen: set[tuple[str | None, str]] = set()
@@ -1686,7 +1676,6 @@ def build_diseno_coverage_report(
     a single-segment modelo ``segmento`` is unset on both sides and the
     bare number alone identifies the casilla.
     """
-
     diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
     declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
     covered: list[DerivedDisenoCasilla] = []
@@ -1707,7 +1696,6 @@ def build_diseno_coverage_report(
 
 def _sheet_casilla_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
     """Return the casilla tags declared in one record-design sheet, in field order."""
-
     numbers: list[str] = []
     seen: set[str] = set()
     for design_field in sheet.fields:

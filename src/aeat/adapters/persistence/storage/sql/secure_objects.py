@@ -210,7 +210,6 @@ class SecureObjectRepository:
 
     def _ensure_table_revision_metadata_columns(self, table_name: str) -> None:
         """Add nullable revision metadata columns to a pre-existing table."""
-
         existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
         missing = tuple(
             (name, column_type)
@@ -240,7 +239,6 @@ class SecureObjectRepository:
 
     def _is_duplicate_column_race(self, table_name: str, column_name: str, exc: OperationalError) -> bool:
         """Return whether an ``ALTER TABLE ADD COLUMN`` failed after a concurrent add."""
-
         if "duplicate column" not in str(exc.orig).lower():
             return False
         existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
@@ -248,7 +246,6 @@ class SecureObjectRepository:
 
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""
-
         with self._engine.begin() as connection:
             connection.execute(
                 text(
@@ -279,12 +276,10 @@ class SecureObjectRepository:
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
         """Return the namespace registry bound to this repository, if any."""
-
         return self._namespace_registry
 
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
         """Return the registry contract for ``namespace`` when policy is bound."""
-
         if self._namespace_registry is None:
             return None
         try:
@@ -405,7 +400,6 @@ class SecureObjectRepository:
         the active-gate at the CLI root callback already refused
         non-exempt verbs that lack a session.
         """
-
         from datetime import UTC, datetime
 
         from ..errors import SessionExpiredError
@@ -426,7 +420,6 @@ class SecureObjectRepository:
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""
-
         with session_scope(self._engine) as session:
             row_id = session.execute(
                 select(_orm.SecureObjectRow.id).where(
@@ -477,7 +470,6 @@ class SecureObjectRepository:
             `(namespace ASC, object_key ASC)` so consumers can
             checkpoint progress deterministically.
         """
-
         with session_scope(self._engine) as session:
             stmt = text(
                 "SELECT id, namespace, object_key, classification, schema_version, "
@@ -701,7 +693,6 @@ class SecureObjectRepository:
         exposes the HMAC lookup digest plus storage metadata needed by repair
         diagnostics.
         """
-
         with session_scope(self._engine) as session:
             stmt = (
                 text(
@@ -766,7 +757,6 @@ class SecureObjectRepository:
         should iterate :meth:`list_records` and read IDs from decrypted
         payloads.
         """
-
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(_orm.SecureObjectRow.object_key)
@@ -954,7 +944,6 @@ class SecureObjectRepository:
         max_supported_version: int,
     ) -> SecureObjectRecord | None:
         """Load and decrypt one object, returning ``None`` when absent."""
-
         self._check_session_freshness()
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
@@ -1011,7 +1000,6 @@ class SecureObjectRepository:
 
     def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
         """Encrypt and upsert several payloads in one SQL unit of work."""
-
         if not writes:
             return
         self._check_session_freshness()
@@ -1322,7 +1310,6 @@ class SecureObjectRepository:
         column; callers use this to fingerprint an envelope they intend
         to discard (e.g. the workflow-state reset recovery path).
         """
-
         # Resolve the row id through the ORM so the HashedLookup column
         # binding hashes ``object_key`` consistently with the rest of
         # the repository, then read the raw row through ``text()`` so
@@ -1358,7 +1345,6 @@ class SecureObjectRepository:
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""
-
         self._check_session_freshness()
         with session_scope(self._engine) as session:
             # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:

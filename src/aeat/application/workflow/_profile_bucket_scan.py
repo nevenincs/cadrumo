@@ -81,7 +81,6 @@ def read_profile_bucket(
             ambiguous resolution the name-uniqueness guard should have
             prevented among live profiles).
     """
-
     if not label or not label.strip():
         return None
     needle = label.strip().casefold()
@@ -118,7 +117,6 @@ def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> P
     the returned pointer carries the manifest ``status`` so the caller
     can branch on it.
     """
-
     if not profile_id or not profile_id.strip():
         return None
     resolved_root = _resolve_root(root)
@@ -158,7 +156,6 @@ def list_profile_buckets(
         include_tombstoned: When ``True``, tombstoned profiles are
             included; default ``False`` returns only live profiles.
     """
-
     resolved_root = _resolve_root(root)
     buckets_root = resolved_root / BUCKETS_DIRNAME
     if not buckets_root.is_dir():
@@ -193,7 +190,6 @@ def list_profile_buckets(
 
 def list_profile_bucket_scan_issues(*, root: Path | None = None) -> tuple[ProfileBucketScanIssue, ...]:
     """Return non-sensitive manifest-scan issues found under the profile root."""
-
     resolved_root = _resolve_root(root)
     buckets_root = resolved_root / BUCKETS_DIRNAME
     if not buckets_root.is_dir():

@@ -123,7 +123,6 @@ async def _build_default_browser_session(
     the factory returns an incompatible type; production callers omit
     it and the central browser factory is used.
     """
-
     from .....core.config import load_settings
     from ..browser import default_browser_session_factory
 

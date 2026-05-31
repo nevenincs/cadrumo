@@ -107,7 +107,6 @@ def _validate_work_unit_id(value: str) -> str:
     invalid identifiers are rejected at the CLI boundary rather than
     surfacing as an opaque application-layer error.
     """
-
     stripped = value.strip()
     if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
         raise typer.BadParameter(
@@ -126,7 +125,6 @@ def _validate_calculation_revision_id(value: str) -> str:
     shape as a ``work_unit_id``. Rejecting a malformed identifier at the
     CLI boundary keeps the application layer free of input-shape checks.
     """
-
     stripped = value.strip()
     if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
         raise typer.BadParameter(
@@ -150,7 +148,6 @@ app = typer.Typer(
 
 def _bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     """Render registered domain errors before crossing the Typer boundary."""
-
     return typer.BadParameter(resolve_error_message(exc))
 
 
@@ -161,7 +158,6 @@ def _resolve_default_actor() -> str:
     display name. When no active profile exists or the bucket is empty the
     fallback label keeps the audit record populated rather than raising.
     """
-
     with suppress(Exception):
         from ...application.workflow._models import resolve_active_bucket_id
         from ...application.workflow._persistence import workflow_state_repository
@@ -187,7 +183,6 @@ def _require_active_profile() -> None:
     translated ``profile create`` guidance that the ledger surface
     already gives.
     """
-
     from ...application.workflow._models import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
     from ._errors import CliRefusedBoundaryError
@@ -210,7 +205,6 @@ def _guard_foral_profile_ccaa() -> None:
     not a foral error; :func:`_require_active_profile` handles the
     unconfigured-profile case separately.
     """
-
     from ...application.user_profile._orchestration import fact_value
     from ...application.workflow._persistence import workflow_state_repository
 
@@ -280,7 +274,6 @@ def modelo_readiness(
     readiness datum is computed once in the projection, so this surface
     cannot disagree with any other operator-facing surface.
     """
-
     from ...application.state_projection import (
         ModeloReadinessRequest,
         build_operator_state_projection,
@@ -488,7 +481,6 @@ def _profile_resolved_binding_ids(report: _BindingReportLike) -> frozenset[str]:
     empty set and ``--missing`` then drops only constant bindings. A
     bucket with no active profile likewise yields an empty set.
     """
-
     filing_year = getattr(report, "filing_year", None)
     if filing_year is None:
         return frozenset()
@@ -530,7 +522,6 @@ def _parse_kv_spec[T](
     If ``key_validator`` is provided it receives ``(key, spec)`` and
     must raise :class:`typer.BadParameter` if the key is malformed.
     """
-
     if "=" not in spec:
         raise typer.BadParameter(
             tr(
@@ -560,7 +551,6 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     unknown or unspecified — the caller falls back to the generic shape
     hint.
     """
-
     if not modelo or not modelo.strip():
         return ()
     try:
@@ -596,7 +586,6 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     ``modelo`` is supplied the error instead explains the composition
     and enumerates the registry-declared period tokens for that modelo.
     """
-
     token = period.strip()
     if not token:
         raise typer.BadParameter(tr("cli.common.errors.period_empty"))
@@ -651,7 +640,6 @@ def _period_token_error(
     back to ``fallback`` (the raw registry message) only when no
     modelo-specific token set is available.
     """
-
     declared = _declared_period_tokens(modelo)
     if declared:
         return tr(
@@ -690,7 +678,6 @@ def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
     modelo's declared period tokens are known the error enumerates them;
     otherwise it falls back to the raw registry shape hint.
     """
-
     declared = _declared_period_tokens(modelo)
     if not declared:
         return fallback
@@ -707,7 +694,6 @@ def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
 
 def _validate_binding_key(key: str, spec: str) -> None:
     """Validate a ``--binding`` key against :data:`BindingId` constraints."""
-
     try:
         _BINDING_ID_ADAPTER.validate_python(key)
     except ValidationError as exc:
@@ -730,7 +716,6 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     CLI boundary; the value is passed through unchanged so the
     bindings-resolution layer can coerce it per source type.
     """
-
     return _parse_kv_spec(
         spec,
         flag="--binding",
@@ -762,7 +747,6 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
     ``vinculada``). Remaining tokens are ``KEY=VALUE`` pairs.  Raises
     :class:`typer.BadParameter` on any parse or validation error.
     """
-
     parts = spec.split()
     if not parts:
         raise typer.BadParameter(
@@ -854,7 +838,6 @@ def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
     The AEAT rule: the sum of all member share_percentages MUST equal
     exactly 100% per filing.
     """
-
     member_rows = [r for r in rows if isinstance(r, Modelo184MemberRow)]
     if not member_rows:
         return
@@ -880,7 +863,6 @@ def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
     €3,005.06 must be declared.  The check applies per-row, not as a sum across
     rows, because each row is one declared counterparty.
     """
-
     contraparte_rows = [r for r in rows if isinstance(r, Modelo347ContraparteRow)]
     for row in contraparte_rows:
         total = row.importe_total
@@ -936,7 +918,6 @@ def bindings_list(
     drops constant-valued bindings and any binding the active profile
     already satisfies.
     """
-
     service = _service()
     targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
     per_modelo_reports = []
@@ -1056,7 +1037,6 @@ def bindings_preview(
     echoed back resolved. Unknown override keys fail with a
     suggestion list sourced from the same catalogue.
     """
-
     _require_binding_scope(modelo=modelo, year=year, period=period)
     assert modelo is not None
     assert year is not None
@@ -1127,7 +1107,6 @@ def bindings_preview(
 
 def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:
     """Report every missing required binding-scope option at once."""
-
     missing = [
         option
         for option, value in (("--modelo", modelo), ("--year", year), ("--period", period))
@@ -1257,7 +1236,6 @@ def aggregate_modelo(
     ] = None,
 ) -> None:
     """Delegate per-modelo aggregation execution to the backend service."""
-
     command = PerModeloAggregationCommand(
         modelo=modelo,
         period=period,
@@ -1439,7 +1417,6 @@ def _validate_filing_year(year: int) -> None:
     validation" boundary error. The refusal now names the bad year and
     renders in the operator's language.
     """
-
     if not _FILING_YEAR_MIN <= year <= _FILING_YEAR_MAX:
         raise typer.BadParameter(
             tr(
@@ -1462,7 +1439,6 @@ def _revision_covers_year(revision_id: str, year: int, definition: object) -> bo
     A revision with no year constraints (``year_from`` is None and
     ``years`` is empty) is treated as applicable to every year.
     """
-
     rev = definition.revisions.get(revision_id)  # type: ignore[union-attr]
     if rev is None:
         return False
@@ -1492,7 +1468,6 @@ def _validate_registry_target(modelo: str, revision_id: str, year: int) -> None:
     to a 2024 filing silently uses wrong parameters; this guard refuses
     the cross-year combination with an explicit message.
     """
-
     from ...core.resources import resources
 
     authority = resources().modelos.authority
@@ -1566,7 +1541,6 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     in the create payload so the audit trail shows the guard was
     bypassed deliberately.
     """
-
     from ...application.workflow._persistence import workflow_state_repository
     from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
@@ -1673,7 +1647,6 @@ def _guard_stub_modelo(modelo: str) -> None:
     it does not model, leaving the taxpayer with no path to a valid filing.
     Legal refs carried in the error match the governing statute.
     """
-
     from ...core.config import load_settings
     from ._errors import CliRefusedBoundaryError
 
@@ -1729,7 +1702,6 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     unit's modelo / year / period so the next attempt can succeed.
     Non-input registry-validation errors fall through unchanged.
     """
-
     base = tr(error.translated_message, **(error.context or {})) if error.translated_message is not None else str(error)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
@@ -1819,7 +1791,6 @@ def work_create(
     ] = None,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
-
     # User-input validation order: stub guard runs before registry lookup
     # because several stub modelos (210, 600, 620, 650, 660) are not
     # registry-registered; _validate_registry_target would refuse them
@@ -1983,7 +1954,6 @@ def work_list(
     ] = False,
 ) -> None:
     """List modelo work units. Discarded units are excluded unless asked."""
-
     _require_active_profile()
     units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
     from ._common import _emit_envelope
@@ -2031,7 +2001,6 @@ def work_status(
     ],
 ) -> None:
     """View one work unit's metadata."""
-
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     try:
@@ -2063,7 +2032,6 @@ def work_rename(
     ] = None,
 ) -> None:
     """Update one work unit's display name (preserves work_unit_id)."""
-
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     try:
@@ -2110,7 +2078,6 @@ def work_discard(
     ``config profile delete``: an unconfirmed run is refused with
     the exact re-run command.
     """
-
     work_unit_id = _validate_work_unit_id(work_unit_id)
     if not confirmed:
         raise typer.BadParameter(
@@ -2194,7 +2161,6 @@ def _result_summary_lines(rev: CalculationRevision) -> list[str]:
     no registry-grounded summary is available; the full table then
     stands alone.
     """
-
     from ...application.modelo import calculation_result_summary
 
     summary = calculation_result_summary(rev)
@@ -2215,7 +2181,6 @@ def _result_summary_lines(rev: CalculationRevision) -> list[str]:
 
 def _result_summary_payload(rev: CalculationRevision) -> tuple[ResultSummaryRowPayload, ...]:
     """Return the headline-result summary rows for the JSON payload."""
-
     from ...application.modelo import calculation_result_summary
     from ._modelo_payloads import ResultSummaryRowPayload
 
@@ -2324,7 +2289,6 @@ def _filing_record_lines(record: ModeloRecord) -> list[str]:
 
 def _validate_casilla_key(key: str, spec: str) -> None:
     """Validate a ``--casilla`` key against :data:`CasillaId` constraints."""
-
     try:
         _CASILLA_ID_ADAPTER.validate_python(key)
     except ValidationError as exc:
@@ -2392,7 +2356,6 @@ def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     bare-numeric ``--casilla`` tokens can be resolved against the real
     casilla catalogue before the calculation is dispatched.
     """
-
     unit = get_work_unit(work_unit_id)
     authority = _service()._authority
     snapshot = authority.snapshot(
@@ -2424,7 +2387,6 @@ def _resolve_inss_exenta_casilla_id(work_unit_id: str) -> str:
     (e.g. when ``--prestacion-inss-exenta`` is used against a modelo
     that does not declare the exempt-INSS casilla).
     """
-
     try:
         revision = _casilla_revision_for_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
@@ -2455,7 +2417,6 @@ def _resolve_deduccion_maternidad_casilla_id(work_unit_id: str) -> str:
 
     Raises :exc:`typer.BadParameter` when no matching casilla is found.
     """
-
     try:
         revision = _casilla_revision_for_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
@@ -2487,7 +2448,6 @@ def _resolve_reduccion_trabajo_casilla_id(work_unit_id: str) -> str:
     when ``--rescate-plan-pensiones-capital`` is used against a modelo that
     does not declare the reducción slot).
     """
-
     try:
         revision = _casilla_revision_for_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
@@ -2523,7 +2483,6 @@ def _compute_dt12_reduccion_plan_pensiones(
     Raises :exc:`ValueError` when ``aportaciones_totales`` is zero or negative
     (division by zero guard) or when any input is negative.
     """
-
     if aportaciones_totales <= Decimal(0):
         raise PensionReduccionError(
             f"aportaciones_totales must be positive; got {aportaciones_totales}",
@@ -2556,7 +2515,6 @@ def _resolve_sal_reserva_especial_casilla_id(work_unit_id: str) -> str:
     Raises :exc:`typer.BadParameter` when no matching casilla is found (e.g.
     when used against a modelo other than M200).
     """
-
     try:
         revision = _casilla_revision_for_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
@@ -2596,7 +2554,6 @@ def _compute_sal_reserva_especial_dotacion(
     Raises :exc:`ValueError` when capital_social is zero or negative,
     or when any input is negative.
     """
-
     if capital_social <= Decimal(0):
         raise PensionReduccionError(
             f"capital_social must be positive; got {capital_social}",
@@ -2626,7 +2583,6 @@ def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
     Returns ``(hijo_id_str, meses_int)``.  Raises :exc:`typer.BadParameter` on
     malformed input or out-of-range meses (must be 0–12).
     """
-
     if "=" not in spec:
         raise typer.BadParameter(
             tr(
@@ -2677,7 +2633,6 @@ def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     - Non-numeric key → return unchanged (already qualified or format
       validation will reject it).
     """
-
     if not _BARE_NUMERIC_RE.fullmatch(key):
         return key
 
@@ -2942,7 +2897,6 @@ def work_calculate(
     ),
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
-
     activate_subcommand_output_language(ctx, output_language)
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
@@ -3316,7 +3270,6 @@ def work_revisions(
     ] = None,
 ) -> None:
     """List calculation revisions, optionally filtered to one work unit."""
-
     if work_unit_id is not None:
         work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
@@ -3357,7 +3310,6 @@ def work_revision(
     Read-only: the persisted revision is rendered as-is, never
     recomputed. Use ``work revisions`` to discover a revision id.
     """
-
     calculation_revision_id = _validate_calculation_revision_id(calculation_revision_id)
     _require_active_profile()
     try:
@@ -3422,7 +3374,6 @@ def work_history(
     the four catalogues (work unit, calculation revision, verification
     report, filing record). Emits no bucket event.
     """
-
     from ...application.modelo import assemble_work_unit_history
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
@@ -3563,7 +3514,6 @@ def work_verify(
     revision is not mutated and the report explains the missing
     inputs or blocking findings.
     """
-
     activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     # ModeloWorkflowGateError is intentionally NOT wrapped in
@@ -3623,7 +3573,6 @@ def work_file(
     ),
 ) -> None:
     """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
-
     activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     # ModeloWorkflowGateError is a workflow-state refusal, not a
@@ -3673,7 +3622,6 @@ def _resolve_workflow_run_id(target: str) -> str:
             run id nor a 64-character work-unit id, when the work
             unit does not exist, or when no run targets it yet.
     """
-
     from ...application.modelo import workflow_period_for_work_unit
     from ...application.workflow import WorkflowError, find_latest_run_for_period
 
@@ -3719,7 +3667,6 @@ def _resolve_workflow_run_id(target: str) -> str:
 )
 def work_runs(ctx: typer.Context) -> None:
     """List persisted workflow runs so an operator can discover run ids."""
-
     from ...application.workflow import list_runs
 
     runs = list_runs()
@@ -3788,7 +3735,6 @@ def work_resume(
     ],
 ) -> None:
     """Surface the workflow-resume preconditions and resumable context."""
-
     from ...application.workflow import (
         WorkflowError,
         WorkflowResumeRefusedError,
@@ -3881,7 +3827,6 @@ def work_amend(
     refusal instead of forcing the operator to rediscover them one
     invocation at a time.
     """
-
     missing: list[str] = []
     if not from_filing_record_id or not from_filing_record_id.strip():
         missing.append("--from-filing-record")
@@ -3978,7 +3923,6 @@ def filing_record_list(
     ] = False,
 ) -> None:
     """List filing records. Superseded records are excluded unless asked."""
-
     records = list_filing_records(bucket_id=bucket_id, include_superseded=include_superseded)
     payload = {
         "operation": "modelo.filing_record.list",
@@ -4033,7 +3977,6 @@ def verification_report_list(
     ] = None,
 ) -> None:
     """List verification reports, optionally filtered to one revision."""
-
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
     payload = {
         "operation": "modelo.verification_report.list",
@@ -4072,7 +4015,6 @@ def verification_report_show(
     ],
 ) -> None:
     """View one verification report by id."""
-
     try:
         report = get_verification_report(verification_report_id)
     except VerificationReportNotFoundError as exc:
@@ -4095,7 +4037,6 @@ def filing_record_show(
     ],
 ) -> None:
     """View one filing record by id."""
-
     try:
         record = get_filing_record(filing_record_id)
     except ModeloRecordNotFoundError as exc:
@@ -4143,7 +4084,6 @@ def filing_record_import(
     ] = None,
 ) -> None:
     """Persist an externally-filed return as a baseline filing record."""
-
     work_unit_id = _validate_work_unit_id(work_unit_id)
     from ...application.modelo import (
         ExternalModeloImportError,
@@ -4422,7 +4362,6 @@ def modelo_history(
     ] = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
-
     from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     repo = BucketEventHistoryRepository()
@@ -4478,7 +4417,6 @@ def modelo_history(
 
 def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport) -> None:
     """Render a :class:`ModeloReconciliationReport` to the active emitter."""
-
     payload = report.model_dump(mode="json")
     lines = [
         f"work_unit_id\t{report.work_unit_id}",
@@ -4549,7 +4487,6 @@ def modelo_reconcile_verb(
     returns the verdict. The verb is local-only per the app-modelo-shape
     ADR amendment.
     """
-
     from ...application.modelo._reconcile import (
         ModeloReconciliationCommand,
         ModeloReconciliationSourceKind,
@@ -4626,7 +4563,6 @@ def modelo_reconcile_from_justificante_verb(
     ],
 ) -> None:
     """Reconcile a work unit against the supplied justificante PDF."""
-
     from ...application.modelo._reconcile import (
         ModeloReconciliationCommand,
         ModeloReconciliationSourceKind,
@@ -4699,7 +4635,6 @@ def modelo_export_verb(
     ] = None,
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
-
     from ...application.modelo import ModeloIvaWalletReconciliationBlocked
     from ...application.modelo._export import (
         ModeloExportCommand,
@@ -4838,7 +4773,6 @@ def modelo_project(
     ] = None,
 ) -> None:
     """Project a year-end Modelo 100 from the active profile's M130 quarterly filings."""
-
     _require_active_profile()
 
     from ...application.modelo import list_work_units as _list_work_units
@@ -5096,7 +5030,6 @@ def modelo_compare(
     ] = "100",
 ) -> None:
     """Compare two filing-year revisions for the same modelo casilla-by-casilla."""
-
     _require_active_profile()
 
     from ...application.modelo import list_work_units as _list_work_units
@@ -5325,7 +5258,6 @@ def iva_wallet_balance_cmd(
     ],
 ) -> None:
     """Report the aggregated IVA wallet balance without contacting AEAT."""
-
     from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
 
     report = query_iva_wallet_balance(as_of_year=as_of_year)
@@ -5415,7 +5347,6 @@ def iva_wallet_seed_cmd(
     ] = False,
 ) -> None:
     """Declare a Modelo 303 carry-forward balance for bootstrapping local history."""
-
     from decimal import Decimal, InvalidOperation
 
     from ...application.calculations._iva_compensation_history import (

@@ -59,7 +59,6 @@ _ATTACHMENT_MANIFEST_NAMESPACE = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.namespace
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
     """Reject any digest input that is not a 64-char lowercase hex string."""
-
     if not isinstance(value, str):
         raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
     if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
@@ -83,33 +82,27 @@ class AttachmentStore(BaseModel):
     @property
     def blobs_dir(self) -> Path:
         """Return the logical byte-object namespace marker."""
-
         return Path("db://secure_objects") / _ATTACHMENT_BLOB_NAMESPACE
 
     @property
     def manifests_dir(self) -> Path:
         """Return the logical manifest-object namespace marker."""
-
         return Path("db://secure_objects") / _ATTACHMENT_MANIFEST_NAMESPACE
 
     def blob_path(self, sha256: str) -> Path:
         """Return a logical object marker for ``sha256``."""
-
         return self.blobs_dir / _require_digest(sha256, field_name="sha256")
 
     def manifest_path(self, attachment_id: str) -> Path:
         """Return a logical object marker for ``attachment_id``."""
-
         return self.manifests_dir / _require_digest(attachment_id)
 
     def _manifest_lock_target(self, attachment_id: str) -> Path:
         """Return a logical lock marker; SQL transactions govern writes."""
-
         return self.manifest_path(attachment_id).with_suffix(".lock")
 
     def put_bytes(self, data: bytes) -> str:
         """Write ``data`` under its SHA-256 digest if not already present."""
-
         digest = hashlib.sha256(data).hexdigest()
         objects = self._objects_repo()
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
@@ -129,7 +122,6 @@ class AttachmentStore(BaseModel):
 
     def put_file(self, source: Path) -> tuple[str, int]:
         """Read ``source`` into the encrypted object backend."""
-
         hasher = hashlib.sha256()
         chunks: list[bytes] = []
         bytes_size = 0
@@ -159,7 +151,6 @@ class AttachmentStore(BaseModel):
 
     def read_bytes(self, sha256: str) -> bytes:
         """Return the raw bytes for ``sha256``."""
-
         digest = _require_digest(sha256, field_name="sha256")
         record = self._objects_repo().load(
             _ATTACHMENT_BLOB_NAMESPACE,
@@ -174,12 +165,10 @@ class AttachmentStore(BaseModel):
 
     def open_bytes(self, sha256: str) -> BinaryIO:
         """Open the blob for ``sha256`` as a streaming binary handle."""
-
         return BytesIO(self.read_bytes(sha256))
 
     def verify_blob(self, attachment_id: str) -> None:
         """Re-hash the stored blob and verify it matches ``attachment_id``."""
-
         digest = _require_digest(attachment_id)
         actual = hashlib.sha256(self.read_bytes(digest)).hexdigest()
         if actual != digest:
@@ -187,7 +176,6 @@ class AttachmentStore(BaseModel):
 
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` as an encrypted database object."""
-
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
@@ -207,7 +195,6 @@ class AttachmentStore(BaseModel):
 
     def load_manifest(self, attachment_id: str) -> Attachment:
         """Load and validate the manifest for ``attachment_id``."""
-
         digest = _require_digest(attachment_id)
         record = self._objects_repo().load(
             _ATTACHMENT_MANIFEST_NAMESPACE,
@@ -233,7 +220,6 @@ class AttachmentStore(BaseModel):
 
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate over every manifest in sorted attachment-id order."""
-
         manifests: list[Attachment] = []
         for record in self._objects_repo().list_records(
             _ATTACHMENT_MANIFEST_NAMESPACE,

@@ -35,7 +35,6 @@ from ..domain.user_profile import ProfileNotFoundError, UserProfileFact
 
 def _question_for_profile_key(profile_key: str):
     """Return the descriptor's question for ``profile_key``, or ``None``."""
-
     for flow in WIZARD_FLOWS:
         for section in flow.sections:
             for question in section.questions:
@@ -66,7 +65,6 @@ def _resolve_target_profile(profile: str | None):
     UUID) resolves directly. Returns a ``ProfileBucketPointer`` carrying
     the immutable UUID ``bucket_id`` and the operator ``label``.
     """
-
     from ..application.workflow._profile_bucket_scan import (
         read_profile_bucket,
         read_profile_bucket_by_id,
@@ -94,7 +92,6 @@ def _resolve_target_profile(profile: str | None):
 
 def register(app: typer.Typer) -> None:
     """Mount the ``profile`` sub-app onto ``app``."""
-
     sub = typer.Typer(
         name="profile",
         help=tr("cli.diagnostics.profile.help"),

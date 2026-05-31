@@ -195,7 +195,6 @@ def resolve_bound_casilla_inputs(
     ``facts`` is keyed by registry binding id. The binding layer only selects
     factual values; it does not own legal rates, thresholds, or casilla meaning.
     """
-
     for key, value in facts.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError(f"binding fact {key!r} must be a Decimal")
@@ -222,7 +221,6 @@ def previous_filing_observation_requirements(
     period: str,
 ) -> tuple[RegistryModeloObservationRequirement, ...]:
     """Return filed declarations needed by previous-filing bindings."""
-
     grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
@@ -259,7 +257,6 @@ def resolve_previous_filing_binding_values(
     period: str,
 ) -> dict[str, Decimal]:
     """Resolve previous-filing bindings from observed filed declarations."""
-
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -447,7 +444,6 @@ def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     supply the source casilla + period at resolve time. The direct
     resolver skips these to avoid spurious malformed-selector errors.
     """
-
     selector = _selector_as_dict(binding)
     if selector.get("source_casillas"):
         return True
@@ -641,7 +637,6 @@ def invoice_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[InvoiceObservationRequirement, ...]:
     """Return invoice ledger slices needed by ``revision``'s invoice bindings."""
-
     grouped: dict[
         tuple[tuple[str, ...], _RectificationScope, str | None],
         set[str],
@@ -689,7 +684,6 @@ _OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset()
 
 def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate an invoice-source binding before it reaches runtime."""
-
     _validated_invoice_selector(binding)
 
 
@@ -757,7 +751,6 @@ def resolve_invoice_binding_values(
     Row-producer bindings (``aggregation.op == "rows"``) are skipped here; they
     are resolved by :func:`resolve_invoice_binding_row_values`.
     """
-
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -785,7 +778,6 @@ def resolve_invoice_binding_row_values(
     ``(binding_id, row_index)``. Row indexes are one-based to match
     ``ModeloBindingValue.row_index``.
     """
-
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     # Group bindings by (grouping, rectification_scope, claves, vat_regime) so
@@ -1387,7 +1379,6 @@ def unsupported_ledger_iva_observations(
     ``ledger_iva_aggregation`` binding is a modelling gap and must not
     be silently inferred into an annual or periodic form.
     """
-
     selectors = tuple(
         _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"
     )
@@ -1471,7 +1462,6 @@ def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedg
 
 def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_expense_aggregation`` binding definition."""
-
     if binding.source != "ledger_renta_expense_aggregation":
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
     selector = _renta_ledger_expense_selector(binding)
@@ -1497,7 +1487,6 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     observations: Iterable[RentaExpenseObservationProtocol],
 ) -> dict[str, Decimal]:
     """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``."""
-
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -1557,7 +1546,6 @@ _RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset({"gross_income_sum
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
     """Validate a ``ledger_renta_income_aggregation`` binding definition."""
-
     if binding.source != "ledger_renta_income_aggregation":
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_income_aggregation source")
     selector = _renta_ledger_income_selector(binding)
@@ -1608,7 +1596,6 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
     ``None``).
     """
-
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -1737,7 +1724,6 @@ _COUNTERPART_FACTS = _INVOICE_FACTS
 
 def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
     """Validate a counterpart-source binding selector with counterpart-flavoured errors."""
-
     selector = _invoice_selector(binding)
     if selector.fact not in _COUNTERPART_FACTS:
         raise RegistryValidationError(
@@ -1802,7 +1788,6 @@ def counterpart_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[CounterpartObservationRequirement, ...]:
     """Return counterpart slices needed by ``revision``'s counterpart bindings."""
-
     grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[str]] = {}
     for binding in revision.bindings:
         if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
@@ -1832,7 +1817,6 @@ def resolve_counterpart_binding_values(
     observations: Iterable[CounterpartAggregationObservation],
 ) -> dict[str, Decimal]:
     """Resolve scalar counterpart-source bindings into Decimal aggregates."""
-
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -1856,7 +1840,6 @@ def resolve_counterpart_binding_row_values(
     observations: Iterable[CounterpartAggregationObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer counterpart-source bindings into per-row indexed values."""
-
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     cohorts: dict[
@@ -2021,7 +2004,6 @@ def withholding_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[WithholdingObservationRequirement, ...]:
     """Return withholding slices needed by ``revision``'s withholding bindings."""
-
     grouped: dict[tuple[str, ...], set[str]] = {}
     for binding in revision.bindings:
         if binding.source != RowSetGroupingKind.WITHHOLDING:
@@ -2054,7 +2036,6 @@ def resolve_withholding_binding_values(
     observations: Iterable[WithholdingObservation],
 ) -> dict[str, Decimal]:
     """Resolve scalar withholding-source bindings into Decimal aggregates."""
-
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -2086,7 +2067,6 @@ def resolve_withholding_binding_row_values(
     observations: Iterable[WithholdingObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer withholding bindings into per-row indexed values."""
-
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     cohorts: dict[
@@ -2125,7 +2105,6 @@ def _build_withholding_rows(
     observations: tuple[WithholdingObservation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group withholding observations into rows keyed by perceptor (and optionally clave)."""
-
     accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
     for observation in observations:
         if grouping == "per_perceptor":
@@ -2253,7 +2232,6 @@ def resolve_related_party_binding_row_values(
     observations: Iterable[RelatedPartyOperationObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer related-party bindings into per-row indexed values."""
-
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
     for binding in revision.bindings:
@@ -2281,7 +2259,6 @@ def _build_related_party_rows(
     observations: tuple[RelatedPartyOperationObservation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group related-party observations by (party, country, kind, method) summing amounts."""
-
     accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
     for obs in observations:
         key = (obs.country_code, obs.counterparty_tax_id, obs.operation_kind_code, obs.transfer_pricing_method_code)
@@ -2383,7 +2360,6 @@ def resolve_foreign_asset_binding_row_values(
     observations: Iterable[Modelo720RowObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer foreign-asset bindings into per-row indexed values."""
-
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
     cohort_classes: set[tuple[str, ...]] = set()
@@ -2517,7 +2493,6 @@ def resolve_atribucion_binding_row_values(
     observations: Iterable[AtributionMemberObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer atribucion bindings into per-row indexed values."""
-
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _AtributionSelector]] = []
     for binding in revision.bindings:
@@ -2625,7 +2600,6 @@ def resolve_refund_binding_row_values(
     observations: Iterable[RefundOperationObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer refund-operation bindings into per-row indexed values."""
-
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RefundSelector]] = []
     for binding in revision.bindings:
@@ -2755,7 +2729,6 @@ def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
     set is ever extended or renamed, the layout predicate follows
     automatically.
     """
-
     if "data_type" not in selector:
         return False
     return _MANUAL_INPUT_RECORD_SHAPE_KEYS.issubset(selector)
@@ -2896,7 +2869,6 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     Sources NOT in the registry are intentionally free-form today;
     those bindings short-circuit with an empty failure list.
     """
-
     if binding.source == AggregationSourceKind.INVOICE:
         return [
             f"binding {binding.id!r} source 'invoice' is retired; use "

@@ -93,7 +93,6 @@ class BucketSession:
             ValueError: If `bucket_id` is empty, `idle_minutes` is not
                 positive, `kek` is not 32 bytes, or `dek` is not 32 bytes.
         """
-
         if not bucket_id:
             raise StorageValidationError("bucket_id must be non-empty")
         if idle_minutes <= 0:
@@ -136,7 +135,6 @@ class BucketSession:
         Raises `BucketLockedError` after `close()` has sealed the
         session.
         """
-
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
         return bytes(self._kek_buffer)
@@ -148,21 +146,18 @@ class BucketSession:
         Raises `BucketLockedError` after `close()` has sealed the
         session.
         """
-
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
         return bytes(self._dek_buffer)
 
     def touch(self, now: datetime) -> None:
         """Reset the idle-timeout deadline to `now + idle_window`."""
-
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
         self._idle_deadline = now + self._idle_window
 
     def is_expired(self, now: datetime) -> bool:
         """Return whether the idle window has elapsed at `now`."""
-
         if self._sealed:
             return True
         return now >= self._idle_deadline
@@ -183,7 +178,6 @@ class BucketSession:
         the per-bucket URL cannot be reconstructed from current
         settings; otherwise the targeted dispose runs.
         """
-
         if self._sealed:
             return
         _zeroise(self._kek_buffer)
@@ -193,7 +187,6 @@ class BucketSession:
 
     def _evict_engine(self) -> None:
         """Dispose the SQLAlchemy engine bound to this bucket's database."""
-
         from .....core.config import Settings, load_settings
         from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME
         from ..sql.engine import dispose_engine

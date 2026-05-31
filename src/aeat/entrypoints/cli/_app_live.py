@@ -191,7 +191,6 @@ def iva_wallet_pull_cmd(
     is set and can trigger the configured authentication provider,
     including Cl@ve Móvil manual approval.
     """
-
     from ...application.live import capture_iva_compensation_wallet
 
     _emit_live_auth_preflight()
@@ -243,7 +242,6 @@ def iva_wallet_history_cmd(
     ] = None,
 ) -> None:
     """List the profile-local IVA compensation history without contacting AEAT."""
-
     from ...application.live import list_iva_compensation_history
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
@@ -357,7 +355,6 @@ def iva_wallet_capture_history_cmd(
     ] = Path("var/aeat/live/iva-compensation-history"),
 ) -> None:
     """Pull multi-year Modelo 303 filing history and verify secure reload."""
-
     from ...application.live import capture_iva_compensation_history
 
     _emit_live_auth_preflight()
@@ -427,7 +424,6 @@ def iva_wallet_capture_remote_state_cmd(
     ] = Path("var/aeat/live/iva-remote-state"),
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as one read-only operation."""
-
     from ...application.live import capture_iva_remote_state
 
     _emit_live_auth_preflight()
@@ -508,7 +504,6 @@ def filed_list_cmd(
     ``--from-year`` / ``--to-year`` are omitted they default to the current
     calendar year.
     """
-
     from datetime import date as _date
 
     from ...core.resources import resources
@@ -579,7 +574,6 @@ def filed_capture_cmd(
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
 ) -> None:
     """Capture filed-declaration data from the authenticated AEAT register."""
-
     _emit_live_auth_preflight()
     report = asyncio.run(
         capture_filed_data(
@@ -643,7 +637,6 @@ def filed_capture_sources_cmd(
     ] = None,
 ) -> None:
     """Capture filed observations required by a target filing's dependencies."""
-
     _emit_live_auth_preflight()
     report = asyncio.run(
         capture_source_filed_data(
@@ -708,7 +701,6 @@ def notifications_capture(ctx: typer.Context) -> None:
     shell. Will trigger the configured auth provider (e.g. Cl@ve Móvil push
     or certificate handshake) when no live session is present.
     """
-
     from ...application.live import capture_notifications
 
     bucket_id = _active_bucket_id()

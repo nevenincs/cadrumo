@@ -340,7 +340,6 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
     of the codebase reads from. The contract is constructed once at
     import time so every consumer sees the same shape.
     """
-
     lifecycle = LifecycleContract(
         steps=(
             ModeloLifecycleStep.CALCULATE,
@@ -372,13 +371,11 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
 @lru_cache(maxsize=1)
 def get_operator_surface_contract() -> OperatorSurfaceContract:
     """Return the cached backend-owned operator surface contract."""
-
     return build_operator_surface_contract()
 
 
 def require_accepted_root(name: str) -> RootSurface:
     """Return an accepted root or raise a registered application error."""
-
     normalized = name.strip().lower()
     for root in get_operator_surface_contract().roots:
         if root.name.value == normalized:
@@ -398,7 +395,6 @@ def require_accepted_root(name: str) -> RootSurface:
 
 def retired_surface_suggestion(name: str) -> RetiredOperatorSurface | None:
     """Return the retired-surface contract for ``name`` when one exists."""
-
     normalized = name.strip().lower()
     for surface in get_operator_surface_contract().retired_surfaces:
         if surface.name == normalized:
@@ -408,7 +404,6 @@ def retired_surface_suggestion(name: str) -> RetiredOperatorSurface | None:
 
 def resolve_source_kind_alias(value: str) -> SourceKind:
     """Resolve canonical source kinds and parser-only aliases."""
-
     normalized = value.strip().lower()
     for source_kind in SOURCE_KINDS:
         if source_kind.value == normalized:

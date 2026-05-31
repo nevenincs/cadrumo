@@ -418,7 +418,6 @@ class TaxpayerProfile(BaseModel):
         persistence roundtrip loss-free while the field stays a typed,
         order-independent ``frozenset`` on the model.
         """
-
         if isinstance(value, frozenset):
             return value
         if isinstance(value, list | tuple | set):
@@ -441,7 +440,6 @@ class TaxpayerProfile(BaseModel):
         undeclared the boolean is left untouched so existing profiles
         keep working until the engine is rewired.
         """
-
         regime = self.irpf_estimation_regime
         if regime is None:
             return self
@@ -465,7 +463,6 @@ class TaxpayerProfile(BaseModel):
         incomplete model — reject it at the boundary so downstream
         consumers never see a nil start date for an active impatriado.
         """
-
         if (
             self.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO
             and self.special_regime_start_date is None
@@ -485,7 +482,6 @@ class TaxpayerProfile(BaseModel):
         residence is therefore mandatory for any meaningful downstream
         computation (EU/EEA status, convenio lookup, Modelo 210 routing).
         """
-
         if (
             self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
             and self.country_of_fiscal_residence is None
@@ -505,7 +501,6 @@ class TaxpayerProfile(BaseModel):
         representative in Spain. Both NIF and name are required together;
         partial declaration is rejected.
         """
-
         if (
             self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
             and not self.ue_eee_status
@@ -537,7 +532,6 @@ class TaxpayerProfile(BaseModel):
         correctly. An explicit boolean is left in place for the
         consistency check above to adjudicate.
         """
-
         if not isinstance(data, dict):
             return data
         regime = data.get("irpf_estimation_regime")
@@ -564,7 +558,6 @@ class TaxpayerProfile(BaseModel):
             True only when ``irpf_special_regime is IMPATRIADO`` and
             ``start_date.year <= today.year <= start_date.year + 5``.
         """
-
         if (
             self.irpf_special_regime is not IrpfSpecialRegime.IMPATRIADO
             or self.special_regime_start_date is None
@@ -580,7 +573,6 @@ class TaxpayerProfile(BaseModel):
         Returns ``False`` when ``country_of_fiscal_residence`` is ``None``
         (i.e., for IRPF-resident profiles).
         """
-
         if self.country_of_fiscal_residence is None:
             return False
         return self.country_of_fiscal_residence.upper() in UE_EEA_COUNTRY_CODES
@@ -604,7 +596,6 @@ class TaxpayerProfile(BaseModel):
         - España-Países Bajos: BOE-A-1972-674
         - España-Marruecos: BOE-A-1985-13340
         """
-
         if self.country_of_fiscal_residence is None:
             return None
         return _CONVENIO_BY_COUNTRY.get(self.country_of_fiscal_residence.upper())
@@ -622,7 +613,6 @@ class TaxpayerProfile(BaseModel):
 
         Returns ``False`` when ``days_in_spain`` is empty.
         """
-
         return any(150 <= days <= 215 for days in self.days_in_spain.values())
 
 _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD: Decimal = Decimal("1500")
@@ -650,7 +640,6 @@ def evaluate_multiple_pagadores_obligation(
         secondary_income > 1,500); ``False`` in every other case,
         including when either value is undeclared.
     """
-
     if pagadores_count is None or secondary_income is None:
         return False
     return pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD

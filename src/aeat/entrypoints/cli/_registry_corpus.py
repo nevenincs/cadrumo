@@ -59,7 +59,6 @@ def list_citations_cmd(
     ] = None,
 ) -> None:
     """List the normatives codified in the project's legal corpus."""
-
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
     _emit(ctx, report, _citation_list_lines(report))
 
@@ -77,7 +76,6 @@ def show_citation_cmd(
     ] = None,
 ) -> None:
     """View one normative and, optionally, one cited article."""
-
     report = show_registry_citation(RegistryCitationShowCommand(normative_id=normative_id, articulo=articulo))
     _emit(ctx, report, _citation_show_lines(report))
 
@@ -85,7 +83,6 @@ def show_citation_cmd(
 @citations_app.command("verify", help=tr("cli.registry.citations.verify_help"))
 def verify_citations_cmd(ctx: typer.Context) -> None:
     """Verify the legal corpus against its own schema invariants."""
-
     report = verify_registry_citations()
     _emit(ctx, report, _citation_verification_lines(report))
     if not report.passed:
@@ -105,7 +102,6 @@ def list_manuals_cmd(
     ] = None,
 ) -> None:
     """List AEAT Manual práctico records available on disk."""
-
     report = list_registry_manuals(RegistryManualsListCommand(manual=manual, year=year))
     _emit(ctx, report, _manuals_list_lines(report))
 
@@ -131,7 +127,6 @@ def show_manual_cmd(
     ] = None,
 ) -> None:
     """View one manual's metadata and, optionally, one section by id."""
-
     report = show_registry_manual(RegistryManualShowCommand(manual=manual, year=year, part=part, section=section))
     _emit(ctx, report, _manual_show_lines(report))
 
@@ -157,7 +152,6 @@ def list_manual_rules_cmd(
     ] = None,
 ) -> None:
     """List AEAT rule decisions for one manual / year / part."""
-
     report = list_registry_manual_rules(RegistryManualRulesCommand(manual=manual, year=year, part=part, kind=kind))
     _emit(ctx, report, _manual_rules_lines(report))
 
@@ -179,7 +173,6 @@ def verify_manual_cmd(
     ] = ManualPart.SINGLE,
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
-
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
     _emit(ctx, report, _manual_verification_lines(report))
     if not report.passed:

@@ -108,7 +108,6 @@ def config_root(
     help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.config.workflow_help"), is_eager=True),
 ) -> None:
     """Render config-level workflow help when requested."""
-
     if help_ or ctx.invoked_subcommand is None:
         document = _build_help_document("config")
         _emit(ctx, document, _render_help_text(document).splitlines())
@@ -118,7 +117,6 @@ def config_root(
 @repair_app.callback()
 def repair(ctx: typer.Context) -> None:
     """Diagnose and repair local configuration, registry, profile, auth, and log state."""
-
     if ctx.invoked_subcommand is not None:
         return
     report = _build_config_repair_report()
@@ -131,7 +129,6 @@ def repair_logs(
     lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.repair.logs_lines_help")),
 ) -> None:
     """Show the configured log file path and recent lines."""
-
     path = _default_log_file_path()
     tail = _tail_lines(path, lines) if path.exists() and lines > 0 else ()
     _emit(
@@ -156,7 +153,6 @@ def repair_quarantine(
     ``--dry-run`` previews the rows that would be quarantined without
     moving anything, consistent with ``reset-state --dry-run``.
     """
-
     if not dry_run and not yes:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.repair.quarantine_requires_yes",
@@ -218,7 +214,6 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     F8). The chunked tail keeps memory proportional to the requested
     line count, not the file size.
     """
-
     if count <= 0:
         return ()
     chunk_size = 8192
@@ -247,7 +242,6 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
 
 def _redact_repair_log_line(line: str) -> str:
     """Redact identifiers before diagnostic log lines are echoed to the operator."""
-
     redacted = _REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE.sub(r"\g<label>\g<sep><object-key>", line)
     redacted = _REPAIR_LOG_OBJECT_KEY_RE.sub("<object-key>", redacted)
     redacted = _REPAIR_LOG_UUID_RE.sub("<profile-id>", redacted)
@@ -265,7 +259,6 @@ def repair_reset_state(
     ),
 ) -> None:
     """Drop the unreadable workflow-state envelope and emit a reset event."""
-
     from ....application.workflow._persistence import fingerprint_workflow_state, reset_workflow_state
 
     if not dry_run and not yes:
@@ -339,7 +332,6 @@ def repair_profile(
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
     """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
-
     from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
     from ....application.workflow._profile_health import (
         repair_active_profile_manifest_status,
@@ -407,7 +399,6 @@ def _redacted_profile_identifier(value: str | None) -> str:
 
 def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     """Return a paste-safe repair payload with internal profile ids removed."""
-
     redacted = dict(payload)
     for key in ("before", "after"):
         nested = redacted.get(key)
@@ -435,7 +426,6 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
     ``label`` is the operator-facing profile name; it resolves to the
     immutable bucket UUID via the manifest scan.
     """
-
     from ....domain.user_profile import ProfileNotFoundError
 
     pointer = _resolve_profile_by_label(label)
@@ -571,7 +561,6 @@ def repair_integrity_objects(
     ),
 ) -> None:
     """Wrap build_repair_integrity_report and render through _emit."""
-
     from ....application.repair_integrity import build_repair_integrity_report
 
     # Cold-root guard: integrity is bootstrap-exempt; on a root with no
@@ -619,7 +608,6 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
     cold-start hang. The validation is engineer-facing and runs only
     when the operator explicitly asks for it here.
     """
-
     from ....application.diagnostics import build_registry_integrity_report
 
     report = build_registry_integrity_report()
@@ -651,7 +639,6 @@ def repair_connectivity(
     ] = "browser",
 ) -> None:
     """Probe outbound browser connectivity through the diagnostics backend."""
-
     del target
     status = _probe_browser_connectivity()
     _emit(
@@ -678,7 +665,6 @@ def _resolve_profile_by_label(name: str):
     :class:`ProfileBucketPointer` carrying the immutable UUID
     ``bucket_id`` and the ``label``.
     """
-
     try:
         pointer = _read_profile_bucket(name)
     except ValueError as exc:
@@ -696,7 +682,6 @@ def _resolve_profile_by_label(name: str):
 
 def _resolve_active_profile_pointer():
     """Resolve the active profile (by UUID) to its bucket pointer or ``None``."""
-
     from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     active = _resolve_active_bucket_id()
@@ -742,7 +727,6 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
     and restored if the surrounding span fails, closing the window the
     repository's own rollback cannot see.
     """
-
     from ....application.user_profile._orchestration import (
         profile_create_storage_span,
         register_active_profile,
@@ -779,7 +763,6 @@ def config_list(ctx: typer.Context) -> None:
     :func:`list_profile_buckets` reads them and returns the full
     set without unlocking any bucket.
     """
-
     from ....application.workflow._profile_bucket_scan import list_profile_buckets
 
     active = _resolve_active_bucket_id()
@@ -813,7 +796,6 @@ def config_profile_switch(
     name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
 ) -> None:
     """Select an existing profile as the active profile."""
-
     from ....application.user_profile._orchestration import select_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -926,7 +908,6 @@ def _emit_profile_record_unreadable(
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
-
     from ....adapters.persistence.storage import has_active_bucket_session
     from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
     from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
@@ -957,7 +938,6 @@ def config_profile_show(
     command exits with code 2 after rendering the report so operators
     discover the failure on stdout and via the shell exit status.
     """
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import ProfileValidationService
     from ....application.user_profile._projections import record_to_path_values
@@ -1047,7 +1027,6 @@ def config_profile_delete(
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
-
     from ....application.user_profile._orchestration import delete_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1111,7 +1090,6 @@ def config_profile_duplicate(
     bypassed the provisioner and could leave a half-copied bucket on
     a crash; the atomic provisioner rolls every write back instead.
     """
-
     from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
     from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError
@@ -1207,7 +1185,6 @@ def config_profile_rename(
     directory, keystore directory, secure-object key, and active-profile
     pointer are untouched.
     """
-
     from ....application.user_profile._orchestration import (
         ProfileAlreadyRegisteredError,
         rename_profile,
@@ -1269,7 +1246,6 @@ def config_profile_export(
     symmetric reader and re-provisions the record into a fresh bucket
     via the atomic-create provisioner.
     """
-
     from ....application.user_profile._bundle import serialize_profile_bundle
     from ....application.user_profile._orchestration import profile_storage_session
     from ....domain.user_profile import ProfileNotFoundError
@@ -1349,7 +1325,6 @@ def config_profile_import(
     lands the second copy under a fresh, non-colliding label while
     still minting its own immutable UUID identity.
     """
-
     from ....application.user_profile._bundle import (
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
@@ -1450,7 +1425,6 @@ def config_profile_import(
 )
 def config_profile_logout(ctx: typer.Context) -> None:
     """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
-
     from ....application.user_profile._orchestration import logout_active_profile
 
     before = logout_active_profile()
@@ -1471,7 +1445,6 @@ def config_profile_logout(ctx: typer.Context) -> None:
 @profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
-
     from pydantic import ValidationError
 
     from ....application.user_profile._projections import record_to_path_values
@@ -1615,7 +1588,6 @@ def config_reset(
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
 ) -> None:
     """Reset operator-entered configuration scopes."""
-
     from ....application.config_reset import reset_config
 
     if not yes:
@@ -1647,7 +1619,6 @@ def auth_providers(
     ),
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import list_operator_auth_providers
 
@@ -1688,7 +1659,6 @@ def auth_configure(
     ),
 ) -> None:
     """Configure the active authentication provider."""
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, configure_operator_auth
     from ....application.auth._operator import (
@@ -1749,7 +1719,6 @@ def auth_status(
     ),
 ) -> None:
     """Show the configured local authentication state."""
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import inspect_operator_auth
 
@@ -1777,7 +1746,6 @@ def auth_test(
     ),
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, test_operator_auth
 
@@ -1812,7 +1780,6 @@ def auth_login(
     ),
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, login_operator_auth
     from ....application.auth._operator import (
@@ -1854,7 +1821,6 @@ def auth_clear(
     ),
 ) -> None:
     """Clear local auth metadata, persisted sessions, and auth locks."""
-
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, clear_operator_auth
 
@@ -1887,7 +1853,6 @@ def auth_clear(
 )
 def auth_diagnostics_list(ctx: typer.Context) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
-
     from ....application.auth import list_auth_diagnostics
 
     report = list_auth_diagnostics()
@@ -1922,7 +1887,6 @@ def auth_diagnostics_show(
     diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
-
     from ....application.auth import load_auth_diagnostic
 
     detail = load_auth_diagnostic(diagnostic_id)
@@ -1999,7 +1963,6 @@ def auth_diagnostics_report(
     ),
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
-
     from ....application.auth import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
 
     try:
@@ -2222,7 +2185,6 @@ def bucket_history(
     ] = None,
 ) -> None:
     """Browse the append-only bucket-event history."""
-
     from ....domain.buckets import BucketEventHistoryRepository
 
     selected = _parse_bucket_event_types(event_type)

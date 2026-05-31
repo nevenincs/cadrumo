@@ -27,7 +27,6 @@ _INVOICE_OBJECT_KEY = "catalogue"
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-
     from ...adapters.persistence.storage import inspect_bucket_storage_runtime
     from ...core.config import load_settings
 
@@ -65,12 +64,10 @@ class InvoiceCatalogueRepository:
     @property
     def bucket_id(self) -> str | None:
         """Return the profile bucket id when this repository resolved one."""
-
         return self._bucket_id
 
     def exists(self) -> bool:
         """Return whether an invoice catalogue has been persisted."""
-
         return self._objects.exists(_INVOICE_NAMESPACE, _INVOICE_OBJECT_KEY)
 
     def load(self) -> InvoiceCatalogue:
@@ -152,7 +149,6 @@ class InvoiceCatalogueRepository:
 
     def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it."""
-
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 

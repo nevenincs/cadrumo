@@ -109,7 +109,6 @@ class OAuthMetadata(BaseModel):
         accidental writes that would leave the integration unable to
         call Sheets, Drive, or display which account is linked.
         """
-
         missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in value)
         if missing:
             raise ValueError(f"granted_scopes missing required scopes: {missing!r}")

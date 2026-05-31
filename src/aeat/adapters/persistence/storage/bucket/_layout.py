@@ -56,7 +56,6 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     Raises:
         ValueError: If ``bucket_id`` is empty or contains a path separator.
     """
-
     if not bucket_id:
         raise BucketValidationError("bucket_id must be non-empty")
     if "/" in bucket_id or "\\" in bucket_id:
@@ -91,7 +90,6 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
         FileExistsError: If ``<root>/buckets/<bucket_id>/`` already exists.
         ValueError: If ``bucket_id`` is empty or contains a path separator.
     """
-
     paths = bucket_paths(root, bucket_id)
     paths.bucket_dir.parent.mkdir(parents=True, exist_ok=True)
     paths.bucket_dir.mkdir(parents=False, exist_ok=False)

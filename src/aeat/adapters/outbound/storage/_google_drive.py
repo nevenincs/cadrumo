@@ -100,7 +100,6 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
     The lazy-import guard makes this callable without `google-api-python-client`
     installed, which is important for unit tests that inject fakes.
     """
-
     status = getattr(getattr(error, "resp", None), "status", None)
     detail = f"drive {action} failed: {error}"
     context = {"action": action, "status": str(status) if status is not None else "unknown"}
@@ -119,7 +118,6 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
 
 def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
     """Real Drive v3 service factory. Lazily imports google-api-python-client."""
-
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -181,7 +179,6 @@ class GoogleDriveProvider:
         marker — protects operator-created same-named work from
         silent merge. Cached for the lifetime of the provider instance.
         """
-
         if self._vault_folder_id is not None:
             return self._vault_folder_id
         service = self._get_service()
@@ -243,7 +240,6 @@ class GoogleDriveProvider:
                 do not include our ownership marker — the folder
                 belongs to the operator's pre-existing work.
         """
-
         existing = entry.get("appProperties") or {}
         existing_value = existing.get(_OWNERSHIP_KEY)
         if existing_value == _OWNERSHIP_VALUE:
@@ -280,7 +276,6 @@ class GoogleDriveProvider:
         Returns ``None`` when the namespace folder does not exist and
         `create=False`.
         """
-
         cached = self._namespace_folder_ids.get(namespace)
         if cached is not None:
             return cached
@@ -338,7 +333,6 @@ class GoogleDriveProvider:
             `None` when no marker-verified match exists (including the
             case where a foreign file shares the prefix).
         """
-
         service = self._get_service()
         prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
         query = f"'{namespace_folder_id}' in parents and name contains '{prefix}--' and trashed=false"
@@ -649,7 +643,6 @@ class GoogleDriveProvider:
 
 def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
     """Build a `MediaIoBaseUpload` from `payload`. Lazy-imported."""
-
     try:
         from googleapiclient.http import MediaIoBaseUpload
     except ImportError as exc:
@@ -667,7 +660,6 @@ def _metadata_from_drive_entry(
     object_key_hmac: str,
 ) -> ProviderObjectMetadata:
     """Convert a Drive `files().get/list` response entry into our record."""
-
     byte_length_raw = entry.get("size", 0)
     try:
         byte_length = int(byte_length_raw) if byte_length_raw is not None else 0

@@ -37,7 +37,6 @@ def provider_for_extension(path: Path) -> FinancialProvider | None:
     detection because the bare ``.pdf`` suffix carries no statement
     flavour information).
     """
-
     suffix = path.suffix.lower()
     if suffix in CSV_EXTENSIONS:
         return CsvProvider()

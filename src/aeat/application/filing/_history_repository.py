@@ -43,7 +43,6 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     @property
     def bucket_id(self) -> str | None:
         """Return the profile bucket id when this repository resolved one."""
-
         return self._bucket_id
 
     def extract_identifier(self, payload: ModeloHistory) -> str:
@@ -51,12 +50,10 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
 
     def list_modelos(self) -> tuple[str, ...]:
         """Return every modelo persisted in this repository, sorted."""
-
         return tuple(self.iter_ids())
 
     def iter_histories(self) -> Iterator[tuple[str, ModeloHistory]]:
         """Yield ``(modelo, history)`` tuples for every persisted modelo."""
-
         for history in self.iter_records():
             yield str(history.modelo), history
 
