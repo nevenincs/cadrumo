@@ -164,13 +164,13 @@ dev = [
   "vaultspec-rag>=0.2.8",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
-  "sphinx>=8.1,<10",  # upper bound keeps -W / nitpicky flag semantics stable (docs-architecture)
+  "sphinx>=8.1,<10",  # upper bound keeps -W / nitpicky flag semantics stable
   "sphinx-autodoc-typehints>=2.5",
   "sphinx-markdown-builder>=0.6",
   "furo>=2024.8",
   "myst-parser>=4.0",
-  # Documentation conformance enforcement (docs-architecture epic):
-  # docstring presence/style, signature-vs-docstring accuracy, RST formatting.
+  # Documentation conformance enforcement: docstring presence/style,
+  # signature-vs-docstring accuracy, and RST formatting.
   "pydoclint>=0.6",
   "interrogate>=1.7.0",
   "doc8>=1.1",
@@ -207,7 +207,7 @@ select = [
   "SIM",  # flake8-simplify
   "TID",  # flake8-tidy-imports; enforces banned-api below
   "RUF",  # ruff-specific rules
-  "D",  # pydocstyle (Google-style docstring conventions; docs-architecture)
+  "D",  # pydocstyle (Google-style docstring conventions)
 ]
 ignore = [
   "S101",  # allow assert in tests
@@ -217,13 +217,13 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 # Google-style docstrings are the project standard (matches napoleon in
-# docs/conf.py); codified in the docs-architecture conventions ADR.
+# docs/conf.py).
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 # Bundled test modules colocated under src/aeat/. Docstring (D) rules are
-# audience-scoped out of the test surface per the docs-architecture
-# conventions ADR (tests are excluded from autodoc and interrogate too).
+# audience-scoped out of the test surface (tests are excluded from autodoc
+# and interrogate too).
 "src/aeat/**/test_*.py" = ["S101", "T20", "D"]
 "src/aeat/**/_test_*.py" = ["S101", "T20", "D"]
 "src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
