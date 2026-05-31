@@ -730,16 +730,16 @@ Close 1 regression at wizard/_persistence.py:142 + systemic sweep of tr()-as-pos
 
 Enroll calc_sheets/ cluster (5 sites in _engine, _records, _parity_harness, _calc_sheets_pull). Enroll _repository.py 5 constructor guards into BucketValidationError. Replace _base.py 5 __init_subclass__ TypeError with FinancialProviderConfigError. Narrow _notifications.py swallow. Address dual ValueError MRO leaks in GoogleAuthValidationError + BucketValidationError.
 
-- [ ] `W06.P28.S476` - introduce CalcSheetsEngineError(AeatError) in src/aeat/application/storage/calc_sheets/_errors.py and migrate ValueError raises at _engine.py:57,300,309; `src/aeat/application/storage/calc_sheets/_engine.py`.
-- [ ] `W06.P28.S477` - introduce CalcSheetsRecordError(AeatError) and migrate _records.py:83,94 utility ValueError; `src/aeat/application/storage/calc_sheets/_records.py`.
-- [ ] `W06.P28.S478` - introduce CalcSheetsParityError(AeatError) and migrate _parity_harness.py:154 ValueError; `src/aeat/application/storage/calc_sheets/_parity_harness.py`.
-- [ ] `W06.P28.S479` - migrate _calc_sheets_pull.py:745 column-index ValueError to OutboundStorageValidationError; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
-- [ ] `W06.P28.S480` - migrate 5 user_profile/_repository.py constructor ValueError guards at lines 97,112,114,124,222 to BucketValidationError (matches sibling _profile_repository.py pattern); `src/aeat/application/user_profile/_repository.py`.
-- [ ] `W06.P28.S481` - introduce FinancialProviderConfigError(AeatError) and migrate 5 __init_subclass__ TypeError raises at financial/providers/_base.py:231,236,241,246,250; `src/aeat/adapters/inbound/financial/providers/_base.py`.
-- [ ] `W06.P28.S482` - narrow silent except Exception swallow at sede/_notifications.py:449 warm-up navigation; `document non-Playwright propagation; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `W06.P28.S483` - drop ValueError mixin from BucketValidationError MRO at bucket/_errors.py:20; `callers requiring isinstance(exc,ValueError) catch BucketValidationError directly; `src/aeat/adapters/persistence/storage/bucket/_errors.py`.
-- [ ] `W06.P28.S484` - drop ValueError mixin from GoogleAuthValidationError MRO at google/_errors.py:20; `src/aeat/adapters/outbound/google/_errors.py`.
-- [ ] `W06.P28.S485` - add aggregate real-behavior test asserting calc_sheets cluster + new error classes envelope-roundtrip and MRO does not leak ValueError; `src/aeat/test_w06_p28_exceptions.py`.
+- [x] `W06.P28.S476` - introduce CalcSheetsEngineError(AeatError) in src/aeat/application/storage/calc_sheets/_errors.py and migrate ValueError raises at _engine.py:57,300,309; `src/aeat/application/storage/calc_sheets/_engine.py`.
+- [x] `W06.P28.S477` - introduce CalcSheetsRecordError(AeatError) and migrate _records.py:83,94 utility ValueError; `src/aeat/application/storage/calc_sheets/_records.py`.
+- [x] `W06.P28.S478` - introduce CalcSheetsParityError(AeatError) and migrate _parity_harness.py:154 ValueError; `src/aeat/application/storage/calc_sheets/_parity_harness.py`.
+- [x] `W06.P28.S479` - migrate _calc_sheets_pull.py:745 column-index ValueError to OutboundStorageValidationError; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
+- [x] `W06.P28.S480` - migrate 5 user_profile/_repository.py constructor ValueError guards at lines 97,112,114,124,222 to BucketValidationError (matches sibling _profile_repository.py pattern); `src/aeat/application/user_profile/_repository.py`.
+- [x] `W06.P28.S481` - introduce FinancialProviderConfigError(AeatError) and migrate 5 __init_subclass__ TypeError raises at financial/providers/_base.py:231,236,241,246,250; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [x] `W06.P28.S482` - narrow silent except Exception swallow at sede/_notifications.py:449 warm-up navigation; `document non-Playwright propagation; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
+- [x] `W06.P28.S483` - drop ValueError mixin from BucketValidationError MRO at bucket/_errors.py:20; `callers requiring isinstance(exc,ValueError) catch BucketValidationError directly; `src/aeat/adapters/persistence/storage/bucket/_errors.py`.
+- [x] `W06.P28.S484` - drop ValueError mixin from GoogleAuthValidationError MRO at google/_errors.py:20; `src/aeat/adapters/outbound/google/_errors.py`.
+- [x] `W06.P28.S485` - add aggregate real-behavior test asserting calc_sheets cluster + new error classes envelope-roundtrip and MRO does not leak ValueError; `src/aeat/test_w06_p28_exceptions.py`.
 
 ### Phase `W06.P29` - A7 hardcoded + enum: 2 regressions + new sweep
 
