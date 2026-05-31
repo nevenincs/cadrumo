@@ -33,7 +33,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...adapters.inbound.pdf._utils import sha256_file
+from ...core.hashing import sha256_file
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     CasillaFieldKind,
