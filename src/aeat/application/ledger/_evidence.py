@@ -16,7 +16,6 @@ append-only friendly so concurrent agents do not corrupt previous rows.
 
 from __future__ import annotations
 
-import hashlib
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -27,6 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import PDF_EXTENSION
+from ...core.hashing import sha256_file as _sha256_file
 from ...core.identity import BucketId
 from ...core.time import _now
 from ...domain.buckets import (
@@ -103,14 +103,6 @@ def _resolve_media_kind(source_path: Path) -> str:
         f"only PDF and image inputs are accepted. See {_DEFERRED_ADR_REF}.",
         suggestion="aeat app ledger evidence list",
     )
-
-
-def _hash_file(source_path: Path) -> str:
-    hasher = hashlib.sha256()
-    with source_path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
 
 
 class PurchaseInvoiceEvidenceResult(BaseModel):
@@ -233,7 +225,7 @@ class PurchaseInvoiceEvidenceService:
                 suggestion="aeat app ledger evidence list",
             )
         media_kind = _resolve_media_kind(resolved)
-        digest = _hash_file(resolved)
+        digest = _sha256_file(resolved)
         now = _now()
         record = PurchaseInvoiceEvidence(
             evidence_id=uuid.uuid4().hex[:16],
