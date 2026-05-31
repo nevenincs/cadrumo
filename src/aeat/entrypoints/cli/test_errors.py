@@ -7,7 +7,7 @@ Verifies:
   for a repeated call (the memoised-wrapper path).
 - The cast-rationale marker for the memoised-wrapper path is present in source.
 
-No mocks, no skips, no xfail, no tautological assertions.
+No mocks, no skips, no expected-fail markers, no tautological assertions.
 """
 
 from __future__ import annotations
