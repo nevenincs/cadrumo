@@ -439,13 +439,15 @@ class LedgerCheckResult(OutputSchema):
 class LedgerPreflightResult(OutputSchema):
     """JSON envelope for ``aeat app ledger preflight``.
 
-    Mirrors ``LedgerTaxReadinessReport.model_dump(mode='json')``.
+    Mirrors ``LedgerPreflightReport.model_dump(mode='json')`` produced
+    by :func:`preflight_ledger_tax_readiness`. ``period`` is the nested
+    :class:`Period` model dump; ``ready`` is the computed-field flag.
     """
 
     bucket_id: str
-    period: str
+    period: dict
     checked_transaction_count: int
-    issues: list[LedgerPreflightIssuePayload]
+    issues: list[dict]
     ready: bool
 
 
@@ -628,15 +630,19 @@ class CollectibleInvoiceListResult(BusinessInvoiceListResult):
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
-    Mirrors the registered inventory ledger model dump plus the
-    ``bucket_event_ids`` field the CLI appends at the emit site.
+    Mirrors :class:`aeat.domain.profile.inventory.InventoryLedger`'s
+    ``model_dump(mode='json')`` plus the ``bucket_event_ids`` field the
+    CLI appends at the emit site.
     """
 
     actividad_id: str
     year: int
     valuation_method: str
     opening_stock: str
+    opening_layers: list[dict] = []
+    closing_stock: str | None = None
     period_movements: list[dict] = []
+    schema_version: str
     bucket_event_ids: list[str] = []
 
 
