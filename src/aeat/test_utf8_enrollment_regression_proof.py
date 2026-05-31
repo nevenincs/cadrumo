@@ -1,16 +1,18 @@
-"""Aggregate regression proof for W11.P42 UTF-8 enrollment.
+"""Regression proof for the UTF-8 enrollment of three additional file clusters.
 
 Assertions
 ----------
-(a) Zero bare ``"utf-8"`` survive in the three file clusters fixed in
-    W11.P42: ``locales/manager.py``, ``adapters/outbound/google/_session_store.py``,
-    and ``adapters/outbound/aeat/sede/_iva_compensation_wallet.py`` (hash-only sites
-    are allowlisted and therefore already zero non-hash violations).
+(a) Zero bare ``"utf-8"`` survive in the three enrolled file clusters:
+    ``locales/manager.py``,
+    ``adapters/outbound/google/_session_store.py``, and
+    ``adapters/outbound/aeat/sede/_iva_compensation_wallet.py`` (hash-only
+    sites are allowlisted and therefore already zero non-hash
+    violations).
 
 (b) The inventory test in ``test_utf8_enrollment_inventory.py`` walks the
-    full production tree (not a fixed allowlist), confirmed by asserting that
-    the scan covers more than the original fixed set of enrolled modules and
-    includes the files fixed in W11.P42.
+    full production tree (not a fixed allowlist), confirmed by asserting
+    that the scan covers more than the original enrolled count and
+    includes the files enrolled by this regression proof.
 """
 
 from __future__ import annotations
@@ -31,16 +33,16 @@ _BARE_UTF8_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 _HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5"})
 
-# Files fixed in W11.P42 that must now be zero-violation.
-_W11_P42_FIXED_FILES: tuple[str, ...] = (
+# Files enrolled by this regression proof that must now be zero-violation.
+_ENROLLED_FILES: tuple[str, ...] = (
     "locales/manager.py",
     "adapters/outbound/google/_session_store.py",
     # _iva_compensation_wallet.py has only hash-site literals (allowlisted); zero non-hash violations.
     "adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
 )
 
-# Original enrolled module count from W07/W09 (11 modules).
-_ORIGINAL_ENROLLED_COUNT = 11
+# Baseline enrolled module count prior to this regression proof.
+_BASELINE_ENROLLED_COUNT = 11
 
 
 def _is_hash_site(line: str) -> bool:
@@ -72,13 +74,13 @@ def _all_production_files() -> list[pathlib.Path]:
     return files
 
 
-class TestW11P42FixedFilesZeroViolations:
-    """(a) Zero non-hash bare utf-8 literals in each W11.P42 fixed file."""
+class TestEnrolledFilesZeroViolations:
+    """(a) Zero non-hash bare utf-8 literals in each enrolled file."""
 
-    @pytest.mark.parametrize("rel_path", _W11_P42_FIXED_FILES)
+    @pytest.mark.parametrize("rel_path", _ENROLLED_FILES)
     def test_zero_violations(self, rel_path: str) -> None:
         path = _SRC_ROOT / rel_path
-        assert path.exists(), f"Fixed file missing from tree: {rel_path}"
+        assert path.exists(), f"Enrolled file missing from tree: {rel_path}"
         violations = _non_hash_utf8_violations(path)
         assert violations == [], (
             f"{rel_path} still contains {len(violations)} non-hash bare utf-8 literal(s):\n"
@@ -87,21 +89,21 @@ class TestW11P42FixedFilesZeroViolations:
 
 
 class TestInventoryTestCoversFullTree:
-    """(b) The inventory scan covers more files than the original fixed allowlist."""
+    """(b) The inventory scan covers more files than the baseline enrolled set."""
 
-    def test_scan_covers_more_than_original_enrolled_count(self) -> None:
+    def test_scan_covers_more_than_baseline_enrolled_count(self) -> None:
         production_files = _all_production_files()
-        assert len(production_files) > _ORIGINAL_ENROLLED_COUNT, (
-            f"Expected production tree scan to cover more than {_ORIGINAL_ENROLLED_COUNT} files "
-            f"(original W07/W09 enrolled set), got {len(production_files)}. "
+        assert len(production_files) > _BASELINE_ENROLLED_COUNT, (
+            f"Expected production tree scan to cover more than {_BASELINE_ENROLLED_COUNT} files "
+            f"(baseline enrolled set), got {len(production_files)}. "
             "The full-tree inventory test may not be operating correctly."
         )
 
-    def test_scan_includes_w11_p42_fixed_files(self) -> None:
+    def test_scan_includes_enrolled_files(self) -> None:
         production_files = _all_production_files()
         scanned_rels = {p.relative_to(_SRC_ROOT).as_posix() for p in production_files}
-        missing = [f for f in _W11_P42_FIXED_FILES if f not in scanned_rels]
+        missing = [f for f in _ENROLLED_FILES if f not in scanned_rels]
         assert missing == [], (
-            f"Full-tree inventory scan excludes W11.P42 fixed files: {missing}. "
+            f"Full-tree inventory scan excludes enrolled files: {missing}. "
             "These files would escape regression detection."
         )

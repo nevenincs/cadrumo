@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -35,6 +35,9 @@ if TYPE_CHECKING:
     from .workflow._profile_health import ActiveProfileHealth
 
 _log = get_logger(__name__)
+
+_REGISTRY_INTEGRITY_PROBE_YEAR: Final[int] = 2025
+_REGISTRY_INTEGRITY_PROBE_DATE: Final[date] = date(2025, 12, 31)
 
 DiagnosticStatus = Literal["ok", "warn", "fail"]
 
@@ -637,9 +640,9 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
         authority.snapshot(
             "100",
-            filing_year=2025,
+            filing_year=_REGISTRY_INTEGRITY_PROBE_YEAR,
             period="0A",
-            on=date(2025, 12, 31),
+            on=_REGISTRY_INTEGRITY_PROBE_DATE,
         )
     except RegistryValidationError as exc:
         return DiagnosticCheck(

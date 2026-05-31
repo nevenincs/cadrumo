@@ -331,7 +331,7 @@ def show_registry_citation(
     try:
         reference = find_reference(catalogue, command.normative_id)
         article = find_articulo(catalogue, reference.id, command.articulo) if command.articulo is not None else None
-    except Exception:
+    except Exception:  # BROAD-EXCEPT-RATIONALE-CORPUS-LOOKUP-BOUNDARY: find_reference/find_articulo surface KeyError, ValueError, and catalogue-specific exceptions; warning-and-continue is the boundary contract.
         _LOGGER.warning(
             "registry.citations.show failed",
             extra={

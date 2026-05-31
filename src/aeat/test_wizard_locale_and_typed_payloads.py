@@ -157,7 +157,7 @@ def test_google_spreadsheet_required_spreadsheet_id_field() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S565 — OAuthClientPayload TypedDict + _OAuthClientWrapper pydantic model
+# OAuthClientPayload TypedDict + _OAuthClientWrapper pydantic model
 # ---------------------------------------------------------------------------
 
 
@@ -207,7 +207,7 @@ def test_oauth_client_wrapper_rejects_non_dict_payload() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S566 — InvoiceRowPayload TypedDict from _decode_invoice_payload
+# InvoiceRowPayload TypedDict from _decode_invoice_payload
 # ---------------------------------------------------------------------------
 
 
@@ -275,7 +275,7 @@ def test_parse_invoice_payload_end_to_end_json() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S567 — Orphan __init__ modules carry intent documentation
+# Orphan __init__ modules carry intent documentation
 # ---------------------------------------------------------------------------
 
 

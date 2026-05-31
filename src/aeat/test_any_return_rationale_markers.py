@@ -1,28 +1,32 @@
-"""W10.P41 rationale-marker aggregate inventory test.
+"""Any-return and kwargs-Any rationale-marker inventory.
 
 Real-behavior AST + source walk that asserts all -> Any returns and
-**kwargs: Any signatures mandated by W10.P41.S575-S581 carry their
-documented RATIONALE-* markers.
+**kwargs: Any signatures listed below carry their documented
+RATIONALE-* markers.
 
-(a) S575 — profile.py field_validator Any-return markers
+(a) profile.py field_validator Any-return markers
     14 @field_validator(mode='before') def lines carry
     ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR.
 
-(b) S576 — profile_catalogue.py catalogue-slot Any-return markers
+(b) profile_catalogue.py catalogue-slot Any-return markers
     get_setup_flow and get_wizard_flows carry
     ANY-RETURN-RATIONALE-CATALOGUE-SLOT.
 
-(c) S577 — google/_calc_sheets_apply.py build-factory Any-return markers
+(c) google/_calc_sheets_apply.py build-factory Any-return markers
     _drive_service and _sheets_service carry
     ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY.
 
-(d) S578 — _borrador_100.py marker-token correctness
+(d) _borrador_100.py marker-token correctness
     _derive_snapshot_id carries KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH
-    (not the superseded CAST-RATIONALE-BORRADOR100-SNAPSHOT-DISPATCH token).
+    (not the superseded CAST-RATIONALE-BORRADOR100-SNAPSHOT-DISPATCH).
 
-(e) S580 — core/logging.py overload-impl Any-return marker
+(e) core/logging.py overload-impl Any-return marker
     _scrub_value implementation overload carries
     ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL.
+
+(f) adapters/outbound/storage/_google_drive.py build-factory markers.
+
+(g) entrypoints/cli/_stdio.py stdlib-logger survivor enrollment.
 
 No mocks, no skips, no tautological assertions.
 """
@@ -38,7 +42,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 # Filesystem root
 # ---------------------------------------------------------------------------
 
-# __file__ lives at src/aeat/test_w10_p41_rationale_inventory.py
 _SRC = Path(__file__).parent  # src/aeat/
 
 
@@ -52,7 +55,7 @@ def _lines(path: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# (a) S575 — profile.py field_validator PYDANTIC-VALIDATOR markers
+# (a) profile.py field_validator PYDANTIC-VALIDATOR markers
 # ---------------------------------------------------------------------------
 
 _PROFILE_MODULE = _SRC / "core/profile.py"
@@ -101,7 +104,7 @@ def test_profile_pydantic_validators_carry_rationale(func_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# (b) S576 — profile_catalogue.py CATALOGUE-SLOT markers
+# (b) profile_catalogue.py CATALOGUE-SLOT markers
 # ---------------------------------------------------------------------------
 
 _CATALOGUE_MODULE = _SRC / "core/profile_catalogue.py"
@@ -122,7 +125,7 @@ def test_profile_catalogue_slots_carry_rationale(func_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# (c) S577 — _calc_sheets_apply.py GOOGLE-BUILD-FACTORY markers
+# (c) _calc_sheets_apply.py GOOGLE-BUILD-FACTORY markers
 # ---------------------------------------------------------------------------
 
 _CALC_SHEETS_MODULE = _SRC / "adapters/outbound/google/_calc_sheets_apply.py"
@@ -145,7 +148,7 @@ def test_calc_sheets_build_factories_carry_rationale(func_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# (d) S578 — _borrador_100.py marker-token correctness
+# (d) _borrador_100.py marker-token correctness
 # ---------------------------------------------------------------------------
 
 _BORRADOR_100_MODULE = _SRC / "application/live/_borrador_100.py"
@@ -165,7 +168,7 @@ def test_borrador_100_snapshot_dispatch_uses_correct_marker_token() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (e) S580 — core/logging.py SCRUB-OVERLOAD-IMPL marker
+# (e) core/logging.py SCRUB-OVERLOAD-IMPL marker
 # ---------------------------------------------------------------------------
 
 _LOGGING_MODULE = _SRC / "core/logging.py"
@@ -194,7 +197,7 @@ def test_scrub_value_overload_impl_carries_rationale() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (f) S595 — adapters/outbound/storage/_google_drive.py build-factory markers
+# (f) adapters/outbound/storage/_google_drive.py build-factory markers
 # ---------------------------------------------------------------------------
 
 _GOOGLE_DRIVE_MODULE = _SRC / "adapters/outbound/storage/_google_drive.py"
@@ -228,7 +231,7 @@ def test_google_drive_any_return_sites_carry_rationale(func_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# (g) S597 — entrypoints/cli/_stdio.py stdlib-logger survivor enrollment
+# (g) entrypoints/cli/_stdio.py stdlib-logger survivor enrollment
 # ---------------------------------------------------------------------------
 # _stdio.py intentionally uses ``logging.getLogger(__name__)`` (stdlib) rather
 # than ``aeat.core.logging.get_logger`` because the module runs before settings
