@@ -216,7 +216,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
     declared = globals().get("_DECLARED_CODE_BY_QUALNAME")
     if declared is None:
         _DEFERRED_BIND.add(error_type)
-        return  # type: ignore[return-value]  # deferred; no code available yet
+        return  # type: ignore[return-value]  # CAST-RATIONALE-REGISTRY-DEFERRED-BINDING: _DECLARED_CODE_BY_QUALNAME is absent during the circular-import window when a sibling module triggers AeatError subclass creation while _registry.py is still initialising; returning None here is intentional — get_registered_error_code drains _DEFERRED_BIND after the module finishes loading, supplying the code retroactively.
     qualname = _qualname(error_type)
     code = declared.get(qualname)
     if code is None:

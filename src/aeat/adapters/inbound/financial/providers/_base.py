@@ -239,7 +239,7 @@ class FinancialProvider(ABC):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'verification_source' class variable"
             )
-        vs = cls.verification_source  # type: ignore[attr-defined]
+        vs = cls.verification_source  # type: ignore[attr-defined]  # CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE: provider subclasses declare verification_source ClassVar; base reads it via dynamic access during registration.
         if vs not in _VALID_SOURCES:
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.verification_source={vs!r} is not one of "
@@ -249,7 +249,7 @@ class FinancialProvider(ABC):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable"
             )
-        pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]
+        pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]  # CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE: provider subclasses declare provisional_pending_specimen ClassVar; base reads it via dynamic access during registration.
         if not isinstance(pps, bool):
             raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}"
