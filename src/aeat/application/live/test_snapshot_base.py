@@ -18,9 +18,13 @@ from aeat.adapters.persistence.storage.sql import SecureObjectRecord, SecureObje
 from aeat.application.live._borrador_100 import BorradorSnapshotNotFoundError
 from aeat.application.live._censo import CensoSnapshotNotFoundError
 from aeat.application.live._errors import LiveApplicationInputError
+from aeat.application.live._borrador_100 import Borrador100SnapshotRepository
+from aeat.application.live._censo import CensoSnapshotRepository
 from aeat.application.live._snapshot_base import (
+    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
+    SnapshotRepository,
     SnapshotService,
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
@@ -457,3 +461,62 @@ def test_censo_snapshot_not_found_error_accepts_structured_kwargs() -> None:
         suggestion="aeat config profile census refresh",
     )
     assert error.suggestion == "aeat config profile census refresh"
+
+
+# ---- SnapshotRepository structural-conformance gate (S56) -----------------
+# Rule 9-A: conformance is STRUCTURAL (isinstance against the @runtime_checkable
+# Protocol), NOT explicit inheritance. Concrete repos must NOT inherit from
+# SnapshotRepository — the isinstance check verifies structural conformance.
+
+
+def test_borrador100_snapshot_repository_conforms_to_protocol(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Borrador100SnapshotRepository satisfies SnapshotRepository[…] structurally."""
+    repo = Borrador100SnapshotRepository(bucket_id="proto-gate-test", objects=secure_objects)
+    assert isinstance(repo, SnapshotRepository)
+    # Rule 9-A: structural conformance only — no explicit inheritance.
+    assert SnapshotRepository not in type(repo).__mro__
+
+
+def test_censo_snapshot_repository_conforms_to_protocol(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """CensoSnapshotRepository satisfies SnapshotRepository[…] structurally."""
+    repo = CensoSnapshotRepository(bucket_id="proto-gate-test", objects=secure_objects)
+    assert isinstance(repo, SnapshotRepository)
+
+
+def test_secure_snapshot_repository_conforms_to_protocol(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """SecureSnapshotRepository satisfies SnapshotRepository[…] structurally.
+
+    Uses the expedientes namespace+model to exercise the generic class.
+    """
+    from aeat.adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+    from aeat.application.live._expedientes import (
+        PersistedExpedientesSnapshot,
+        expedientes_snapshot_object_key,
+    )
+
+    repo: SecureSnapshotRepository[PersistedExpedientesSnapshot] = SecureSnapshotRepository(
+        bucket_id="proto-gate-test",
+        payload_model=PersistedExpedientesSnapshot,
+        namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+        object_key=expedientes_snapshot_object_key,
+        not_found_factory=lambda sid: KeyError(sid),
+        ambiguous_prefix_factory=lambda sid, ids: KeyError(sid),
+        domain_label="expedientes",
+        objects=secure_objects,
+    )
+    assert isinstance(repo, SnapshotRepository)
+
+
+def test_snapshot_repository_protocol_anti_tautology() -> None:
+    """Non-conforming object is not accepted; proves isinstance gate is real."""
+
+    class NotARepo:
+        """Intentionally missing all SnapshotRepository members."""
+
+    assert not isinstance(NotARepo(), SnapshotRepository)
