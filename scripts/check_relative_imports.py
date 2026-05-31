@@ -1,4 +1,4 @@
-"""Enforce the relative-imports mandate inside `src/aeat/` (#162).
+"""Enforce the relative-imports mandate inside `src/aeat/`.
 
 Ruff's `flake8-tidy-imports.banned-api` (TID251) resolves relative
 imports back to their absolute path before matching the banned prefix,
@@ -32,8 +32,6 @@ right tool (placeholder gates, plugin loaders), and a heuristic match
 on every "aeat."-prefixed string would produce noise. New contributors
 adding dynamic-import sites should prefer relative-equivalent helpers
 where possible; reviewers should grep for `"aeat\\."` in any new code.
-
-See `.vault/adr/2026-04-17-relative-imports-adr.md`.
 """
 
 from __future__ import annotations
@@ -41,8 +39,11 @@ from __future__ import annotations
 import ast
 import sys
 from pathlib import Path
+from typing import Final
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+_UTF_8: Final[str] = "utf-8"
 SRC_AEAT = REPO_ROOT / "src" / "aeat"
 
 # Sanity cap: any single Python source file larger than this is almost
@@ -81,7 +82,7 @@ def _scan_file(path: Path) -> tuple[list[tuple[int, str]], list[str]]:
         return findings, errors
 
     try:
-        source = path.read_text(encoding="utf-8")
+        source = path.read_text(encoding=_UTF_8)
     except UnicodeDecodeError as exc:
         errors.append(f"{path}: not valid UTF-8: {exc}")
         return findings, errors
@@ -134,8 +135,7 @@ def _resolve_targets(args: list[str]) -> list[Path]:
     for raw in args:
         # Resolve relative to the current working directory — standard
         # CLI semantics. prek invokes hooks from the repo root, so this
-        # also handles repo-root-relative paths correctly. Per Gemini
-        # PR-review feedback on #162.
+        # also handles repo-root-relative paths correctly.
         candidate = Path(raw).resolve()
         if candidate.suffix != ".py":
             continue
@@ -177,9 +177,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if all_findings:
         sys.stderr.write(
-            "Absolute `aeat.*` imports are banned inside src/aeat/ (#162).\n"
-            "Use relative imports (`from .module import X` or `from ..sibling import Y`).\n"
-            "See CLAUDE.md > 'Relative-Imports Mandate'.\n\n"
+            "Absolute `aeat.*` imports are banned inside src/aeat/.\n"
+            "Use relative imports (`from .module import X` or `from ..sibling import Y`).\n\n"
         )
         for path, lineno, line in all_findings:
             rel = path.relative_to(REPO_ROOT)
