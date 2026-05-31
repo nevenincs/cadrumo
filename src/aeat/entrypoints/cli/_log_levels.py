@@ -16,7 +16,6 @@ from collections.abc import Mapping
 from enum import StrEnum
 
 from ...core.errors import AeatError
-from ...core.i18n import tr
 from ...core.logging import set_log_level
 
 
@@ -84,7 +83,9 @@ def resolve_log_level(
     """
     selected_flags = sum((quiet, verbose, debug))
     if selected_flags > 1:
-        raise LogLevelResolutionError(tr("cli.log_levels.errors.flags_mutually_exclusive"))
+        raise LogLevelResolutionError(
+            translated_message="cli.log_levels.errors.flags_mutually_exclusive",
+        )
     if debug:
         return LogLevel.DEBUG
     if verbose:
@@ -111,7 +112,8 @@ def resolve_log_level(
     except ValueError as exc:
         allowed = ", ".join(level.value for level in LogLevel)
         raise LogLevelResolutionError(
-            tr("cli.log_levels.errors.invalid_env_value", allowed=allowed, value=raw_value)
+            translated_message="cli.log_levels.errors.invalid_env_value",
+            context={"allowed": allowed, "value": raw_value},
         ) from exc
 
 

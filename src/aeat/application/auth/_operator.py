@@ -240,7 +240,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
     if resolve_active_bucket_id() is None:
         raise AuthConfigureNoActiveBucketError(
-            tr("application.auth.operator.errors.no_active_bucket"),
+            translated_message="application.auth.operator.errors.no_active_bucket",
         )
     state_repo = workflow_state_repository()
     current_state = state_repo.load()
@@ -248,23 +248,21 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     active_bucket_id = profile_health.active_profile
     if active_bucket_id is None:
         raise AuthConfigureNoActiveBucketError(
-            tr("application.auth.operator.errors.no_active_bucket"),
+            translated_message="application.auth.operator.errors.no_active_bucket",
         )
     if profile_health.status == "dangling_pointer":
         raise AuthConfigureDanglingActiveProfileError(
-            tr(
-                "application.auth.operator.errors.dangling_active_profile",
-                active_profile=active_bucket_id,
-            )
+            translated_message="application.auth.operator.errors.dangling_active_profile",
+            context={"active_profile": active_bucket_id},
         )
     if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
         raise AuthConfigureDanglingActiveProfileError(
-            tr(
-                "application.auth.operator.errors.unreadable_active_profile",
-                active_profile=active_bucket_id,
-                status=profile_health.status,
-                next_action=profile_health.next_action,
-            )
+            translated_message="application.auth.operator.errors.unreadable_active_profile",
+            context={
+                "active_profile": active_bucket_id,
+                "status": profile_health.status,
+                "next_action": profile_health.next_action,
+            },
         )
 
     next_state = _append_bucket_event(
@@ -965,10 +963,8 @@ async def login_operator_auth(
     # The refusal text is user prose, never the env-var name.
     if resolved_settings.aeat_live_tests_enabled != "1":
         raise AuthLoginNotEnabledError(
-            tr(
-                "application.auth.operator.login.refused_live_tests_disabled",
-                provider=provider_kind.value,
-            )
+            translated_message="application.auth.operator.login.refused_live_tests_disabled",
+            context={"provider": provider_kind.value},
         )
 
     # Provider-specific local-readiness preconditions. A certificate
@@ -1146,20 +1142,18 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
             cert_path = Path(recorded) if recorded else None
         if cert_path is None:
             raise AuthLoginPreconditionError(
-                tr("application.auth.operator.login.refused_certificate_path_unset")
+                translated_message="application.auth.operator.login.refused_certificate_path_unset",
             )
         if not cert_path.is_file():
             raise AuthLoginPreconditionError(
-                tr(
-                    "application.auth.operator.login.refused_certificate_file_missing",
-                    path=str(cert_path),
-                )
+                translated_message="application.auth.operator.login.refused_certificate_file_missing",
+                context={"path": str(cert_path)},
             )
     if provider_kind is AuthProviderKind.CLAVE_MOVIL and not unwrap_optional_secret(
         settings.aeat_clave_movil_dni_nie
     ).strip():
         raise AuthLoginPreconditionError(
-            tr("application.auth.operator.login.refused_clave_movil_identity_unset")
+            translated_message="application.auth.operator.login.refused_clave_movil_identity_unset",
         )
 
 def _implemented_provider(provider: str) -> AuthProviderListing:

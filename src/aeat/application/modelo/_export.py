@@ -24,7 +24,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core.i18n import tr
 from ...domain import filing as filing_domain
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -362,7 +361,7 @@ def export_modelo_revision(
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
-            tr("application.modelo.errors.export_no_active_bucket"),
+            translated_message="application.modelo.errors.export_no_active_bucket",
         )
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()

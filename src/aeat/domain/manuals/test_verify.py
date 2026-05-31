@@ -185,5 +185,6 @@ class TestVerify:
             part=ManualPart.SINGLE,
             settings=settings,
         )
-        with pytest.raises(ManualReviewRequiredError, match=r"manual|review|required"):
+        with pytest.raises(ManualReviewRequiredError) as excinfo:
             raise_on_errors(report)
+        assert excinfo.value.translated_message == "cli.registry.manuals.verify_failed"

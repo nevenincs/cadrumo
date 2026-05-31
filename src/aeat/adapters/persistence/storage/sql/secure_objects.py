@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
+from .....core.errors import resolve_error_message
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
@@ -287,9 +288,8 @@ class SecureObjectRepository:
             return self._namespace_registry.namespace_by_value(namespace)
         except KeyError as exc:
             raise StorageValidationError(
-                tr("errors.storage.namespace.unregistered", namespace=namespace),
-                context={"namespace": namespace},
                 translated_message="errors.storage.namespace.unregistered",
+                context={"namespace": namespace},
             ) from exc
 
     def _enforce_registered_write_policy(
@@ -304,33 +304,21 @@ class SecureObjectRepository:
             return
         if classification is not definition.sensitivity:
             raise ClassificationError(
-                tr(
-                    "errors.storage.namespace.classification_mismatch",
-                    namespace=namespace,
-                    classification=classification.value,
-                    expected=definition.sensitivity.value,
-                ),
+                translated_message="errors.storage.namespace.classification_mismatch",
                 context={
                     "namespace": namespace,
                     "classification": classification.value,
                     "expected": definition.sensitivity.value,
                 },
-                translated_message="errors.storage.namespace.classification_mismatch",
             )
         if schema_version != definition.schema_version:
             raise EnvelopeVersionError(
-                tr(
-                    "errors.storage.namespace.schema_mismatch",
-                    namespace=namespace,
-                    schema_version=schema_version,
-                    expected=definition.schema_version,
-                ),
+                translated_message="errors.storage.namespace.schema_mismatch",
                 context={
                     "namespace": namespace,
                     "schema_version": schema_version,
                     "expected": definition.schema_version,
                 },
-                translated_message="errors.storage.namespace.schema_mismatch",
             )
 
     def _enforce_registered_read_policy(
@@ -344,18 +332,12 @@ class SecureObjectRepository:
             return None
         if expected_class is not definition.sensitivity:
             raise ClassificationError(
-                tr(
-                    "errors.storage.namespace.classification_mismatch",
-                    namespace=namespace,
-                    classification=expected_class.value,
-                    expected=definition.sensitivity.value,
-                ),
+                translated_message="errors.storage.namespace.classification_mismatch",
                 context={
                     "namespace": namespace,
                     "classification": expected_class.value,
                     "expected": definition.sensitivity.value,
                 },
-                translated_message="errors.storage.namespace.classification_mismatch",
             )
         return definition
 
@@ -369,18 +351,12 @@ class SecureObjectRepository:
         if definition is None or schema_version <= definition.schema_version:
             return
         raise EnvelopeVersionError(
-            tr(
-                "errors.storage.namespace.schema_mismatch",
-                namespace=namespace,
-                schema_version=schema_version,
-                expected=definition.schema_version,
-            ),
+            translated_message="errors.storage.namespace.schema_mismatch",
             context={
                 "namespace": namespace,
                 "schema_version": schema_version,
                 "expected": definition.schema_version,
             },
-            translated_message="errors.storage.namespace.schema_mismatch",
         )
 
     def _check_session_freshness(self) -> None:
@@ -925,7 +901,7 @@ class SecureObjectRepository:
                         classification=classification_str,
                         schema_version=schema_version,
                         written_at=written_at,
-                        reason=str(exc),
+                        reason=resolve_error_message(exc),
                     )
                     continue
                 try:

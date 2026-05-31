@@ -204,10 +204,16 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
     requested = profile.strip()
     if not requested:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile))
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": profile},
+        )
     pointer = read_profile_bucket(requested) or read_profile_bucket_by_id(requested)
     if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=requested))
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": requested},
+        )
     ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
 
 

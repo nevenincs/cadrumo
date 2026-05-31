@@ -257,15 +257,17 @@ def test_default_route_repository_carries_namespace_registry_before_profile_sele
 
 
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
-    with (
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile="bucket-a",
-            aeat_output_language="en",
-        ),
-        pytest.raises(StorageValidationError, match="Cold-bootstrap storage"),
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="bucket-a",
+        aeat_output_language="en",
     ):
-        secure_object_repository_for_cold_bootstrap_state()
+        with pytest.raises(StorageValidationError) as excinfo:
+            secure_object_repository_for_cold_bootstrap_state()
+    assert (
+        excinfo.value.translated_message
+        == "errors.storage.runtime.cold_bootstrap_active_profile_refused"
+    )
 
 
 def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
@@ -277,8 +279,12 @@ def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
         aeat_output_language="en",
     )
 
-    with pytest.raises(StorageValidationError, match="Cold-bootstrap storage"):
+    with pytest.raises(StorageValidationError) as excinfo:
         secure_object_repository_for_cold_bootstrap_state(settings)
+    assert (
+        excinfo.value.translated_message
+        == "errors.storage.runtime.cold_bootstrap_active_profile_refused"
+    )
 
 
 def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Path) -> None:
@@ -287,8 +293,12 @@ def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Pat
         aeat_output_language="en",
     )
 
-    with pytest.raises(StorageValidationError, match="explicit database route"):
+    with pytest.raises(StorageValidationError) as excinfo:
         secure_object_repository_for_cold_bootstrap_state(settings)
+    assert (
+        excinfo.value.translated_message
+        == "errors.storage.runtime.cold_bootstrap_explicit_database_refused"
+    )
 
 
 def test_default_route_repository_refuses_settings_scoped_active_profile_without_session(

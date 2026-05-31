@@ -1013,7 +1013,7 @@ def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
 
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-1T.pdf"
 
-    with pytest.raises(DeclaracionParseError, match=r"coverage="):
+    with pytest.raises(DeclaracionParseError) as excinfo:
         parse_declaracion(
             pdf_path,
             modelo_override="130",
@@ -1021,19 +1021,33 @@ def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
             period_override="1T",
             registry_snapshot=strict_snap,
         )
+    assert (
+        excinfo.value.translated_message
+        == "adapters.inbound.declaracion.errors.extraction_failed"
+    )
+    assert excinfo.value.context is not None
+    details = excinfo.value.context.get("details", "")
+    assert isinstance(details, str) and "coverage" in details
 
 
 def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_path: Path) -> None:
     pdf_path = tmp_path / "modelo-999.pdf"
     _write_declaration_pdf(pdf_path, modelo="999", ejercicio="2025", values={"01": Decimal("1.00")})
 
-    with pytest.raises(DeclaracionParseError, match="is not present in the calculation registry"):
+    with pytest.raises(DeclaracionParseError) as excinfo:
         parse_declaracion(
             pdf_path,
             modelo_override="999",
             año_override=2025,
             period_override="1T",
         )
+    assert (
+        excinfo.value.translated_message
+        == "adapters.inbound.declaracion.errors.registry_snapshot_required"
+    )
+    assert excinfo.value.context is not None
+    assert excinfo.value.context.get("modelo") == "999"
+    assert "is not present in the calculation registry" in excinfo.value.context.get("error", "")
 
 
 def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:

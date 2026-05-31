@@ -216,16 +216,16 @@ async def require_verified_aeat_session(
     persisted = load_persisted_session(settings, kind)
     if persisted is None:
         raise AuthSessionUnavailableError(
-            tr("application.auth.sessions.errors.no_session")
+            translated_message="application.auth.sessions.errors.no_session",
         )
     if persisted.is_expired(datetime.now(UTC)):
         raise AuthSessionUnavailableError(
-            tr("application.auth.sessions.errors.session_expired")
+            translated_message="application.auth.sessions.errors.session_expired",
         )
     paths = storage_state_paths(settings, persisted.provider_kind)
     if not _get_session_store().exists(paths.storage_state):
         raise AuthSessionUnavailableError(
-            tr("application.auth.sessions.errors.state_missing")
+            translated_message="application.auth.sessions.errors.state_missing",
         )
 
     from ...adapters.outbound.aeat.browser import default_browser_session_factory
@@ -241,14 +241,14 @@ async def require_verified_aeat_session(
         raise
     except Exception as exc:
         raise AuthSessionUnavailableError(
-            tr("application.auth.sessions.errors.verify_failed")
+            translated_message="application.auth.sessions.errors.verify_failed",
         ) from exc
     finally:
         await _close_provider(provider)
 
     if not bool(getattr(assertion, "is_valid", False)):
         raise AuthSessionUnavailableError(
-            tr("application.auth.sessions.errors.sede_rejected")
+            translated_message="application.auth.sessions.errors.sede_rejected",
         )
     _assert_session_identity_matches_expected(refreshed_session, expected_identity)
     return refreshed_session
@@ -369,7 +369,7 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         persisted = _get_session_store().load(storage_state_path)
     except (ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
-            tr("application.auth.sessions.errors.corrupt_session")
+            translated_message="application.auth.sessions.errors.corrupt_session",
         ) from exc
     if persisted is None:
         return None
@@ -378,19 +378,19 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         raw = json.loads(json.dumps(persisted.metadata, default=str))
     except (TypeError, ValueError) as exc:
         raise CorruptAuthSessionError(
-            tr("application.auth.sessions.errors.corrupt_session")
+            translated_message="application.auth.sessions.errors.corrupt_session",
         ) from exc
 
     if not isinstance(raw, dict):
         raise CorruptAuthSessionError(
-            tr("application.auth.sessions.errors.corrupt_session")
+            translated_message="application.auth.sessions.errors.corrupt_session",
         )
 
     try:
         session = _provider_neutral_session_metadata(raw)
     except (KeyError, TypeError, ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
-            tr("application.auth.sessions.errors.corrupt_session")
+            translated_message="application.auth.sessions.errors.corrupt_session",
         ) from exc
     if session.provider_kind is not kind_hint:
         _logger.debug(
@@ -400,7 +400,7 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
             session.provider_kind.value,
         )
         raise CorruptAuthSessionError(
-            tr("application.auth.sessions.errors.corrupt_session")
+            translated_message="application.auth.sessions.errors.corrupt_session",
         )
     return session
 
@@ -464,17 +464,17 @@ def _assert_active_profile_identity_matches_provider(
     provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)
     if not provider_identity:
         raise AuthProfileIdentityMismatchError(
-            tr("application.auth.sessions.errors.clave_identity_missing")
+            translated_message="application.auth.sessions.errors.clave_identity_missing",
         )
 
     profile_identity = _active_profile_tax_identity()
     if not profile_identity:
         raise AuthProfileIdentityMismatchError(
-            tr("application.auth.sessions.errors.profile_tax_id_missing")
+            translated_message="application.auth.sessions.errors.profile_tax_id_missing",
         )
     if profile_identity != provider_identity:
         raise AuthProfileIdentityMismatchError(
-            tr("application.auth.sessions.errors.clave_identity_profile_mismatch")
+            translated_message="application.auth.sessions.errors.clave_identity_profile_mismatch",
         )
     return provider_identity
 
@@ -520,7 +520,7 @@ def _assert_session_identity_matches_expected(session: object, expected_identity
     session_identity = _normalise_tax_identity(getattr(session, "identity_nif", ""))
     if session_identity and session_identity != expected_identity:
         raise AuthProfileIdentityMismatchError(
-            tr("application.auth.sessions.errors.session_identity_profile_mismatch")
+            translated_message="application.auth.sessions.errors.session_identity_profile_mismatch",
         )
 
 
