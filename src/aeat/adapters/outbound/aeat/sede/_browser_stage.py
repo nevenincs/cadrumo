@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from typing import TYPE_CHECKING, Protocol
 
+# LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY: stdlib logging imported solely for type-annotation context; never instantiated at runtime.
 if TYPE_CHECKING:
     import logging
 
