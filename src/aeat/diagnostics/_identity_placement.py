@@ -52,14 +52,14 @@ from __future__ import annotations
 import ast
 import re
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
 
 __all__ = (
     "AEAT_ROOT",
     "AliasInventory",
+    "ConstraintShape",
     "Finding",
-    "PROMOTE001_PROTECT_LIST",
     "build_alias_inventory",
     "build_kind_status_state_alias_inventory",
     "find_bare_str_kind_status_state_fields",
@@ -102,6 +102,34 @@ class Finding:
 
 
 @dataclass(frozen=True)
+class ConstraintShape:
+    """A pydantic string-constraint shape extracted from AST.
+
+    Attributes track the three substitutability-relevant facets: minimum
+    length, maximum length, and regex pattern.  ``None`` means the facet
+    was not declared at the source site (the comparator treats it as the
+    permissive extreme: ``min_length=0``, ``max_length=inf``, no pattern).
+
+    A separate ``pattern_unresolved`` flag distinguishes "no pattern
+    declared" (``pattern is None and not pattern_unresolved``) from
+    "pattern declared as a Name reference we could not resolve to a
+    literal" (``pattern is None and pattern_unresolved``).  The
+    comparator treats the unresolved case as "alias has a pattern
+    requirement" so the missing literal does not silently downgrade the
+    shape comparison.
+    """
+
+    min_length: int | None = None
+    max_length: int | None = None
+    pattern: str | None = None
+    pattern_unresolved: bool = False
+
+    @property
+    def has_pattern(self) -> bool:
+        return self.pattern is not None or self.pattern_unresolved
+
+
+@dataclass(frozen=True)
 class AliasInventory:
     """Discovered typed-id alias inventory.
 
@@ -115,10 +143,16 @@ class AliasInventory:
     alias was discovered; the private-name import detector consults this
     set to recognise an ``_ids.py``-equivalent re-export module such as
     ``aeat.core.identity``.
+
+    ``constraints_by_owner`` is the per-owner constraint shape derived
+    from the alias's ``StringConstraints`` / ``Field`` metadata. Empty
+    when the alias declaration could not be parsed (the substitutability
+    comparator then treats the alias as unconstrained).
     """
 
     aliases_by_owner: dict[str, str]
     alias_modules: frozenset[str]
+    constraints_by_owner: dict[str, ConstraintShape] = dataclass_field(default_factory=dict)
 
 
 def iter_aeat_modules(root: Path = AEAT_ROOT) -> Iterator[Path]:
@@ -160,40 +194,197 @@ def _camel_to_snake(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
-def _module_alias_names(tree: ast.Module) -> list[str]:
-    """Return module-level identifiers that name a typed-id alias.
+_CONSTRAINT_CALL_NAMES = frozenset({"StringConstraints", "Field"})
 
-    A typed alias may appear as a bare ``Assign`` (``WorkUnitId =
-    Annotated[...]``), an ``AnnAssign`` with a type annotation, a PEP 695
-    ``TypeAlias`` statement (``type CasillaId = Annotated[...]``), or as
-    an ``ImportFrom`` re-export (``from ._bucket import BucketId``).
-    The detector accepts any module-level name ending in ``Id`` whose
-    first character is uppercase, mirroring the ADR Rule 4 naming
-    convention.
+
+def _module_literal_string_assignments(tree: ast.Module) -> dict[str, str]:
+    """Return module-level ``NAME = "literal"`` assignments.
+
+    Used to resolve ``pattern=_HEX_64_PATTERN`` references back to the
+    underlying regex literal when extracting a :class:`ConstraintShape`
+    from an alias declaration.
     """
-    names: list[str] = []
+    out: dict[str, str] = {}
     for node in tree.body:
-        candidates: list[str] = []
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    candidates.append(target.id)
-        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            candidates.append(node.target.id)
-        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
-            candidates.append(node.name.id)
-        elif isinstance(node, ast.ImportFrom):
-            for alias in node.names:
-                imported = alias.asname or alias.name
-                candidates.append(imported)
-        for candidate in candidates:
-            if (
-                candidate.endswith("Id")
-                and candidate[:1].isupper()
-                and not candidate.startswith("_")
-            ):
-                names.append(candidate)
-    return names
+        target_name: str | None = None
+        value_node: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            target_name = node.targets[0].id
+            value_node = node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
+            target_name = node.target.id
+            value_node = node.value
+        if target_name is None or value_node is None:
+            continue
+        if isinstance(value_node, ast.Constant) and isinstance(value_node.value, str):
+            out[target_name] = value_node.value
+    return out
+
+
+def _resolve_string_constant(
+    node: ast.expr, literals: dict[str, str]
+) -> tuple[str | None, bool]:
+    """Return ``(literal, unresolved)`` for a regex-pattern AST expression.
+
+    ``literal`` is the resolved string when the node is a string
+    constant or a Name reference resolvable through ``literals``.
+    ``unresolved`` is ``True`` when the node names a constraint
+    (e.g. a Name we could not resolve, or a non-string expression) so
+    the comparator can treat the alias as "has a pattern requirement"
+    without knowing the exact pattern text.
+    """
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value, False
+    if isinstance(node, ast.Name):
+        if node.id in literals:
+            return literals[node.id], False
+        return None, True
+    return None, True
+
+
+def _extract_constraint_shape_from_call(
+    call: ast.Call, literals: dict[str, str]
+) -> ConstraintShape:
+    """Extract a :class:`ConstraintShape` from a ``StringConstraints(...)`` or
+    ``Field(...)`` call.
+    """
+    min_length: int | None = None
+    max_length: int | None = None
+    pattern: str | None = None
+    pattern_unresolved = False
+    for kw in call.keywords:
+        if kw.arg == "min_length" and isinstance(kw.value, ast.Constant) and isinstance(
+            kw.value.value, int
+        ):
+            min_length = kw.value.value
+        elif kw.arg == "max_length" and isinstance(kw.value, ast.Constant) and isinstance(
+            kw.value.value, int
+        ):
+            max_length = kw.value.value
+        elif kw.arg == "pattern":
+            resolved, unresolved = _resolve_string_constant(kw.value, literals)
+            pattern = resolved
+            pattern_unresolved = unresolved
+    return ConstraintShape(
+        min_length=min_length,
+        max_length=max_length,
+        pattern=pattern,
+        pattern_unresolved=pattern_unresolved,
+    )
+
+
+def _call_name(call: ast.Call) -> str | None:
+    """Return the dotted-leaf name of ``call.func`` (``Field``, ``StringConstraints``)."""
+    fn = call.func
+    if isinstance(fn, ast.Name):
+        return fn.id
+    if isinstance(fn, ast.Attribute):
+        return fn.attr
+    return None
+
+
+def _extract_shape_from_annotated_value(
+    value_node: ast.expr | None, literals: dict[str, str]
+) -> ConstraintShape:
+    """Extract a :class:`ConstraintShape` from an alias RHS expression.
+
+    Accepts both ``Annotated[str, StringConstraints(...)]`` and
+    ``Annotated[str, Field(...)]`` shapes; returns an empty
+    :class:`ConstraintShape` when no constraint call is found.
+    """
+    if value_node is None:
+        return ConstraintShape()
+    if not isinstance(value_node, ast.Subscript):
+        return ConstraintShape()
+    slice_node = value_node.slice
+    elements: list[ast.expr]
+    if isinstance(slice_node, ast.Tuple):
+        elements = list(slice_node.elts)
+    else:
+        elements = [slice_node]
+    for element in elements:
+        if isinstance(element, ast.Call):
+            if _call_name(element) in _CONSTRAINT_CALL_NAMES:
+                return _extract_constraint_shape_from_call(element, literals)
+    return ConstraintShape()
+
+
+def _extract_field_constraint_shape(
+    annotation: ast.expr, default_value: ast.expr | None, literals: dict[str, str]
+) -> ConstraintShape:
+    """Extract the effective constraint shape declared on a pydantic field.
+
+    Two shapes contribute constraints:
+
+    * The annotation itself when it is ``Annotated[str, ...]`` — the
+      inner ``StringConstraints`` / ``Field`` call carries the
+      constraints.
+    * The default value when it is a ``Field(...)`` call with keyword
+      arguments — bare-``str``-typed fields commonly declare their
+      constraints inline through the default-value ``Field``.
+
+    Both contributions are merged: the annotation shape's facets win
+    where present, the default-value shape fills any remaining gaps.
+    """
+    ann_shape = _extract_shape_from_annotated_value(annotation, literals)
+    default_shape = ConstraintShape()
+    if isinstance(default_value, ast.Call) and _call_name(default_value) in _CONSTRAINT_CALL_NAMES:
+        default_shape = _extract_constraint_shape_from_call(default_value, literals)
+    return ConstraintShape(
+        min_length=ann_shape.min_length if ann_shape.min_length is not None else default_shape.min_length,
+        max_length=ann_shape.max_length if ann_shape.max_length is not None else default_shape.max_length,
+        pattern=ann_shape.pattern if ann_shape.pattern is not None else default_shape.pattern,
+        pattern_unresolved=ann_shape.pattern_unresolved or default_shape.pattern_unresolved,
+    )
+
+
+def _classify_promotion(
+    candidate: ConstraintShape, alias: ConstraintShape
+) -> tuple[bool, str]:
+    """Return ``(compatible, rationale)`` for promoting ``candidate`` to ``alias``.
+
+    Promotion is shape-compatible iff every constraint declared on
+    ``alias`` is at least as permissive as the corresponding constraint
+    declared on ``candidate`` -- i.e. every value accepted by the
+    field's current constraints would also be accepted by the alias.
+    The substitutability check follows the pre-filter required by the
+    swarm-audit-cadence rule.
+
+    The rationale string is empty when ``compatible`` is True and is a
+    structured human-readable reason otherwise.
+    """
+    reasons: list[str] = []
+    alias_min = alias.min_length if alias.min_length is not None else 0
+    cand_min = candidate.min_length if candidate.min_length is not None else 0
+    if alias_min > cand_min:
+        reasons.append(
+            f"alias requires min_length={alias.min_length} but field declares "
+            f"min_length={candidate.min_length if candidate.min_length is not None else 0}"
+        )
+    alias_max = alias.max_length
+    cand_max = candidate.max_length
+    if alias_max is not None and (cand_max is None or cand_max > alias_max):
+        reasons.append(
+            f"alias requires max_length<={alias.max_length} but field declares "
+            f"max_length={candidate.max_length if candidate.max_length is not None else 'unbounded'}"
+        )
+    if alias.has_pattern:
+        if not candidate.has_pattern:
+            reasons.append(
+                f"alias requires pattern={alias.pattern!r} but field declares no pattern"
+            )
+        elif (
+            alias.pattern is not None
+            and candidate.pattern is not None
+            and alias.pattern != candidate.pattern
+        ):
+            reasons.append(
+                f"alias requires pattern={alias.pattern!r} but field declares "
+                f"pattern={candidate.pattern!r}"
+            )
+    if reasons:
+        return False, "; ".join(reasons)
+    return True, ""
 
 
 def _is_alias_module(path: Path) -> bool:
@@ -203,36 +394,83 @@ def _is_alias_module(path: Path) -> bool:
     :mod:`aeat.core.identity` package aggregates aliases through its
     package ``__init__`` (re-exporting from ``_bucket.py``,
     ``_profile.py``, ``_snapshot.py``), so a package ``__init__`` that
-    re-exports typed aliases is also recognised.
+    re-exports typed aliases is also recognised, as are the per-identity
+    private modules within ``core/identity/`` themselves so the
+    constraint-shape extractor sees the original ``StringConstraints``
+    declaration rather than only the re-export.
     """
     name = path.name
     if name == "_ids.py":
         return True
-    if name == "__init__.py" and path.parent.name == "identity":
-        return True
+    if path.parent.name == "identity":
+        if name == "__init__.py":
+            return True
+        if name.startswith("_") and not name.startswith("__") and name.endswith(".py"):
+            return True
     return False
 
 
+def _iter_alias_definitions(
+    tree: ast.Module,
+) -> Iterator[tuple[str, ast.expr | None]]:
+    """Yield ``(name, value_node)`` for module-level typed-id alias declarations.
+
+    Re-export ``ImportFrom`` rows yield ``(name, None)`` because the
+    value node lives in the imported module; the caller resolves the
+    constraint shape from the underlying definition site instead.
+    """
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    yield target.id, node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            yield node.target.id, node.value
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            yield node.name.id, getattr(node, "value", None)
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                yield alias.asname or alias.name, None
+
+
 def build_alias_inventory(root: Path = AEAT_ROOT) -> AliasInventory:
-    """Discover typed-id aliases declared under ``root``."""
+    """Discover typed-id aliases declared under ``root``.
+
+    Each discovered alias contributes its constraint shape to
+    ``constraints_by_owner`` so the bare-string field detector can
+    decide promotion compatibility from the alias's actual
+    ``StringConstraints`` / ``Field`` metadata.
+    """
     by_owner: dict[str, str] = {}
     alias_modules: set[str] = set()
+    constraints_by_owner: dict[str, ConstraintShape] = {}
     for path in iter_aeat_modules(root):
         if not _is_alias_module(path):
             continue
         tree, _err = _parse(path)
         if tree is None:
             continue
-        names = _module_alias_names(tree)
-        if not names:
-            continue
-        alias_modules.add(_module_dotted_path(path, root))
-        for alias in names:
-            owner = _camel_to_snake(alias[:-2])  # strip trailing ``Id``
-            by_owner.setdefault(owner, alias)
+        literals = _module_literal_string_assignments(tree)
+        recorded_in_module = False
+        for name, value_node in _iter_alias_definitions(tree):
+            if not (name.endswith("Id") and name[:1].isupper() and not name.startswith("_")):
+                continue
+            recorded_in_module = True
+            owner = _camel_to_snake(name[:-2])
+            by_owner.setdefault(owner, name)
+            if owner in constraints_by_owner:
+                continue
+            if value_node is None:
+                continue
+            shape = _extract_shape_from_annotated_value(value_node, literals)
+            if shape != ConstraintShape():
+                constraints_by_owner[owner] = shape
+        if recorded_in_module:
+            alias_modules.add(_module_dotted_path(path, root))
     return AliasInventory(
         aliases_by_owner=dict(sorted(by_owner.items())),
         alias_modules=frozenset(alias_modules),
+        constraints_by_owner=dict(sorted(constraints_by_owner.items())),
     )
 
 
@@ -397,87 +635,6 @@ def find_misplaced_hex_length_constants(root: Path = AEAT_ROOT) -> list[Finding]
 
 # --- Clause 4: bare-``str`` ``<owner>_id`` BaseModel field ----------------
 
-#: Sites excluded from the Clause 4 bare-str ``_id`` detector.
-#:
-#: Each entry is a ``(dotted_module, class_name, field_name)`` triple.
-#: A site is excluded when the alias constraint shape is stricter than the
-#: field's declared constraint, so promoting the bare ``str`` to the typed alias
-#: would cause runtime validation failures on existing data.
-#:
-#: Rationale codes:
-#:   HEX64   — alias requires a 64-char hex digest; field accepts arbitrary strings.
-#:   MINLEN  — alias requires min_length=1; field has an empty-string default.
-#:   PATTERN — alias has a character-class pattern that rejects existing values.
-#:   NODOC   — field documents a non-hex-64 shape in its module docstring; alias is hex-64.
-#:   TRANSIT — field carries values from an external transit format that doesn't
-#:             match the alias constraint (e.g. 3-digit modelo codes, registry kebab refs).
-PROMOTE001_PROTECT_LIST: frozenset[tuple[str, str, str]] = frozenset(
-    {
-        # HEX64 — TransactionId requires hex-64; these fields accept any str
-        ("aeat.application.aggregation._iva_ledger", "IvaLedgerAggregationIssue", "transaction_id"),
-        ("aeat.application.aggregation._iva_ledger", "ProrrataLedgerReference", "transaction_id"),
-        ("aeat.application.aggregation._renta_income_ledger", "RentaIncomeLedgerAggregationIssue", "transaction_id"),
-        ("aeat.application.aggregation._renta_income_ledger", "RentaIncomeObservation", "transaction_id"),
-        ("aeat.application.aggregation._renta_ledger", "RentaLedgerAggregationIssue", "transaction_id"),
-        ("aeat.application.invoices._linking", "InvoiceTransactionLinkResult", "transaction_id"),
-        ("aeat.application.invoices._reconciliation", "ReconciliationSkippedSuggestion", "transaction_id"),
-        ("aeat.application.ledger._models", "LedgerReviewQuery", "transaction_id"),
-        ("aeat.application.ledger._models", "BulkClassifyRow", "transaction_id"),
-        ("aeat.application.ledger._models", "BulkClassifyFailure", "transaction_id"),
-        ("aeat.application.ledger._models", "ApplyRulesAppliedRow", "transaction_id"),
-        ("aeat.application.ledger._preflight", "LedgerPreflightIssue", "transaction_id"),
-        ("aeat.application.review._models", "LedgerReviewRecord", "transaction_id"),
-        ("aeat.domain.transactions._models", "TransactionEvidenceProvenanceEntry", "evidence_id"),
-        ("aeat.domain.transactions._models", "Transaction", "invoice_id"),
-        ("aeat.domain.transactions._raw_transaction", "RawTransaction", "transaction_id"),
-        # HEX64 — EvidenceId is hex-64; these fields accept arbitrary strings
-        ("aeat.application.ledger._evidence", "PurchaseInvoiceEvidence", "evidence_id"),
-        # HEX64 — InvoiceId likely hex-64; these fields accept arbitrary strings
-        ("aeat.application.invoices._linking", "InvoiceTransactionLinkResult", "invoice_id"),
-        ("aeat.application.invoices._queries", "InvoiceListRow", "invoice_id"),
-        ("aeat.application.invoices._reconciliation", "ReconciliationSkippedSuggestion", "invoice_id"),
-        ("aeat.application.ledger._business_operation_invoice", "BusinessOperationInvoice", "invoice_id"),
-        ("aeat.application.review._models", "InvoiceReviewRecord", "invoice_id"),
-        ("aeat.domain.invoices._service", "ReconciliationSuggestion", "invoice_id"),
-        ("aeat.domain.invoices._service", "LinkInconsistency", "invoice_id"),
-        ("aeat.domain.calculations.registry._bindings", "InvoiceObservation", "invoice_id"),
-        # HEX64/NODOC — SnapshotId is hex-64; snapshot_id fields use non-hex-64 shape
-        ("aeat.application.live.test_snapshot_base", "ProbeSnapshot", "snapshot_id"),
-        ("aeat.application.live._borrador_100", "Borrador100Snapshot", "snapshot_id"),
-        ("aeat.application.live._censo", "CensoSnapshot", "snapshot_id"),
-        ("aeat.application.user_profile._censo_sync", "CensoProfileComparison", "snapshot_id"),
-        ("aeat.application.user_profile._censo_sync", "CensoApplyResult", "snapshot_id"),
-        ("aeat.application.user_profile", "ProfileSnapshot", "snapshot_id"),
-        ("aeat.application.user_profile", "ProfileStaleCheckReport", "snapshot_id"),
-        # MINLEN — BucketId has min_length=1; these fields have empty-string defaults
-        ("aeat.adapters.persistence.storage.runtime", "StorageRuntime", "bucket_id"),
-        ("aeat.application.live.test_snapshot_base", "ProbeSnapshot", "bucket_id"),
-        ("aeat.core._bucket_pointer", "BucketPointer", "bucket_id"),
-        ("aeat.core.config", "StorageRouteClassification", "bucket_id"),
-        ("aeat.application.live._censo", "CensoSnapshot", "profile_id"),
-        # HEX64 — RevisionId constraint incompatible with these fields
-        ("aeat.application.state_projection", "ModeloReadinessRequest", "revision_id"),
-        ("aeat.application.state_projection", "ProjectionModeloReadiness", "revision_id"),
-        ("aeat.application.user_profile", "ProfilePreflightReport", "revision_id"),
-        ("aeat.application.user_profile", "ProfileSnapshotRequest", "revision_id"),
-        ("aeat.application.user_profile", "ProfileSnapshot", "revision_id"),
-        ("aeat.domain.user_profile._registry_contract", "UserProfileRegistryContractIssue", "revision_id"),
-        ("aeat.adapters.persistence.storage.sql.secure_objects", "SecureObjectRawRow", "revision_id"),
-        # TRANSIT — ModeloId requires ^\d{3}$; these carry arbitrary model identifiers in transit
-        ("aeat.adapters.outbound.google._calc_sheets_pull", "PullMetadata", "modelo_id"),
-        ("aeat.application.storage.calc_sheets._parity_harness", "ParityReport", "modelo_id"),
-        ("aeat.application.storage.calc_sheets._records", "SheetExportMetadata", "modelo_id"),
-        ("aeat.domain.user_profile._registry_contract", "UserProfileRegistryContractIssue", "modelo_id"),
-        # PATTERN — ProfileId has character-class pattern; field values may not match
-        ("aeat.application.state_projection", "ProjectionActiveProfile", "profile_id"),
-        # TRANSIT — ConstructId; registry construct identifiers use different shape
-        ("aeat.domain.user_profile._registry_contract", "UserProfileRegistryContractIssue", "construct_id"),
-        # TRANSIT — BindingId/CasillaId; registry ref shapes differ from hex-64
-        ("aeat.application.aggregation._source_mesh", "CalculationSourceDiagnostic", "binding_id"),
-        ("aeat.application.aggregation._source_mesh", "CalculationSourceDiagnostic", "casilla_id"),
-    }
-)
-
 
 def _is_basemodel_subclass(node: ast.ClassDef) -> bool:
     """Return whether ``node`` textually inherits from ``BaseModel``.
@@ -532,37 +689,41 @@ def _is_alias_declaration_module(path: Path) -> bool:
 def find_bare_str_typed_id_fields(
     root: Path = AEAT_ROOT,
     inventory: AliasInventory | None = None,
-    protect_list: frozenset[tuple[str, str, str]] | None = None,
 ) -> list[Finding]:
     """Detect bare-``str`` ``<owner>_id`` fields on pydantic models.
 
     For every pydantic ``BaseModel`` subclass declared under ``root``,
     inspect every ``AnnAssign`` field whose target name matches
     ``<owner>_id``. If ``<owner>`` is in the alias inventory and the
-    annotation is bare ``str`` (or ``str | None``), the field is flagged
-    — the typed alias for that identity exists and is the contract the
-    field should consume.
+    annotation is bare ``str`` (or ``str | None``), the field is
+    classified against the alias's introspected constraint shape:
 
-    Sites in ``protect_list`` (default: :data:`PROMOTE001_PROTECT_LIST`) are
-    excluded from the findings.  Each protect-list entry is a
-    ``(dotted_module, class_name, field_name)`` triple documenting a site
-    where the alias constraint shape is incompatible with the field's existing
-    data contract, making promotion without a broader data-migration unsafe.
+    * **Shape-compatible** — every value the field accepts today would
+      also be accepted by the alias. The detector emits a promotion
+      candidate finding so the migration pressure stays on without
+      requiring an allowlist of pre-approved sites.
+    * **Shape-incompatible** — the alias is stricter than the field's
+      declared constraints. The detector emits a structured rationale
+      derived from the introspected constraint deltas (``min_length``,
+      ``max_length``, ``pattern``) so the operator can see why
+      promotion would reject values the field currently accepts.
+
+    The classification follows the substitutability pre-filter from the
+    swarm-audit-cadence rule and consults ``inventory.constraints_by_owner``
+    directly; there is no protect list.
     """
     if inventory is None:
         inventory = build_alias_inventory(root)
-    if protect_list is None:
-        protect_list = PROMOTE001_PROTECT_LIST
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         if _is_alias_declaration_module(path):
             continue
-        dotted = _module_dotted_path(path, root)
         tree, err = _parse(path)
         if err is not None:
             findings.append(err)
             continue
         assert tree is not None
+        literals = _module_literal_string_assignments(tree)
         for class_node in (n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)):
             if not _is_basemodel_subclass(class_node):
                 continue
@@ -580,19 +741,24 @@ def find_bare_str_typed_id_fields(
                     continue
                 if not _annotation_is_bare_str(field.annotation):
                     continue
-                if (dotted, class_node.name, name) in protect_list:
-                    continue
                 alias = inventory.aliases_by_owner[owner]
-                findings.append(
-                    Finding(
-                        path,
-                        field.lineno,
-                        (
-                            f"bare-str typed-id field {class_node.name}.{name}: a typed "
-                            f"alias {alias!r} exists for owner {owner!r}; consume it"
-                        ),
-                    )
+                alias_shape = inventory.constraints_by_owner.get(owner, ConstraintShape())
+                candidate_shape = _extract_field_constraint_shape(
+                    field.annotation, field.value, literals
                 )
+                compatible, rationale = _classify_promotion(candidate_shape, alias_shape)
+                if compatible:
+                    message = (
+                        f"bare-str typed-id field {class_node.name}.{name}: "
+                        f"shape-compatible promotion candidate; alias {alias!r} "
+                        f"accepts every value the field accepts"
+                    )
+                else:
+                    message = (
+                        f"bare-str typed-id field {class_node.name}.{name}: "
+                        f"shape-incompatible with alias {alias!r}; {rationale}"
+                    )
+                findings.append(Finding(path, field.lineno, message))
     return findings
 
 
