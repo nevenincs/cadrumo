@@ -24,15 +24,15 @@ from .....domain.submission._protocols import (
     ModeloDraftLike,
     ModeloFinding,
 )
-from ._errors import ExportError, ExportFormatError
+from ._errors import AeatExportFormatError, ExportError
 
 __all__ = [
+    "AeatExportFormatError",
     "AuthProviderProbe",
     "DeadlineWindowChecker",
     "ModeloDraftLoader",
     "ModeloDraftStatus",
     "ExportError",
-    "ExportFormatError",
     "ModeloDraftLike",
     "ModeloFinding",
     "LiveSubmitForbiddenError",

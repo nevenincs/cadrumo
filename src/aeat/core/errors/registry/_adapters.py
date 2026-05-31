@@ -589,7 +589,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.aeat.export._errors.ExportFormatError",
+        "aeat.adapters.outbound.aeat.export._errors.AeatExportFormatError",
         ErrorCode(
             code="FAIL_EXPORT_FORMAT",
             category=ErrorCategory.FAIL,

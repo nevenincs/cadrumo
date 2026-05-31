@@ -24,7 +24,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
-from .._errors import ExportFormatError
+from .._errors import AeatExportFormatError
 from ._record_spec import (
     FicheroBoeEncoding,
     FieldKind,
@@ -70,13 +70,13 @@ def serialise(
         total_length: Expected content-byte count, excluding CRLF.
         required_field_ids: ``field_id`` values the caller guarantees
             must be present in ``headers``; missing required fields
-            raise :exc:`ExportFormatError` before any bytes are emitted.
+            raise :exc:`AeatExportFormatError` before any bytes are emitted.
 
     Returns:
         The ``total_length + 2`` byte payload (content + CRLF).
 
     Raises:
-        ExportFormatError: On missing required headers, on serialised-length
+        AeatExportFormatError: On missing required headers, on serialised-length
             mismatch, or from the individual encoders on overflow or
             non-encoding-compatible characters.
     """
@@ -84,7 +84,7 @@ def serialise(
     parts = [_encode_field(spec, casilla_values=casilla_values, headers=headers, encoding=encoding) for spec in specs]
     body = b"".join(parts)
     if len(body) != total_length:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"serialised body is {len(body)} bytes but total_length={total_length} "
             f"was declared; likely an encoder width mismatch."
         )
@@ -96,7 +96,7 @@ def _require_headers_present(headers: Mapping[str, HeaderValue], required_field_
     for required in required_field_ids:
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload"
             )
 
@@ -125,7 +125,7 @@ def _encode_reserved_field(spec: RecordFieldSpec, *, encoding: FicheroBoeEncodin
     assert spec.literal_value is not None  # invariant from model_validator
     lit = spec.literal_value.encode(encoding)
     if len(lit) != spec.length:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"RESERVED field {spec.field_id!r} literal width {len(lit)} != declared length {spec.length}"
         )
     return lit
@@ -144,7 +144,7 @@ def _encode_currency_field(
     else:
         header_val = headers.get(spec.field_id, _ZERO)
         if isinstance(header_val, (str, date)):
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"CURRENCY field {spec.field_id!r} requires a "
                 f"Decimal in headers; got {type(header_val).__name__}"
             )
@@ -167,7 +167,7 @@ def _encode_date_field(
     assert spec.date_fmt is not None  # invariant from model_validator
     dval = headers.get(spec.field_id)
     if not isinstance(dval, date):
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"DATE field {spec.field_id!r} requires a date in headers; got {type(dval).__name__}"
         )
     return encode_date(dval, spec.date_fmt, encoding=encoding)
@@ -182,7 +182,7 @@ def _encode_text_field(
     """ALPHANUMERIC / NUMERIC field: stringify the header value, encode with justification / padding."""
     tval = headers.get(spec.field_id, "")
     if isinstance(tval, date):
-        raise ExportFormatError(f"text field {spec.field_id!r} received a date; expected a string")
+        raise AeatExportFormatError(f"text field {spec.field_id!r} received a date; expected a string")
     return encode_text(
         str(tval),
         length=spec.length,
@@ -224,14 +224,14 @@ def serialise_envelope(
         The full envelope byte payload with a single trailing CRLF.
 
     Raises:
-        ExportFormatError: Same conditions as :func:`serialise`, plus any
+        AeatExportFormatError: Same conditions as :func:`serialise`, plus any
             per-segment width mismatch.
     """
     # Pre-flight required headers once (not per-segment).
     for required in required_field_ids:
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope"
             )
 
