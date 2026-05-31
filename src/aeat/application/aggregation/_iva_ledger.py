@@ -33,10 +33,8 @@ from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionDirection,
     TransactionLifecycleState,
-)
-from ...domain.transactions import (
-    TransactionDirection as LedgerTransactionDirection,
 )
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
@@ -569,10 +567,10 @@ def _validate_intracom_export_counterparty(
     return None
 
 
-def _flow_direction_for(direction: LedgerTransactionDirection) -> IvaFlowDirection | None:
-    if direction is LedgerTransactionDirection.INCOMING:
+def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | None:
+    if direction is TransactionDirection.INCOMING:
         return IvaFlowDirection.REPERCUTIDO
-    if direction is LedgerTransactionDirection.OUTGOING:
+    if direction is TransactionDirection.OUTGOING:
         return IvaFlowDirection.SOPORTADO
     return None
 
