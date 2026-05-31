@@ -154,3 +154,80 @@ the calculation layer; it prevents automatic filing output until reviewed.
 The Modelo 130 relation-regression work remains related by runtime mechanism
 only. It does not use the AEAT IVA wallet, but both plans validate that
 cross-period evidence can be safely materialised into current-period bindings.
+
+## First-period bootstrap
+
+### Bootstrap scenarios
+
+Three distinct bootstrap scenarios arise when the local compensation history
+pre-dates the operator's use of this tool:
+
+**True first-period**: The operator files their first ever Modelo 303 under this
+NIF. By definition, casilla `110` (compensación pendiente de períodos anteriores)
+is zero — there is no prior balance to carry forward. Run `iva-wallet seed
+--amount 0` for that period. The seeded record carries `status=seeded` and
+`expediente_id=manual-seed`, distinguishable from filed observations.
+
+**Mid-career carry-in**: The operator has filed Modelo 303 before but is
+switching to this tool. Their last M303 filed under the prior tool or directly
+with AEAT left a non-zero carry-forward balance. Run `iva-wallet seed --amount X`
+where `X` is the `compensación pendiente de períodos posteriores` from their
+last filed M303. Subsequent periods see this seeded value as the prior balance.
+
+**Mid-year tool switch**: As mid-career carry-in, but the switch happens
+mid-calendar-year. The operator may have earlier intra-year periods already
+filed. Each already-filed period should be seeded in chronological order so the
+local recurrence chain is unbroken from the seeded anchor.
+
+### LIVA art. 99.5 grounding for zero-first-period
+
+Under LIVA (Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor
+Añadido) art. 99.5, the right to deduct IVA quotas is born in the tax period in
+which the deductible quotas are incurred. A taxpayer filing their first Modelo
+303 for a new registration period has no prior period in which an IVA
+compensation balance could have been generated; therefore casilla `110` is
+legally zero. This is not a missing-data state — it is a legally certain state.
+
+Treating a seeded-zero or AEAT-wallet-zero for the first registered IVA filing
+period as a blocking `missing` divergence would prevent automatic output
+unnecessarily. The reconciliation layer maps this case to the non-blocking
+`first_period_zero` divergence instead.
+
+### Bootstrap state shape
+
+A seeded compensation period persists as an `IvaCompensationPeriodState` with:
+
+- `status = "seeded"` — distinguishes bootstrap from filed records in
+  diagnostics.
+- `expediente_id = "manual-seed"` — synthetic provenance marker.
+- `source_observation_key = "303:seed:<year>:<period>"` — namespace-prefixed
+  key for namespace integrity.
+- `available_end_amount = <amount>` — the declared carry-forward value.
+- `generated_amount = 0` — seeded records do not generate new compensation.
+
+### Divergence variant: first_period_zero
+
+`IvaCompensationDivergence` carries a `"first_period_zero"` literal that the
+reconciliation function emits when:
+
+1. The caller signals `is_first_iva_period=True`, AND
+2. The effective amount from the selected authority source (wallet or seeded
+   local recurrence) is zero (Decimal("0")).
+
+The resulting `IvaCompensationReconciliationDecision` has `blocked=False` and
+`selected_authority="aeat_wallet"` (when wallet is available) or
+`selected_authority="local_recurrence"` (when only the seeded record is
+available). Calculation proceeds without operator review because the zero value
+is legally certain under LIVA art. 99.5.
+
+### CLI seed contract
+
+`aeat app modelo iva-wallet seed` is the sole surface for declaring bootstrap
+balances. The command:
+
+- Accepts `--amount 0` for the true-first-period case (legally zero, art. 99.5).
+- Accepts `--amount X` for the carry-in case (X from the last prior-tool M303).
+- Requires `--confirm` as an explicit acknowledgement gate.
+- Refuses if a state already exists for the period (`IvaCompensationSeedConflictError`).
+- Returns the persisted `status`, `filing_year`, `period`, and `amount` in the
+  standard `--output` format.
