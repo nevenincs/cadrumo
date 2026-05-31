@@ -4,7 +4,6 @@ aeat.domain.auth package
 .. automodule:: aeat.domain.auth
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

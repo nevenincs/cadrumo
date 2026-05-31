@@ -4,7 +4,6 @@ aeat.adapters.persistence.storage package
 .. automodule:: aeat.adapters.persistence.storage
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

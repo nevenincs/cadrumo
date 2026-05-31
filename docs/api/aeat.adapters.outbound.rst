@@ -4,7 +4,6 @@ aeat.adapters.outbound package
 .. automodule:: aeat.adapters.outbound
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------
