@@ -59,6 +59,7 @@ __all__ = (
     "AEAT_ROOT",
     "AliasInventory",
     "Finding",
+    "PROMOTE001_PROTECT_LIST",
     "build_alias_inventory",
     "build_kind_status_state_alias_inventory",
     "find_bare_str_kind_status_state_fields",
@@ -409,6 +410,87 @@ def find_misplaced_hex_length_constants(root: Path = AEAT_ROOT) -> list[Finding]
 
 # --- Clause 4: bare-``str`` ``<owner>_id`` BaseModel field ----------------
 
+#: Sites excluded from the Clause 4 bare-str ``_id`` detector.
+#:
+#: Each entry is a ``(dotted_module, class_name, field_name)`` triple.
+#: A site is excluded when the alias constraint shape is stricter than the
+#: field's declared constraint, so promoting the bare ``str`` to the typed alias
+#: would cause runtime validation failures on existing data.
+#:
+#: Rationale codes:
+#:   HEX64   — alias requires a 64-char hex digest; field accepts arbitrary strings.
+#:   MINLEN  — alias requires min_length=1; field has an empty-string default.
+#:   PATTERN — alias has a character-class pattern that rejects existing values.
+#:   NODOC   — field documents a non-hex-64 shape in its module docstring; alias is hex-64.
+#:   TRANSIT — field carries values from an external transit format that doesn't
+#:             match the alias constraint (e.g. 3-digit modelo codes, registry kebab refs).
+PROMOTE001_PROTECT_LIST: frozenset[tuple[str, str, str]] = frozenset(
+    {
+        # HEX64 — TransactionId requires hex-64; these fields accept any str
+        ("aeat.application.aggregation._iva_ledger", "IvaLedgerAggregationIssue", "transaction_id"),
+        ("aeat.application.aggregation._iva_ledger", "ProrrataLedgerReference", "transaction_id"),
+        ("aeat.application.aggregation._renta_income_ledger", "RentaIncomeLedgerAggregationIssue", "transaction_id"),
+        ("aeat.application.aggregation._renta_income_ledger", "RentaIncomeObservation", "transaction_id"),
+        ("aeat.application.aggregation._renta_ledger", "RentaLedgerAggregationIssue", "transaction_id"),
+        ("aeat.application.invoices._linking", "InvoiceTransactionLinkResult", "transaction_id"),
+        ("aeat.application.invoices._reconciliation", "ReconciliationSkippedSuggestion", "transaction_id"),
+        ("aeat.application.ledger._models", "LedgerReviewQuery", "transaction_id"),
+        ("aeat.application.ledger._models", "BulkClassifyRow", "transaction_id"),
+        ("aeat.application.ledger._models", "BulkClassifyFailure", "transaction_id"),
+        ("aeat.application.ledger._models", "ApplyRulesAppliedRow", "transaction_id"),
+        ("aeat.application.ledger._preflight", "LedgerPreflightIssue", "transaction_id"),
+        ("aeat.application.review._models", "LedgerReviewRecord", "transaction_id"),
+        ("aeat.domain.transactions._models", "TransactionEvidenceProvenanceEntry", "evidence_id"),
+        ("aeat.domain.transactions._models", "Transaction", "invoice_id"),
+        ("aeat.domain.transactions._raw_transaction", "RawTransaction", "transaction_id"),
+        # HEX64 — EvidenceId is hex-64; these fields accept arbitrary strings
+        ("aeat.application.ledger._evidence", "PurchaseInvoiceEvidence", "evidence_id"),
+        # HEX64 — InvoiceId likely hex-64; these fields accept arbitrary strings
+        ("aeat.application.invoices._linking", "InvoiceTransactionLinkResult", "invoice_id"),
+        ("aeat.application.invoices._queries", "InvoiceListRow", "invoice_id"),
+        ("aeat.application.invoices._reconciliation", "ReconciliationSkippedSuggestion", "invoice_id"),
+        ("aeat.application.ledger._business_operation_invoice", "BusinessOperationInvoice", "invoice_id"),
+        ("aeat.application.review._models", "InvoiceReviewRecord", "invoice_id"),
+        ("aeat.domain.invoices._service", "ReconciliationSuggestion", "invoice_id"),
+        ("aeat.domain.invoices._service", "LinkInconsistency", "invoice_id"),
+        ("aeat.domain.calculations.registry._bindings", "InvoiceObservation", "invoice_id"),
+        # HEX64/NODOC — SnapshotId is hex-64; snapshot_id fields use non-hex-64 shape
+        ("aeat.application.live.test_snapshot_base", "ProbeSnapshot", "snapshot_id"),
+        ("aeat.application.live._borrador_100", "Borrador100Snapshot", "snapshot_id"),
+        ("aeat.application.live._censo", "CensoSnapshot", "snapshot_id"),
+        ("aeat.application.user_profile._censo_sync", "CensoProfileComparison", "snapshot_id"),
+        ("aeat.application.user_profile._censo_sync", "CensoApplyResult", "snapshot_id"),
+        ("aeat.application.user_profile", "ProfileSnapshot", "snapshot_id"),
+        ("aeat.application.user_profile", "ProfileStaleCheckReport", "snapshot_id"),
+        # MINLEN — BucketId has min_length=1; these fields have empty-string defaults
+        ("aeat.adapters.persistence.storage.runtime", "StorageRuntime", "bucket_id"),
+        ("aeat.application.live.test_snapshot_base", "ProbeSnapshot", "bucket_id"),
+        ("aeat.core._bucket_pointer", "BucketPointer", "bucket_id"),
+        ("aeat.core.config", "StorageRouteClassification", "bucket_id"),
+        ("aeat.application.live._censo", "CensoSnapshot", "profile_id"),
+        # HEX64 — RevisionId constraint incompatible with these fields
+        ("aeat.application.state_projection", "ModeloReadinessRequest", "revision_id"),
+        ("aeat.application.state_projection", "ProjectionModeloReadiness", "revision_id"),
+        ("aeat.application.user_profile", "ProfilePreflightReport", "revision_id"),
+        ("aeat.application.user_profile", "ProfileSnapshotRequest", "revision_id"),
+        ("aeat.application.user_profile", "ProfileSnapshot", "revision_id"),
+        ("aeat.domain.user_profile._registry_contract", "UserProfileRegistryContractIssue", "revision_id"),
+        ("aeat.adapters.persistence.storage.sql.secure_objects", "SecureObjectRawRow", "revision_id"),
+        # TRANSIT — ModeloId requires ^\d{3}$; these carry arbitrary model identifiers in transit
+        ("aeat.adapters.outbound.google._calc_sheets_pull", "PullMetadata", "modelo_id"),
+        ("aeat.application.storage.calc_sheets._parity_harness", "ParityReport", "modelo_id"),
+        ("aeat.application.storage.calc_sheets._records", "SheetExportMetadata", "modelo_id"),
+        ("aeat.domain.user_profile._registry_contract", "UserProfileRegistryContractIssue", "modelo_id"),
+        # PATTERN — ProfileId has character-class pattern; field values may not match
+        ("aeat.application.state_projection", "ProjectionActiveProfile", "profile_id"),
+        # TRANSIT — ConstructId; registry construct identifiers use different shape
+        ("aeat.domain.user_profile._registry_contract", "UserProfileRegistryContractIssue", "construct_id"),
+        # TRANSIT — BindingId/CasillaId; registry ref shapes differ from hex-64
+        ("aeat.application.aggregation._source_mesh", "CalculationSourceDiagnostic", "binding_id"),
+        ("aeat.application.aggregation._source_mesh", "CalculationSourceDiagnostic", "casilla_id"),
+    }
+)
+
 
 def _is_basemodel_subclass(node: ast.ClassDef) -> bool:
     """Return whether ``node`` textually inherits from ``BaseModel``.
@@ -466,6 +548,7 @@ def _is_alias_declaration_module(path: Path) -> bool:
 def find_bare_str_typed_id_fields(
     root: Path = AEAT_ROOT,
     inventory: AliasInventory | None = None,
+    protect_list: frozenset[tuple[str, str, str]] | None = None,
 ) -> list[Finding]:
     """Detect bare-``str`` ``<owner>_id`` fields on pydantic models.
 
@@ -475,14 +558,23 @@ def find_bare_str_typed_id_fields(
     annotation is bare ``str`` (or ``str | None``), the field is flagged
     — the typed alias for that identity exists and is the contract the
     field should consume.
+
+    Sites in ``protect_list`` (default: :data:`PROMOTE001_PROTECT_LIST`) are
+    excluded from the findings.  Each protect-list entry is a
+    ``(dotted_module, class_name, field_name)`` triple documenting a site
+    where the alias constraint shape is incompatible with the field's existing
+    data contract, making promotion without a broader data-migration unsafe.
     """
 
     if inventory is None:
         inventory = build_alias_inventory(root)
+    if protect_list is None:
+        protect_list = PROMOTE001_PROTECT_LIST
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         if _is_alias_declaration_module(path):
             continue
+        dotted = _module_dotted_path(path, root)
         tree, err = _parse(path)
         if err is not None:
             findings.append(err)
@@ -504,6 +596,8 @@ def find_bare_str_typed_id_fields(
                 if owner not in inventory.aliases_by_owner:
                     continue
                 if not _annotation_is_bare_str(field.annotation):
+                    continue
+                if (dotted, class_node.name, name) in protect_list:
                     continue
                 alias = inventory.aliases_by_owner[owner]
                 findings.append(
