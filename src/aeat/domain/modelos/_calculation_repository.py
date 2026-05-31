@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+
+from aeat.core.time import _now
 
 from ...core.logging import get_logger
 from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
@@ -11,8 +12,6 @@ from ._errors import ModeloError
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import Envelope, SensitivityClass
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
@@ -81,7 +80,7 @@ class CalculationRevisionCatalogueRepository:
 
         envelope = Envelope[CalculationRevisionCatalogue](
             schema_version=_CALCULATION_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )

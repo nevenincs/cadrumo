@@ -9,10 +9,11 @@ disk.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from aeat.core.time import _now
 
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
@@ -21,7 +22,6 @@ from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.envelope._envelope import Envelope
     from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 
@@ -202,7 +202,7 @@ class TransactionCatalogueRepository:
 
         envelope = Envelope[TransactionCatalogue](
             schema_version=_TX_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )

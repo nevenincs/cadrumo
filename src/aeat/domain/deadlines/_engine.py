@@ -7,9 +7,11 @@ read from validated calculation registry data.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from typing import Protocol, runtime_checkable
+
+from aeat.core.time import _now
 
 from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
@@ -188,7 +190,7 @@ class DeadlineEngine:
             profile=profile,
             year=year,
             obligations=tuple(obligations),
-            generated_at=datetime.now(UTC),
+            generated_at=_now(),
         )
 
     def _obligation_for_window(

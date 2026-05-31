@@ -13,11 +13,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, ValidationError
+
+from aeat.core.time import _now
 
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
@@ -237,7 +238,7 @@ def fetch_manual_part(
         relative_pdf_path=_PDF_FILENAME,
         sha256=sha256,
         content_length=length,
-        fetched_at=datetime.now(tz=UTC),
+        fetched_at=_now(),
         synthetic=False,
     )
     write_manifest(manifest_path, manifest)
