@@ -15,10 +15,13 @@ from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Literal
+from zipfile import BadZipFile
 
 from openpyxl import load_workbook
 from openpyxl.cell.cell import Cell, MergedCell
 from openpyxl.formula import Tokenizer
+from openpyxl.formula.tokenizer import TokenizerError
+from openpyxl.utils.exceptions import InvalidFileException
 from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -305,7 +308,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             error=str(exc),
             started=started,
         )
-    except Exception as exc:
+    except (InvalidFileException, BadZipFile, OSError) as exc:
         _log.warning(
             "workbook parity scan failed for %s: %s",
             relative,
@@ -322,6 +325,16 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             error=f"{type(exc).__name__}: {exc}",
             started=started,
         )
+    except Exception as exc:
+        _log.warning(
+            "workbook parity scan unexpected error for %s: %s",
+            relative,
+            exc,
+            exc_info=True,
+        )
+        raise RegistryValidationError(
+            f"Unexpected error scanning workbook {relative}: {type(exc).__name__}: {exc}"
+        ) from exc
     kind = _classify_xlsx(relative, formulas)
     evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
     return WorkbookArtefactReport(
@@ -1073,7 +1086,7 @@ def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workb
     try:
         tokens = Tokenizer(formula).items
         token_values = (token.value for token in tokens)
-    except Exception as exc:
+    except TokenizerError as exc:
         _log.debug(
             "workbook parity: openpyxl Tokenizer failed on formula %r; falling back to regex (%s)",
             formula[:80],

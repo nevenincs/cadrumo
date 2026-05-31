@@ -97,7 +97,7 @@ class SiteHealthEvidence(_SiteHealthRecord):
         """Enforce per-item length bounds on every detected marker."""
         for marker in value:
             if not isinstance(marker, str):
-                raise TypeError(f"detected_markers entries must be str, got {type(marker).__name__}")
+                raise ValueError(f"detected_markers entries must be str, got {type(marker).__name__}")
             if len(marker) < 1 or len(marker) > 128:
                 raise BrowserValidationError(f"detected_markers entry must be 1..128 chars, got length {len(marker)}")
         return value

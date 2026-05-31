@@ -92,8 +92,8 @@ def _extract_pages_text_with_pdfium_cached(
                     page.close()
         finally:
             document.close()
-    except Exception:
-        _logger.debug("pypdfium2 failed to extract declaración PDF text from %s", path, exc_info=True)
+    except (ImportError, OSError, ValueError, RuntimeError) as _exc:
+        _logger.debug("pypdfium2 failed to extract declaración PDF text from %s: %s", path, _exc, exc_info=True)
         return None
     if not any(pages):
         return None

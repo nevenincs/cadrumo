@@ -45,6 +45,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time._clock import _now
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
+from .....domain.user_profile._errors import UserProfileError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
@@ -452,7 +453,7 @@ class ClaveMovilAuthProvider:
                             storage_state=persisted.storage_state,
                             metadata=refreshed_metadata,
                         )
-                    except Exception:
+                    except (OSError, AuthError):
                         log.warning(
                             "ClaveMovilAuthProvider: encrypted session refresh write failed;"
                             " session valid but deadline not persisted",
@@ -801,7 +802,7 @@ class ClaveMovilAuthProvider:
             else:
                 context["identity_alignment"] = "mismatch"
             return context
-        except Exception as exc:
+        except (ImportError, KeyError, AttributeError, UserProfileError) as exc:
             log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
             return {
                 "active_profile_id": "",
@@ -1039,7 +1040,17 @@ class ClaveMovilAuthProvider:
         except Exception:
             # If the encrypted save fails, remove any partial object so the
             # next authenticate() call sees a clean slate and runs fresh.
-            self._invalidate_persisted(storage_state_path)
+            # The cleanup is wrapped so a secondary failure does not mask the
+            # original persist exception (mirrors the teardown pattern above).
+            try:
+                self._invalidate_persisted(storage_state_path)
+            except Exception as _cleanup_exc:
+                log.debug(
+                    "ClaveMovilAuthProvider: _invalidate_persisted during persist-failure cleanup"
+                    " suppressed: %s",
+                    _cleanup_exc,
+                    exc_info=True,
+                )
             raise
 
         session = AeatSession(
