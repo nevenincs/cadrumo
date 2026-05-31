@@ -32,6 +32,7 @@ from decimal import Decimal, InvalidOperation
 
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
+from ...core.logging import get_logger
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -184,8 +185,12 @@ def _inject_derived_family_facts(
                 age_at_year_end = filing_year - birth.year
                 if age_at_year_end < 3:
                     count_menores += 1
-            except (ValueError, TypeError):
-                pass
+            except (ValueError, TypeError) as exc:
+                get_logger(__name__).debug(
+                    "profile-binding: failed to parse birth date for menores count; skipping entry (%s: %s)",
+                    type(exc).__name__,
+                    exc,
+                )
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
