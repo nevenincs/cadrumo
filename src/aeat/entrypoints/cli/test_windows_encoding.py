@@ -15,9 +15,6 @@ all platforms (including non-Windows where it is a no-op).
 from __future__ import annotations
 
 import io
-import os
-from collections.abc import Iterator
-from contextlib import contextmanager
 
 import pytest
 
@@ -29,18 +26,17 @@ from ._stdio import _set_windows_console_utf8, configure_stdio_for_utf8
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-@contextmanager
-def _output_language(language: str) -> Iterator[None]:
-    """Temporarily override ``AEAT_OUTPUT_LANGUAGE`` for the duration of a test."""
-    previous = os.environ.get("AEAT_OUTPUT_LANGUAGE")
-    os.environ["AEAT_OUTPUT_LANGUAGE"] = language
-    try:
-        yield
-    finally:
-        if previous is None:
-            os.environ.pop("AEAT_OUTPUT_LANGUAGE", None)
-        else:
-            os.environ["AEAT_OUTPUT_LANGUAGE"] = previous
+def _output_language(language: str):
+    """Pin ``aeat_output_language`` for the duration of a test.
+
+    Delegates to the canonical Settings override API
+    (:func:`aeat.core.config.override_settings`); the production
+    locale resolver reads through ``load_settings`` so the ContextVar
+    layer is reached.
+    """
+    from ...core.config import override_settings
+
+    return override_settings(aeat_output_language=language)
 
 
 @pytest.mark.parametrize(
