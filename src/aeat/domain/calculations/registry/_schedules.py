@@ -78,9 +78,15 @@ def _mapping_get(m: Mapping, key: str) -> object:
 def _resolve_profile_fact(profile_facts: object, field: str) -> object:
     if isinstance(profile_facts, Mapping) and field in profile_facts:
         return _mapping_get(profile_facts, field)
+    # Schema predicate path "iva.regime" maps to the TaxpayerProfile.iva_regime
+    # attribute.  The dotted path form is what the TOML registry declares; the
+    # attribute name is what the Python dataclass exposes without nesting.
     if field == "iva.regime" and hasattr(profile_facts, "iva_regime"):
         _attr = "iva_regime"
         return getattr(profile_facts, _attr)
+    # Schema predicate path "taxpayer.entity_type" maps to
+    # TaxpayerProfile.entity_type.  The "taxpayer." prefix is the namespace used
+    # in the registry TOML; the attribute is a flat field on the profile object.
     if field == "taxpayer.entity_type" and hasattr(profile_facts, "entity_type"):
         return profile_facts.entity_type
     current: object = profile_facts
