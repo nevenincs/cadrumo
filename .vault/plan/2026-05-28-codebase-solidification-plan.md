@@ -990,3 +990,18 @@ Add BROAD-EXCEPT-RATIONALE markers on _acquisition_lock + _sessions teardowns. D
 - [x] `W14.P46.S611` - dedup _file_fingerprint 4-site identical implementation in domain/categories/_registry.py:94 + domain/iva/_catalogue.py:78 + application/topics/__init__.py:102 + domain/normatives/_loader.py:59; `introduce aeat.core.paths.file_stat_fingerprint canonical + migrate; `src/aeat/core/paths.py`.
 - [x] `W14.P46.S612` - extract _RENTA_WEB_OPEN_DEFAULT_YEAR = 2025 Final constant in domain/calculations/registry/_renta_web_open_oracle.py and migrate :71 + :162 hardcoded year=2025; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
 - [x] `W14.P46.S613` - aggregate test asserting all 6 W14 survivor closures landed + ratchets unchanged; `src/aeat/test_w14_p46_survivor_closure.py`.
+
+## Wave `W15` - post-ADR maintenance: close W15 5-finding backlog
+
+W15 maintenance audit zero strict regressions (4/3 sustained — ADR close achieved + holding). W15 closes 5 small findings: 2 rationale markers + 2 year-constant extractions + 1 documentation note. Lowest backlog of the epic.
+
+### Phase `W15.P47` - W15 audit closure
+
+Single-phase closure of 5 maintenance findings.
+
+- [ ] `W15.P47.S614` - add BROAD-EXCEPT-RATIONALE-CORPUS-LOOKUP-BOUNDARY marker on application/registry/_corpus.py:334 (find_reference/find_articulo surfaces heterogeneous catalogue-specific exceptions; `warning-and-continue at lookup boundary); `src/aeat/application/registry/_corpus.py`.
+- [ ] `W15.P47.S615` - add BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK marker on core/config.py:999 (read_pointer raises OSError/JSONDecodeError/ValidationError; `degrade to None for best-effort bucket resolution); `src/aeat/core/config.py`.
+- [ ] `W15.P47.S616` - extract _HOME_OFFICE_DEDUCTION_YEAR = 2025 Final constant in application/user_profile/_censo_sync.py and migrate :356; `src/aeat/application/user_profile/_censo_sync.py`.
+- [ ] `W15.P47.S617` - extract _REGISTRY_INTEGRITY_PROBE_YEAR + _REGISTRY_INTEGRITY_PROBE_DATE Final constants in application/diagnostics.py and migrate :640,642; `src/aeat/application/diagnostics.py`.
+- [ ] `W15.P47.S618` - document filing/runtime.py:281-287 alt fingerprint variant — either align with file_stat_fingerprint canonical (if name vs relative path semantic is reconcilable) or add # ALT-FINGERPRINT-RATIONALE: relative-path fingerprint for registry-tree change detection (distinct from filename-keyed file_stat_fingerprint canonical); `src/aeat/application/filing/runtime.py`.
+- [ ] `W15.P47.S619` - aggregate test asserting all 5 W15 closures landed + W14 ratchets intact; `src/aeat/test_w15_p47_maintenance_closure.py`.
