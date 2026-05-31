@@ -864,10 +864,10 @@ W9 audit confirmed ZERO strict regressions (first since W4). Consecutive-clean-w
 
 Enroll WorkbookScanStatus StrEnum at 5+ comparison sites within its own defining file. Close UTF_8_ENCODING enrollment gap at 20+ persistence/application sites. Migrate _STRICT_FROZEN ConfigDict at 2 files missed by W13 sweep.
 
-- [ ] `W09.P37.S553` - enroll WorkbookScanStatus StrEnum at _workbook_parity.py:122,963,966,981,1020 comparison sites (StrEnum defined same file but never used for comparisons); `src/aeat/domain/calculations/registry/_workbook_parity.py`.
-- [ ] `W09.P37.S554` - enroll UTF_8_ENCODING at 20+ persistence/application call sites (blob_store/_blob_store.py:350, master_key/_master_key.py:761, _profile_health.py:256, topics/__init__.py:122, _observation_store.py:113,130,165,182 + 6 more); `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py`.
-- [ ] `W09.P37.S555` - migrate _STRICT_FROZEN local ConfigDict at bucket/_layout.py:31 + sql/secure_objects.py:36 to canonical STRICT_FROZEN_CONFIG from aeat.core._models; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
-- [ ] `W09.P37.S556` - add inventory test asserting WorkbookScanStatus enum has zero bare-string comparison survivors in its defining file + STRICT_FROZEN_CONFIG used everywhere; `src/aeat/test_w09_p37_inventory.py`.
+- [x] `W09.P37.S553` - enroll WorkbookScanStatus StrEnum at _workbook_parity.py:122,963,966,981,1020 comparison sites (StrEnum defined same file but never used for comparisons); `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [x] `W09.P37.S554` - enroll UTF_8_ENCODING at 20+ persistence/application call sites (blob_store/_blob_store.py:350, master_key/_master_key.py:761, _profile_health.py:256, topics/__init__.py:122, _observation_store.py:113,130,165,182 + 6 more); `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py`.
+- [x] `W09.P37.S555` - migrate _STRICT_FROZEN local ConfigDict at bucket/_layout.py:31 + sql/secure_objects.py:36 to canonical STRICT_FROZEN_CONFIG from aeat.core._models; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
+- [x] `W09.P37.S556` - add inventory test asserting WorkbookScanStatus enum has zero bare-string comparison survivors in its defining file + STRICT_FROZEN_CONFIG used everywhere; `src/aeat/test_w09_p37_inventory.py`.
 
 ### Phase `W09.P38` - A1+A8 narrowing + rationale markers
 
@@ -883,10 +883,10 @@ Add rationale comments to 3 financial-provider teardown except-Exception sites (
 
 Thread tr() on _commands.py:907 wizard status tab-key. Enumerate _catalogue.py f-string-as-locale-key sites in survivor registry. Wrap GoogleApiResponseBody alias in TypedDict per-endpoint. Wrap _google.py OAuth json.loads in pydantic. Define InvoiceRowPayload TypedDict for _importing.py. Audit storage/ and calculations/ __init__.py for orphan re-exports.
 
-- [ ] `W09.P39.S562` - thread tr() on wizard/_commands.py:907 status tab-key label (sibling of 906/909/910 already wrapped); `src/aeat/application/wizard/_commands.py`.
-- [ ] `W09.P39.S563` - enumerate _catalogue.py:57,106-169 f-string-as-locale-key sites in survivor registry (or refactor to static maps if enum value space allows); `src/aeat/application/wizard/_catalogue.py`.
-- [ ] `W09.P39.S564` - wrap GoogleApiResponseBody alias at adapters/outbound/google/_api.py:38 with per-endpoint TypedDicts or pydantic schemas; `src/aeat/adapters/outbound/google/_api.py`.
-- [ ] `W09.P39.S565` - wrap json.loads(raw) OAuth client payload at cli/_config/_google.py:209 in OAuthClientPayload TypedDict + pydantic validation; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W09.P39.S566` - define InvoiceRowPayload TypedDict for _decode_invoice_payload at application/invoices/_importing.py:99 + downstream coercion; `src/aeat/application/invoices/_importing.py`.
-- [ ] `W09.P39.S567` - audit storage/__init__.py and calculations/__init__.py orphan re-export modules; `delete or document; `src/aeat/application/storage/__init__.py`.
-- [ ] `W09.P39.S568` - aggregate test asserting locale + pydantic boundary closures landed; `src/aeat/test_w09_p39_locale_pydantic.py`.
+- [x] `W09.P39.S562` - thread tr() on wizard/_commands.py:907 status tab-key label (sibling of 906/909/910 already wrapped); `src/aeat/application/wizard/_commands.py`.
+- [x] `W09.P39.S563` - enumerate _catalogue.py:57,106-169 f-string-as-locale-key sites in survivor registry (or refactor to static maps if enum value space allows); `src/aeat/application/wizard/_catalogue.py`.
+- [x] `W09.P39.S564` - wrap GoogleApiResponseBody alias at adapters/outbound/google/_api.py:38 with per-endpoint TypedDicts or pydantic schemas; `src/aeat/adapters/outbound/google/_api.py`.
+- [x] `W09.P39.S565` - wrap json.loads(raw) OAuth client payload at cli/_config/_google.py:209 in OAuthClientPayload TypedDict + pydantic validation; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W09.P39.S566` - define InvoiceRowPayload TypedDict for _decode_invoice_payload at application/invoices/_importing.py:99 + downstream coercion; `src/aeat/application/invoices/_importing.py`.
+- [x] `W09.P39.S567` - audit storage/__init__.py and calculations/__init__.py orphan re-export modules; `delete or document; `src/aeat/application/storage/__init__.py`.
+- [x] `W09.P39.S568` - aggregate test asserting locale + pydantic boundary closures landed; `src/aeat/test_w09_p39_locale_pydantic.py`.

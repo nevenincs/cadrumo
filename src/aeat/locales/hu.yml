@@ -523,6 +523,7 @@ application:
     output_labels:
       active_profile: active_profile
       profile: profile
+      status: állapot
     status:
       errors:
         missing_tax_id: Az aktív profilból hiányzik a tax.id azonosító.
