@@ -936,10 +936,10 @@ Fix locales/manager.py 9 bare utf-8 regression. Close _session_store.py ×8 + _i
 
 Add BROAD-EXCEPT-RATIONALE markers to 3 diagnostics.py except-Exception sites (lines 425, 429, 569, 761). Wrap wizard _commands.py:910 next tab-label through tr(). Investigate _PdfWord TypeAlias in declaracion/_parser.py:32 — replace with structured type. Wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic model.
 
-- [ ] `W11.P43.S587` - add BROAD-EXCEPT-RATIONALE markers on diagnostics.py:425,429 browser context+session teardown except sites; `src/aeat/application/diagnostics.py`.
-- [ ] `W11.P43.S588` - add BROAD-EXCEPT-RATIONALE marker on diagnostics.py:569 integrity-probe loop swallow; `src/aeat/application/diagnostics.py`.
-- [ ] `W11.P43.S589` - replace inline pragma comment with BROAD-EXCEPT-RATIONALE token at diagnostics.py:761; `src/aeat/application/diagnostics.py`.
-- [ ] `W11.P43.S590` - wrap wizard/_commands.py:910 next tab-label through tr() with new application.wizard.output_labels.next key; `src/aeat/application/wizard/_commands.py`.
-- [ ] `W11.P43.S591` - investigate _PdfWord TypeAlias at declaracion/_parser.py:32; `either move to canonical home or replace with structured TypedDict; `src/aeat/adapters/inbound/declaracion/_parser.py`.
-- [ ] `W11.P43.S592` - wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic SidecarMetadata model; `src/aeat/adapters/outbound/storage/_local.py`.
-- [ ] `W11.P43.S593` - aggregate test asserting axis finishers landed; `src/aeat/test_w11_p43_axis_finishers.py`.
+- [x] `W11.P43.S587` - add BROAD-EXCEPT-RATIONALE markers on diagnostics.py:425,429 browser context+session teardown except sites; `src/aeat/application/diagnostics.py`.
+- [x] `W11.P43.S588` - add BROAD-EXCEPT-RATIONALE marker on diagnostics.py:569 integrity-probe loop swallow; `src/aeat/application/diagnostics.py`.
+- [x] `W11.P43.S589` - replace inline pragma comment with BROAD-EXCEPT-RATIONALE token at diagnostics.py:761; `src/aeat/application/diagnostics.py`.
+- [x] `W11.P43.S590` - wrap wizard/_commands.py:910 next tab-label through tr() with new application.wizard.output_labels.next key; `src/aeat/application/wizard/_commands.py`.
+- [x] `W11.P43.S591` - investigate _PdfWord TypeAlias at declaracion/_parser.py:32; `either move to canonical home or replace with structured TypedDict; `src/aeat/adapters/inbound/declaracion/_parser.py`.
+- [x] `W11.P43.S592` - wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic SidecarMetadata model; `src/aeat/adapters/outbound/storage/_local.py`.
+- [x] `W11.P43.S593` - aggregate test asserting axis finishers landed; `src/aeat/test_w11_p43_axis_finishers.py`.
