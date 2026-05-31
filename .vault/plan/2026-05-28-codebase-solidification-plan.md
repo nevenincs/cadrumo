@@ -1076,3 +1076,17 @@ Land 2 ANY-RETURN-RATIONALE-* markers on bare Any parameter annotations + aggreg
 - [x] `W20.P52.S643` - A8: add ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION marker on _iva_wallet_blocked_message(decision: Any) at _actions.py:1341 (concrete type is IvaWalletCompensationDecision; `cross-module import cycle prevents direct annotation; duck-typed via .divergence/.reason protocol access); `src/aeat/application/modelo/_actions.py`.
 - [x] `W20.P52.S644` - A8: add ANY-RETURN-RATIONALE-SOURCE-PROFILE-FINGERPRINT marker on _profile_fingerprint(profile_record: Any) at _source_profile.py:71 (concrete type is a pydantic model registered at runtime; `duck-typed via hasattr(model_dump_json) to avoid cross-domain import); `src/aeat/application/aggregation/_source_profile.py`.
 - [x] `W20.P52.S645` - aggregate test asserting both W20 ANY-RETURN-RATIONALE-* tokens present on the named helper functions + prior-wave inventory ratchets remain green; `src/aeat/test_w20_p52_closure.py`.
+
+## Wave `W21` - close W21 findings + introduce structural prevention for parameter-Any drift class
+
+W21 swarm re-audit: 8 of 9 axes returned ZERO findings. A8 surfaced 9 parameter-Any survivors (3 in core profile/catalogue from circular-import-driven rationale; 6 in Google adapter from third-party Resource objects). Pattern matches W20: parameter-Any residue is a deep survivor pool. Per W11 UTF-8 ratchet precedent, introduce a parameter-Any inventory ratchet enrolling all current sites with `_KNOWN_VIOLATING_LINES` allowlist to prevent new-site drift.
+
+### Phase `W21.P53` - W21 audit closure + parameter-Any inventory ratchet
+
+Land 3 marker batches + 1 structural-prevention ratchet + aggregate test.
+
+- [ ] `W21.P53.S646` - A8: add KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR markers on core/profile.py:73 (ProjectAnswersFn.__call__) and :115 (project_answers); WizardFlow type lives in aeat.application.wizard and importing here would create a circular dependency; `src/aeat/core/profile.py`.
+- [ ] `W21.P53.S647` - A8: add KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR marker on profile_catalogue.py:65 (register_wizard_catalogue); same circular-import rationale as S646; `src/aeat/core/profile_catalogue.py`.
+- [ ] `W21.P53.S648` - A8: add ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE markers on Google API Resource parameter positions in _calc_sheets_apply.py (drive: Any at :114, :162, :182, :195, :233, :234) and _calc_sheets_pull.py (raw: Any / row_set: Any at :339, :655, :686, :711); googleapiclient Resource objects have no stub types; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py` + `_calc_sheets_pull.py`.
+- [ ] `W21.P53.S649` - structural prevention: introduce test_any_param_rationale_inventory.py (AST-walk all production files for parameter-Any and **kwargs-Any annotations; require KWARGS-ANY-RATIONALE-* / ADAPTER-INTERNAL-ALIAS-RATIONALE-* / ANY-RETURN-RATIONALE-* marker within 3 lines above the signature); enrol all currently-known violating sites in _KNOWN_VIOLATING_LINES allowlist; gate new sites; mirror W11 UTF-8 ratchet pattern; `src/aeat/test_any_param_rationale_inventory.py`.
+- [ ] `W21.P53.S650` - aggregate test asserting all 3 W21 marker batches landed + ratchet S649 imports cleanly + prior-wave inventory ratchets remain green; `src/aeat/test_w21_p53_closure.py`.
