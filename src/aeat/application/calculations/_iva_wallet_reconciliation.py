@@ -9,11 +9,13 @@ the effective binding decision consumed by Modelo 303 calculation.
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from aeat.core.time import _now
 
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ...core.errors import AeatError
@@ -275,7 +277,7 @@ def reconcile_iva_compensation_wallet(
             target_year=target_year,
             target_period=target_period,
         )
-    when = decided_at if decided_at is not None else datetime.now(UTC)
+    when = decided_at if decided_at is not None else _now()
     wallet_amount = wallet.total_pending if wallet is not None else None
     wallet_captured_at = wallet.captured_at if wallet is not None else None
     stale_wallet = _is_wallet_stale(wallet_captured_at, when, max_wallet_age_days)

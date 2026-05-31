@@ -27,13 +27,16 @@ event without further coupling.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Final
 
 from pydantic import BaseModel, Field
 
+from aeat.core.time import _now
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
 from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
 from ..live._censo import (
@@ -46,8 +49,6 @@ from ._censo_errors import (
     CensoSyncError,
 )
 from ._repository import UserProfileLifecycleRepository
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 CENSUS_SOURCE_TAG: Final = "aeat_census_read"
 """``UserProfileFact.source`` value stamped on every census-derived fact."""
@@ -170,7 +171,7 @@ class CensoSyncService:
             )
         return self._snapshots.capture(
             profile_id=profile_id,
-            captured_at=datetime.now(UTC),
+            captured_at=_now(),
             source_url=source_url,
             censo_facts=facts,
         )
@@ -222,7 +223,7 @@ class CensoSyncService:
             )
         return self._snapshots.capture(
             profile_id=profile_id,
-            captured_at=datetime.now(UTC),
+            captured_at=_now(),
             source_url=G313_LAUNCHER_URL,
             censo_facts=facts,
         )
@@ -304,7 +305,7 @@ class CensoSyncService:
         updated = profile.model_copy(
             update={
                 "facts": retained + new_censo_facts,
-                "updated_at": datetime.now(UTC),
+                "updated_at": _now(),
             },
         )
         self._profiles.save(updated)

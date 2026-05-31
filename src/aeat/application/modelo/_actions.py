@@ -14,14 +14,16 @@ service layer is unit-testable without a workflow-state fixture.
 from __future__ import annotations
 
 import asyncio
+import decimal as _decimal
 import hashlib
 import re as _re
 from collections.abc import Mapping
-from datetime import UTC, date, datetime
-import decimal as _decimal
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from aeat.core.time import _now
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
@@ -36,9 +38,6 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import (
-    M210_CONVENIO_MISSING_SENTINEL,
-    M210_DEFERRED_TIPO_SENTINEL,
-    M210_NOT_YET_AUTHORED_SENTINEL,
     M210_RATE_SENTINELS,
     CasillaDefinition,
     CasillaObservation,
@@ -56,7 +55,6 @@ from ...domain.calculations.registry import (
     materialize_relation_binding_values,
 )
 from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
-from ...domain.submission import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -106,7 +104,7 @@ from ...domain.modelos._work_unit import (
 )
 from ...domain.period import parse_canonical_period, period_end_date
 from ...domain.profile._ccaa import CCAA
-from ...domain.submission import SubmissionEngine
+from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..filing import (
     approve_draft,
@@ -610,7 +608,7 @@ def create_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is not None:
         return existing
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -743,7 +741,7 @@ def rename_work_unit(
             "create a fresh work unit on the same modelo / year / period to continue",
             translated_message="application.modelo.errors.work_unit_mutation_refused",
         )
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     cleaned_name = new_name.strip()
     cleaned_actor = actor.strip()
     renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
@@ -819,7 +817,7 @@ def discard_work_unit(
             f"(by {existing.discarded_by!r} at {existing.discarded_at!s})",
             translated_message="application.modelo.errors.work_unit_already_discarded",
         )
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     discarded = existing.model_copy(
         update={
             "state": WorkUnitState.DESCARTADO,
@@ -1119,7 +1117,7 @@ def calculate_modelo_revision(
     existing = revisions.get(revision_id)
     if existing is not None:
         return existing
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -1983,7 +1981,7 @@ def mark_revision_verificado_completo(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete"
         )
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     verified = existing.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -2951,7 +2949,7 @@ def verify_modelo_revision(
         missing_required=missing_required,
     )
 
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     report_id = derive_verification_report_id(
         calculation_revision_id=calculation_revision_id,
         run_at=now,
@@ -3488,7 +3486,7 @@ def file_modelo_revision(
         repository=iva_compensation_decision_repository,
     )
 
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     gate_engine = workflow_engine or _build_revision_workflow_engine(
         revision=target,
         work_unit=work_unit,
@@ -3832,7 +3830,7 @@ def amend_modelo_revision(
         overrides=overrides,
     )
 
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(overrides)
 
@@ -4092,7 +4090,7 @@ def import_external_filing_evidence(
     outputs = dict(casilla_values)
     observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
 
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         inputs_snapshot=inputs_snapshot,

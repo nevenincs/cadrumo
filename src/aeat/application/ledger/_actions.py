@@ -7,13 +7,15 @@ import hashlib
 import io
 import json
 from collections.abc import Callable, Iterable, Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from pydantic import ValidationError
+
+from aeat.core.time import _now
 
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ProviderValidation
@@ -3166,7 +3168,7 @@ def _decimal_to_string(value: Decimal) -> str:
 
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
-    timestamp = value or datetime.now(UTC)
+    timestamp = value or _now()
     return _coerce_utc_aware(timestamp)
 
 

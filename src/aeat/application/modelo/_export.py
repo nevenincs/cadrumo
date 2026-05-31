@@ -19,11 +19,15 @@ service.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from aeat.core.time import _now
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity import BucketId
 from ...domain import filing as filing_domain
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -37,7 +41,6 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,
 )
-from ...core.identity import BucketId
 from ...domain.modelos._errors import ModeloError, ModeloExportError
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
@@ -63,8 +66,6 @@ from ._actions import (
     _emit_bucket_event,
     _raise_if_persisted_iva_compensation_decision_blocks_work_unit,
 )
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 #: AEAT-assigned program-identifier code stamped into the optional
 #: ``program_version`` export header. AEAT requires a 4-character
@@ -386,7 +387,7 @@ def export_modelo_revision(
         repository=iva_compensation_decision_repository,
     )
 
-    now = clock or datetime.now(UTC)
+    now = clock or _now()
     filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=filing_year,

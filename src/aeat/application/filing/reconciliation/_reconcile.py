@@ -19,9 +19,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Protocol
+
+from aeat.core.time import _now
 
 from ....core.decimal import format_decimal
 from ....core.logging import get_logger
@@ -106,7 +108,7 @@ def reconcile(
             per-field mismatches and a multilingual narrative summary.
     """
     subview = _require_registry_reconciliation_surface(draft, schema_provider=schema_provider)
-    reconciled_at = now or datetime.now(tz=UTC)
+    reconciled_at = now or _now()
     draft_ref = ModeloDraftRef(
         draft_id=draft.draft_id,
         modelo=draft.modelo,

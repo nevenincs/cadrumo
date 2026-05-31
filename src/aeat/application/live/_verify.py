@@ -24,19 +24,21 @@ Structurally read-only:
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from aeat.core.time import _now
+
 from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...core.identity import BucketId
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
+from ...core.identity import BucketId
 from ...core.time import _now
 from ._errors import LiveApplicationInputError
 
@@ -154,7 +156,7 @@ class VerifyObservationRepository:
             )
         envelope = Envelope[VerifyObservation](
             schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
             payload=observation,
         )

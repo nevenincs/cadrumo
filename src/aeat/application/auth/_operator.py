@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from aeat.core.time import _now
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings, unwrap_optional_secret
 from ...core.errors import AeatError
 from ...core.i18n import tr
@@ -23,7 +26,6 @@ from ._sessions import (
     load_persisted_session,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
@@ -221,8 +223,6 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         AuthConfigureDanglingActiveProfileError: When the active-profile
             pointer does not resolve to a registered bucket.
     """
-    from datetime import UTC, datetime
-
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ...domain.buckets import (
         BucketEvent,
@@ -277,7 +277,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     active_bucket_id = next_state.active_profile_bucket_id()
     assert active_bucket_id is not None  # invariant: update_auth preserves the active profile
 
-    occurred_at = datetime.now(UTC)
+    occurred_at = _now()
     payload: dict[str, str] = {"provider_id": listing.id}
     if certificate_path is not None:
         payload["certificate_path"] = str(certificate_path)
@@ -625,7 +625,7 @@ def _live_auth_identity_state(
         record = workflow_state_repository().load().active_profile_record()
         values = record_to_path_values(record) if record is not None else {}
         profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
-    except (OSError, AeatError, AttributeError, LookupError) as exc:
+    except (OSError, AeatError, AttributeError, LookupError):
         _log.debug("profile tax-id probe failed; treating as empty", exc_info=True)
         profile_tax_id = ""
     provider_identity = unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip().upper()
@@ -692,7 +692,6 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
             expired=None,
             summary=tr("application.auth.operator.probe.no_provider"),
         )
-    from datetime import UTC, datetime
 
     session = load_persisted_session(load_settings(), kind)
     if session is None:
@@ -701,7 +700,7 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
             expired=None,
             summary=tr("application.auth.operator.probe.no_session"),
         )
-    expired = session.is_expired(datetime.now(UTC))
+    expired = session.is_expired(_now())
     if expired:
         summary = tr("application.auth.operator.probe.session_expired")
     else:
@@ -776,7 +775,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         CertificateHealthSeverity,
         evaluate_loaded_certificate_health,
     )
-    from ...core.config import load_settings, unwrap_optional_secret
+    from ...core.config import load_settings
 
     settings = load_settings()
     raw = (certificate_path or "").strip() or (
@@ -881,7 +880,7 @@ def _try_load_certificate_metadata(
             backend=settings.aeat_certificate_backend,
         )
         return load_certificate(bundle)
-    except (OSError, ValueError, AeatError) as exc:
+    except (OSError, ValueError, AeatError):
         _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
         return None
 
