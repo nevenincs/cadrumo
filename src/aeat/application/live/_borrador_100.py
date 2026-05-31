@@ -13,11 +13,13 @@ been routed through the shared base.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
@@ -28,6 +30,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -38,7 +41,6 @@ from ._snapshot_base import (
     enforce_snapshot_state_invariants,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace
 _BORRADOR_100_SNAPSHOT_VERSION = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version
 _BORRADOR_100_SNAPSHOT_SENSITIVITY = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
@@ -227,7 +229,7 @@ class Borrador100SnapshotRepository:
             )
         envelope = Envelope[Borrador100Snapshot](
             schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )

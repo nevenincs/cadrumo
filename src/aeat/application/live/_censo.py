@@ -18,10 +18,12 @@ Mis Datos Censales endpoint.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import (
     LIVE_CENSUS_SNAPSHOT_NAMESPACE as CENSUS_SNAPSHOT_STORAGE_NAMESPACE,
@@ -41,6 +43,7 @@ from ._snapshot_base import (
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
+
 
 class CensoSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 036 censo snapshot lookup misses by id.
@@ -270,7 +273,7 @@ class CensoSnapshotRepository:
             )
         envelope = Envelope[CensoSnapshot](
             schema_version=_CENSUS_SNAPSHOT_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=_CENSUS_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )
@@ -374,7 +377,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         updated = existing.model_copy(
             update={
                 "state": SnapshotLifecycleState.DISCARDED,
-                "discarded_at": datetime.now(UTC),
+                "discarded_at": _now(),
                 "discarded_by": trimmed_actor,
                 "discard_reason": discard_reason.strip(),
                 "superseded_by_snapshot_id": None,

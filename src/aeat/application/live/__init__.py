@@ -13,6 +13,8 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
+from aeat.core.time import _now
+
 from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import (
     PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL,
@@ -762,7 +764,7 @@ def list_iva_compensation_history(
     decision_repo = decision_repository if decision_repository is not None else _IvaWalletDecisionRepository()
     states = repo.list_periods()
     rows = tuple(_history_row(state) for state in states)
-    resolved_as_of_year = as_of_year if as_of_year is not None else datetime.now(UTC).year
+    resolved_as_of_year = as_of_year if as_of_year is not None else _now().year
     carry_forward = _build_iva_compensation_carry_forward_report(states, as_of_year=resolved_as_of_year)
     authority_decisions = tuple(_authority_decision_row(decision) for decision in decision_repo.list_decisions())
     return IvaCompensationHistoryReport(
@@ -1245,7 +1247,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
         declarations = await register.walk(modelo=modelo, ejercicio=year)
     capture = ExpedientesCapture(
         declarations=tuple(declarations),
-        captured_at=datetime.now(tz=UTC),
+        captured_at=_now(),
         source_url=f"declarations:modelo={modelo}:ejercicio={year}",
     )
     persisted = ExpedientesService(settings=settings).capture(bucket_id=bucket_id, capture=capture)
@@ -1393,7 +1395,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 operation="live-iva-remote-state-read",
                 target_url=_PRE303_PRESENTATION_SERVICE_URL,
             )
-        except (_AeatError, OSError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, _AeatError, OSError) as exc:
             auth_error = exc
 
         if auth_result is None:
@@ -1422,7 +1424,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 surface=LiveIvaReadSurface.FILED_HISTORY,
                 timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
             )
-        except (_AeatError, OSError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, _AeatError, OSError) as exc:
             filed_error = exc
 
         try:
@@ -1438,7 +1440,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 surface=LiveIvaReadSurface.WALLET_CARTERA,
                 timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
             )
-        except (_AeatError, OSError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, _AeatError, OSError) as exc:
             wallet_error = exc
 
         report = build_iva_remote_state_acquisition_report(
@@ -1558,7 +1560,7 @@ def persist_iva_remote_state_acquisition_report(
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest:
     """Persist a redacted encrypted manifest for a live IVA acquisition report."""
-    resolved_captured_at = captured_at if captured_at is not None else datetime.now(UTC)
+    resolved_captured_at = captured_at if captured_at is not None else _now()
     manifest = _iva_remote_state_acquisition_manifest(report, captured_at=resolved_captured_at)
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     repo.save(manifest)

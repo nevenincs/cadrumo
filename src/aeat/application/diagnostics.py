@@ -4,20 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from aeat import __version__
+from aeat.core.time import _now
 
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
-from ._errors import DiagnosticModelError
 from ..core.logging import default_log_file_path, get_logger
 from ..core.resources import bundled_path
+from ._errors import DiagnosticModelError
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
@@ -440,7 +441,7 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
             html_fragment="",
             detected_markers=("healthy",),
         ),
-        observed_at=datetime.now(tz=UTC),
+        observed_at=_now(),
     )
 
 def render_config_repair_text(report: ConfigRepairReport) -> str:
@@ -631,8 +632,6 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     A failure routes the operator to a structured diagnostic rather
     than a runtime KeyError mid-calculation.
     """
-    from datetime import date
-
     from ..domain.calculations.registry import ValidatedRegistryAuthority
     from ..domain.calculations.registry._errors import RegistryValidationError
 

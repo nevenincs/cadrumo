@@ -27,16 +27,14 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...core.errors import AeatError
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
-from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...adapters.persistence.storage.bucket._manifest import (
@@ -46,11 +44,13 @@ from ...adapters.persistence.storage.bucket._manifest import (
     ManifestKdfParams,
 )
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
+from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
 from ...core.config import load_settings
+from ...core.errors import AeatError
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...domain.user_profile import (
@@ -254,7 +254,7 @@ class ProfileRepository:
             self._refuse_duplicate_tax_id(facts)
 
         kdf_params = _default_kdf_params()
-        created_at = datetime.now(UTC)
+        created_at = _now()
         bucket_dek_path = keystore_path(self._root, resolved_id) / BUCKET_DEK_FILENAME
         key_schedule = (
             BucketKeySchedule.BUCKET_DEK_V1 if bucket_dek_path.is_file() else BucketKeySchedule.LEGACY_MASTER_KEY

@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
+from aeat.core.time import _now
 from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -655,7 +656,7 @@ def build_overview_calendar(
         return OverviewCalendar(
             range=calendar_range,
             entries=(),
-            generated_at=datetime.now(UTC),
+            generated_at=_now(),
             warnings=(),
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
@@ -756,7 +757,7 @@ def build_overview_calendar(
     return OverviewCalendar(
         range=calendar_range,
         entries=entries_tuple,
-        generated_at=datetime.now(UTC),
+        generated_at=_now(),
         warnings=warnings,
         completeness=completeness,
         suppressed_entries=tuple(suppressed),

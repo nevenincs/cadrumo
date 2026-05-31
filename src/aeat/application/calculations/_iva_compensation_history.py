@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import ClassVar
 
 from pydantic import BaseModel, Field, model_validator
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
@@ -16,11 +18,11 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _ZERO = Decimal("0")
 
 class IvaCompensationExpiryReviewState(StrEnum):
@@ -259,7 +261,7 @@ def seed_iva_compensation_period(
             f"IVA compensation state for {filing_year}/{period} already exists "
             f"(status={existing.status!r}); seeding would overwrite it"
         )
-    when = seeded_at if seeded_at is not None else datetime.now(UTC)
+    when = seeded_at if seeded_at is not None else _now()
     state = IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
         filing_year=filing_year,

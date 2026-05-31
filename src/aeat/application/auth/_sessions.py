@@ -5,15 +5,16 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
+from aeat.core.time import _now
+
 from ...core.errors import AeatError
-from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time._utc import _validate_utc_aware
 from . import AuthProviderKind, select_provider
@@ -218,7 +219,7 @@ async def require_verified_aeat_session(
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.no_session",
         )
-    if persisted.is_expired(datetime.now(UTC)):
+    if persisted.is_expired(_now()):
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.session_expired",
         )

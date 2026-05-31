@@ -15,10 +15,13 @@ contacts AEAT. Lifecycle continuation is owned by
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
+from aeat.core.time import _now
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from . import (
     CalendarCompleteness,
@@ -28,8 +31,6 @@ from . import (
     OverviewPeriodState,
     build_overview_calendar,
 )
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""
@@ -119,7 +120,7 @@ def build_overview_backlog(
         as_of=resolved_as_of,
         items=tuple(items),
         late_count=len(items),
-        generated_at=datetime.now(UTC),
+        generated_at=_now(),
         warnings=calendar.warnings,
         completeness=calendar.completeness,
         taxpayer_model_declared=calendar.taxpayer_model_declared,

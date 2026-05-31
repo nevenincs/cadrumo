@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
+
+from aeat.core.time import _now
 
 from ...core.errors import AeatError
 from ...core.identity import BucketId
@@ -122,7 +124,7 @@ def derive_bundle_id(
 
 
 def utcnow() -> datetime:
-    return datetime.now(tz=UTC)
+    return _now()
 
 
 __all__ = [

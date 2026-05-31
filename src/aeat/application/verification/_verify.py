@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
+
+from aeat.core.time import _now
 
 from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.decimal import coerce_decimal
@@ -161,7 +163,7 @@ def verify_declaracion(
         discrepancies=classified,
         coverage=coverage,
         narrative=_compose_narrative(declaracion, status, classified, coverage),
-        verified_at=datetime.now(tz=UTC),
+        verified_at=_now(),
     )
 
 

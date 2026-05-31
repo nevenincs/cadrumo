@@ -13,9 +13,11 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
+
+from aeat.core.time import _now
 
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.logging import get_logger
@@ -223,7 +225,7 @@ def approve_draft(
         raise ModeloDraftError("only READY_TO_SUBMIT drafts may be approved")
     _require_registry_review_alignment(draft, schema_provider=schema_provider)
 
-    timestamp = approved_at or datetime.now(tz=UTC)
+    timestamp = approved_at or _now()
     approval_basis = compute_current_approval_basis(
         draft,
         bucket_id=bucket_id,
@@ -268,7 +270,7 @@ def unapprove_draft(
         ``status`` set to the validation status derived from
         :attr:`ModeloDraft.findings`.
     """
-    timestamp = unapproved_at or datetime.now(tz=UTC)
+    timestamp = unapproved_at or _now()
     updated = draft.model_copy(
         update={
             "status": derive_validation_status(draft.findings),
@@ -315,7 +317,7 @@ def refresh_review_status(
         Either ``draft`` unchanged (when no transition was needed) or a
         new :class:`ModeloDraft` with the appropriate status update.
     """
-    timestamp = refreshed_at or datetime.now(tz=UTC)
+    timestamp = refreshed_at or _now()
     has_review_metadata = _has_review_metadata(draft)
     if draft.status in _DOWNSTREAM_STATUSES:
         cleared = _review_metadata_reset()

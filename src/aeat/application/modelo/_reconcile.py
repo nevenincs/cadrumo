@@ -22,12 +22,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from aeat.core.time import _now
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.identity import BucketId
 from ...domain.modelos._ids import WorkUnitId
 from ._actions import WorkUnitNotFoundError
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ModeloReconciliationSourceKind(StrEnum):
     """Closed set of external-evidence kinds the operator can supply."""
@@ -141,7 +143,6 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
         )
 
-    from datetime import UTC, datetime
 
     from ...adapters.inbound.justificante import parse_justificante
     from ...domain.buckets import (
@@ -209,7 +210,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         f"reconciled modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'} "
         f"against work unit {command.work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
     )
-    reconciled_at = datetime.now(UTC)
+    reconciled_at = _now()
     report = ModeloReconciliationReport(
         work_unit_id=command.work_unit_id,
         bucket_id=work_unit.bucket_id,
