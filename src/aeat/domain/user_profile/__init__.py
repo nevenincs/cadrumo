@@ -36,7 +36,7 @@ from ._schema import (
     ProfileSnapshotPolicy,
 )
 from ._values import (
-    ProfileFactValue,
+    UserProfileFactValue,
     UserProfileFact,
     UserProfilePortableExport,
     UserProfileRecord,
@@ -48,7 +48,7 @@ from ._values import (
 
 __all__ = [
     "ProfileAlreadyExistsError",
-    "ProfileFactValue",
+    "UserProfileFactValue",
     "ProfileFieldDefinition",
     "ProfileFieldType",
     "ProfileNotFoundError",
