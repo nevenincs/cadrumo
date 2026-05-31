@@ -823,16 +823,16 @@ W8 audit confirmed broader-Step grammar works (regressions 8→2, findings 32→
 
 Fix NonTtyRefusedError positional message swallowing locale resolver. Sweep LATIN_1 across BOE export-formats test package (W7 missed). Enroll PeriodKind in domain/deadlines/_engine. Introduce RowSetGroupingKind StrEnum. Extract _FILED_HISTORY_OBSERVATION constant. ArtefactKind enrollment in fixture generator. Wizard tab-key labels. Operator-surface ValueError invariant guards.
 
-- [ ] `W08.P34.S531` - fix NonTtyRefusedError positional message at entrypoints/cli/_tty.py:46 to drop super().__init__(message) positional and rely on registered message_key for locale resolution; `src/aeat/entrypoints/cli/_tty.py`.
-- [ ] `W08.P34.S532` - fix regression: broad-sweep LATIN_1_ENCODING enrollment across BOE export-formats test package (test_fichero_boe_roundtrip, test_currency_edge_cases, test_envelope, test_record_spec — 20+ iso-8859-1 literals); `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
-- [ ] `W08.P34.S533` - enroll PeriodKind StrEnum imports in domain/deadlines/_engine.py:368,370,372,379,381 + reference in _schema.py Literal annotations; `src/aeat/domain/deadlines/_engine.py`.
-- [ ] `W08.P34.S534` - introduce RowSetGroupingKind(StrEnum) with WITHHOLDING/RELATED_PARTY/FOREIGN_ASSET/ATRIBUCION/REFUND members + migrate _row_set_assembly.py:109-117, _schema.py:1790-1794, _bindings.py:2027,2860; `src/aeat/application/calculations/_row_set_assembly.py`.
-- [ ] `W08.P34.S535` - extract _FILED_HISTORY_OBSERVATION constant in iva_wallet_reconciliation.py:37,488,514,529 and frozenset; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
-- [ ] `W08.P34.S536` - enroll ArtefactKind StrEnum in test fixture generator modelo_100_generator.py:111,115,134; `src/aeat/tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py`.
-- [ ] `W08.P34.S537` - wrap wizard/_commands.py:906,909 profile and active_profile tab-key labels through tr(); `src/aeat/application/wizard/_commands.py`.
-- [ ] `W08.P34.S538` - reclassify operator_surface/_models.py:155,162,192,199,201,260,273,284 ValueError invariant guards as InternalInvariantError or AeatError subclass (developer-surface); `src/aeat/application/operator_surface/_models.py`.
-- [ ] `W08.P34.S539` - optional: tr-wrap or document --version short-format CLI output at entrypoints/cli/__init__.py:142; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `W08.P34.S540` - add inventory test asserting LATIN_1 enrollment is complete in adapters/outbound/aeat/export package; `src/aeat/test_w08_p34_latin1_inventory.py`.
+- [x] `W08.P34.S531` - fix NonTtyRefusedError positional message at entrypoints/cli/_tty.py:46 to drop super().__init__(message) positional and rely on registered message_key for locale resolution; `src/aeat/entrypoints/cli/_tty.py`.
+- [x] `W08.P34.S532` - fix regression: broad-sweep LATIN_1_ENCODING enrollment across BOE export-formats test package (test_fichero_boe_roundtrip, test_currency_edge_cases, test_envelope, test_record_spec — 20+ iso-8859-1 literals); `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
+- [x] `W08.P34.S533` - enroll PeriodKind StrEnum imports in domain/deadlines/_engine.py:368,370,372,379,381 + reference in _schema.py Literal annotations; `src/aeat/domain/deadlines/_engine.py`.
+- [x] `W08.P34.S534` - introduce RowSetGroupingKind(StrEnum) with WITHHOLDING/RELATED_PARTY/FOREIGN_ASSET/ATRIBUCION/REFUND members + migrate _row_set_assembly.py:109-117, _schema.py:1790-1794, _bindings.py:2027,2860; `src/aeat/application/calculations/_row_set_assembly.py`.
+- [x] `W08.P34.S535` - extract _FILED_HISTORY_OBSERVATION constant in iva_wallet_reconciliation.py:37,488,514,529 and frozenset; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
+- [x] `W08.P34.S536` - enroll ArtefactKind StrEnum in test fixture generator modelo_100_generator.py:111,115,134; `src/aeat/tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py`.
+- [x] `W08.P34.S537` - wrap wizard/_commands.py:906,909 profile and active_profile tab-key labels through tr(); `src/aeat/application/wizard/_commands.py`.
+- [x] `W08.P34.S538` - reclassify operator_surface/_models.py:155,162,192,199,201,260,273,284 ValueError invariant guards as InternalInvariantError or AeatError subclass (developer-surface); `src/aeat/application/operator_surface/_models.py`.
+- [x] `W08.P34.S539` - optional: tr-wrap or document --version short-format CLI output at entrypoints/cli/__init__.py:142; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `W08.P34.S540` - add inventory test asserting LATIN_1 enrollment is complete in adapters/outbound/aeat/export package; `src/aeat/test_w08_p34_latin1_inventory.py`.
 
 ### Phase `W08.P35` - A1 exceptions sweep
 
@@ -855,3 +855,38 @@ Dedup canonical_decimal_string (regression — exists in both _identifiers.py an
 - [x] `W08.P36.S550` - fix regression: dedup canonical_decimal_string in _identifiers.py vs _decimal.py — canonical lives at aeat.domain._identifiers; `delete duplicate in _decimal.py and migrate callers; `src/aeat/adapters/inbound/financial/_decimal.py`.
 - [x] `W08.P36.S551` - add CAST-RATIONALE markers to production cast sites at justificante/_extract.py:435 -> Any, live/_borrador_100.py:311 kwargs-Any, core/profile.py:278 pydantic field_validator -> Any; `src/aeat/adapters/inbound/justificante/_extract.py`.
 - [x] `W08.P36.S552` - add inventory test asserting no canonical_decimal_string duplicates survive; `src/aeat/test_w08_p36_dedup.py`.
+
+## Wave `W09` - consecutive-clean-wave 2/3: close W9 findings (zero regressions confirmed)
+
+W9 audit confirmed ZERO strict regressions (first since W4). Consecutive-clean-wave counter at 1/3 toward ADR close condition. W09 closes 26 W9 findings (all new/survivor-missed) with continued broader-Step grammar + grep-post-condition discipline. If W10 audit also zero-regression, counter advances to 2/3.
+
+### Phase `W09.P37` - A7 broad sweep: WorkbookScanStatus + UTF_8 gap + STRICT_FROZEN_CONFIG
+
+Enroll WorkbookScanStatus StrEnum at 5+ comparison sites within its own defining file. Close UTF_8_ENCODING enrollment gap at 20+ persistence/application sites. Migrate _STRICT_FROZEN ConfigDict at 2 files missed by W13 sweep.
+
+- [ ] `W09.P37.S553` - enroll WorkbookScanStatus StrEnum at _workbook_parity.py:122,963,966,981,1020 comparison sites (StrEnum defined same file but never used for comparisons); `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `W09.P37.S554` - enroll UTF_8_ENCODING at 20+ persistence/application call sites (blob_store/_blob_store.py:350, master_key/_master_key.py:761, _profile_health.py:256, topics/__init__.py:122, _observation_store.py:113,130,165,182 + 6 more); `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py`.
+- [ ] `W09.P37.S555` - migrate _STRICT_FROZEN local ConfigDict at bucket/_layout.py:31 + sql/secure_objects.py:36 to canonical STRICT_FROZEN_CONFIG from aeat.core._models; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
+- [ ] `W09.P37.S556` - add inventory test asserting WorkbookScanStatus enum has zero bare-string comparison survivors in its defining file + STRICT_FROZEN_CONFIG used everywhere; `src/aeat/test_w09_p37_inventory.py`.
+
+### Phase `W09.P38` - A1+A8 narrowing + rationale markers
+
+Add rationale comments to 3 financial-provider teardown except-Exception sites (_pdf_n26, _xlsx, _ofx). Add ANY-RETURN-RATIONALE-* markers on 3 profile lazy-module helpers. Add KWARGS-ANY-RATIONALE-* markers on 4 live snapshot abstract methods. Browser stage stdlib Logger annotation cleanup.
+
+- [ ] `W09.P38.S557` - add inline rationale comment on financial-provider teardown except-Exception sites (_pdf_n26.py:195, _xlsx.py:189, _ofx.py:173) enumerating known upstream exception types; `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
+- [ ] `W09.P38.S558` - add ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE markers on profile.py:138,145,152 _m/_p/_ccaa lazy-module helpers (block comment present but per-def markers missing); `src/aeat/core/profile.py`.
+- [ ] `W09.P38.S559` - add KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH markers on _censo.py:393, _expedientes.py:156, _notifications.py:171, _snapshot_base.py:209 (sibling of borrador W08.P36.S551 pattern); `src/aeat/application/live/_censo.py`.
+- [ ] `W09.P38.S560` - replace stdlib Logger import at sede/_browser_stage.py:6 with aeat.core.logging Logger re-export or annotate with type-only exemption; `src/aeat/adapters/outbound/aeat/sede/_browser_stage.py`.
+- [ ] `W09.P38.S561` - add inventory test asserting all financial-provider teardown raises have rationale comments + Any-return/kwargs-Any rationale markers complete; `src/aeat/test_w09_p38_rationale_inventory.py`.
+
+### Phase `W09.P39` - A3+A4 closure
+
+Thread tr() on _commands.py:907 wizard status tab-key. Enumerate _catalogue.py f-string-as-locale-key sites in survivor registry. Wrap GoogleApiResponseBody alias in TypedDict per-endpoint. Wrap _google.py OAuth json.loads in pydantic. Define InvoiceRowPayload TypedDict for _importing.py. Audit storage/ and calculations/ __init__.py for orphan re-exports.
+
+- [ ] `W09.P39.S562` - thread tr() on wizard/_commands.py:907 status tab-key label (sibling of 906/909/910 already wrapped); `src/aeat/application/wizard/_commands.py`.
+- [ ] `W09.P39.S563` - enumerate _catalogue.py:57,106-169 f-string-as-locale-key sites in survivor registry (or refactor to static maps if enum value space allows); `src/aeat/application/wizard/_catalogue.py`.
+- [ ] `W09.P39.S564` - wrap GoogleApiResponseBody alias at adapters/outbound/google/_api.py:38 with per-endpoint TypedDicts or pydantic schemas; `src/aeat/adapters/outbound/google/_api.py`.
+- [ ] `W09.P39.S565` - wrap json.loads(raw) OAuth client payload at cli/_config/_google.py:209 in OAuthClientPayload TypedDict + pydantic validation; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `W09.P39.S566` - define InvoiceRowPayload TypedDict for _decode_invoice_payload at application/invoices/_importing.py:99 + downstream coercion; `src/aeat/application/invoices/_importing.py`.
+- [ ] `W09.P39.S567` - audit storage/__init__.py and calculations/__init__.py orphan re-export modules; `delete or document; `src/aeat/application/storage/__init__.py`.
+- [ ] `W09.P39.S568` - aggregate test asserting locale + pydantic boundary closures landed; `src/aeat/test_w09_p39_locale_pydantic.py`.
