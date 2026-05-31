@@ -101,10 +101,20 @@ from ....domain.calculations.registry._errors import (
 from .._common import _emit, _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_payloads import (
-    GoogleRegisterResult,
+    GoogleFolderGetResult,
+    GoogleFolderSetResult,
     GoogleLoginResult,
-    GoogleStatusResult,
     GoogleLogoutResult,
+    GoogleRegisterResult,
+    GoogleStatusResult,
+    GoogleSyncCalcExportResult,
+    GoogleSyncCalcPullResult,
+    GoogleSyncCalcVerifyDivergencePayload,
+    GoogleSyncCalcVerifyResult,
+    GoogleSyncFailedManifestPayload,
+    GoogleSyncFailedObjectPayload,
+    GoogleSyncProbeResult,
+    GoogleSyncPushResult,
 )
 
 google_app = typer.Typer(
@@ -456,15 +466,12 @@ def google_folder_set(
 
     config = DriveConfig(root_folder_id=folder_id.strip())
     save_drive_config(active, config)
-    payload = {
-        "operation": "config.google.folder.set",
-        "profile": active,
-        "root_folder_id": config.root_folder_id,
-    }
-    _emit(
+    folder_set_result = GoogleFolderSetResult(profile=active, root_folder_id=config.root_folder_id)
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.folder.set",
+        result=folder_set_result,
+        lines=(
             "operation\tconfig.google.folder.set",
             f"profile\t{active}",
             f"root_folder_id\t{config.root_folder_id}",
@@ -483,16 +490,16 @@ def google_folder_get(
         raise _google_refusal(exc) from exc
 
     config = load_drive_config(active)
-    payload = {
-        "operation": "config.google.folder.get",
-        "profile": active,
-        "configured": config is not None,
-        "root_folder_id": config.root_folder_id if config is not None else None,
-    }
-    _emit(
+    folder_get_result = GoogleFolderGetResult(
+        profile=active,
+        configured=config is not None,
+        root_folder_id=config.root_folder_id if config is not None else None,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.folder.get",
+        result=folder_get_result,
+        lines=(
             "operation\tconfig.google.folder.get",
             f"profile\t{active}",
             f"configured\t{config is not None}",
@@ -551,21 +558,21 @@ def google_sync_probe(
     # OR the persisted DriveConfig may have supplied it; the provider
     # is the single resolved source of truth.
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
-    payload = {
-        "operation": "config.google.sync.probe",
-        "profile": active,
-        "provider_kind": report.provider_kind.value,
-        "reachable": report.reachable,
-        "writable": report.writable,
-        "read_only": report.read_only,
-        "root_folder_present": report.root_folder_present,
-        "root_folder_id": resolved_root_folder_id,
-        "detail": report.detail,
-    }
-    _emit(
+    probe_result = GoogleSyncProbeResult(
+        profile=active,
+        provider_kind=report.provider_kind.value,
+        reachable=report.reachable,
+        writable=report.writable,
+        read_only=report.read_only,
+        root_folder_present=report.root_folder_present,
+        root_folder_id=resolved_root_folder_id,
+        detail=report.detail,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.sync.probe",
+        result=probe_result,
+        lines=(
             "operation\tconfig.google.sync.probe",
             f"profile\t{active}",
             f"provider_kind\t{report.provider_kind.value}",
@@ -724,24 +731,27 @@ def google_sync_push(
     manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
     manifest_failed = mirror_result["failed_manifests"]
 
-    payload: dict[str, object] = {
-        "operation": "config.google.sync.push",
-        "profile": active,
-        "root_folder_id": resolved_root_folder_id,
-        "dry_run": dry_run,
-        "namespace_filter": namespace_filter,
-        "limit": limit,
-        "pushed_total": sum(pushed_by_ns.values()),
-        "skipped_total": sum(skipped_by_ns.values()),
-        "failed_total": len(failed),
-        "manifest_pushed_total": len(manifest_pushed_by_ns),
-        "manifest_failed_total": len(manifest_failed),
-        "pushed_by_namespace": pushed_by_ns,
-        "skipped_by_namespace": skipped_by_ns,
-        "failed_objects": [{"namespace": ns, "hmac": h, "error": err} for ns, h, err in failed],
-        "manifest_pushed_by_namespace": manifest_pushed_by_ns,
-        "failed_manifests": [{"namespace": ns, "error": err} for ns, err in manifest_failed],
-    }
+    push_result = GoogleSyncPushResult(
+        profile=active,
+        root_folder_id=resolved_root_folder_id,
+        dry_run=dry_run,
+        namespace_filter=namespace_filter,
+        limit=limit,
+        pushed_total=sum(pushed_by_ns.values()),
+        skipped_total=sum(skipped_by_ns.values()),
+        failed_total=len(failed),
+        manifest_pushed_total=len(manifest_pushed_by_ns),
+        manifest_failed_total=len(manifest_failed),
+        pushed_by_namespace=dict(pushed_by_ns),
+        skipped_by_namespace=dict(skipped_by_ns),
+        failed_objects=[
+            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed
+        ],
+        manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
+        failed_manifests=[
+            GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed
+        ],
+    )
     lines: list[str] = [
         "operation\tconfig.google.sync.push",
         f"profile\t{active}",
@@ -761,7 +771,7 @@ def google_sync_push(
         lines.append(f"namespace\t{ns}\tpushed={pushed}\tskipped={skipped}")
     for ns, h, err in failed:
         lines.append(f"failed\t{ns}\t{h[:16]}\t{err}")
-    _emit(ctx, payload, tuple(lines))
+    _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines))
 
 
 calc_app = typer.Typer(
@@ -867,28 +877,28 @@ def google_sync_calc_export(
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    payload = {
-        "operation": "config.google.sync.calc.export",
-        "profile": active,
-        "modelo": snapshot.modelo.id,
-        "revision": snapshot.revision.id,
-        "period": snapshot.period,
-        "year": snapshot.filing_year,
-        "engine_version": plan.metadata.engine_version,
-        "registry_sha": plan.metadata.registry_sha,
-        "root_folder_id": root_folder_id,
-        "folder_id": result.folder_id,
-        "spreadsheet_id": result.spreadsheet_id,
-        "spreadsheet_url": result.spreadsheet_url,
-        "value_cells_written": result.value_cells_written,
-        "formula_cells_written": result.formula_cells_written,
-        "protected_ranges_written": result.protected_ranges_written,
-        "tab_count": result.tab_count,
-    }
-    _emit(
+    export_result = GoogleSyncCalcExportResult(
+        profile=active,
+        modelo=snapshot.modelo.id,
+        revision=snapshot.revision.id,
+        period=snapshot.period,
+        year=snapshot.filing_year,
+        engine_version=plan.metadata.engine_version,
+        registry_sha=plan.metadata.registry_sha,
+        root_folder_id=root_folder_id,
+        folder_id=result.folder_id,
+        spreadsheet_id=result.spreadsheet_id,
+        spreadsheet_url=result.spreadsheet_url,
+        value_cells_written=result.value_cells_written,
+        formula_cells_written=result.formula_cells_written,
+        protected_ranges_written=result.protected_ranges_written,
+        tab_count=result.tab_count,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.sync.calc.export",
+        result=export_result,
+        lines=(
             "operation\tconfig.google.sync.calc.export",
             f"profile\t{active}",
             f"modelo\t{snapshot.modelo.id}",
@@ -974,30 +984,29 @@ def google_sync_calc_verify(
 
     report = verify_modelo_parity(snapshot, scenario, credentials=credentials, root_folder_id=root_folder_id)
 
-    payload: dict[str, object] = {
-        "operation": "config.google.sync.calc.verify",
-        "profile": active,
-        "modelo": report.modelo_id,
-        "revision": report.revision_id,
-        "period": report.period,
-        "year": report.filing_year,
-        "spreadsheet_id": report.spreadsheet_id,
-        "spreadsheet_url": report.spreadsheet_url,
-        "verdict": report.verdict,
-        "aeat_oracle_present": report.aeat_oracle_present,
-        "computed_count": len(report.casillas),
-        "divergence_count": len(report.divergences),
-        "divergences": [
-            {
-                "casilla": c.casilla_number,
-                "label": c.label,
-                "local": str(c.local) if c.local is not None else None,
-                "sheets": str(c.sheets) if c.sheets is not None else None,
-                "aeat": str(c.aeat) if c.aeat is not None else None,
-            }
+    verify_result = GoogleSyncCalcVerifyResult(
+        profile=active,
+        modelo=report.modelo_id,
+        revision=report.revision_id,
+        period=report.period,
+        year=report.filing_year,
+        spreadsheet_id=report.spreadsheet_id,
+        spreadsheet_url=report.spreadsheet_url,
+        verdict=report.verdict,
+        aeat_oracle_present=report.aeat_oracle_present,
+        computed_count=len(report.casillas),
+        divergence_count=len(report.divergences),
+        divergences=[
+            GoogleSyncCalcVerifyDivergencePayload(
+                casilla=c.casilla_number,
+                label=c.label,
+                local=str(c.local) if c.local is not None else None,
+                sheets=str(c.sheets) if c.sheets is not None else None,
+                aeat=str(c.aeat) if c.aeat is not None else None,
+            )
             for c in report.divergences
         ],
-    }
+    )
     lines: list[str] = [
         "operation\tconfig.google.sync.calc.verify",
         f"profile\t{active}",
@@ -1013,7 +1022,7 @@ def google_sync_calc_verify(
     ]
     for div in report.divergences:
         lines.append(f"divergence\t{div.casilla_number}\tlocal={div.local}\tsheets={div.sheets}\taeat={div.aeat}")
-    _emit(ctx, payload, tuple(lines))
+    _emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
 
 
 @calc_app.command("pull", help=tr("cli.config.google.sync.calc.pull_help"))
@@ -1186,7 +1195,8 @@ def google_sync_calc_pull(
         )
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
-    _emit(ctx, payload, tuple(lines))
+    pull_result = GoogleSyncCalcPullResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
 
 
 def _assemble_pull_observations(
