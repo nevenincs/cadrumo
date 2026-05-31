@@ -44,7 +44,13 @@ from ...core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 # A test-local import is necessary because the CLI lazy-loads
 # subcommand modules — the registry is otherwise empty until the
 # first Typer dispatch.
-from . import _ledger_payloads, _modelo_payloads, _review_payloads  # noqa: F401  (side-effect import)
+from . import (  # noqa: F401  (side-effect import)
+    _app_live_payloads,
+    _config_payloads,
+    _ledger_payloads,
+    _modelo_payloads,
+    _review_payloads,
+)
 
 # Per-command allow-list of migrated emit sites. Populated as each
 # command's ``--json`` emit site is lifted to
@@ -89,6 +95,32 @@ MIGRATED_COMMANDS: frozenset[str] = frozenset(
         "ledger.import",
         "ledger.track",
         "ledger.review",
+        # W03: app live filed verbs.
+        "app.live.filed.list",
+        "app.live.filed.capture",
+        "app.live.filed.capture.sources",
+        # W02.P05: repair verbs.
+        "config.repair.logs",
+        "config.repair.quarantine",
+        "config.repair.reset_state",
+        "config.repair.connectivity",
+        # W02.P06: config and profile verbs.
+        "config.list",
+        "config.profile.switch",
+        "config.profile.show",
+        "config.profile.delete",
+        "config.profile.duplicate",
+        "config.status",
+        "config.reset",
+        # W02.P07: auth and bucket verbs.
+        "config.auth.providers",
+        "config.auth.configure",
+        "config.auth.status",
+        "config.auth.test",
+        "config.auth.login",
+        "config.auth.clear",
+        "config.apoderado.check",
+        "config.bucket.history",
     }
 )
 
