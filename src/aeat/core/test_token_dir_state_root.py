@@ -17,37 +17,28 @@ against an ambient `AEAT_TOKEN_DIR` leaking in via env precedence.
 
 from __future__ import annotations
 
-import os
-from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+
+from aeat.tests.env_scope import scoped_env_var
 
 from .config import Settings
 from .paths import resolve_project_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
-_TOKEN_DIR_ENV = "AEAT_TOKEN_DIR"
 
-
-@contextmanager
-def _without_token_dir_env() -> Iterator[None]:
+def _without_token_dir_env():
     """Suppress an ambient ``AEAT_TOKEN_DIR`` for the with-block.
 
     The validator-derives-default branch must observe an unset
     ``aeat_token_dir``. Constructor kwargs win against env, but the
     tests that want the *derived* path pass no kwarg, so env precedence
-    would surface here. Snapshotting and restoring the var is the
-    non-monkeypatch (CLAUDE.md) equivalent of ``monkeypatch.delenv``.
+    would surface here. Delegates to the centralized
+    :func:`aeat.tests.env_scope.scoped_env_var` helper.
     """
-    prior = os.environ.pop(_TOKEN_DIR_ENV, None)
-    try:
-        yield
-    finally:
-        if prior is not None:
-            os.environ[_TOKEN_DIR_ENV] = prior
+    return scoped_env_var("AEAT_TOKEN_DIR", None)
 
 
 def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
