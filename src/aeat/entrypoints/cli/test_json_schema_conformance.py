@@ -44,7 +44,7 @@ from ...core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 # A test-local import is necessary because the CLI lazy-loads
 # subcommand modules — the registry is otherwise empty until the
 # first Typer dispatch.
-from . import _modelo_payloads, _review_payloads  # noqa: F401  (side-effect import)
+from . import _ledger_payloads, _modelo_payloads, _review_payloads  # noqa: F401  (side-effect import)
 
 # Per-command allow-list of migrated emit sites. Populated as each
 # command's ``--json`` emit site is lifted to
@@ -66,6 +66,29 @@ MIGRATED_COMMANDS: frozenset[str] = frozenset(
         "modelo.work.verify",
         "modelo.work.file",
         "modelo.work.amend",
+        # W01.P01: ledger mutation verbs.
+        "ledger.add",
+        "ledger.update",
+        "ledger.classify",
+        "ledger.allocate",
+        "ledger.attach",
+        "ledger.archive",
+        "ledger.stash",
+        "ledger.remove",
+        "ledger.reset",
+        "ledger.split",
+        "ledger.merge",
+        # W01.P02: ledger query verbs.
+        "ledger.list",
+        "ledger.view",
+        "ledger.status",
+        "ledger.history",
+        "ledger.categories",
+        # W01.P03: ledger import/export/track/review verbs.
+        "ledger.export",
+        "ledger.import",
+        "ledger.track",
+        "ledger.review",
     }
 )
 

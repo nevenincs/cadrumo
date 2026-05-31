@@ -48,9 +48,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    rows = payload if isinstance(payload, list) else payload.get(
-        "transactions", payload.get("rows", [])
-    )
+    rows = payload.get("result", payload).get("rows", [])
     assert rows, listed.output
     return rows[0]["transaction_id"]
 
@@ -64,7 +62,7 @@ def _allocate(transaction_id: str, business_pct: str) -> dict:
         ],
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["transaction"]
+    return json.loads(result.output)["result"]["transaction"]
 
 
 def test_allocate_full_business_pct_yields_business(tmp_path: Path) -> None:
