@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from aeat.application import aggregation
 from aeat.application.aggregation import (
     ACCEPTED_SOURCE_KINDS,
-    ERROR_CODES,
+    AggregationErrorCodes,
     AggregationSourceKind,
     AggregationUnsupportedModeloError,
     CounterpartAggregation,
@@ -95,7 +95,7 @@ def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> N
 
     assert contract.service_owner == "aeat.application.aggregation"
     assert contract.accepted_source_kinds == ACCEPTED_SOURCE_KINDS
-    assert contract.error_codes == ERROR_CODES
+    assert contract.error_codes == AggregationErrorCodes
     by_provider = {provider.provider: provider for provider in contract.providers}
     assert by_provider[PerModeloAggregationProvider.RETENCIONES].modelos == ("111", "115", "123", "180", "190", "193")
     assert by_provider[PerModeloAggregationProvider.COUNTERPART].modelos == ("347", "349")
