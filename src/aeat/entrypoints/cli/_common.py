@@ -78,10 +78,15 @@ def _emit_envelope(
     """
     from ...core.json_contract import emit_json_success
 
-    if _format_of(ctx) == "json":
+    format_name = _format_of(ctx)
+    if format_name == _FORMAT_JSON:
         emit_json_success(command, result)
         return
-    rendered = render_command_output(format_name=_FORMAT_TEXT, payload=result, lines=lines)
+    # Route non-JSON paths through render_command_output so unsupported
+    # ``--format`` values (e.g. ``xml``) raise the same refusal contract
+    # that the bare ``_emit`` path enforces. ``render_command_output``
+    # ignores ``payload`` outside JSON mode and emits the line iterator.
+    rendered = render_command_output(format_name=format_name, payload=result, lines=lines)
     if rendered.text:
         typer.echo(rendered.text)
 
