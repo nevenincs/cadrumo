@@ -97,8 +97,14 @@ from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from .._common import _emit
+from .._common import _emit, _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._google_payloads import (
+    GoogleRegisterResult,
+    GoogleLoginResult,
+    GoogleStatusResult,
+    GoogleLogoutResult,
+)
 
 google_app = typer.Typer(
     name="google",
@@ -261,16 +267,16 @@ def google_register(
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
 
-    payload = {
-        "operation": "config.google.register",
-        "profile": active,
-        "client_id": client.client_id,
-        "project_id": client.project_id,
-    }
-    _emit(
+    typed = GoogleRegisterResult(
+        profile=active,
+        client_id=client.client_id,
+        project_id=client.project_id,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.register",
+        result=typed,
+        lines=(
             "operation\tconfig.google.register",
             f"profile\t{active}",
             f"client_id\t{client.client_id}",
@@ -306,16 +312,16 @@ def google_login(
                     context={"profile": active},
                     suggestion="aeat config google login",
                 )
-            payload = {
-                "operation": "config.google.login",
-                "profile": active,
-                "mode": "refresh-only",
-                "account_email": metadata.account_email,
-            }
-            _emit(
+            typed_refresh = GoogleLoginResult(
+                profile=active,
+                mode="refresh-only",
+                account_email=metadata.account_email,
+            )
+            _emit_envelope(
                 ctx,
-                payload,
-                (
+                command="config.google.login",
+                result=typed_refresh,
+                lines=(
                     "operation\tconfig.google.login",
                     f"profile\t{active}",
                     "mode\trefresh-only",
@@ -329,17 +335,17 @@ def google_login(
     except GoogleAuthError as exc:
         raise _google_refusal(exc) from exc
 
-    payload = {
-        "operation": "config.google.login",
-        "profile": active,
-        "mode": "consent",
-        "account_email": metadata.account_email,
-        "granted_scopes": list(metadata.granted_scopes),
-    }
-    _emit(
+    typed_consent = GoogleLoginResult(
+        profile=active,
+        mode="consent",
+        account_email=metadata.account_email,
+        granted_scopes=list(metadata.granted_scopes),
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.login",
+        result=typed_consent,
+        lines=(
             "operation\tconfig.google.login",
             f"profile\t{active}",
             "mode\tconsent",
@@ -361,18 +367,17 @@ def google_status(
 
     client = load_client(active)
     metadata = load_metadata(active)
-    payload: dict[str, object] = {
-        "operation": "config.google.status",
-        "profile": active,
-        "client_registered": client is not None,
-        "client_id": client.client_id if client is not None else None,
-        "session_present": metadata is not None,
-        "account_email": metadata.account_email if metadata is not None else None,
-        "granted_scopes": list(metadata.granted_scopes) if metadata is not None else [],
-        "issued_at": metadata.issued_at.isoformat() if metadata is not None else None,
-        "last_refresh_at": metadata.last_refresh_at.isoformat() if metadata is not None else None,
-        "reauth_required": metadata.reauth_required if metadata is not None else None,
-    }
+    typed_status = GoogleStatusResult(
+        profile=active,
+        client_registered=client is not None,
+        client_id=client.client_id if client is not None else None,
+        session_present=metadata is not None,
+        account_email=metadata.account_email if metadata is not None else None,
+        granted_scopes=list(metadata.granted_scopes) if metadata is not None else [],
+        issued_at=metadata.issued_at.isoformat() if metadata is not None else None,
+        last_refresh_at=metadata.last_refresh_at.isoformat() if metadata is not None else None,
+        reauth_required=metadata.reauth_required if metadata is not None else None,
+    )
     lines = [
         "operation\tconfig.google.status",
         f"profile\t{active}",
@@ -391,7 +396,7 @@ def google_status(
                 *tuple(f"scope\t{scope}" for scope in metadata.granted_scopes),
             )
         )
-    _emit(ctx, payload, tuple(lines))
+    _emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
 
 
 @google_app.command("logout", help=tr("cli.config.google.logout_help"))
@@ -410,17 +415,17 @@ def google_logout(
         raise _google_refusal(exc) from exc
 
     token_removed, metadata_removed = delete_session(active)
-    payload = {
-        "operation": "config.google.logout",
-        "profile": active,
-        "token_removed": token_removed,
-        "metadata_removed": metadata_removed,
-        "client_preserved": True,
-    }
-    _emit(
+    typed_logout = GoogleLogoutResult(
+        profile=active,
+        token_removed=token_removed,
+        metadata_removed=metadata_removed,
+        client_preserved=True,
+    )
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.google.logout",
+        result=typed_logout,
+        lines=(
             "operation\tconfig.google.logout",
             f"profile\t{active}",
             f"token_removed\t{token_removed}",
