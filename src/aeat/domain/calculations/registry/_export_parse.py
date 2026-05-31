@@ -369,7 +369,7 @@ def _parse_field_value(field: ExportFieldDefinition, raw: str) -> Decimal | str 
     if field.data_type == "integer":
         return _parse_integer(field, raw)
     if field.data_type == "decimal":
-        return _parse_decimal(field, raw)
+        return _parse_decimal(raw, field)
     if field.data_type == "boolean":
         return _parse_boolean(raw)
     value = raw.strip()
@@ -399,7 +399,7 @@ def _parse_integer(field: ExportFieldDefinition, raw: str) -> Decimal:
     return Decimal(int(text))
 
 
-def _parse_decimal(field: ExportFieldDefinition, raw: str) -> Decimal:
+def _parse_decimal(raw: str, field: ExportFieldDefinition) -> Decimal:
     text = raw.strip().replace(",", ".")
     if not text:
         return Decimal("0")
