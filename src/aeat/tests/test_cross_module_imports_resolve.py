@@ -195,9 +195,9 @@ def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
     * **silent fixes**: an allow-list entry that no longer fails (so
       the baseline gets trimmed instead of accruing dead entries).
 
-    Closes ``W09.P20.S139`` (gate definition). ``W09.P20.S140`` extends
-    the gate to fail at ``__init__.py``-modification time, not just
-    when a broken consumer is encountered.
+    The companion ``__init__.py`` gate below extends this check to
+    fail at ``__init__.py``-modification time, not just when a
+    broken consumer is encountered.
     """
     live_breakage: set[tuple[str, str, str]] = set()
     for triple in _IMPORT_TRIPLES:
@@ -239,15 +239,15 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 
 
 # Per-file count cap for the __init__.py public-import-without-__all__ gate.
-# Mirrors the singleton-warning regression cap idiom (W06.P16.S115):
-# each entry pins the maximum number of public sibling imports an
+# Mirrors the singleton-warning regression cap idiom: each entry pins
+# the maximum number of public sibling imports an
 # ``__init__.py`` may carry without listing them in ``__all__``. The
 # gate fails when a file's count grows (regression — public surface
 # drifted further off ``__all__``) OR when a file's count shrinks
 # (silent fix — trim the cap so the gain is locked in) OR when a
 # new file enters the set (regression — new ``__init__.py`` skipped
-# the discipline). Trim caps as packages clean up; the W09.P20 close
-# state is an empty mapping.
+# the discipline). Trim caps as packages clean up; the close state
+# is an empty mapping.
 _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {}
 
 
@@ -330,14 +330,14 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
     consumer ``from pkg import *`` then misses the name, and the
     public-surface contract drifts off the ``__all__`` source of truth.
 
-    Closes ``W09.P20.S140``. Sibling check to ``S139`` — together
-    they pin every ``__init__.py`` re-export at both ends:
-    ``S139`` proves consumer imports resolve; ``S140`` proves the
+    Sibling check to the consumer-resolution gate above — together
+    they pin every ``__init__.py`` re-export at both ends: the
+    consumer-side proves imports resolve; this side proves the
     package's own re-exports are coherent.
 
-    Uses the per-file count-cap idiom established by
-    ``W06.P16.S115`` so 225 historical findings stay tracked without
-    a 225-line inline tuple list. Each cap is a regression boundary:
+    Uses the per-file count-cap idiom so historical findings stay
+    tracked without an inline tuple list. Each cap is a regression
+    boundary:
     a file's count cannot grow without the gate failing, and any
     shrink must be locked in by trimming the cap.
     """

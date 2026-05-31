@@ -122,10 +122,9 @@ def test_bare_str_typed_id_detector_recognises_synthetic_violation(tmp_path) -> 
     confirm the detector reports the two bare shapes and accepts the
     typed shape.
 
-    The exhaustive full-tree enforcement is deferred to a follow-up
-    Wave that adjudicates the cross-domain ADR-amendment surface the
-    detector surfaces (see W05.P19.S68 step record for the inventory
-    of 54 known sites the detector flags against the post-W04 tree).
+    The exhaustive full-tree enforcement is deferred until the
+    cross-domain ADR-amendment surface the detector flags is
+    adjudicated (54 known sites at last inventory).
     """
 
     fixture_root = tmp_path / "src" / "aeat"
