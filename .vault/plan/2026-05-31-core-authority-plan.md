@@ -280,18 +280,18 @@ Execute the twelve GPU-semantic-search-only findings: collapse three _hash_file 
 
 Collapse the three _hash_file copies to core/hashing.sha256_file (MERGE-006), migrate five SHA-256 one-liner call sites (MERGE-007), consolidate the two _normalise_period copies to application/filing/_period_utils.py (MERGE-008), and harden validate_identity NIF rejection (MERGE-009, classified FIX).
 
-- [ ] `W10.P26.S85` - declare sha256_file in core/hashing.py, delete the two non-canonical _hash_file copies from domain/calculations/registry/_workbook_parity.py and application/ledger/_actions.py, and migrate their callers to core.hashing.sha256_file; `MERGE-006, Rule 1; `src/aeat/core/hashing.py`.
-- [ ] `W10.P26.S86` - migrate each of the five independent SHA-256 one-liner hashlib call sites across domain/ and application/ to use core.hashing.sha256_file; `MERGE-007, Rule 1; `src/aeat/`.
-- [ ] `W10.P26.S87` - extract _normalise_period to application/filing/_period_utils.py, delete the two copies from application/filing/_normalise_period.py and application/filing/reconciliation/_normalise_period.py, and update the four callers; `MERGE-008, Rule 1; `src/aeat/application/filing/_period_utils.py`.
-- [ ] `W10.P26.S88` - harden core/identity/validate_identity to reject malformed NIFs that _normalise_tax_identity would reject, add a regression test asserting rejection of a known malformed NIF, and update the domain function to call core/identity/validate_identity; `MERGE-009, Rule 1; `src/aeat/core/identity/`.
+- [x] `W10.P26.S85` - declare sha256_file in core/hashing.py, delete the two non-canonical _hash_file copies from domain/calculations/registry/_workbook_parity.py and application/ledger/_actions.py, and migrate their callers to core.hashing.sha256_file; `MERGE-006, Rule 1; `src/aeat/core/hashing.py`.
+- [x] `W10.P26.S86` - migrate each of the five independent SHA-256 one-liner hashlib call sites across domain/ and application/ to use core.hashing.sha256_file; `MERGE-007, Rule 1; `src/aeat/`.
+- [x] `W10.P26.S87` - extract _normalise_period to application/filing/_period_utils.py, delete the two copies from application/filing/_normalise_period.py and application/filing/reconciliation/_normalise_period.py, and update the four callers; `MERGE-008, Rule 1; `src/aeat/application/filing/_period_utils.py`.
+- [x] `W10.P26.S88` - harden core/identity/validate_identity to reject malformed NIFs that _normalise_tax_identity would reject, add a regression test asserting rejection of a known malformed NIF, and update the domain function to call core/identity/validate_identity; `MERGE-009, Rule 1; `src/aeat/core/identity/`.
 
 ### Phase `W10.P27` - reconciliation status consolidation and registry load boilerplate
 
 Audit and document the ReconciliationStatus vs SubmissionStatus divergence (MERGE-004), unify the three reconciliation status enum variants under a single core type (MERGE-005), and eliminate the three ValidatedRegistryAuthority.load boilerplate duplications via a factory helper (MERGE-010). Wave close gate: sequential pytest across domain/, application/, and core/.
 
-- [ ] `W10.P27.S89` - audit whether ReconciliationStatus states are a subset of SubmissionStatus and document explicit divergence or consolidation rationale in the commit message; `MERGE-004, Rule 7; `src/aeat/application/filing/reconciliation/_schema.py`.
-- [ ] `W10.P27.S90` - unify RentaReconciliationStatus, ReconciliationStatus, and ModeloReconciliationVerdict under a single core reconciliation status type and update the five callers; `MERGE-005, Rule 7; `src/aeat/core/`.
-- [ ] `W10.P27.S91` - introduce a factory helper in domain/calculations/registry/_authority.py eliminating the two duplicate ValidatedRegistryAuthority.load boilerplate call sites and run sequential pytest across domain/, application/, and core/ as Wave W10 close gate; `MERGE-010, aeat-registry-authority-flow; `src/aeat/domain/calculations/registry/_authority.py`.
+- [x] `W10.P27.S89` - audit whether ReconciliationStatus states are a subset of SubmissionStatus and document explicit divergence or consolidation rationale in the commit message; `MERGE-004, Rule 7; `src/aeat/application/filing/reconciliation/_schema.py`.
+- [x] `W10.P27.S90` - unify RentaReconciliationStatus, ReconciliationStatus, and ModeloReconciliationVerdict under a single core reconciliation status type and update the five callers; `MERGE-005, Rule 7; `src/aeat/core/`.
+- [x] `W10.P27.S91` - introduce a factory helper in domain/calculations/registry/_authority.py eliminating the two duplicate ValidatedRegistryAuthority.load boilerplate call sites and run sequential pytest across domain/, application/, and core/ as Wave W10 close gate; `MERGE-010, aeat-registry-authority-flow; `src/aeat/domain/calculations/registry/_authority.py`.
 
 ## Wave `W11` - enforcement-test extension to 10 clauses
 
