@@ -8,18 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
-def _hex64(label: str) -> str:
-    return hashlib.sha256(label.encode("utf-8")).hexdigest()
-
-
-WU_100 = _hex64("wu-100")
-WU_1 = _hex64("wu-1")
-WU_A = _hex64("wu-A")
-WU_B = _hex64("wu-B")
-REV_1_ID = _hex64("rev-1")
-FILING_1_ID = _hex64("filing-1")
-
 from aeat.adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
 from aeat.application.evidence import (
     BundleVerificationState,
@@ -33,6 +21,18 @@ from aeat.application.evidence._models import derive_bundle_id
 from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _hex64(label: str) -> str:
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
+WU_100 = _hex64("wu-100")
+WU_1 = _hex64("wu-1")
+WU_A = _hex64("wu-A")
+WU_B = _hex64("wu-B")
+REV_1_ID = _hex64("rev-1")
+FILING_1_ID = _hex64("filing-1")
 
 
 @pytest.fixture

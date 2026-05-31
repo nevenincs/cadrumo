@@ -39,6 +39,8 @@ import pytest
 
 from ...core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
 # Import the per-package payload modules so their @register_schema
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # A test-local import is necessary because the CLI lazy-loads
@@ -155,8 +157,6 @@ MIGRATED_COMMANDS: frozenset[str] = frozenset(
 )
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 def test_migrated_commands_are_registered() -> None:
     """Every entry in MIGRATED_COMMANDS must have a registered schema.
 
@@ -173,8 +173,6 @@ def test_migrated_commands_are_registered() -> None:
     )
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 @pytest.mark.parametrize("command_path", sorted(MIGRATED_COMMANDS))
 def test_migrated_command_envelope_round_trips(command_path: str) -> None:
     """Each migrated command's schema must round-trip via SchemaEnvelope.

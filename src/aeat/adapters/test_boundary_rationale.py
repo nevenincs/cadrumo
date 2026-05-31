@@ -14,6 +14,8 @@ import pathlib
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
 _SRC = pathlib.Path(__file__).parent
 
 _BOUNDARY_RATIONALE_MARKER = "irreducible"
@@ -33,8 +35,6 @@ _ANNOTATED_FILES: list[tuple[str, str]] = [
         "_build_context_kwargs",
     ),
 ]
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 @pytest.mark.parametrize("rel_path,anchor_text", _ANNOTATED_FILES)
