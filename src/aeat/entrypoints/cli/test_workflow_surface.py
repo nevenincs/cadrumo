@@ -13,8 +13,7 @@ from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.diagnostics import build_cli_version_report
-from aeat.core import config as config_module
-from aeat.core.config import SecretStoreBackend, Settings
+from aeat.core.config import SecretStoreBackend, load_settings, override_settings
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.domain.transactions import TransactionCatalogueRepository
 from aeat.tests.cli_runner import invoke_cached_cli
@@ -44,10 +43,16 @@ def _json_output(result: Result) -> str:
 
 @contextmanager
 def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
+    """Pin Settings via the canonical centralized override API.
+
+    Replaces a prior direct manipulation of ``config._settings_override``
+    (private ContextVar) with ``override_settings(**fields)``. The
+    backend API validates all fields through pydantic, restores prior
+    state on exit, and is async-context-safer than token-based reset.
+    """
     dispose_engine()
-    base_settings = Settings(_env_file=None)
-    settings = Settings(
-        _env_file=None,
+    dev_test_passphrase = load_settings().aeat_dev_test_database_password
+    with override_settings(
         aeat_auth_provider=None,
         aeat_certificate_path=None,
         aeat_certificate_password_secret=None,
@@ -55,7 +60,7 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
         aeat_clave_movil_dni_fecha=None,
         aeat_clave_movil_nie_soporte=None,
         aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=base_settings.aeat_dev_test_database_password,
+        aeat_secret_passphrase=dev_test_passphrase,
         aeat_secret_store_dir=tmp_path / "secrets",
         aeat_allow_unencrypted="",
         aeat_active_profile=None,
@@ -65,13 +70,11 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
         aeat_financial_txs_dir=tmp_path / "txs",
         aeat_invoices_dir=tmp_path / "invoices",
         aeat_drafts_dir=tmp_path / "drafts",
-    )
-    token = config_module._settings_override.set(settings)
-    try:
-        yield tmp_path
-    finally:
-        config_module._settings_override.reset(token)
-        dispose_engine()
+    ):
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine()
 
 
 @pytest.fixture
