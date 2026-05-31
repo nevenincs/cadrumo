@@ -19,70 +19,70 @@ classifiers = [
 
 dependencies = [
   # LLM providers
-  "anthropic>=0.74.1",
+  "anthropic>=0.74.1,<1",
   # Argon2id KDF for the file-fallback master-key provider's
   # passphrase-to-KEK derivation. OWASP-current top-tier
   # password-hashing primitive; ships pre-built wheels for
   # Linux/macOS/Windows.
-  "argon2-cffi>=23.1.0",
+  "argon2-cffi>=23.1.0,<26",
   # HTML parsing for status readers.
-  "beautifulsoup4>=4.12",
+  "beautifulsoup4>=4.12,<5",
   # PKCS#12 parsing for client-certificate auth.
-  "cryptography>=47.0.0",
+  "cryptography>=47.0.0,<48",
   # XML parsing.
-  "defusedxml>=0.7.1",
+  "defusedxml>=0.7.1,<1",
   # Google API client + OAuth flow for the Drive + Sheets integration
   # (ADR `2026-05-08-google-oauth-adr`). The Desktop OAuth client uses
   # loopback IP + PKCE via google-auth-oauthlib's InstalledAppFlow;
   # the storage provider drives Drive v3 / Sheets v4 through the
   # discovery client. google-auth-httplib2 is intentionally NOT pinned —
   # transport is satisfied by `requests` (transitive via google-auth).
-  "google-auth>=2.50.0",
-  "google-auth-oauthlib>=1.3.1",
-  "google-api-python-client>=2.195.0",
+  "google-auth>=2.50.0,<3",
+  "google-auth-oauthlib>=1.3.1,<2",
+  "google-api-python-client>=2.195.0,<3",
   # In-process Excel-formula evaluator. Used by the schema-to-sheet
   # parity oracle to evaluate translated Sheets formulas locally and
   # assert exact-after-per-casilla-rounding identity against the
   # canonical Python calc engine. No network IO; runs in-process.
-  "formulas>=1.2.0",
+  "formulas>=1.2.0,<2",
   # HTTP client
-  "httpx>=0.28.1",
+  "httpx>=0.28.1,<1",
   # OS-keychain abstraction for the master-key provider (Windows
   # Credential Manager, macOS Keychain, Linux Secret Service via
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
-  "keyring>=25.6.0",
+  "keyring>=25.6.0,<26",
   # Financial ingest.
-  "ofxparse>=0.21",
-  "openpyxl>=3.1.5",
+  "ofxparse>=0.21,<1",
+  "openpyxl>=3.1.5,<4",
   # PDF parsing for justificantes.
-  "pdfplumber>=0.11.9",
+  "pdfplumber>=0.11.9,<1",
   # Fast text extraction from official AEAT manual PDFs for registry
   # source-citation validation.
-  "pypdfium2>=5.7.1",
+  "pypdfium2>=5.7.1,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
-  "pikepdf>=10.0.0",
+  "pikepdf>=10.0.0,<11",
   # Browser automation
-  "playwright>=1.58.0",
+  "playwright>=1.58.0,<2",
   # Data validation & models
-  "pydantic>=2.12.5",
-  "pydantic-settings>=2.9.1",
+  "pydantic>=2.12.5,<3",
+  "pydantic-settings>=2.9.1,<3",
   # Interactive prompt backend for the wizard descriptor runtime.
-  "questionary>=2.1.1",
+  "questionary>=2.1.1,<3",
   # Configuration
-  "python-dotenv>=1.2.2",
+  "python-dotenv>=1.2.2,<2",
   # CLI localization backend.
-  "python-i18n>=0.3.9",
-  "rich>=14.2.0",
+  "python-i18n>=0.3.9,<1",
+  "rich>=14.2.0,<16",
   # Persistence
-  "sqlalchemy>=2.0.36",
+  "sqlalchemy>=2.0.36,<3",
   # CLI
-  "typer>=0.20.0",
+  "typer>=0.20.0,<1",
   # IANA tz database (bundled on Linux/macOS, missing on Windows
   # CPython — required by aeat.status._parsers.expedientes to
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
-  "xlrd>=2.0.1",
+  "xlrd>=2.0.1,<3",
 ]
 
 [project.scripts]
