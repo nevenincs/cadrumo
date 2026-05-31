@@ -745,16 +745,16 @@ Enroll calc_sheets/ cluster (5 sites in _engine, _records, _parity_harness, _cal
 
 Fix 2 regressions: _bindings.py/_schema.py ledger_transaction sibling sites; _workbook_parity.py .xls Literal annotations. Add OracleEnvironment enum to registry.__init__ match block. Add INVOICE member to AggregationSourceKind. Delete SEDE_BODY_ENCODING duplicate. Add UTF_8_ENCODING constant. Extract env-var name constants from auth modules. file_permissions.py SYSTEMROOT+USERDOMAIN env constants.
 
-- [ ] `W06.P29.S486` - fix regression: migrate ledger_transaction bare sites in _bindings.py:1631,1637,2846 + _schema.py:1787 to AggregationSourceKind.LEDGER_TRANSACTION; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W06.P29.S487` - fix regression: migrate .xls bare sites + Literal annotations in _workbook_parity.py:109,364,646,1129 to XLS_EXTENSION/XLSX_EXTENSION; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
-- [ ] `W06.P29.S488` - migrate OracleEnvironment bare strings in application/registry/__init__.py:269-274,288-289 + entrypoints/cli/registry.py:184 to OracleEnvironment enum members; `src/aeat/application/registry/__init__.py`.
-- [ ] `W06.P29.S489` - add INVOICE member to AggregationSourceKind in aeat.core.aggregation and migrate 4 bare 'invoice' sites in _bindings.py + _schema.py + _validate_record_sections.py; `src/aeat/core/aggregation.py`.
-- [ ] `W06.P29.S490` - delete SEDE_BODY_ENCODING duplicate in sede/_browser_constants.py and import LATIN_1_ENCODING from external_constants instead; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
-- [ ] `W06.P29.S491` - introduce UTF_8_ENCODING constant in external_constants and selectively migrate encoding= kwarg call-sites (excluding idiomatic encode/decode hashing); `src/aeat/core/external_constants.py`.
-- [ ] `W06.P29.S492` - extract _SYSTEMROOT_ENV_VAR and _USERDOMAIN_ENV_VAR Final constants in core/file_permissions.py:63,65; `src/aeat/core/file_permissions.py`.
-- [ ] `W06.P29.S493` - extract _CERT_PASSWORD_SECRET_ENV and _CLAVE_MOVIL_DNI_NIE_ENV Final constants in auth modules where env-var names appear in error messages; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W06.P29.S494` - migrate LATIN_1_ENCODING into _record_spec.py:16 alias dict key and document _record_spec.py:17 latin_1 alias variant; `src/aeat/domain/calculations/registry/_record_spec.py`.
-- [ ] `W06.P29.S495` - add aggregate inventory test asserting zero ledger_transaction/.xls/SEDE_BODY_ENCODING/production-string survivors in production; `src/aeat/test_w06_p29_constants_inventory.py`.
+- [x] `W06.P29.S486` - fix regression: migrate ledger_transaction bare sites in _bindings.py:1631,1637,2846 + _schema.py:1787 to AggregationSourceKind.LEDGER_TRANSACTION; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W06.P29.S487` - fix regression: migrate .xls bare sites + Literal annotations in _workbook_parity.py:109,364,646,1129 to XLS_EXTENSION/XLSX_EXTENSION; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [x] `W06.P29.S488` - migrate OracleEnvironment bare strings in application/registry/__init__.py:269-274,288-289 + entrypoints/cli/registry.py:184 to OracleEnvironment enum members; `src/aeat/application/registry/__init__.py`.
+- [x] `W06.P29.S489` - add INVOICE member to AggregationSourceKind in aeat.core.aggregation and migrate 4 bare 'invoice' sites in _bindings.py + _schema.py + _validate_record_sections.py; `src/aeat/core/aggregation.py`.
+- [x] `W06.P29.S490` - delete SEDE_BODY_ENCODING duplicate in sede/_browser_constants.py and import LATIN_1_ENCODING from external_constants instead; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [x] `W06.P29.S491` - introduce UTF_8_ENCODING constant in external_constants and selectively migrate encoding= kwarg call-sites (excluding idiomatic encode/decode hashing); `src/aeat/core/external_constants.py`.
+- [x] `W06.P29.S492` - extract _SYSTEMROOT_ENV_VAR and _USERDOMAIN_ENV_VAR Final constants in core/file_permissions.py:63,65; `src/aeat/core/file_permissions.py`.
+- [x] `W06.P29.S493` - extract _CERT_PASSWORD_SECRET_ENV and _CLAVE_MOVIL_DNI_NIE_ENV Final constants in auth modules where env-var names appear in error messages; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W06.P29.S494` - migrate LATIN_1_ENCODING into _record_spec.py:16 alias dict key and document _record_spec.py:17 latin_1 alias variant; `src/aeat/domain/calculations/registry/_record_spec.py`.
+- [x] `W06.P29.S495` - add aggregate inventory test asserting zero ledger_transaction/.xls/SEDE_BODY_ENCODING/production-string survivors in production; `src/aeat/test_w06_p29_constants_inventory.py`.
 
 ### Phase `W06.P30` - A8 cast marker + A5 wrapper consolidation
 
