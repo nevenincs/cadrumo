@@ -194,7 +194,8 @@ def test_config_repair_integrity_objects_cli_is_metadata_only_for_unreadable_row
     assert sensitive_period not in text.output
     assert "wallet-balance" not in text.output
 
-    payload = json.loads(payload_result.output)
+    envelope = json.loads(payload_result.output)
+    payload = envelope["result"]
     serialized = json.dumps(payload)
     assert payload["unreadable_total"] == 1
     assert payload["readable_total"] == 0
@@ -233,7 +234,8 @@ def test_config_repair_quarantine_moves_unreadable_rows_without_disclosing_paylo
     assert "12345678Z" not in result.output
     assert "wallet-balance" not in result.output
     assert payload_result.exit_code == 0, payload_result.output
-    payload = json.loads(payload_result.output)
+    envelope = json.loads(payload_result.output)
+    payload = envelope["result"]
     assert payload["unreadable_total"] == 0
     assert payload["readable_total"] == 0
     serialized = json.dumps(payload)
@@ -278,7 +280,8 @@ def test_config_repair_quarantine_dry_run_is_metadata_only_and_non_mutating() ->
     assert sensitive_period not in text.output
     assert "wallet-balance" not in text.output
 
-    payload = json.loads(payload_result.output)
+    envelope = json.loads(payload_result.output)
+    payload = envelope["result"]
     serialized = json.dumps(payload)
     assert payload["dry_run"] is True
     assert payload["unreadable_total"] == 1
