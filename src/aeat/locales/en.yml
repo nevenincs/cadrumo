@@ -2681,6 +2681,7 @@ errors:
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
       operation.
     error_aeat_core: An internal application error occurred.
+    error_aeat_core_not_found: The requested resource or record was not found.
     error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.

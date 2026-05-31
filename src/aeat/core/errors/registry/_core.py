@@ -48,6 +48,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.errors._not_found.CoreNotFoundError",
+        ErrorCode(
+            code="ERROR_AEAT_CORE_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aeat_core_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.errors.CoreValidationError",
         ErrorCode(
             code="INTEGRITY_AEAT_CORE_VALIDATION",

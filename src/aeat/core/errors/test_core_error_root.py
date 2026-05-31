@@ -15,6 +15,7 @@ from __future__ import annotations
 import pytest
 
 from aeat.core.errors import AeatError, CoreError, CoreValidationError
+from aeat.core.errors._not_found import CoreNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -58,6 +59,39 @@ def test_catching_aeat_error_catches_core_error_subclass() -> None:
 
     assert caught is not None
     assert isinstance(caught, CoreError)
+
+
+def test_core_not_found_error_descends_from_core_error() -> None:
+    """CoreNotFoundError is a CoreError and KeyError.
+
+    Non-tautological: raising CoreNotFoundError and catching it as CoreError
+    proves the inheritance chain without reading the class definition.
+    If the inheritance were broken, the except arm would not fire and
+    pytest would report an uncaught CoreNotFoundError.
+    """
+    assert issubclass(CoreNotFoundError, CoreError)
+    assert issubclass(CoreNotFoundError, AeatError)
+    assert issubclass(CoreNotFoundError, KeyError)
+
+    caught_as_core: CoreError | None = None
+    try:
+        raise CoreNotFoundError("record missing")
+    except CoreError as exc:
+        caught_as_core = exc
+
+    assert caught_as_core is not None
+    assert isinstance(caught_as_core, CoreNotFoundError)
+    assert isinstance(caught_as_core, KeyError)
+
+    # KeyError arm also fires (dict-like repository compatibility)
+    caught_as_key_error: KeyError | None = None
+    try:
+        raise CoreNotFoundError("key error arm")
+    except KeyError as exc:
+        caught_as_key_error = exc
+
+    assert caught_as_key_error is not None
+    assert isinstance(caught_as_key_error, CoreNotFoundError)
 
 
 def test_core_validation_error_catch_order_is_well_defined() -> None:

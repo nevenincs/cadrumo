@@ -2807,6 +2807,7 @@ errors:
     error_access_gate_submission_preflight: La comprobación previa del control de
       acceso rechazó una operación de escritura.
     error_aeat_core: Se produjo un error interno en la aplicación.
+    error_aeat_core_not_found: No se encontró el recurso o registro solicitado.
     error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
