@@ -2770,6 +2770,7 @@ errors:
     error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
       ha rebutjat una operació d'escriptura.
     error_aeat_core: S'ha produït un error intern en l'aplicació.
+    error_aeat_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
     error_aeat_observability: S'ha produït un error en la telemetria de l'aplicació.
     error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
