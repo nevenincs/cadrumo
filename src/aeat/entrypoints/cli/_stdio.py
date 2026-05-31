@@ -139,6 +139,7 @@ def _set_windows_console_utf8() -> None:
     try:
         import ctypes
 
+        # TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES: ctypes.windll is Windows-only and absent from cross-platform stubs.
         k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         k32.SetConsoleOutputCP(65001)
         k32.SetConsoleCP(65001)

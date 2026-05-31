@@ -304,6 +304,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
                 provider_context = get_master_key_provider()
+                # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
                 provider_context.__enter__()  # type: ignore[attr-defined]
             state = workflow_state_repository().load()
             checks.append(
@@ -351,6 +352,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         checks.append(_secure_objects_integrity_check(secure_objects))
     finally:
         if provider_context is not None:
+            # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
             provider_context.__exit__(None, None, None)  # type: ignore[attr-defined]
 
     checks.append(_registry_cross_domain_integrity_check(root))

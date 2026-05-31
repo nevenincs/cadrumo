@@ -106,7 +106,8 @@ def _as_toml_table(value: object) -> dict[str, object] | None:
     key type at this single TOML deserialization boundary.
     """
     if isinstance(value, dict):
-        return value  # type: ignore[return-value]  # TOML always emits str keys; key type is erased by the object parameter
+        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE: TOML deserialization erases str-key type after isinstance narrowing; annotation re-attaches the known str key at the boundary.
+        return value  # type: ignore[return-value]
     return None
 
 
