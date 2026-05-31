@@ -24,7 +24,8 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     _assert_query_browser_action,
     extract_verdict_from_response_text,
 )
-from aeat.domain.calculations.registry import AEAT_GROI_URL, GROI_ORACLE_ID, RegistryValidationError
+from aeat.core.config import Settings
+from aeat.domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -42,7 +43,7 @@ def test_oracle_id_matches_registry_namespace() -> None:
 def test_url_pins_to_aeat_www2_groi_servlet() -> None:
     """URL captured live; pinned so a future drift forces re-verification."""
 
-    assert str(AEAT_GROI_URL) == (
+    assert Settings.external_constants().aeat.oracles.groi_check == (
         "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
     )
 
@@ -63,7 +64,7 @@ def test_planned_operations_lists_form_open_per_nif_discard() -> None:
     assert len(operations) == 5
     assert operations[0].kind == "http"
     assert operations[0].method == "GET"
-    assert operations[0].url == AEAT_GROI_URL
+    assert str(operations[0].url) == Settings.external_constants().aeat.oracles.groi_check
     assert operations[1].kind == "browser_action"
     assert operations[1].action == "open-groi-form"
     assert operations[2].kind == "browser_action"
@@ -92,7 +93,7 @@ def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
     observation = GroiNifVerdict(
         nif="A28015865",
         verdict="valid",
-        raw_evidence_locator=str(AEAT_GROI_URL),
+        raw_evidence_locator=Settings.external_constants().aeat.oracles.groi_check,
     )
     rebuilt = GroiNifVerdict.model_validate(observation.model_dump())
     assert rebuilt == observation
