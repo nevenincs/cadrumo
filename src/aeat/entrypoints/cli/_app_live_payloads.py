@@ -65,7 +65,7 @@ class FiledCaptureResult(OutputSchema):
     calculation_observation_keys: list[str]
 
 
-@register_schema("app.live.filed.capture.sources")
+@register_schema("app.live.filed.capture_sources")
 class FiledCaptureSourcesResult(OutputSchema):
     """Payload for ``aeat app live filed capture-sources``."""
 
