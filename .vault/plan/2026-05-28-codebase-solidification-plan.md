@@ -714,17 +714,17 @@ Wave 6 audit surfaced 4 strict regressions (worse than W5's 2): A3 WorkflowInput
 
 Close 1 regression at wizard/_persistence.py:142 + systemic sweep of tr()-as-positional across all operator-facing AeatError raises. Single-agent file-by-file broad-grep pass with strict no-positional-tr inventory test.
 
-- [ ] `W06.P27.S465` - fix regression: thread translated_message on WorkflowInputMismatchError at wizard/_persistence.py:142 (sibling W5 missed); `src/aeat/application/wizard/_persistence.py`.
-- [ ] `W06.P27.S466` - migrate 28+ tr-as-positional sites in entrypoints/cli/_config/__init__.py to translated_message kwarg via grep-find-all-CliRefusedBoundaryError-tr-positional + replace; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W06.P27.S467` - migrate tr-as-positional sites in entrypoints/cli/_config/_google.py:765,775,785,1256 + convert :170 f-string-as-translated_message to static keys + context; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W06.P27.S468` - migrate tr-as-positional in entrypoints/cli/_config/_profile_census.py:32,35; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `W06.P27.S469` - migrate WizardUnsupportedConsoleError tr-positional at wizard/_prompter.py:195,202,223 + wizard/_commands.py:939 f-string-as-key; `src/aeat/application/wizard/_prompter.py`.
-- [ ] `W06.P27.S470` - migrate NoActiveProfileError tr-positional at workflow/_models.py:239,266; `src/aeat/application/workflow/_models.py`.
-- [ ] `W06.P27.S471` - migrate WorkUnitNotFoundError tr-positional at modelo/_actions.py:694,721,783,1441,3196,3959,3962,3967; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W06.P27.S472` - migrate AggregationPeriodError tr-positional at aggregation/_models.py:167,169,171,173; `src/aeat/application/aggregation/_models.py`.
-- [ ] `W06.P27.S473` - migrate ProfileNotFoundError tr-positional at user_profile/_orchestration.py:596; `src/aeat/application/user_profile/_orchestration.py`.
-- [ ] `W06.P27.S474` - migrate ModeloApplicationError tr-positional at filing/_runtime_repository.py:19,22; `src/aeat/application/filing/_runtime_repository.py`.
-- [ ] `W06.P27.S475` - add real-behavior inventory test asserting zero raise (Class)(tr(...)) positional anti-pattern survives in production AeatError subclasses; `src/aeat/test_locale_tr_positional_inventory.py`.
+- [x] `W06.P27.S465` - fix regression: thread translated_message on WorkflowInputMismatchError at wizard/_persistence.py:142 (sibling W5 missed); `src/aeat/application/wizard/_persistence.py`.
+- [x] `W06.P27.S466` - migrate 28+ tr-as-positional sites in entrypoints/cli/_config/__init__.py to translated_message kwarg via grep-find-all-CliRefusedBoundaryError-tr-positional + replace; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W06.P27.S467` - migrate tr-as-positional sites in entrypoints/cli/_config/_google.py:765,775,785,1256 + convert :170 f-string-as-translated_message to static keys + context; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W06.P27.S468` - migrate tr-as-positional in entrypoints/cli/_config/_profile_census.py:32,35; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `W06.P27.S469` - migrate WizardUnsupportedConsoleError tr-positional at wizard/_prompter.py:195,202,223 + wizard/_commands.py:939 f-string-as-key; `src/aeat/application/wizard/_prompter.py`.
+- [x] `W06.P27.S470` - migrate NoActiveProfileError tr-positional at workflow/_models.py:239,266; `src/aeat/application/workflow/_models.py`.
+- [x] `W06.P27.S471` - migrate WorkUnitNotFoundError tr-positional at modelo/_actions.py:694,721,783,1441,3196,3959,3962,3967; `src/aeat/application/modelo/_actions.py`.
+- [x] `W06.P27.S472` - migrate AggregationPeriodError tr-positional at aggregation/_models.py:167,169,171,173; `src/aeat/application/aggregation/_models.py`.
+- [x] `W06.P27.S473` - migrate ProfileNotFoundError tr-positional at user_profile/_orchestration.py:596; `src/aeat/application/user_profile/_orchestration.py`.
+- [x] `W06.P27.S474` - migrate ModeloApplicationError tr-positional at filing/_runtime_repository.py:19,22; `src/aeat/application/filing/_runtime_repository.py`.
+- [x] `W06.P27.S475` - add real-behavior inventory test asserting zero raise (Class)(tr(...)) positional anti-pattern survives in production AeatError subclasses; `src/aeat/test_locale_tr_positional_inventory.py`.
 
 ### Phase `W06.P28` - A1 exceptions: calc_sheets + repository + base + MRO + swallow
 
