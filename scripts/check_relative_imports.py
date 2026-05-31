@@ -1,4 +1,4 @@
-"""Enforce the relative-imports mandate inside `src/aeat/`.
+r"""Enforce the relative-imports mandate inside `src/aeat/`.
 
 Ruff's `flake8-tidy-imports.banned-api` (TID251) resolves relative
 imports back to their absolute path before matching the banned prefix,
