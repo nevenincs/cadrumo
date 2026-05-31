@@ -208,6 +208,7 @@ def build_draft(
     casilla_provenance = tuple(
         ModeloCasillaProvenance(
             casilla_id=casilla.id,
+            formula_id=casilla.formula,
             legal_refs=tuple(casilla.legal_refs),
             source_refs=tuple(casilla.source_refs),
         )
