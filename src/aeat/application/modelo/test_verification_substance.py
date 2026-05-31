@@ -545,7 +545,12 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     )
 
     # Modest operator inputs so C14 stays small + positive.
+    # C01 (ingresos) is bound via ledger_renta_income_aggregation, but the
+    # ledger binding's smuggling guard only applies to previous_filing
+    # sources; supplying C01 directly is the supported manual-entry path
+    # mirrored by the M131 sibling test below.
     casilla_inputs: dict[str, Decimal] = {
+        "01": Decimal("10000"),
         "02": Decimal("0"),
         "05": Decimal("0"),
         "06": Decimal("0"),
@@ -555,16 +560,15 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         "18": Decimal("0"),
     }
     # Carry-forward seed deliberately large — exceeds the computed C14.
+    # previous_year_economic_activity_net_income > 12000 keeps the C13
+    # minoración at zero so C14 = C12 (positive cuota) instead of being
+    # eroded to negative by the small-income minoración bracket.
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("20000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("99999"),
-            # M130 C03 is a ledger-aggregated cumulative binding; supply
-            # a small value so C14 stays small + positive (the cap rule
-            # only fires when C14 > 0).
-            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("1000"),
         },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
