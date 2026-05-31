@@ -21,8 +21,8 @@ from pathlib import Path
 
 from aeat.diagnostics import _identity_placement
 from aeat.diagnostics._identity_placement import (
+    ConstraintShape,
     Finding,
-    PROMOTE001_PROTECT_LIST,
     build_alias_inventory,
     build_kind_status_state_alias_inventory,
     find_bare_str_kind_status_state_fields,
@@ -161,11 +161,28 @@ def test_bare_str_typed_id_detector_recognises_synthetic_violation(tmp_path) -> 
         f"alias inventory failed to discover InvoiceId; got "
         f"{sorted(inventory.aliases_by_owner.keys())!r}"
     )
+    invoice_shape = inventory.constraints_by_owner["invoice"]
+    assert invoice_shape == ConstraintShape(min_length=64, max_length=64), (
+        f"alias inventory failed to extract InvoiceId constraint shape; "
+        f"got {invoice_shape!r}"
+    )
 
     findings = find_bare_str_typed_id_fields(fixture_root, inventory)
-    classes_flagged = sorted(f.message.split(" ")[3].split(".")[0] for f in findings)
-    assert classes_flagged == ["BareField", "OptionalBareField"], (
-        f"detector mis-classifies typed alias usage; flagged {classes_flagged!r}"
+    by_class = {f.message.split(" ")[3].split(".")[0]: f for f in findings}
+    assert set(by_class) == {"BareField", "OptionalBareField"}, (
+        f"detector mis-classifies typed alias usage; flagged {sorted(by_class)!r}"
+    )
+    assert "shape-compatible promotion candidate" in by_class["BareField"].message, (
+        f"BareField (min/max match alias) must be classified compatible; "
+        f"got {by_class['BareField'].message!r}"
+    )
+    assert "shape-incompatible" in by_class["OptionalBareField"].message, (
+        f"OptionalBareField (no constraints) must be classified incompatible; "
+        f"got {by_class['OptionalBareField'].message!r}"
+    )
+    assert "min_length=64" in by_class["OptionalBareField"].message, (
+        f"OptionalBareField incompatibility rationale must cite min_length; "
+        f"got {by_class['OptionalBareField'].message!r}"
     )
 
 
@@ -269,7 +286,7 @@ def test_detector_public_surface_is_pinned() -> None:
         "AEAT_ROOT",
         "AliasInventory",
         "Finding",
-        "PROMOTE001_PROTECT_LIST",
+        "ConstraintShape",
         "build_alias_inventory",
         "build_kind_status_state_alias_inventory",
         "find_bare_str_kind_status_state_fields",
