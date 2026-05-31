@@ -122,7 +122,9 @@ def _registry_inspect_payload() -> RegistryTreeReport:
         ],
     )
     assert result.exit_code == 0, result.output
-    return RegistryTreeReport.model_validate_json(result.output)
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "registry.inspect"
+    return RegistryTreeReport.model_validate(envelope["result"])
 
 
 def test_registry_inspect_cli_reports_unverified_state(_registry_inspect_payload: RegistryTreeReport) -> None:
@@ -263,7 +265,9 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     )
 
     assert result.exit_code == 0, f"CLI command failed:\n{result.output}"
-    payload = json.loads(result.output)
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "registry.verify"
+    payload = envelope["result"]
     registry_surfaces = _registry_application_surfaces()
     assert payload["verified"] is True
     assert payload["source_reference_count"] > 0
@@ -311,7 +315,9 @@ def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> Non
     )
 
     assert result.exit_code == 0
-    payload = json.loads(result.output)
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "registry.workbooks.verify"
+    payload = envelope["result"]
     assert payload["workbook_count"] >= 1
     assert payload["scanned_count"] == 1
     assert payload["failed_count"] == 0
@@ -404,7 +410,9 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
     )
 
     assert second.exit_code == 0
-    payload = json.loads(second.output)
+    envelope = json.loads(second.output)
+    assert envelope["command"] == "registry.workbooks.verify"
+    payload = envelope["result"]
     assert payload["workbook_count"] >= 1
     assert payload["failed_count"] == 0
 

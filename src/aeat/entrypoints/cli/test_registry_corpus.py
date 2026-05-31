@@ -109,7 +109,9 @@ def test_citations_verify_emits_json_when_format_json_is_set() -> None:
     result = _invoke("citations", "verify", fmt="json")
     # JSON path emits a parseable document on stdout (with non-zero
     # exit when the corpus has errors; we don't assert the rc here).
-    payload = json.loads(result.stdout)
+    envelope = json.loads(result.stdout)
+    assert envelope["command"] == "registry.citations.verify"
+    payload = envelope["result"]
     assert payload["operation"] == "registry.citations.verify"
     assert "issue_count" in payload
     assert isinstance(payload["issues"], list)
@@ -155,7 +157,9 @@ def test_citations_list_emits_json_payload_through_root_format(tmp_path: Path) -
     result = _invoke_with_env("citations", "list", "--tag", "irpf", env=_env_with_normatives_root(tmp_path), fmt="json")
 
     assert result.exit_code == 0, result.stdout
-    payload = json.loads(result.stdout)
+    envelope = json.loads(result.stdout)
+    assert envelope["command"] == "registry.citations.list"
+    payload = envelope["result"]
     assert payload["operation"] == "registry.citations.list"
     assert payload["reference_count"] == 1
     assert payload["tag_filter"] == "irpf"
@@ -182,7 +186,9 @@ def test_citations_show_emits_text_and_json_payloads_through_root_format(tmp_pat
     assert text.exit_code == 0, text.stdout
     assert "operation\tregistry.citations.show" in text.stdout
     assert "cite\tLey 35/2006, art. 32 (BOE-A-2006-20764)" in text.stdout
-    payload = json.loads(json_result.stdout)
+    envelope = json.loads(json_result.stdout)
+    assert envelope["command"] == "registry.citations.view"
+    payload = envelope["result"]
     assert payload["operation"] == "registry.citations.show"
     assert payload["reference"]["id"] == "ley-35-2006"
     assert payload["articulo"]["numero"] == "32"
@@ -220,7 +226,9 @@ def test_manuals_list_walks_corpus_root() -> None:
 def test_manuals_list_emits_json_payload() -> None:
     result = _invoke("manuals", "list", fmt="json")
     assert result.exit_code == 0
-    payload = json.loads(result.stdout)
+    envelope = json.loads(result.stdout)
+    assert envelope["command"] == "registry.manuals.list"
+    payload = envelope["result"]
     assert payload["operation"] == "registry.manuals.list"
     assert "part_count" in payload
     assert "parts" in payload
