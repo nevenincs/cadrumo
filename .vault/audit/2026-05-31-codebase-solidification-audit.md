@@ -60,3 +60,36 @@ The strict zero-fresh-findings counter advances to **1 of 3** required by the re
 The 77-site bare `# type: ignore` corpus should be addressed in a follow-up campaign rather than reopened under this epic. The proper sequence is to land an inventory ratchet (`test_type_ignore_rationale_markers.py` modelled on `test_cast_rationale_inventory.py`), enrol the existing sites with a `_KNOWN_VIOLATING_LINES` allowlist analogous to the W11 UTF-8 ratchet pattern, then drive the allowlist toward empty in incremental waves of a successor epic.
 
 The substitutability pre-filter introduced after the W11 PROMOTE-001 false-positive lesson and explicitly briefed into every subsequent audit dispatch is functioning as intended. W17 rejected 7 of 12 candidates by the pre-filter; W18 rejected 2 of 4; W19 produced zero candidates requiring rejection because no false positives reached the report stage. The pre-filter rule in `aeat-swarm-audit-cadence.md` is durable repo-level guidance and should be preserved.
+
+## Closure addendum — W20 through W25 trajectory and ADR close-condition evidence
+
+The W19 audit projected the strict close counter as 1 of 3. Six additional waves followed before the close condition was met. The trajectory:
+
+| Wave | Findings | Counter | Notes |
+|------|----------|---------|-------|
+| W19 | 0 | 1/3 | inaugural strict-zero wave |
+| W20 | 2 | 0/3 reset | A8 parameter-Any: `_actions.py:1341`, `_source_profile.py:71` — W19 had scanned return-Any but not parameter-Any annotations |
+| W21 | 9 | 0/3 reset | A8 parameter-Any cluster: 3 in `core/profile.py` / `core/profile_catalogue.py` (circular-import driven), 6 in Google adapter Resource parameters. Closed under W21.P53 with three rationale-marker batches plus a new structural ratchet `test_any_param_rationale_inventory.py` enrolling 30 pre-existing parameter-Any sites in a `_KNOWN_VIOLATING_LINES` allowlist mirroring the W11 UTF-8 pattern |
+| W22 | 2 | 0/3 reset | A2 TYPE_CHECKING-only `import logging` lacking rationale marker; P09 `unittest.mock.patch` in `test_except_clause_narrowing.py`. The mock site was rewritten using the canonical `CertificateHealthCheck` Protocol injection seam that already existed on `AeatAuthenticator`, allowing the `test_mock_inventory.py` allowlist to drop to empty |
+| W23 | 0 | 1/3 | first strict-zero wave after W22 closures |
+| W24 | 0 | 2/3 | sustained clean |
+| W25 | 0 | 3/3 | **GATE PASSED** |
+
+The parameter-Any class (W20 and W21 findings) was the deepest survivor pool the epic surfaced. The decision in W21 to introduce a structural inventory ratchet rather than continue mechanical wave-by-wave marker addition was the inflection point: ratchet enrolment stabilises the existing pool while structurally blocking new drift, allowing strict-zero waves to follow on the very next pass.
+
+The W22 mock-allowlist reduction to empty is an architectural milestone. The codebase no longer carries any test that depends on `unittest.mock`, `MagicMock`, or `patch.object`. The remediation path that found this state — replacing `patch.object` with real-subclass-via-existing-Protocol-injection — is the durable lesson: when a test reaches for `mock.patch`, the production code already exposes the correct injection seam and the test is asking the wrong question.
+
+The epic closes with 22 waves of structural fixes (W1 through W22) plus three confirmation waves (W23 through W25). 25 waves total. Plan accumulated 54 phases and ~653 Steps. Inventory ratchets actively defending the converged state at close:
+
+- `test_utf8_enrollment_inventory` — AST-walks every production file; W11 `_KNOWN_VIOLATING_FILES` allowlist (77 sites).
+- `test_cast_rationale_inventory` — every `cast()` call must carry `CAST-RATIONALE-*`.
+- `test_latin1_encoding_constant_enrollment` — bare `"latin-1"` blocked.
+- `test_enum_constant_extraction_inventory` — enum-string-literal use blocked.
+- `test_any_param_rationale_inventory` — W21; parameter-Any drift blocked; 30 enrolled survivors.
+- `test_mock_inventory` — W22; allowlist is empty; any mock usage is a fresh finding.
+- `test_no_skip_xfail` — live-test allowlist only.
+- `test_any_return_rationale_markers` — return-Any annotations require rationale tokens.
+
+One follow-up campaign remains in scope: the 77-site bare `# type: ignore` corpus first noted in W17. The proper inheritance is a `TYPE-IGNORE-RATIONALE-*` rationale-marker convention plus a `test_type_ignore_rationale_inventory.py` ratchet modelled on the W21 parameter-Any pattern. That work belongs in a successor epic, not in a final wave of this one.
+
+The epic is now eligible for archive via `vault feature archive codebase-solidification`. The standing ratchet suite, the substitutability pre-filter, the broader-Step grammar with grep-post-conditions, and the recurring-audit-cadence rule are the durable artefacts that should outlive the archive.
