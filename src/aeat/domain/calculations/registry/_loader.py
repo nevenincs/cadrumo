@@ -21,13 +21,10 @@ from ._schema import (
     SourceReference,
 )
 
-# Governing ADRs:
-# - 2026-05-19-modelo-registry-fragment-architecture-adr: fragments are an
-#   authoring layout only; this loader compiles them into complete runtime
-#   ModeloRevision objects before validation.
-# - 2026-05-27-schema-hardening-casilla-continuity-contract-adr D2: continuity
-#   evolution records are generic revision append records, not M100-specific
-#   loader behavior.
+# Registry TOML fragments are an authoring layout only; this loader compiles
+# them into complete runtime ModeloRevision objects before validation.
+# Continuity evolution records are generic revision append records, not
+# modelo-specific loader behaviour.
 _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     {
         "parameters",

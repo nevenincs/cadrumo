@@ -2,10 +2,9 @@
 
 `CensoSyncService` exposes the four-verb surface the CLI mounts under
 ``aeat config profile census {refresh, show, compare, apply}``. AEAT is
-the binding legal source of truth per the 2026-05-16 amendment to the
-modelo-036-037-foundation ADR; this service is the only path that
-captures census facts into the secure store and stamps them onto the
-operator's profile.
+the binding legal source of truth for census data; this service is the
+only path that captures census facts into the secure store and stamps
+them onto the operator's profile.
 
 The service composes:
 

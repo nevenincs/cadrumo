@@ -16,15 +16,12 @@ renderer; both functions are read-only and emit no bucket events.
                                      namespace, plus per-namespace
                                      decryptability counts.
 
-Repair-remediation decisions (per ADR
-``2026-05-26-linkage-design-audit-adr`` Decision 4) are non-destructive
-planning records persisted as encrypted AUDIT-class secure-object rows
-in a profile-local namespace. The full preserve/quarantine/rebuild/
-export-required semantics + repair-policy command-surface catalog land
-here as scaffolds matching the design documented at
-``.vault/exec/2026-05-19-live-iva-compensation-wallet/2026-05-22-live-iva-compensation-wallet-w05-p02-s01.md``.
-The live-iva-compensation-wallet campaign's eventual landing
-supersedes via standard merge resolution.
+Repair-remediation decisions are non-destructive planning records
+persisted as encrypted AUDIT-class secure-object rows in a
+profile-local namespace. The full preserve/quarantine/rebuild/
+export-required semantics and repair-policy command-surface catalog
+live here; the design mandates that mutation is never authorised
+from a decision record alone.
 """
 
 from __future__ import annotations
@@ -87,8 +84,7 @@ cross-profile reads are not permitted by the underlying repository.
 """
 
 _RepairDecisionOutcome = Literal["preserve", "quarantine", "rebuild", "export-required"]
-"""Closed set of non-destructive planning outcomes per the
-live-iva-compensation-wallet W05.P02.S01 exec record."""
+"""Closed set of non-destructive planning outcomes for repair-remediation."""
 
 
 @runtime_checkable
@@ -148,9 +144,9 @@ def _aggregate_integrity(
 ) -> DiagnosticCheck:
     """Render the cross-namespace summary as one DiagnosticCheck row.
 
-    The check honours the 2026-05-14 exhaustiveness lock: ``fail`` /
-    ``warn`` rows MUST carry exactly one of ``next_action`` /
-    ``dead_end``; ``ok`` rows MUST carry neither.
+    The check honours the exhaustiveness lock: ``fail`` / ``warn`` rows
+    MUST carry exactly one of ``next_action`` / ``dead_end``; ``ok`` rows
+    MUST carry neither.
     """
     readable = sum(item.readable for item in integrity)
     unreadable = sum(item.unreadable for item in integrity)
@@ -315,12 +311,10 @@ def _repair_list_row(row: SecureObjectDecryptabilityRow) -> RepairListRow:
 class RepairRemediationDecision(BaseModel):
     """Non-destructive planning record for a repair-remediation outcome.
 
-    Per ADR ``2026-05-26-linkage-design-audit-adr`` Decision 4 + the
-    live-iva-compensation-wallet W05.P02.S01 exec record: the decision
-    records preserve / quarantine / rebuild / export-required planning
-    outcomes without authorising mutation. ``mutation_authorized`` is
-    hard-typed to ``False`` so a decision record can never be mistaken
-    for an execute order.
+    Decision records persist preserve / quarantine / rebuild /
+    export-required planning outcomes without authorising mutation.
+    ``mutation_authorized`` is hard-typed to ``False`` so a decision
+    record can never be mistaken for an execute order.
 
     The ``decision_id`` is content-bound via
     :func:`repair_remediation_decision_id` to every other field, so
@@ -544,10 +538,7 @@ _LEDGER_POLICY = RepairPolicyNamespacePolicy(
     recovery_policy="reimport_authoritative_ledger_source",
     mutation_authority="operator_requested_import_or_export_only",
 )
-_REPAIR_ADR_LINKS = (
-    "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]",
-    "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]",
-)
+_REPAIR_ADR_LINKS: tuple[str, ...] = ()
 
 
 def _secure_object_policy(

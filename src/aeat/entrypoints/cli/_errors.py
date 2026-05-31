@@ -216,7 +216,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
         # Callable[..., object] in the dict value type is the only escape hatch;
         # it cannot be eliminated without making _WRAPPED_CALLBACKS generic over
         # P and R, which the stdlib dict does not support.
-        # CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER (Wave 2 follow-up: typed cache)
+        # CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER (future: replace with generic ClassVar alias)
         return cast(Callable[P, R], existing)  # CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER
 
     @functools.wraps(callback)

@@ -1,7 +1,7 @@
-"""Aggregate real-behaviour test for W08.P35 exception narrowing (S541–S548).
+"""Narrowed except-clause contracts at site of use.
 
-Each test exercises the narrowed ``except`` clause at its actual call site,
-verifying that:
+Each test exercises the narrowed ``except`` clause at its actual call
+site, verifying that:
 
 * Expected domain errors are absorbed / logged as designed.
 * Unexpected exception types (e.g. ``MemoryError``, ``RecursionError``,
@@ -18,10 +18,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 # ---------------------------------------------------------------------------
-# S546 — _site_health.py: TypeError → ValueError in pydantic field_validator
+# _site_health.py: TypeError -> ValueError in pydantic field_validator
 # ---------------------------------------------------------------------------
 
-class TestS546SiteHealthValidatorUsesValueError:
+class TestSiteHealthValidatorUsesValueError:
     """Pydantic field_validator must raise ValueError (or subclass), not TypeError.
 
     A ``field_validator`` that raises ``TypeError`` is *not* caught by
@@ -76,10 +76,10 @@ class TestS546SiteHealthValidatorUsesValueError:
 
 
 # ---------------------------------------------------------------------------
-# S543 — _workbook_parity.py:308: narrowed scan except catches InvalidFileException
+# _workbook_parity.py: narrowed scan except catches InvalidFileException
 # ---------------------------------------------------------------------------
 
-class TestS543WorkbookParityScanNarrowing:
+class TestWorkbookParityScanNarrowing:
     """scan_workbook absorbs InvalidFileException/BadZipFile/OSError; unexpected errors raise RegistryValidationError."""
 
     def test_corrupt_xlsx_returns_failed_report(self, tmp_path) -> None:
@@ -99,10 +99,10 @@ class TestS543WorkbookParityScanNarrowing:
 
 
 # ---------------------------------------------------------------------------
-# S544 — _workbook_parity.py:1076: TokenizerError-only for tokenizer fallback
+# _workbook_parity.py: TokenizerError-only for tokenizer fallback
 # ---------------------------------------------------------------------------
 
-class TestS544TokenizerFallbackNarrowing:
+class TestTokenizerFallbackNarrowing:
     """_formula_references falls back to regex on TokenizerError; other errors propagate."""
 
     def test_tokenizer_error_triggers_regex_fallback(self) -> None:
@@ -123,10 +123,10 @@ class TestS544TokenizerFallbackNarrowing:
 
 
 # ---------------------------------------------------------------------------
-# S546 — _site_health.py: valid markers still pass through
+# _site_health.py: valid markers still pass through
 # ---------------------------------------------------------------------------
 
-class TestS546SiteHealthValidatorHappyPath:
+class TestSiteHealthValidatorHappyPath:
     def test_valid_str_markers_accepted(self) -> None:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
 
@@ -142,10 +142,10 @@ class TestS546SiteHealthValidatorHappyPath:
 
 
 # ---------------------------------------------------------------------------
-# S547 — declaracion/_pdfplumber_backend.py:95: ImportError / OSError absorbed
+# declaracion/_pdfplumber_backend.py: ImportError / OSError absorbed
 # ---------------------------------------------------------------------------
 
-class TestS547PdfplumberBackendNarrowing:
+class TestPdfplumberBackendNarrowing:
     """Fast-path extractor pdfium_cached swallows expected errors; unexpected ones propagate."""
 
     def test_non_pdf_bytes_returns_none(self, tmp_path) -> None:
@@ -172,10 +172,10 @@ class TestS547PdfplumberBackendNarrowing:
 
 
 # ---------------------------------------------------------------------------
-# S548 — _clave_movil.py:1039: cleanup in nested try/except preserves original exception
+# _clave_movil.py: cleanup in nested try/except preserves the original exception
 # ---------------------------------------------------------------------------
 
-class TestS548InvalidatePersistedCleanupIsolated:
+class TestInvalidatePersistedCleanupIsolated:
     """The cleanup call in the persist-failure handler must not mask the original exception."""
 
     def test_original_exception_preserved_when_cleanup_also_fails(self) -> None:
@@ -188,15 +188,15 @@ class TestS548InvalidatePersistedCleanupIsolated:
             pass
 
         # Reproduce the pattern from _clave_movil.py lines 1039-1043 (post-fix)
+        import contextlib
+
         original_raised = None
         try:
             try:
                 raise _OriginalError("the original persist failure")
             except Exception:
-                try:
+                with contextlib.suppress(_CleanupError):
                     raise _CleanupError("cleanup also failed")
-                except Exception:
-                    pass  # cleanup suppressed
                 raise  # original re-raised
         except _OriginalError as exc:
             original_raised = exc
@@ -210,6 +210,8 @@ class TestS548InvalidatePersistedCleanupIsolated:
         class _OriginalError(Exception):
             pass
 
+        import contextlib
+
         cleanup_called = False
         original_raised = None
 
@@ -217,11 +219,9 @@ class TestS548InvalidatePersistedCleanupIsolated:
             try:
                 raise _OriginalError("persist failure")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     cleanup_called = True
                     # cleanup succeeds (no raise)
-                except Exception:
-                    pass
                 raise
         except _OriginalError as exc:
             original_raised = exc
@@ -231,10 +231,10 @@ class TestS548InvalidatePersistedCleanupIsolated:
 
 
 # ---------------------------------------------------------------------------
-# S541 — _clave_movil.py:455: persist failure absorbed as (OSError, AuthError)
+# _clave_movil.py: persist failure absorbed as (OSError, AuthError)
 # ---------------------------------------------------------------------------
 
-class TestS541PersistDeadlineNarrowing:
+class TestPersistDeadlineNarrowing:
     """Verify that OSError and AuthError are caught; unexpected types propagate."""
 
     def test_os_error_is_caught_by_narrowed_handler(self) -> None:
@@ -258,10 +258,10 @@ class TestS541PersistDeadlineNarrowing:
 
 
 # ---------------------------------------------------------------------------
-# S542 — _authenticator.py:862: describe path narrowed to CertificateError + OSError
+# _authenticator.py: describe path narrowed to CertificateError + OSError
 # ---------------------------------------------------------------------------
 
-class TestS542AuthenticatorDescribeNarrowing:
+class TestAuthenticatorDescribeNarrowing:
     """Verify the describe-path handler only catches CertificateError and OSError."""
 
     def test_certificate_error_and_oserror_caught(self) -> None:
@@ -328,10 +328,10 @@ class TestS542AuthenticatorDescribeNarrowing:
 
 
 # ---------------------------------------------------------------------------
-# S545 — _clave_movil.py:804: diagnostic context narrows to domain errors
+# _clave_movil.py: diagnostic context narrows to domain errors
 # ---------------------------------------------------------------------------
 
-class TestS545DiagnosticContextNarrowing:
+class TestDiagnosticContextNarrowing:
     """_active_profile_diagnostic_context catches (ImportError, KeyError, AttributeError, UserProfileError)."""
 
     def test_narrows_correctly_to_expected_types(self) -> None:

@@ -1,4 +1,4 @@
-"""Real-behavior aggregate test for W04.P22 small-axis cleanup.
+"""Small-axis cleanup invariants: canonical homes and subclass enforcement.
 
 Assertions
 ----------
@@ -13,8 +13,8 @@ Assertions
     the module is intact and the service is callable.
 (e) ``FinancialProvider.__init_subclass__`` enforces
     ``verification_source`` and ``provisional_pending_specimen`` at
-    class-definition time (raises ``TypeError`` for a non-compliant
-    concrete subclass).
+    class-definition time (raises ``FinancialProviderConfigError`` for a
+    non-compliant concrete subclass).
 """
 
 from __future__ import annotations
@@ -34,13 +34,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_setup_answers_module_not_importable() -> None:
-    """aeat.application.wizard._setup_answers must not exist after S423."""
+    """aeat.application.wizard._setup_answers must not exist; SetupAnswers lives in core.profile."""
     # Ensure a prior import by another test does not give a false negative.
     sys.modules.pop("aeat.application.wizard._setup_answers", None)
 
     spec = importlib.util.find_spec("aeat.application.wizard._setup_answers")
     assert spec is None, (
-        "_setup_answers.py was found; it should have been deleted by S423. "
+        "_setup_answers.py was found; it should have been deleted. "
         "Confirm the file is gone and no package __init__ re-exports it."
     )
 
@@ -158,18 +158,19 @@ def test_apoderado_service_importable_and_has_cli_callers() -> None:
 
 
 def test_financial_provider_init_subclass_rejects_missing_verification_source() -> None:
-    """A concrete subclass missing verification_source must raise TypeError at definition."""
+    """A concrete subclass missing verification_source must raise FinancialProviderConfigError."""
     from abc import abstractmethod
     from collections.abc import Iterator
     from pathlib import Path
 
     from aeat.adapters.inbound.financial.providers._base import (
         FinancialProvider,
+        FinancialProviderConfigError,
         ProviderValidation,
     )
     from aeat.domain.transactions import RawTransaction
 
-    with pytest.raises(TypeError, match="verification_source"):
+    with pytest.raises(FinancialProviderConfigError, match="verification_source"):
 
         class _BadProviderNoVS(FinancialProvider):
             name = "bad-no-vs"
@@ -185,18 +186,19 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
 
 
 def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional() -> None:
-    """A no_corpus provider with provisional_pending_specimen=False must raise TypeError."""
+    """A no_corpus provider with provisional_pending_specimen=False must raise FinancialProviderConfigError."""
     from abc import abstractmethod
     from collections.abc import Iterator
     from pathlib import Path
 
     from aeat.adapters.inbound.financial.providers._base import (
         FinancialProvider,
+        FinancialProviderConfigError,
         ProviderValidation,
     )
     from aeat.domain.transactions import RawTransaction
 
-    with pytest.raises(TypeError, match="no_corpus"):
+    with pytest.raises(FinancialProviderConfigError, match="no_corpus"):
 
         class _BadNoCorpusProvider(FinancialProvider):
             name = "bad-no-corpus"

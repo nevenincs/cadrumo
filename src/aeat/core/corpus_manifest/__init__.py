@@ -32,7 +32,7 @@ from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..errors import CoreValidationError
+from ..errors import CoreValidationError as _CoreValidationError
 from ..logging import get_logger as _get_logger
 from ..time._utc import _validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
@@ -126,7 +126,7 @@ class CorpusManifest(BaseModel):
     def _require_aware(cls, value: datetime) -> datetime:
         try:
             return _validate_utc_aware(value)
-        except CoreValidationError as exc:
+        except _CoreValidationError as exc:
             raise CorpusManifestError(str(exc)) from exc
 
 class CorpusManifestDiff(BaseModel):

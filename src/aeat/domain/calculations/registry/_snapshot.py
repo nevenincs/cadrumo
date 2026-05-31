@@ -23,8 +23,8 @@ _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
 # Peer-domain modules that register a ``CrossDomainSnapshotCheck`` with the
 # registry validator as an import side effect. Each module calls
 # ``register_cross_domain_snapshot_check`` at import time; the registry never
-# imports the peer statically (that would reverse the dependency direction the
-# restructure ADR fixes, defect F7). The registry only owns this *list of
+# imports the peer statically (that would reverse the hexagonal dependency
+# direction). The registry only owns this *list of
 # names* -- the dependency-inversion contract the ``CrossDomainSnapshotCheck``
 # Protocol declares. ``_install_cross_domain_snapshot_checks`` imports them by
 # name so the registration is deterministic at snapshot build, independent of

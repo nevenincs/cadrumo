@@ -5710,4 +5710,247 @@ def iva_wallet_seed_cmd(
     _emit_envelope(ctx, command="modelo.iva_wallet.seed", result=seed_result, lines=lines)
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# Maritime worker IRPF exemption preview
+# ─────────────────────────────────────────────────────────────────────────
+# Wires the application-layer maritime exemption service into the work
+# subtree so operators can preview the Art. 7.p) / REBECA exemption
+# pathway selected by the active profile's maritime worker facts. The
+# DA 41 inactive guard and the RETMAR mandatory-filing completeness
+# gate emit through the central error-code registry; the operator-
+# facing message is rendered by the CLI error boundary in the active
+# output language.
+
+
+def _maritime_facts_from_active_profile():
+    """Read maritime worker facts off the active profile record.
+
+    Returns a :class:`MaritimeWorkerFacts` populated with the
+    ``maritime_worker.*`` schema-path values; absent paths default to
+    ``None`` / ``False`` per the dataclass contract so a profile
+    without any maritime fact resolves cleanly (no pathway eligible).
+    """
+    from ...application.user_profile._orchestration import fact_value
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...domain.renta import MaritimeWorkerFacts
+
+    state = workflow_state_repository().load()
+    record = state.active_profile_record()
+
+    def _enum(path: str) -> str | None:
+        raw = fact_value(record, path)
+        return raw.strip() if raw else None
+
+    def _bool(path: str) -> bool:
+        raw = fact_value(record, path)
+        if raw is None:
+            return False
+        return raw.strip().lower() in {"true", "1", "yes"}
+
+    return MaritimeWorkerFacts(
+        worker_class=_enum("maritime_worker.worker_class"),
+        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]
+        waters_type=_enum("maritime_worker.waters_type"),  # type: ignore[arg-type]
+        vessel_registry=_enum("maritime_worker.vessel_registry"),  # type: ignore[arg-type]
+        tuna_fleet=_bool("maritime_worker.tuna_fleet"),
+        pending_eu_clearance=_bool("maritime_worker.pending_eu_clearance"),
+        retmar_registered=_bool("maritime_worker.retmar_registered"),
+    )
+
+
+@work_app.command(
+    "preview-maritime-exemption",
+    help=tr(
+        "cli.app.modelo.work.preview_maritime_exemption_help",
+        default=(
+            "Preview the Art. 7.p) / REBECA maritime worker IRPF exemption resolved "
+            "from the active profile's maritime_worker facts. Emits typed "
+            "CasillaObservation rows with legal_refs; surfaces the RETMAR mandatory-"
+            "filing warning when retmar_registered=True; refuses with the DA 41 "
+            "inactive code when the tuna-fleet selector resolves."
+        ),
+    ),
+)
+def work_preview_maritime_exemption(
+    ctx: typer.Context,
+    annual_salary: Annotated[
+        str | None,
+        typer.Option(
+            "--annual-salary",
+            help=tr(
+                "cli.app.modelo.work.preview_maritime_exemption_annual_salary_help",
+                default=(
+                    "Gross annual salary in EUR (Decimal). Required when the active "
+                    "profile triggers Art. 7.p) eligibility (vessel_flag=foreign or "
+                    "waters_type=international)."
+                ),
+            ),
+        ),
+    ] = None,
+    qualifying_days: Annotated[
+        int | None,
+        typer.Option(
+            "--qualifying-days",
+            min=1,
+            max=365,
+            help=tr(
+                "cli.app.modelo.work.preview_maritime_exemption_qualifying_days_help",
+                default=(
+                    "Calendar days worked outside Spanish territory in the tax year. "
+                    "Required alongside --annual-salary when Art. 7.p) applies."
+                ),
+            ),
+        ),
+    ] = None,
+    gross_navigation_income: Annotated[
+        str | None,
+        typer.Option(
+            "--gross-navigation-income",
+            help=tr(
+                "cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_help",
+                default=(
+                    "Total gross employment income from navigation in EUR (Decimal). "
+                    "Required when the active profile triggers REBECA eligibility "
+                    "(vessel_registry in REBECA / rebeca_eu_eea / scheduled_canary_route)."
+                ),
+            ),
+        ),
+    ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
+    """Resolve the maritime exemption pathway for the active profile."""
+    activate_subcommand_output_language(ctx, output_language)
+    _require_active_profile()
+
+    from ...application.calculations._maritime_exemption_service import (
+        resolve_maritime_exemption,
+    )
+    from ...domain.renta import ProfileCompletenessError
+    from ...domain.renta.errors import RentaValidationError
+
+    facts = _maritime_facts_from_active_profile()
+
+    annual_salary_decimal: Decimal | None = None
+    if annual_salary is not None:
+        try:
+            annual_salary_decimal = Decimal(annual_salary)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.preview_maritime_exemption_annual_salary_not_decimal",
+                    value=annual_salary,
+                    default="--annual-salary must be a decimal amount; received: {value}",
+                )
+            ) from exc
+
+    gross_navigation_decimal: Decimal | None = None
+    if gross_navigation_income is not None:
+        try:
+            gross_navigation_decimal = Decimal(gross_navigation_income)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal",
+                    value=gross_navigation_income,
+                    default="--gross-navigation-income must be a decimal amount; received: {value}",
+                )
+            ) from exc
+
+    retmar_warning: str | None = None
+    try:
+        result = resolve_maritime_exemption(
+            facts=facts,
+            annual_salary=annual_salary_decimal,
+            qualifying_days=qualifying_days,
+            gross_navigation_income=gross_navigation_decimal,
+        )
+    except ProfileCompletenessError as exc:
+        # RETMAR mandatory-filing gate is a non-blocking warning per the
+        # service contract: re-run the resolution against a fact copy with
+        # retmar_registered cleared so the operator still receives the
+        # observation payload, and surface the translated warning message
+        # alongside.
+        retmar_warning = resolve_error_message(exc)
+        from dataclasses import replace as _dc_replace
+
+        facts_without_retmar = _dc_replace(facts, retmar_registered=False)
+        result = resolve_maritime_exemption(
+            facts=facts_without_retmar,
+            annual_salary=annual_salary_decimal,
+            qualifying_days=qualifying_days,
+            gross_navigation_income=gross_navigation_decimal,
+        )
+    except RentaValidationError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    from ._common import _emit_envelope
+    from ._modelo_payloads import (
+        CasillaObservationPayload,
+        WorkPreviewMaritimeExemptionResult,
+    )
+
+    observation_payloads = [
+        CasillaObservationPayload(
+            casilla_id=obs.casilla_id,
+            value=str(obs.value),
+            formula_id=obs.formula_id,
+            legal_refs=list(obs.legal_refs),
+            source_refs=list(obs.source_refs),
+        )
+        for obs in result.observations
+    ]
+    casilla_values = {key: str(value) for key, value in result.casilla_values.items()}
+
+    payload = WorkPreviewMaritimeExemptionResult(
+        worker_class=facts.worker_class,
+        vessel_flag=facts.vessel_flag,
+        waters_type=facts.waters_type,
+        vessel_registry=facts.vessel_registry,
+        retmar_registered=facts.retmar_registered,
+        retmar_mandatory_filing=result.retmar_mandatory_filing or facts.retmar_registered,
+        retmar_warning=retmar_warning,
+        casilla_values=casilla_values,
+        observations=observation_payloads,
+    )
+
+    lines: list[str] = [
+        "operation\tmodelo.work.preview_maritime_exemption",
+        f"worker_class\t{facts.worker_class or '-'}",
+        f"vessel_flag\t{facts.vessel_flag or '-'}",
+        f"waters_type\t{facts.waters_type or '-'}",
+        f"vessel_registry\t{facts.vessel_registry or '-'}",
+        f"retmar_registered\t{str(facts.retmar_registered).lower()}",
+        f"observation_count\t{len(observation_payloads)}",
+    ]
+    for obs in result.observations:
+        lines.append(
+            "observation\t"
+            + "\t".join(
+                (
+                    f"casilla={obs.casilla_id}",
+                    f"value={obs.value}",
+                    f"legal_refs={'; '.join(obs.legal_refs)}",
+                    f"source_refs={','.join(obs.source_refs)}",
+                )
+            )
+        )
+    for key, value in casilla_values.items():
+        lines.append(f"casilla_value\t{key}\t{value}")
+    if retmar_warning is not None:
+        lines.append(f"retmar_warning\t{retmar_warning}")
+
+    _emit_envelope(
+        ctx,
+        command="modelo.work.preview_maritime_exemption",
+        result=payload,
+        lines=lines,
+    )
+
+
 __all__ = ["app"]

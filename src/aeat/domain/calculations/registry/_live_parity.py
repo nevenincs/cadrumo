@@ -109,8 +109,6 @@ _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
         ("authenticated_read_surface", "pre_filing_validator"),
         # AEAT VAT-ID consult surfaces (GROI today, IXVI under cert auth) are
         # callable verification surfaces gated on cl@ve-movil / certificate.
-        # The pair is added per the authenticated-synthetic-surface-taxonomy
-        # ADR (2026-05-07).
         ("authenticated_simulator", "vat_id_check"),
     }
 )

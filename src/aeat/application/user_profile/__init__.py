@@ -343,6 +343,7 @@ __all__ = [
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
     "UserProfileFactValue",
+    "ProfileId",
     "ProfileImportResult",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",

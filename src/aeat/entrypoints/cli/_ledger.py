@@ -1227,7 +1227,14 @@ def ledger_link(
         lines.append(f"invoice_id\t{invoice_id}")
     if evidence_id is not None:
         lines.append(f"evidence_id\t{evidence_id}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerLinkResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.link",
+        result=LedgerLinkResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @app.command(
@@ -1276,6 +1283,8 @@ def ledger_check(
             if (tx.raw.value_date or tx.raw.booked_date) is not None
         },
     )
+    from ._ledger_payloads import LedgerCheckResult
+
     if not years:
         payload = {
             "bucket_id": bucket_id,
@@ -1291,7 +1300,12 @@ def ledger_check(
             "issues\t0",
             "ready\ttrue",
         ]
-        _emit(ctx, payload, lines)
+        _emit_envelope(
+            ctx,
+            command="ledger.check",
+            result=LedgerCheckResult.model_validate(payload),
+            lines=lines,
+        )
         return
 
     aggregated_issues: list[LedgerPreflightIssue] = []
@@ -1324,7 +1338,12 @@ def ledger_check(
     ]
     for issue in aggregated_issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(
+        ctx,
+        command="ledger.check",
+        result=LedgerCheckResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @app.command(
@@ -1369,7 +1388,14 @@ def ledger_preflight(
     ]
     for issue in report.issues:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import LedgerPreflightResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.preflight",
+        result=LedgerPreflightResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @app.command("history", help=tr("cli.ledger.history.help"))
@@ -2222,7 +2248,14 @@ def ratios_list(ctx: typer.Context) -> None:
     if census_mismatch is not None:
         lines.append(f"census_mismatch\t{census_mismatch}")
     lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RatiosListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.list",
+        result=RatiosListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @ratios_app.command(
@@ -2270,10 +2303,13 @@ def ratios_set(
         if warning is not None:
             _emit_ratios_census_override_warning(bucket_id=bucket_id, warning=warning)
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
-    _emit(
+    from ._ledger_payloads import RatiosSetResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
+        command="ledger.ratios.set",
+        result=RatiosSetResult.model_validate(payload),
+        lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
     )
 
 

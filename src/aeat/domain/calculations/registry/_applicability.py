@@ -159,8 +159,8 @@ class PayerFact(StrEnum):
     be asserted in the positive direction — a ``True`` fact yields
     :attr:`ApplicabilityVerdict.APPLICABLE`. A ``False`` fact yields
     :attr:`ApplicabilityVerdict.INCOMPLETE` (the engine refuses to guess
-    a ``NOT_APPLICABLE`` it cannot positively justify), per the parent
-    ADR's safe default and ``.claude/rules/aeat-calculation-grounding.md``.
+    a ``NOT_APPLICABLE`` it cannot positively justify — incomplete facts
+    must never silently exempt a taxpayer from a filing obligation).
 
     Attributes:
         PAYS_WITHHELD_INCOME: The taxpayer pays salaries (rendimientos
@@ -1265,7 +1265,7 @@ def derive_modelo_applicability(
     # residents, not to non-resident taxpayers under Art. 93. Enforce the
     # exemption before the rule table so the payer-fact gate is never reached.
     # Year-7+ filers whose window has expired revert to the general IRPF
-    # regime and owe M720 again — #191 EXEMPT-001 wires the window check here.
+    # regime and owe M720 again — the window-expiry check is wired here.
     if modelo == "720" and profile.beckham_window_active(_today):
         return ModeloApplicability(
             modelo="720",
@@ -1306,8 +1306,8 @@ _MODELO_202_MODALITY_LEGAL_REFS: tuple[str, ...] = (
 
 ``ley-27-2014:art-40`` carries the general pago-fraccionado regime;
 ``ley-27-2014:art-40-3`` carries the 6.000.000 EUR INCN mandatory-Art.
-40.3 threshold (registered by P01.S01 against the BOE-A-2014-12328
-corpus). Both keys resolve in the registry ``legal/is.toml`` table.
+40.3 threshold (grounded against the BOE-A-2014-12328 corpus).
+Both keys resolve in the registry ``legal/is.toml`` table.
 """
 
 # LIS Art. 40.3 mandatory-modality threshold: INCN of the prior 12

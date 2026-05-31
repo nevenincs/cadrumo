@@ -409,3 +409,388 @@ class LedgerReviewResult(OutputSchema):
     review_status: str | None = None
     transaction: TransactionPayload | None = None
     verbose: bool | None = None
+
+
+# ---------------------------------------------------------------------------
+# P04 — Diagnostic verb result schemas (check / preflight / link)
+# ---------------------------------------------------------------------------
+
+
+class LedgerPreflightIssuePayload(OutputSchema):
+    """One ledger preflight / check issue row (matches LedgerPreflightIssue.model_dump)."""
+
+    transaction_id: str
+    reason: str
+    detail: str = ""
+
+
+@register_schema("ledger.check")
+class LedgerCheckResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger check``."""
+
+    bucket_id: str
+    periods: list[str]
+    checked_transaction_count: int
+    issues: list[LedgerPreflightIssuePayload]
+    ready: bool
+
+
+@register_schema("ledger.preflight")
+class LedgerPreflightResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger preflight``.
+
+    Mirrors ``LedgerTaxReadinessReport.model_dump(mode='json')``.
+    """
+
+    bucket_id: str
+    period: str
+    checked_transaction_count: int
+    issues: list[LedgerPreflightIssuePayload]
+    ready: bool
+
+
+@register_schema("ledger.link")
+class LedgerLinkResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger link``."""
+
+    operation: str
+    bucket_id: str
+    transaction_id: str
+    invoice_id: str | None = None
+    evidence_id: str | None = None
+    actor: str
+    evidence_update: dict | None = None
+
+
+# ---------------------------------------------------------------------------
+# P05 — Usage-ratios sub-app result schemas
+# ---------------------------------------------------------------------------
+
+
+class RatiosRowPayload(OutputSchema):
+    """One per-category usage-ratio row."""
+
+    category: str
+    ratio: str
+
+
+@register_schema("ledger.ratios.list")
+class RatiosListResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger ratios list``."""
+
+    bucket_id: str
+    rows: list[RatiosRowPayload]
+    count: int
+    census_mismatch: str | None = None
+
+
+@register_schema("ledger.ratios.set")
+class RatiosSetResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger ratios set``."""
+
+    bucket_id: str
+    category: str
+    ratio: str
+
+
+@register_schema("ledger.ratios.unset")
+class RatiosUnsetResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger ratios unset``."""
+
+    bucket_id: str
+    category: str
+    ratio: str = ""
+
+
+@register_schema("ledger.ratios.eligible")
+class RatiosEligibleResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger ratios eligible``."""
+
+    bucket_id: str
+    rows: list[dict]
+    count: int
+
+
+@register_schema("ledger.ratios.validate")
+class RatiosValidateResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger ratios validate``.
+
+    Mirrors ``RatiosValidationReport.model_dump(mode='json')`` produced by
+    :func:`validate_ratios_for_bucket`.
+    """
+
+    bucket_id: str
+    profile_present: bool
+    eligible_count: int
+    overrides_count: int
+    missing_overrides: list[str] = []
+    findings: list[dict] = []
+
+
+# ---------------------------------------------------------------------------
+# P06 — Business operation invoice sub-apps
+# (payable-invoice and collectible-invoice share the same record shape)
+# ---------------------------------------------------------------------------
+
+
+class BusinessInvoiceRecordPayload(OutputSchema):
+    """One business-operation invoice record.
+
+    Mirrors ``BusinessOperationInvoiceRecord.model_dump(mode='json')``
+    plus the ``bucket_event_ids`` field the CLI appends at the emit
+    site for mutation verbs (defaults to empty for read verbs).
+    """
+
+    invoice_id: str
+    bucket_id: str
+    source_kind: str
+    counterparty_nif: str
+    counterparty_name: str = ""
+    invoice_number: str
+    invoice_date: str
+    currency: str
+    taxable_base: str
+    iva_rate: str | None = None
+    iva_amount: str
+    total_amount: str
+    notes: str = ""
+    country_code: str | None = None
+    eu_vat_id: str | None = None
+    operation_type: str | None = None
+    created_at: str
+    updated_at: str
+    bucket_event_ids: list[str] = []
+
+
+class BusinessInvoiceListResult(OutputSchema):
+    """Shared list result for payable / collectible invoice list verbs."""
+
+    bucket_id: str
+    rows: list[dict]
+    count: int
+
+
+@register_schema("ledger.payable_invoice.add")
+class PayableInvoiceAddResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger payable-invoice add``."""
+
+
+@register_schema("ledger.payable_invoice.view")
+class PayableInvoiceViewResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger payable-invoice view``."""
+
+
+@register_schema("ledger.payable_invoice.update")
+class PayableInvoiceUpdateResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger payable-invoice update``."""
+
+
+@register_schema("ledger.payable_invoice.remove")
+class PayableInvoiceRemoveResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger payable-invoice remove``."""
+
+
+@register_schema("ledger.payable_invoice.list")
+class PayableInvoiceListResult(BusinessInvoiceListResult):
+    """JSON envelope for ``aeat app ledger payable-invoice list``."""
+
+
+@register_schema("ledger.collectible_invoice.add")
+class CollectibleInvoiceAddResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger collectible-invoice add``."""
+
+
+@register_schema("ledger.collectible_invoice.view")
+class CollectibleInvoiceViewResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger collectible-invoice view``."""
+
+
+@register_schema("ledger.collectible_invoice.update")
+class CollectibleInvoiceUpdateResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger collectible-invoice update``."""
+
+
+@register_schema("ledger.collectible_invoice.remove")
+class CollectibleInvoiceRemoveResult(BusinessInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger collectible-invoice remove``."""
+
+
+@register_schema("ledger.collectible_invoice.list")
+class CollectibleInvoiceListResult(BusinessInvoiceListResult):
+    """JSON envelope for ``aeat app ledger collectible-invoice list``."""
+
+
+# ---------------------------------------------------------------------------
+# P07 — Inventory sub-app
+# ---------------------------------------------------------------------------
+
+
+class InventoryLedgerPayload(OutputSchema):
+    """One per-actividad inventory ledger record.
+
+    Mirrors the registered inventory ledger model dump plus the
+    ``bucket_event_ids`` field the CLI appends at the emit site.
+    """
+
+    actividad_id: str
+    year: int
+    valuation_method: str
+    opening_stock: str
+    period_movements: list[dict] = []
+    bucket_event_ids: list[str] = []
+
+
+@register_schema("ledger.inventory.list")
+class InventoryListResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory list``."""
+
+    bucket_id: str
+    rows: list[dict]
+    count: int
+
+
+@register_schema("ledger.inventory.create")
+class InventoryCreateResult(InventoryLedgerPayload):
+    """JSON envelope for ``aeat app ledger inventory create``."""
+
+
+@register_schema("ledger.inventory.movement.add")
+class InventoryMovementAddResult(InventoryLedgerPayload):
+    """JSON envelope for ``aeat app ledger inventory movement add``."""
+
+
+@register_schema("ledger.inventory.valuation.preview")
+class InventoryValuationPreviewResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory valuation preview``.
+
+    Mirrors ``InventoryValuationPreview.model_dump(mode='json')`` plus
+    the ``bucket_event_ids`` field the CLI appends at the emit site.
+    """
+
+    actividad_id: str
+    year: int
+    valuation_method: str
+    closing_stock: str
+    cogs: str
+    bucket_event_ids: list[str] = []
+
+
+# ---------------------------------------------------------------------------
+# P08 — Purchase-invoice evidence sub-app
+# ---------------------------------------------------------------------------
+
+
+class EvidenceRecordPayload(OutputSchema):
+    """One purchase-invoice evidence record.
+
+    Mirrors ``PurchaseInvoiceEvidence.model_dump(mode='json')`` plus the
+    ``bucket_event_ids`` field the CLI appends at the emit site (defaults
+    to empty for read verbs).
+    """
+
+    evidence_id: str
+    bucket_id: str
+    source_path: str
+    source_sha256: str
+    media_kind: str
+    supplier: str | None = None
+    invoice_number: str | None = None
+    invoice_date: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    notes: str = ""
+    created_at: str
+    updated_at: str
+    bucket_event_ids: list[str] = []
+
+
+@register_schema("ledger.evidence.add")
+class EvidenceAddResult(EvidenceRecordPayload):
+    """JSON envelope for ``aeat app ledger evidence add``."""
+
+
+@register_schema("ledger.evidence.view")
+class EvidenceViewResult(EvidenceRecordPayload):
+    """JSON envelope for ``aeat app ledger evidence view``."""
+
+
+@register_schema("ledger.evidence.update")
+class EvidenceUpdateResult(EvidenceRecordPayload):
+    """JSON envelope for ``aeat app ledger evidence update``."""
+
+
+@register_schema("ledger.evidence.remove")
+class EvidenceRemoveResult(EvidenceRecordPayload):
+    """JSON envelope for ``aeat app ledger evidence remove``."""
+
+
+@register_schema("ledger.evidence.list")
+class EvidenceListResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence list``."""
+
+    bucket_id: str
+    count: int
+    rows: list[dict]
+
+
+# ---------------------------------------------------------------------------
+# P09 — Classification-rule sub-app
+# ---------------------------------------------------------------------------
+
+
+class ClassificationRulePayload(OutputSchema):
+    """One classification-rule row (matches the dict emitted by rule.add / rule.list)."""
+
+    rule_id: str
+    description_pattern: str
+    classification: str
+    category_id: str | None = None
+    priority: int
+    actor: str
+    created_at: str
+
+
+@register_schema("ledger.rule.add")
+class RuleAddResult(ClassificationRulePayload):
+    """JSON envelope for ``aeat app ledger rule add``."""
+
+
+@register_schema("ledger.rule.list")
+class RuleListResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger rule list``."""
+
+    rules: list[ClassificationRulePayload]
+
+
+class RuleApplyMatchPayload(OutputSchema):
+    """One dry-run match row for ``rule apply --dry-run``."""
+
+    transaction_id: str
+    description: str
+    matched_rule_id: str
+    classification: str
+
+
+@register_schema("ledger.rule.apply")
+class RuleApplyResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger rule apply``.
+
+    Covers both the dry-run branch (``dry_run``, ``would_match``,
+    ``count``) and the live-apply branch (``rules_evaluated``,
+    ``transactions_scanned``, ``matched``, ``skipped_already_classified``,
+    ``no_match``, ``applied``). All fields are optional so both branches
+    validate cleanly.
+    """
+
+    # Dry-run path
+    dry_run: bool | None = None
+    would_match: list[RuleApplyMatchPayload] | None = None
+    count: int | None = None
+    # Live-apply path
+    rules_evaluated: int | None = None
+    transactions_scanned: int | None = None
+    matched: int | None = None
+    skipped_already_classified: int | None = None
+    no_match: int | None = None
+    applied: list[dict] | None = None

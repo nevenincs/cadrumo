@@ -1225,6 +1225,12 @@ cli:
           0003 (Retribucions dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
           import decimal; s''ha rebut: {value}.'
+        preview_maritime_exemption_annual_salary_help: cli.app.modelo.work.preview_maritime_exemption_annual_salary_help
+        preview_maritime_exemption_annual_salary_not_decimal: cli.app.modelo.work.preview_maritime_exemption_annual_salary_not_decimal
+        preview_maritime_exemption_gross_navigation_income_help: cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_help
+        preview_maritime_exemption_gross_navigation_income_not_decimal: cli.app.modelo.work.preview_maritime_exemption_gross_navigation_income_not_decimal
+        preview_maritime_exemption_help: cli.app.modelo.work.preview_maritime_exemption_help
+        preview_maritime_exemption_qualifying_days_help: cli.app.modelo.work.preview_maritime_exemption_qualifying_days_help
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.

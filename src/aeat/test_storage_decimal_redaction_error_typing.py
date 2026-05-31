@@ -1,9 +1,9 @@
-"""Real-behavior tests for W07.P32 exception sweep (S517-S527).
+"""Storage / decimal / redaction error class typing and raise contracts.
 
 Verifies:
 - MRO: FinancialValidationError, DecimalFormatError, RedactionError are NOT
   ValueError subclasses.
-- All new error classes are reachable via the ERROR_REGISTRY.
+- All migrated error classes are reachable via the ERROR_REGISTRY.
 - ErrorEnvelope roundtrip: build_error_envelope produces a valid envelope.
 - Raise behavior: each migrated site raises the correct typed error.
 """
@@ -16,12 +16,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 # ---------------------------------------------------------------------------
-# S517 — FinancialValidationError no longer inherits ValueError
+# FinancialValidationError no longer inherits ValueError
 # ---------------------------------------------------------------------------
 
 
 def test_financial_validation_error_not_value_error() -> None:
-    """FinancialValidationError must not be a ValueError subclass (S517)."""
+    """FinancialValidationError must not be a ValueError subclass."""
     from aeat.adapters.inbound.financial.providers._base import (
         FinancialValidationError,
     )
@@ -32,7 +32,7 @@ def test_financial_validation_error_not_value_error() -> None:
 
 
 def test_financial_validation_error_is_aeat_error() -> None:
-    """FinancialValidationError still derives from AeatError after MRO drop."""
+    """FinancialValidationError still derives from AeatError."""
     from aeat.adapters.inbound.financial.providers._base import (
         FinancialValidationError,
     )
@@ -54,7 +54,7 @@ def test_financial_validation_error_registered() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S518 — EncryptedString / Bytes / JSON / HashedLookup TypeError → StorageValidationError
+# EncryptedString / Bytes / JSON / HashedLookup TypeError -> StorageValidationError
 # ---------------------------------------------------------------------------
 
 
@@ -119,12 +119,12 @@ def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S519 — DecimalFormatError(CoreError)
+# DecimalFormatError(CoreError)
 # ---------------------------------------------------------------------------
 
 
 def test_decimal_format_error_not_value_error() -> None:
-    """DecimalFormatError must not be a ValueError subclass (S519)."""
+    """DecimalFormatError must not be a ValueError subclass."""
     from aeat.core.errors import DecimalFormatError
 
     assert not issubclass(DecimalFormatError, ValueError)
@@ -149,12 +149,12 @@ def test_decimal_format_error_registered() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S520 — RedactionError(CoreError)
+# RedactionError(CoreError)
 # ---------------------------------------------------------------------------
 
 
 def test_redaction_error_not_value_error() -> None:
-    """RedactionError must not be a ValueError subclass (S520)."""
+    """RedactionError must not be a ValueError subclass."""
     from aeat.core.errors import RedactionError
 
     assert not issubclass(RedactionError, ValueError)
@@ -188,7 +188,7 @@ def test_redaction_error_registered() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S522 — OverviewAgendaError (existing class migrated in _agenda.py)
+# OverviewAgendaError raised at agenda-build entry
 # ---------------------------------------------------------------------------
 
 
@@ -212,12 +212,12 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S523 — CensoSyncError (blank bucket_id)
+# CensoSyncError typing (independent of CensoSyncService construction)
 # ---------------------------------------------------------------------------
 
 
 def _load_censo_sync_error_class() -> type:
-    """Load CensoSyncError without triggering the broken domain.user_profile.__init__."""
+    """Load CensoSyncError without triggering the domain.user_profile.__init__."""
     import importlib.util
     import pathlib
 
@@ -235,12 +235,11 @@ def _load_censo_sync_error_class() -> type:
 
 
 def test_censo_sync_error_is_aeat_error() -> None:
-    """CensoSyncError is an AeatError subclass and is registered (S523).
+    """CensoSyncError is an AeatError subclass and is registered.
 
-    CensoSyncService cannot be instantiated in unit context because the
-    domain.user_profile package carries a pre-existing aeat.core._time deletion
-    regression (addressed in W07.P33.S528). The contract tested here is that the
-    error class itself is properly typed and registered.
+    CensoSyncService cannot be instantiated in a pure unit context here;
+    the contract tested is that the error class itself is properly
+    typed and registered.
     """
     from aeat.core.errors import AeatError
 
@@ -249,18 +248,18 @@ def test_censo_sync_error_is_aeat_error() -> None:
 
 
 def test_censo_sync_error_no_longer_value_error() -> None:
-    """CensoSyncError must not inherit ValueError (S523 type-safety check)."""
+    """CensoSyncError must not inherit ValueError."""
     censo_sync_error_cls = _load_censo_sync_error_class()
     assert not issubclass(censo_sync_error_cls, ValueError)
 
 
 # ---------------------------------------------------------------------------
-# S524 — PortalValidationError for build_entry factory
+# PortalValidationError for the build_entry factory
 # ---------------------------------------------------------------------------
 
 
 def test_portal_validation_error_both_url_and_path() -> None:
-    """build_entry raises PortalValidationError when both url and path are given (S524)."""
+    """build_entry raises PortalValidationError when both url and path are given."""
     from aeat.domain.portals._entries._common import build_entry
     from aeat.domain.portals._errors import PortalValidationError
 
@@ -279,7 +278,7 @@ def test_portal_validation_error_both_url_and_path() -> None:
 
 
 def test_portal_validation_error_path_not_starting_slash() -> None:
-    """build_entry raises PortalValidationError when path does not start with / (S524)."""
+    """build_entry raises PortalValidationError when path does not start with /."""
     from aeat.domain.portals._entries._common import build_entry
     from aeat.domain.portals._errors import PortalValidationError
 
@@ -297,12 +296,12 @@ def test_portal_validation_error_path_not_starting_slash() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S525 — ProfileAnswerTypeError in profile parsing helpers
+# ProfileAnswerTypeError in profile parsing helpers
 # ---------------------------------------------------------------------------
 
 
 def test_profile_answer_type_error_descendant_bad_discapacidad() -> None:
-    """parse_descendiente_flag raises ProfileAnswerTypeError for invalid DISCAPACIDAD (S525)."""
+    """parse_descendiente_flag raises ProfileAnswerTypeError for invalid DISCAPACIDAD."""
     from aeat.core.errors import ProfileAnswerTypeError
     from aeat.domain.profile._descendant_facts import parse_descendiente_flag
 
@@ -311,7 +310,7 @@ def test_profile_answer_type_error_descendant_bad_discapacidad() -> None:
 
 
 def test_profile_answer_type_error_marriage_date_invalid() -> None:
-    """parse_marriage_date_flag raises ProfileAnswerTypeError for non-ISO-8601 input (S525)."""
+    """parse_marriage_date_flag raises ProfileAnswerTypeError for non-ISO-8601 input."""
     from aeat.core.errors import ProfileAnswerTypeError
     from aeat.domain.profile._marriage_facts import parse_marriage_date_flag
 
@@ -320,7 +319,7 @@ def test_profile_answer_type_error_marriage_date_invalid() -> None:
 
 
 def test_profile_answer_type_error_ccaa_unknown_label() -> None:
-    """CCAA.from_label raises ProfileAnswerTypeError for an unknown CCAA label (S525)."""
+    """CCAA.from_label raises ProfileAnswerTypeError for an unknown CCAA label."""
     from aeat.core.errors import ProfileAnswerTypeError
     from aeat.domain.profile._ccaa import CCAA
 
@@ -329,12 +328,12 @@ def test_profile_answer_type_error_ccaa_unknown_label() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S526 — RegistryValidationError in M232 row bindings
+# RegistryValidationError in M232 row bindings
 # ---------------------------------------------------------------------------
 
 
 def test_m232_binding_error_too_many_rows() -> None:
-    """materialize_m232_related_party_rows raises RegistryValidationError for >5 rows (S526)."""
+    """materialize_m232_related_party_rows raises RegistryValidationError for >5 rows."""
     from decimal import Decimal as _Decimal
 
     from aeat.domain.calculations.registry._errors import RegistryValidationError

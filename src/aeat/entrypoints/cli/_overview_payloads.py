@@ -67,7 +67,10 @@ class OverviewStatusResult(OutputSchema):
 
     # Period-scoped branch fields
     period: str | None = None
-    drafts: list[OverviewDraftPayload] | None = None
+    # The period-scoped branch emits a list of draft payloads; the
+    # full-status passthrough branch emits an ``int`` count derived from
+    # ``OverviewStatusReport.drafts``. Both shapes share the JSON key.
+    drafts: int | list[OverviewDraftPayload] | None = None
     verbose: bool | None = None
 
     # Full status-report passthrough (model_dump of OverviewStatusReport).

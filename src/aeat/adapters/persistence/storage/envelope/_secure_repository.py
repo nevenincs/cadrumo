@@ -175,7 +175,7 @@ class SecureBoundRepository[T: BaseModel]:
         # has already validated payload against the T schema, so the runtime type
         # of envelope.payload IS T. The cast bridges the ClassVar[type[BaseModel]]
         # declaration (required for cross-subclass compatibility) to the generic T
-        # visible to type checkers at the call site. Wave 2 follow-up: replace the
+        # visible to type checkers at the call site. Future improvement: replace the
         # ClassVar[type[BaseModel]] with a class-level generic alias to eliminate
         # this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
         return cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
@@ -231,7 +231,7 @@ class SecureBoundRepository[T: BaseModel]:
             envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
             # Safe: same rationale as the load() path — envelope was validated by
             # model_validate_json against Envelope[self.payload_type] == Envelope[T].
-            # Wave 2 follow-up: eliminate via generic ClassVar alias
+            # Future improvement: eliminate via generic ClassVar alias
             # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
             identifiers.append(self.extract_identifier(cast(T, envelope.payload)))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
         yield from sorted(identifiers)
@@ -254,7 +254,7 @@ class SecureBoundRepository[T: BaseModel]:
         typed generic parameterisation. The return type is widened to
         ``Envelope[BaseModel]`` because the method signature must be invariant
         across all concrete subclasses (which each supply a different ``T``).
-        Wave 2 follow-up: make the class truly generic so this method returns
+        Future improvement: make the class truly generic so this method returns
         ``Envelope[T]`` directly (see: CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS).
         """
         # The widening to Envelope[BaseModel] is the only remaining escape hatch
@@ -262,7 +262,7 @@ class SecureBoundRepository[T: BaseModel]:
         # the mismatch is between the invariant return annotation and the
         # covariant usage at call sites. Safe at runtime because Pydantic enforces
         # the concrete type during model_validate_json.
-        # CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS (Wave 2 follow-up)
+        # CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS (future: eliminate via generic ClassVar alias)
         return Envelope.for_payload_type(self.payload_type)  # type: ignore[return-value]
 
 

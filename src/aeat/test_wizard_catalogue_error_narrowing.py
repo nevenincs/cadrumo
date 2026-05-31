@@ -1,10 +1,12 @@
-"""Real-behaviour tests for W05.P24 exception sweep (S444-S453).
+"""Wizard catalogue error classes plus narrowed except-clause contracts.
 
 Verifies:
-  (a) The three new error classes are registered in the error registry and
-      can produce a valid ErrorEnvelope roundtrip.
-  (b) The narrowed except clauses in production code honestly propagate
-      non-typed exceptions rather than swallowing them silently.
+  (a) The wizard-catalogue / project-answers error classes are registered
+      in the error registry and produce valid ErrorEnvelope roundtrips.
+  (b) The narrowed except clauses in the advisory predicate evaluator,
+      result-summary lookup, ledger bulk-classify loop, and review-adapter
+      fallback honestly propagate non-typed exceptions rather than
+      swallowing them silently.
 """
 
 from __future__ import annotations
@@ -82,7 +84,7 @@ class TestNewErrorClassesRegistered:
 # ---------------------------------------------------------------------------
 
 
-class TestS447DecimalNarrowing:
+class TestAdvisoryPredicateDecimalNarrowing:
     """_evaluate_advisory_predicate_fires only catches InvalidOperation on threshold parse."""
 
     _VALID_EXPR = 'advisory_when_ratio_ge(["num_id", "den_id", "0.5"])'
@@ -121,7 +123,7 @@ class TestS447DecimalNarrowing:
         assert result is False
 
 
-class TestS449ResultSummaryNarrowing:
+class TestResultSummaryNarrowing:
     """calculation_result_summary returns None on typed errors, propagates unexpected ones."""
 
     def _make_fake_revision(self) -> object:
@@ -189,7 +191,7 @@ class TestS449ResultSummaryNarrowing:
             module.get_work_unit = original  # type: ignore[assignment]
 
 
-class TestS452LedgerNarrowing:
+class TestLedgerBulkClassifyNarrowing:
     """Bulk classify loops capture typed errors; propagate unexpected ones."""
 
     def test_validation_error_is_captured_by_parse_clause(self) -> None:
@@ -222,7 +224,7 @@ class TestS452LedgerNarrowing:
         assert propagated
 
 
-class TestS453ReviewAdaptersNarrowing:
+class TestReviewAdapterImportNarrowing:
     """_resolve_active_tax_id splits ImportError from workflow state errors."""
 
     def test_import_error_clause_is_narrower_than_exception(self) -> None:

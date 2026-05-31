@@ -1,17 +1,18 @@
-"""Aggregate inventory test for W12.P44 finisher steps (S594-S598).
+"""Ratchet extensions and rationale-marker completion.
 
-Asserts that all six ratchet and marker changes landed correctly:
+Asserts that the following ratchet and marker changes are in place:
 
-(a) S594 — scripts/ ratchet extension in test_utf8_enrollment_inventory.py
-    and check_relative_imports.py fixed (no bare encoding="utf-8").
+(a) scripts/ ratchet extension in test_utf8_enrollment_inventory.py and
+    check_relative_imports.py fixed (no bare encoding="utf-8").
 
-(b) S595 — _google_drive.py Any-return markers complete (4 sites).
+(b) _google_drive.py Any-return markers complete (4 sites).
 
-(c) S596 — sha256 allowlist commentary present in test_utf8_enrollment_inventory.py.
+(c) sha256 allowlist commentary present in test_utf8_enrollment_inventory.py.
 
-(d) S597 — _stdio.py stdlib-logger rationale present in test_w10_p41_rationale_inventory.py.
+(d) _stdio.py stdlib-logger rationale present in
+    test_any_return_rationale_markers.py.
 
-(e) S598 — diagnostics/secure_objects.py:53 machine-format rationale marker present.
+(e) diagnostics/secure_objects.py:53 machine-format rationale marker present.
 
 No mocks, no skips, no tautological assertions.
 """
@@ -39,7 +40,7 @@ def _source(path: Path) -> str:
 
 
 # ---------------------------------------------------------------------------
-# (a) S594 — scripts/ ratchet landed and check_relative_imports.py clean
+# (a) scripts/ ratchet landed and check_relative_imports.py clean
 # ---------------------------------------------------------------------------
 
 _UTF8_INVENTORY_TEST = _SRC / "test_utf8_enrollment_inventory.py"
@@ -50,8 +51,7 @@ def test_scripts_ratchet_exists_in_utf8_inventory() -> None:
     """test_utf8_enrollment_inventory.py must define the scripts/ ratchet function."""
     src = _source(_UTF8_INVENTORY_TEST)
     assert "test_no_bare_utf8_literals_in_scripts" in src, (
-        "test_utf8_enrollment_inventory.py: scripts/ ratchet function not found — "
-        "S594 ratchet extension not landed"
+        "test_utf8_enrollment_inventory.py: scripts/ ratchet function not found"
     )
     assert "_SCRIPTS_ROOT" in src, (
         "test_utf8_enrollment_inventory.py: _SCRIPTS_ROOT constant not found — "
@@ -66,7 +66,7 @@ def test_check_relative_imports_uses_local_utf8_constant() -> None:
     """check_relative_imports.py must define _UTF_8 constant and not use bare encoding="utf-8"."""
     src = _source(_CHECK_REL_IMPORTS)
     assert '_UTF_8: Final[str] = "utf-8"' in src, (
-        "scripts/check_relative_imports.py: _UTF_8 constant not found — S594 fix not applied"
+        "scripts/check_relative_imports.py: _UTF_8 constant not found"
     )
     # The bare literal must not survive outside the constant definition line itself.
     lines_with_bare = [
@@ -81,7 +81,7 @@ def test_check_relative_imports_uses_local_utf8_constant() -> None:
 
 
 # ---------------------------------------------------------------------------
-# (b) S595 — _google_drive.py Any-return markers (4 sites)
+# (b) _google_drive.py Any-return markers (4 sites)
 # ---------------------------------------------------------------------------
 
 _GOOGLE_DRIVE = _SRC / "adapters/outbound/storage/_google_drive.py"
@@ -111,7 +111,7 @@ def test_google_drive_any_return_markers_present(func_name: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# (c) S596 — sha256 allowlist commentary documented in utf8 inventory test
+# (c) sha256 allowlist commentary documented in utf8 inventory test
 # ---------------------------------------------------------------------------
 
 
@@ -127,31 +127,30 @@ def test_sha256_allowlist_sites_documented_in_utf8_inventory() -> None:
     for filename in exempt_files:
         assert filename in src, (
             f"test_utf8_enrollment_inventory.py: sha256 allowlist commentary missing "
-            f"reference to {filename!r} — S596 documentation not present"
+            f"reference to {filename!r}"
         )
 
 
 # ---------------------------------------------------------------------------
-# (d) S597 — _stdio.py rationale enrolled in test_w10_p41_rationale_inventory.py
+# (d) _stdio.py rationale enrolled in test_any_return_rationale_markers.py
 # ---------------------------------------------------------------------------
 
-_RATIONALE_INVENTORY = _SRC / "test_w10_p41_rationale_inventory.py"
+_RATIONALE_INVENTORY = _SRC / "test_any_return_rationale_markers.py"
 
 
 def test_stdio_logger_rationale_enrolled_in_inventory() -> None:
-    """test_w10_p41_rationale_inventory.py must contain the _stdio.py stdlib-logger test."""
+    """test_any_return_rationale_markers.py must contain the _stdio.py stdlib-logger test."""
     src = _source(_RATIONALE_INVENTORY)
     assert "test_stdio_stdlib_logger_rationale_present" in src, (
-        "test_w10_p41_rationale_inventory.py: _stdio.py logger rationale test not found — "
-        "S597 enrollment not landed"
+        "test_any_return_rationale_markers.py: _stdio.py logger rationale test not found"
     )
     assert "_STDIO_MODULE" in src, (
-        "test_w10_p41_rationale_inventory.py: _STDIO_MODULE path constant not found"
+        "test_any_return_rationale_markers.py: _STDIO_MODULE path constant not found"
     )
 
 
 # ---------------------------------------------------------------------------
-# (e) S598 — diagnostics/secure_objects.py machine-format rationale marker
+# (e) diagnostics/secure_objects.py machine-format rationale marker
 # ---------------------------------------------------------------------------
 
 _SECURE_OBJECTS = _SRC / "diagnostics/secure_objects.py"
@@ -162,8 +161,8 @@ def test_secure_objects_machine_format_rationale_present() -> None:
     """diagnostics/secure_objects.py:53 tab-pair echo must carry the machine-format rationale marker."""
     src = _source(_SECURE_OBJECTS)
     assert _MACHINE_FORMAT_TOKEN in src, (
-        f"diagnostics/secure_objects.py: missing {_MACHINE_FORMAT_TOKEN!r} — "
-        "S598 rationale marker not applied to the tab-separated row echo"
+        f"diagnostics/secure_objects.py: missing {_MACHINE_FORMAT_TOKEN!r} "
+        "on the tab-separated row echo"
     )
     # Verify the marker is on the row-format line specifically.
     lines_with_token = [

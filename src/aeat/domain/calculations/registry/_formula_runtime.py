@@ -384,16 +384,14 @@ def _initial_values(
     # callers; that projection is recognised and not a masking
     # pattern (the source of truth is the binding map).
     #
-    # P07.S36 hardening: re-impose ADR Decision Z2's lost design
-    # intent on previous-filing bound casillas specifically. The
-    # ONLY legitimate way to land a previous-filing bound casilla
-    # value in `inputs` is the projection pattern where the same
-    # value is ALSO present in `binding_values` under the casilla's
-    # binding id. A previous-filing bound casilla supplied via
-    # `inputs` WITHOUT the matching `binding_values[binding_id]`
-    # entry is a test-fixture lie — the silent-zero hazard in
-    # disguise. Raise loudly so the lie is caught at fixture
-    # authoring time, not absorbed as a silent default.
+    # Re-impose the design intent for previous-filing bound casillas: the
+    # ONLY legitimate way to land a previous-filing bound casilla value in
+    # `inputs` is the projection pattern where the same value is ALSO present
+    # in `binding_values` under the casilla's binding id. A previous-filing
+    # bound casilla supplied via `inputs` WITHOUT the matching
+    # `binding_values[binding_id]` entry is a test-fixture lie — the
+    # silent-zero hazard in disguise. Raise loudly so the lie is caught at
+    # fixture authoring time, not absorbed as a silent default.
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     smuggled_previous_filing_bound = sorted(
         casilla_id
@@ -413,7 +411,7 @@ def _initial_values(
             translated_message="errors.calc.bound_input_smuggled_without_binding_value",
             context={"casilla_ids": ",".join(smuggled_previous_filing_bound)},
         )
-    # P08.S50 hardening: when BOTH inputs[bound_casilla_id] AND
+    # Guard: when BOTH inputs[bound_casilla_id] AND
     # binding_values[binding_id] are populated, the two values MUST
     # match. A divergence means the fixture (or production caller's
     # projection helper) declared two contradictory values for the

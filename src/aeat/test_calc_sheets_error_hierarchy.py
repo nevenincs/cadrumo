@@ -1,4 +1,4 @@
-"""Aggregate real-behavior tests for the A1 exceptions sweep (P28).
+"""calc_sheets error hierarchy and bucket/google-auth MRO invariants.
 
 Verifies:
 - calc_sheets cluster error classes are AeatError subclasses with distinct
@@ -90,19 +90,19 @@ def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:
 
 
 # ---------------------------------------------------------------------------
-# MRO does not leak ValueError (S483, S484)
+# MRO does not leak ValueError
 # ---------------------------------------------------------------------------
 
 
 def test_bucket_validation_error_mro_does_not_include_value_error() -> None:
-    """Removing ValueError from BucketValidationError MRO is the S483 contract."""
+    """BucketValidationError must not inherit ValueError."""
     assert not issubclass(BucketValidationError, ValueError)
     assert issubclass(BucketValidationError, BucketError)
     assert issubclass(BucketValidationError, AeatError)
 
 
 def test_google_auth_validation_error_mro_does_not_include_value_error() -> None:
-    """Removing ValueError from GoogleAuthValidationError MRO is the S484 contract."""
+    """GoogleAuthValidationError must not inherit ValueError."""
     assert not issubclass(GoogleAuthValidationError, ValueError)
     assert issubclass(GoogleAuthValidationError, GoogleAuthError)
     assert issubclass(GoogleAuthValidationError, AeatError)

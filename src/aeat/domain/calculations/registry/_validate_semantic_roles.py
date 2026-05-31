@@ -143,15 +143,13 @@ def _emit_semantic_role_typo_twin_warnings(
     emit_grouped_semantic_role_typo_twin_warnings(_collect_role_observations(modelos))
 
 
-# Plan C W05 validator hard-flip surface (semantic_role requirement).
-#
-# Each entry is (label_pattern, expected_role). A casilla whose label
-# matches the pattern must declare the expected semantic_role; missing
-# declarations raise RegistryValidationError at snapshot build. The set
-# starts conservative - only patterns where corpus rollout is provably
-# complete should land here. Modellers extending this set must run a
-# discovery audit first to confirm all in-corpus casillas already carry
-# the role.
+# Enforced semantic_role requirements: each entry is (label_pattern,
+# expected_role). A casilla whose label matches the pattern must declare
+# the expected semantic_role; missing declarations raise
+# RegistryValidationError at snapshot build. The set starts conservative
+# — only patterns where corpus rollout is provably complete should land
+# here. Modellers extending this set must run a discovery audit first to
+# confirm all in-corpus casillas already carry the role.
 #
 # Today's enforcement set:
 # - "Ejercicio al que se refiere la declaracion" -> filing_year

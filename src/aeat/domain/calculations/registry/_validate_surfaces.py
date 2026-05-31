@@ -78,13 +78,12 @@ def validate_workbook_parity_section(
             )
 
 
-# P10.S68: the known predicate operator set was previously a
-# module-level constant here that mirrored the runtime evaluator's
-# regex set. Drift between the two was a silent-pass hazard. The
-# canonical set now lives at
+# The known predicate operator set was previously a module-level constant
+# here that mirrored the runtime evaluator's regex set. Drift between the
+# two was a silent-pass hazard. The canonical set now lives at
 # aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS
-# and both the validator (here) and a gate test against the
-# runtime evaluator reference it.
+# and both the validator (here) and a gate test against the runtime
+# evaluator reference it.
 def _predicate_operator_name(expression: str) -> str | None:
     """Return the leading operator name of a predicate expression, or None."""
     stripped = expression.strip()
