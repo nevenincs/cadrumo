@@ -86,7 +86,7 @@ class CalcSheetsApplyResult(BaseModel):
     tab_count: int = Field(ge=1)
 
 
-def _drive_service(credentials: object) -> Any:
+def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -98,7 +98,7 @@ def _drive_service(credentials: object) -> Any:
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _sheets_service(credentials: object) -> Any:
+def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:

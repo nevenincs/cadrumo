@@ -113,6 +113,7 @@ def test_profile_lazy_module_helpers_carry_any_return_rationale() -> None:
 # The marker may appear in the 10 lines preceding the def (block-comment style)
 # or on the def line itself.
 _S559_MANDATE: list[tuple[Path, str]] = [
+    (_SRC / "application/live/_borrador_100.py", "_derive_snapshot_id"),
     (_SRC / "application/live/_censo.py", "_derive_snapshot_id"),
     (_SRC / "application/live/_expedientes.py", "_derive_snapshot_id"),
     (_SRC / "application/live/_notifications.py", "_derive_snapshot_id"),
