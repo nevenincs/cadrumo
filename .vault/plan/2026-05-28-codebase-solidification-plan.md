@@ -1041,3 +1041,15 @@ Land 5 survivor-missed findings + aggregate test.
 - [x] `W17.P49.S635` - A8: narrow prefill_report: Any to BindingPrefillReport at _iva_wallet_reconciliation.py:137 (import from ._binding_prefill; `callee already returns the typed shape); grep-post zero ': Any' on prefill_report field; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
 - [x] `W17.P49.S636` - P09: replace runtime pytest.skip at test_calc_sheets_pull_typing.py:101 with assert manual_casillas precondition (130/2T-2024 snapshot is bundled and stable; `skip is a false-negative gate); grep-post zero pytest.skip in this file; `src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py`.
 - [x] `W17.P49.S637` - aggregate test asserting all 5 W17.P49 closures landed (markers present, canonicals imported, no pytest.skip in named file, no bare 'EUR' default in _ledger_expenses) + all prior-wave inventory ratchets remain green; `src/aeat/test_w17_p49_closure.py`.
+
+## Wave `W18` - close W18 audit findings: 0 regressions + 2 survivor-missed (8 of 9 axes completely clean)
+
+W18 swarm re-audit confirmed 7 consecutive zero-strict-regression waves. Eight of nine axes (A1, A2, A3, A4, A5, A6, A7, P09) returned ZERO findings. Only A8 surfaced 4 candidates; pre-filter deferred 2 (bare `# type: ignore` in _sessions.py — part of known 77-site gap awaiting separate inventory ratchet per W17 note). 2 actionable: A8 prose-but-not-token cast() sites.
+
+### Phase `W18.P50` - W18 audit closure
+
+Land 2 cast-rationale token formalizations + aggregate test confirming sustained 8-of-9-axes clean state.
+
+- [ ] `W18.P50.S638` - A8: replace prose-only comment with canonical CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST token on cast() at _streams.py:155; grep-post token appears on line preceding the cast; `src/aeat/adapters/inbound/sanitizer/_streams.py`.
+- [ ] `W18.P50.S639` - A8: replace prose-only comment with canonical CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS token on cast() at _engine.py:1270; grep-post token appears on line preceding the cast; `src/aeat/application/workflow/_engine.py`.
+- [ ] `W18.P50.S640` - aggregate test asserting both W18 cast-rationale tokens present + 8-of-9-axes clean state holds (audit-trail assertion: re-run cast-rationale and other inventory ratchets and assert zero new violations); `src/aeat/test_w18_p50_closure.py`.
