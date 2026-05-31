@@ -19,8 +19,14 @@ import typer
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
 from ....domain.profile._constants import ProfileName
-from .._common import _emit
+from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
+from ._profile_census_payloads import (
+    CensusRefreshResult,
+    CensusShowResult,
+    CensusCompareResult,
+    CensusApplyResult,
+)
 
 
 def _active_pointer() -> tuple[ProfileName, ProfileName]:
@@ -124,18 +130,18 @@ def register(profile_app: typer.Typer) -> None:
             profile_id=profile_id,
             snapshot_id=snapshot.snapshot_id,
         )
-        payload = {
-            "snapshot_id": snapshot.snapshot_id,
-            "profile_id": snapshot.profile_id,
-            "captured_at": snapshot.captured_at.isoformat(),
-            "facts": dict(snapshot.censo_facts),
-        }
+        typed_refresh = CensusRefreshResult(
+            snapshot_id=snapshot.snapshot_id,
+            profile_id=snapshot.profile_id,
+            captured_at=snapshot.captured_at.isoformat(),
+            facts=dict(snapshot.censo_facts),
+        )
         lines = [
             f"snapshot_id\t{snapshot.snapshot_id}",
             f"captured_at\t{snapshot.captured_at.isoformat()}",
             f"facts\t{len(snapshot.censo_facts)}",
         ]
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.census.refresh", result=typed_refresh, lines=lines)
 
     @census_app.command(
         "show",
@@ -166,14 +172,14 @@ def register(profile_app: typer.Typer) -> None:
             )
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        payload = {
-            "snapshot_id": snapshot.snapshot_id,
-            "profile_id": snapshot.profile_id,
-            "captured_at": snapshot.captured_at.isoformat(),
-            "source_url": snapshot.source_url,
-            "state": snapshot.state.value,
-            "facts": dict(snapshot.censo_facts),
-        }
+        typed_show = CensusShowResult(
+            snapshot_id=snapshot.snapshot_id,
+            profile_id=snapshot.profile_id,
+            captured_at=snapshot.captured_at.isoformat(),
+            source_url=snapshot.source_url,
+            state=snapshot.state.value,
+            facts=dict(snapshot.censo_facts),
+        )
         lines = [
             f"snapshot_id\t{snapshot.snapshot_id}",
             f"captured_at\t{snapshot.captured_at.isoformat()}",
@@ -181,7 +187,7 @@ def register(profile_app: typer.Typer) -> None:
         ]
         for path, value in sorted(snapshot.censo_facts.items()):
             lines.append(f"{path}\t{value}")
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.census.show", result=typed_show, lines=lines)
 
     @census_app.command(
         "compare",
@@ -212,7 +218,7 @@ def register(profile_app: typer.Typer) -> None:
             )
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        payload = comparison.model_dump(mode="json")
+        typed_compare = CensusCompareResult.model_validate(comparison.model_dump(mode="json"))
         lines = [
             f"snapshot_id\t{comparison.snapshot_id}",
             f"diverging\t{len(comparison.diverging)}",
@@ -224,7 +230,7 @@ def register(profile_app: typer.Typer) -> None:
                 f"{row.status.value}\t{row.path}\t"
                 f"census={row.census_value or ''}\tprofile={row.profile_value or ''}"
             )
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.census.compare", result=typed_compare, lines=lines)
 
     @census_app.command(
         "apply",
@@ -267,7 +273,7 @@ def register(profile_app: typer.Typer) -> None:
             profile_id=profile_id,
             snapshot_id=result.snapshot_id,
         )
-        payload = result.model_dump(mode="json")
+        typed_apply = CensusApplyResult.model_validate(result.model_dump(mode="json"))
         lines = [
             f"snapshot_id\t{result.snapshot_id}",
             f"written\t{len(result.written_paths)}",
@@ -277,7 +283,7 @@ def register(profile_app: typer.Typer) -> None:
             lines.append(f"written\t{path}")
         for path in result.unchanged_paths:
             lines.append(f"unchanged\t{path}")
-        _emit(ctx, payload, lines)
+        _emit_envelope(ctx, command="config.census.apply", result=typed_apply, lines=lines)
 
     profile_app.add_typer(census_app, name="census")
 
