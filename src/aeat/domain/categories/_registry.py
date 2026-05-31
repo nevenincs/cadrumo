@@ -11,6 +11,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
+from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
@@ -214,7 +215,10 @@ def _decimal_or_none(value: object) -> Decimal | None:
         return value
     if isinstance(value, bool | float):
         raise CategoryValidationError("decimal profile values must not be booleans or floats")
-    return Decimal(str(value))
+    coerced = coerce_decimal(value)
+    if coerced is None:
+        raise CategoryValidationError(f"decimal profile value {value!r} could not be parsed")
+    return coerced
 
 
 def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:

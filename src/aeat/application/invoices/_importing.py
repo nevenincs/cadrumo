@@ -11,9 +11,11 @@ from typing import Any, NotRequired, TypedDict
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
-from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.invoices._errors import InvoiceValidationError
+from ...domain.iva import InvoiceKind
 
 
 class InvoiceRowPayload(TypedDict, total=False):
@@ -133,10 +135,12 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
 def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:  # ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: parse-stage slot assembled from CSV/JSON decode before Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field names but dict mutation is required for the line-synthesis back-fill.
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return
-    base = Decimal(str(payload["base_total"]))
+    base = coerce_decimal(payload["base_total"])
+    if base is None:
+        raise InvoiceValidationError(f"invoice base_total {payload['base_total']!r} is not a decimal")
     rate_raw = str(payload["iva_rate"])
     rate = _IVA_RATE_ALIASES.get(rate_raw, rate_raw)
-    iva_amount = Decimal(str(payload.get("iva_total", "0")))
+    iva_amount = coerce_decimal(payload.get("iva_total"), default=Decimal("0")) or Decimal("0")
     payload["lines"] = [
         {
             "description": "Imported invoice line",

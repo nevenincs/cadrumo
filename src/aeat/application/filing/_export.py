@@ -33,6 +33,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
@@ -377,7 +378,7 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     if record.requires_positive_casilla is None:
         return
     raw = casilla_values.get(record.requires_positive_casilla)
-    amount = Decimal("0") if raw in {None, ""} else Decimal(str(raw))
+    amount = coerce_decimal(raw, default=Decimal("0")) or Decimal("0")
     if amount <= 0:
         raise FilingExportValidationError(
             f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}"
@@ -542,12 +543,9 @@ def _format_field(field: ExportFieldDefinition, value: object) -> str:
 
 
 def _format_money(value: object, *, length: int, signed: bool) -> str:
-    if value is None or value == "":
-        amount = Decimal("0")
-    elif isinstance(value, bool):
+    if isinstance(value, bool):
         raise FilingExportValidationError("money export fields cannot render boolean values")
-    else:
-        amount = Decimal(str(value))
+    amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
     cents = int((abs(amount).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP) * 100).to_integral_value())
     if amount < 0:
         if not signed:
@@ -563,7 +561,10 @@ def _format_integer(value: object, *, length: int) -> str:
         return "0".zfill(length)
     if isinstance(value, bool):
         raise FilingExportValidationError("integer export fields cannot render boolean values")
-    return str(int(Decimal(str(value)))).zfill(length)
+    coerced = coerce_decimal(value)
+    if coerced is None:
+        raise FilingExportValidationError(f"integer export field cannot coerce {value!r} to Decimal")
+    return str(int(coerced)).zfill(length)
 
 
 def _pad(value: str, field: ExportFieldDefinition) -> str:
@@ -593,7 +594,8 @@ def _mismatched_casillas(
         checked.append(parsed.casilla_id)
         expected = values.get(parsed.casilla_id) or Decimal("0")
         if isinstance(parsed.value, Decimal):
-            if Decimal(str(expected)).quantize(_MONEY_QUANT) != parsed.value.quantize(_MONEY_QUANT):
+            expected_decimal = coerce_decimal(expected, default=Decimal("0")) or Decimal("0")
+            if expected_decimal.quantize(_MONEY_QUANT) != parsed.value.quantize(_MONEY_QUANT):
                 mismatched.append(parsed.casilla_id)
         elif str(expected) != str(parsed.value):
             mismatched.append(parsed.casilla_id)

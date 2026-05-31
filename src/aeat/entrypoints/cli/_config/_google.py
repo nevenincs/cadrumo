@@ -91,6 +91,7 @@ from ....application.storage.calc_sheets import (
     build_export_plan,
 )
 from ....core.config import load_settings
+from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
 from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
 from ....domain.calculations.registry._errors import (
@@ -960,7 +961,7 @@ def google_sync_calc_verify(
         def _to_decimal_map(node: object) -> dict[str, Decimal]:
             if not isinstance(node, dict):
                 return {}
-            return {str(k): Decimal(str(v)) for k, v in node.items()}
+            return {str(k): coerce_decimal(v) or Decimal("0") for k, v in node.items()}
 
         scenario = OperatorInputScenario(
             inputs_by_number=_to_decimal_map(raw.get("inputs_by_number")),
