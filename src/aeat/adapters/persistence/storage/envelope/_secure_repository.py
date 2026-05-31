@@ -53,7 +53,6 @@ def _active_bucket_objects_or_default() -> SecureObjectRepository:
     test harnesses and bootstrap-adjacent callers. Once a bucket is
     selected, route/session failures are not swallowed.
     """
-
     return secure_object_repository_for_active_bucket_or_default_route()
 
 

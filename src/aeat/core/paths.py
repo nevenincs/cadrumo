@@ -36,7 +36,6 @@ def resolve_project_path(value: str | Path) -> Path:
     Returns:
         The fully resolved absolute :class:`pathlib.Path`.
     """
-
     candidate = Path(value).expanduser()
     if candidate.is_absolute():
         return candidate.resolve()
@@ -53,7 +52,6 @@ def normalize_project_relative_path(value: Path | None) -> Path | None:
         ``None`` when ``value`` is ``None``; otherwise the resolved
         absolute path produced by :func:`resolve_project_path`.
     """
-
     if value is None:
         return None
     return resolve_project_path(value)
@@ -71,7 +69,6 @@ def normalize_project_relative_str(value: str) -> str:
         The resolved absolute path as a string, or the original empty
         string.
     """
-
     if not value:
         return value
     return str(resolve_project_path(value))
@@ -96,7 +93,6 @@ def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) ->
         ValueError: When ``relative_path`` is malformed or when the
             resolved path escapes ``root``.
     """
-
     if "\\" in relative_path:
         raise CoreValidationError(f"{context} must use forward slashes only")
     pure = PurePosixPath(relative_path)
@@ -131,7 +127,6 @@ def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Pat
         ValueError: When ``record_id`` is not a simple filename token
             or the resolved path escapes ``root``.
     """
-
     if not _SAFE_FILE_TOKEN_RE.fullmatch(record_id):
         raise CoreValidationError(f"{context} must be a simple filename token")
     resolved_root = root.resolve()

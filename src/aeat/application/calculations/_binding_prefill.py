@@ -139,7 +139,6 @@ def _gather_observations(
     """Walk every previous_filing binding in the revision and pull
     matching observations from the local store.
     """
-
     needed: dict[tuple[str, int, str], _GatheredObservation] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
@@ -167,7 +166,6 @@ def _observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-
     snapshot = resources().modelos.authority.snapshot(
         "303",
         filing_year=state.filing_year,
@@ -275,7 +273,6 @@ def resolve_bindings_from_local_store(
     enforcement (refusing the export when prior filings are missing)
     is the caller's choice via the prefill report's coverage.
     """
-
     repo = repository if repository is not None else CalculationObservationRepository()
     iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
     when = captured_at if captured_at is not None else datetime.now(UTC)
@@ -343,7 +340,6 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     reconciliation; they must not use it directly as the effective value while
     fresh AEAT wallet evidence exists.
     """
-
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
         from ..modelo._actions import ModeloApplicabilityFilterError
 

@@ -95,7 +95,6 @@ _CasillaKey = Annotated[
 
 def _canonical_decimal(value: Decimal) -> str:
     """Stable string form of a Decimal for hash inputs."""
-
     if value.is_zero():
         return "0"
     return format(value.normalize(), "f")
@@ -151,7 +150,6 @@ def derive_calculation_revision_id(
     are present they are serialised into the hash so structurally
     identical re-runs with the same rows produce the same id.
     """
-
     payload: dict[str, object] = {
         "work_unit_id": work_unit_id.strip(),
         "inputs": dict(sorted((k.strip(), v.strip()) for k, v in inputs_snapshot.items())),

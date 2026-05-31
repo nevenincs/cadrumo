@@ -74,7 +74,6 @@ def register_wizard_catalogue(
     Calling with *different* objects raises :class:`RuntimeError` to
     prevent accidental re-registration from a different source.
     """
-
     if _SETUP_FLOW_SLOT:
         if _SETUP_FLOW_SLOT[0] is setup_flow and _WIZARD_FLOWS_SLOT[0] is wizard_flows:
             return
@@ -94,7 +93,6 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wi
         WizardCatalogueNotRegisteredError: When the application layer has
             not yet called :func:`register_wizard_catalogue`.
     """
-
     if not _SETUP_FLOW_SLOT:
         raise WizardCatalogueNotRegisteredError()
     return _SETUP_FLOW_SLOT[0]
@@ -107,7 +105,6 @@ def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLO
         WizardCatalogueNotRegisteredError: When the application layer has
             not yet called :func:`register_wizard_catalogue`.
     """
-
     if not _WIZARD_FLOWS_SLOT:
         raise WizardCatalogueNotRegisteredError()
     return _WIZARD_FLOWS_SLOT[0]

@@ -130,7 +130,6 @@ class RentaLedgerExpenseAggregation(BaseModel):
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
         """Return the frozen mapping of binding-ready casilla totals."""
-
         return self.casilla_aggregation.casilla_values
 
     @field_serializer("observations")
@@ -159,7 +158,6 @@ def aggregate_renta_ledger_expenses_from_repositories(
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses."""
-
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -191,7 +189,6 @@ def aggregate_renta_ledger_expenses(
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations."""
-
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.year
     profiles = resources().category_profiles.get(resolved_profile_year)

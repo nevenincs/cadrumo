@@ -36,7 +36,6 @@ class StorageWritePolicyDecision(BaseModel):
 
     def render_refusal_message(self, *, locale: str | None = None) -> str:
         """Render the translated user-facing refusal message."""
-
         if self.allowed or not self.message_key:
             return ""
         if self.detail_message_key:
@@ -120,7 +119,6 @@ def inspect_storage_write_policy(
     settings: Settings | None = None,
 ) -> StorageWritePolicyDecision:
     """Return whether ``verb_path`` may perform profile-bound writes."""
-
     if bootstrap_exempt:
         return StorageWritePolicyDecision(
             allowed=True,
@@ -173,7 +171,6 @@ def inspect_storage_write_policy(
 
 def is_profile_bound_write_verb_path(verb_path: str) -> bool:
     """Return whether ``verb_path`` names a profile-bound mutation surface."""
-
     normalised = verb_path.strip()
     return any(
         normalised == guarded or normalised.startswith(f"{guarded} ")

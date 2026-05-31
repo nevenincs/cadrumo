@@ -37,7 +37,6 @@ def _coerce_spending_category(value: object) -> object:
     carry the enum's ``.value`` string) loadable without weakening
     strict-mode for every other field on the model.
     """
-
     if value is None or isinstance(value, SpendingCategory):
         return value
     if isinstance(value, str):
@@ -177,7 +176,6 @@ class Period(BaseModel):
     @property
     def start(self) -> date:
         """Return the first :class:`~datetime.date` included in the period."""
-
         if self.kind is PeriodKind.QUARTERLY:
             assert self.quarter is not None
             month, _ = _QUARTER_MONTHS[self.quarter]
@@ -191,7 +189,6 @@ class Period(BaseModel):
     @property
     def end(self) -> date:
         """Return the last :class:`~datetime.date` included in the period."""
-
         if self.kind is PeriodKind.QUARTERLY:
             assert self.quarter is not None
             _, month = _QUARTER_MONTHS[self.quarter]
@@ -205,7 +202,6 @@ class Period(BaseModel):
     @property
     def period_type(self) -> PeriodType:
         """Return the matching aggregation period cadence."""
-
         if self.kind is PeriodKind.ANNUAL:
             return PeriodType.ANNUAL
         return PeriodType.QUARTERLY
@@ -219,7 +215,6 @@ class Period(BaseModel):
         Returns:
             ``True`` if :attr:`start` <= ``value`` <= :attr:`end`.
         """
-
         return self.start <= value <= self.end
 
 

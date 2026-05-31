@@ -72,7 +72,6 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     as identity-ready but never as profile-ready, because the deadline
     engine cannot compute IVA obligations without a regime declaration.
     """
-
     record = state.active_profile_record()
     identity_ready = False
     missing_required: tuple[str, ...] = ()
@@ -150,7 +149,6 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
         WizardStatusError: When no profile is active or the active
             profile does not carry a ``tax.id``.
     """
-
     record = state.active_profile_record()
     if record is None:
         raise WizardStatusError(

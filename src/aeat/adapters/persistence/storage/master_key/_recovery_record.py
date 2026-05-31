@@ -21,12 +21,10 @@ from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 def _decode_b64(value: str) -> bytes:
     """Decode a strict base64 string; raise if malformed."""
-
     return base64.b64decode(value.encode("ascii"), validate=True)
 
 def _validate_b64(value: str) -> str:
     """Accept a base64 string and verify it decodes; return canonical form."""
-
     decoded = _decode_b64(value)
     re_encoded = base64.b64encode(decoded).decode("ascii")
     if re_encoded != value:

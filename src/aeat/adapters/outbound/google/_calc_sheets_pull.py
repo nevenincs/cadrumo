@@ -252,7 +252,6 @@ def _sheets_service(credentials: object) -> "_GoogleResource":
 
 def _verify_ownership(drive_service: "_GoogleResource", spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
-
     file_meta = execute_request(
         drive_service.files().get(
             fileId=spreadsheet_id,
@@ -278,7 +277,6 @@ def _read_developer_metadata(
     spreadsheet_id: str,
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
-
     spreadsheet = execute_request(
         sheets_service.spreadsheets().get(
             spreadsheetId=spreadsheet_id,
@@ -391,7 +389,6 @@ def pull_operator_edits(
         OutboundStorageValidationError: `spreadsheet_id` is blank.
         OutboundStorageNetworkError: A transport or unmapped HTTP failure.
     """
-
     if not spreadsheet_id.strip():
         raise OutboundStorageValidationError(
             "spreadsheet_id must not be blank",
@@ -596,7 +593,6 @@ def _parse_relation_metadata(
     datetime | None,
 ]:
     """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
-
     if not raw:
         return None, None, (), None
     parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
@@ -647,7 +643,6 @@ def _read_row_set_edits(
     of non-blank cells read across all row-sets. Each row-set's data
     block is fetched in one batchGet entry (header_row+1 .. header_row+51).
     """
-
     row_sets = collect_row_sets(snapshot.revision)
     if not row_sets:
         return ((), 0)
@@ -740,7 +735,6 @@ def _decode_row_set_cell(
 
 def _column_index_to_letters(column: int) -> str:
     """Convert a 1-based column index to A1 letters (1 -> A, 27 -> AA)."""
-
     if column < 1:
         raise OutboundStorageValidationError("column index must be 1-based and positive")
     letters: list[str] = []
@@ -802,7 +796,6 @@ def verify_pull_coverage(
     metadata digests for those surfaces when the apply side stamps
     them.
     """
-
     discrepancies: list[PullCoverageDiscrepancy] = []
 
     # Metadata identity: registry coordinates must match exactly.
@@ -871,7 +864,6 @@ def compute_from_pull(
     The caller is responsible for handling stale workbooks before
     invoking this helper.
     """
-
     _require_metadata_match(pull=pull, snapshot=snapshot)
     inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)
     binding_values, enum_binding_values = _collect_binding_values(snapshot=snapshot, edits=pull.binding_edits)

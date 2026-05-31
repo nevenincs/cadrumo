@@ -123,7 +123,6 @@ class AliasInventory:
 
 def iter_aeat_modules(root: Path = AEAT_ROOT) -> Iterator[Path]:
     """Yield every ``.py`` file under ``root`` excluding cache dirs."""
-
     for path in root.rglob("*.py"):
         if any(part in _SKIP_DIR_NAMES for part in path.parts):
             continue
@@ -137,7 +136,6 @@ def _module_dotted_path(path: Path, root: Path = AEAT_ROOT) -> str:
     an alternate root so test fixtures rooted at a synthetic
     ``tmp_path/src/aeat`` layout resolve cleanly.
     """
-
     rel = path.relative_to(root.parent).with_suffix("")
     parts = list(rel.parts)
     if parts and parts[-1] == "__init__":
@@ -147,7 +145,6 @@ def _module_dotted_path(path: Path, root: Path = AEAT_ROOT) -> str:
 
 def _parse(path: Path) -> tuple[ast.Module | None, Finding | None]:
     """Parse ``path`` into an AST, returning a finding on syntax error."""
-
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:  # pragma: no cover - filesystem error
@@ -160,7 +157,6 @@ def _parse(path: Path) -> tuple[ast.Module | None, Finding | None]:
 
 def _camel_to_snake(name: str) -> str:
     """Convert a CamelCase identifier to ``snake_case``."""
-
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
@@ -175,7 +171,6 @@ def _module_alias_names(tree: ast.Module) -> list[str]:
     first character is uppercase, mirroring the ADR Rule 4 naming
     convention.
     """
-
     names: list[str] = []
     for node in tree.body:
         candidates: list[str] = []
@@ -210,7 +205,6 @@ def _is_alias_module(path: Path) -> bool:
     ``_profile.py``, ``_snapshot.py``), so a package ``__init__`` that
     re-exports typed aliases is also recognised.
     """
-
     name = path.name
     if name == "_ids.py":
         return True
@@ -221,7 +215,6 @@ def _is_alias_module(path: Path) -> bool:
 
 def build_alias_inventory(root: Path = AEAT_ROOT) -> AliasInventory:
     """Discover typed-id aliases declared under ``root``."""
-
     by_owner: dict[str, str] = {}
     alias_modules: set[str] = set()
     for path in iter_aeat_modules(root):
@@ -251,7 +244,6 @@ _REGISTRY_IDS_MODULE = "aeat.domain.calculations.registry._ids"
 
 def _domain_root(dotted: str) -> str | None:
     """Return the ``domain.<root>`` segment for ``dotted`` if any."""
-
     parts = dotted.split(".")
     if len(parts) >= 3 and parts[0] == "aeat" and parts[1] == "domain":
         return parts[2]
@@ -260,7 +252,6 @@ def _domain_root(dotted: str) -> str | None:
 
 def _resolve_relative_import(consumer: str, module: str | None, level: int) -> str | None:
     """Resolve a ``from .x import y`` style module to an absolute path."""
-
     if level == 0:
         return module
     consumer_parts = consumer.split(".")
@@ -280,7 +271,6 @@ def _iter_import_from(tree: ast.Module) -> Iterator[ast.ImportFrom]:
 
 def find_sibling_domain_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
     """Detect ``domain.<a>`` importing from ``domain.<b>._ids`` for ``a != b``."""
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         dotted = _module_dotted_path(path, root)
@@ -334,7 +324,6 @@ def find_private_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
     them. The public alias names are the cross-layer contract; the
     private constants are an implementation detail.
     """
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         dotted = _module_dotted_path(path, root)
@@ -371,7 +360,6 @@ def find_private_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
 
 def _iter_module_assignments(tree: ast.Module) -> Iterator[tuple[str, int]]:
     """Yield ``(name, lineno)`` for every module-level name assignment."""
-
     for node in tree.body:
         if isinstance(node, ast.Assign):
             for target in node.targets:
@@ -383,7 +371,6 @@ def _iter_module_assignments(tree: ast.Module) -> Iterator[tuple[str, int]]:
 
 def find_misplaced_hex_length_constants(root: Path = AEAT_ROOT) -> list[Finding]:
     """Detect ``_HEX_*_LENGTH`` constants declared outside an ``_ids.py``."""
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         if path.name == "_ids.py":
@@ -502,7 +489,6 @@ def _is_basemodel_subclass(node: ast.ClassDef) -> bool:
     is sufficient. Generic-parameterised bases (e.g. ``BaseModel[T]``)
     are unwrapped through the ``ast.Subscript`` value.
     """
-
     for base in node.bases:
         target = base
         if isinstance(target, ast.Subscript):
@@ -522,7 +508,6 @@ def _annotation_is_bare_str(annotation: ast.expr) -> bool:
     ``ast.Subscript``; either form passes the detector. The detector
     only flags the two bare shapes that drop the typed contract.
     """
-
     if isinstance(annotation, ast.Name) and annotation.id == "str":
         return True
     if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
@@ -541,7 +526,6 @@ def _expr_is_none(node: ast.expr) -> bool:
 
 def _is_alias_declaration_module(path: Path) -> bool:
     """Return whether ``path`` declares typed-id aliases (skip in detector)."""
-
     return _is_alias_module(path)
 
 
@@ -565,7 +549,6 @@ def find_bare_str_typed_id_fields(
     where the alias constraint shape is incompatible with the field's existing
     data contract, making promotion without a broader data-migration unsafe.
     """
-
     if inventory is None:
         inventory = build_alias_inventory(root)
     if protect_list is None:
@@ -624,7 +607,6 @@ def _is_named_domain_subpackage(domain_segment: str) -> bool:
     ``domain/`` have ``parts[2] == '_enums'`` etc. and are NOT sibling
     subpackages — they are the root domain package's own internal modules.
     """
-
     return bool(domain_segment) and domain_segment[0].isalpha()
 
 
@@ -635,7 +617,6 @@ def find_sibling_domain_enum_imports(root: Path = AEAT_ROOT) -> list[Finding]:
     considered sibling domains.  Root-level ``domain/_enums.py`` is not a
     sibling subpackage and imports from it are not flagged by this clause.
     """
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         dotted = _module_dotted_path(path, root)
@@ -684,7 +665,6 @@ def find_sibling_domain_constant_imports(root: Path = AEAT_ROOT) -> list[Finding
     Only named subpackages (those whose name starts with a letter) are
     considered sibling domains.
     """
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         dotted = _module_dotted_path(path, root)
@@ -733,7 +713,6 @@ def find_sibling_domain_protocol_imports(root: Path = AEAT_ROOT) -> list[Finding
     Only named subpackages (those whose name starts with a letter) are
     considered sibling domains.
     """
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         dotted = _module_dotted_path(path, root)
@@ -811,7 +790,6 @@ def find_private_name_cross_package_imports(root: Path = AEAT_ROOT) -> list[Find
     not private API. Relative imports are within-package by definition and are
     excluded. Imports from modules on the ADR protect list are excluded.
     """
-
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         if path.name.startswith("test_") or path.stem.endswith("_test"):
@@ -878,7 +856,6 @@ _CLAUSE9_PROTECT_MODULES: frozenset[str] = frozenset(
 
 def _literal_constant_value(node: ast.expr) -> object:
     """Return the literal value of ``node`` if it is a simple constant, else sentinel."""
-
     _MISSING = object()
     if isinstance(node, ast.Constant):
         return node.value
@@ -897,7 +874,6 @@ def find_same_name_constant_multi_declarations(
     (int, float, str, bytes, bool, or unary-negated number) are considered.
     Test modules and protect-list modules are excluded.
     """
-
     _MISSING = object()
     # name -> list of (dotted_module, literal_value, path, lineno)
     registry: dict[str, list[tuple[str, object, Path, int]]] = {}
@@ -985,7 +961,6 @@ def _is_string_alias_value(value_node: ast.expr) -> bool:
     positives from enum classes and integer constants that happen to
     share the ``Kind``/``Status``/``State`` naming suffix.
     """
-
     if not isinstance(value_node, ast.Subscript):
         return False
     outer = value_node.value
@@ -1015,7 +990,6 @@ def build_kind_status_state_alias_inventory(root: Path = AEAT_ROOT) -> AliasInve
     ``Kind``/``Status``/``State`` naming suffix are excluded so the
     inventory does not generate false-positive clause-10 violations.
     """
-
     by_owner: dict[str, str] = {}
     alias_modules: set[str] = set()
     for path in iter_aeat_modules(root):
@@ -1065,7 +1039,6 @@ def find_bare_str_kind_status_state_fields(
     owner exists in the inventory and the annotation is bare ``str`` (or
     ``str | None``), the field is flagged.
     """
-
     if inventory is None:
         inventory = build_kind_status_state_alias_inventory(root)
     findings: list[Finding] = []

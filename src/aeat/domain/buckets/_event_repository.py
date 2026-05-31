@@ -39,7 +39,6 @@ class BucketEventHistoryRepository:
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
         """Return the secure-object backend used by this catalogue."""
-
         return self._objects
 
     def exists(self) -> bool:
@@ -105,7 +104,6 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
     Content-addressed: a re-emission with identical content collapses
     to the same ``event_id`` and the existing entry is left in place.
     """
-
     mapping = dict(catalogue.events)
     mapping[event.event_id] = event
     return BucketEventHistoryCatalogue(events=mapping)

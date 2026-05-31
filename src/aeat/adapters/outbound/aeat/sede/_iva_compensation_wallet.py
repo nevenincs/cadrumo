@@ -85,7 +85,6 @@ async def fetch_iva_compensation_wallet(
     settings: Settings | None = None,
 ) -> IvaCompensationWalletObservation:
     """Fetch and parse AEAT's read-only IVA compensation wallet."""
-
     _assert_read_http("GET", _PRE303_PRESENTATION_URL)
     _assert_read_http("GET", _WALLET_URL)
     settings = settings or Settings()
@@ -194,7 +193,6 @@ def parse_iva_compensation_wallet_html(
     allow_empty_wallet_shell: bool = False,
 ) -> IvaCompensationWalletObservation:
     """Parse wallet rows from a captured AEAT wallet HTML page."""
-
     validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
     soup = BeautifulSoup(html, "html.parser")
     rows: list[IvaCompensationWalletRow] = []
@@ -246,7 +244,6 @@ def parse_iva_compensation_wallet_html(
 
 def is_aeat_wallet_auth_gate_redirect(current_url: str) -> bool:
     """Return True when wallet navigation lands on AEAT's certificate/auth 4033 page."""
-
     if not current_url:
         return False
     parsed = urlsplit(current_url)
@@ -269,7 +266,6 @@ async def _open_authenticated_surface(
     surface: str,
 ) -> bool:
     """Open an AEAT app through the selector so Cl@ve app-local state is minted."""
-
     _assert_read_http("GET", selector_url)
     await browser_session.navigate(page, selector_url)
     await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
@@ -342,7 +338,6 @@ async def _continue_own_name_representation(
     surface: str,
 ) -> None:
     """Continue only through AEAT's own-name acting-capacity selector."""
-
     _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
         await page.wait_for_selector(

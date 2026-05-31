@@ -49,7 +49,6 @@ class LLMCache:
         Returns:
             Deterministic cache key components.
         """
-
         prompt_material = "\n".join([request.system or "", request.prompt])
         args_payload = {
             "max_tokens": request.max_tokens,
@@ -75,7 +74,6 @@ class LLMCache:
         Returns:
             Cached response when present, otherwise `None`.
         """
-
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
@@ -250,7 +248,6 @@ class LLMCache:
 
     def _object_key_for(self, key: CacheKey) -> str:
         """Return the natural secure-object key for a cache key."""
-
         sanitised_model = self._sanitise_model_for_path(key.model)
         return "|".join(
             (
@@ -264,12 +261,10 @@ class LLMCache:
 
     def _logical_root(self) -> str:
         """Return the stable logical cache partition."""
-
         return self.root_dir.resolve().as_posix()
 
     def _payload_for_entry(self, entry: Mapping[str, object]) -> bytes:
         """Wrap a redacted entry with its logical partition before encryption."""
-
         payload = {
             "logical_root": self._logical_root(),
             "entry": entry,
@@ -278,7 +273,6 @@ class LLMCache:
 
     def _entry_from_payload(self, payload: bytes) -> CachedEntry:
         """Decode a secure-object payload into a cached entry."""
-
         decoded = json.loads(payload.decode("utf-8"))
         if decoded.get("logical_root") != self._logical_root():
             raise LLMCacheError("LLM cache payload belongs to a different logical partition")
@@ -286,7 +280,6 @@ class LLMCache:
 
     def _payload_root_matches(self, payload: bytes) -> bool:
         """Return whether ``payload`` belongs to this cache partition."""
-
         try:
             decoded = json.loads(payload.decode("utf-8"))
         except (ValueError, TypeError):

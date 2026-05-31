@@ -39,7 +39,6 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     @property
     def bucket_id(self) -> str | None:
         """Return the profile bucket id when this repository resolved one."""
-
         return self._bucket_id
 
     def extract_identifier(self, payload: ModeloDraft) -> str:
@@ -47,12 +46,10 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
 
     def list_draft_ids(self) -> tuple[str, ...]:
         """Return every draft id persisted in this repository."""
-
         return tuple(self.iter_ids())
 
     def iter_drafts(self) -> Iterator[ModeloDraft]:
         """Yield every persisted draft, in lexicographic id order."""
-
         return self.iter_records()
 
 

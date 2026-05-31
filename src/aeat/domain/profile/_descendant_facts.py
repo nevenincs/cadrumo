@@ -43,7 +43,6 @@ def descendant_facts_from_list(
     The caller converts these to :class:`~aeat.domain.user_profile.UserProfileFact`
     records; this function only computes the canonical key-value pairs.
     """
-
     facts: list[tuple[str, str]] = []
     for idx, d in enumerate(descendientes):
         prefix = f"{_DESCENDANT_FACT_PREFIX}.{idx}"
@@ -82,7 +81,6 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
     Entries are sorted by index so the reconstructed tuple preserves the
     original insertion order.
     """
-
     rows: dict[int, dict[str, str]] = {}
     for path, value in facts.items():
         m = _N_RE.match(path)
@@ -152,7 +150,6 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
     on missing required keys or invalid values.
     """
-
     parts = {k.strip().upper(): v.strip() for k, _, v in (p.partition("=") for p in raw.split(","))}
 
     nacimiento_raw = parts.get("NACIMIENTO")

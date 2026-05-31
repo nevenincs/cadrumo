@@ -26,7 +26,6 @@ def build_remote_mirror_namespace_manifest(
     rows: Iterable[SecureObjectRawRow],
 ) -> RemoteMirrorNamespaceManifest:
     """Build a manifest from raw ciphertext rows for one secure-object namespace."""
-
     entries = tuple(_remote_mirror_object_manifest(row) for row in rows if row.namespace == namespace)
     latest = max(
         (entry for entry in entries if entry.revision_written_at is not None),
@@ -48,7 +47,6 @@ def put_remote_mirror_namespace_manifest(
     manifest: RemoteMirrorNamespaceManifest,
 ) -> ProviderObjectMetadata:
     """Persist a namespace mirror manifest through the remote storage provider."""
-
     payload = manifest.model_dump_json().encode("utf-8")
     return provider.put(
         REMOTE_MIRROR_MANIFEST_NAMESPACE,
@@ -64,7 +62,6 @@ def inspect_remote_mirror_upload(
     expected_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
     """Detect remote upload drift against an expected local namespace manifest."""
-
     remote_manifest = _load_remote_manifest(provider, expected_manifest.namespace)
     issues = list(_compare_manifest_objects(local=expected_manifest, remote=remote_manifest))
     for entry in expected_manifest.objects:
@@ -107,7 +104,6 @@ def inspect_remote_mirror_download(
     remote_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
     """Detect whether a remote manifest can be downloaded completely."""
-
     issues: list[RemoteMirrorIssue] = []
     for entry in remote_manifest.objects:
         try:
@@ -130,7 +126,6 @@ def compare_remote_mirror_manifests(
     remote: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
     """Compare local and remote namespace manifests for stale or conflicting revisions."""
-
     return RemoteMirrorInspection(
         namespace=local.namespace,
         issues=tuple(_compare_manifest_objects(local=local, remote=remote)),
@@ -237,7 +232,6 @@ def _compare_manifest_objects(
 
 def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
     """Compute the provider object key used for mirrored ciphertext rows."""
-
     hasher = hashlib.sha256()
     hasher.update(namespace.encode())
     hasher.update(b"\x00")

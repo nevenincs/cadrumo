@@ -79,7 +79,6 @@ def _emit_envelope(
         lines: Iterable of pre-formatted text lines (used unchanged
             for text mode).
     """
-
     from ...core.json_contract import emit_json_success
 
     if _format_of(ctx) == "json":
@@ -104,7 +103,6 @@ def _no_active_profile_refusal() -> Exception:
     this same translated refusal so first-contact guidance is
     consistent across the CLI surface.
     """
-
     from ._errors import CliRefusedBoundaryError
 
     return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
@@ -214,7 +212,6 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 
 def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
-
     from ...application.workflow import NoActiveProfileError, active_bucket_id_or_raise
 
     try:
@@ -347,7 +344,6 @@ def activate_subcommand_output_language(ctx: typer.Context, language: str | None
     Settings field directly and drop the cached language so any ``tr()``
     fired during the verb body resolves to the requested locale.
     """
-
     if language is None:
         return
     from ...core.config import override_settings

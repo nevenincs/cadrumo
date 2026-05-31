@@ -41,7 +41,6 @@ class LLMRequest(BaseModel):
     @classmethod
     def validate_prompt(cls, value: str) -> str:
         """Ensure prompts are not empty or whitespace-only."""
-
         normalized = value.strip()
         if not normalized:
             msg = "Prompt must not be empty."
@@ -52,7 +51,6 @@ class LLMRequest(BaseModel):
     @classmethod
     def validate_system(cls, value: str | None) -> str | None:
         """Normalize empty system prompts to ``None``."""
-
         if value is None:
             return None
         normalized = value.strip()
@@ -62,7 +60,6 @@ class LLMRequest(BaseModel):
     @classmethod
     def validate_language(cls, value: str | None) -> str | None:
         """Validate optional ISO 639-1 language codes."""
-
         if value is None:
             return None
         return value
@@ -102,7 +99,6 @@ class PromptDefinition(BaseModel):
     @classmethod
     def validate_id(cls, value: str) -> str:
         """Ensure prompt identifiers are kebab-case."""
-
         if not _PROMPT_ID_PATTERN.fullmatch(value):
             msg = f"Prompt id must be kebab-case, got {value!r}"
             raise LLMValidationError(msg)
@@ -121,12 +117,10 @@ class PromptRegistry(BaseModel):
 
     def register(self, definition: PromptDefinition) -> None:
         """Add or replace a prompt definition."""
-
         self.definitions[self._composite_key(definition.id, definition.version)] = definition
 
     def get(self, prompt_id: str, version: int | None = None) -> PromptDefinition:
         """Return a prompt definition by id and optional version."""
-
         if version is not None:
             return self.definitions[self._composite_key(prompt_id, version)]
         candidates = [item for item in self.definitions.values() if item.id == prompt_id]
@@ -136,13 +130,11 @@ class PromptRegistry(BaseModel):
 
     def prompt_ids(self) -> tuple[str, ...]:
         """Return the distinct prompt identifiers in the registry."""
-
         return tuple(sorted({item.id for item in self.definitions.values()}))
 
     @classmethod
     def seeded(cls) -> PromptRegistry:
         """Return the default prompt registry for current downstream consumers."""
-
         registry = cls()
         registry.register(
             PromptDefinition(
@@ -181,7 +173,6 @@ class PromptRegistry(BaseModel):
     @staticmethod
     def _composite_key(prompt_id: str, version: int) -> str:
         """Build the storage key for a versioned prompt."""
-
         return f"{prompt_id}:v{version}"
 
 
@@ -234,7 +225,6 @@ class Translation(BaseModel):
     @classmethod
     def validate_translation_language(cls, value: str) -> str:
         """Validate translation language codes."""
-
         return value
 
 

@@ -227,7 +227,6 @@ class LiveParityCatalogue:
         environment: OracleEnvironment,
     ) -> None:
         """Register an oracle under an explicit environment classification."""
-
         oracle_id = oracle.oracle_id
         if not oracle_id:
             raise RegistryValidationError("oracle_id must be non-empty")
@@ -249,7 +248,6 @@ class LiveParityCatalogue:
         return test-environment-only oracles; test-environment lookups never
         return production-only oracles.
         """
-
         try:
             oracle = self._oracles[oracle_id]
         except KeyError as exc:
@@ -271,7 +269,6 @@ class LiveParityCatalogue:
 
     def environment_of(self, oracle_id: str) -> OracleEnvironment:
         """Return the declared environment of a registered oracle."""
-
         try:
             return self._environments[oracle_id]
         except KeyError as exc:
@@ -282,7 +279,6 @@ class LiveParityCatalogue:
 
     def ids(self, *, environment: OracleEnvironment | None = None) -> tuple[str, ...]:
         """Return oracle ids, optionally filtered to those visible under ``environment``."""
-
         if environment is None:
             return tuple(sorted(self._oracles))
         return tuple(
@@ -302,7 +298,6 @@ def build_planned_operations(
     verification flow, useful for static-analysis tests that assert no
     oracle declares a forbidden operation under any policy.
     """
-
     operations = oracle.planned_operations(payload, expected=expected)
     if not isinstance(operations, tuple):
         raise RegistryValidationError(f"oracle {oracle.oracle_id!r} planned_operations must return a tuple")
@@ -323,7 +318,6 @@ def pre_flight_oracle_operations(
     the oracle must not be invoked when this raises, since the planned set
     contains a step the policy forbids.
     """
-
     operations = build_planned_operations(oracle, payload, expected=expected)
     for index, operation in enumerate(operations):
         try:
@@ -349,7 +343,6 @@ def evaluate_planned_operations(
     Callers that prefer an exception-free interface use this; tests and
     dry-runs use it to inspect blocked verdicts.
     """
-
     operations = build_planned_operations(oracle, payload, expected=expected)
     blocked_reasons: list[str] = []
     for index, operation in enumerate(operations):
@@ -377,7 +370,6 @@ def assert_oracle_operations_allowed(
     that the guard is the *only* gate before any side-effecting code, even
     when the oracle reuses an externally constructed operation list.
     """
-
     for index, operation in enumerate(operations):
         try:
             assert_remote_operation_allowed(policy, operation)
@@ -418,7 +410,6 @@ def evaluate_cross_reference_applicability(
     governs combination: ``all`` requires every predicate to match;
     ``any`` requires at least one match.
     """
-
     if not decision.applicability_predicates:
         return CrossReferenceApplicability(
             cross_reference_id=decision.id,
@@ -469,7 +460,6 @@ def resolve_cross_reference_oracle(
     thread profile facts (legacy adapters, the audit) keep the old
     catalogue-only resolution path by omitting both arguments.
     """
-
     if oracle_id is None:
         raise RegistryValidationError(f"cross-reference {cross_reference_id!r} has no oracle binding to resolve")
     if decision is not None and profile_facts is not None:
@@ -508,7 +498,6 @@ def audit_oracle_bindings(
     The function never raises and never performs any network operation.
     Failure aggregation is the caller's job.
     """
-
     failures: list[str] = []
     for revision in modelo.revisions.values():
         for cross_reference in revision.live_cross_references:
@@ -560,7 +549,6 @@ def collect_applicability_declarations(
     ``(modelo_id, revision_id, cross_reference_id)`` for deterministic
     audit output.
     """
-
     declarations: list[CrossReferenceApplicabilityDeclaracion] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -597,7 +585,6 @@ def collect_orphan_oracle_ids(
     Order is the catalogue's lexicographic order for deterministic
     output.
     """
-
     bound: set[str] = set()
     modelo_tuple = tuple(modelos)
     for modelo in modelo_tuple:
@@ -633,7 +620,6 @@ def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> ReplayPaylo
     ``surface_label`` is interpolated into the error messages so callers
     can identify their oracle in failures (e.g. ``"AEAT NIF-IVA replay"``).
     """
-
     try:
         document = loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, JSONDecodeError) as exc:
@@ -785,7 +771,6 @@ def audit_registry_oracle_bindings(
     registry-validator's own failures. The function preserves the order
     of the input iterable so the report is deterministic.
     """
-
     failures: list[str] = []
     for modelo in modelos:
         failures.extend(audit_oracle_bindings(modelo, catalogue, environment=environment))

@@ -216,7 +216,6 @@ class RentaWebOpenOracle:
 
 def parse_renta_web_open_live_payload(payload: bytes) -> RentaWebOpenLivePayload:
     """Parse the optional JSON payload for Renta WEB Open verification."""
-
     if not payload:
         return RentaWebOpenLivePayload()
     try:
@@ -230,7 +229,6 @@ def parse_renta_web_open_live_payload(payload: bytes) -> RentaWebOpenLivePayload
 
 def equivalent_renta_web_open_value(expected: str, observed: str) -> bool:
     """Return true when dot or comma decimal renderings represent the same number."""
-
     if observed == expected:
         return True
     expected_decimal = _parse_decimal_text(expected)

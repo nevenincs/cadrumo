@@ -33,7 +33,6 @@ TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     """Return the runtime-created secure-object repository for ``bucket_id``."""
-
     from ...adapters.persistence.storage import inspect_bucket_storage_runtime
     from ...core.config import load_settings
 
@@ -48,7 +47,6 @@ def transaction_catalogue_object_key(bucket_id: str) -> str:
     must qualify with ``(bucket_id, tx_id)``; ``tx_id`` alone is unique
     only within one bucket.
     """
-
     trimmed = bucket_id.strip()
     if not trimmed:
         raise LedgerStorageError(
@@ -109,12 +107,10 @@ class TransactionCatalogueRepository:
     @property
     def bucket_id(self) -> str:
         """Return the profile bucket id this repository is bound to."""
-
         return self._bucket_id
 
     def exists(self) -> bool:
         """Return whether this bucket's transaction catalogue has been persisted."""
-
         return self._objects.exists(TX_BUCKET_NAMESPACE, self._object_key)
 
     def load(self) -> TransactionCatalogue:
@@ -219,7 +215,6 @@ class TransactionCatalogueRepository:
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work."""
-
         self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
         _log.info(
             "saved transaction catalogue bucket_id=%s object_key=%s entries=%d extra_writes=%d",

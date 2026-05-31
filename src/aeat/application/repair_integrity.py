@@ -212,7 +212,6 @@ def _build_repair_integrity_report(
 @contextmanager
 def active_bucket_repair_session() -> Iterator[None]:
     """Open the active bucket session so integrity probes test decryptability, not bootstrap state."""
-
     provider: object | None = None
     try:
         from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session

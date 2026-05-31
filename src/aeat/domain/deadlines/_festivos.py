@@ -213,7 +213,6 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     missing or malformed (caller-recoverable; the surrounding deadline
     engine can degrade to weekend-only shifts).
     """
-
     path = _calendar_path(year)
     if not path.exists():
         raise DeadlineValidationError(
@@ -278,8 +277,8 @@ def _holidays_on(
     ccaa_code: CalendarCCAA | None,
 ) -> tuple[Holiday, ...]:
     """Return every holiday that matches ``candidate`` for the supplied
-    CCAA (and always every national holiday)."""
-
+    CCAA (and always every national holiday).
+    """
     matches: list[Holiday] = []
     for holiday in calendar.national:
         if holiday.holiday_date == candidate:
@@ -306,7 +305,6 @@ def is_business_day(
     callers with no tax-residence information get weekend + national
     detection but miss CCAA shifts.
     """
-
     if candidate.weekday() in _WEEKEND:
         return False
     return not _holidays_on(candidate, calendar=calendar, ccaa_code=ccaa_code)
@@ -326,7 +324,6 @@ def next_business_day(
     Semana Santa weekend + Jueves Santo + Viernes Santo + Lunes de
     Pascua = 4 days).
     """
-
     candidate = start
     for _ in range(14):
         if is_business_day(candidate, calendar=calendar, ccaa_code=ccaa_code):
@@ -350,7 +347,6 @@ def _reason_for(
     holidays: Iterable[Holiday],
 ) -> tuple[str, tuple[HolidayJurisdiction, ...], tuple[str, ...]]:
     """Build the structured shift reason for one non-business day."""
-
     if candidate.weekday() == 5:
         weekend_token = "sabado"
     elif candidate.weekday() == 6:
@@ -397,7 +393,6 @@ def shift_deadline(
     year. Callers that already hold the calendar may pass it directly
     to avoid a second lookup.
     """
-
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
 

@@ -96,13 +96,11 @@ class ParityTapeReplayReport(ParityTapeModel):
 
 def load_parity_scenario(path: Path) -> ParityScenario:
     """Load one parity scenario from JSON."""
-
     return ParityScenario.model_validate_json(path.read_text(encoding="utf-8"))
 
 
 def save_parity_scenario(scenario: ParityScenario, path: Path) -> Path:
     """Persist one parity scenario to JSON."""
-
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(scenario.model_dump_json(indent=2), encoding="utf-8")
     return path
@@ -110,13 +108,11 @@ def save_parity_scenario(scenario: ParityScenario, path: Path) -> Path:
 
 def load_parity_tape(path: Path) -> ParityTape:
     """Load one parity tape from JSON."""
-
     return ParityTape.model_validate_json(path.read_text(encoding="utf-8"))
 
 
 def save_parity_tape(tape: ParityTape, path: Path) -> Path:
     """Persist one parity tape to JSON."""
-
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(tape.model_dump_json(indent=2), encoding="utf-8")
     return path
@@ -124,7 +120,6 @@ def save_parity_tape(tape: ParityTape, path: Path) -> Path:
 
 def generate_parity_tape_path(root: Path, scenario_id: str, created_at: datetime) -> Path:
     """Return a deterministic archive path for one parity tape."""
-
     stamp = created_at.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
     return root / _slugify(scenario_id) / f"{stamp}.json"
 
@@ -138,7 +133,6 @@ def run_parity_scenario(
     executable: str | None = None,
 ) -> ParityTape:
     """Execute one scenario against the registry and workbook parity backend."""
-
     workbook_path = _resolve_scenario_path(scenario.workbook_path, scenario_path=scenario_path)
     snapshot = _snapshot_for_scenario(scenario, registry_root=registry_root, source_root=source_root)
     workbook_root = _common_root(
@@ -178,7 +172,6 @@ def replay_parity_tape(
     executable: str | None = None,
 ) -> ParityTapeReplayReport:
     """Replay an archived tape against the current registry implementation."""
-
     current = run_parity_scenario(
         tape.scenario,
         registry_root=registry_root,

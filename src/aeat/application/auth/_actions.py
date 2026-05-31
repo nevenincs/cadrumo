@@ -20,7 +20,6 @@ def update_auth(
     subject: str | None = None,
 ) -> WorkflowState:
     """Update local auth readiness state."""
-
     auth = state.auth
     if isinstance(auth, dict):
         auth = AuthState.model_validate(auth)

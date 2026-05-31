@@ -110,7 +110,6 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     def require_default_object_key(self) -> str:
         """Return the singleton object key or raise when the namespace is multi-key."""
-
         if self.default_object_key is None:
             raise NamespaceRegistryError(f"namespace {self.namespace!r} does not define a singleton object key")
         return self.default_object_key
@@ -170,7 +169,6 @@ class StorageHierarchyRegistry(BaseModel):
 
     def namespace_by_key(self, key: str) -> SecureObjectNamespaceDefinition:
         """Return a namespace definition by registry key."""
-
         for namespace in self.namespaces:
             if namespace.key == key:
                 return namespace
@@ -178,7 +176,6 @@ class StorageHierarchyRegistry(BaseModel):
 
     def namespace_by_value(self, value: str) -> SecureObjectNamespaceDefinition:
         """Return a namespace definition by persisted namespace value."""
-
         for namespace in self.namespaces:
             if namespace.namespace == value:
                 return namespace
@@ -186,7 +183,6 @@ class StorageHierarchyRegistry(BaseModel):
 
     def path_by_key(self, key: str) -> StoragePathDefinition:
         """Return a path definition by registry key."""
-
         for path in self.paths:
             if path.key == key:
                 return path

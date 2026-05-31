@@ -98,7 +98,6 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
     channel routing can branch on the concrete Python type rather than
     re-parsing a ``str(value)`` rendering.
     """
-
     selector_index: dict[str, tuple[str, ...]] = {}
     for section in schema.sections:
         for field in section.fields:
@@ -131,7 +130,6 @@ def _inject_derived_marriage_facts(
     as explicit profile facts by an older tooling version) they are not
     overwritten.
     """
-
     raw_date = fact_index.get("renta_taxpayer.marriage_date")
     if not isinstance(raw_date, date):
         return
@@ -164,7 +162,6 @@ def _inject_derived_family_facts(
     Only the 2024 filing year is handled; other years are ignored until a
     dedicated binding is declared.
     """
-
     if filing_year != 2024:
         return
 
@@ -250,7 +247,6 @@ def resolve_profile_sourced_bindings(
     leave it ``None`` and the bucket's :class:`UserProfileRecord` is
     loaded. A bucket with no profile yields an empty result.
     """
-
     # A profile binding only matters to the engine when a formula
     # consumes it. Identity / export-layout profile bindings (the
     # taxpayer NIF, display name, ...) are projected onto the filing
@@ -333,7 +329,6 @@ def _resolve_one(
     binding: DataBindingDefinition, fact_index: Mapping[str, UserProfileFactValue]
 ) -> UserProfileFactValue | None:
     """Return the typed profile fact value for one profile binding, or None if absent."""
-
     for selector in profile_binding_selectors(binding.selector):
         value = fact_index.get(selector)
         if value is None:

@@ -67,7 +67,6 @@ def extract_pages_text_from_path(
             cannot open it, or when every page is empty (suggesting a
             scan-only / XFA PDF without an embedded text layer).
     """
-
     if not pdf_path.is_file():
         raise error_class(f"{not_found_label}: {pdf_path}")
     try:
@@ -89,7 +88,6 @@ def extract_pages_text_from_bytes(
     source_label: str = "in-memory PDF",
 ) -> tuple[str, ...]:
     """Extract text from PDF bytes without materialising a plaintext file."""
-
     try:
         with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
@@ -126,7 +124,6 @@ def extract_pages_text_concatenated(
     Raises:
         ``error_class``: When pdfplumber cannot open the file.
     """
-
     try:
         with pdfplumber.open(str(pdf_path)) as pdf:
             chunks: list[str] = []
@@ -161,7 +158,6 @@ def extract_pages_text_with_fast_path(
     When ``fast_path_extractor`` is ``None`` this function is equivalent
     to :func:`extract_pages_text_from_path`.
     """
-
     if fast_path_extractor is not None and pdf_path.is_file():
         fast_pages = fast_path_extractor(pdf_path)
         if fast_pages is not None:

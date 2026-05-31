@@ -54,7 +54,6 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     The raw key path is intentionally not carried in the context; the
     operator-facing surface only needs the resolved field label.
     """
-
     message_key = f"wizard.errors.{reason}"
     field_label = tr(str(question.prompt))
     full_context: dict[str, object] = {
@@ -84,7 +83,6 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
     three digits). The answer stays a string throughout so leading
     zeros are preserved; it is never int-coerced.
     """
-
     value = raw.strip()
     if not value and question.required and question.visible_when is None:
         raise _fail(question, "blank_text")
@@ -109,7 +107,6 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
 
 def validate_secret(raw: str, question: WizardQuestion) -> str:
     """Return the raw secret answer unchanged; reject blank required strings."""
-
     if not raw and question.required and question.visible_when is None:
         raise _fail(question, "blank_secret")
     return raw
@@ -128,7 +125,6 @@ def validate_confirm(raw: str, question: WizardQuestion) -> str:
     declared-``False``. A blank answer fails only for an
     unconditionally-required CONFIRM.
     """
-
     token = raw.strip().lower()
     if not token:
         if question.required and question.visible_when is None:
@@ -155,7 +151,6 @@ def validate_select(raw: str, question: WizardQuestion) -> str:
     an undeclared closed-set fact when left blank. Any non-blank answer
     must match a declared choice.
     """
-
     if not question.choices:
         raise _fail(question, "select_without_choices")
     value = raw.strip()
@@ -181,7 +176,6 @@ def validate_checkbox(raw: str, question: WizardQuestion) -> str:
     threaded into this validator. Every supplied token must match a
     declared choice; the canonical form is the sorted token set.
     """
-
     if not question.choices:
         raise _fail(question, "checkbox_without_choices")
     allowed = {choice.value for choice in question.choices}
@@ -196,7 +190,6 @@ def validate_checkbox(raw: str, question: WizardQuestion) -> str:
 
 def validate_path(raw: str, question: WizardQuestion) -> str:
     """Return the canonical filesystem string; reject blank required paths."""
-
     value = raw.strip()
     if not value:
         if question.required and question.visible_when is None:
@@ -208,7 +201,6 @@ def validate_path(raw: str, question: WizardQuestion) -> str:
 
 def validate_integer(raw: str, question: WizardQuestion) -> str:
     """Parse the answer as an integer and re-emit the canonical decimal form."""
-
     text = raw.strip()
     if not text:
         if question.required and question.visible_when is None:
@@ -234,7 +226,6 @@ _VALIDATORS = {
 
 def validate_widget_answer(question: WizardQuestion, raw: str) -> str:
     """Dispatch ``question.widget`` onto its widget-specific validator."""
-
     validator = _VALIDATORS[question.widget]
     return validator(raw, question)
 

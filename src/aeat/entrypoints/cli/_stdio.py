@@ -59,7 +59,6 @@ _HELP_TOKENS = frozenset({"--help", "-h"})
 
 def _help_surface_requested() -> bool:
     """Return whether the current invocation renders a ``--help`` surface."""
-
     return any(token in _HELP_TOKENS for token in sys.argv[1:])
 
 
@@ -88,7 +87,6 @@ def _ensure_help_render_width() -> Iterator[None]:
     so a DI-seam that bypassed the os.environ write would misrepresent
     the production contract.
     """
-
     _original = os.environ.get(_COLUMNS_ENV_VAR)
 
     if not _help_surface_requested():
@@ -167,7 +165,6 @@ def _reconfigure_stream(stream: TextIO | None) -> None:
     crashing the CLI startup over an encoding-tuning step is the
     wrong trade-off.
     """
-
     if stream is None:
         return
     reconfigure = getattr(stream, "reconfigure", None)
@@ -202,7 +199,6 @@ def configure_stdio_for_utf8(
     against a synthetic stream pass it in directly instead of
     monkeypatching ``sys``.
     """
-
     _set_windows_console_utf8()
     with _ensure_help_render_width():
         _reconfigure_stream(sys.stdout if stdout is None else stdout)

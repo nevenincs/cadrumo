@@ -66,7 +66,6 @@ class MintedRecovery(BaseModel):
 
 def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRecord:
     """Split the GCM wire shape into the `RecoveryRecord` field set."""
-
     ciphertext_with_tag = blob.ciphertext
     ciphertext = ciphertext_with_tag[:-_GCM_TAG_BYTES]
     tag = ciphertext_with_tag[-_GCM_TAG_BYTES:]
@@ -81,7 +80,6 @@ def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRe
 
 def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
     """Re-assemble an `EncryptedBlob` from the typed envelope fields."""
-
     nonce = base64.b64decode(envelope.nonce_b64.encode("ascii"), validate=True)
     ciphertext = base64.b64decode(envelope.wrapped_dek_b64.encode("ascii"), validate=True)
     tag = base64.b64decode(envelope.tag_b64.encode("ascii"), validate=True)
@@ -94,7 +92,6 @@ def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecover
     the 24-word mnemonic the operator must record. The mnemonic is the
     only handle on the recovery KEK; this function does NOT persist it.
     """
-
     recovery_key: RecoveryKey = generate_recovery_key()
     wrapped: WrappedMasterKey = wrap_master_key(master_key=dek, recovery_key=recovery_key)
     blob = wrapped.to_blob()
@@ -120,7 +117,6 @@ def unwrap_recovery_envelope(
     propagates unchanged; production callers omit it and the central
     ``decode_mnemonic`` is used.
     """
-
     resolved_decoder = decoder or decode_mnemonic
     try:
         entropy = resolved_decoder(mnemonic)
@@ -143,7 +139,6 @@ def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool
     verb. Catches `RecoveryVerificationError` and surfaces a boolean
     so the CLI renders the outcome without leaking detail.
     """
-
     try:
         unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     except RecoveryVerificationError:
@@ -166,7 +161,6 @@ def open_session_from_recovery(
     the function unwraps the DEK from the recovery envelope and yields
     a live session bound to `bucket_id`.
     """
-
     dek = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     return BucketSession.open(
         bucket_id=bucket_id,

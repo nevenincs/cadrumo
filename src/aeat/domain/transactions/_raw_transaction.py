@@ -186,5 +186,4 @@ class RawTransaction(BaseModel):
         decision so future display tweaks (placeholder strings, ellipses)
         land in one place.
         """
-
         return self.counterparty or ""

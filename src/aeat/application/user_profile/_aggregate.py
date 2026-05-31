@@ -85,7 +85,6 @@ class ProfileAggregate(BaseModel):
         undetectable at load. The label agreement check below is the
         structural defence against that torn-rename state.
         """
-
         if self.record.profile_id != self.profile_id:
             raise UserProfileValidationError(
                 f"aggregate profile_id {self.profile_id!r} disagrees with "

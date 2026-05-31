@@ -180,7 +180,6 @@ def validate_usage_ratio_reference(
     the percentage must match the referenced profile ratio so the stored
     transaction fact and its proportionality source cannot drift.
     """
-
     if category_id is None:
         raise UsageRatioValidationError("usage_ratio_id requires category_id on the ledger transaction")
     try:

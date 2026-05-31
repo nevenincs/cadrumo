@@ -731,7 +731,6 @@ class AeatAuthenticator:
         target_url: str | None = None,
     ) -> AeatLoginAssertion:
         """Provider-protocol alias for :meth:`verify_login`."""
-
         return await self.verify_login(session, target_url=target_url)
 
     async def capture_storage_state(self, session: AeatSession) -> Path:
@@ -1163,7 +1162,6 @@ class AeatAuthenticator:
 
     def _load_persisted_browser_session(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         """Load encrypted browser session state or invalidate the logical path."""
-
         try:
             persisted = _session_store.load(storage_state_path)
         except (AuthValidationError, ValidationError) as exc:

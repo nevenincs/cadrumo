@@ -70,7 +70,6 @@ def _get_session_store() -> SessionStoreProtocol:
 
 def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
     """Return a non-secret diagnostic suffix for a failed live assertion."""
-
     parts = [
         f"status={getattr(assertion, 'status_code', None)}",
         f"error={getattr(assertion, 'error_message', None)!r}",
@@ -165,7 +164,6 @@ def storage_state_paths(
     kind: AuthProviderKind | None = None,
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``."""
-
     from ..workflow._models import require_active_bucket_id
 
     resolved = kind or AuthProviderKind.CERTIFICATE
@@ -176,7 +174,6 @@ def storage_state_paths(
 
 def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
     """Load persisted AEAT session metadata for ``kind`` or the active provider."""
-
     if kind is None and settings.aeat_auth_provider is not None:
         kind = AuthProviderKind(settings.aeat_auth_provider.value)
     if kind is not None:
@@ -196,7 +193,6 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
 
 def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
     """Remove persisted encrypted sessions for ``kind`` or every supported provider."""
-
     removed: list[Path] = []
     kinds = [kind] if kind is not None else list(AuthProviderKind)
     for candidate_kind in kinds:
@@ -215,7 +211,6 @@ async def require_verified_aeat_session(
     target_url: str | None = None,
 ) -> AeatSession:
     """Return a verified active AEAT session without exposing provider mechanics."""
-
     provider_kind = _resolve_provider_kind(settings, kind)
     expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     persisted = load_persisted_session(settings, kind)
@@ -283,7 +278,6 @@ async def ensure_authenticated_aeat_session(
     5. optionally delete persisted session state for ``fresh``;
     6. authenticate and verify through the selected provider.
     """
-
     provider_kind = _resolve_provider_kind(settings, kind)
     expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     reset_status = (
@@ -420,7 +414,6 @@ def _provider_neutral_session_metadata(raw: dict[str, object]) -> PersistedAuthS
     common reuse contract, so this function validates and narrows that
     metadata instead of treating adapter-owned fields as corruption.
     """
-
     return PersistedAuthSession.model_validate(
         {
             "provider_kind": AuthProviderKind(str(raw["provider_kind"])),
@@ -466,7 +459,6 @@ def _assert_active_profile_identity_matches_provider(
     provider_kind: AuthProviderKind,
 ) -> str | None:
     """Fail closed before live auth can bind one taxpayer's session to another profile."""
-
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
     provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)

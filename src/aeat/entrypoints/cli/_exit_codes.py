@@ -59,7 +59,6 @@ def exit_with(code: ExitCode, *, message: str | None = None) -> None:
     Raises:
         :exc:`typer.Exit`: Always, with the integer value of ``code``.
     """
-
     if message:
         typer.echo(message, err=True)
     raise typer.Exit(int(code))

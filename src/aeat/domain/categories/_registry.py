@@ -29,7 +29,6 @@ from ._spending_category import SpendingCategory
 
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
     """Load one year-keyed spending-category profile TOML file."""
-
     resolved = path.resolve()
     try:
         stat = resolved.stat()
@@ -85,7 +84,6 @@ def load_category_profile_registry(
     override is supplied; the ``bundled_path`` boundary is the
     single resolution surface.
     """
-
     target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
@@ -119,7 +117,6 @@ def _load_category_profile_registry_cached(
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
     """Return the exact category profile registry for ``year``."""
-
     profiles = load_category_profile_registry().get(year)
     if profiles is None:
         raise CategoryValidationError(f"no category profile registry registered for year={year}")

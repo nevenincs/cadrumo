@@ -26,7 +26,6 @@ from ._layout import BucketPaths, bucket_paths
 
 def keystore_root(root: Path) -> Path:
     """Return the keystore parent ``<root>/keystore/`` (no IO)."""
-
     return root / KEYSTORE_DIRNAME
 
 
@@ -36,7 +35,6 @@ def keystore_path(root: Path, bucket_id: str) -> Path:
     Raises:
         ValueError: If ``bucket_id`` is empty or carries a path separator.
     """
-
     if not bucket_id:
         raise BucketValidationError("bucket_id must be non-empty")
     if "/" in bucket_id or "\\" in bucket_id:
@@ -52,7 +50,6 @@ def _is_under(child: Path, parent: Path) -> bool:
     followed because the call site validates configuration before any
     filesystem state exists.
     """
-
     try:
         resolved_child = child.resolve(strict=False)
         resolved_parent = parent.resolve(strict=False)
@@ -85,7 +82,6 @@ def validate_keystore_separation(
     Raises:
         ValueError: If the configured keystore path violates separation.
     """
-
     paths: BucketPaths = bucket_paths(root, bucket_id)
     target = configured_keystore if configured_keystore is not None else keystore_path(root, bucket_id)
 

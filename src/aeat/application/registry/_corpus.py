@@ -292,7 +292,6 @@ def list_registry_citations(
     locale: str | None = None,
 ) -> RegistryCitationsListReport:
     """Return topic-backed citation references from the local corpus."""
-
     resolved_command = command or RegistryCitationsListCommand()
     topics = _topic_projections(topic_catalogue, locale=locale)
     catalogue = load_normative_catalogue()
@@ -327,7 +326,6 @@ def show_registry_citation(
     locale: str | None = None,
 ) -> RegistryCitationShowReport:
     """Return one topic-backed citation reference from the local corpus."""
-
     topics = _topic_projections(topic_catalogue, locale=locale)
     catalogue = load_normative_catalogue()
     try:
@@ -375,7 +373,6 @@ def verify_registry_citations(
     locale: str | None = None,
 ) -> RegistryCitationsVerificationReport:
     """Verify the local citation corpus and return a typed application report."""
-
     topics = _topic_projections(topic_catalogue, locale=locale)
     report = verify_normative_catalogue()
     reference_count = 0
@@ -406,7 +403,6 @@ def list_registry_manuals(
     locale: str | None = None,
 ) -> RegistryManualsListReport:
     """Return discovered local manual parts as a typed application report."""
-
     resolved_command = command or RegistryManualsListCommand()
     topics = _topic_projections(topic_catalogue, locale=locale)
     parts = _discover_manual_parts(settings=settings)
@@ -442,7 +438,6 @@ def show_registry_manual(
     locale: str | None = None,
 ) -> RegistryManualShowReport:
     """Return one local manual part as a typed application report."""
-
     topics = _topic_projections(topic_catalogue, locale=locale)
     manual_id = _domain_manual_id(command.manual)
     try:
@@ -549,7 +544,6 @@ def list_registry_manual_rules(
     locale: str | None = None,
 ) -> RegistryManualRulesReport:
     """Return manual rules as a typed application report."""
-
     topics = _topic_projections(topic_catalogue, locale=locale)
     kind = _manual_rule_kind(command.kind)
     manual_id = _domain_manual_id(command.manual)
@@ -590,7 +584,6 @@ def verify_registry_manual(
     locale: str | None = None,
 ) -> RegistryManualVerificationReport:
     """Verify one local manual part and return a typed application report."""
-
     topics = _topic_projections(topic_catalogue, locale=locale)
     manual_id = _domain_manual_id(command.manual)
     report = verify_manual_dir(
@@ -652,7 +645,6 @@ def _localized(text: Mapping[str, str]) -> str:
     the authoritative ``es`` entry (guaranteed present by the
     normatives schema).
     """
-
     return text.get(output_language()) or text["es"]
 
 def _citation_reference_projection(
@@ -767,7 +759,6 @@ def _manual_part_projection(
 
 def registry_manual_id(value: str | RegistryManualId | ManualId) -> RegistryManualId:
     """Resolve an operator-facing registry manual id."""
-
     raw = value.value if isinstance(value, ManualId | RegistryManualId) else value
     try:
         return RegistryManualId(raw)

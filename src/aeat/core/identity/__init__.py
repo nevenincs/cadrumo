@@ -50,7 +50,6 @@ def _subject_tax_id_validator(value: str) -> str:
     re-raises as :class:`ValueError` while preserving the original
     cause, so callers see a uniform :class:`pydantic.ValidationError`.
     """
-
     try:
         return validate_spanish_tax_id(value)
     except IdentityError as exc:

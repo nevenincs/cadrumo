@@ -236,7 +236,6 @@ class OperatorSurfaceLogFields(BaseModel):
 
     def as_extra(self) -> Mapping[str, object]:
         """Return a logging ``extra`` payload with stable field names."""
-
         return {
             "contract_name": self.contract_name,
             "root_count": self.root_count,

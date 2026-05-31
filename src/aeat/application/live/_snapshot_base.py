@@ -116,7 +116,6 @@ def derive_snapshot_id_from_json(parts: dict[str, _CanonicalValue]) -> str:
     Decimals / datetimes / typed-IDs to JSON-safe scalars; the helper does
     not introspect Pydantic models.
     """
-
     canonical = json.dumps(
         parts,
         ensure_ascii=True,
@@ -143,7 +142,6 @@ def enforce_snapshot_state_invariants(
     Domain-specific Pydantic model validators wrap this helper so the same
     rules apply across Borrador100, Census, and future stateful services.
     """
-
     discard_metadata_present = (
         discarded_at is not None or bool(discarded_by) or bool(discard_reason)
     )
@@ -247,7 +245,6 @@ class SnapshotService[TPayload: BaseModel](ABC):
         Liskov conflict while preserving the operator-facing keyword-only
         signatures on each service.
         """
-
         snapshot_id = self._derive_snapshot_id(**kwargs)
         if self._repository.exists(snapshot_id):
             return self._repository.load(snapshot_id)

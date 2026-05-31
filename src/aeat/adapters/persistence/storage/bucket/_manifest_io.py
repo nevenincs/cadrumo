@@ -25,7 +25,6 @@ from ._manifest import BucketManifest
 
 def manifest_path(paths: BucketPaths) -> Path:
     """Return the canonical manifest path for the bucket."""
-
     return paths.bucket_dir / BUCKET_MANIFEST_FILENAME
 
 
@@ -55,7 +54,6 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
     small set of scalar keys plus the nested ``[kdf_params]`` table, so a
     hand-rolled emitter is bounded and reviewable.
     """
-
     kdf = manifest.kdf_params
     lines: list[str] = []
     lines.append(f"bucket_id = {_format_scalar(manifest.bucket_id)}")
@@ -97,7 +95,6 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     crash mid-write leaves either the previous good manifest or the new
     good manifest, never a torn intermediate.
     """
-
     target = manifest_path(paths)
     tmp = target.with_suffix(target.suffix + ".tmp")
     payload = _serialise_manifest(manifest)
@@ -114,7 +111,6 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
             a wrong type, or a malformed structure.
         tomllib.TOMLDecodeError: If the TOML is unparsable.
     """
-
     target = manifest_path(paths)
     text = target.read_text(encoding=_UTF_8_ENCODING)
     # ``tomllib.loads`` is typed ``dict[str, Any]`` upstream by stdlib

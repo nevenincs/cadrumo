@@ -241,7 +241,6 @@ class AeatSection(_Frozen):
         in a :class:`~aeat.core.errors.CoreValidationError` carrying an
         operator-facing recovery hint.
         """
-
         try:
             return AeatPre303Surface.model_validate(self.pre303_raw)
         except ValidationError as exc:
@@ -354,7 +353,6 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     ``importlib.resources`` so the resolution path is identical
     under editable installs and built wheels.
     """
-
     if path is not None:
         with path.open("rb") as handle:
             payload = tomllib.load(handle)

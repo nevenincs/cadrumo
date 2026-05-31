@@ -192,7 +192,6 @@ def aggregate_iva_ledger_observations_from_repositories(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations."""
-
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -209,7 +208,6 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
     declarable ledger facts; the category, rate, and flow axes must have
     been resolved upstream from invoice/operation evidence.
     """
-
     if candidate.category in {IvaCategory.UNKNOWN, IvaCategory.ERRONEOUS_INVOICE}:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.unsupported_iva_category"),
@@ -231,7 +229,6 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
 
 def validate_iva_ledger_observations(candidates: Iterable[IvaLedgerCandidate]) -> tuple[IvaLedgerObservation, ...]:
     """Validate every pre-classified IVA candidate in input order."""
-
     return tuple(validate_iva_ledger_observation(candidate) for candidate in candidates)
 
 def aggregate_iva_ledger_candidates(
@@ -247,7 +244,6 @@ def aggregate_iva_ledger_candidates(
     IVA and adjustments because those axes cannot be recovered from a
     transaction amount or direction without guessing.
     """
-
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     observations: list[IvaLedgerObservation] = []
     issues: list[IvaLedgerAggregationIssue] = []
@@ -278,7 +274,6 @@ def aggregate_iva_ledger_candidate_bindings(
     period: Period | str,
 ) -> dict[str, Decimal]:
     """Validate pre-classified candidates and resolve registry bindings."""
-
     aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
     if aggregation.issues:
         first = aggregation.issues[0]
@@ -311,7 +306,6 @@ def aggregate_iva_ledger_observations(
     period: Period | str,
 ) -> IvaLedgerAggregation:
     """Project classified ledger transaction tax facts into IVA observations."""
-
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     observations: list[IvaLedgerObservation] = []
     prorrata_references: list[ProrrataLedgerReference] = []
@@ -571,7 +565,6 @@ def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIs
 
 def iva_ledger_missing_fact_reasons(transaction: Transaction) -> tuple[IvaLedgerAggregationIssueReason, ...]:
     """Return missing IVA fact reasons for a transaction without projecting it."""
-
     reasons: list[IvaLedgerAggregationIssueReason] = []
     if transaction.taxable_base is None:
         reasons.append(IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE)

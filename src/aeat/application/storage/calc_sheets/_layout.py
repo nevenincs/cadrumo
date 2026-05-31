@@ -132,7 +132,6 @@ class SheetLayout(BaseModel):
         this to compile a `FormulaExpression` casilla leaf into an A1
         reference.
         """
-
         if casilla in self.calculos_cells:
             return self.calculos_cells[casilla]
         if casilla in self.entradas_cells:
@@ -219,7 +218,6 @@ def _select_active_brackets(
     engine emits to `Tarifas` are exactly the rows the runtime would
     consult for the same base value on the same filing date.
     """
-
     active = tuple(
         entry
         for entry in definition.brackets
@@ -242,7 +240,6 @@ def plan_layout(
             runtime's `_resolve_bracket` selection. When `None`, every
             bracket entry is emitted in `lower_bound` order.
     """
-
     value_column = _ENTRADAS_VALUE_COLUMN
     anchor_column = _TARIFFS_ANCHOR_COLUMN
 

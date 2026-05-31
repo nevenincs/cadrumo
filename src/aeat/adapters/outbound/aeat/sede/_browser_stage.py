@@ -69,7 +69,6 @@ async def run_playwright_stage[T](
     timeout_is_shape_change: bool = False,
 ) -> T:
     """Await a Playwright operation and emit uniform Sede failure modes."""
-
     try:
         return await operation
     except PlaywrightTimeoutError as exc:

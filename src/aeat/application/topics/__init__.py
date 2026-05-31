@@ -74,7 +74,6 @@ class TopicCatalogue(BaseModel):
         Raises:
             TopicNotFoundError: When ``slug`` is not in the catalogue.
         """
-
         for topic in self.topics:
             if topic.slug == slug:
                 return topic
@@ -82,7 +81,6 @@ class TopicCatalogue(BaseModel):
 
     def slugs(self) -> tuple[str, ...]:
         """Return every registered slug sorted alphabetically."""
-
         return tuple(sorted(topic.slug for topic in self.topics))
 
 def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
@@ -100,7 +98,6 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
             files present). Pydantic validation errors propagate
             verbatim from :class:`Topic` when a TOML row is malformed.
     """
-
     target = root if root is not None else _TOPIC_REGISTRY_ROOT
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))

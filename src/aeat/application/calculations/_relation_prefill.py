@@ -67,7 +67,6 @@ def _gather_observations_for_snapshot(
     runtime resolver can fold them through the declared aggregation
     in one pass.
     """
-
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
     requirements = relation_source_requirements(
         snapshot.revision,
@@ -115,7 +114,6 @@ def resolve_relations_from_local_store(
     `provenance="operator_manual"` so the engine emits a blank cell
     the operator can fill by hand.
     """
-
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else datetime.now(UTC)
     observations = _gather_observations_for_snapshot(snapshot, repository=repo)

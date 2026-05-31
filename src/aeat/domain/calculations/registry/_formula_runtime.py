@@ -181,7 +181,6 @@ def calculate_registry_snapshot(
     cannot flow through the Decimal ``binding_values`` channel; keeping
     them in a dedicated channel preserves the Decimal-only invariant.
     """
-
     _reject_non_decimal(inputs, "input")
     resolved_date_context = dict(date_context)
     resolved_date_context.setdefault("filing_period", date(snapshot.filing_year, 12, 31))
@@ -501,7 +500,6 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
     missing binding value for those sources is a caller-supply
     failure, not an authored suppression.
     """
-
     if binding.source != "previous_filing":
         return False
     try:

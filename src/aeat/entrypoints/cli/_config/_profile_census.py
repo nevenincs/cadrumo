@@ -90,7 +90,6 @@ def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_
 
 def register(profile_app: typer.Typer) -> None:
     """Attach the census subgroup to ``profile_app``."""
-
     census_app = typer.Typer(
         name="census",
         help=tr(

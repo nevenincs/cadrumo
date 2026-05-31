@@ -16,7 +16,6 @@ def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
     :class:`ReviewQueueRowPayload` shape; downstream JSON consumers
     rely on the registry rather than the application-side record.
     """
-
     return ReviewQueueRowPayload(
         item_id=row.item_id,
         kind=row.kind,
@@ -63,7 +62,6 @@ def review_queue(
     ),
 ) -> None:
     """List read-only review queue rows."""
-
     try:
         resolved_state = ReviewState(state.strip().lower())
         report = project_review_queue(kinds=kinds, source_kinds=source_kinds, state=resolved_state, modelo=modelo)
@@ -98,7 +96,6 @@ def review_show(
     ),
 ) -> None:
     """View one read-only review queue item."""
-
     try:
         row = project_review_item(item_id)
     except ReviewError as exc:

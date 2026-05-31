@@ -99,7 +99,6 @@ def assemble_observations_for_grouping(
     that have no matching assembler — those are registry layout
     declarations the application layer cannot consume yet.
     """
-
     source_kind = _GROUPING_DISPATCH.get(grouping)
     if source_kind is None:
         raise RegistryValidationError(
@@ -148,7 +147,6 @@ def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal
     Accepts any object with ``binding`` / ``row_index`` / ``value``
     attributes (including the pull adapter's frozen ``RowSetCellEdit``).
     """
-
     grouped: dict[int, dict[str, Decimal | str | None]] = {}
     for cell in cells:
         binding = str(cell.binding)
@@ -162,7 +160,6 @@ def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal
 
 def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
     """Return ``binding_id → selector.row_field`` for every row-producer binding."""
-
     lookup: dict[str, str] = {}
     for binding in revision.bindings:
         if (binding.aggregation or {}).get("op") != "rows":
@@ -206,7 +203,6 @@ def _optional_text_kwarg(
     AEAT-required fields — fabricating a legal value at the assembler
     boundary masks incomplete operator input.
     """
-
     raw = fields.get(key)
     if raw is None:
         return {}
@@ -231,7 +227,6 @@ def assemble_withholding_observations(
       * ``country_code`` — defaults to ``ES`` per the AEAT diseño de
         registro convention for unspecified perceptors.
     """
-
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
@@ -274,7 +269,6 @@ def assemble_related_party_observations(
     filing_year: int,
 ) -> tuple[RelatedPartyOperationObservation, ...]:
     """Reassemble per-operation related-party observations from row-set cells."""
-
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
@@ -313,7 +307,6 @@ def assemble_foreign_asset_observations(
     filing_year: int,
 ) -> tuple[Modelo720RowObservation, ...]:
     """Reassemble per-asset observations from row-set cells (modelo 720)."""
-
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_acquisition_date = date(filing_year, 12, 31)
@@ -351,7 +344,6 @@ def assemble_atribucion_observations(
     filing_year: int,
 ) -> tuple[AtributionMemberObservation, ...]:
     """Reassemble per-member atribución observations from row-set cells (modelo 184)."""
-
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
@@ -391,7 +383,6 @@ def assemble_refund_observations(
     filing_year: int,
 ) -> tuple[RefundOperationObservation, ...]:
     """Reassemble per-operation refund observations from row-set cells (modelo 360)."""
-
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_operation_date = date(filing_year, 12, 31)

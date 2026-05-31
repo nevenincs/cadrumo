@@ -177,7 +177,6 @@ class AuthClearResult(BaseModel):
 
 def list_operator_auth_providers() -> AuthProvidersReport:
     """Return implemented and reserved auth provider slots."""
-
     return AuthProvidersReport(providers=list_auth_providers())
 
 class AuthConfigureNoActiveBucketError(AeatError):
@@ -211,7 +210,6 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         AuthConfigureNoActiveBucketError: When no active profile bucket
             exists yet. The operator must run ``aeat config profile create NAME`` first.
     """
-
     from datetime import UTC, datetime
 
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -319,7 +317,6 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     read the same datum and cannot disagree. The live backend is probed
     (via the projection) for the ``available`` / ``health_*`` fields.
     """
-
     if provider is not None:
         get_auth_provider(provider)
 
@@ -342,7 +339,6 @@ def _auth_status_from_projection(projection: OperatorStateProjection) -> AuthSta
     canonical ``configured``, and ``backend_available`` mirrors the
     single canonical ``available``.
     """
-
     auth = projection.auth
     active = projection.active_profile
     return AuthStatusResult(
@@ -369,7 +365,6 @@ def _auth_configure_result(
     certificate_path: Path | None,
 ) -> AuthConfigureResult:
     """Build a redacted configuration result that exposes identity readiness."""
-
     from ..user_profile._projections import record_to_path_values
 
     active_profile = state.active_profile_bucket_id() or ""
@@ -438,7 +433,6 @@ def _identity_alignment_next_action(alignment: str) -> str:
     configuration command that supplies it; a missing or mismatched
     profile tax id routes to the profile editor / switcher.
     """
-
     if alignment == "clave_identity_missing":
         return tr("application.auth.operator.alignment.clave_identity_missing_next_action")
     if alignment == "profile_tax_id_missing":
@@ -463,7 +457,6 @@ def _identity_alignment_detail(
     compared values — the Cl@ve identity's DNI/NIE and the active
     profile's tax id — and the concrete step the operator must take.
     """
-
     if alignment == "matches" or alignment == "not_applicable":
         return ""
     if alignment == "mismatch":
@@ -492,7 +485,6 @@ def _certificate_completeness(
     selection but leaves the slot unusable; the operator must be told
     the configuration is incomplete, not that it succeeded.
     """
-
     if provider != AuthProviderKind.CERTIFICATE.value:
         return True, ""
     if certificate_path is None:
@@ -534,7 +526,6 @@ def test_operator_auth(provider: str | None = None) -> AuthTestResult:
     ``auth status`` reports no provider at all. Both surfaces report the
     same "no provider configured" state on the same state.
     """
-
     provider_kind = _provider_kind_or_none(provider)
     requested_provider = provider_kind.value if provider_kind is not None else None
 
@@ -563,7 +554,6 @@ def build_live_auth_preflight_report(
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
     """Return a redacted preflight report before a live read may trigger auth."""
-
     resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
@@ -679,7 +669,6 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
     answers the question ``auth status`` cannot: is there actually a
     usable session token on disk for this provider right now.
     """
-
     if not provider:
         return _LocalSessionProbe(
             present=False,
@@ -745,7 +734,6 @@ def _probe_configured_provider(provider: str, certificate_path: str) -> _Provide
     identity classifier. No network call is made; the probe is a pure
     local readiness check (round-5 M4).
     """
-
     if not provider:
         return _ProviderProbeOutcome(
             result=ProviderProbeResult.NO_PROVIDER,
@@ -774,7 +762,6 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
     health classifier so the probe distinguishes a corrupt envelope
     from an expired-but-readable certificate.
     """
-
     from ...adapters.outbound.aeat.auth.certificate import (
         CertificateError,
         CertificateHealthSeverity,
@@ -871,7 +858,6 @@ def _try_load_certificate_metadata(
     caller can classify the failure as ``corrupt`` without surfacing
     a stack trace to the operator.
     """
-
     from ...adapters.outbound.aeat.auth.certificate import CertificateBundle, load_certificate
 
     del bundle_bytes  # the loader reads the file via the bundle path
@@ -897,7 +883,6 @@ def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
     ``invalid_identity``; an unset identity as ``identity_unset``. The
     probe never contacts AEAT — it validates the local configuration.
     """
-
     from ...adapters.outbound.aeat.auth._clave_movil import (
         ClaveMovilConfigurationError,
         _classify_identity,
@@ -958,7 +943,6 @@ async def login_operator_auth(
     is off, or (b) the configured provider is locally incomplete
     (certificate path unset / file missing / unreadable). Round-5 B2.
     """
-
     resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
@@ -1026,7 +1010,6 @@ def clear_operator_auth(
     settings: Settings | None = None,
 ) -> AuthClearResult:
     """Clear workflow auth state, persisted sessions, and acquisition locks."""
-
     provider_kind = _provider_kind_or_none(provider)
     resolved_settings = settings or load_settings()
     removed_sessions: list[Path] = []
@@ -1143,7 +1126,6 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
     Settings has none, mirroring how :func:`inspect_operator_auth` and
     the state projection cross the env-var / workflow-state seam.
     """
-
     if provider_kind is AuthProviderKind.CERTIFICATE:
         cert_path = settings.aeat_certificate_path
         if cert_path is None:

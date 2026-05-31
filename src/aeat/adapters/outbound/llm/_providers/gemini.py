@@ -116,7 +116,6 @@ class GeminiAdapter(_ProviderAdapter):
             :exc:`aeat.adapters.outbound.llm.LLMProviderError`: When the API
                 returns any other HTTP error status.
         """
-
         parts: list[dict[str, str]] = []
         if request.system is not None:
             parts.append({"text": f"System instruction:\n{request.system}"})

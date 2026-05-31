@@ -102,7 +102,6 @@ def build_overview_agenda(
     the same date, the deterministic calendar ordering
     ``(closes_on, modelo, period)`` resolves the tie.
     """
-
     if horizon_days <= 0:
         raise OverviewAgendaError(f"horizon_days must be positive; got {horizon_days}")
 

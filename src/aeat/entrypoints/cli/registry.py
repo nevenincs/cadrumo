@@ -88,7 +88,6 @@ def inspect_registry_cmd(
     ] = None,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
-
     registry_root = _resolve_registry_root(registry_root)
     report = inspect_registry_tree(registry_root)
     _emit(
@@ -138,7 +137,6 @@ def verify_registry_cmd(
     ] = None,
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
-
     registry_root = _resolve_registry_root(registry_root)
     report = verify_registry_tree(registry_root, source_root=_resolve_source_root(source_root))
     _emit(
@@ -192,7 +190,6 @@ def audit_oracles_cmd(
     underlying catalogue error. Exit code is non-zero when failures
     exist so CI / pre-deploy pipelines can gate on a clean audit.
     """
-
     registry_root = _resolve_registry_root(registry_root)
     report = audit_registry_oracles(registry_root, environment=environment)
     lines = [
@@ -269,7 +266,6 @@ def verify_filed_state_cmd(
     ] = None,
 ) -> None:
     """Verify local registry calculation output against captured filed state."""
-
     report = verify_filed_state(
         observation_path=observation_path,
         source_observation_paths=tuple(source_observation_paths or ()),
@@ -341,7 +337,6 @@ def verify_workbooks_cmd(
     ] = None,
 ) -> None:
     """Run the read-only workbook parity backend verification."""
-
     report = verify_registry_workbooks(
         root=_resolve_workbook_root(root),
         limit=limit,
@@ -423,7 +418,6 @@ def run_parity_cmd(
     ] = None,
 ) -> None:
     """Run one stored parity scenario and archive the resulting tape."""
-
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
         registry_root=_resolve_registry_root(registry_root),
@@ -481,7 +475,6 @@ def replay_parity_cmd(
     ] = None,
 ) -> None:
     """Replay one archived parity tape against the current registry runtime."""
-
     report = replay_registry_parity(
         tape_path=tape_path,
         registry_root=_resolve_registry_root(registry_root),

@@ -128,7 +128,6 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
             has no registered rate for the destination MS / rate tier
             at the supply date.
     """
-
     rate = lookup_rate(
         candidate.destination_member_state,
         candidate.rate_kind,
@@ -165,7 +164,6 @@ def validate_oss_ioss_observation(
             substrate has no registered rate for the destination MS
             and rate tier at the supply date.
     """
-
     expected = _expected_iva_amount(candidate)
     persisted = candidate.iva_amount.quantize(Decimal("0.01"))
     if abs(persisted - expected) > _IVA_TOLERANCE:
@@ -214,7 +212,6 @@ def validate_oss_ioss_observations(
             has no registered rate for any candidate's destination /
             tier at its supply date.
     """
-
     return tuple(validate_oss_ioss_observation(candidate) for candidate in candidates)
 
 
@@ -248,7 +245,6 @@ def aggregate_oss_ioss_bindings(
             mismatches the destination MS rate by more than the
             tolerance.
     """
-
     observations = validate_oss_ioss_observations(candidates)
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 

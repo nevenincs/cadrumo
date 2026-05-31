@@ -63,7 +63,6 @@ def evaluate_idle(
         ValueError: If `configured_minutes` is not a strict positive
             integer.
     """
-
     if configured_minutes <= 0:
         raise StorageValidationError("configured_minutes must be a strict positive integer")
 

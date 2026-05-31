@@ -58,7 +58,6 @@ def _ccaa_choice_values() -> list[str]:
     localised redirect rather than a generic "not one of" error, but they
     are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
-
     from ...domain.profile._ccaa import CCAA
 
     common = [member.value for member in CCAA]
@@ -71,7 +70,6 @@ _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 def _fiscal_residency_choice_values() -> list[str]:
     """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
-
     from ...domain.deadlines._models import FiscalResidency
 
     return [member.value for member in FiscalResidency]
@@ -90,7 +88,6 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     flag choices never drift from the values the wizard catalogue and
     the profile schema validate against.
     """
-
     from ...domain.deadlines._models import (
         EntityType,
         IrpfEstimationRegime,
@@ -122,7 +119,6 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
     ``--situacion-familiar`` flag choices never drift from the values
     the wizard catalogue and the profile schema validate against.
     """
-
     from ...domain.deadlines._models import IrpfSpecialRegime
     from ...domain.profile import SituacionFamiliar
 
@@ -140,7 +136,6 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
 
 def _iva_regime_choice_values() -> list[str]:
     """Return the IVARegime choice tokens accepted by ``--iva-regime``."""
-
     from ...domain.deadlines._models import IVARegime
 
     return [member.value for member in IVARegime]
@@ -151,19 +146,16 @@ _IVA_REGIME_CHOICE_VALUES: list[str] = _iva_regime_choice_values()
 
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
-
     return f"--{question.id}"
 
 
 def _no_flag_name(question: WizardQuestion) -> str:
     """Map a CONFIRM question to its negative flag name."""
-
     return f"--no-{question.id}"
 
 
 def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     """Return the translation key used for the flag's ``--help`` text."""
-
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
@@ -417,7 +409,6 @@ assert not _missing_option_infos, (
 
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:
     """Return the questions whose value must be supplied in ``--quiet`` mode."""
-
     return tuple(
         question
         for section in flow.sections
@@ -431,7 +422,6 @@ def _missing_required_flags(
     canonical: dict[str, str],
 ) -> tuple[str, ...]:
     """Return the question ids whose canonical-token value is missing."""
-
     missing: list[str] = []
     for question in _required_flag_questions(flow):
         if question.id not in canonical or not canonical[question.id]:
@@ -450,7 +440,6 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
     must name the actual flags to add, never a raw Python identifier
     tuple.
     """
-
     return " ".join(f"--{question_id}" for question_id in missing)
 
 
@@ -470,7 +459,6 @@ def _scripted_from_canonical(
     projection and the runner desyncs the queue and feeds a question
     the wrong token.
     """
-
     from ._runner import _condition_satisfied
 
     answers: deque[str] = deque()
@@ -487,7 +475,6 @@ def _scripted_from_canonical(
 
 def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str | None:
     """Project a Typer-parsed flag value into the canonical-token form."""
-
     if value is None:
         return None
     if question.widget is WizardWidget.CONFIRM:
@@ -522,7 +509,6 @@ def _python_parameter(
     (basic identity vs. advanced regime questions) instead of one
     undifferentiated wall of flags.
     """
-
     _flag_name(question)
     try:
         option = _SETUP_OPTION_INFOS[question.id]
@@ -566,7 +552,6 @@ def _python_parameter(
 
 def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     """Build the three fixed mode-flag parameters."""
-
     del flow
     profile_name = inspect.Parameter(
         name="profile_name",
@@ -608,7 +593,6 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
     title so ``aeat config profile create NAME --help`` renders one help panel per
     :class:`WizardSection`.
     """
-
     parameters: list[inspect.Parameter] = []
     for section in flow.sections:
         section_title = tr(str(section.title))
@@ -622,7 +606,6 @@ def _collect_flag_values(
     kwargs: dict[str, object],
 ) -> dict[str, str]:
     """Project the closure's keyword arguments into the canonical-token dict."""
-
     canonical: dict[str, str] = {}
     for section in flow.sections:
         for question in section.questions:
@@ -641,7 +624,6 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     every other stored field is left untouched. No full-flow walk, no
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
-
     from ..user_profile._orchestration import profile_storage_session
     from ..workflow._persistence import workflow_state_repository
     from ._persistence import persist_patch
@@ -673,7 +655,6 @@ def _run_full_flow(
     question is collected even when its ``visible_when`` gate would
     hide it, so an explicitly-given flag value is always honoured.
     """
-
     from ..user_profile._orchestration import (
         profile_create_storage_span,
         profile_storage_session,
@@ -768,7 +749,6 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     so an operator is never walked through 40-odd questions only to
     have the persistence step reject the work.
     """
-
     question_params = _question_parameters(flow)
     mode_params = _mode_parameters(flow)
     parameters = (*mode_params, *question_params)

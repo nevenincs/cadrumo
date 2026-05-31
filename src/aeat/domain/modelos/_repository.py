@@ -55,12 +55,10 @@ class WorkUnitCatalogueRepository:
     @property
     def bucket_id(self) -> str | None:
         """Return the profile bucket id when this repository resolved one."""
-
         return self._bucket_id
 
     def exists(self) -> bool:
         """Return whether a work-unit catalogue object has been persisted."""
-
         return self._objects.exists(_WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY)
 
     def load(self) -> WorkUnitCatalogue:
@@ -75,7 +73,6 @@ class WorkUnitCatalogueRepository:
                 can catch a single typed error from the modelo
                 domain.
         """
-
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
@@ -135,7 +132,6 @@ def upsert_work_unit(catalogue: WorkUnitCatalogue, unit: WorkUnit) -> WorkUnitCa
     deterministic ``work_unit_id``; any existing entry under that
     id is replaced.
     """
-
     mapping = dict(catalogue.work_units)
     mapping[unit.work_unit_id] = unit
     return WorkUnitCatalogue(work_units=mapping)
@@ -147,7 +143,6 @@ def remove_work_unit(catalogue: WorkUnitCatalogue, work_unit_id: str) -> WorkUni
     Removing an absent id is a no-op that returns a value-equal
     catalogue. The original is not mutated.
     """
-
     if work_unit_id not in catalogue.work_units:
         return catalogue
     mapping = dict(catalogue.work_units)

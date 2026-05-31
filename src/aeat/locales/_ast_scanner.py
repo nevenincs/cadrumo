@@ -81,13 +81,11 @@ against concrete locale entries. No additional static registration is needed.
 
 def _is_dotted_literal(value: str) -> bool:
     """Return True when ``value`` matches the dot-notation key shape."""
-
     return bool(_KEY_LITERAL_RE.match(value))
 
 
 def _is_dynamic_translation_prefix(prefix: str) -> bool:
     """Return True when a dynamic dotted prefix belongs to the i18n catalogue."""
-
     root = prefix.split(".", 1)[0]
     return root in _DYNAMIC_TRANSLATION_ROOTS
 
@@ -102,8 +100,8 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     ``WizardCheckFinding`` verifier findings), direct
     ``tr("dotted.key")``/``t("dotted.key")`` calls, ``build_entry``
     portal-catalogue keys, and dotted-literal defaults for kw-only
-    ``translated_message``/``message_key`` parameters."""
-
+    ``translated_message``/``message_key`` parameters.
+    """
     findings: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
@@ -115,7 +113,6 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
 
 def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> None:
     """Pick up dotted-literal defaults for ``translated_message`` / ``message_key`` kwonly args."""
-
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
         if default is None or arg.arg not in {"translated_message", "message_key"}:
             continue
@@ -135,8 +132,8 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str]) -> None:
     kwargs with a dotted-literal value declares a live operator-facing
     translation key. This covers the ``ErrorCode(message_key=...)``
     registry rows and ``WizardCheckFinding(message_key=...)`` verifier
-    findings, neither of which carries an ``*Error`` callee name."""
-
+    findings, neither of which carries an ``*Error`` callee name.
+    """
     name = _callee_name(node.func)
     if name is None:
         return
@@ -158,8 +155,8 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     callee-agnostic: it covers exception constructors,
     ``super().__init__(...)`` delegations, ``ErrorCode(...)`` registry
     declarations, and ``WizardCheckFinding(...)`` verifier findings
-    alike."""
-
+    alike.
+    """
     for kw in node.keywords:
         if kw.arg not in {"message_key", "translated_message"}:
             continue
@@ -176,8 +173,8 @@ def _collect_build_entry_keys(node: ast.Call, findings: set[str]) -> None:
     ``purpose`` keys (and an optional ``notes`` tuple of keys) as keyword
     arguments rather than through a ``tr(...)`` call. The regex scanner
     and the ``tr``/``t`` call-site path both miss them, so resolve those
-    keyword arguments explicitly here."""
-
+    keyword arguments explicitly here.
+    """
     for kw in node.keywords:
         if kw.arg in {"label", "purpose"}:
             value = _dotted_literal_value(kw.value)
@@ -208,7 +205,6 @@ def _dotted_literal_value(node: ast.expr | None) -> str | None:
     must be a Constant, its value must be a string, and the string must
     match the dotted-literal shape.
     """
-
     if (
         isinstance(node, ast.Constant)
         and isinstance(node.value, str)
@@ -245,7 +241,6 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
     the head ``topic.`` ends in a dot; ``f"plain text {value}"``
     does not.
     """
-
     findings: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.JoinedStr):
@@ -271,7 +266,6 @@ def _extract_concat_prefixes(tree: ast.AST) -> set[str]:
     Matches the dynamic-key pattern ``tr("cli.registry.metrics." + key)``
     where the literal carries the registered key prefix.
     """
-
     findings: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -312,7 +306,6 @@ def scan_source_tree(root: Path) -> set[str]:
     separate parity check that asserts at least one concrete locale
     entry exists under each declared namespace prefix.
     """
-
     findings: set[str] = set()
     for module in root.rglob("*.py"):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
@@ -342,7 +335,6 @@ def scan_namespace_markers(root: Path) -> set[str]:
     parity check when at least one concrete locale key starts with
     its prefix.
     """
-
     findings: set[str] = set()
     for module in root.rglob("*.py"):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:

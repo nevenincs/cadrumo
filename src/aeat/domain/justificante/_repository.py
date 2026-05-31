@@ -41,12 +41,10 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
 
     def list_csvs(self) -> tuple[str, ...]:
         """Return every justificante CSV persisted in this repository."""
-
         return tuple(self.iter_ids())
 
     def iter_justificantes(self) -> Iterator[Justificante]:
         """Yield every persisted justificante, in lexicographic CSV order."""
-
         yield from self.iter_records()
 
 

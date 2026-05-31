@@ -35,7 +35,6 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
 
     def list_submission_ids(self) -> tuple[str, ...]:
         """Return every submission id persisted in this repository."""
-
         return tuple(self.iter_ids())
 
     def iter_submissions(self) -> Iterator[ModeloPresentado]:

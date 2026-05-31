@@ -49,7 +49,6 @@ def _install_cross_domain_snapshot_checks() -> None:
     composition root happening to import ``renta`` before the first M100
     snapshot.
     """
-
     global _cross_domain_checks_installed
     if _cross_domain_checks_installed:
         return
@@ -69,7 +68,6 @@ def build_snapshot(
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot."""
-
     source_root_key = str(source_root.expanduser().resolve())
     key = (id(modelo), id(catalogues), source_root_key, filing_year, period, on, revision_id)
     cached = _SNAPSHOT_CACHE.get(key)
@@ -91,7 +89,6 @@ def build_snapshot(
 
 def _validate_modelo_once(modelo: ModeloDefinition, catalogues: RegistryCatalogues, source_root_key: str) -> None:
     """Validate one immutable modelo/catalogue pair once per process."""
-
     key = (id(modelo), id(catalogues), source_root_key)
     cached = _VALIDATION_CACHE.get(key)
     if cached is not None and cached[0] is modelo and cached[1] is catalogues:
@@ -110,7 +107,6 @@ def _build_validated_snapshot(
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``."""
-
     _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})

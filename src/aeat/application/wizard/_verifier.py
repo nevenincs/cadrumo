@@ -204,7 +204,6 @@ _SETUP_CHECKS: tuple[Callable[[SetupAnswers], WizardCheckFinding], ...] = (
 
 def verify_setup_answers(answers: SetupAnswers) -> WizardCheckReport:
     """Run the closed setup-flow check set against ``answers``."""
-
     findings = tuple(check(answers) for check in _SETUP_CHECKS)
     return WizardCheckReport(findings=findings)
 

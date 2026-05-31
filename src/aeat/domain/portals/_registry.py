@@ -196,7 +196,6 @@ PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
 
 def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) -> Portal | None:
     """Resolve registry application consumers that identify portal dispatch entries."""
-
     for enum_prefix in (f"{Portal.__module__}.{Portal.__qualname__}.", "aeat.domain.portals.Portal."):
         if consumer.startswith(enum_prefix):
             member_name = consumer.removeprefix(enum_prefix)
@@ -247,7 +246,6 @@ def get_portal(portal: Portal | str) -> PortalMetadata:
 
 def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
     """Return portal ids bound to ``code`` by validated registry data."""
-
     try:
         try:
             modelo = resources().modelos.authority.validate_modelo(str(code))

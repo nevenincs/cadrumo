@@ -11,7 +11,6 @@ def _emit_completeness_gate_failures(
     revision: ModeloRevision,
 ) -> None:
     """Append a failure for every calculation-completeness manifest violation."""
-
     manifest = revision.completeness_manifest
     if manifest is None:
         return

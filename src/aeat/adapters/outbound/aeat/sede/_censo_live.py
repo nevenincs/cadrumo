@@ -78,7 +78,6 @@ async def fetch_g313_census(
         SedeNavigationError: when the session has no persisted browser
             state or the navigation itself fails.
     """
-
     settings = settings or Settings()
     if session.storage_state_path is None:
         raise SedeNavigationError(
@@ -161,7 +160,6 @@ def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
     the snapshot path keys stay aligned with the user-profile schema
     paths the comparison verb walks against.
     """
-
     pairs: list[tuple[str, str]] = []
     if fact_set.fiscal_address_cadastral_reference is not None:
         pairs.append(

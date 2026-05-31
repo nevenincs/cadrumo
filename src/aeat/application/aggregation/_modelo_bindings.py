@@ -309,7 +309,6 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     invoice_repository: InvoiceCatalogueRepository | None = None,
 ) -> ModeloLedgerBindingAggregation:
     """Resolve ledger-backed registry bindings from the active bucket."""
-
     binding_values: dict[str, Decimal] = {}
     source_transaction_ids: set[str] = set()
     iva_issues: tuple[IvaLedgerAggregationIssue, ...] = ()
@@ -375,7 +374,6 @@ def resolve_modelo_ledger_binding_values_from_repositories(
 
 def aggregation_period_for_modelo(*, filing_year: int, period: str) -> str:
     """Translate registry/modelo period tokens to aggregation period tokens."""
-
     normalized = period.strip().upper()
     quarter_map = {"1T": "Q1", "2T": "Q2", "3T": "Q3", "4T": "Q4"}
     if normalized in quarter_map:

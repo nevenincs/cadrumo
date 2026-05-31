@@ -119,7 +119,6 @@ class Finca(_FincaRecord):
         use type. The rendimiento regime (Arts. 22-24) and the
         vivienda habitual exclusion both return ``False``.
         """
-
         return self.use_type in {UseType.OTRO_INMUEBLE_NO_AFECTO, UseType.VIVIENDA_DESOCUPADA}
 
 

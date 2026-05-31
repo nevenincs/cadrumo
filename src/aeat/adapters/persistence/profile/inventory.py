@@ -36,7 +36,6 @@ def load_inventory() -> tuple[InventoryLedger, ...]:
     Returns:
         Tuple of persisted inventory ledgers, empty when no envelope exists.
     """
-
     return InventoryLedgerRepository().load().ledgers
 
 
@@ -49,7 +48,6 @@ def save_inventory(ledgers: tuple[InventoryLedger, ...]) -> Path:
     Returns:
         Logical path identifying the secure object.
     """
-
     repository = InventoryLedgerRepository()
     repository.save(InventoryLedgerDocument(ledgers=ledgers))
     return repository.envelope_path
@@ -68,7 +66,6 @@ def create_inventory_ledger(ledger: InventoryLedger) -> InventoryLedgerDocument:
         :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When a ledger
             with the same ``(actividad_id, year)`` pair already exists.
     """
-
     return InventoryLedgerRepository().create(ledger)
 
 
@@ -93,7 +90,6 @@ def record_movement(
             target ledger does not exist, the movement id is duplicated,
             or the resulting valuation is invalid.
     """
-
     return InventoryLedgerRepository().record_movement(
         actividad_id,
         movement,
@@ -117,19 +113,16 @@ class InventoryLedgerRepository:
                 engine; production callers leave it ``None`` and the
                 repository self-resolves from settings.
         """
-
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
-
         return Path("db://secure_objects") / _INVENTORY_NAMESPACE / INVENTORY_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
         """Logical lock marker; SQL transactions govern writes."""
-
         return Path("db://secure_objects") / _INVENTORY_NAMESPACE / "inventory-ledger.lock"
 
     def load(self) -> InventoryLedgerDocument:
@@ -142,7 +135,6 @@ class InventoryLedgerRepository:
             :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
                 envelope exists but cannot be loaded or decrypted.
         """
-
         try:
             record = self._objects.load(
                 _INVENTORY_NAMESPACE,
@@ -162,7 +154,6 @@ class InventoryLedgerRepository:
         Args:
             document: Ledger document to encrypt and write.
         """
-
         self._save_unlocked(document)
         _log.info("saved %d inventory ledgers to secure object %s", len(document.ledgers), self._object_key)
 
@@ -179,7 +170,6 @@ class InventoryLedgerRepository:
             :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When a
                 ledger with the same ``(actividad_id, year)`` pair exists.
         """
-
         current = self._load_unlocked()
         if any(
             existing.actividad_id == ledger.actividad_id and existing.year == ledger.year
@@ -214,7 +204,6 @@ class InventoryLedgerRepository:
                 target ledger does not exist, the movement id is duplicated,
                 or the resulting valuation is invalid.
         """
-
         ledgers = list(self._load_unlocked().ledgers)
         for index, ledger in enumerate(ledgers):
             if ledger.actividad_id == actividad_id and ledger.year == year:

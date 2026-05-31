@@ -202,7 +202,6 @@ def reconcile_modelo_303_iva_compensation(
     The local side is not recomputed here. It is read through the same
     previous-filing binding resolver used by the calculation chain.
     """
-
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
         raise IvaCompensationReconciliationInputError(
             "IVA compensation wallet reconciliation only applies to Modelo 303"
@@ -269,7 +268,6 @@ def reconcile_iva_compensation_wallet(
     prior compensation balance; zero is legally certain and does not require
     operator review.
     """
-
     if wallet is not None:
         _validate_wallet_matches_snapshot(
             wallet,

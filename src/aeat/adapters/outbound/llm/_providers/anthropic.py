@@ -86,7 +86,6 @@ class AnthropicAdapter(_ProviderAdapter):
                 authentication failures, bad requests, connection /
                 timeout failures, and non-2xx API status codes.
         """
-
         user_message: MessageParam = {"role": "user", "content": request.prompt}
         messages: tuple[MessageParam, ...] = (user_message,)
         metadata: MetadataParam = {"user_id": request.request_id}

@@ -61,12 +61,12 @@ def coerce_decimal(
         Value returned when *value* is ``None``, an empty string, or
         cannot be parsed.  Defaults to ``None``.
 
-    Returns
+    Returns:
     -------
     Decimal | None
         Parsed decimal, or *default* when coercion fails.
 
-    Examples
+    Examples:
     --------
     >>> from decimal import Decimal
     >>> coerce_decimal("12.34")

@@ -48,7 +48,6 @@ def _rounding_rule_for(
     formula: FormulaDefinition,
 ) -> tuple[Literal["money", "integer", "none"], int | None]:
     """Map a registry rounding code to (rule_name, scale)."""
-
     if formula.rounding is None:
         return ("none", None)
     if formula.rounding == "money-2":
@@ -73,7 +72,6 @@ def _registry_sha(snapshot: RegistrySnapshot) -> str:
     The pull adapter uses this to refuse merges that would silently
     cross a registry boundary.
     """
-
     canonical = snapshot.model_dump_json(exclude_none=False, by_alias=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
 
@@ -296,7 +294,6 @@ def _resolve_scalar(parameter: ParameterDefinition, today: date) -> Decimal:
     so the workbook shows the parameter as it was at the filing date.
     Bracket-table parameters do not pass through this helper.
     """
-
     if parameter.data_type == "bracket_table":
         raise CalcSheetsEngineError(f"bracket_table parameter {parameter.id!r} has no scalar value")
     chosen: Decimal | None = None
@@ -376,7 +373,6 @@ def _tariff_value_cells(
     Scalar tariffs occupy one labelled cell at the parameter's anchor;
     bracket tables occupy the anchor + a header row + N bracket rows.
     """
-
     cells: list[SheetValueCell] = []
     for table in tariffs:
         anchor = table.anchor
@@ -618,7 +614,6 @@ def _relation_value_cells(
       who export without supplying relations get a valid workbook
       with a clearly-blank cell to fill in by hand).
     """
-
     by_relation = relation_values.by_relation()
     cells: list[SheetValueCell] = []
     for relation_id, anchor in layout.relation_cells.items():
@@ -720,7 +715,6 @@ def build_export_plan(
             detect stale prefills. Explicit `relation_values` take
             precedence over the resolver.
     """
-
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
     if relation_values is not None:
         relations = relation_values
@@ -780,7 +774,6 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     vertically with a one-row gap between blocks. The pull adapter
     reads row data from `first_data_row` downwards.
     """
-
     cohorts: dict[str, list[DataBindingDefinition]] = {}
     cohort_legal: dict[str, set[str]] = {}
     cohort_source: dict[str, set[str]] = {}
@@ -840,7 +833,6 @@ def _row_set_column_label(binding: DataBindingDefinition) -> str:
     under ``sheets.detalle.headers.*``; missing keys fall back to the
     binding id so the workbook still renders rather than 500-erroring.
     """
-
     # `binding.selector` is a Mapping; getattr returns the default for
     # every Mapping regardless of key, so the row_field lookup must go
     # through `.get`. The previous getattr-form silently dropped every
@@ -862,7 +854,6 @@ def _collect_cell_constraints(
     `Cálculos` map; manual / bound casillas resolve through the
     `Entradas` map. Informational casillas are skipped.
     """
-
     constraints: list[SheetCellConstraint] = []
     for casilla in revision.casillas:
         if casilla.constraints is None:

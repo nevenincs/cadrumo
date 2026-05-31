@@ -44,7 +44,6 @@ class WrappedDek(BaseModel):
 
 def _associated_data(bucket_id: str) -> bytes:
     """Compose the AEAD additional-authenticated-data for one bucket."""
-
     if not bucket_id:
         raise EncryptionError("bucket_id must be non-empty")
     return f"aeat.dek-wrap.v1:{bucket_id}".encode()
@@ -68,7 +67,6 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
         EncryptionError: If `kek` or `dek` is not 32 bytes, or `bucket_id`
             is empty.
     """
-
     if len(kek) != _KEK_BYTES:
         raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")
     if len(dek) != _DEK_BYTES:
@@ -98,7 +96,6 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
             verify (wrong KEK, wrong bucket id, tampered ciphertext or
             tag).
     """
-
     if len(kek) != _KEK_BYTES:
         raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")
 

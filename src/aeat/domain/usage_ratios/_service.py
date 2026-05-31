@@ -49,7 +49,6 @@ _USAGE_RATIO_NAMESPACE = "aeat.domain.usage_ratios"
 
 def usage_ratios_object_key(bucket_id: str) -> str:
     """Return the secure object key for one profile bucket's usage-ratio profile."""
-
     trimmed = bucket_id.strip()
     if not trimmed:
         raise UsageRatioPersistenceError("bucket_id must not be blank")
@@ -107,7 +106,6 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
 
 def _summarise_validation_errors(exc: ValidationError) -> str:
     """Render a short, operator-legible summary of a pydantic validation failure."""
-
     lines: list[str] = []
     for error in exc.errors():
         loc = error.get("loc", ())
@@ -218,7 +216,6 @@ def load_usage_ratios_with_census_guard(
             HOME_OFFICE override exists with ``raw_afectacion_ratio``
             unset.
     """
-
     profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
     home_office = _home_office_categories()
     persisted_home_office = {
@@ -281,7 +278,6 @@ def derive_home_office_ratios_from_census(
         :exc:`UsageRatioValidationError`: when ``raw_afectacion_ratio``
             is outside [0, 1].
     """
-
     if raw_afectacion_ratio < Decimal("0") or raw_afectacion_ratio > Decimal("1"):
         raise UsageRatioValidationError(
             f"raw_afectacion_ratio must be in [0, 1]; got {raw_afectacion_ratio}",

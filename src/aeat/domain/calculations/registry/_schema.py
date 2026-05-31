@@ -67,7 +67,6 @@ def _validate_nif_string(value: object) -> object:
     as `RegistryValidationError` so the schema boundary surfaces
     identifier-format problems through its established error type.
     """
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"NIF value must be a string, got {type(value).__name__}")
     try:
@@ -197,7 +196,6 @@ def _coerce_modelo_year(value: object) -> object:
     value outside ``RegistrySnapshotRef.modelo_year``'s declared
     ``ge=2000, le=2099`` range.
     """
-
     if isinstance(value, bool):
         raise RegistryValidationError("year value must not be a boolean")
     if isinstance(value, float):
@@ -241,7 +239,6 @@ def _validate_period_code(value: object) -> object:
 
     Modellers introducing a new form must extend this validator.
     """
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
     if not _PERIOD_CODE_RE.match(value):
@@ -274,7 +271,6 @@ def _validate_country_code(value: object) -> object:
     the supported codes, or (b) accept any ISO alpha-2 code with
     downstream business validation.
     """
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"country_code value must be a string, got {type(value).__name__}")
     if not _COUNTRY_CODE_RE.match(value):
@@ -314,7 +310,6 @@ def _validate_iban_string(value: object) -> object:
     four chars to the tail and converting letters to digits must be
     congruent to 1 mod 97).
     """
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"iban value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").replace("-", "").upper()
@@ -338,7 +333,6 @@ independently of a casilla declaration.
 
 def _validate_name_string(value: object) -> object:
     """Validate a personal or entity name: non-empty unicode within length bounds."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"name value must be a string, got {type(value).__name__}")
     stripped = value.strip()
@@ -358,7 +352,6 @@ _NIF_IVA_RE = re.compile(r"^[A-Z]{2}[A-Z0-9]{2,12}$")
 
 def _validate_nif_iva_string(value: object) -> object:
     """Validate an intracomunitario NIF-IVA: ISO country prefix plus identifier body."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"nif_iva value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").replace("-", "").upper()
@@ -401,7 +394,6 @@ _CCAA_CODES = frozenset(
 
 def _validate_ccaa_code(value: object) -> object:
     """Validate an autonomous-community code against the AEAT-supported set."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"ccaa_code value must be a string, got {type(value).__name__}")
     if value not in _CCAA_CODES:
@@ -420,7 +412,6 @@ _PROVINCE_CODE_RE = re.compile(r"^(0[1-9]|[1-4][0-9]|5[0-2])$")
 
 def _validate_province_code(value: object) -> object:
     """Validate a Spanish province code (01-52)."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"province_code value must be a string, got {type(value).__name__}")
     if not _PROVINCE_CODE_RE.match(value):
@@ -439,7 +430,6 @@ _POSTAL_CODE_RE = re.compile(r"^\d{5}$")
 
 def _validate_postal_code(value: object) -> object:
     """Validate a Spanish postal code (five digits)."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"postal_code value must be a string, got {type(value).__name__}")
     if not _POSTAL_CODE_RE.match(value):
@@ -456,7 +446,6 @@ _MUNICIPALITY_CODE_RE = re.compile(r"^\d{5}$")
 
 def _validate_municipality_code(value: object) -> object:
     """Validate a five-digit INE municipality code."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"municipality_code value must be a string, got {type(value).__name__}")
     if not _MUNICIPALITY_CODE_RE.match(value):
@@ -473,7 +462,6 @@ _BIC_RE = re.compile(r"^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
 
 def _validate_bic_string(value: object) -> object:
     """Validate a SWIFT BIC (ISO 9362): 8 or 11 characters."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"bic value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").upper()
@@ -492,7 +480,6 @@ _DATE_ISO_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 
 def _validate_calendar_date(value: object) -> object:
     """Validate a calendar date in either ISO 8601 or AEAT `ddmmaaaa` form."""
-
     if not isinstance(value, str):
         raise RegistryValidationError(f"date value must be a string, got {type(value).__name__}")
     if not (_DATE_ISO_RE.match(value) or _DATE_DDMMAAAA_RE.match(value)):
@@ -663,7 +650,6 @@ class PeriodSelector(RegistryModel):
 
     def includes_year(self, year: int) -> bool:
         """Return whether the selector covers a filing year."""
-
         if self.years:
             return year in self.years
         if self.year_from is None:
@@ -1921,7 +1907,6 @@ class CasillaConstraints(RegistryModel):
         `min_length`, `max_length`, `enum`) are surfaced through the
         sibling :meth:`violates_text` method.
         """
-
         if self.sign == "non_negative" and value < Decimal("0"):
             return f"value {value} violates sign=non_negative"
         if self.sign == "non_positive" and value > Decimal("0"):
@@ -1940,7 +1925,6 @@ class CasillaConstraints(RegistryModel):
         by consumers that resolve a casilla value into a string at
         evaluation time.
         """
-
         length = len(value)
         if self.min_length is not None and length < self.min_length:
             return f"value length {length} below min_length {self.min_length}"
@@ -2344,7 +2328,6 @@ class ExportLayoutDefinition(RegistryModel):
         records tuple is typically empty), so this check is a no-op
         for them.
         """
-
         if self.format != "fixed_width":
             return self
         normalised: dict[str, str] = {}
@@ -2364,7 +2347,6 @@ class ExportLayoutDefinition(RegistryModel):
 
 def _normalise_fichero_boe_encoding(declared: str) -> str:
     """Return the canonical form of a fichero-BOE encoding declaration."""
-
     return ENCODING_ALIAS_MAP.get(declared.strip().lower(), declared.strip().lower())
 
 

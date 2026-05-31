@@ -71,7 +71,6 @@ class AeatError(Exception):
 
     def __init_subclass__(cls, **kwargs: object) -> None:
         """Bind a registered :class:`ErrorCode` to each declared subclass."""
-
         super().__init_subclass__(**kwargs)
         from ._registry import bind_error_code
 
@@ -94,7 +93,6 @@ class AeatError(Exception):
             suggestion: Optional copy-paste recovery command override.
             translated_message: Optional multilingual message override.
         """
-
         if message is None:
             super().__init__()
         else:
@@ -202,7 +200,6 @@ class SiteHealthError(AeatError):
                 the detected non-OK state. The concrete record is the
                 adapter-layer ``SiteHealthStatus``.
         """
-
         state = status.state
         state_value = getattr(state, "value", state)
         evidence = status.evidence

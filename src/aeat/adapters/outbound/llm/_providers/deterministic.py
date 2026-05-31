@@ -65,7 +65,6 @@ class _DeterministicAdapter(_ProviderAdapter):
             :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: When
                 :attr:`error_mode` is ``"rate-limit"``.
         """
-
         self.calls += 1
         if self.error_mode == "provider":
             raise LLMProviderError("synthetic provider failure")

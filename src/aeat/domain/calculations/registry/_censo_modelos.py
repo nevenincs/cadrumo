@@ -49,7 +49,6 @@ class CensoModeloFoundationLogFields(BaseModel):
 
     def as_extra(self) -> dict[str, object]:
         """Return a logging ``extra`` payload with stable field names."""
-
         return {
             "service_name": self.service_name,
             "service_owner": self.service_owner,
@@ -147,7 +146,6 @@ class CensoModeloFoundationResult(BaseModel):
     @property
     def log_fields(self) -> CensoModeloFoundationLogFields:
         """Return stable logging fields for this foundation decision."""
-
         decision: Literal["active_work_unit_allowed", "historical_metadata_only"]
         decision = "active_work_unit_allowed" if self.active_work_unit_allowed else "historical_metadata_only"
         return CensoModeloFoundationLogFields(
@@ -194,12 +192,10 @@ class CensoModeloFoundationResult(BaseModel):
 
 def censo_modelo_ownership_map() -> tuple[CensoModeloOwnership, ...]:
     """Return the registry-owned census modelo ownership map."""
-
     return (censo_modelo_ownership(_ACTIVE_CENSUS_MODELO), censo_modelo_ownership(_HISTORICAL_CENSUS_MODELO))
 
 def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     """Build the immutable backend-owned census modelo foundation contract."""
-
     active_ownership = censo_modelo_ownership(_ACTIVE_CENSUS_MODELO)
     contract = CensoModeloFoundationContract(
         event_kinds=tuple(CensoModeloEventKind(kind) for kind in active_ownership.event_kinds),
@@ -220,12 +216,10 @@ def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
 @lru_cache(maxsize=1)
 def get_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     """Return the cached backend-owned census modelo foundation contract."""
-
     return build_censo_modelo_foundation_contract()
 
 def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     """Return the census ownership record for an exact string modelo code."""
-
     if not isinstance(modelo, str):
         raise RegistryValidationError("census modelo code must be a string")
     authority = resources().modelos.authority
@@ -298,12 +292,10 @@ def _historical_037_ownership_from_registry(authority: ValidatedRegistryAuthorit
 
 def is_active_censo_modelo(modelo: str) -> bool:
     """Return whether a census modelo may create active work units."""
-
     return censo_modelo_ownership(modelo).active_work_unit_allowed
 
 def resolve_censo_modelo_foundation(command: CensoModeloFoundationCommand) -> CensoModeloFoundationResult:
     """Resolve one census modelo foundation command through the registry owner."""
-
     ownership = censo_modelo_ownership(command.modelo)
     event_kinds = tuple(CensoModeloEventKind(kind) for kind in ownership.event_kinds)
     result = CensoModeloFoundationResult(
@@ -324,7 +316,6 @@ def resolve_censo_modelo_work_unit_foundation(
     period: str,
 ) -> CensoModeloFoundationResult | None:
     """Resolve a work-unit period through the census foundation when it applies."""
-
     ownership = _find_censo_modelo_ownership(modelo)
     if ownership is None:
         return None

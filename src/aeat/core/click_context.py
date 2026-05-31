@@ -31,7 +31,6 @@ def current_cli_flag(name: str) -> bool:
         ``True`` when the nearest ancestor binding for ``name`` is
         truthy; ``False`` otherwise.
     """
-
     ctx = click.get_current_context(silent=True)
     while ctx is not None:
         if isinstance(ctx.obj, dict) and name in ctx.obj:
@@ -56,7 +55,6 @@ def current_context_has_any(names: Iterable[str]) -> bool:
         context chain; ``False`` otherwise (including when no context is
         active).
     """
-
     ctx = click.get_current_context(silent=True)
     while ctx is not None:
         for name in names:
@@ -81,7 +79,6 @@ def json_output_requested() -> bool:
     Python parameter name fits their command without breaking the
     output-mode probe.
     """
-
     ctx = click.get_current_context(silent=True)
     while ctx is not None:
         if _context_layer_requests_json(ctx):
@@ -106,7 +103,6 @@ def _params_request_json(params: dict[str, object]) -> bool:
 
 def _context_value_is_json(value: object) -> bool:
     """Return ``True`` when a Click context value requests JSON output."""
-
     return isinstance(value, str) and value.strip().lower() == "json"
 
 

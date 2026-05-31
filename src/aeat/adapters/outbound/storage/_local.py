@@ -78,7 +78,6 @@ def _validate_label(label: str) -> str:
 
 def _filename(object_key_hmac: str, label: str, *, extension: str = _FILE_EXTENSION) -> str:
     """Build the canonical filename `<hmac_prefix_8>--<label><extension>`."""
-
     prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
     return f"{prefix}--{label}{extension}"
 
@@ -97,7 +96,6 @@ class LocalFileSystemProvider:
         constructor itself never touches the filesystem so test
         fixtures and settings-driven instantiation stay cheap.
         """
-
         self._root = Path(root)
 
     @property
@@ -122,7 +120,6 @@ class LocalFileSystemProvider:
         prefix; the label suffix is operator-mutable so we resolve by
         prefix to keep rename detection cheap.
         """
-
         namespace_dir = self._root / namespace
         if not namespace_dir.is_dir():
             return None
@@ -166,7 +163,6 @@ class LocalFileSystemProvider:
         afterwards; on sidecar-write failure the payload is removed so
         no orphaned object lingers without metadata.
         """
-
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
         label_clean = _validate_label(label)

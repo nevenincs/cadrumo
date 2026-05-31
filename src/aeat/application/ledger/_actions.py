@@ -182,7 +182,6 @@ def create_manual_transaction(
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist one manual ledger transaction in the command's bucket."""
-
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -231,7 +230,6 @@ def attach_manual_transaction_evidence(
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Attach purchase evidence or supplementary attachments to one ledger transaction."""
-
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -285,7 +283,6 @@ def _transaction_dedup_fingerprint(transaction: Transaction) -> str:
     fingerprint is derived from the current ``raw`` as a best-effort
     fallback — this keeps re-imports of legacy rows idempotent.
     """
-
     return transaction.import_fingerprint or derive_import_fingerprint(transaction.raw)
 
 
@@ -339,7 +336,6 @@ def _evaluate_import_rows(
     This single classifier backs both the persisting import path and
     the ``--dry-run`` preview, so the preview count is exact.
     """
-
     existing_fingerprints = {_transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()}
     existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
     imported: list[Transaction] = []
@@ -387,7 +383,6 @@ def import_ledger_transactions(
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerImportOperationResult:
     """Import provider transactions into one bucket catalogue and emit events."""
-
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -465,7 +460,6 @@ def import_ledger_source(
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file."""
-
     provider = _resolve_financial_provider(command.provider, command.path)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
@@ -585,7 +579,6 @@ def archive_manual_transaction(
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Mark one bucket-scoped ledger transaction as archived."""
-
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
@@ -616,7 +609,6 @@ def stash_manual_transaction(
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Mark one active bucket-scoped ledger transaction as stashed."""
-
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
@@ -649,7 +641,6 @@ def remove_manual_transaction(
     occurred_at: datetime | None = None,
 ) -> LedgerTransactionRemovalReport:
     """Remove one bucket-scoped ledger transaction after finalized-modelo checks."""
-
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger removal")
     trimmed_source_command = _require_source_command(source_command, operation="ledger removal")
@@ -756,7 +747,6 @@ def reset_ledger_catalogue(
     occurred_at: datetime | None = None,
 ) -> LedgerCatalogueResetReport:
     """Reset one bucket's ledger catalogue after finalized-modelo checks."""
-
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger reset")
     trimmed_source_command = _require_source_command(source_command, operation="ledger reset")
@@ -883,7 +873,6 @@ def export_ledger_transactions(
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
     """Export canonical bucket-local ledger transaction rows and emit an audit event."""
-
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -951,7 +940,6 @@ def get_manual_transaction(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> ManualLedgerTransactionResult:
     """Return one transaction from a bucket-scoped catalogue."""
-
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = _require_transaction(repository.load(), transaction_id)
     return _result(bucket_id, transaction, ())
@@ -963,7 +951,6 @@ def list_manual_transactions(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id."""
-
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = sorted(
         repository.load().values(),
@@ -982,7 +969,6 @@ def query_ledger_review_rows(
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions."""
-
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
     rows = _filter_ledger_review_rows(
@@ -1068,7 +1054,6 @@ def _ledger_review_filter_labels(query: LedgerReviewQuery) -> tuple[str, ...]:
 
 def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
     """Return the operator review status for a bucket-local transaction fact."""
-
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
     if transaction.business_classification in {
@@ -1082,7 +1067,6 @@ def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewSt
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
     """Return the canonical CLI/API projection for one ledger transaction."""
-
     raw = transaction.raw
     return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,
@@ -1114,7 +1098,6 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
 
 def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransactionReviewPayload:
     """Return one ledger transaction projection plus derived operator review status."""
-
     raw = transaction.raw
     return LedgerTransactionReviewPayload(
         transaction_id=transaction.transaction_id,
@@ -1147,7 +1130,6 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
 
 def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> LedgerTransactionResultPayload:
     """Return the canonical projection for a single ledger mutation/read result."""
-
     return LedgerTransactionResultPayload(
         bucket_id=result.ref.bucket_id,
         transaction_id=result.ref.transaction_id,
@@ -1158,7 +1140,6 @@ def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> 
 
 def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTransactionTrackingPayload:
     """Return durable event lineage fields for one ledger transaction."""
-
     return LedgerTransactionTrackingPayload(
         transaction_id=transaction.transaction_id,
         created_event_id=transaction.created_event_id,
@@ -1190,7 +1171,6 @@ def summarize_manual_transactions(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> LedgerStatusReport:
     """Return a read-only status summary for one bucket's ledger transactions."""
-
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
     status_counts: dict[LedgerReviewStatus, int] = {
@@ -1245,7 +1225,6 @@ def update_manual_transaction(
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Replace one manual ledger transaction with a validated command payload."""
-
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -1372,7 +1351,6 @@ def update_manual_transaction_fields(
     field-for-field identical to the stored transaction.  This is the explicit
     operator-driven counterpart to the automatic silent no-op (S14).
     """
-
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     current = _require_transaction(repository.load(), transaction_id)
     command = _command_from_patch(
@@ -1447,7 +1425,6 @@ def split_transaction(
       whole lineage chain in chronological order.
     - Catalogue + event are persisted atomically.
     """
-
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger split")
     trimmed_source_command = _require_source_command(source_command, operation="ledger split")
@@ -1683,7 +1660,8 @@ def _build_split_child_transaction(
     source_command: str,
 ) -> Transaction:
     """Build one child Transaction. ``split_lineage`` is filled in by the caller
-    once all child ids are known so siblings can reference each other."""
+    once all child ids are known so siblings can reference each other.
+    """
     parent_raw = parent.raw
     provider_transaction_id = f"split:{parent.transaction_id}:{index:04d}"
     raw_child = RawTransaction(
@@ -1758,7 +1736,6 @@ def merge_transactions(
       the entire split + merge chain in chronological order.
     - Catalogue + event are persisted atomically.
     """
-
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger merge")
     trimmed_source_command = _require_source_command(source_command, operation="ledger merge")
@@ -3417,7 +3394,6 @@ def bulk_classify_from_csv(
     and the remaining valid rows are applied (partial-success semantics
     matching the ledger import pattern).
     """
-
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = bucket_event_repository or BucketEventHistoryRepository()
 
@@ -3522,7 +3498,6 @@ def add_classification_rule(
     Raises :class:`ValueError` when ``description_pattern`` is not a
     valid regex (validated by :class:`~aeat.domain.transactions._classification_rule.LedgerClassificationRule`).
     """
-
     from typing import cast
 
     from ...domain.transactions._classification_rule import LedgerClassificationRule
@@ -3568,7 +3543,6 @@ def apply_classification_rules(
     the first matching rule wins. Match is ``re.search(pattern, description,
     re.IGNORECASE)``.
     """
-
     from typing import cast
 
     from ._rule_repository import LedgerClassificationRuleRepository

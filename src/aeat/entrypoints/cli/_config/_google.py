@@ -139,7 +139,6 @@ def _refusal_detail(exc: GoogleAuthError | OutboundStorageError) -> str:
     bubble up from the Google adapter with only a positional English
     `message` keep `str(exc)` — the adapter boundary owns that text.
     """
-
     translated_message = getattr(exc, "translated_message", None)
     if translated_message is not None:
         context = getattr(exc, "context", None) or {}
@@ -158,7 +157,6 @@ def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBo
     an unrecognised type falls back to the generic ``auth_failed``
     frame.
     """
-
     suffix = _GOOGLE_ERROR_KEY_SUFFIX.get(type(exc).__name__, "auth_failed")
     # Static-key inventory: cli.config.google.errors.{validation,client_not_registered,
     # client_revoked,token_revoked,token_expired,scope_insufficient,network,
@@ -204,7 +202,6 @@ def _coerce_client_json(path: Path) -> OAuthClient:
     applications. Only the Desktop ("installed") shape is accepted;
     other shapes raise `GoogleAuthValidationError`.
     """
-
     try:
         raw = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
@@ -257,7 +254,6 @@ def google_register(
     ),
 ) -> None:
     """Register a Cloud Console Desktop OAuth client for the active profile."""
-
     try:
         active = resolve_active_profile()
         client = _coerce_client_json(client_json)
@@ -293,7 +289,6 @@ def google_login(
     ),
 ) -> None:
     """Run the loopback IP + PKCE consent flow (or refresh an existing credential)."""
-
     try:
         active = resolve_active_profile()
         client = load_client(active)
@@ -359,7 +354,6 @@ def google_status(
     ctx: typer.Context,
 ) -> None:
     """Report the current Google OAuth session state for the active profile."""
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -410,7 +404,6 @@ def google_logout(
     subsequent `aeat config google login` can re-acquire a session
     without the operator re-importing the Cloud Console JSON.
     """
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -450,7 +443,6 @@ def google_folder_set(
     folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
 ) -> None:
     """Persist the Drive root folder id under the active profile."""
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -479,7 +471,6 @@ def google_folder_get(
     ctx: typer.Context,
 ) -> None:
     """Show the persisted Drive root folder id for the active profile."""
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -530,7 +521,6 @@ def google_sync_probe(
     resolves to a real folder, and (when `--no-read-only`) a sentinel
     file round-trips into `_probe/`.
     """
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -591,7 +581,6 @@ def _object_key_hmac(namespace: str, object_key: bytes) -> str:
     sha256(namespace + object_key); a per-profile keyed HMAC for
     unlinkability lands alongside P04 (snapshot escrow + HKDF).
     """
-
     return remote_mirror_object_key_hmac(namespace, object_key)
 
 
@@ -602,7 +591,6 @@ def _label_for(namespace: str) -> str:
     sanitised to alnum/dash/underscore. Per-namespace registered
     label-derivers override this default once they ship.
     """
-
     leaf = namespace.rsplit(".", 1)[-1] or "obj"
     safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in leaf)
     return safe[:32] or "obj"
@@ -701,7 +689,6 @@ def google_sync_push(
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
     key never leaves the host — only ciphertext reaches Drive.
     """
-
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -780,7 +767,6 @@ calc_app = typer.Typer(
 
 def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     """Hydrate refreshable Google credentials + the configured Drive root."""
-
     settings = load_settings()
     credentials = _build_google_credentials(profile=profile)
     root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
@@ -839,7 +825,6 @@ def google_sync_calc_export(
     local store the flag is a no-op and the workbook ships with blank
     relation cells the operator fills by hand.
     """
-
     from ....application.calculations import resolve_relations_from_local_store
 
     try:
@@ -942,7 +927,6 @@ def google_sync_calc_verify(
     backend↔Sheets parity is checked; verdict surfaces as
     `inconclusive` in that case.
     """
-
     from decimal import Decimal
 
     from ....application.storage.calc_sheets._parity_harness import (
@@ -1058,7 +1042,6 @@ def google_sync_calc_pull(
     the workbook was compiled against a different registry slice;
     callers should refuse to apply stale edits to the local store.
     """
-
     from ....adapters.outbound.google._calc_sheets_pull import (
         compute_from_pull,
         pull_operator_edits,

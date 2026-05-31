@@ -132,7 +132,6 @@ def _activate_engine(db_path: Path, monkeypatch: pytest.MonkeyPatch) -> Engine:
     responsible for disposing the returned engine when the check
     completes.
     """
-
     dispose_engine()
     url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", (db_path.parent / "storage-root").as_posix())
@@ -351,7 +350,6 @@ def assert_secure_repository_contract[T: BaseModel](
     count equals :data:`EXPECTED_CHECK_COUNT` so a silently-skipped
     check is visible at the self-test boundary.
     """
-
     executed = 0
 
     # CAST-RATIONALE-ENVELOPE-REPO-SUITE-CONTRACT-ERASE: ``case`` is typed

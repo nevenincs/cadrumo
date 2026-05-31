@@ -77,13 +77,11 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
 
 def implemented_auth_provider_ids() -> tuple[str, ...]:
     """Return provider ids accepted by auth commands that need an implementation."""
-
     return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE if entry.implemented)
 
 
 def known_auth_provider_ids() -> tuple[str, ...]:
     """Return every recognized provider id, including reserved slots."""
-
     return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE)
 
 

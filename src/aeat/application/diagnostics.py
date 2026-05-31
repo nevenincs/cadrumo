@@ -192,7 +192,6 @@ def _ensure_models_rebuilt() -> None:
     first use of a heavy function, when the real types are imported
     anyway. Idempotent: the rebuild runs once per process.
     """
-
     global _models_rebuilt
     if _models_rebuilt:
         return
@@ -237,7 +236,6 @@ def build_cli_version_report(
     ``--detail`` is on, the caller re-invokes with
     ``with_registry=True`` to populate the registry summary.
     """
-
     if with_registry:
         root = registry_root or bundled_path("registry", "aeat")
         summary = _build_registry_version_summary(root)
@@ -252,7 +250,6 @@ def build_cli_version_report(
 
 def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface."""
-
     _ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
@@ -373,7 +370,6 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
 def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthStatus:
     """Probe the configured AEAT browser target through the browser adapter."""
-
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var.
     from ..core.config import load_settings as _load_settings
@@ -383,7 +379,6 @@ def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthSt
 
 def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
     """Render one site-health status as compact repair output."""
-
     markers = ", ".join(status.evidence.detected_markers) or tr("cli.diagnostics.browser.markers_none")
     lines = [
         f"{tr('cli.diagnostics.browser.target_label')}\t{tr('cli.diagnostics.browser.target_browser')}",
@@ -447,7 +442,6 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
 
 def render_config_repair_text(report: ConfigRepairReport) -> str:
     """Render a compact human-readable repair report."""
-
     lines = [
         f"{tr('cli.diagnostics.repair.overall_label', default='Overall')}\t{report.overall}",
         (
@@ -493,7 +487,6 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
 
 def _repair_safe_wizard_status(report: WizardStatusReport) -> WizardStatusReport:
     """Return a repair-surface copy that does not expose the bucket UUID."""
-
     if report.active_profile is None:
         return report
     return report.model_copy(update={"active_profile": "active_profile"})
@@ -501,7 +494,6 @@ def _repair_safe_wizard_status(report: WizardStatusReport) -> WizardStatusReport
 
 def _finding_tag(finding: DiagnosticFinding) -> str:
     """Return the requirement prefix rendered ahead of a finding summary."""
-
     if finding.requirement == "required":
         return f"{tr('cli.diagnostics.repair.finding_required', default='required')}: "
     if finding.requirement == "optional":
@@ -636,7 +628,6 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     A failure routes the operator to a structured diagnostic rather
     than a runtime KeyError mid-calculation.
     """
-
     from datetime import date
 
     from ..domain.calculations.registry import ValidatedRegistryAuthority
@@ -684,7 +675,6 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
     both the registry's identity and its validation verdict. Disaster
     ADR Ruling 4 keeps this off every fast-path surface.
     """
-
     root = registry_root or bundled_path("registry", "aeat")
     return RegistryIntegrityReport(
         registry=_build_registry_version_summary(root),
@@ -694,7 +684,6 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
 
 def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     """Render pointer/manifest/profile-record health before semantic readiness."""
-
     active_profile = "active_profile" if health.active_profile is not None else "-"
     summary = tr(
         "cli.diagnostics.summary.profile_storage",
@@ -751,7 +740,6 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
     into an actionable list: the operator sees precisely which fields
     are unset and the one command that walks them through filling each.
     """
-
     from .user_profile._keys_validation import list_profile_key_records
 
     if state is None:
@@ -919,7 +907,6 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
     explicitly. This row fires when the host is Windows and
     ``pyproject.toml`` is newer than the venv marker.
     """
-
     if sys.platform != "win32":
         return None
     pyproject = PROJECT_ROOT / "pyproject.toml"
@@ -950,7 +937,6 @@ def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:
 
 def render_cli_version_text(report: CliVersionReport) -> str:
     """Render a compact text line for human-facing version output."""
-
     registry = report.registry
     if not registry.available:
         return tr(
@@ -1005,7 +991,6 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
     operator can confirm the blast radius before committing — the same
     preview shape ``reset-state --dry-run`` already offers.
     """
-
     from .repair_integrity import active_bucket_repair_session
 
     with active_bucket_repair_session():

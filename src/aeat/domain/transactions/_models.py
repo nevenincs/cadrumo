@@ -85,7 +85,6 @@ def normalise_movement_reference(value: str) -> str:
     characters is squeezed out. Two narratives that differ only in
     accents, casing, punctuation, or whitespace map to the same token.
     """
-
     decomposed = unicodedata.normalize("NFKD", value)
     stripped = "".join(char for char in decomposed if not unicodedata.combining(char))
     return _REFERENCE_NOISE.sub("", stripped.lower())
@@ -106,7 +105,6 @@ def derive_import_fingerprint(raw: RawTransaction) -> str:
     same statement (or the same movements exported as a different file
     format) recognises the row as already present.
     """
-
     effective_value_date = raw.value_date or raw.booked_date
     payload = json.dumps(
         {
@@ -130,7 +128,6 @@ def derive_movement_day_key(raw: RawTransaction) -> str:
     narrative. The import path uses this to warn the operator about a
     probable cross-format duplicate rather than silently importing it.
     """
-
     effective_value_date = raw.value_date or raw.booked_date
     return f"{effective_value_date.isoformat()}:{canonical_decimal_string(raw.amount)}"
 
@@ -212,7 +209,6 @@ def _validate_business_pct_coupling(
 
 def _coerce_identifier_tuple(raw: object) -> tuple[object, ...]:
     """Freeze inbound identifier sequences while rejecting scalar strings."""
-
     if isinstance(raw, tuple):
         return raw
     if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
@@ -222,7 +218,6 @@ def _coerce_identifier_tuple(raw: object) -> tuple[object, ...]:
 
 def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     """Trim identifier tuples and reject blanks or duplicates."""
-
     normalized = tuple(item.strip() for item in value if item.strip())
     if len(normalized) != len(value):
         raise TransactionValidationError("identifier fields must not contain blank values")
@@ -244,7 +239,6 @@ _NON_NEGATIVE_DECIMAL_HINTS = {
 
 def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
     """Reject negative monetary or percentage values when supplied."""
-
     if value is not None and value < Decimal("0"):
         raise TransactionValidationError(
             _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative")
@@ -857,14 +851,12 @@ class Transaction(BaseModel):
     @classmethod
     def _validate_identifier_tuple(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Trim and freeze attachment identifiers."""
-
         return _normalize_identifier_tuple(value)
 
     @field_validator("taxable_base", "iva_rate", "iva_amount")
     @classmethod
     def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""
-
         return _validate_non_negative_decimal(value, field_name=info.field_name or "")
 
     @field_validator("notes", "classification_reason")

@@ -35,7 +35,6 @@ _RECORD_VERSION = 1
 
 def save_client(profile: str, client: OAuthClient) -> None:
     """Persist the Cloud Console Desktop OAuth client for ``profile``."""
-
     _repository().save(
         namespace=_NAMESPACE_CLIENT,
         object_key=profile,
@@ -48,7 +47,6 @@ def save_client(profile: str, client: OAuthClient) -> None:
 
 def load_client(profile: str) -> OAuthClient | None:
     """Load the OAuth client for ``profile`` or return ``None`` when absent."""
-
     record = _repository().load(
         _NAMESPACE_CLIENT,
         profile,
@@ -62,7 +60,6 @@ def load_client(profile: str) -> OAuthClient | None:
 
 def save_token(profile: str, token: OAuthToken) -> None:
     """Persist the OAuth refresh token for ``profile``."""
-
     _repository().save(
         namespace=_NAMESPACE_TOKEN,
         object_key=profile,
@@ -75,7 +72,6 @@ def save_token(profile: str, token: OAuthToken) -> None:
 
 def load_token(profile: str) -> OAuthToken | None:
     """Load the OAuth refresh token for ``profile`` or return ``None``."""
-
     record = _repository().load(
         _NAMESPACE_TOKEN,
         profile,
@@ -89,7 +85,6 @@ def load_token(profile: str) -> OAuthToken | None:
 
 def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
     """Persist the OAuth audit metadata for ``profile``."""
-
     _repository().save(
         namespace=_NAMESPACE_METADATA,
         object_key=profile,
@@ -102,7 +97,6 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
 
 def load_metadata(profile: str) -> OAuthMetadata | None:
     """Load the OAuth audit metadata for ``profile`` or return ``None``."""
-
     record = _repository().load(
         _NAMESPACE_METADATA,
         profile,
@@ -116,7 +110,6 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
 
 def save_drive_config(profile: str, config: DriveConfig) -> None:
     """Persist the per-profile Drive backend configuration."""
-
     _repository().save(
         namespace=_NAMESPACE_DRIVE_CONFIG,
         object_key=profile,
@@ -129,7 +122,6 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
 
 def load_drive_config(profile: str) -> DriveConfig | None:
     """Load the per-profile Drive backend configuration or return ``None``."""
-
     record = _repository().load(
         _NAMESPACE_DRIVE_CONFIG,
         profile,
@@ -147,7 +139,6 @@ def delete_session(profile: str) -> tuple[bool, bool]:
     Returns:
         A pair `(token_removed, metadata_removed)`.
     """
-
     repo = _repository()
     token_removed = repo.delete(_NAMESPACE_TOKEN, profile)
     metadata_removed = repo.delete(_NAMESPACE_METADATA, profile)

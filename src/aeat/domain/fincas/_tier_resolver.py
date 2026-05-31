@@ -308,7 +308,8 @@ def _resolve_tier_70(
 def _resolve_tier_70_b_2(contract: Arrendamiento) -> TierResolution | None:
     """Ordinal 2.º — Public Admin tenant or Ley 49/2002 entity destining
     the dwelling to alquiler social, IMV beneficiary, or dwelling in a
-    public housing program with a rent cap."""
+    public housing program with a rent cap.
+    """
     if (
         contract.tenant_is_public_admin
         or contract.tenant_is_ley_49_2002_entity_with_social_use

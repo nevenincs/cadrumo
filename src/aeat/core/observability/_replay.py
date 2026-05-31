@@ -124,6 +124,7 @@ def replay_run(
 
     Args:
         run_id: Identifier of the recorded run to replay.
+
     Returns:
         The loaded :class:`RunTrace` of the original run.
 

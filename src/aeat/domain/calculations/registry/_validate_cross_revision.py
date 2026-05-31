@@ -74,7 +74,6 @@ class CrossRevisionCasillaDriftSummary:
 
 def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
     """Return the stable cross-revision fingerprint for a casilla."""
-
     return tuple(getattr(casilla, field) for field in _CROSS_REVISION_CASILLA_FIELDS)
 
 
@@ -106,7 +105,6 @@ def _revisions_overlap(left: object, right: object) -> bool:
 
 def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
     """Raise when a repeated casilla id drifts across revisions."""
-
     failures = _validate_cross_revision_casilla_consistency(modelos)
     if failures:
         raise RegistryValidationError(
@@ -127,7 +125,6 @@ def _validate_cross_revision_casilla_consistency(
     that needs explicit handling (either deprecate-and-rename or
     reconcile-to-canonical-form), never silent acceptance.
     """
-
     failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     for divergence in _iter_cross_revision_casilla_divergences(modelos):
         if not divergence.revisions_overlap:
@@ -154,7 +151,6 @@ def _validate_strict_cross_revision_casilla_continuity(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
     """Enforce explicit continuity decisions for opted-in declared surfaces."""
-
     failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     for modelo in modelos:
         for divergence in _iter_cross_revision_casilla_divergences((modelo,)):
@@ -253,7 +249,6 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     turning it into a load-time error before the schema has an explicit
     continuity/evolution contract.
     """
-
     if example_limit < 1:
         raise ValueError("example_limit must be at least 1")
 

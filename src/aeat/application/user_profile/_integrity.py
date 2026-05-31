@@ -73,7 +73,6 @@ def verify_profile_integrity(
         ProfileIntegrityError: If any store disagrees on the UUID, or
             the manifest and record disagree on the lifecycle status.
     """
-
     mismatches: list[str] = []
     if directory_name != profile_id:
         mismatches.append(f"bucket directory {directory_name!r}")

@@ -33,7 +33,6 @@ def _distinct_valid_nif(profile_id: str) -> str:
     of ``profile_id``; the control letter is computed so the result
     passes the NIF checksum validator.
     """
-
     digest = hashlib.sha256(profile_id.encode("utf-8")).hexdigest()
     number = int(digest, 16) % 100_000_000
     return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
@@ -89,7 +88,6 @@ def register_minimal_profile(
         ``profile.created`` / ``profile.selected`` workflow events
         appended.
     """
-
     merged: dict[str, str] = dict(_REQUIRED_PLACEHOLDERS)
     # Default the tax id to a profile-unique valid NIF so two
     # ``register_minimal_profile`` calls never collide on the

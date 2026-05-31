@@ -71,7 +71,6 @@ def activate_session(session: BucketSession) -> Iterator[None]:
             the column-level encryption key for the duration of the
             block.
     """
-
     token = _active_session.set(session)
     try:
         yield
@@ -93,7 +92,6 @@ def get_active_master_key() -> bytes:
             The diagnostic points the operator at ``aeat config
             profile switch NAME``.
     """
-
     session = _active_session.get()
     if session is None:
         raise NoActiveBucketSessionError(
@@ -110,7 +108,6 @@ def get_active_master_key() -> bytes:
 
 def has_active_bucket_session() -> bool:
     """Return whether an active :class:`BucketSession` is bound."""
-
     return _active_session.get() is not None
 
 

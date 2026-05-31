@@ -194,7 +194,6 @@ def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
     ``False``, which is indistinguishable from "not declared" — see
     :class:`PayerFact`.
     """
-
     match fact:
         case PayerFact.PAYS_WITHHELD_INCOME:
             return profile.has_employees or profile.pays_professionals_with_retencion
@@ -248,7 +247,6 @@ class ModeloApplicability(BaseModel):
         An attribution entity owes no cuota self-assessment, so a
         pass-through verdict is not an applicable obligation.
         """
-
         return self.verdict is ApplicabilityVerdict.APPLICABLE
 
 class ModeloApplicabilityRule(BaseModel):
@@ -329,7 +327,6 @@ class ModeloApplicabilityRule(BaseModel):
         entity-type, income-category, estimation-regime, and
         payer-fact axes.
         """
-
         if profile.entity_type is None:
             return _incomplete_applicability(self.modelo)
         if profile.entity_type not in self.applicable_entity_types:
@@ -395,7 +392,6 @@ class ModeloApplicabilityRule(BaseModel):
 
     def _not_applicable(self) -> ModeloApplicability:
         """Return the ``NOT_APPLICABLE`` applicability for this rule."""
-
         return ModeloApplicability(
             modelo=self.modelo,
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
@@ -544,7 +540,6 @@ def _incomplete_applicability(
             default) when the cause is an *undeclared taxpayer model* —
             the operator must declare their taxpayer type first.
     """
-
     reason = _INCOMPLETE_UNRULED_REASON if unruled else _INCOMPLETE_UNDECLARED_REASON
     return ModeloApplicability(
         modelo=modelo,
@@ -568,7 +563,6 @@ def _undetermined_applicability(modelo: str) -> ModeloApplicability:
     Args:
         modelo: The AEAT modelo identifier the verdict decides.
     """
-
     return ModeloApplicability(
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
@@ -1132,7 +1126,6 @@ a rationale pointing at the deferred expansion. See
 
 def has_applicability_rule(modelo: str) -> bool:
     """Return whether a seed applicability rule exists for ``modelo``."""
-
     return modelo in _MODELO_APPLICABILITY_RULES
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
@@ -1143,7 +1136,6 @@ def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     dictionary, so the registry rule table remains read-only from the
     public API.
     """
-
     return tuple(_MODELO_APPLICABILITY_RULES[modelo] for modelo in sorted(_MODELO_APPLICABILITY_RULES))
 
 def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
@@ -1156,7 +1148,6 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     autónomo. A legal / attribution entity needs no income category;
     the ``entity_type`` alone selects its tax.
     """
-
     if profile.entity_type is None:
         return False
     if profile.entity_type is EntityType.NATURAL_PERSON:
@@ -1224,7 +1215,6 @@ def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
         selects, or :attr:`TaxRoute.INCOMPLETE` when ``entity_type``
         is undeclared.
     """
-
     if profile.entity_type is None:
         return TaxRoute.INCOMPLETE
     return _TAX_ROUTE_FOR_ENTITY_TYPE[profile.entity_type]
@@ -1258,7 +1248,6 @@ def derive_modelo_applicability(
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
     """
-
     _today = today if today is not None else date.today()
 
     # An impatriado (LIRPF Art. 93 special regime) is taxed as a non-resident
@@ -1411,7 +1400,6 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
     a rationale pointing at the entity-type axis — the modality
     question only meaningfully applies to an IS contribuyente.
     """
-
     if profile.entity_type is None or profile.entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,

@@ -121,7 +121,6 @@ def build_draft(
         ModeloBuilderError: If the registry has no matching snapshot,
             inputs are malformed, or strict validation fails.
     """
-
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
     snapshot_ref = _RegistrySnapshotRef(

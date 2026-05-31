@@ -223,7 +223,6 @@ def census_business_pct_for(
     been applied yet, signalling to the caller that the operator's
     explicit value (or the registry default) governs instead.
     """
-
     if raw_afectacion_ratio is None:
         return None
     if family_for(category) not in _HOME_OFFICE_FAMILIES:
@@ -263,7 +262,6 @@ def census_override_warning(
         A :class:`RatiosCensoOverrideWarning` if a warning should be
         emitted, otherwise ``None``.
     """
-
     if family_for(category) not in _HOME_OFFICE_FAMILIES:
         return None
     rule = resolve_category_profiles(year)[category].proportionality
