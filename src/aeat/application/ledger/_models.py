@@ -27,6 +27,7 @@ from ...domain.transactions._models import (
     TransactionLifecycleLineageEntry,
 )
 from ..export import ExportSerializationFormat
+from ..review import LedgerReviewStatus
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _TRANSFER_ALLOWED_STATES = frozenset(
@@ -336,7 +337,7 @@ class LedgerTransactionReviewPayload(BaseModel):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
-    review_status: str = Field(min_length=1)
+    review_status: LedgerReviewStatus
     classified_by: str = Field(min_length=1)
     source_jurisdiction: str | None = None
 
@@ -360,7 +361,7 @@ class LedgerTransactionResultPayload(BaseModel):
 
     bucket_id: BucketId
     transaction_id: TransactionId
-    review_status: str = Field(min_length=1)
+    review_status: LedgerReviewStatus
     transaction: LedgerTransactionPayload
 
 
