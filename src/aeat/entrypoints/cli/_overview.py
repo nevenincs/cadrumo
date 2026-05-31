@@ -16,10 +16,19 @@ from ._common import (
     _bad,
     _canonical_period,
     _emit,
+    _emit_envelope,
     _load_drafts,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
+)
+from ._overview_payloads import (
+    OverviewStatusResult,
+    OverviewCalendarResult,
+    OverviewCalendarAllProfilesResult,
+    OverviewAgendaResult,
+    OverviewBacklogResult,
+    OverviewExplainResult,
 )
 from ._overview_rendering import render_cli_overview_status_lines
 
@@ -55,25 +64,29 @@ def overview_status(
         drafts = _load_drafts()
         canonical = _canonical_period(period)
         per_modelo_drafts = [d for d in drafts if d.period == canonical]
-        payload = {
-            "period": canonical,
-            "drafts": [
-                {"draft_id": d.draft_id, "modelo": d.modelo, "status": d.status.value} for d in per_modelo_drafts
+        from ._overview_payloads import OverviewDraftPayload
+
+        typed_period = OverviewStatusResult(
+            period=canonical,
+            drafts=[
+                OverviewDraftPayload(draft_id=d.draft_id, modelo=d.modelo, status=d.status.value)
+                for d in per_modelo_drafts
             ],
-            "verbose": verbose,
-        }
+            verbose=verbose,
+        )
         period_lines: list[str] = [
             f"{tr('cli.overview.period')}\t{canonical}",
             f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
         ]
         for d in per_modelo_drafts:
             period_lines.append(f"{d.modelo}\t{d.draft_id}\t{d.status.value}")
-        _emit(ctx, payload, period_lines)
+        _emit_envelope(ctx, command="overview.status", result=typed_period, lines=period_lines)
         return
     profile_record = current.active_profile_record() if current is not None else None
     raw_values = record_to_values(profile_record) if profile_record is not None else None
     report = build_overview_status_report(state=current, raw_values=raw_values)
-    _emit(ctx, report, render_cli_overview_status_lines(report))
+    typed_status = OverviewStatusResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="overview.status", result=typed_status, lines=render_cli_overview_status_lines(report))
 
 
 @app.command(
@@ -177,7 +190,8 @@ def overview_calendar(
                 keys=warning_summary,
             ),
         )
-    payload = cal.model_dump(mode="json")
+    cal_dump = cal.model_dump(mode="json")
+    typed_cal = OverviewCalendarResult.model_validate(cal_dump)
     lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",
         f"to\t{rng.to_date.isoformat()}",
@@ -204,7 +218,7 @@ def overview_calendar(
             f"\tverdict={suppressed.verdict.value}"
             f"\treason={suppressed.reason[:80]}"
         )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="overview.calendar", result=typed_cal, lines=lines)
 
 
 def _overview_calendar_all_profiles(
@@ -295,7 +309,8 @@ def _overview_calendar_all_profiles(
             }
         )
 
-    _emit(ctx, {"profiles": all_calendars}, all_lines)
+    typed_all = OverviewCalendarAllProfilesResult(profiles=all_calendars)
+    _emit_envelope(ctx, command="overview.calendar.all_profiles", result=typed_all, lines=all_lines)
 
 
 @app.command(
@@ -368,7 +383,7 @@ def overview_agenda(
             ),
         )
 
-    payload = agenda.model_dump(mode="json")
+    typed_agenda = OverviewAgendaResult.model_validate(agenda.model_dump(mode="json"))
     lines: list[str] = [
         f"as_of\t{agenda.as_of.isoformat()}",
         f"horizon_days\t{agenda.horizon_days}",
@@ -391,7 +406,7 @@ def overview_agenda(
         lines.append(f"  {entry.modelo}\t{entry.period}\t{entry.adjusted_closes_on.isoformat()}")
     for warning in agenda.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines)
 
 
 @app.command(
@@ -457,7 +472,7 @@ def overview_backlog(
             ),
         )
 
-    payload = backlog.model_dump(mode="json")
+    typed_backlog = OverviewBacklogResult.model_validate(backlog.model_dump(mode="json"))
     lines: list[str] = [
         f"from\t{backlog.range.from_date.isoformat()}",
         f"to\t{backlog.range.to_date.isoformat()}",
@@ -468,7 +483,7 @@ def overview_backlog(
         lines.append(f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}")
     for warning in backlog.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines)
 
 
 @app.command(
@@ -513,7 +528,7 @@ def overview_explain(
         )
     except OverviewExplainError as exc:
         raise _bad(str(exc)) from exc
-    payload = result.model_dump(mode="json")
+    typed_explain = OverviewExplainResult.model_validate(result.model_dump(mode="json"))
     lines: list[str] = [
         f"modelo\t{result.modelo}",
         f"year\t{result.year}",
@@ -526,4 +541,4 @@ def overview_explain(
         lines.append(f"scheduling_rationale\t{result.scheduling_rationale}")
     for fact_name, fact_value in sorted(result.profile_facts.items()):
         lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
