@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core._time import utc_now as _utc_now
+from ...core.time._clock import _now as _utc_now
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
