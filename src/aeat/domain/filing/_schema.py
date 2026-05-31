@@ -82,11 +82,19 @@ class ModeloBindingValue(BaseModel):
 
 
 class ModeloCasillaProvenance(BaseModel):
-    """Regulatory grounding for one casilla carried on a filing draft."""
+    """Regulatory grounding for one casilla carried on a filing draft.
+
+    ``formula_id`` is set for computed casillas (those whose value is
+    produced by a registry formula) and ``None`` for manual-input or
+    bound casillas. ``legal_refs`` and ``source_refs`` are always
+    populated from the registry casilla definition when the draft is
+    created.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     casilla_id: CasillaId
+    formula_id: str | None = None
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
 
