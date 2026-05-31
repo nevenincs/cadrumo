@@ -17,7 +17,8 @@ import contextlib
 import hashlib
 import json
 import os
-from collections.abc import Iterator
+import typing
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -131,20 +132,23 @@ class LocalFileSystemProvider:
                 return entry
         return None
 
-    def _load_sidecar(self, sidecar_path: Path) -> dict[str, object]:
+    def _load_sidecar(self, sidecar_path: Path) -> Mapping[str, object]:
         try:
-            payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
+            raw = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, json.JSONDecodeError) as exc:
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
                 context={"sidecar_path": str(sidecar_path)},
             ) from exc
-        if not isinstance(payload, dict):
+        if not isinstance(raw, dict):
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is not a JSON object",
                 context={"sidecar_path": str(sidecar_path)},
             )
-        return payload
+        # CAST-RATIONALE-SIDECAR-MAPPING: json.loads returns Any; isinstance
+        # guard above confirms dict shape; cast narrows the static type to
+        # Mapping[str, object] without altering runtime behaviour.
+        return typing.cast(Mapping[str, object], raw)
 
     def put(
         self,

@@ -549,6 +549,7 @@ application:
       active_profile: 'Perfil activo'
       profile: 'Perfil'
       status: estado
+      next: 'Siguiente'
     status:
       errors:
         missing_tax_id: El perfil activo no tiene tax.id.
