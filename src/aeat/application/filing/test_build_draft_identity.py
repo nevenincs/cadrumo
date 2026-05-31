@@ -53,8 +53,16 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
+            # Binding IDs are extracted from the flat inputs dict via
+            # _decimal_inputs_for_ids(inputs, decimal_binding_ids).
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
+            # Casilla 15 is previous_filing-bound (modelo-130-resultados-
+            # negativos-anteriores). For Q1 the prior-quarter anchor is
+            # absent by design (max_year_delta=0, no prior trimestre in
+            # the same ejercicio). Supplying it as a casilla input would
+            # violate the P07.S36 smuggled-binding guard; the formula
+            # engine materialises it as Decimal("0") via the absent-by-
+            # design path with provenance marker on the CasillaObservation.
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
