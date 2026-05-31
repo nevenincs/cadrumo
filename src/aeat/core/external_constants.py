@@ -304,6 +304,9 @@ CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", 
 
 #: Provenance source identifier for facts entered interactively via the CLI.
 PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
+
+#: Environment variable name used to override the CLI output language at runtime.
+OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
 """Canonical encoding probe order for CSV financial sources.
 
 The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`

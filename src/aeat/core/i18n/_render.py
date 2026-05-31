@@ -20,11 +20,11 @@ import yaml
 
 from ..config import PROJECT_ROOT, _settings_override, load_settings
 from ..errors import CoreError
+from ..external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
-OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
 DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
