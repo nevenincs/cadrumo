@@ -967,10 +967,10 @@ W13 audit zero strict regressions — counter advances 2/3 toward ADR close (3 c
 
 Single-phase closure of all 7 W13 findings. Mostly marker additions + 1 narrowing fix + 1 constant extraction.
 
-- [ ] `W13.P45.S600` - narrow except (RegistryError, Exception) at domain/deadlines/_plazo.py:62 to just RegistryError (resolves A1+A8 simultaneously: drops both blind catch and bare noqa); `src/aeat/domain/deadlines/_plazo.py`.
-- [ ] `W13.P45.S601` - add BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN marker on adapters/inbound/financial/providers/_xlsx.py:96 (sibling of line 189 from W09 ratchet) + extend ratchet to assert both sites; `src/aeat/adapters/inbound/financial/providers/_xlsx.py`.
-- [ ] `W13.P45.S602` - add LOGGING-STDLIB-RATIONALE-SINK-HANDLER marker on core/observability/_sink.py:25 (legitimate Handler ABC subclass) + enroll in survivor ratchet; `src/aeat/core/observability/_sink.py`.
-- [ ] `W13.P45.S603` - add MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE marker on entrypoints/cli/_ledger.py:590 tab-separated failure record; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W13.P45.S604` - wrap _entry_from_payload json.loads at adapters/outbound/llm/_cache.py:276 with pydantic _CachePayloadEnvelope model OR add JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT marker; `src/aeat/adapters/outbound/llm/_cache.py`.
-- [ ] `W13.P45.S605` - extract _IVA_REGIME_PATH and _TAXPAYER_ENTITY_TYPE_PATH module-level constants in domain/calculations/registry/_schedules.py:83,89; `src/aeat/domain/calculations/registry/_schedules.py`.
-- [ ] `W13.P45.S606` - aggregate test asserting all 7 W13 findings closed + ratchets extended; `src/aeat/test_w13_p45_closure.py`.
+- [x] `W13.P45.S600` - narrow except (RegistryError, Exception) at domain/deadlines/_plazo.py:62 to just RegistryError (resolves A1+A8 simultaneously: drops both blind catch and bare noqa); `src/aeat/domain/deadlines/_plazo.py`.
+- [x] `W13.P45.S601` - add BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN marker on adapters/inbound/financial/providers/_xlsx.py:96 (sibling of line 189 from W09 ratchet) + extend ratchet to assert both sites; `src/aeat/adapters/inbound/financial/providers/_xlsx.py`.
+- [x] `W13.P45.S602` - add LOGGING-STDLIB-RATIONALE-SINK-HANDLER marker on core/observability/_sink.py:25 (legitimate Handler ABC subclass) + enroll in survivor ratchet; `src/aeat/core/observability/_sink.py`.
+- [x] `W13.P45.S603` - add MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE marker on entrypoints/cli/_ledger.py:590 tab-separated failure record; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W13.P45.S604` - wrap _entry_from_payload json.loads at adapters/outbound/llm/_cache.py:276 with pydantic _CachePayloadEnvelope model OR add JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT marker; `src/aeat/adapters/outbound/llm/_cache.py`.
+- [x] `W13.P45.S605` - extract _IVA_REGIME_PATH and _TAXPAYER_ENTITY_TYPE_PATH module-level constants in domain/calculations/registry/_schedules.py:83,89; `src/aeat/domain/calculations/registry/_schedules.py`.
+- [x] `W13.P45.S606` - aggregate test asserting all 7 W13 findings closed + ratchets extended; `src/aeat/test_w13_p45_closure.py`.

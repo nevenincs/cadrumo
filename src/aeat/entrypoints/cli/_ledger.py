@@ -587,7 +587,7 @@ def ledger_classify(
         from ._ledger_payloads import LedgerClassifyResult
 
         for failure in result.failures:
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")  # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id\treason), not user-facing prose.
         classify_result = LedgerClassifyResult.model_validate(
             {
                 "total": result.total,
@@ -2048,13 +2048,21 @@ def _resolve_source_jurisdiction(
     and foreign-source income distinctly so a silent ES default would
     quietly include foreign-source amounts in the IRPF base).
 
+    Args:
+        operator_value: Operator-supplied jurisdiction string, or ``None``
+            when the flag was omitted.
+        fiscal_residency: Resolved fiscal-residency classification from
+            the active profile, or ``None`` when unavailable.
+        irpf_special_regime: Resolved IRPF special-regime classification
+            from the active profile, or ``None`` when unavailable.
+
     Returns:
-        - The operator-supplied value (after stripping) when present.
-        - ``"ES"`` when the profile is RESIDENT_IRPF / GENERAL and no
-          operator value was given.
-        - Raises ``typer.BadParameter`` via :func:`_bad` for
-          NON_RESIDENT_IRNR or RESIDENT_IRPF / IMPATRIADO when no
-          operator value was given.
+        The operator-supplied value when present, or ``"ES"`` when the
+        profile is RESIDENT_IRPF / GENERAL and no operator value was given.
+
+    Raises:
+        _bad: When the profile is NON_RESIDENT_IRNR or RESIDENT_IRPF /
+            IMPATRIADO and no operator value was given.
     """
     if operator_value is not None:
         return operator_value
