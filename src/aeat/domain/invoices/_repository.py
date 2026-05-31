@@ -8,8 +8,9 @@ JSON catalogue, or envelope file lands on disk.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+
+from aeat.core.time import _now
 
 from ...core.logging import get_logger
 from ._errors import InvoicePersistenceError
@@ -132,7 +133,7 @@ class InvoiceCatalogueRepository:
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
@@ -153,7 +154,7 @@ class InvoiceCatalogueRepository:
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
