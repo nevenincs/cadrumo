@@ -48,7 +48,7 @@ class WorkUnitState(StrEnum):
     DESCARTADO = "descartado"
 
 
-_ActorLabel = Annotated[
+ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
@@ -177,7 +177,7 @@ class WorkUnit(BaseModel):
     updated_at: datetime
     state: WorkUnitState = WorkUnitState.BORRADOR
     discarded_at: datetime | None = None
-    discarded_by: _ActorLabel | None = None
+    discarded_by: ModeloActorLabel | None = None
     discard_reason: _DiscardReason | None = None
     current_calculation_revision_id: _OptionalHex64 = None
     filed_calculation_revision_id: _OptionalHex64 = None
