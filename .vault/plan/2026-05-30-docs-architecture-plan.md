@@ -52,10 +52,10 @@ Restore the lint recipe to green so the docstring gate can be wired onto a worki
 
 Add the runnable docs build and docs-check entrypoints the pyproject comment promises but the justfile lacks.
 
-- [ ] `W01.P03.S07` - add the docs build recipe producing furo html; `justfile`.
-- [ ] `W01.P03.S08` - add the docs-check conformance recipe; `justfile`.
+- [x] `W01.P03.S07` - add the docs build recipe producing furo html; `justfile`.
+- [x] `W01.P03.S08` - add the docs-check conformance recipe; `justfile`.
 - [ ] `W01.P03.S09` - confirm both documentation recipes run; `justfile`.
-- [ ] `W01.P03.S65` - wire doc8 rst formatting linting into the docs-check recipe; `justfile`.
+- [x] `W01.P03.S65` - wire doc8 rst formatting linting into the docs-check recipe; `justfile`.
 
 ### Phase `W01.P04` - sphinx config and toctree repair
 
@@ -224,10 +224,10 @@ Run a fresh-context honesty review against the closure summary before declaring 
 Waves are sequenced: `W01` before `W02` before `W03` before `W04`
 before `W05`. `W02` needs `W01`'s deps and recipes; `W03` remediates
 against `W02`'s gates; `W04` pages build under `W02`'s gates; `W05`
-flips gates to blocking once the tree is green from `W03` and `W04`.
-Within `W03` the seven subpackage Phases (`P09`-`P15`) are independent
-and are the swarm fan-out; `W02`'s four Phases are independent; `W01`'s
-Phases are largely independent.
+flips gates to blocking once the tree is green. Within `W03` the seven
+subpackage Phases (`P09`-`P15`) are independent and are the swarm
+fan-out; `W02`'s four Phases are independent; `W01`'s Phases are largely
+independent.
 
 ## Verification
 
