@@ -75,7 +75,6 @@ from ...core.logging import get_logger
 from ._common import (
     _bad,
     _canonical_period,
-    _emit,
     _emit_envelope,
     _no_active_profile_refusal,
     _parse_iso_date,
@@ -2348,7 +2347,14 @@ def ratios_unset(
         new=None,
     )
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": ""}
-    _emit(ctx, payload, (f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"))
+    from ._ledger_payloads import RatiosUnsetResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.unset",
+        result=RatiosUnsetResult.model_validate(payload),
+        lines=(f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"),
+    )
 
 
 @ratios_app.command(
@@ -2374,7 +2380,14 @@ def ratios_eligible(ctx: typer.Context) -> None:
         lines.append(
             f"{row.category.value}\t{row.proportionality_kind}\tdefault={default or '-'}\toverride={override_marker}"
         )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RatiosEligibleResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.eligible",
+        result=RatiosEligibleResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @ratios_app.command(
@@ -2401,7 +2414,14 @@ def ratios_validate(ctx: typer.Context) -> None:
     for finding in report.findings:
         detail = f"\t{finding.detail}" if finding.detail else ""
         lines.append(f"finding\t{finding.category.value}\t{finding.kind}{detail}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RatiosValidateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.ratios.validate",
+        result=RatiosValidateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 def _business_invoice_payload(record) -> dict[str, object]:
@@ -2540,7 +2560,14 @@ def payable_invoice_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.add",
+        result=PayableInvoiceAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @payable_invoice_app.command(
@@ -2554,7 +2581,14 @@ def payable_invoice_view(
 ) -> None:
     bucket_id = _ratios_bucket_id()
     record = _payable_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    from ._ledger_payloads import PayableInvoiceViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.view",
+        result=PayableInvoiceViewResult.model_validate(_business_invoice_payload(record)),
+        lines=_business_invoice_text_lines(record),
+    )
 
 
 @payable_invoice_app.command(
@@ -2574,7 +2608,14 @@ def payable_invoice_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.list",
+        result=PayableInvoiceListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @payable_invoice_app.command(
@@ -2619,7 +2660,14 @@ def payable_invoice_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceUpdateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.update",
+        result=PayableInvoiceUpdateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @payable_invoice_app.command(
@@ -2647,7 +2695,14 @@ def payable_invoice_remove(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import PayableInvoiceRemoveResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.payable_invoice.remove",
+        result=PayableInvoiceRemoveResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 collectible_invoice_app = typer.Typer(
@@ -2752,7 +2807,14 @@ def collectible_invoice_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.add",
+        result=CollectibleInvoiceAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @collectible_invoice_app.command(
@@ -2767,7 +2829,14 @@ def collectible_invoice_view(
 ) -> None:
     bucket_id = _ratios_bucket_id()
     record = _collectible_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    from ._ledger_payloads import CollectibleInvoiceViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.view",
+        result=CollectibleInvoiceViewResult.model_validate(_business_invoice_payload(record)),
+        lines=_business_invoice_text_lines(record),
+    )
 
 
 @collectible_invoice_app.command(
@@ -2788,7 +2857,14 @@ def collectible_invoice_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.list",
+        result=CollectibleInvoiceListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @collectible_invoice_app.command(
@@ -2835,7 +2911,14 @@ def collectible_invoice_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceUpdateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.update",
+        result=CollectibleInvoiceUpdateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @collectible_invoice_app.command(
@@ -2865,7 +2948,14 @@ def collectible_invoice_remove(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _business_invoice_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import CollectibleInvoiceRemoveResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.collectible_invoice.remove",
+        result=CollectibleInvoiceRemoveResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 app.add_typer(payable_invoice_app, name="payable-invoice")
@@ -2921,7 +3011,14 @@ def inventory_list(ctx: typer.Context) -> None:
             f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
             f"opening={row.opening_stock}\tmovements={row.movement_count}"
         )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import InventoryListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.list",
+        result=InventoryListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @inventory_app.command(
@@ -2956,10 +3053,13 @@ def inventory_create(
     ledger = result.ledger
     payload = ledger.model_dump(mode="json")
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit(
+    from ._ledger_payloads import InventoryCreateResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="ledger.inventory.create",
+        result=InventoryCreateResult.model_validate(payload),
+        lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
             f"year\t{ledger.year}",
@@ -3048,10 +3148,13 @@ def inventory_movement_add(
     ledger = result.ledger
     payload = ledger.model_dump(mode="json")
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit(
+    from ._ledger_payloads import InventoryMovementAddResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="ledger.inventory.movement.add",
+        result=InventoryMovementAddResult.model_validate(payload),
+        lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",
             f"year\t{ledger.year}",
@@ -3080,10 +3183,13 @@ def inventory_valuation_preview(
     preview = result.preview
     payload = preview.model_dump(mode="json")
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit(
+    from ._ledger_payloads import InventoryValuationPreviewResult
+
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="ledger.inventory.valuation.preview",
+        result=InventoryValuationPreviewResult.model_validate(payload),
+        lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{preview.actividad_id}",
             f"year\t{preview.year}",
@@ -3194,7 +3300,14 @@ def evidence_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.add",
+        result=EvidenceAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @evidence_app.command(
@@ -3215,7 +3328,14 @@ def evidence_view(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
     )
-    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+    from ._ledger_payloads import EvidenceViewResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.view",
+        result=EvidenceViewResult.model_validate(_evidence_payload(record)),
+        lines=_evidence_text_lines(record),
+    )
 
 
 @evidence_app.command(
@@ -3241,7 +3361,14 @@ def evidence_list(ctx: typer.Context) -> None:
             f"{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t"
             f"{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}"
         )
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.list",
+        result=EvidenceListResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @evidence_app.command(
@@ -3283,7 +3410,14 @@ def evidence_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceUpdateResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.update",
+        result=EvidenceUpdateResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @evidence_app.command(
@@ -3311,7 +3445,14 @@ def evidence_remove(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import EvidenceRemoveResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.evidence.remove",
+        result=EvidenceRemoveResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -3412,7 +3553,14 @@ def rule_add(
         f"classification\t{rule.classification.value}",
         f"priority\t{rule.priority}",
     ]
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RuleAddResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.add",
+        result=RuleAddResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @rule_app.command(
@@ -3490,7 +3638,14 @@ def rule_apply(
         ]
         for row in would_match:
             lines.append(f"  match\t{row['transaction_id'][:16]}...\t{row['classification']}")
-        _emit(ctx, payload, lines)
+        from ._ledger_payloads import RuleApplyResult
+
+        _emit_envelope(
+            ctx,
+            command="ledger.rule.apply",
+            result=RuleApplyResult.model_validate(payload),
+            lines=lines,
+        )
         return
 
     from ...application.ledger._actions import apply_classification_rules
@@ -3526,7 +3681,14 @@ def rule_apply(
     ]
     for row in result.applied:
         lines.append(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RuleApplyResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.apply",
+        result=RuleApplyResult.model_validate(payload),
+        lines=lines,
+    )
 
 
 @rule_app.command(
@@ -3561,4 +3723,11 @@ def rule_list(ctx: typer.Context) -> None:
         lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
     for r in rules:
         lines.append(f"{r.priority}\t{r.classification.value}\t{r.description_pattern}\t{r.rule_id[:16]}...")
-    _emit(ctx, payload, lines)
+    from ._ledger_payloads import RuleListResult
+
+    _emit_envelope(
+        ctx,
+        command="ledger.rule.list",
+        result=RuleListResult.model_validate(payload),
+        lines=lines,
+    )
