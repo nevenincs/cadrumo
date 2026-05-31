@@ -64,3 +64,9 @@ Confirm byte-identity round-trips for both modelos, a green 26-modelo registry s
 - [x] `P04.S21` - Run the serialise-then-deserialise byte-identity round-trip suite for both Modelo 130 and Modelo 303 and confirm both golden-SHA fixtures match; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
 - [x] `P04.S22` - Load the full registry snapshot and confirm all 26 modelos remain valid with the new and amended Modelo 130 / Modelo 303 export layouts present, no validation regression at snapshot build; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `P04.S23` - Run the aeat app modelo export verb against a populated Modelo 130 and Modelo 303 draft and confirm each produces a byte-accurate fichero-BOE; `src/aeat/entrypoints/cli/`.
+
+### Phase `P05` - Residual coverage audit and prerequisite identification
+
+Audit the 17 modelos that still lack real export_layouts field specs as of 2026-05-31. For each: determine why it is blocked (PDF-only DR source, incomplete registry casillas, no DR corpus entry, or administrative form not requiring fichero-BOE). Document the prerequisite work required before each can be unblocked. This phase does not implement export layouts; it produces the evidence record that closes issue #563.
+
+- [x] `P05.S24` - Audit the 17 modelos that lack real export_layouts field specs; `categorize each by blocker type (PDF-only DR corpus, incomplete registry casillas, no DR corpus entry, administrative form); document prerequisite work; produce coverage ledger closing issue #563; `src/aeat/_data/registry/aeat/modelos/`.
