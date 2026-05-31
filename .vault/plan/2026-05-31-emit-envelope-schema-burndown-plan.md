@@ -197,80 +197,80 @@ Extend _modelo_payloads.py with OutputSchema subclasses for the 24 remaining bar
 
 Author OutputSchema subclasses for audit check, audit show, audit export, audit replay, work history, and work runs in _modelo_payloads.py and migrate their emit sites.
 
-- [ ] `W04.P13.S94` - author ModeloAuditCheckResult OutputSchema subclass with @register_schema decorator for modelo.audit.check; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P13.S95` - migrate audit_check bare emit site to _emit_envelope using typed ModeloAuditCheckResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P13.S96` - author ModeloAuditShowResult OutputSchema subclass with @register_schema decorator for modelo.audit.show; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P13.S97` - migrate audit_show bare emit site to _emit_envelope using typed ModeloAuditShowResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P13.S98` - author ModeloAuditExportResult OutputSchema subclass with @register_schema decorator for modelo.audit.export; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P13.S99` - migrate audit_export bare emit site to _emit_envelope using typed ModeloAuditExportResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P13.S100` - author ModeloAuditReplayResult OutputSchema subclass with @register_schema decorator for modelo.audit.replay; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P13.S101` - migrate audit_replay bare emit site to _emit_envelope using typed ModeloAuditReplayResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P13.S102` - author WorkHistoryResult OutputSchema subclass with @register_schema decorator for modelo.work.history; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P13.S103` - migrate work_history bare emit site to _emit_envelope using typed WorkHistoryResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P13.S104` - author WorkRunsResult OutputSchema subclass with @register_schema decorator for modelo.work.runs; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P13.S105` - migrate work_runs bare emit site to _emit_envelope using typed WorkRunsResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P13.S94` - author ModeloAuditCheckResult OutputSchema subclass with @register_schema decorator for modelo.audit.check; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P13.S95` - migrate audit_check bare emit site to _emit_envelope using typed ModeloAuditCheckResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P13.S96` - author ModeloAuditShowResult OutputSchema subclass with @register_schema decorator for modelo.audit.show; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P13.S97` - migrate audit_show bare emit site to _emit_envelope using typed ModeloAuditShowResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P13.S98` - author ModeloAuditExportResult OutputSchema subclass with @register_schema decorator for modelo.audit.export; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P13.S99` - migrate audit_export bare emit site to _emit_envelope using typed ModeloAuditExportResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P13.S100` - author ModeloAuditReplayResult OutputSchema subclass with @register_schema decorator for modelo.audit.replay; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P13.S101` - migrate audit_replay bare emit site to _emit_envelope using typed ModeloAuditReplayResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P13.S102` - author WorkHistoryResult OutputSchema subclass with @register_schema decorator for modelo.work.history; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P13.S103` - migrate work_history bare emit site to _emit_envelope using typed WorkHistoryResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P13.S104` - author WorkRunsResult OutputSchema subclass with @register_schema decorator for modelo.work.runs; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P13.S105` - migrate work_runs bare emit site to _emit_envelope using typed WorkRunsResult; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W04.P14` - modelo record-query verb payload classes
 
 Author OutputSchema subclasses for filing record list, filing record show, filing record import, verification report list, and verification report show in _modelo_payloads.py and migrate their emit sites.
 
-- [ ] `W04.P14.S106` - author FilingRecordListResult OutputSchema subclass with @register_schema decorator for modelo.filing_record.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P14.S107` - migrate filing_record_list bare emit site to _emit_envelope using typed FilingRecordListResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P14.S108` - author FilingRecordShowResult OutputSchema subclass with @register_schema decorator for modelo.filing_record.show; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P14.S109` - migrate filing_record_show bare emit site to _emit_envelope using typed FilingRecordShowResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P14.S110` - author FilingRecordImportResult OutputSchema subclass with @register_schema decorator for modelo.filing_record.import; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P14.S111` - migrate filing_record_import bare emit site to _emit_envelope using typed FilingRecordImportResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P14.S112` - author VerificationReportListResult OutputSchema subclass with @register_schema decorator for modelo.verification_report.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P14.S113` - migrate verification_report_list bare emit site to _emit_envelope using typed VerificationReportListResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P14.S114` - author VerificationReportShowResult OutputSchema subclass with @register_schema decorator for modelo.verification_report.show; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P14.S115` - migrate verification_report_show bare emit site to _emit_envelope using typed VerificationReportShowResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P14.S106` - author FilingRecordListResult OutputSchema subclass with @register_schema decorator for modelo.filing_record.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P14.S107` - migrate filing_record_list bare emit site to _emit_envelope using typed FilingRecordListResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P14.S108` - author FilingRecordShowResult OutputSchema subclass with @register_schema decorator for modelo.filing_record.show; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P14.S109` - migrate filing_record_show bare emit site to _emit_envelope using typed FilingRecordShowResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P14.S110` - author FilingRecordImportResult OutputSchema subclass with @register_schema decorator for modelo.filing_record.import; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P14.S111` - migrate filing_record_import bare emit site to _emit_envelope using typed FilingRecordImportResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P14.S112` - author VerificationReportListResult OutputSchema subclass with @register_schema decorator for modelo.verification_report.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P14.S113` - migrate verification_report_list bare emit site to _emit_envelope using typed VerificationReportListResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P14.S114` - author VerificationReportShowResult OutputSchema subclass with @register_schema decorator for modelo.verification_report.show; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P14.S115` - migrate verification_report_show bare emit site to _emit_envelope using typed VerificationReportShowResult; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W04.P15` - modelo registry-projection verb payload classes
 
 Author OutputSchema subclasses for list modelos, describe modelo, casillas, bindings list, bindings preview, and formulas in _modelo_payloads.py and migrate their emit sites.
 
-- [ ] `W04.P15.S116` - author ModeloListResult OutputSchema subclass with @register_schema decorator for modelo.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S117` - migrate list_modelos bare emit site to _emit_envelope using typed ModeloListResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P15.S118` - author ModeloDescribeResult OutputSchema subclass with @register_schema decorator for modelo.describe; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S119` - migrate describe_modelo bare emit site to _emit_envelope using typed ModeloDescribeResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P15.S120` - author ModeloCasillasResult OutputSchema subclass with @register_schema decorator for modelo.casillas; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S121` - migrate casillas bare emit site to _emit_envelope using typed ModeloCasillasResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P15.S122` - author ModeloBindingsListResult OutputSchema subclass with @register_schema decorator for modelo.bindings.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S123` - migrate bindings_list bare emit site to _emit_envelope using typed ModeloBindingsListResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P15.S124` - author ModeloBindingsPreviewResult OutputSchema subclass with @register_schema decorator for modelo.bindings.preview; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S125` - migrate bindings_preview bare emit site to _emit_envelope using typed ModeloBindingsPreviewResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P15.S126` - author FormulasResult OutputSchema subclass with @register_schema decorator for modelo.formulas; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P15.S127` - migrate formulas bare emit site to _emit_envelope using typed FormulasResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P15.S116` - author ModeloListResult OutputSchema subclass with @register_schema decorator for modelo.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S117` - migrate list_modelos bare emit site to _emit_envelope using typed ModeloListResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P15.S118` - author ModeloDescribeResult OutputSchema subclass with @register_schema decorator for modelo.describe; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S119` - migrate describe_modelo bare emit site to _emit_envelope using typed ModeloDescribeResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P15.S120` - author ModeloCasillasResult OutputSchema subclass with @register_schema decorator for modelo.casillas; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S121` - migrate casillas bare emit site to _emit_envelope using typed ModeloCasillasResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P15.S122` - author ModeloBindingsListResult OutputSchema subclass with @register_schema decorator for modelo.bindings.list; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S123` - migrate bindings_list bare emit site to _emit_envelope using typed ModeloBindingsListResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P15.S124` - author ModeloBindingsPreviewResult OutputSchema subclass with @register_schema decorator for modelo.bindings.preview; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S125` - migrate bindings_preview bare emit site to _emit_envelope using typed ModeloBindingsPreviewResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P15.S126` - author FormulasResult OutputSchema subclass with @register_schema decorator for modelo.formulas; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P15.S127` - migrate formulas bare emit site to _emit_envelope using typed FormulasResult; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W04.P16` - modelo remaining singleton verb payload classes
 
 Author OutputSchema subclasses for modelo export, modelo compare, modelo history, modelo project, modelo readiness, iva wallet balance, iva wallet seed, and work resume in _modelo_payloads.py and migrate their emit sites.
 
-- [ ] `W04.P16.S128` - author ModeloExportResult OutputSchema subclass with @register_schema decorator for modelo.export; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S129` - migrate modelo_export_verb bare emit site to _emit_envelope using typed ModeloExportResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S130` - author ModeloCompareResult OutputSchema subclass with @register_schema decorator for modelo.compare; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S131` - migrate modelo_compare bare emit site to _emit_envelope using typed ModeloCompareResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S132` - author ModeloHistoryResult OutputSchema subclass with @register_schema decorator for modelo.history; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S133` - migrate modelo_history bare emit site to _emit_envelope using typed ModeloHistoryResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S134` - author ModeloProjectResult OutputSchema subclass with @register_schema decorator for modelo.project; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S135` - migrate modelo_project bare emit site to _emit_envelope using typed ModeloProjectResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S136` - author ModeloReadinessResult OutputSchema subclass with @register_schema decorator for modelo.readiness; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S137` - migrate modelo_readiness bare emit site to _emit_envelope using typed ModeloReadinessResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S138` - author IvaWalletBalanceResult OutputSchema subclass with @register_schema decorator for modelo.iva_wallet.balance; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S139` - migrate iva_wallet_balance_cmd bare emit site to _emit_envelope using typed IvaWalletBalanceResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S140` - author IvaWalletSeedResult OutputSchema subclass with @register_schema decorator for modelo.iva_wallet.seed; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S141` - migrate iva_wallet_seed_cmd bare emit site to _emit_envelope using typed IvaWalletSeedResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S142` - author WorkResumeResult OutputSchema subclass with @register_schema decorator for modelo.work.resume; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S143` - migrate work_resume bare emit site to _emit_envelope using typed WorkResumeResult; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W04.P16.S144` - author ModeloAggregateResult OutputSchema subclass with @register_schema decorator for modelo.aggregate; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W04.P16.S145` - migrate aggregate_modelo bare emit site to _emit_envelope using typed ModeloAggregateResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S128` - author ModeloExportResult OutputSchema subclass with @register_schema decorator for modelo.export; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S129` - migrate modelo_export_verb bare emit site to _emit_envelope using typed ModeloExportResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S130` - author ModeloCompareResult OutputSchema subclass with @register_schema decorator for modelo.compare; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S131` - migrate modelo_compare bare emit site to _emit_envelope using typed ModeloCompareResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S132` - author ModeloHistoryResult OutputSchema subclass with @register_schema decorator for modelo.history; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S133` - migrate modelo_history bare emit site to _emit_envelope using typed ModeloHistoryResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S134` - author ModeloProjectResult OutputSchema subclass with @register_schema decorator for modelo.project; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S135` - migrate modelo_project bare emit site to _emit_envelope using typed ModeloProjectResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S136` - author ModeloReadinessResult OutputSchema subclass with @register_schema decorator for modelo.readiness; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S137` - migrate modelo_readiness bare emit site to _emit_envelope using typed ModeloReadinessResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S138` - author IvaWalletBalanceResult OutputSchema subclass with @register_schema decorator for modelo.iva_wallet.balance; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S139` - migrate iva_wallet_balance_cmd bare emit site to _emit_envelope using typed IvaWalletBalanceResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S140` - author IvaWalletSeedResult OutputSchema subclass with @register_schema decorator for modelo.iva_wallet.seed; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S141` - migrate iva_wallet_seed_cmd bare emit site to _emit_envelope using typed IvaWalletSeedResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S142` - author WorkResumeResult OutputSchema subclass with @register_schema decorator for modelo.work.resume; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S143` - migrate work_resume bare emit site to _emit_envelope using typed WorkResumeResult; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W04.P16.S144` - author ModeloAggregateResult OutputSchema subclass with @register_schema decorator for modelo.aggregate; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W04.P16.S145` - migrate aggregate_modelo bare emit site to _emit_envelope using typed ModeloAggregateResult; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W04.P17` - MIGRATED_COMMANDS extension and surface-test re-baseline for modelo
 
 Append all newly migrated modelo command paths to MIGRATED_COMMANDS and re-baseline affected modelo CLI surface tests.
 
-- [ ] `W04.P17.S146` - append all newly migrated modelo command paths to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W04.P17.S147` - re-baseline modelo CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W04.P17.S146` - append all newly migrated modelo command paths to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W04.P17.S147` - re-baseline modelo CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_modelo.py`.
 
 ## Wave `W05` - small-module burndown - 29 bare emit sites across 7 modules
 
