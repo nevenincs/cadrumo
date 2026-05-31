@@ -25,7 +25,6 @@ from ._common import (
 from ._overview_payloads import (
     OverviewStatusResult,
     OverviewCalendarResult,
-    OverviewCalendarAllProfilesResult,
     OverviewAgendaResult,
     OverviewBacklogResult,
     OverviewExplainResult,
@@ -309,8 +308,8 @@ def _overview_calendar_all_profiles(
             }
         )
 
-    typed_all = OverviewCalendarAllProfilesResult(profiles=all_calendars)
-    _emit_envelope(ctx, command="overview.calendar.all_profiles", result=typed_all, lines=all_lines)
+    typed_all = OverviewCalendarResult(profiles=all_calendars)
+    _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines)
 
 
 @app.command(
