@@ -1338,6 +1338,7 @@ def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
         )
 
 
+# ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION: concrete type is IvaWalletCompensationDecision but direct import creates a cross-module cycle; helper accesses .divergence/.reason via duck-typed protocol.
 def _iva_wallet_blocked_message(decision: Any) -> str:
     divergence = str(decision.divergence)
     reason = str(decision.reason)
