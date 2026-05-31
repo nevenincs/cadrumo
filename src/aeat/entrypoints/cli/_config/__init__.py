@@ -410,6 +410,8 @@ def repair_profile(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.repair.profile_requires_yes",
         )
+    from .._config_payloads import RepairProfileResult
+
     if repair_manifest_status:
         result = repair_active_profile_manifest_status(confirmed=yes)
         health = result.after or result.before
@@ -425,7 +427,10 @@ def repair_profile(
             lines.append(f"profile_record_error\t{health.profile_record_error}")
         if health.next_action:
             lines.append(f"next_action\t{health.next_action}")
-        _emit(ctx, _redact_profile_repair_payload(result.model_dump(mode="json")), lines)
+        repair_payload = RepairProfileResult.model_validate(
+            _redact_profile_repair_payload(result.model_dump(mode="json"))
+        )
+        _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
         return
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
     health = result.after or result.before
@@ -444,7 +449,8 @@ def repair_profile(
         lines.append(f"profile_record_error\t{health.profile_record_error}")
     if health.next_action:
         lines.append(f"next_action\t{health.next_action}")
-    _emit(ctx, payload, lines)
+    repair_payload = RepairProfileResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
 def _redacted_profile_identifier(value: str | None) -> str:
@@ -482,6 +488,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
     """
     from ....domain.user_profile import ProfileNotFoundError
 
+    from .._config_payloads import RepairProfileResult
+
     pointer = _resolve_profile_by_label(label)
     profile_id = pointer.bucket_id
     try:
@@ -496,10 +504,11 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "status": "missing_profile_record",
             "next_action": _profile_record_missing_next_action(profile_id, label=pointer.label),
         }
-        _emit(
+        _emit_envelope(
             ctx,
-            payload,
-            (
+            command="config.repair.profile",
+            result=RepairProfileResult.model_validate(payload),
+            lines=(
                 "readiness\tmissing_profile_record",
                 "profile_id\t<profile-id>",
                 "bucket_id\t<profile-id>",
@@ -521,10 +530,11 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
             "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
-        _emit(
+        _emit_envelope(
             ctx,
-            payload,
-            (
+            command="config.repair.profile",
+            result=RepairProfileResult.model_validate(payload),
+            lines=(
                 "readiness\tprofile_record_unreadable",
                 "profile_id\t<profile-id>",
                 "bucket_id\t<profile-id>",
@@ -547,10 +557,11 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
             "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
-        _emit(
+        _emit_envelope(
             ctx,
-            payload,
-            (
+            command="config.repair.profile",
+            result=RepairProfileResult.model_validate(payload),
+            lines=(
                 "readiness\tprofile_record_unreadable",
                 "profile_id\t<profile-id>",
                 "bucket_id\t<profile-id>",
@@ -570,10 +581,11 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         "status": record.status.value,
         "next_action": f"aeat config profile switch {pointer.label}",
     }
-    _emit(
+    _emit_envelope(
         ctx,
-        payload,
-        (
+        command="config.repair.profile",
+        result=RepairProfileResult.model_validate(payload),
+        lines=(
             "readiness\tready",
             f"display_name\t{record.display_name}",
             "profile_id\t<profile-id>",
@@ -617,15 +629,21 @@ def repair_integrity_objects(
     """Wrap build_repair_integrity_report and render through _emit."""
     from ....application.repair_integrity import build_repair_integrity_report
 
+    from .._config_payloads import RepairIntegrityObjectsResult
+
     # Cold-root guard: integrity is bootstrap-exempt; on a root with no
     # active profile there is no per-bucket database whose secure-object
     # rows could be probed. Report cleanly rather than crashing on the
     # absent database URL (disaster ADR Ruling 6).
     if _resolve_active_bucket_id() is None:
-        _emit(
+        guard_result = RepairIntegrityObjectsResult.model_validate(
+            {"readable": 0, "unreadable": 0, "status": "ok", "reason": "no-active-profile"}
+        )
+        _emit_envelope(
             ctx,
-            {"readable": 0, "unreadable": 0, "status": "ok", "reason": "no-active-profile"},
-            (
+            command="config.repair.integrity.objects",
+            result=guard_result,
+            lines=(
                 "readable\t0",
                 "unreadable\t0",
                 "status\tok",
@@ -643,7 +661,8 @@ def repair_integrity_objects(
     ]
     for ns in report.namespaces:
         lines.append(f"{ns.namespace}\treadable={ns.readable}\tunreadable={ns.unreadable}")
-    _emit(ctx, payload, lines)
+    integrity_result = RepairIntegrityObjectsResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.repair.integrity.objects", result=integrity_result, lines=lines)
 
 
 @integrity_app.command(
@@ -664,6 +683,8 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
     """
     from ....application.diagnostics import build_registry_integrity_report
 
+    from .._config_payloads import RepairIntegrityRegistryResult
+
     report = build_registry_integrity_report()
     payload = report.model_dump(mode="json")
     lines = [
@@ -674,7 +695,8 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
         lines.append(f"detail\t{report.check.detail}")
     if report.check.next_action:
         lines.append(f"next_action\t{report.check.next_action}")
-    _emit(ctx, payload, lines)
+    registry_result = RepairIntegrityRegistryResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.repair.integrity.registry", result=registry_result, lines=lines)
 
 
 repair_app.add_typer(integrity_app, name="integrity")
@@ -1283,17 +1305,21 @@ def config_profile_rename(
             context={"name": source},
         ) from exc
 
-    _emit(
+    from .._config_payloads import ConfigProfileRenameResult
+
+    rename_result = ConfigProfileRenameResult(
+        profile_id=record.profile_id,
+        previous_display_name=source,
+        display_name=record.display_name,
+    )
+    _emit_envelope(
         ctx,
-        {
-            "profile_id": record.profile_id,
-            "previous_display_name": source,
-            "display_name": record.display_name,
-        },
-        (
-            f"profile_id	{record.profile_id}",
-            f"previous_display_name	{source}",
-            f"display_name	{record.display_name}",
+        command="config.profile.rename",
+        result=rename_result,
+        lines=(
+            f"profile_id\t{record.profile_id}",
+            f"previous_display_name\t{source}",
+            f"display_name\t{record.display_name}",
         ),
     )
 
@@ -1353,15 +1379,19 @@ def config_profile_export(
         ) from exc
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
-    _emit(
+    from .._config_payloads import ConfigProfileExportResult
+
+    export_result = ConfigProfileExportResult(
+        profile_id=pointer.bucket_id,
+        display_name=pointer.label,
+        out=str(out),
+        schema_version=bundle.bundle_schema_version,
+    )
+    _emit_envelope(
         ctx,
-        {
-            "profile_id": pointer.bucket_id,
-            "display_name": pointer.label,
-            "out": str(out),
-            "schema_version": bundle.bundle_schema_version,
-        },
-        (
+        command="config.profile.export",
+        result=export_result,
+        lines=(
             f"profile_id\t{pointer.bucket_id}",
             f"display_name\t{pointer.label}",
             f"out\t{out}",
@@ -1479,14 +1509,18 @@ def config_profile_import(
     # Import v2 financial-history objects into the newly-provisioned bucket.
     with profile_storage_session(target_id):
         deserialize_profile_bundle(bundle, target_bucket_id=target_id)
-    _emit(
+    from .._config_payloads import ConfigProfileImportResult
+
+    import_result = ConfigProfileImportResult(
+        profile_id=target_id,
+        display_name=target_label,
+        schema_version=bundle.bundle_schema_version,
+    )
+    _emit_envelope(
         ctx,
-        {
-            "profile_id": target_id,
-            "display_name": target_label,
-            "schema_version": bundle.bundle_schema_version,
-        },
-        (
+        command="config.profile.import",
+        result=import_result,
+        lines=(
             f"profile_id\t{target_id}",
             f"display_name\t{target_label}",
             f"schema_version\t{bundle.bundle_schema_version}",
@@ -1506,14 +1540,18 @@ def config_profile_logout(ctx: typer.Context) -> None:
     from ....application.user_profile._orchestration import logout_active_profile
 
     before = logout_active_profile()
-    _emit(
+    from .._config_payloads import ConfigProfileLogoutResult
+
+    logout_result = ConfigProfileLogoutResult(
+        logged_out_profile=before or "",
+        active_profile=None,
+        session_warning=tr("cli.config.profile.logout_session_warning"),
+    )
+    _emit_envelope(
         ctx,
-        {
-            "logged_out_profile": before or "",
-            "active_profile": None,
-            "session_warning": tr("cli.config.profile.logout_session_warning"),
-        },
-        (
+        command="config.profile.logout",
+        result=logout_result,
+        lines=(
             f"logged_out_profile\t{before or '<none>'}",
             tr("cli.config.profile.logout_session_warning"),
         ),
@@ -1989,6 +2027,8 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     from ....application.auth import list_auth_diagnostics
 
+    from .._config_payloads import AuthDiagnosticsListResult
+
     report = list_auth_diagnostics()
     lines = [f"row_count\t{report.row_count}"]
     for row in report.rows:
@@ -2009,7 +2049,8 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
                 )
             )
         )
-    _emit(ctx, report.model_dump(mode="json"), lines)
+    list_result = AuthDiagnosticsListResult.model_validate(report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
 
 
 @auth_diagnostics_app.command(
@@ -2029,12 +2070,16 @@ def auth_diagnostics_show(
             translated_message="cli.config.auth.diagnostics.not_found",
             context={"diagnostic_id": diagnostic_id},
         )
+    from .._config_payloads import AuthDiagnosticsShowResult
+
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     bool_value = _optional_bool_text
-    _emit(
+    show_result = AuthDiagnosticsShowResult.model_validate(detail.model_dump(mode="json"))
+    _emit_envelope(
         ctx,
-        detail.model_dump(mode="json"),
-        (
+        command="config.auth.diagnostics.show",
+        result=show_result,
+        lines=(
             f"diagnostic_id\t{detail.diagnostic_id or diagnostic_id}",
             f"captured_at\t{detail.captured_at.isoformat()}",
             f"reason\t{detail.reason}",
@@ -2114,10 +2159,18 @@ def auth_diagnostics_report(
             translated_message="cli.config.auth.diagnostics.not_found",
             context={"diagnostic_id": diagnostic_id},
         )
-    _emit(
+    from .._config_payloads import AuthDiagnosticsReportResult
+
+    report_result = AuthDiagnosticsReportResult(
+        diagnostic_id=result.diagnostic_id,
+        phone_state=result.phone_state,
+        reported_at=result.reported_at.isoformat(),
+    )
+    _emit_envelope(
         ctx,
-        result.model_dump(mode="json"),
-        (
+        command="config.auth.diagnostics.report",
+        result=report_result,
+        lines=(
             f"diagnostic_id\t{result.diagnostic_id}",
             f"phone_state\t{result.phone_state}",
             f"reported_at\t{result.reported_at.isoformat()}",
@@ -2140,10 +2193,13 @@ def apoderado_scopes_list(ctx: typer.Context) -> None:
     """List all available representative scopes in the vocabulary."""
     from ....application.auth._apoderado import ApoderadoService
 
+    from .._config_payloads import ApoderadoScopesListResult
+
     svc = ApoderadoService()
     payload = svc.catalogue.model_dump(mode="json")
     lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
-    _emit(ctx, payload, lines)
+    scopes_result = ApoderadoScopesListResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
 
 
 @apoderado_app.command(
@@ -2158,6 +2214,8 @@ def apoderado_status(ctx: typer.Context) -> None:
             translated_message="cli.config.profile.no_active_profile",
         )
 
+    from .._config_payloads import ApoderadoStatusResult
+
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
 
@@ -2170,7 +2228,8 @@ def apoderado_status(ctx: typer.Context) -> None:
         lines.append(f"represented_nif\t{result.represented_nif}")
         lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
 
-    _emit(ctx, payload, lines)
+    status_result = ApoderadoStatusResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.auth.apoderado.status", result=status_result, lines=lines)
 
 
 @apoderado_app.command(
@@ -2199,6 +2258,8 @@ def apoderado_configure(
             translated_message="cli.config.profile.no_active_profile",
         )
 
+    from .._config_payloads import ApoderadoConfigureResult
+
     svc = ApoderadoService()
     result = svc.configure(
         bucket_id=pointer.bucket_id,
@@ -2212,7 +2273,8 @@ def apoderado_configure(
         f"represented_nif\t{result.represented_nif}",
         f"granted_scopes\t{','.join(result.granted_scopes)}",
     ]
-    _emit(ctx, payload, lines)
+    configure_result = ApoderadoConfigureResult.model_validate(payload)
+    _emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
 
 
 @apoderado_app.command(
@@ -2229,15 +2291,17 @@ def apoderado_clear(ctx: typer.Context) -> None:
             translated_message="cli.config.profile.no_active_profile",
         )
 
+    from .._config_payloads import ApoderadoClearResult
+
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
 
-    payload = {"bucket_id": pointer.bucket_id, "cleared": cleared}
+    clear_result = ApoderadoClearResult(bucket_id=pointer.bucket_id, cleared=cleared)
     lines = [
         f"bucket_id\t{pointer.bucket_id}",
         f"cleared\t{cleared}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="config.auth.apoderado.clear", result=clear_result, lines=lines)
 
 
 @apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
