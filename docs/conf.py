@@ -22,7 +22,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
-    "sphinx_markdown_builder",
     "myst_parser",
 ]
 
@@ -34,6 +33,10 @@ source_suffix = {
 }
 
 master_doc = "index"
+# English is the only documentation language. Additional languages attach
+# here - set `language`, add `locale_dirs` and `gettext_compact`, and a
+# gettext / sphinx-intl build matrix. Documentation translation must not
+# reuse the runtime CLI translation catalogues.
 language = "en"
 
 exclude_patterns = [
@@ -42,21 +45,11 @@ exclude_patterns = [
     ".DS_Store",
     "**/test_*.py",
     "**/_test_*.py",
-    # Legacy narrative docs scheduled for removal (heavy dev-process
-    # metadata that predates the docstring rewrite); excluded from the
-    # build so Sphinx neither toctree-warns about them nor renders them.
-    "casillas.md",
-    "concepts/**",
-    "coverage/**",
-    "error-codes.md",
-    "exit-codes.md",
-    "json-contract.md",
-    "security-runbook.md",
 ]
 
-# Quiet down warnings that originate from MyST cross-reference resolution.
-# Real autodoc / nitpicky reference issues still surface.
-suppress_warnings = ["myst.xref_missing"]
+# No blanket warning suppression: the docs-check gate builds nitpicky (-n)
+# with warnings-as-errors (-W), so unresolved cross-references must be fixed
+# or added to nitpick_ignore_regex below.
 
 # ── Autodoc / Napoleon ──────────────────────────────────────────────────────
 napoleon_google_docstring = True
@@ -151,3 +144,58 @@ myst_enable_extensions = [
     "tasklist",
 ]
 myst_heading_anchors = 3
+
+# ── Nitpicky cross-reference baseline ─────────────────────────────────────────
+# docs-check builds with -n -W. The autodoc_mock_imports above replace heavy
+# native deps with mocks whose types cannot resolve as cross-reference targets;
+# those are ignored here so the gate flags only real, fixable broken refs. This
+# baseline is curated alongside autodoc_mock_imports - adding a mock import
+# without its ignore entry is incomplete.
+nitpick_ignore_regex = [
+    (
+        r"py:.*",
+        r"^(tree_sitter|tree_sitter_language_pack|qdrant_client|playwright|"
+        r"playwright_stealth|pikepdf|pdfplumber|ofxparse|openpyxl|reportlab|"
+        r"argon2|keyring|anthropic)(\..*)?$",
+    ),
+]
+
+# ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
+# `sphinx-build -b linkcheck` is CI-scheduled and advisory: several AEAT/BOE
+# endpoints rate-limit or block automated clients, so their failures must never
+# red the local docs-check gate.
+linkcheck_ignore = [
+    r"https?://(www\.|sede\.)?agenciatributaria\.(es|gob\.es).*",
+    r"https?://(www\.)?boe\.es.*",
+]
+linkcheck_timeout = 30
+
+
+def setup(app):
+    """Resolve deferred pydantic forward references before autodoc runs.
+
+    Several diagnostics report models defer ``model_rebuild()`` to a lazy
+    runtime path so the ``aeat --version`` fast path stays light. Autodoc
+    imports those modules directly and would crash on a not-fully-defined
+    model; the docs build is not the fast path, so the rebuild is triggered
+    once the builder is initialised and mock imports are active.
+
+    Args:
+        app: The Sphinx application instance.
+
+    Returns:
+        The extension metadata declaring parallel-read/write safety.
+    """
+
+    def _resolve_deferred_models(app):
+        """Import the diagnostics module and run its idempotent model rebuild.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        from aeat.application import diagnostics
+
+        diagnostics._ensure_models_rebuilt()
+
+    app.connect("builder-inited", _resolve_deferred_models)
+    return {"parallel_read_safe": True, "parallel_write_safe": True}
