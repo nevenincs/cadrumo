@@ -222,3 +222,42 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
 
     expected_total = obs_contable.deductible_amount + obs_fiscal.deductible_amount
     assert result.casilla_values["0199"] == expected_total
+
+
+# ---------------------------------------------------------------------------
+# Typed provenance: SpendingCategory survives the ledger→renta handoff
+# (audit finding F3: cross-domain-handoffs-swarm-audit 2026-05-16)
+# ---------------------------------------------------------------------------
+
+
+def test_casilla_aggregation_category_id_is_typed_spending_category_instance() -> None:
+    """category_id on CasillaProvenance rows is a SpendingCategory enum member.
+
+    The ledger→renta handoff must preserve the typed ``SpendingCategory``
+    enum through ``_casilla_aggregation`` so downstream consumers can
+    compare against the enum directly without calling
+    ``normalize_spending_category``. This test asserts the type survives
+    end-to-end: from ``RentaDeductibleExpenseObservation.category``
+    (typed ``SpendingCategory``) through ``_casilla_aggregation`` to
+    ``CasillaProvenance.category_id`` (also typed ``SpendingCategory``
+    via the ``_SpendingCategoryField`` coercion).
+
+    If ``category_id`` were stored as a bare ``str``, the
+    ``isinstance`` assertion below would fail, surfacing the
+    provenance-loss regression introduced by any future edit that
+    reverts ``category_id`` to ``str | None``.
+    """
+
+    obs = _observation("tx-typed", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
+
+    result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
+
+    assert len(result.provenance) == 1
+    row = result.provenance[0]
+    # The typed enum must survive the handoff — not a bare string.
+    assert isinstance(row.category_id, SpendingCategory), (
+        f"CasillaProvenance.category_id must be a SpendingCategory instance "
+        f"but got {type(row.category_id).__name__!r}; the typed provenance "
+        "was lost at the ledger→renta handoff"
+    )
+    assert row.category_id is SpendingCategory.CUOTAS_AUTONOMOS_SS
