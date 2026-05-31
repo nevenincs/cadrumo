@@ -43,7 +43,7 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 # the M100 routing referential-integrity gate runs on this declarations path.
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
-from .....core.config import Settings
+from .....core.config import Settings, load_settings
 from .....core.time._clock import _now
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -104,7 +104,6 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
-_DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(_SEDE_BASE).netloc
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
@@ -112,10 +111,27 @@ _COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
 _COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
 _COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
 _DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
-_NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
-_FORM_INTERACTION_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
-_BUSCAR_SETTLE_MS = _DEFAULTS.aeat_browser_buscar_settle_ms
-_VER_CLICK_TIMEOUT_MS = _DEFAULTS.aeat_browser_ver_click_timeout_ms
+
+DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
+DEFAULT_FORM_INTERACTION_TIMEOUT_MS: int = 10_000
+DEFAULT_BUSCAR_SETTLE_MS: int = 2_000
+DEFAULT_VER_CLICK_TIMEOUT_MS: int = 5_000
+
+
+def _get_navigation_timeout_ms() -> int:
+    return load_settings().aeat_browser_navigation_timeout_ms
+
+
+def _get_form_interaction_timeout_ms() -> int:
+    return load_settings().aeat_browser_form_interaction_timeout_ms
+
+
+def _get_buscar_settle_ms() -> int:
+    return load_settings().aeat_browser_buscar_settle_ms
+
+
+def _get_ver_click_timeout_ms() -> int:
+    return load_settings().aeat_browser_ver_click_timeout_ms
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",
@@ -454,7 +470,7 @@ async def _drive_search(
         await page.goto(
             _LISTING_URL,
             wait_until=_WAIT_NETWORKIDLE,
-            timeout=_NAVIGATION_TIMEOUT_MS,
+            timeout=_get_navigation_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -480,12 +496,12 @@ async def _drive_search(
     try:
         await page.get_by_text("Modelo (*)", exact=True).first.wait_for(
             state="visible",
-            timeout=_FORM_INTERACTION_TIMEOUT_MS,
+            timeout=_get_form_interaction_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
             "declaraciones register form did not render the 'Modelo (*)' "
-            f"label within {_FORM_INTERACTION_TIMEOUT_MS}ms; "
+            f"label within {_get_form_interaction_timeout_ms()}ms; "
             "session likely expired or AEAT served a maintenance page",
             translated_message=tr("adapters.sede.errors.form_render_timeout"),
         ) from exc
@@ -513,7 +529,7 @@ async def _drive_search(
             page.locator("button.z-button")
             .filter(has_text="Buscar")
             .click(
-                timeout=_FORM_INTERACTION_TIMEOUT_MS,
+                timeout=_get_form_interaction_timeout_ms(),
             )
         )
     except PlaywrightError as exc:
@@ -521,7 +537,7 @@ async def _drive_search(
             f"clicking Buscar failed: {exc}",
             translated_message="adapters.sede.errors.playwright_buscar_click_failed",
         ) from exc
-    await page.wait_for_timeout(_BUSCAR_SETTLE_MS)
+    await page.wait_for_timeout(_get_buscar_settle_ms())
     return True
 
 
@@ -537,7 +553,7 @@ async def _select_combobox_value(
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
         _assert_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
-        await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+        await button.click(timeout=_get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"opening combobox after label {label_text!r} failed: {exc}",
@@ -558,7 +574,7 @@ async def _select_combobox_value(
     target = matching_options.first
     try:
         _assert_read_browser_action(f"select-option-{option_match}", policy=read_policy)
-        await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+        await target.click(timeout=_get_form_interaction_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"selecting option {option_match!r} for {label_text!r} failed: {exc}",
@@ -850,10 +866,10 @@ async def capture_declaration(
 
         try:
             async with context.expect_page(
-                timeout=_VER_CLICK_TIMEOUT_MS,
+                timeout=_get_ver_click_timeout_ms(),
             ) as new_page_info:
                 _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
-                await ver_button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+                await ver_button.click(timeout=_get_form_interaction_timeout_ms())
             cotejo_page = await new_page_info.value
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -864,7 +880,7 @@ async def capture_declaration(
         try:
             await cotejo_page.wait_for_load_state(
                 _WAIT_DOMCONTENTLOADED,
-                timeout=_NAVIGATION_TIMEOUT_MS,
+                timeout=_get_navigation_timeout_ms(),
             )
         except PlaywrightError as exc:
             raise SedeNavigationError(
@@ -1651,9 +1667,9 @@ async def _capture_row_pdf_artefact(
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
-        async with context.expect_page(timeout=_VER_CLICK_TIMEOUT_MS) as new_page_info:
+        async with context.expect_page(timeout=_get_ver_click_timeout_ms()) as new_page_info:
             _assert_read_browser_action("open-cotejo-pdf", policy=read_policy)
-            await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+            await button.click(timeout=_get_form_interaction_timeout_ms())
         cotejo_page = await new_page_info.value
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -1661,7 +1677,7 @@ async def _capture_row_pdf_artefact(
         ) from exc
 
     try:
-        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_NAVIGATION_TIMEOUT_MS)
+        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_get_navigation_timeout_ms())
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"PDF artefact page did not settle for {declaration.expediente_id!r}: {exc}",
@@ -1708,9 +1724,9 @@ async def _capture_submitted_file_artefact(
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
-        async with page.expect_download(timeout=_VER_CLICK_TIMEOUT_MS) as download_info:
+        async with page.expect_download(timeout=_get_ver_click_timeout_ms()) as download_info:
             _assert_read_browser_action("download-filed-data-file", policy=read_policy)
-            await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
+            await button.click(timeout=_get_form_interaction_timeout_ms())
         download = await download_info.value
         path = await download.path()
     except PlaywrightError as exc:
@@ -1769,9 +1785,7 @@ def _assert_read_browser_action(
 
 
 def _row_locator_for_expediente(page: Page, *, expediente_id: str):
-    """Return a Playwright locator pointing at the listitem whose
-    ``Expediente`` cell text equals ``expediente_id``.
-    """
+    """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``."""
     return page.locator(".z-listitem").filter(
         has=page.locator(".z-listcell").filter(has_text=expediente_id),
     )
