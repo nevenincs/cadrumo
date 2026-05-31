@@ -261,16 +261,16 @@ Sever the remaining illegal import-direction edges: 89 domain-to-adapters reposi
 
 Sever the 7 domain-to-application illegal import edges (MIGRATE-005, RELOC-029) by moving each shared type to domain/ or core/, and eliminate the 5 domain-to-entrypoints edges (MIGRATE-004, RELOC-030) by removing any domain module reference to entrypoints. Rule 2.
 
-- [ ] `W09.P24.S80` - identify all 7 domain-to-application import sites and move each shared type to domain/ or core/, removing the upward import edge; `MIGRATE-005, RELOC-029, Rule 2; `src/aeat/domain/`.
-- [ ] `W09.P24.S81` - identify all 5 domain-to-entrypoints import sites, extract any referenced symbol to domain/ or core/, and remove the entrypoints import from every domain module; `MIGRATE-004, RELOC-030, Rule 2; `src/aeat/domain/`.
+- [x] `W09.P24.S80` - identify all 7 domain-to-application import sites and move each shared type to domain/ or core/, removing the upward import edge; `MIGRATE-005, RELOC-029, Rule 2; `src/aeat/domain/`.
+- [x] `W09.P24.S81` - identify all 5 domain-to-entrypoints import sites, extract any referenced symbol to domain/ or core/, and remove the entrypoints import from every domain module; `MIGRATE-004, RELOC-030, Rule 2; `src/aeat/domain/`.
 
 ### Phase `W09.P25` - core outbound edges elimination
 
 Eliminate the 36 core-to-domain edges (MIGRATE-006, RELOC-025), 13 core-to-application edges (MIGRATE-007, RELOC-026), and 4 core-to-adapters edges (MIGRATE-008, RELOC-027) by moving each referenced symbol into core/ or removing the dependency. Rule 1. Wave close gate: sequential pytest across domain/ and core/.
 
-- [ ] `W09.P25.S82` - enumerate the 36 core-to-domain import edges, verify Rule 2 exceptions A B C do not apply, and for each edge move the referenced symbol into core/ or remove the core/ dependency; `MIGRATE-006, RELOC-025, Rule 1; `src/aeat/core/`.
-- [ ] `W09.P25.S83` - enumerate the 13 core-to-application import edges and for each move the referenced symbol into core/ or remove the dependency; `MIGRATE-007, RELOC-026, Rule 1; `src/aeat/core/`.
-- [ ] `W09.P25.S84` - enumerate the 4 core-to-adapters import edges, move referenced symbols into core/, and run sequential pytest across domain/ and core/ as Wave W09 close gate; `MIGRATE-008, RELOC-027, Rule 1; `src/aeat/core/`.
+- [x] `W09.P25.S82` - enumerate the 36 core-to-domain import edges, verify Rule 2 exceptions A B C do not apply, and for each edge move the referenced symbol into core/ or remove the core/ dependency; `MIGRATE-006, RELOC-025, Rule 1; `src/aeat/core/`.
+- [x] `W09.P25.S83` - enumerate the 13 core-to-application import edges and for each move the referenced symbol into core/ or remove the dependency; `MIGRATE-007, RELOC-026, Rule 1; `src/aeat/core/`.
+- [x] `W09.P25.S84` - enumerate the 4 core-to-adapters import edges, move referenced symbols into core/, and run sequential pytest across domain/ and core/ as Wave W09 close gate; `MIGRATE-008, RELOC-027, Rule 1; `src/aeat/core/`.
 
 ## Wave `W10` - semantic-equivalence consolidations
 
