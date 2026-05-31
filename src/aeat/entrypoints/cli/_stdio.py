@@ -142,8 +142,18 @@ def _set_windows_console_utf8() -> None:
         k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         k32.SetConsoleOutputCP(65001)
         k32.SetConsoleCP(65001)
-    except Exception:
-        pass  # best-effort; non-fatal if ctypes or windll is unavailable
+    except Exception as exc:
+        # Best-effort: non-fatal when ctypes or windll is unavailable
+        # (redirected / piped output where code-page switching is a
+        # no-op). Surface the cause at debug level so diagnostic
+        # captures see why the console code page was not switched —
+        # silent ``pass`` would hide a real misconfiguration on
+        # genuine Windows consoles where this is expected to work.
+        _LOGGER.debug(
+            "windows console UTF-8 switch skipped: %s: %s",
+            type(exc).__name__,
+            exc,
+        )
 
 # ``aeat.core.logging`` cannot be imported at this layer without
 # pulling the project's configuration eagerly; this module runs at
