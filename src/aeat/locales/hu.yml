@@ -1205,12 +1205,25 @@ cli:
           dinerarias) opcióban.
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének decimálisnak
           kell lennie; a kapott érték: {value}.'
-        preview_maritime_exemption_annual_salary_help: 'Eves brutto munkaber EUR-ban (Decimal). Akkor kotelezo, ha az aktiv profil teljesiti az Art. 7.p) felteteleit (vessel_flag=foreign vagy waters_type=international).'
-        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary decimalis osszeg kell legyen; megkapott ertek: {value}.'
-        preview_maritime_exemption_gross_navigation_income_help: 'Hajozasbol szarmazo osszes brutto munkajovedelem EUR-ban (Decimal). Akkor kotelezo, ha az aktiv profil teljesiti a REBECA felteteleit (vessel_registry: REBECA / rebeca_eu_eea / scheduled_canary_route).'
-        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income decimalis osszeg kell legyen; megkapott ertek: {value}.'
-        preview_maritime_exemption_help: 'Tengeri munkavallaloi IRPF-mentesseg (Art. 7.p) LIRPF / REBECA 50%) elozetes szamitasa az aktiv profil maritime_worker tenyei alapjan. Tipusos CasillaObservation sorokat ad ki legal_refs adatokkal; megjeleniti a RETMAR kotelezo bevallasi figyelmeztetest, ha retmar_registered=True; visszautasitja a DA 41 inaktiv koddal, ha a tonhalflotta szelektor teljesul.'
-        preview_maritime_exemption_qualifying_days_help: 'Spanyol teruleten kivuli munkavegzes naptari napjai az adoeven belul. Az Art. 7.p) alkalmazasakor az --annual-salary mellett kotelezo.'
+        preview_maritime_exemption_annual_salary_help: Eves brutto munkaber EUR-ban
+          (Decimal). Akkor kotelezo, ha az aktiv profil teljesiti az Art. 7.p) felteteleit
+          (vessel_flag=foreign vagy waters_type=international).
+        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary decimalis
+          osszeg kell legyen; megkapott ertek: {value}.'
+        preview_maritime_exemption_gross_navigation_income_help: 'Hajozasbol szarmazo
+          osszes brutto munkajovedelem EUR-ban (Decimal). Akkor kotelezo, ha az aktiv
+          profil teljesiti a REBECA felteteleit (vessel_registry: REBECA / rebeca_eu_eea
+          / scheduled_canary_route).'
+        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
+          decimalis osszeg kell legyen; megkapott ertek: {value}.'
+        preview_maritime_exemption_help: Tengeri munkavallaloi IRPF-mentesseg (Art.
+          7.p) LIRPF / REBECA 50%) elozetes szamitasa az aktiv profil maritime_worker
+          tenyei alapjan. Tipusos CasillaObservation sorokat ad ki legal_refs adatokkal;
+          megjeleniti a RETMAR kotelezo bevallasi figyelmeztetest, ha retmar_registered=True;
+          visszautasitja a DA 41 inaktiv koddal, ha a tonhalflotta szelektor teljesul.
+        preview_maritime_exemption_qualifying_days_help: Spanyol teruleten kivuli
+          munkavegzes naptari napjai az adoeven belul. Az Art. 7.p) alkalmazasakor
+          az --annual-salary mellett kotelezo.
         reason_help: Az eldobás opcionális szabad szöveges oka (max. 500 karakter).
         relation_help: Korábbi időszaki kapcsolati érték KEY=VALUE formátumban. A
           KEY egy nyilvántartási kapcsolat-azonosító; az VALUE egy decimális. Több
@@ -1743,8 +1756,13 @@ cli:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     profile:
       errors:
+        ambiguous_profile: 'Tobbertelmu profilnev: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: 'Nincs kivalasztott aktiv profil.'
+        profile_empty: '--profile nem lehet ures.'
+        unknown_profile: 'Ismeretlen profil: %{profile}.'
+        unknown_profile_key: 'Ismeretlen profilkulcs: %{key}.'
       get_help: Read one profile key stored value.
       help: Engineer-only profile field inspection and surgical edits.
       key_help: Profile key.

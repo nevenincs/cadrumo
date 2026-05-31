@@ -1225,12 +1225,25 @@ cli:
           0003 (Retribucions dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
           import decimal; s''ha rebut: {value}.'
-        preview_maritime_exemption_annual_salary_help: 'Salari anual brut en EUR (Decimal). Obligatori quan el perfil actiu compleix els requisits de l''Art. 7.p) (vessel_flag=foreign o waters_type=international).'
-        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary ha de ser un import decimal; s''ha rebut: {value}.'
-        preview_maritime_exemption_gross_navigation_income_help: 'Total d''ingressos bruts de treball procedents de la navegacio en EUR (Decimal). Obligatori quan el perfil actiu compleix REBECA (vessel_registry a REBECA / rebeca_eu_eea / scheduled_canary_route).'
-        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income ha de ser un import decimal; s''ha rebut: {value}.'
-        preview_maritime_exemption_help: 'Previsualitza l''exempcio IRPF del treballador del mar (Art. 7.p) LIRPF / REBECA 50%) a partir dels fets maritime_worker del perfil actiu. Emet files CasillaObservation tipades amb legal_refs; mostra l''avis RETMAR de declaracio obligatoria quan retmar_registered=True; rebutja amb el codi DA 41 inactiu quan el selector tuna_fleet aplica.'
-        preview_maritime_exemption_qualifying_days_help: 'Dies naturals treballats fora del territori espanyol en l''exercici. Obligatori juntament amb --annual-salary quan s''aplica l''Art. 7.p).'
+        preview_maritime_exemption_annual_salary_help: Salari anual brut en EUR (Decimal).
+          Obligatori quan el perfil actiu compleix els requisits de l'Art. 7.p) (vessel_flag=foreign
+          o waters_type=international).
+        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary ha
+          de ser un import decimal; s''ha rebut: {value}.'
+        preview_maritime_exemption_gross_navigation_income_help: Total d'ingressos
+          bruts de treball procedents de la navegacio en EUR (Decimal). Obligatori
+          quan el perfil actiu compleix REBECA (vessel_registry a REBECA / rebeca_eu_eea
+          / scheduled_canary_route).
+        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
+          ha de ser un import decimal; s''ha rebut: {value}.'
+        preview_maritime_exemption_help: Previsualitza l'exempcio IRPF del treballador
+          del mar (Art. 7.p) LIRPF / REBECA 50%) a partir dels fets maritime_worker
+          del perfil actiu. Emet files CasillaObservation tipades amb legal_refs;
+          mostra l'avis RETMAR de declaracio obligatoria quan retmar_registered=True;
+          rebutja amb el codi DA 41 inactiu quan el selector tuna_fleet aplica.
+        preview_maritime_exemption_qualifying_days_help: Dies naturals treballats
+          fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
+          quan s'aplica l'Art. 7.p).
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
@@ -1744,8 +1757,13 @@ cli:
         el problema.
     profile:
       errors:
+        ambiguous_profile: 'Nom de perfil ambigu: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: 'Cap perfil actiu seleccionat.'
+        profile_empty: '--profile no pot estar en blanc.'
+        unknown_profile: 'Perfil desconegut: %{profile}.'
+        unknown_profile_key: 'Clau de perfil desconeguda: %{key}.'
       get_help: Read one profile key stored value.
       help: Engineer-only profile field inspection and surgical edits.
       key_help: Profile key.
