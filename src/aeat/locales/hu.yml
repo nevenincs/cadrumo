@@ -224,6 +224,17 @@ aggregation:
       period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
       quarterly_period_required: Az M130 jövedelemaggregáláshoz negyedéves időszak
         szükséges (pl. 2024Q1).
+  service:
+    errors:
+      envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
+      envelope_period_mismatch: aggregation.service.errors.envelope_period_mismatch
+      envelope_provider_payload_mismatch: aggregation.service.errors.envelope_provider_payload_mismatch
+      observations_mismatch: aggregation.service.errors.observations_mismatch
+      per_modelo_modelos_not_unique: aggregation.service.errors.per_modelo_modelos_not_unique
+      per_modelo_providers_not_unique: aggregation.service.errors.per_modelo_providers_not_unique
+      provider_modelos_not_unique: aggregation.service.errors.provider_modelos_not_unique
+      result_source_kinds_not_unique: aggregation.service.errors.result_source_kinds_not_unique
+      source_kinds_mismatch: aggregation.service.errors.source_kinds_mismatch
   source_mesh:
     errors:
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
@@ -1721,14 +1732,8 @@ cli:
       inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     profile:
       errors:
-        ambiguous_profile: 'Ambiguous profile label: %{profile}'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: No active profile and no --profile NAME supplied; run `aeat
-          config profile switch NAME` first.
-        profile_empty: --profile must not be empty when supplied.
-        unknown_profile: 'Unknown profile: %{profile}'
-        unknown_profile_key: 'Unknown profile key: %{key}'
       get_help: Read one profile key stored value.
       help: Engineer-only profile field inspection and surgical edits.
       key_help: Profile key.
@@ -2853,6 +2858,8 @@ errors:
     error_deadlines_schedule_computation: A motor nem tudott érvényes határidő-ütemtervet
       létrehozni. Ellenőrizze a kért évet és a profil adatait.
     error_deadlines_validation: Egy határidő-rekord nem ment át az érvényesítésen.
+    error_decimal_format: 'Decimális formázási hiba: az érték None, de nem lett tartalék
+      értékkonfiguráció megadva.'
     error_declaracion_template_not_detected: A bevallás PDF sablon-revíziója nem ismerhető
       fel automatikusan.
     error_domain: Domain logikai hiba történt.
@@ -2950,6 +2957,7 @@ errors:
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
     error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
     error_profile_validation: Egy profil-rekord nem ment át az érvényesítésen.
+    error_redaction: Egy szerkesztési segédprogram rossz típusú argumentumot kapott.
     error_renta: Hiba történt a RENTA-számítás során.
     error_renta_validation: Egy RENTA-mezőérték érvénytelen.
     error_rental_amortization_cap_exceeded: A halmozott amortizáció meghaladná a bérleti
@@ -3509,6 +3517,11 @@ filing:
     out_of_range: Az érték kívül esik az engedélyezett tartományon.
     required_missing: Kötelező mező hiányzik.
     schema_mismatch: Eltérés a várt sémától.
+live:
+  errors:
+    expediente_not_found: live.errors.expediente_not_found
+    iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
+    year_range_invalid: live.errors.year_range_invalid
 locales:
   cli:
     audit:
@@ -3545,12 +3558,21 @@ profile:
     tax:
       id: Adóazonosító (NIF/NIE/CIF)
 review:
+  adapters:
+    errors:
+      invoices_load_failed: review.adapters.errors.invoices_load_failed
+      transactions_load_failed: review.adapters.errors.transactions_load_failed
   filing:
     draft_placeholder_summary: Tervezet függőben
     finding_summary: Érvényesítési megállapítás a tervezeten
     stale_approval_summary: A tervezet jóváhagyása elavult.
   invoice:
     summary: Számla felülvizsgálatra vár
+  operator:
+    errors:
+      item_not_found: review.operator.errors.item_not_found
+      unknown_kind: review.operator.errors.unknown_kind
+      unsupported_item_type: review.operator.errors.unsupported_item_type
   transaction:
     summary: Tranzakció besorolásra vár
 sheets:
@@ -3589,6 +3611,9 @@ sheets:
       supplier_tax_id: Szállító adóazonosítója
       transfer_pricing_method_code: Transzferár-módszer
       valuation_amount: Értékelés
+some:
+  locale:
+    key: some.locale.key
 topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális

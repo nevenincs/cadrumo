@@ -35,6 +35,7 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
 from .....core.access_gate import AeatLiveReadNotEnabledError
 from .....core.config import CertificateBackend
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time._utc import _coerce_utc_aware
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
@@ -330,7 +331,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         raise CertificateLoadError(f"could not read PKCS#12 bundle at {bundle.path}: {exc}") from exc
 
     try:
-        parsed = pkcs12.load_pkcs12(raw_bytes, raw_password.encode("utf-8"))
+        parsed = pkcs12.load_pkcs12(raw_bytes, raw_password.encode(UTF_8_ENCODING))
     except ValueError as exc:
         message = str(exc).lower()
         if "invalid password" in message or "mac verify" in message:
@@ -349,7 +350,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     friendly_name: str | None = bundle.friendly_name
     if friendly_name is None and parsed.cert.friendly_name is not None:
         try:
-            friendly_name = parsed.cert.friendly_name.decode("utf-8")
+            friendly_name = parsed.cert.friendly_name.decode(UTF_8_ENCODING)
         except UnicodeDecodeError:
             friendly_name = None
 
@@ -526,7 +527,7 @@ def health(
         # honour the "never-crash on pre-expiry path" contract.
         try:
             raw_bytes = path.read_bytes()
-            parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+            parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode(UTF_8_ENCODING))
         except (OSError, ValueError) as exc:
             raise CertificateLoadError(
                 f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}"

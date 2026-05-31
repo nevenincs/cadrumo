@@ -773,23 +773,23 @@ W7 audit found 8 strict regressions (worsening trend: 0,0,0,0,2,4,8). Root cause
 
 Close 2 A3 regressions in _authenticator.py + extend tr-positional inventory test scope to adapters. Close 3 A7 UTF_8 regressions across 75 production call sites in auth/persistence/application. Plus 4 A7 new (MediaKind enum, COLUMNS env-var promotion, CLASSIFIED_BY_AUTO, BOE encoding unification) and 6 A3 new (Review/Live/Aggregation f-string raises, diagnostics dynamic key).
 
-- [ ] `W07.P31.S500` - fix 2 regressions: thread translated_message on CertificateLoadError at auth/_authenticator.py:1241 + :1251; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W07.P31.S501` - extend test_locale_tr_positional_inventory.py scope to include src/aeat/adapters/ (not just application); `src/aeat/test_locale_tr_positional_inventory.py`.
-- [ ] `W07.P31.S502` - broad-sweep UTF_8_ENCODING enrollment: migrate all 75 production encoding=utf-8 / encode(utf-8) / decode(utf-8) call sites in auth+persistence+application excluding idiomatic hash sites; `src/aeat/adapters/outbound/aeat/auth/_session_store.py`.
-- [ ] `W07.P31.S503` - same sweep in auth certificate + clave_movil; `src/aeat/adapters/outbound/aeat/auth/certificate.py`.
-- [ ] `W07.P31.S504` - same sweep in persistence layer (_local, _lockfile, _secret_store, _rotation); `src/aeat/adapters/outbound/storage/_local.py`.
-- [ ] `W07.P31.S505` - same sweep in application layer (_acquisition_lock, ledger/_evidence, ledger/_business_operation_invoice, invoices/_importing); `src/aeat/application/auth/_acquisition_lock.py`.
-- [ ] `W07.P31.S506` - add UTF_8 inventory test asserting zero bare encoding=utf-8 / encode(utf-8) / decode(utf-8) survives outside idiomatic hash sites; `src/aeat/test_utf8_enrollment_inventory.py`.
-- [ ] `W07.P31.S507` - introduce MediaKind(StrEnum) with PDF=pdf and IMAGE=image; `migrate _evidence.py:65,98,100 + _declarations.py:1698; `src/aeat/application/ledger/_models.py`.
-- [ ] `W07.P31.S508` - promote _COLUMNS_ENV_VAR from _stdio.py:52 to aeat.core.external_constants.COLUMNS_ENV_VAR alongside W6 env-var constants; `src/aeat/core/external_constants.py`.
-- [ ] `W07.P31.S509` - introduce CLASSIFIED_BY_AUTO in external_constants and migrate domain/transactions/_models.py:173,178,800 validator + default; `src/aeat/core/external_constants.py`.
-- [ ] `W07.P31.S510` - unify _LATIN_1_CODEC_ALIAS in _record_spec.py with LATIN_1_ENCODING and centralise BOE encoding choices in external_constants; `src/aeat/core/external_constants.py`.
-- [ ] `W07.P31.S511` - use LedgerProviderID member iteration at _ledger.py:122-132 instead of raw _KNOWN_IMPORT_PROVIDERS tuple; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W07.P31.S512` - thread translated_message on ReviewError raises at review/_operator.py:109,120,195; `src/aeat/application/review/_operator.py`.
-- [ ] `W07.P31.S513` - thread translated_message on ReviewSourceLoadError at review/_adapters.py:144,205; `src/aeat/application/review/_adapters.py`.
-- [ ] `W07.P31.S514` - thread translated_message on LiveApplicationInputError at application/live/__init__.py:507; `src/aeat/application/live/__init__.py`.
-- [ ] `W07.P31.S515` - thread translated_message on 8+ AggregationConfigError raises at aggregation/_service.py with grep-post-condition; `src/aeat/application/aggregation/_service.py`.
-- [ ] `W07.P31.S516` - expand diagnostics/profile.py:48 f-string-as-locale-key to static keys via enumerated dispatch; `src/aeat/diagnostics/profile.py`.
+- [x] `W07.P31.S500` - fix 2 regressions: thread translated_message on CertificateLoadError at auth/_authenticator.py:1241 + :1251; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W07.P31.S501` - extend test_locale_tr_positional_inventory.py scope to include src/aeat/adapters/ (not just application); `src/aeat/test_locale_tr_positional_inventory.py`.
+- [x] `W07.P31.S502` - broad-sweep UTF_8_ENCODING enrollment: migrate all 75 production encoding=utf-8 / encode(utf-8) / decode(utf-8) call sites in auth+persistence+application excluding idiomatic hash sites; `src/aeat/adapters/outbound/aeat/auth/_session_store.py`.
+- [x] `W07.P31.S503` - same sweep in auth certificate + clave_movil; `src/aeat/adapters/outbound/aeat/auth/certificate.py`.
+- [x] `W07.P31.S504` - same sweep in persistence layer (_local, _lockfile, _secret_store, _rotation); `src/aeat/adapters/outbound/storage/_local.py`.
+- [x] `W07.P31.S505` - same sweep in application layer (_acquisition_lock, ledger/_evidence, ledger/_business_operation_invoice, invoices/_importing); `src/aeat/application/auth/_acquisition_lock.py`.
+- [x] `W07.P31.S506` - add UTF_8 inventory test asserting zero bare encoding=utf-8 / encode(utf-8) / decode(utf-8) survives outside idiomatic hash sites; `src/aeat/test_utf8_enrollment_inventory.py`.
+- [x] `W07.P31.S507` - introduce MediaKind(StrEnum) with PDF=pdf and IMAGE=image; `migrate _evidence.py:65,98,100 + _declarations.py:1698; `src/aeat/application/ledger/_models.py`.
+- [x] `W07.P31.S508` - promote _COLUMNS_ENV_VAR from _stdio.py:52 to aeat.core.external_constants.COLUMNS_ENV_VAR alongside W6 env-var constants; `src/aeat/core/external_constants.py`.
+- [x] `W07.P31.S509` - introduce CLASSIFIED_BY_AUTO in external_constants and migrate domain/transactions/_models.py:173,178,800 validator + default; `src/aeat/core/external_constants.py`.
+- [x] `W07.P31.S510` - unify _LATIN_1_CODEC_ALIAS in _record_spec.py with LATIN_1_ENCODING and centralise BOE encoding choices in external_constants; `src/aeat/core/external_constants.py`.
+- [x] `W07.P31.S511` - use LedgerProviderID member iteration at _ledger.py:122-132 instead of raw _KNOWN_IMPORT_PROVIDERS tuple; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W07.P31.S512` - thread translated_message on ReviewError raises at review/_operator.py:109,120,195; `src/aeat/application/review/_operator.py`.
+- [x] `W07.P31.S513` - thread translated_message on ReviewSourceLoadError at review/_adapters.py:144,205; `src/aeat/application/review/_adapters.py`.
+- [x] `W07.P31.S514` - thread translated_message on LiveApplicationInputError at application/live/__init__.py:507; `src/aeat/application/live/__init__.py`.
+- [x] `W07.P31.S515` - thread translated_message on 8+ AggregationConfigError raises at aggregation/_service.py with grep-post-condition; `src/aeat/application/aggregation/_service.py`.
+- [x] `W07.P31.S516` - expand diagnostics/profile.py:48 f-string-as-locale-key to static keys via enumerated dispatch; `src/aeat/diagnostics/profile.py`.
 
 ### Phase `W07.P32` - A1 exceptions + MRO finishers
 

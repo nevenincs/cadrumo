@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .....core.config import load_settings as _load_settings
+from .....core.external_constants import UTF_8_ENCODING
 from .._namespace_registry import BUCKET_LOCK_FILENAME
 from ._errors import BucketBusyError
 
@@ -52,7 +53,7 @@ def _read_pid(target: Path) -> int | None:
     """Read the recorded PID from the lockfile, ``None`` on any IO failure."""
 
     try:
-        text = target.read_text(encoding="utf-8").strip()
+        text = target.read_text(encoding=UTF_8_ENCODING).strip()
     except (FileNotFoundError, PermissionError):
         return None
     if not text:

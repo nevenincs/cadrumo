@@ -133,6 +133,8 @@ _SWEPT_MODULES: frozenset[str] = frozenset(
         "entrypoints/cli/_config/__init__.py",
         "entrypoints/cli/_config/_google.py",
         "entrypoints/cli/_config/_profile_census.py",
+        # W07.P31 adapters sweep (S500-S501):
+        "adapters/outbound/aeat/auth/_authenticator.py",
     }
 )
 

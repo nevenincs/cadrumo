@@ -113,28 +113,16 @@ def _parse_required_decimal(raw: str, *, label: str) -> Decimal:
     return parsed
 
 
-# Canonical financial-import provider ids accepted by `aeat app ledger
-# import --provider`. Each entry resolves through
-# `aeat.application.ledger._actions._resolve_financial_provider`; the
-# tuple is the single source of truth shared by the `--provider` help
-# text and the unknown-provider refusal so an operator can always
-# discover the recognised set.
-_KNOWN_IMPORT_PROVIDERS: tuple[str, ...] = (
-    "auto",
-    "csv",
-    "ofx",
-    "qfx",
-    "xlsx",
-    "excel",
-    "n26",
-    "pdf",
-    "pdf-n26",
-)
+def _known_import_providers() -> tuple[str, ...]:
+    """Return the tuple of recognised provider ids from the canonical enum."""
+    from ...application.ledger._actions import LedgerProviderID
+
+    return tuple(p.value for p in LedgerProviderID)
 
 
 def _provider_catalogue_text() -> str:
     """Return the comma-joined recognised provider ids for messages."""
-    return ", ".join(_KNOWN_IMPORT_PROVIDERS)
+    return ", ".join(_known_import_providers())
 
 
 def _validate_import_provider(provider: str) -> str:
@@ -148,7 +136,7 @@ def _validate_import_provider(provider: str) -> str:
     """
 
     normalised = provider.strip().lower()
-    if normalised not in _KNOWN_IMPORT_PROVIDERS:
+    if normalised not in _known_import_providers():
         raise _bad(
             tr(
                 "cli.ledger.errors.unknown_provider",

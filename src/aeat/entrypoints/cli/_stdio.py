@@ -31,6 +31,8 @@ import sys
 from collections.abc import Iterator
 from typing import Final, TextIO
 
+from ...core.external_constants import COLUMNS_ENV_VAR
+
 # Minimum render width for the help surface. The wizard `profile
 # create` / `edit` verbs expose ~40 flags, including long negatable
 # boolean flag pairs that carry both `--x` and `--no-x` in one
@@ -49,7 +51,7 @@ from typing import Final, TextIO
 _MIN_HELP_RENDER_COLUMNS = 240
 
 #: Environment variable key Rich uses to determine console column width.
-_COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
+_COLUMNS_ENV_VAR: Final[str] = COLUMNS_ENV_VAR
 
 #: argv tokens that request the help surface.
 _HELP_TOKENS = frozenset({"--help", "-h"})
