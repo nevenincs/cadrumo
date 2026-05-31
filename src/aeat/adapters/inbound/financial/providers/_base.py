@@ -42,12 +42,14 @@ import csv
 import unicodedata
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import ClassVar, Literal
 
 from pydantic import BaseModel
+
+from aeat.core.time import _now
 
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
@@ -359,7 +361,7 @@ class FinancialProvider(ABC):
             source_sha256=source_sha256,
             source_row_index=source_row_index,
             source_format=self.source_format,
-            ingested_at=datetime.now(UTC),
+            ingested_at=_now(),
             provider_name=self.name,
         )
 

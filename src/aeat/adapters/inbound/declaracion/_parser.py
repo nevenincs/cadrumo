@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import re
-from datetime import UTC, datetime
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
+
+from aeat.core.time import _now
 
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
@@ -206,7 +207,7 @@ def _parse_declaracion_pages(
         warnings=(),
         source_pdf_path=source_path,
         source_pdf_sha256=source_pdf_sha256,
-        parsed_at=datetime.now(tz=UTC),
+        parsed_at=_now(),
     )
 
 

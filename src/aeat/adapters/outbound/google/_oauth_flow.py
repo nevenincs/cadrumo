@@ -18,7 +18,9 @@ Two policy gates fire before any network IO happens:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
+
+from aeat.core.time import _now
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
@@ -151,7 +153,7 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
         token_uri=token_uri,
         account_email=account_email,
         granted_scopes=granted_scopes,
-        issued_at=datetime.now(UTC),
+        issued_at=_now(),
     )
 
 
