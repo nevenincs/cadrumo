@@ -1637,6 +1637,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
             pdf_path,
             modelo_override="131",
             año_override=2026,
+            template_revision_override="2026",
             period_override="1T",
         )
     except DeclaracionParseError as exc:
