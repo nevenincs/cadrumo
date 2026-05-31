@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from aeat.core.resources._repos.normatives import NormativeRepository
-from aeat.domain.normatives.errors import NormativeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -57,6 +56,8 @@ def test_normative_repository_get_surfaces_parse_error_on_bad_catalogue(tmp_path
     bad_normative.write_text('{"id": "ley-bad"}', encoding="utf-8")
 
     repo = NormativeRepository(root=tmp_path)
+
+    from aeat.domain.normatives.errors import NormativeParseError
 
     with pytest.raises(NormativeParseError):
         _ = repo.singleton
