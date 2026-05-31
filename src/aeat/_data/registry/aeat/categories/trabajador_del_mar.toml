@@ -34,3 +34,37 @@ reference = "Ley 35/2006 Art. 7.p)"
 document_id = "BOE-A-2006-20764"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
 notes = "Primary foreign-work exemption. Conditions: work effectively performed outside Spanish territory; foreign entity receiving the services is non-resident in Spain or has a permanent establishment abroad; the territory has an equivalent income tax or CDI with Spain. Annual cap 60,100 EUR. Confirmed for Galician fishing crew by TEAR Galicia December 2024; extended April 2025 by Supreme Court doctrine to military Navy in NATO/UN sea operations."
+
+[[exemption_bindings]]
+id = "rebeca-50pct"
+pathway = "rebeca_50pct_exemption"
+status = "active"
+exempt_fraction = "0.50"
+
+[exemption_bindings.selector]
+worker_class = "trabajador_del_mar"
+vessel_registry = ["REBECA", "rebeca_eu_eea", "scheduled_canary_route"]
+
+[[exemption_bindings.legal_refs]]
+reference = "Ley 19/1994 Art. 73.2"
+document_id = "BOE-A-1994-16100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+notes = "REBECA regime: 50% exemption on gross employment income from navigation for crew of vessels enrolled in the Registro Especial de Buques y Empresas Navieras de Canarias or on scheduled routes between the Canary Islands and mainland Spain."
+
+[[exemption_bindings.legal_refs]]
+reference = "Ley 19/1994 Art. 73.3"
+document_id = "BOE-A-1994-16100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+notes = "REBECA conditions: vessel enrolled in REBECA register; crew employment contract governed by the vessel operator; navigation income taxed at source via withholding on 50% of gross pay by employer (Modelo 111 withholding base adjustment)."
+
+[[exemption_bindings.legal_refs]]
+reference = "Ley 19/1994 Art. 75.1"
+document_id = "BOE-A-1994-16100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+notes = "REBECA extension scope: since 1 January 2021 applies to crews of vessels of REBECA-registered companies enrolled in other EU/EEA member state registries."
+
+[[exemption_bindings.legal_refs]]
+reference = "Ley 19/1994 Art. 75.3"
+document_id = "BOE-A-1994-16100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-16100"
+notes = "REBECA withholding: exempt 50% is excluded from the Modelo 111 withholding base by the employer. The 50% fraction is statutory and not variable by election."
