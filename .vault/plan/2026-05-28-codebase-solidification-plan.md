@@ -764,3 +764,53 @@ Add CAST-RATIONALE marker on _bindings.py:1651 cast (regression). Consolidate 3 
 - [x] `W06.P30.S497` - verify cast inventory test (W2.P13.S312) catches the _bindings.py:1651 site and document why it didn't fire in W6; `src/aeat/test_cast_rationale_inventory.py`.
 - [x] `W06.P30.S498` - consolidate 3 _parse_date validator wrappers in domain/profile/family.py:80,98,122 into single module-level factory used by all 3 validator methods; `src/aeat/domain/profile/family.py`.
 - [x] `W06.P30.S499` - add real-behavior test asserting consolidated _parse_date factory matches each validator's input/output contract; `src/aeat/domain/profile/test_family_parse_date.py`.
+
+## Wave `W07` - broader Step grammar: close W7 audit findings with grep-post-condition enforcement
+
+W7 audit found 8 strict regressions (worsening trend: 0,0,0,0,2,4,8). Root cause: every Step's scope is narrow file:line lists; siblings in same files persist. W07 adopts broader Step grammar: each enrollment Step requires a grep-post-condition gate proving zero bare-pattern siblings survive in the touched file before close. P31 A3+A7 broad sweeps (tr-positional adapter scope expansion + UTF_8 75-site enrollment + _authenticator regressions). P32 A1 survivor sweep + MRO finishers. P33 A5 dormant duplicate + A8 cast marker placement.
+
+### Phase `W07.P31` - A3 + A7 broad enrollment sweep
+
+Close 2 A3 regressions in _authenticator.py + extend tr-positional inventory test scope to adapters. Close 3 A7 UTF_8 regressions across 75 production call sites in auth/persistence/application. Plus 4 A7 new (MediaKind enum, COLUMNS env-var promotion, CLASSIFIED_BY_AUTO, BOE encoding unification) and 6 A3 new (Review/Live/Aggregation f-string raises, diagnostics dynamic key).
+
+- [ ] `W07.P31.S500` - fix 2 regressions: thread translated_message on CertificateLoadError at auth/_authenticator.py:1241 + :1251; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W07.P31.S501` - extend test_locale_tr_positional_inventory.py scope to include src/aeat/adapters/ (not just application); `src/aeat/test_locale_tr_positional_inventory.py`.
+- [ ] `W07.P31.S502` - broad-sweep UTF_8_ENCODING enrollment: migrate all 75 production encoding=utf-8 / encode(utf-8) / decode(utf-8) call sites in auth+persistence+application excluding idiomatic hash sites; `src/aeat/adapters/outbound/aeat/auth/_session_store.py`.
+- [ ] `W07.P31.S503` - same sweep in auth certificate + clave_movil; `src/aeat/adapters/outbound/aeat/auth/certificate.py`.
+- [ ] `W07.P31.S504` - same sweep in persistence layer (_local, _lockfile, _secret_store, _rotation); `src/aeat/adapters/outbound/storage/_local.py`.
+- [ ] `W07.P31.S505` - same sweep in application layer (_acquisition_lock, ledger/_evidence, ledger/_business_operation_invoice, invoices/_importing); `src/aeat/application/auth/_acquisition_lock.py`.
+- [ ] `W07.P31.S506` - add UTF_8 inventory test asserting zero bare encoding=utf-8 / encode(utf-8) / decode(utf-8) survives outside idiomatic hash sites; `src/aeat/test_utf8_enrollment_inventory.py`.
+- [ ] `W07.P31.S507` - introduce MediaKind(StrEnum) with PDF=pdf and IMAGE=image; `migrate _evidence.py:65,98,100 + _declarations.py:1698; `src/aeat/application/ledger/_models.py`.
+- [ ] `W07.P31.S508` - promote _COLUMNS_ENV_VAR from _stdio.py:52 to aeat.core.external_constants.COLUMNS_ENV_VAR alongside W6 env-var constants; `src/aeat/core/external_constants.py`.
+- [ ] `W07.P31.S509` - introduce CLASSIFIED_BY_AUTO in external_constants and migrate domain/transactions/_models.py:173,178,800 validator + default; `src/aeat/core/external_constants.py`.
+- [ ] `W07.P31.S510` - unify _LATIN_1_CODEC_ALIAS in _record_spec.py with LATIN_1_ENCODING and centralise BOE encoding choices in external_constants; `src/aeat/core/external_constants.py`.
+- [ ] `W07.P31.S511` - use LedgerProviderID member iteration at _ledger.py:122-132 instead of raw _KNOWN_IMPORT_PROVIDERS tuple; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W07.P31.S512` - thread translated_message on ReviewError raises at review/_operator.py:109,120,195; `src/aeat/application/review/_operator.py`.
+- [ ] `W07.P31.S513` - thread translated_message on ReviewSourceLoadError at review/_adapters.py:144,205; `src/aeat/application/review/_adapters.py`.
+- [ ] `W07.P31.S514` - thread translated_message on LiveApplicationInputError at application/live/__init__.py:507; `src/aeat/application/live/__init__.py`.
+- [ ] `W07.P31.S515` - thread translated_message on 8+ AggregationConfigError raises at aggregation/_service.py with grep-post-condition; `src/aeat/application/aggregation/_service.py`.
+- [ ] `W07.P31.S516` - expand diagnostics/profile.py:48 f-string-as-locale-key to static keys via enumerated dispatch; `src/aeat/diagnostics/profile.py`.
+
+### Phase `W07.P32` - A1 exceptions + MRO finishers
+
+Drop ValueError mixin from FinancialValidationError (W6 sibling missed). Close 9 survivors in _encrypted_columns SQLAlchemy processors, domain profile parse helpers, _agenda, _censo_sync init, portals factory, m232 row bindings, decimal._format, redaction.
+
+- [ ] `W07.P32.S517` - fix regression: drop ValueError mixin from FinancialValidationError at financial/providers/_base.py:101 (W6 dropped sibling MROs but missed this); `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [ ] `W07.P32.S518` - introduce StorageValidationError migration at _encrypted_columns.py:125,154,190,257,274 (5 SQLAlchemy processor TypeError); `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [ ] `W07.P32.S519` - introduce DecimalFormatError or CoreValidationError migration at decimal/_format.py:55; `src/aeat/core/decimal/_format.py`.
+- [ ] `W07.P32.S520` - introduce RedactionError(CoreError) and migrate redaction/__init__.py:274,430 TypeErrors; `src/aeat/core/redaction/__init__.py`.
+- [ ] `W07.P32.S521` - migrate _coerce_date at domain/invoices/_models.py:100,102 to ValueError (pydantic-compat) or InvoiceValidationError; `src/aeat/domain/invoices/_models.py`.
+- [ ] `W07.P32.S522` - introduce OverviewAgendaError and migrate application/overview/_agenda.py:108 ValueError; `src/aeat/application/overview/_agenda.py`.
+- [ ] `W07.P32.S523` - migrate application/user_profile/_censo_sync.py:147 ValueError to StorageValidationError; `src/aeat/application/user_profile/_censo_sync.py`.
+- [ ] `W07.P32.S524` - introduce PortalConfigError and migrate domain/portals/_entries/_common.py:48,93,96 ValueError; `src/aeat/domain/portals/_entries/_common.py`.
+- [ ] `W07.P32.S525` - migrate 4 sites in domain/profile/_descendant_facts.py + 1 in _marriage_facts.py + 1 in _ccaa.py to ProfileAnswerTypeError or ProfileParseError; `src/aeat/domain/profile/_descendant_facts.py`.
+- [ ] `W07.P32.S526` - introduce M232BindingError or use CalcSheetsEngineError; `migrate domain/calculations/registry/_m232_row_bindings.py:53,65; `src/aeat/domain/calculations/registry/_m232_row_bindings.py`.
+- [ ] `W07.P32.S527` - aggregate test asserting all new error classes registered + envelope-roundtrip + MRO clean; `src/aeat/test_w07_p32_exceptions.py`.
+
+### Phase `W07.P33` - A5 dormant duplicate + A8 cast marker + 3 wrappers
+
+Delete dormant aeat.core._time module (utc_now duplicate of canonical _now). Re-place cast-rationale marker inline at _bindings.py:1660 (W6 placement drifted). Document 3 _parse_date wrappers as canonical-delegators (acceptable).
+
+- [ ] `W07.P33.S528` - delete aeat.core._time module entirely (utc_now duplicates canonical _now in aeat.core.time._clock; `module unused); `src/aeat/core/_time.py`.
+- [ ] `W07.P33.S529` - re-place CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker inline at _bindings.py:1660 (W6 placement drifted); `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `W07.P33.S530` - add aggregate test asserting no aeat.core._time imports exist + cast rationale inventory passes; `src/aeat/test_w07_p33_cleanup.py`.
