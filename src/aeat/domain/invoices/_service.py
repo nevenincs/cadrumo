@@ -14,8 +14,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.logging import get_logger
 from ...core.identity import TransactionId
 from ..transactions import (
@@ -30,7 +31,6 @@ from ._errors import (
 from ._models import Invoice, InvoiceCatalogue
 
 _LOGGER = get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_AMOUNT_TOLERANCE = Decimal("0.01")
 
 

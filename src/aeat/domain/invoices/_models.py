@@ -20,8 +20,9 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
@@ -39,7 +40,6 @@ from ._validators import (
     validate_vat_number,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LINE_TOLERANCE = Decimal("0.01")
 
 
