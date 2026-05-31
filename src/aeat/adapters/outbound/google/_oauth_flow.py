@@ -21,7 +21,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
-from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.i18n import tr
 from ....domain.user_profile import ProfileNotFoundError
@@ -72,6 +71,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
     `check_unsecured_mode_safety`.
     """
 
+    from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
     from ....application.workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(profile_id)
