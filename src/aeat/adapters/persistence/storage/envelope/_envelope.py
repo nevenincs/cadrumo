@@ -36,6 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from .....core.classification import SensitivityClass
 from .....core.errors import CoreValidationError
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time._utc import _validate_utc_aware
@@ -188,7 +189,7 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
-            encoding="utf-8",
+            encoding=_UTF_8_ENCODING,
             dir=target.parent,
             prefix=f"{target.stem}.",
             suffix=".tmp",
@@ -242,7 +243,7 @@ def load_envelope[PayloadT: BaseModel](
             ``max_supported_version`` or no migrator chain advances it
             to ``max_supported_version``.
     """
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding=_UTF_8_ENCODING)
     envelope = envelope_type.model_validate_json(raw)
     if envelope.classification != expected_class:
         raise ClassificationError(
@@ -423,7 +424,7 @@ def save_encrypted_envelope(
     try:
         with tempfile.NamedTemporaryFile(
             mode="w",
-            encoding="utf-8",
+            encoding=_UTF_8_ENCODING,
             dir=target.parent,
             prefix=f"{target.stem}.",
             suffix=".tmp",
@@ -482,7 +483,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
             schema version exceeds ``max_supported_version`` or no
             migrator chain can advance it.
     """
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding=_UTF_8_ENCODING)
     cipher_envelope = CipherEnvelope.model_validate_json(raw)
     if cipher_envelope.classification != expected_class:
         raise ClassificationError(
@@ -543,7 +544,7 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     """
     if not path.exists():
         return False
-    raw = path.read_text(encoding="utf-8")
+    raw = path.read_text(encoding=_UTF_8_ENCODING)
     # If the file already round-trips as a CipherEnvelope, it is
     # already ciphertext-at-rest; nothing to do.
     try:

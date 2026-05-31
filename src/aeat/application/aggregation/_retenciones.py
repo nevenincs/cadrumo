@@ -21,8 +21,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ._grouping import filter_observations_for_modelo, group_and_collect_names
 from aeat.core.aggregation import AggregationSourceKind
+
+from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
 
 class RetencionScheme(StrEnum):
@@ -78,7 +79,7 @@ class RetencionObservation(BaseModel):
     @field_validator("source_kind")
     @classmethod
     def _reject_bare_invoice_source(cls, value: str) -> str:
-        if value == "invoice":
+        if value == AggregationSourceKind.INVOICE:
             raise ValueError(
                 "bare 'invoice' source-kind is forbidden; use ledger_transaction, "
                 "purchase_invoice_evidence, payable_invoice, or collectible_invoice",

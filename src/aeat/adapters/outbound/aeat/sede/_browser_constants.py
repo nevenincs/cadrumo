@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Final
 
+from .....core.external_constants import LATIN_1_ENCODING
+
 #: Playwright wait state that resolves as soon as the HTML document has
 #: been parsed and the DOM is ready (no sub-resources awaited).
 PLAYWRIGHT_WAIT_DOMCONTENTLOADED: Final[str] = "domcontentloaded"
@@ -23,6 +25,8 @@ PLAYWRIGHT_WAIT_NETWORKIDLE: Final[str] = "networkidle"
 PLAYWRIGHT_TIMEOUT_SHORT_MS: Final[int] = 2_000
 
 #: Character encoding used by the AEAT sede for legacy fixed-width response bodies
-#: (e.g. Modelo 303 page-03 records).  ISO 8859-1 is the AEAT canonical encoding;
-#: ``latin-1`` is Python's alias for the same codec.
-SEDE_BODY_ENCODING: Final[str] = "latin-1"
+#: (e.g. Modelo 303 page-03 records).  Alias of the canonical
+#: :data:`~aeat.core.external_constants.LATIN_1_ENCODING` constant; kept under
+#: this adapter-local name so existing callers do not need to reach into
+#: ``external_constants`` directly.
+SEDE_BODY_ENCODING: Final[str] = LATIN_1_ENCODING

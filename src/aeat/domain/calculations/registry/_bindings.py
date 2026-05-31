@@ -1627,14 +1627,20 @@ def resolve_ledger_renta_income_aggregation_binding_values(
 
 
 CounterpartSourceKind = Literal[
-    "invoice",
-    "ledger_transaction",
-    "purchase_invoice_evidence",
-    "payable_invoice",
-    "collectible_invoice",
+    AggregationSourceKind.INVOICE,
+    AggregationSourceKind.LEDGER_TRANSACTION,
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    AggregationSourceKind.PAYABLE_INVOICE,
+    AggregationSourceKind.COLLECTIBLE_INVOICE,
 ]
 COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = frozenset(
-    {"invoice", "ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice"}
+    {
+        AggregationSourceKind.INVOICE,
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
+    }
 )
 
 
@@ -1647,8 +1653,11 @@ class CounterpartAggregationObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+    # CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND: bridging AggregationSourceKind StrEnum
+    # value to CounterpartSourceKind Literal alias; the runtime value is identical but the
+    # type system cannot infer the Literal subset.
     source_kind: CounterpartSourceKind = Field(
-        default=cast(CounterpartSourceKind, AggregationSourceKind.LEDGER_TRANSACTION),  # CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND: bridging AggregationSourceKind StrEnum value to CounterpartSourceKind Literal alias; the runtime value is identical but the type system cannot infer the Literal subset.
+        default=cast(CounterpartSourceKind, AggregationSourceKind.LEDGER_TRANSACTION),
     )
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)
@@ -2836,17 +2845,17 @@ def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelect
 
 _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "previous_filing": _PreviousModeloSelector,
-    "invoice": _InvoiceSelector,
+    AggregationSourceKind.INVOICE: _InvoiceSelector,
     # Counterpart-aggregation family: every source whose selector shape
     # mirrors the invoice family (fact + claves + rectification_scope +
     # optional row_field / grouping / record) is validated against
     # ``_InvoiceSelector``. The ``_validated_counterpart_selector``
     # helper adds counterpart-specific fact / op invariants on top
     # of the shared schema at handler-call time.
-    "ledger_transaction": _InvoiceSelector,
-    "purchase_invoice_evidence": _InvoiceSelector,
-    "payable_invoice": _InvoiceSelector,
-    "collectible_invoice": _InvoiceSelector,
+    AggregationSourceKind.LEDGER_TRANSACTION: _InvoiceSelector,
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
+    AggregationSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
+    AggregationSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
     "ledger_oss_aggregation": _OssIossLedgerSelector,
     "ledger_iva_aggregation": _IvaLedgerSelector,
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
@@ -2891,7 +2900,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     those bindings short-circuit with an empty failure list.
     """
 
-    if binding.source == "invoice":
+    if binding.source == AggregationSourceKind.INVOICE:
         return [
             f"binding {binding.id!r} source 'invoice' is retired; use "
             "collectible_invoice / payable_invoice / purchase_invoice_evidence"

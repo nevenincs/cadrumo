@@ -18,6 +18,7 @@ from ...application.registry import (
 )
 from ...core.i18n import tr
 from ...core.resources import bundled_path
+from ...domain.calculations.registry._live_parity import OracleEnvironment as _OracleEnvironment
 from ._common import _emit
 from ._registry_corpus import citations_app, manuals_app
 
@@ -181,7 +182,7 @@ def audit_oracles_cmd(
             "--environment",
             help=tr("cli.registry.audit_oracles_environment_help"),
         ),
-    ] = "production",
+    ] = _OracleEnvironment.PRODUCTION,
 ) -> None:
     """Audit registered live-parity oracles against every modelo's cross-reference bindings.
 

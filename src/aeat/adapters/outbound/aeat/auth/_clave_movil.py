@@ -29,7 +29,7 @@ import json
 import re
 import time
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -41,9 +41,9 @@ from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
-from .....core.time._clock import _now
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.time._clock import _now
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -76,6 +76,10 @@ log = get_logger(__name__)
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
 _OWN_NAME_REPRESENTATION_ACTION: Final[str] = "representation-gate-own-name-continue"
+
+# Environment variable name referenced in operator-facing error messages.
+# Named constant so grepping for the env-var name surfaces every usage site.
+_CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "AEAT_CLAVE_MOVIL_DNI_NIE"
 
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
@@ -626,7 +630,7 @@ class ClaveMovilAuthProvider:
         raw = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie)
         if not raw:
             raise ClaveMovilConfigurationError(
-                "AEAT_CLAVE_MOVIL_DNI_NIE is not set; set it to your DNI or NIE "
+                f"{_CLAVE_MOVIL_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
                 "before running `aeat config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
