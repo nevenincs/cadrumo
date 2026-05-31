@@ -33,7 +33,6 @@ on-disk file and the manifest raises :class:`BlobIntegrityError`.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import secrets
 import tempfile
@@ -45,6 +44,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE
+from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
@@ -125,7 +125,7 @@ class BlobReference(BaseModel):
 
 
 def _hex_digest(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
+    return _sha256_hex(data)
 
 
 class EncryptedBlobStore:
