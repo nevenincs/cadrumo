@@ -19,9 +19,17 @@ from ...application.registry import (
 from ...core.i18n import tr
 from ...core.resources import bundled_path
 from ...domain.calculations.registry._live_parity import OracleEnvironment as _OracleEnvironment
-from ._common import _emit, _emit_envelope
+from ._common import _emit_envelope
 from ._registry_corpus import citations_app, manuals_app
-from ._registry_payloads import RegistryInspectResult, RegistryVerifyResult
+from ._registry_payloads import (
+    RegistryAuditOraclesResult,
+    RegistryInspectResult,
+    RegistryParityReplayResult,
+    RegistryParityRunResult,
+    RegistryVerifyFiledStateResult,
+    RegistryVerifyResult,
+    RegistryWorkbooksVerifyResult,
+)
 
 app = typer.Typer(
     name="registry",
@@ -91,25 +99,10 @@ def inspect_registry_cmd(
     """Load the read-only registry tree and report inventory counts."""
     registry_root = _resolve_registry_root(registry_root)
     report = inspect_registry_tree(registry_root)
-    typed = RegistryInspectResult(
-        modelo_count=report.modelo_count,
-        revision_count=report.revision_count,
-        legal_reference_count=report.legal_reference_count,
-        source_reference_count=report.source_reference_count,
-        casilla_count=report.casilla_count,
-        formula_count=report.formula_count,
-        extraction_profile_count=report.extraction_profile_count,
-        cross_reference_count=report.cross_reference_count,
-        workbook_parity_ref_count=report.workbook_parity_ref_count,
-        verification_expectation_count=report.verification_expectation_count,
-        application_link_count=report.application_link_count,
-        application_link_surfaces=list(report.application_link_surfaces),
-        modelos=list(report.modelos),
-    )
     _emit_envelope(
         ctx,
         command="registry.inspect",
-        result=typed,
+        result=RegistryInspectResult.model_validate(report.model_dump(mode="json")),
         lines=(
             _metric_line("modelo_count", report.modelo_count),
             _metric_line("revision_count", report.revision_count),
@@ -156,26 +149,10 @@ def verify_registry_cmd(
     """Validate every registry modelo against shared legal/source catalogues."""
     registry_root = _resolve_registry_root(registry_root)
     report = verify_registry_tree(registry_root, source_root=_resolve_source_root(source_root))
-    typed_verify = RegistryVerifyResult(
-        verified=report.verified,
-        modelo_count=report.modelo_count,
-        revision_count=report.revision_count,
-        legal_reference_count=report.legal_reference_count,
-        source_reference_count=report.source_reference_count,
-        casilla_count=report.casilla_count,
-        formula_count=report.formula_count,
-        extraction_profile_count=report.extraction_profile_count,
-        cross_reference_count=report.cross_reference_count,
-        workbook_parity_ref_count=report.workbook_parity_ref_count,
-        verification_expectation_count=report.verification_expectation_count,
-        application_link_count=report.application_link_count,
-        application_link_surfaces=list(report.application_link_surfaces),
-        modelos=list(report.modelos),
-    )
     _emit_envelope(
         ctx,
         command="registry.verify",
-        result=typed_verify,
+        result=RegistryVerifyResult.model_validate(report.model_dump(mode="json")),
         lines=(
             _metric_line("verified", report.verified),
             _metric_line("modelo_count", report.modelo_count),
@@ -243,7 +220,12 @@ def audit_oracles_cmd(
         )
         for index, declaration in enumerate(report.applicability_declarations)
     )
-    _emit(ctx, report, lines)
+    _emit_envelope(
+        ctx,
+        command="registry.audit_oracles",
+        result=RegistryAuditOraclesResult.model_validate(report.model_dump(mode="json")),
+        lines=lines,
+    )
     if report.failures:
         raise typer.Exit(code=1)
 
@@ -324,7 +306,12 @@ def verify_filed_state_cmd(
                 f"{drift.casilla_id}\tlocal={drift.local_value}\tfiled={drift.filed_value}\tdelta={drift.delta}",
             )
         )
-    _emit(ctx, report, lines)
+    _emit_envelope(
+        ctx,
+        command="registry.verify_filed_state",
+        result=RegistryVerifyFiledStateResult.model_validate(report.model_dump(mode="json")),
+        lines=lines,
+    )
 
 
 @workbooks_app.command("verify", help=tr("cli.registry.workbooks_verify_help"))
@@ -378,10 +365,11 @@ def verify_workbooks_cmd(
         resume_from=resume_from,
         output=output,
     )
-    _emit(
+    _emit_envelope(
         ctx,
-        report,
-        (
+        command="registry.workbooks.verify",
+        result=RegistryWorkbooksVerifyResult.model_validate(report.model_dump(mode="json")),
+        lines=(
             _metric_line("backend_exists", report.backend_exists),
             _metric_line("passed", report.passed),
             _metric_line("workbook_count", report.workbook_count),
@@ -459,10 +447,11 @@ def run_parity_cmd(
         store_root=store_root,
         output=output,
     )
-    _emit(
+    _emit_envelope(
         ctx,
-        tape,
-        (
+        command="registry.parity.run",
+        result=RegistryParityRunResult.model_validate(tape.model_dump(mode="json")),
+        lines=(
             _metric_line("scenario_id", tape.scenario.id),
             _metric_line("status", tape.report.status),
             _metric_line("tape_path", target.as_posix()),
@@ -514,10 +503,11 @@ def replay_parity_cmd(
         registry_root=_resolve_registry_root(registry_root),
         source_root=_resolve_source_root(source_root),
     )
-    _emit(
+    _emit_envelope(
         ctx,
-        report,
-        (
+        command="registry.parity.replay",
+        result=RegistryParityReplayResult.model_validate(report.model_dump(mode="json")),
+        lines=(
             _metric_line("scenario_id", report.scenario_id),
             _metric_line("status", report.status),
             _metric_line("difference_count", len(report.differences)),
