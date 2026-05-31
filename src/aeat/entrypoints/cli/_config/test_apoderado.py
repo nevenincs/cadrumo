@@ -45,7 +45,10 @@ def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
     assert isinstance(result.exception, CliRefusedBoundaryError), (
         f"expected CliRefusedBoundaryError, got {type(result.exception).__name__}: {result.exception}"
     )
-    assert "No active profile" in str(result.exception)
+    # CliRefusedBoundaryError carries the operator-facing copy via its
+    # translated_message key; str(exception) is intentionally empty
+    # because the rendering happens in the boundary, not on the exception.
+    assert result.exception.translated_message == "cli.config.profile.no_active_profile"
 
 
 def test_apoderado_scopes_list(runner: CliRunner) -> None:
