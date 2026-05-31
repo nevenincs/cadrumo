@@ -7,9 +7,6 @@ SecretStr / PrivateAttr non-leakage.
 
 from __future__ import annotations
 
-import os
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -20,6 +17,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
+
+from aeat.tests.env_scope import isolated_aeat_env
 
 from . import (
     CertificateBackend,
@@ -34,34 +33,10 @@ from . import (
     preload_into_browser_context,
     verify_handshake,
 )
+from ._test_fixtures import SECRET_PASSPHRASE
 from .certificate import _select_backend
 
-from ._test_fixtures import SECRET_PASSPHRASE
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
-
-
-@contextmanager
-def _env_overrides(**overrides: str) -> Iterator[None]:
-    """Scoped env overrides for the with-block.
-
-    Replaces ``monkeypatch.setenv`` per the project no-monkeypatch
-    mandate (CLAUDE.md). These tests exercise the pydantic-settings
-    env-reading contract, so a ContextVar-based ``override_settings``
-    does not apply — validators must see real env values.
-    """
-    saved: dict[str, str | None] = {}
-    for name, value in overrides.items():
-        saved[name] = os.environ.get(name)
-        os.environ[name] = value
-    try:
-        yield
-    finally:
-        for name, prior in saved.items():
-            if prior is None:
-                os.environ.pop(name, None)
-            else:
-                os.environ[name] = prior
 
 
 def _build_pkcs12_bundle(
@@ -417,7 +392,7 @@ def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
 
     placeholder_p12 = tmp_path / "op.p12"
     placeholder_p12.write_bytes(b"placeholder")
-    with _env_overrides(
+    with isolated_aeat_env(
         AEAT_CERTIFICATE_PATH=str(placeholder_p12),
         AEAT_CERTIFICATE_PASSWORD_SECRET=SECRET_PASSPHRASE,
         AEAT_CERTIFICATE_FRIENDLY_NAME="op-cert",
@@ -485,6 +460,6 @@ def test_settings_rejects_removed_certificate_backends() -> None:
     class IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None)
 
-    with _env_overrides(AEAT_CERTIFICATE_BACKEND="MTLS_PROXY"):
+    with isolated_aeat_env(AEAT_CERTIFICATE_BACKEND="MTLS_PROXY"):
         with pytest.raises(pydantic.ValidationError, match=r"aeat_certificate_backend|MTLS_PROXY|Input should be"):
             IsolatedSettings()

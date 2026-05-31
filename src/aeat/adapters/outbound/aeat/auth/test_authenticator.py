@@ -417,51 +417,36 @@ def _certificate_assertion() -> AeatLoginAssertion:
 
 @pytest.fixture
 def _settings_factory():
-    """Yield a callable that pins Settings via the ContextVar override.
+    """Yield a cert-shaped Settings factory built on the centralized scope helper.
 
-    Replaces the historical ``monkeypatch.setenv`` shim per the project
-    no-monkeypatch mandate (CLAUDE.md). The ContextVar is set directly
-    rather than via ``override_settings``-as-contextmanager because
-    asyncio tasks copy the context; a token-based ``reset`` from the
-    fixture teardown raises ``ValueError`` if the test body that called
-    ``set`` ran in a child context. Capturing the prior value and
-    restoring it with a plain ``set`` is async-context-safe.
+    Delegates the async-context-safe ContextVar mutation to
+    :func:`aeat.tests.settings_scope.settings_factory`, then wraps the
+    generic factory with this module's certificate-bundle defaults
+    (path, passphrase, backend, verify URL, token-dir derived from the
+    bundle path). Tests pass the bundle ``Path`` as the single
+    positional argument; extra Settings overrides go through ``**``.
     """
-    from .....core.config import Settings, _settings_override, load_settings
+    from aeat.tests.settings_scope import settings_factory as _scoped_factory
 
-    saved_prior = _settings_override.get()
-    applied = False
+    with _scoped_factory() as scoped:
 
-    def factory(
-        path: Path,
-        *,
-        verify_url: str = "https://127.0.0.1:1/",
-        **extra_overrides: object,
-    ) -> Settings:
-        nonlocal applied
-        overrides: dict[str, object] = {
-            "aeat_certificate_path": path,
-            "aeat_certificate_password_secret": SECRET_PASSPHRASE,
-            "aeat_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
-            "aeat_certificate_verify_url": verify_url,
-            "aeat_token_dir": path.parent / ".tokens",
-        }
-        overrides.update(extra_overrides)
-        current = load_settings()
-        merged = current.model_dump()
-        merged.update(overrides)
-        new_settings = Settings.model_validate(merged)
-        explicit_fields = current.model_fields_set | set(overrides.keys())
-        object.__setattr__(new_settings, "__pydantic_fields_set__", explicit_fields)
-        _settings_override.set(new_settings)
-        applied = True
-        return new_settings
+        def factory(
+            path: Path,
+            *,
+            verify_url: str = "https://127.0.0.1:1/",
+            **extra_overrides: object,
+        ) -> Settings:
+            overrides: dict[str, object] = {
+                "aeat_certificate_path": path,
+                "aeat_certificate_password_secret": SECRET_PASSPHRASE,
+                "aeat_certificate_backend": CertificateBackend.HTTPX_FALLBACK,
+                "aeat_certificate_verify_url": verify_url,
+                "aeat_token_dir": path.parent / ".tokens",
+            }
+            overrides.update(extra_overrides)
+            return scoped(**overrides)
 
-    try:
         yield factory
-    finally:
-        if applied:
-            _settings_override.set(saved_prior)
 
 
 async def _seed_persisted_session(
