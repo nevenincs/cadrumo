@@ -161,6 +161,8 @@ def _normalise_period(
             input.
         raw_period: The period as printed on the justificante
             (``"1T"``, ``"12"``, ``"0A"``, ``"2026Q1"``, ...).
+        schema_provider: Registry-backed schema provider used to look
+            up the supported period tokens for the given modelo.
 
     Returns:
         The canonical period string.

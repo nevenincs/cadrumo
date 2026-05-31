@@ -698,7 +698,7 @@ class RecargoBand(BaseModel):
         return self
 
 class Recovery(BaseModel):
-    """Operator-facing recovery payload attached to an OVERDUE obligation.
+    r"""Operator-facing recovery payload attached to an OVERDUE obligation.
 
     Surfaces the resolved Ley 58/2003 art-27 recargo band plus a runnable
     next-action command the operator can copy. The CLI's calendar

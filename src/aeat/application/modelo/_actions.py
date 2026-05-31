@@ -163,9 +163,9 @@ def _emit_bucket_event(
     object_id: str,
     payload: Mapping[str, str],
 ) -> BucketEvent:
-    """Append one event to the bucket-event-history catalogue and
-    return the persisted record. Content-addressed: re-emitting an
-    identical event is a no-op.
+    """Append one event to the bucket-event-history catalogue and return the persisted record.
+
+    Content-addressed: re-emitting an identical event is a no-op.
     """
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
@@ -234,8 +234,7 @@ class VerificationReportNotFoundError(ModeloError, KeyError):
 
 
 class AmendmentEvidenceMissingError(ModeloError):
-    """Raised when the modelo-amend path is asked to amend a filing
-    record that carries no imported official evidence.
+    """Raised when the modelo-amend path is asked to amend a filing record that carries no imported official evidence.
 
     The amend path is gated on ``external_evidence`` being populated
     on the baseline filing record. A locally-computed filing record
@@ -245,15 +244,14 @@ class AmendmentEvidenceMissingError(ModeloError):
 
 
 class AmendmentTargetStateError(ModeloError):
-    """Raised when the modelo-amend path is asked to amend a filing
-    record that is not in ``CURRENT`` status (e.g., it was already
-    superseded by a later filing).
+    """Raised when the modelo-amend path is asked to amend a filing record that is not in ``CURRENT`` status.
+
+    For example, when it was already superseded by a later filing.
     """
 
 
 class StoredCalculationDriftError(ModeloError):
-    """Raised when the verify path detects that a persisted calculation revision
-    has drifted from its content-addressed id.
+    """Raised when a persisted calculation revision has drifted from its content-addressed id.
 
     The ``calculation_revision_id`` is a SHA-256 hash of
     ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``.
@@ -265,9 +263,9 @@ class StoredCalculationDriftError(ModeloError):
 
 
 class ExternalModeloImportError(ModeloError):
-    """Raised when the external-filing import path cannot persist an
-    imported baseline (e.g., empty casilla values, missing evidence
-    reference).
+    """Raised when the external-filing import path cannot persist an imported baseline.
+
+    Examples: empty casilla values, missing evidence reference.
     """
 
 
@@ -335,11 +333,10 @@ class ModeloWorkflowGateError(ModeloError):
 
 
 class AmendmentOverrideCasillaError(ModeloError):
-    """Raised when an amendment override targets a casilla id the
-    registry does not declare for the baseline's modelo / filing
-    year / period. The corrected revision is the legal basis of the
-    complementaria filing — fabricated casilla ids cannot be silently
-    accepted.
+    """Raised when an amendment override targets a casilla id the registry does not declare for the baseline's modelo.
+
+    The corrected revision is the legal basis of the complementaria
+    filing — fabricated casilla ids cannot be silently accepted.
     """
 
 
@@ -585,6 +582,9 @@ def create_work_unit(
         name: Optional display name; defaults to
             ``<modelo>-<year>-<period>``.
         actor: Actor label recorded on the creation bucket event.
+        causante_ccaa: Optional autonomous community of the causante
+            (deceased / estate origin) when the filing is an estate
+            declaration. Persisted on the work unit for CCAA-split logic.
         repository: Repository override for testing; defaults to
             the canonical ``WorkUnitCatalogueRepository``.
         bucket_event_repository: Bucket-event repository override for
@@ -841,8 +841,7 @@ def _canonical_decimal_str(value: Decimal) -> str:
 
 
 class CalculationRegistryUnavailableError(ModeloError):
-    """Raised when the registry snapshot for a work unit's
-    (modelo, year, period) cannot be resolved at calculate time.
+    """Raised when the registry snapshot for a work unit's (modelo, year, period) cannot be resolved at calculate time.
 
     The calculate path runs the registry's formula engine against
     the snapshot; if no snapshot exists for the work unit's axis
@@ -1851,8 +1850,7 @@ def _reject_caller_overrides_of_source_bindings(
     caller_binding_values: Mapping[str, Decimal],
     caller_casilla_inputs: Mapping[str, Decimal],
 ) -> None:
-    """Refuse caller-supplied bindings or casilla inputs that collide with
-    values bucket source resolvers own.
+    """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
 
     Bucket-aggregation calculation derives source-owned binding values
     (and the casillas bound to them) from bucket substrate. Letting a
@@ -2279,8 +2277,7 @@ def _verification_predicates_for_revision(
 
 
 def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
-    """Raise StoredCalculationDriftError when the revision's stored payload
-    does not match its content-addressed id or has internal observation drift.
+    """Check revision integrity; raise :exc:`StoredCalculationDriftError` on content-address or observation drift.
 
     Two checks run:
 
@@ -3076,8 +3073,7 @@ def _dt12_reduccion_advisory_finding(
     revision: object,
     casilla_values: Mapping[str, Decimal],
 ) -> ModeloVerificationFinding | None:
-    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when a large trabajo income is
-    present but no trabajo reducción has been declared.
+    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when large trabajo income is present but no reducción is declared.
 
     The check is advisory only (WARNING severity); it does not block VERIFICADO_COMPLETO.
     Heuristic: casilla with semantic_role ``irpf_rendimiento_trabajo_importe_integro_dinerario``

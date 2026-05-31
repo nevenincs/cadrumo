@@ -218,9 +218,11 @@ def _qualifies_for_tier_90(
     *,
     prior_rent_rebaja_threshold: Decimal,
 ) -> bool:
-    """Tier a) — same landlord + new contract + zona tensionada +
-    initial rent more than ``prior_rent_rebaja_threshold`` below the
-    prior contract's indexed last rent.
+    """Return True if the contract qualifies for tier a) reduccion.
+
+    Tier a) applies when the property is in a stressed area, there is a prior
+    contract, and the initial rent is more than ``prior_rent_rebaja_threshold``
+    below the prior contract's indexed last rent.
     """
     if not finca.is_stressed_area:
         return False
@@ -306,9 +308,11 @@ def _resolve_tier_70(
 
 
 def _resolve_tier_70_b_2(contract: Arrendamiento) -> TierResolution | None:
-    """Ordinal 2.º — Public Admin tenant or Ley 49/2002 entity destining
-    the dwelling to alquiler social, IMV beneficiary, or dwelling in a
-    public housing program with a rent cap.
+    """Return the tier 70 resolution for ordinal 2.º qualifying contracts, or None.
+
+    Qualifies when the tenant is a Public Admin entity, a Ley 49/2002 entity
+    destining the dwelling to alquiler social, an IMV beneficiary, or when the
+    dwelling is in a public housing program with a rent cap.
     """
     if (
         contract.tenant_is_public_admin
@@ -366,8 +370,10 @@ def _qualifies_for_tier_60_rehab(
     *,
     rehab_lookback_days: int,
 ) -> bool:
-    """Tier c) — actuación de rehabilitación finished within
-    ``rehab_lookback_days`` preceding the contract celebration date.
+    """Return True if the contract qualifies for tier c) reduccion.
+
+    Tier c) applies when a rehabilitation (actuación de rehabilitación) was
+    finished within ``rehab_lookback_days`` preceding the contract celebration date.
     """
     if contract.rehabilitation_finished_date is None:
         return False

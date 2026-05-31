@@ -57,8 +57,7 @@ from ._errors import DeadlineValidationError
 
 
 class CalendarCCAA(StrEnum):
-    """Spanish autonomous communities (Comunidades Autónomas) + the two
-    autonomous cities, keyed by ISO 3166-2:ES code.
+    """Spanish autonomous communities and the two autonomous cities, keyed by ISO 3166-2:ES code.
 
     AEAT filing deadlines may shift when the close date coincides with
     a holiday in the taxpayer's CCAA of tax residence (domicilio
@@ -276,8 +275,9 @@ def _holidays_on(
     calendar: HolidayCalendar,
     ccaa_code: CalendarCCAA | None,
 ) -> tuple[Holiday, ...]:
-    """Return every holiday that matches ``candidate`` for the supplied
-    CCAA (and always every national holiday).
+    """Return every holiday that matches ``candidate`` for the supplied CCAA.
+
+    National holidays are always included regardless of CCAA.
     """
     matches: list[Holiday] = []
     for holiday in calendar.national:

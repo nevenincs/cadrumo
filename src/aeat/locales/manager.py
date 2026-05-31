@@ -1,3 +1,5 @@
+"""Locale file management: loading, scaffolding, and structural health checks."""
+
 import re
 from pathlib import Path
 
@@ -21,6 +23,15 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
 
     def construct_mapping(self, node, deep=False):
+        """Construct a mapping node, raising ``LocaleError`` on duplicate keys.
+
+        Args:
+            node: The YAML mapping node to construct.
+            deep: Whether to construct values recursively before returning.
+
+        Returns:
+            A plain ``dict`` of the mapping's key-value pairs.
+        """
         mapping = {}
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
@@ -35,6 +46,12 @@ class LocaleManager:
     """API for managing locale files, scaffolding, and structural health."""
 
     def __init__(self, src_dir: Path, locales_dir: Path):
+        """Initialise the manager with the source tree and locale file directory.
+
+        Args:
+            src_dir: Root directory of the Python source tree to scan for translation keys.
+            locales_dir: Directory containing ``*.yml`` locale files.
+        """
         self.src_dir = src_dir
         self.locales_dir = locales_dir
         self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)

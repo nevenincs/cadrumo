@@ -628,6 +628,9 @@ def build_overview_calendar(
             :class:`aeat.domain.deadlines.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
             a default :class:`_DeadlineEngine` is constructed.
+        raw_values: Optional mapping of casilla id to raw value, forwarded
+            to the engine for user-state annotation. When ``None``, the
+            engine uses an empty mapping.
         show_suppressed: When ``True``, populate
             :attr:`OverviewCalendar.suppressed_entries` with the
             obligations filtered out by a non-``APPLICABLE``

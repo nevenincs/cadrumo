@@ -449,6 +449,8 @@ def validate_draft(
 
     Args:
         draft: The draft to re-validate.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`refresh_review_status` after validation.
         schema_provider: Resolves the casilla collection for the
             draft's modelo.
         deadline_checker: Optional deadline check Protocol implementation.

@@ -38,8 +38,7 @@ class CensoFieldValidationError(CensoSyncError):
 
 
 class CensoApplyConflictError(CensoSyncError):
-    """Raised when ``apply`` aborts because a dependent's state cannot
-    be safely stamped.
+    """Raised when ``apply`` aborts because a dependent's state cannot be safely stamped.
 
     Examples: an in-flight workflow run on a dependent work unit, a
     filing record currently being amended, a draft mid-approval. The

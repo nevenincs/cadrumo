@@ -27,13 +27,19 @@ class SiteHealthEvidenceLike(Protocol):
     """
 
     @property
-    def url(self) -> object: ...
+    def url(self) -> object:
+        """URL that was probed during the health check."""
+        ...
 
     @property
-    def http_status(self) -> object: ...
+    def http_status(self) -> object:
+        """HTTP status code returned by the probed URL."""
+        ...
 
     @property
-    def detected_markers(self) -> Sequence[object]: ...
+    def detected_markers(self) -> Sequence[object]:
+        """Sequence of markers detected in the response that triggered classification."""
+        ...
 
 
 @runtime_checkable
@@ -52,16 +58,24 @@ class SiteHealthStatusLike(Protocol):
     """
 
     @property
-    def state(self) -> object: ...
+    def state(self) -> object:
+        """Classified site-health state (e.g. mantenimiento, WAF challenge, rate limit)."""
+        ...
 
     @property
-    def evidence(self) -> SiteHealthEvidenceLike: ...
+    def evidence(self) -> SiteHealthEvidenceLike:
+        """Evidence block used to classify the detected state."""
+        ...
 
     @property
-    def observed_at(self) -> datetime: ...
+    def observed_at(self) -> datetime:
+        """Timestamp at which the health check observation was recorded."""
+        ...
 
     @property
-    def retry_after_seconds(self) -> int | None: ...
+    def retry_after_seconds(self) -> int | None:
+        """Suggested retry delay in seconds, or ``None`` when not provided."""
+        ...
 
 
 class AeatError(Exception):

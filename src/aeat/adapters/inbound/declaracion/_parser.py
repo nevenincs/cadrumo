@@ -237,6 +237,8 @@ def _resolve_template(
 
     Args:
         path: Path to the source PDF.
+        pages: Optional tuple of page-number strings used to restrict text
+            extraction to specific pages; ``None`` extracts all pages.
         modelo_override: Explicit modelo identifier or ``None``.
         template_revision_override: Explicit revision string or ``None``.
         año_override: Explicit four-digit tax year or ``None``.

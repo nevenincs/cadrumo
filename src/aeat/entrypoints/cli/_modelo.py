@@ -330,17 +330,31 @@ def list_modelos(
     year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
 ) -> None:
     report = _run_query(lambda: _service().list_modelos(year=year))
-    _emit(
-        ctx,
-        report,
-        [
-            "code\ttitle\tcadence\tdomain\trevisions",
-            *[
-                f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}"
-                for row in report.modelos
-            ],
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloListResult, ModeloRowPayload
+
+    result = ModeloListResult(
+        year_filter=year,
+        modelo_count=len(report.modelos),
+        modelos=[
+            ModeloRowPayload(
+                code=row.code,
+                title=row.title,
+                cadence=row.cadence,
+                tax_domain=row.tax_domain,
+                revision_count=row.revision_count,
+            )
+            for row in report.modelos
         ],
     )
+    lines = [
+        "code\ttitle\tcadence\tdomain\trevisions",
+        *[
+            f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}"
+            for row in report.modelos
+        ],
+    ]
+    _emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
 
 
 @app.command("describe")
@@ -362,23 +376,36 @@ def describe_modelo(
         if period is not None and "period" in message.lower():
             raise typer.BadParameter(_bare_period_error(modelo, period, fallback=message)) from exc
         raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
-    _emit(
-        ctx,
-        report,
-        [
-            f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
-            f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
-            f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
-            f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
-            f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
-            f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
-            f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
-            f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
-            f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
-            f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
-            f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
-        ],
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloDescribeResult
+
+    result = ModeloDescribeResult(
+        code=report.code,
+        title=report.title,
+        official_name=report.official_name,
+        tax_domain=report.tax_domain,
+        cadence=report.cadence,
+        revision=report.revision,
+        revision_ids=list(report.revision_ids),
+        periods=list(report.periods),
+        casilla_count=report.casilla_count,
+        binding_count=report.binding_count,
+        formula_count=report.formula_count,
     )
+    lines = [
+        f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
+        f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
+        f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
+        f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
+        f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
+        f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
+        f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
+        f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
+        f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
+        f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
+        f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
+    ]
+    _emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
 
 
 @app.command("casillas")
@@ -407,17 +434,32 @@ def casillas(
             form_number=form_number,
         )
     )
-    _emit(
-        ctx,
-        report,
-        [
-            "casilla_id\tnumber\tinput\trequired\tlabel",
-            *[
-                f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
-                for row in report.rows
-            ],
+    from ._common import _emit_envelope
+    from ._modelo_payloads import CasillaRowPayload, ModeloCasillasResult
+
+    result = ModeloCasillasResult(
+        modelo=report.code,
+        revision=report.revision,
+        casilla_count=len(report.rows),
+        rows=[
+            CasillaRowPayload(
+                casilla_id=row.casilla_id,
+                number=row.number,
+                input_kind=row.input_kind,
+                required=bool(row.required),
+                label=row.label,
+            )
+            for row in report.rows
         ],
     )
+    lines = [
+        "casilla_id\tnumber\tinput\trequired\tlabel",
+        *[
+            f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
+            for row in report.rows
+        ],
+    ]
+    _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
 bindings_app = typer.Typer(
@@ -980,15 +1022,17 @@ def bindings_list(
                 f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}\t"
                 f"{row.input_channel}\t{row.borrador_capable}"
             )
-    payload = {
-        "operation": "registry.modelo.bindings.list",
-        "modelo_filter": modelo,
-        "year_filter": year,
-        "period_filter": period,
-        "missing_filter": missing,
-        "binding_count": len(merged_rows),
-        "bindings": merged_rows,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloBindingsListResult
+
+    result = ModeloBindingsListResult(
+        modelo_filter=modelo,
+        year_filter=year,
+        period_filter=period,
+        missing_filter=missing,
+        binding_count=len(merged_rows),
+        bindings=merged_rows,
+    )
     lines = [
         "operation\tregistry.modelo.bindings.list",
         f"modelo_filter\t{modelo or '-'}",
@@ -999,7 +1043,7 @@ def bindings_list(
         "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable",
     ]
     lines.extend(text_rows)
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines)
 
 
 @bindings_app.command("preview", help=tr("cli.app.modelo.bindings.preview_help"))
@@ -1062,25 +1106,27 @@ def bindings_preview(
                 suggestion=suggestion,
             )
         )
-    payload = {
-        "operation": "registry.modelo.bindings.preview",
-        "modelo": report.code,
-        "revision": report.revision,
-        "filing_year": report.filing_year,
-        "period": report.period,
-        "override_count": len(overrides),
-        "binding_count": len(report.rows),
-        "bindings": [
-            {
-                "binding_id": row.binding_id,
-                "source": row.source,
-                "readiness": _readiness_for_source(row.source),
-                "typed_enum": row.typed_enum,
-                "override": overrides.get(row.binding_id),
-            }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import BindingPreviewRowPayload, ModeloBindingsPreviewResult
+
+    result = ModeloBindingsPreviewResult(
+        modelo=report.code,
+        revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
+        override_count=len(overrides),
+        binding_count=len(report.rows),
+        bindings=[
+            BindingPreviewRowPayload(
+                binding_id=row.binding_id,
+                source=row.source,
+                readiness=_readiness_for_source(row.source),
+                typed_enum=row.typed_enum,
+                override=overrides.get(row.binding_id),
+            )
             for row in report.rows
         ],
-    }
+    )
     lines = [
         "operation\tregistry.modelo.bindings.preview",
         f"modelo\t{report.code}",
@@ -1102,7 +1148,7 @@ def bindings_preview(
         )
         for row in report.rows
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.bindings.preview", result=result, lines=lines)
 
 
 def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:
@@ -1157,7 +1203,31 @@ def formulas(
                 for row in report.rows
             ],
         ]
-    _emit(ctx, report, lines)
+    from ._common import _emit_envelope
+    from ._modelo_payloads import FormulasResult, FormulaPayload
+
+    result = FormulasResult(
+        code=report.code,
+        revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
+        formula_count=report.formula_count,
+        rows=tuple(
+            FormulaPayload(
+                formula_id=row.formula_id,
+                target=row.target,
+                input_casillas=tuple(row.input_casillas),
+                input_bindings=tuple(row.input_bindings),
+                input_parameters=tuple(row.input_parameters),
+                input_relations=tuple(row.input_relations),
+                expression=dict(row.expression) if hasattr(row, "expression") else {},
+                legal_refs=tuple(row.legal_refs),
+                source_refs=tuple(row.source_refs),
+            )
+            for row in report.rows
+        ),
+    )
+    _emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
 def _parse_typed_cli_observations[ObservationT: BaseModel](
@@ -3379,24 +3449,26 @@ def work_history(
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     history = assemble_work_unit_history(work_unit_id)
-    payload = {
-        "operation": "modelo.work.history",
-        "bucket_id": history.bucket_id,
-        "work_unit_id": history.work_unit_id,
-        "event_count": len(history.events),
-        "events": [
-            {
-                "event_id": event.event_id,
-                "occurred_at": event.occurred_at.isoformat(),
-                "event_type": event.event_type.value,
-                "object_type": event.object_type.value,
-                "object_id": event.object_id,
-                "actor": event.actor,
-                "payload": event.payload,
-            }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
+
+    result = WorkHistoryResult(
+        bucket_id=history.bucket_id,
+        work_unit_id=history.work_unit_id,
+        event_count=len(history.events),
+        events=[
+            WorkUnitHistoryEventPayload(
+                event_id=event.event_id,
+                occurred_at=event.occurred_at.isoformat(),
+                event_type=event.event_type.value,
+                object_type=event.object_type.value,
+                object_id=event.object_id,
+                actor=event.actor,
+                payload=event.payload,
+            )
             for event in history.events
         ],
-    }
+    )
     lines = [
         "operation\tmodelo.work.history",
         f"bucket_id\t{history.bucket_id}",
@@ -3416,7 +3488,7 @@ def work_history(
         )
         for event in history.events
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines)
 
 
 def _verification_report_payload(report: VerificationReport) -> VerificationReportPayload:
@@ -3670,21 +3742,23 @@ def work_runs(ctx: typer.Context) -> None:
     from ...application.workflow import list_runs
 
     runs = list_runs()
-    payload = {
-        "operation": "modelo.work.runs",
-        "run_count": len(runs),
-        "runs": [
-            {
-                "run_id": run.run_id,
-                "modelo": run.obligation.modelo if run.obligation is not None else None,
-                "period": run.obligation.period if run.obligation is not None else None,
-                "final_stage": run.final_stage.value,
-                "aborted_reason": (run.aborted_reason.value if run.aborted_reason is not None else None),
-                "started_at": run.started_at.isoformat(),
-            }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRunsResult, WorkflowRunPayload
+
+    result = WorkRunsResult(
+        run_count=len(runs),
+        runs=[
+            WorkflowRunPayload(
+                run_id=run.run_id,
+                modelo=run.obligation.modelo if run.obligation is not None else None,
+                period=run.obligation.period if run.obligation is not None else None,
+                final_stage=run.final_stage.value,
+                aborted_reason=(run.aborted_reason.value if run.aborted_reason is not None else None),
+                started_at=run.started_at.isoformat(),
+            )
             for run in runs
         ],
-    }
+    )
     lines = [
         "operation\tmodelo.work.runs",
         f"run_count\t{len(runs)}",
@@ -3703,7 +3777,7 @@ def work_runs(ctx: typer.Context) -> None:
         )
         for run in runs
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.runs", result=result, lines=lines)
 
 
 @work_app.command(
@@ -3924,13 +3998,15 @@ def filing_record_list(
 ) -> None:
     """List filing records. Superseded records are excluded unless asked."""
     records = list_filing_records(bucket_id=bucket_id, include_superseded=include_superseded)
-    payload = {
-        "operation": "modelo.filing_record.list",
-        "bucket_id_filter": bucket_id,
-        "include_superseded": include_superseded,
-        "record_count": len(records),
-        "records": [_filing_record_payload(record) for record in records],
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloRecordListResult
+
+    result = ModeloRecordListResult(
+        bucket_id_filter=bucket_id,
+        include_superseded=include_superseded,
+        record_count=len(records),
+        records=[_filing_record_payload(record) for record in records],
+    )
     lines = [
         "operation\tmodelo.filing_record.list",
         f"bucket_id_filter\t{bucket_id or ''}",
@@ -3953,7 +4029,7 @@ def filing_record_list(
         )
         for record in records
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.filing_record.list", result=result, lines=lines)
 
 
 verification_report_app = typer.Typer(
@@ -3978,12 +4054,14 @@ def verification_report_list(
 ) -> None:
     """List verification reports, optionally filtered to one revision."""
     reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
-    payload = {
-        "operation": "modelo.verification_report.list",
-        "calculation_revision_id_filter": calculation_revision_id,
-        "report_count": len(reports),
-        "reports": [_verification_report_payload(r) for r in reports],
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import VerificationReportListResult
+
+    result = VerificationReportListResult(
+        calculation_revision_id_filter=calculation_revision_id,
+        report_count=len(reports),
+        reports=[_verification_report_payload(r) for r in reports],
+    )
     lines = [
         "operation\tmodelo.verification_report.list",
         f"calculation_revision_id_filter\t{calculation_revision_id or ''}",
@@ -4003,7 +4081,7 @@ def verification_report_list(
         )
         for r in reports
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.verification_report.list", result=result, lines=lines)
 
 
 @verification_report_app.command("view", help=tr("cli.app.modelo.verification_report.view_help"))
@@ -4020,12 +4098,14 @@ def verification_report_show(
     except VerificationReportNotFoundError as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.verification_report.show",
-        **_verification_report_payload(report).model_dump(mode="python"),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import VerificationReportShowResult
+
+    result = VerificationReportShowResult.model_validate(
+        _verification_report_payload(report).model_dump(mode="python")
+    )
     lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.verification_report.show", result=result, lines=lines)
 
 
 @filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
@@ -4042,12 +4122,12 @@ def filing_record_show(
     except ModeloRecordNotFoundError as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.filing_record.show",
-        **_filing_record_payload(record).model_dump(mode="python"),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloRecordShowResult
+
+    result = ModeloRecordShowResult.model_validate(_filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.filing_record.show", result=result, lines=lines)
 
 
 @filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
@@ -4125,12 +4205,16 @@ def filing_record_import(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.filing_record.import",
-        "evidence_kind": kind.value,
-        "evidence_reference_id": evidence_reference_id,
-        **_filing_record_payload(record).model_dump(mode="python"),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import FilingRecordImportResult
+
+    result = FilingRecordImportResult.model_validate(
+        {
+            "evidence_kind": kind.value,
+            "evidence_reference_id": evidence_reference_id,
+            **_filing_record_payload(record).model_dump(mode="python"),
+        }
+    )
     lines = [
         "operation\tmodelo.filing_record.import",
         f"evidence_kind\t{kind.value}",
@@ -4138,7 +4222,7 @@ def filing_record_import(
         *_filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
 
 
 def _service() -> RegistryQueryService:
@@ -4200,7 +4284,30 @@ def audit_show(
 ) -> None:
     bucket_id = _active_bucket_id()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
-    payload = bundle.model_dump(mode="json")
+    from ._common import _emit_envelope
+    from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditShowResult
+
+    result = ModeloAuditShowResult(
+        bundle_id=bundle.bundle_id,
+        manifest_version=bundle.manifest_version,
+        bucket_id=bundle.bucket_id,
+        work_unit_id=bundle.work_unit_id,
+        calculation_revision_id=bundle.calculation_revision_id,
+        filing_record_id=bundle.filing_record_id,
+        verification_state=bundle.verification_state.value,
+        completeness_ratio=bundle.completeness_ratio,
+        records=[
+            EvidenceRecordRefPayload(
+                object_type=rec.object_type.value,
+                object_id=rec.object_id,
+                content_sha256=rec.content_sha256,
+                payload_size_bytes=rec.payload_size_bytes,
+            )
+            for rec in bundle.records
+        ],
+        created_at=bundle.created_at.isoformat(),
+        notes=bundle.notes,
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"bundle_id\t{bundle.bundle_id}",
@@ -4209,7 +4316,7 @@ def audit_show(
         f"verification_state\t{bundle.verification_state.value}",
         f"records\t{len(bundle.records)}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.audit.show", result=result, lines=lines)
 
 
 @audit_app.command(
@@ -4228,7 +4335,22 @@ def audit_check(
 ) -> None:
     bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
-    payload = report.model_dump(mode="json")
+    from ._common import _emit_envelope
+    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
+
+    result = ModeloAuditCheckResult(
+        bundle_id=report.bundle_id,
+        verification_state=report.verification_state.value,
+        completeness_ratio=report.completeness_ratio,
+        findings=[
+            EvidenceBundleCheckFindingPayload(
+                check=f.check.value,
+                passed=f.passed,
+                detail=f.detail,
+            )
+            for f in report.findings
+        ],
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"bundle_id\t{report.bundle_id}",
@@ -4236,7 +4358,7 @@ def audit_check(
         f"completeness_ratio\t{report.completeness_ratio}",
         f"findings\t{len(report.findings)}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.audit.check", result=result, lines=lines)
 
 
 @audit_app.command(
@@ -4279,20 +4401,23 @@ def audit_export(
         force_incomplete=force_incomplete,
     )
     bundle = service.show(bucket_id=bucket_id, bundle_id=bundle_id)
-    payload: dict[str, object] = {
-        "bucket_id": bucket_id,
-        "bundle_id": bundle.bundle_id,
-        "output": str(output_path),
-        "verification_state": bundle.verification_state.value,
-        "records": len(bundle.records),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloAuditExportResult
+
+    result = ModeloAuditExportResult(
+        bucket_id=bucket_id,
+        bundle_id=bundle.bundle_id,
+        output=str(output_path),
+        verification_state=bundle.verification_state.value,
+        records=len(bundle.records),
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"bundle_id\t{bundle.bundle_id}",
         f"output\t{output_path}",
         f"verification_state\t{bundle.verification_state.value}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
 
 
 @audit_app.command(
@@ -4311,7 +4436,22 @@ def audit_replay(
 ) -> None:
     bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
-    payload = report.model_dump(mode="json")
+    from ._common import _emit_envelope
+    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditReplayResult
+
+    result = ModeloAuditReplayResult(
+        bundle_id=report.bundle_id,
+        verification_state=report.verification_state.value,
+        completeness_ratio=report.completeness_ratio,
+        findings=[
+            EvidenceBundleCheckFindingPayload(
+                check=f.check.value,
+                passed=f.passed,
+                detail=f.detail,
+            )
+            for f in report.findings
+        ],
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"bundle_id\t{report.bundle_id}",
@@ -4319,7 +4459,7 @@ def audit_replay(
         f"completeness_ratio\t{report.completeness_ratio}",
         f"findings\t{len(report.findings)}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.audit.replay", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -4692,7 +4832,22 @@ def modelo_export_verb(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = result.model_dump(mode="json")
+    from ._common import _emit_envelope
+    from ._modelo_payloads import ModeloExportResult as _ModeloExportResult
+
+    export_result = _ModeloExportResult(
+        work_unit_id=result.work_unit_id,
+        calculation_revision_id=result.calculation_revision_id,
+        bucket_id=result.bucket_id,
+        modelo=result.modelo,
+        filing_year=result.filing_year,
+        period=result.period,
+        output_path=str(result.output_path),
+        byte_size=result.byte_size,
+        file_sha256=result.file_sha256,
+        format=result.format,
+        bucket_event_id=result.bucket_event_id,
+    )
     lines = [
         "operation\tmodelo.export",
         f"work_unit_id\t{result.work_unit_id}",
@@ -4707,7 +4862,7 @@ def modelo_export_verb(
         f"format\t{result.format}",
         f"bucket_event_id\t{result.bucket_event_id}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.export", result=export_result, lines=lines)
 
 
 @app.command(

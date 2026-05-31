@@ -1,5 +1,4 @@
-"""Pure projection of the wizard descriptor catalogue into the
-``PROFILE_KEYS`` registry shape.
+"""Pure projection of the wizard descriptor catalogue into the ``PROFILE_KEYS`` registry shape.
 
 ``compile_profile_keys`` walks every :class:`WizardFlow` in the
 catalogue, emits one :class:`ProfileKey` per distinct

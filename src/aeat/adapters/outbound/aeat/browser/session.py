@@ -77,6 +77,11 @@ class BrowserSession:
         Args:
             provisioner: Optional auth-provider hook used to decorate
                 the new context call.
+            storage_state_path: Optional path to a Playwright storage-state
+                JSON file; passed directly to ``browser.new_context``.
+            storage_state: Optional in-memory storage state mapping passed
+                directly to ``browser.new_context``; takes precedence over
+                ``storage_state_path`` when both are supplied.
 
         Returns:
             A configured BrowserContext with evasion strategies
@@ -415,6 +420,9 @@ class BrowserSession:
         Args:
             url: The target URL that failed to load.
             exc: The transport-layer exception raised by Playwright.
+            failure_mode: The :class:`BrowserFailureMode` variant that
+                describes the kind of transport failure; embedded as a
+                ``failure-mode:<value>`` marker in the returned status.
 
         Returns:
             A populated :class:`SiteHealthStatus` carrying state

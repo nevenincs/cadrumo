@@ -194,7 +194,7 @@ def save_events_append(
     *,
     settings: Settings | None = None,
 ) -> Path:
-    """Append a single :class:`RunEvent` line to the per-run ``events.jsonl``.
+    r"""Append a single :class:`RunEvent` line to the per-run ``events.jsonl``.
 
     ``newline=""`` pins the on-disk line terminator to ``\\n`` on every
     platform — mirroring

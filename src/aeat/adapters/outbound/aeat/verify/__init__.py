@@ -60,8 +60,13 @@ _VERIFY_GUARD_POLICY = _RemoteStateGuardPolicy(
 class VerifyBrowserKeyboardLike(Protocol):
     """Subset of Playwright's ``Keyboard`` API used by :func:`verify_csv`."""
 
-    async def type(self, value: str) -> None: ...
-    async def press(self, key: str) -> None: ...
+    async def type(self, value: str) -> None:
+        """Type ``value`` into the focused element character by character."""
+        ...
+
+    async def press(self, key: str) -> None:
+        """Dispatch a key-press event for ``key`` (e.g. ``"Enter"``)."""
+        ...
 
 
 class VerifyBrowserPageLike(Protocol):
@@ -69,17 +74,33 @@ class VerifyBrowserPageLike(Protocol):
 
     keyboard: VerifyBrowserKeyboardLike
 
-    async def goto(self, url: str) -> object | None: ...
-    async def fill(self, selector: str, value: str) -> None: ...
-    async def press(self, selector: str, key: str) -> None: ...
-    async def content(self) -> str: ...
+    async def goto(self, url: str) -> object | None:
+        """Navigate the page to ``url`` and return the primary response."""
+        ...
+
+    async def fill(self, selector: str, value: str) -> None:
+        """Clear and fill the element matched by ``selector`` with ``value``."""
+        ...
+
+    async def press(self, selector: str, key: str) -> None:
+        """Focus the element matched by ``selector`` and press ``key``."""
+        ...
+
+    async def content(self) -> str:
+        """Return the full HTML content of the page."""
+        ...
 
 
 class VerifyBrowserContextLike(Protocol):
     """Subset of Playwright's ``BrowserContext`` API used by :func:`verify_csv`."""
 
-    async def new_page(self) -> VerifyBrowserPageLike: ...
-    async def close(self) -> None: ...
+    async def new_page(self) -> VerifyBrowserPageLike:
+        """Open a new page within this browser context."""
+        ...
+
+    async def close(self) -> None:
+        """Close the browser context and release its resources."""
+        ...
 
 
 @runtime_checkable
@@ -101,8 +122,13 @@ class VerifyBrowserSessionLike(Protocol):
         provisioner: Any = ...,
         storage_state_path: Any = ...,
         storage_state: Any = ...,
-    ) -> VerifyBrowserContextLike: ...
-    async def close(self) -> None: ...
+    ) -> VerifyBrowserContextLike:
+        """Create and return a configured :class:`VerifyBrowserContextLike`."""
+        ...
+
+    async def close(self) -> None:
+        """Close the browser session and release all underlying resources."""
+        ...
 
 
 VerifyBrowserSessionFactory = Callable[[], Awaitable[VerifyBrowserSessionLike]]

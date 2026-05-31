@@ -97,6 +97,7 @@ class AssetsLedgerRepository:
     """Governed repository for the encrypted assets ledger."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, defaulting to the active-bucket secure object store."""
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
@@ -193,6 +194,7 @@ class AmortizacionLedgerRepository:
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Initialise the repository, defaulting to the active-bucket secure object store."""
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property

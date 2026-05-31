@@ -99,9 +99,7 @@ class DeadlineWindowChecker(Protocol):
     """Narrow surface over :mod:`aeat.domain.deadlines` for the preflight gate."""
 
     def is_window_open(self, modelo: str, period: str, today: date) -> bool:
-        """Return ``True`` iff the AEAT filing window for ``modelo`` /
-        ``period`` is open on ``today``.
-        """
+        """Return ``True`` iff the AEAT filing window for ``modelo`` / ``period`` is open on ``today``."""
         ...
 
 

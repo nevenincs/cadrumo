@@ -1,18 +1,32 @@
-"""Registry-load tests for the maritime_worker profile section.
+"""Registry-load and binding-integrity tests for the maritime worker exemption axis.
 
-Verifies that the committed user-profile schema TOML declares the
-worker_class fact and all four supporting vessel/RETMAR facts, and that
-the profile schema loads without error after the maritime_worker section
-was added.
+Covers two surfaces:
+- user_profile/schema.toml: maritime_worker section with worker_class and
+  vessel/RETMAR supporting facts (S03 profile-load tests).
+- categories/trabajador_del_mar.toml: three exemption binding entries each
+  carrying legal_refs populated from BOE-grounded sources (S07 integrity tests).
 """
 
 from __future__ import annotations
 
+import tomllib
+from pathlib import Path
+
 import pytest
 
+from aeat.core.resources import bundled_path
 from aeat.domain.user_profile import ProfileFieldType, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+def _load_trabajador_del_mar_bindings() -> list[dict[str, object]]:
+    path = bundled_path("registry", "aeat", "categories", "trabajador_del_mar.toml")
+    with path.open("rb") as fh:
+        data: dict[str, object] = tomllib.load(fh)
+    bindings = data.get("exemption_bindings")
+    assert isinstance(bindings, list), "trabajador_del_mar.toml must declare [[exemption_bindings]]"
+    return bindings  # type: ignore[return-value]
 
 
 def test_user_profile_schema_loads_with_maritime_worker_section() -> None:
@@ -114,3 +128,93 @@ def test_no_da24_reference_in_maritime_worker_section() -> None:
         assert "DA 24" not in field.description, (
             f"field {field.key!r} description mentions DA 24 LIRPF"
         )
+
+
+# --- S07: binding-entry integrity tests ---
+
+
+def test_trabajador_del_mar_toml_declares_three_binding_entries() -> None:
+    bindings = _load_trabajador_del_mar_bindings()
+
+    ids = [b["id"] for b in bindings]
+    assert "art-7p-foreign-work" in ids
+    assert "rebeca-50pct" in ids
+    assert "da41-tuna-fleet-inactive" in ids
+    assert len(ids) == 3, f"expected exactly 3 binding entries, got {ids}"
+
+
+def test_art7p_binding_has_required_fields_and_legal_refs() -> None:
+    bindings = _load_trabajador_del_mar_bindings()
+    binding = next(b for b in bindings if b["id"] == "art-7p-foreign-work")
+
+    assert binding["status"] == "active"
+    assert binding["annual_cap_eur"] == "60100"
+    assert "formula" in binding
+
+    legal_refs = binding.get("legal_refs", [])
+    assert isinstance(legal_refs, list) and legal_refs, "art-7p binding must carry legal_refs"
+    combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
+    assert "7.p" in combined, "legal_refs must reference Art. 7.p)"
+    assert "BOE-A-2006-20764" in combined, "legal_refs must cite BOE-A-2006-20764"
+
+
+def test_rebeca_binding_has_required_fields_and_legal_refs() -> None:
+    bindings = _load_trabajador_del_mar_bindings()
+    binding = next(b for b in bindings if b["id"] == "rebeca-50pct")
+
+    assert binding["status"] == "active"
+    assert binding["exempt_fraction"] == "0.50"
+
+    legal_refs = binding.get("legal_refs", [])
+    assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "REBECA binding must carry at least 2 legal_refs"
+    combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
+    assert "BOE-A-1994-16100" in combined, "REBECA legal_refs must cite Ley 19/1994 BOE-A-1994-16100"
+    assert "73" in combined, "REBECA legal_refs must reference Art. 73"
+    assert "75" in combined, "REBECA legal_refs must reference Art. 75"
+
+
+def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
+    bindings = _load_trabajador_del_mar_bindings()
+    binding = next(b for b in bindings if b["id"] == "da41-tuna-fleet-inactive")
+
+    assert binding["status"] == "inactive_pending_eu_clearance", (
+        "DA 41 binding must be marked inactive_pending_eu_clearance; "
+        "it must not be treated as active (AEAT 2024 confirms non-applicability)"
+    )
+    assert binding["exempt_fraction"] == "0.50"
+
+    legal_refs = binding.get("legal_refs", [])
+    assert isinstance(legal_refs, list) and len(legal_refs) >= 2, "DA 41 binding must carry at least 2 legal_refs"
+    combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
+    assert "DA 41" in combined, "DA 41 legal_refs must reference DA 41 LIRPF"
+    assert "BOE-A-2006-20764" in combined, "DA 41 legal_refs must cite BOE-A-2006-20764"
+    assert "BOE-A-2018-9268" in combined, "DA 41 legal_refs must cite enabling Ley 6/2018 BOE-A-2018-9268"
+
+
+def test_no_da24_reference_in_trabajador_del_mar_toml() -> None:
+    """DA 24 LIRPF has zero maritime content and must not appear in any binding."""
+    bindings = _load_trabajador_del_mar_bindings()
+
+    for binding in bindings:
+        bid = binding.get("id", "unknown")
+        for ref in binding.get("legal_refs", []):
+            assert "DA 24" not in str(ref.get("reference", "")), (
+                f"binding {bid!r} legal_ref references DA 24 LIRPF which has no maritime content"
+            )
+            assert "DA 24" not in str(ref.get("notes", "")), (
+                f"binding {bid!r} legal_ref notes mention DA 24 LIRPF"
+            )
+
+
+def test_all_binding_entries_carry_nonempty_legal_refs() -> None:
+    bindings = _load_trabajador_del_mar_bindings()
+
+    for binding in bindings:
+        bid = binding.get("id", "unknown")
+        legal_refs = binding.get("legal_refs")
+        assert isinstance(legal_refs, list) and legal_refs, (
+            f"binding {bid!r} must declare at least one [[exemption_bindings.legal_refs]] entry"
+        )
+        for ref in legal_refs:
+            assert ref.get("reference"), f"binding {bid!r} has legal_ref with empty reference"
+            assert ref.get("document_id"), f"binding {bid!r} has legal_ref with empty document_id"

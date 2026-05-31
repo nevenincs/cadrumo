@@ -176,9 +176,7 @@ class _IvaStrictFrozen(BaseModel):
 
 
 class _IvaStrictMutable(BaseModel):
-    """Strict validation but mutable; used for aggregate catalogues that the
-    loader populates incrementally.
-    """
+    """Strict validation mixin with mutable config for incrementally populated catalogues."""
 
     model_config = ConfigDict(
         strict=True,

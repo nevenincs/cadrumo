@@ -124,6 +124,10 @@ def replay_run(
 
     Args:
         run_id: Identifier of the recorded run to replay.
+        invoke: Optional callable that re-enters the CLI with the reconstructed
+            argv.  When ``None`` the function loads and validates the trace
+            but does not re-execute it, returning the original
+            :class:`RunTrace` directly.
 
     Returns:
         The loaded :class:`RunTrace` of the original run.

@@ -196,6 +196,7 @@ class SecureObjectRepository:
         engine: Engine | None = None,
         namespace_registry: StorageHierarchyRegistry | None = None,
     ) -> None:
+        """Bind the repository to ``engine`` and ensure the secure_objects table exists."""
         self._engine = engine or get_engine()
         self._namespace_registry = namespace_registry
         # `inspect(mapped_class).local_table` is a `Table` at runtime, but the
@@ -820,9 +821,16 @@ class SecureObjectRepository:
         failures and decide how to report them; nothing is auto-deleted.
 
         Args:
-            batch_size: SQLAlchemy `yield_per` chunk size for the raw row
+            namespace: The storage namespace whose rows are scanned.
+            expected_class: The :class:`SensitivityClass` all rows in this
+                namespace must carry; rows with a differing classification
+                are yielded as :class:`SecureObjectUnreadable`.
+            max_supported_version: Rows whose ``schema_version`` exceeds
+                this ceiling are yielded as :class:`SecureObjectUnreadable`
+                so callers can detect forward-migration gaps.
+            batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
-                while preserving deterministic `(object_key ASC)` order.
+                while preserving deterministic ``(object_key ASC)`` order.
         """
         if batch_size < 1:
             raise StorageValidationError(f"batch_size must be at least 1; got {batch_size}")
@@ -1054,6 +1062,14 @@ class SecureObjectRepository:
             schema_version: Envelope schema version captured on the row.
             written_at: Timezone-aware datetime captured on the row.
             payload: Plaintext envelope bytes (the column encrypts).
+            write_provenance: Human-readable string identifying the write
+                origin (e.g. caller module or operation name). Defaults to
+                the repository's default provenance marker.
+            source_event_id: Optional opaque identifier of the domain event
+                that triggered this write; stored verbatim for audit trails.
+            expected_revision_id: Optional optimistic-concurrency guard; when
+                supplied the upsert is rejected if the row's current revision
+                does not match.
 
         Raises:
             :exc:`ValueError`: If ``hashed_object_key`` is not exactly

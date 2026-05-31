@@ -170,6 +170,15 @@ class SecretScrubbingFilter(logging.Filter):
     """Redact sensitive fields from log records before formatting."""
 
     def filter(self, record: logging.LogRecord) -> bool:
+        """Scrub sensitive values from ``record`` in-place and return ``True`` to allow it.
+
+        Args:
+            record: The log record whose ``msg``, ``args``, ``exc_info``,
+                ``exc_text``, and extra fields are scrubbed before formatting.
+
+        Returns:
+            Always ``True`` — every record is allowed through after scrubbing.
+        """
         if isinstance(record.msg, str):
             record.msg = _scrub_text(record.msg)
         else:

@@ -1456,7 +1456,7 @@ def derive_calculation_completeness_casillas(
     multi_segment: bool,
     diseno_path: Path | None = None,
 ) -> tuple[DerivedDisenoCasilla, ...]:
-    """Return the calculation-completeness manifest casilla set for a revision.
+    r"""Return the calculation-completeness manifest casilla set for a revision.
 
     Derives the modelo's *calculation closure*
     (:func:`calculation_closure_numbers`) and keys each closure casilla

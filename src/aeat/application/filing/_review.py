@@ -90,6 +90,8 @@ def compute_current_approval_basis(
     Args:
         draft: The :class:`aeat.domain.filing.ModeloDraft` whose basis
             is being computed.
+        bucket_id: Stable bucket identifier; used to load the persisted
+            transaction catalogue when no override is supplied.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional override of the persisted
@@ -143,6 +145,8 @@ def approval_stale_reasons(
 
     Args:
         draft: The :class:`aeat.domain.filing.ModeloDraft` to inspect.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`compute_current_approval_basis`.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
@@ -194,6 +198,8 @@ def approve_draft(
     Args:
         draft: The draft to approve. Must be
             :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`compute_current_approval_basis`.
         approved_by: Operator identifier; rejected when blank after
             stripping.
         schema_provider: The active
@@ -297,6 +303,8 @@ def refresh_review_status(
 
     Args:
         draft: The draft to refresh.
+        bucket_id: Stable bucket identifier; forwarded to
+            :func:`approval_stale_reasons`.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.

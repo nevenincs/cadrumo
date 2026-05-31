@@ -128,7 +128,7 @@ def emit_json_document(
     sort_keys: bool = False,
     stream: IO[str] | None = None,
 ) -> None:
-    """Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
+    r"""Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
 
     When ``stream`` exposes :meth:`_ReconfigurableStream.reconfigure`,
     the helper pins it to ``encoding="utf-8", errors="strict"`` first so

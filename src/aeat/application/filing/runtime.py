@@ -106,15 +106,18 @@ class RegistryCasillaCollection:
     schema_version: str
 
     def __iter__(self) -> object:
+        """Iterate over the contained :class:`RegistryCasillaSchema` instances."""
         return iter(self.casillas)
 
     def get(self, casilla_id: str) -> CasillaSchema | None:
+        """Return the schema for ``casilla_id``, or ``None`` if absent."""
         for casilla in self.casillas:
             if casilla.id == casilla_id:
                 return casilla
         return None
 
     def all(self) -> Sequence[CasillaSchema]:
+        """Return all casilla schemas in declaration order."""
         return self.casillas
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +147,7 @@ class RegistrySchemaProvider:
     subviews: dict[str, RegistryModeloSubview]
 
     def get_collection(self, modelo: str) -> CasillaCollection:
+        """Return the casilla collection for ``modelo``; raises :exc:`ModeloBuilderError` when absent."""
         try:
             return self.collections[modelo]
         except KeyError as exc:

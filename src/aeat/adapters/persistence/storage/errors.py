@@ -87,6 +87,7 @@ class SecureObjectUnreadableError(DecryptionError):
     """
 
     def __init__(self, namespace: str, row_id: int, *, cause: BaseException | None = None) -> None:
+        """Construct the error, binding the affected namespace, row identifier, and optional root cause."""
         super().__init__(
             context={"namespace": namespace, "row_id": row_id},
             translated_message="errors.integrity.integrity_storage_secure_object_unreadable",

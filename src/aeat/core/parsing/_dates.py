@@ -1,5 +1,6 @@
-"""Date string parsers for the two distinct input formats used across AEAT adapters, plus a
-unified :func:`_parse_date` helper that combines format selection with an error-policy axis.
+"""Date string parsers for the two distinct input formats used across AEAT adapters.
+
+Provides a unified :func:`_parse_date` helper that combines format selection with an error-policy axis.
 
 The two variants are intentionally separate because they accept *different*
 wire formats:

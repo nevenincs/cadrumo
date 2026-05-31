@@ -184,8 +184,9 @@ def _rewrite_text_show_operands(
     instruction_index: int,
     edits: list[Replacement],
 ) -> list[PikepdfObject | int | float] | None:
-    """Rewrite text-show operands for one instruction. Returns ``None`` when
-    nothing changed, otherwise the full new operand list.
+    """Rewrite text-show operands for one instruction.
+
+    Returns ``None`` when nothing changed, otherwise the full new operand list.
     """
     if operator in (_TJ, _QUOTE):
         return _rewrite_single_string_at(

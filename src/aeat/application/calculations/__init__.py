@@ -1,6 +1,4 @@
-"""Application-layer calculation utilities — observation repository and
-the multi-year resolver that lets relation / binding pre-resolution
-consult prior years' filings.
+"""Application-layer calculation utilities: observation repository and multi-year resolver for prior-year inputs.
 
 The runtime calc engine (`aeat.domain.calculations.registry._formula_runtime`)
 takes pre-resolved `relation_values` and `binding_values` mappings.

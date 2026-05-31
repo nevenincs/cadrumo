@@ -808,8 +808,9 @@ def google_sync_calc_export(
         help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
     ),
 ) -> None:
-    """Export the registry calculation surface for a modelo + period to a real
-    Google Sheets workbook under the operator's `aeat-vault/`.
+    """Export the registry calculation surface for a modelo + period to a Google Sheets workbook.
+
+    Writes the workbook to the operator's ``aeat-vault/`` directory.
 
     Materialises Entradas (operator inputs), Cálculos (formula cells with
     per-casilla ROUND-wrapped Decimal parity), Procedencia (audit trail),

@@ -793,7 +793,7 @@ class SourceCitation(RegistryModel):
 
 
 class BboxAnchorSpec(RegistryModel):
-    """Spatial anchor configuration for the ``bbox_anchored`` extraction strategy.
+    r"""Spatial anchor configuration for the ``bbox_anchored`` extraction strategy.
 
     The bbox_anchored strategy locates a printed box number in the PDF word
     stream and resolves the associated monetary value by its positional

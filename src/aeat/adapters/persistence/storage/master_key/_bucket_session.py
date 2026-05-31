@@ -88,6 +88,9 @@ class BucketSession:
             idle_minutes: Idle-timeout window in minutes; must be a
                 strict positive integer.
             opened_at: UTC timestamp at which the session opened.
+            unsecured_backend: When ``True``, the session was opened
+                against an unsecured (non-OS-keychain) backend; callers
+                use this flag to emit appropriate warnings.
 
         Raises:
             ValueError: If `bucket_id` is empty, `idle_minutes` is not

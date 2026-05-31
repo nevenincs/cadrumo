@@ -398,6 +398,7 @@ class RepairRemediationDecisionRepository:
     """
 
     def __init__(self, repository: SecureObjectRepository | None = None) -> None:
+        """Initialise the decision repository with an optional secure-object store override."""
         self._repository = repository
 
     def _repo(self) -> SecureObjectRepository:

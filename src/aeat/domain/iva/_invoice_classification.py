@@ -91,8 +91,7 @@ IvaRate alone."""
 
 
 class IvaInvoiceClassification(BaseModel):
-    """Frozen pydantic record bundling the IVA classification triple
-    plus the derived settlement-side classification.
+    """Frozen pydantic record bundling the IVA classification triple and derived settlement sides.
 
     Attributes:
         category: Substrate :class:`IvaCategory` classifying the
