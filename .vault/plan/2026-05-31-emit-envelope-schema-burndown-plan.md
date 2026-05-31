@@ -99,62 +99,62 @@ Migrate all 19 config-command emit sites in _config/__init__.py to typed OutputS
 
 Author OutputSchema subclasses for repair logs, quarantine, reset-state, and connectivity in _config_payloads.py and migrate their emit sites.
 
-- [ ] `W02.P05.S44` - author RepairLogsResult OutputSchema subclass with @register_schema decorator for config.repair.logs; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P05.S45` - migrate repair_logs bare emit site to _emit_envelope using typed RepairLogsResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P05.S46` - author RepairQuarantineResult OutputSchema subclass with @register_schema decorator for config.repair.quarantine; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P05.S47` - migrate repair_quarantine bare emit site to _emit_envelope using typed RepairQuarantineResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P05.S48` - author RepairResetStateResult OutputSchema subclass with @register_schema decorator for config.repair.reset_state; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P05.S49` - migrate repair_reset_state bare emit site to _emit_envelope using typed RepairResetStateResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P05.S50` - author RepairConnectivityResult OutputSchema subclass with @register_schema decorator for config.repair.connectivity; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P05.S51` - migrate repair_connectivity bare emit site to _emit_envelope using typed RepairConnectivityResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P05.S44` - author RepairLogsResult OutputSchema subclass with @register_schema decorator for config.repair.logs; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P05.S45` - migrate repair_logs bare emit site to _emit_envelope using typed RepairLogsResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P05.S46` - author RepairQuarantineResult OutputSchema subclass with @register_schema decorator for config.repair.quarantine; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P05.S47` - migrate repair_quarantine bare emit site to _emit_envelope using typed RepairQuarantineResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P05.S48` - author RepairResetStateResult OutputSchema subclass with @register_schema decorator for config.repair.reset_state; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P05.S49` - migrate repair_reset_state bare emit site to _emit_envelope using typed RepairResetStateResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P05.S50` - author RepairConnectivityResult OutputSchema subclass with @register_schema decorator for config.repair.connectivity; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P05.S51` - migrate repair_connectivity bare emit site to _emit_envelope using typed RepairConnectivityResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `W02.P06` - config and profile verb payload classes
 
 Author OutputSchema subclasses for config list, config profile switch/show/delete/duplicate, config status, and config reset in _config_payloads.py and migrate their emit sites.
 
-- [ ] `W02.P06.S52` - author ConfigListResult OutputSchema subclass with @register_schema decorator for config.list; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S53` - migrate config_list bare emit site to _emit_envelope using typed ConfigListResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P06.S54` - author ConfigProfileSwitchResult OutputSchema subclass with @register_schema decorator for config.profile.switch; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S55` - migrate config_profile_switch bare emit site to _emit_envelope using typed ConfigProfileSwitchResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P06.S56` - author ConfigProfileShowResult OutputSchema subclass with @register_schema decorator for config.profile.show; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S57` - migrate config_profile_show bare emit site to _emit_envelope using typed ConfigProfileShowResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P06.S58` - author ConfigProfileDeleteResult OutputSchema subclass with @register_schema decorator for config.profile.delete; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S59` - migrate config_profile_delete bare emit site to _emit_envelope using typed ConfigProfileDeleteResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P06.S60` - author ConfigProfileDuplicateResult OutputSchema subclass with @register_schema decorator for config.profile.duplicate; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S61` - migrate config_profile_duplicate bare emit site to _emit_envelope using typed ConfigProfileDuplicateResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P06.S62` - author ConfigStatusResult OutputSchema subclass with @register_schema decorator for config.status; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S63` - migrate config_status bare emit site to _emit_envelope using typed ConfigStatusResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P06.S64` - author ConfigResetResult OutputSchema subclass with @register_schema decorator for config.reset; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P06.S65` - migrate config_reset bare emit site to _emit_envelope using typed ConfigResetResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S52` - author ConfigListResult OutputSchema subclass with @register_schema decorator for config.list; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S53` - migrate config_list bare emit site to _emit_envelope using typed ConfigListResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S54` - author ConfigProfileSwitchResult OutputSchema subclass with @register_schema decorator for config.profile.switch; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S55` - migrate config_profile_switch bare emit site to _emit_envelope using typed ConfigProfileSwitchResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S56` - author ConfigProfileShowResult OutputSchema subclass with @register_schema decorator for config.profile.show; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S57` - migrate config_profile_show bare emit site to _emit_envelope using typed ConfigProfileShowResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S58` - author ConfigProfileDeleteResult OutputSchema subclass with @register_schema decorator for config.profile.delete; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S59` - migrate config_profile_delete bare emit site to _emit_envelope using typed ConfigProfileDeleteResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S60` - author ConfigProfileDuplicateResult OutputSchema subclass with @register_schema decorator for config.profile.duplicate; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S61` - migrate config_profile_duplicate bare emit site to _emit_envelope using typed ConfigProfileDuplicateResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S62` - author ConfigStatusResult OutputSchema subclass with @register_schema decorator for config.status; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S63` - migrate config_status bare emit site to _emit_envelope using typed ConfigStatusResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P06.S64` - author ConfigResetResult OutputSchema subclass with @register_schema decorator for config.reset; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P06.S65` - migrate config_reset bare emit site to _emit_envelope using typed ConfigResetResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `W02.P07` - auth and bucket verb payload classes
 
 Author OutputSchema subclasses for auth providers, configure, status, test, login, clear, apoderado check, and bucket history in _config_payloads.py and migrate their emit sites.
 
-- [ ] `W02.P07.S66` - author AuthProvidersResult OutputSchema subclass with @register_schema decorator for config.auth.providers; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S67` - migrate auth_providers bare emit site to _emit_envelope using typed AuthProvidersResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S68` - author AuthConfigureResult OutputSchema subclass with @register_schema decorator for config.auth.configure; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S69` - migrate auth_configure bare emit site to _emit_envelope using typed AuthConfigureResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S70` - author AuthStatusResult OutputSchema subclass with @register_schema decorator for config.auth.status; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S71` - migrate auth_status bare emit site to _emit_envelope using typed AuthStatusResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S72` - author AuthTestResult OutputSchema subclass with @register_schema decorator for config.auth.test; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S73` - migrate auth_test bare emit site to _emit_envelope using typed AuthTestResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S74` - author AuthLoginResult OutputSchema subclass with @register_schema decorator for config.auth.login; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S75` - migrate auth_login bare emit site to _emit_envelope using typed AuthLoginResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S76` - author AuthClearResult OutputSchema subclass with @register_schema decorator for config.auth.clear; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S77` - migrate auth_clear bare emit site to _emit_envelope using typed AuthClearResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S78` - author ApoderadoCheckResult OutputSchema subclass with @register_schema decorator for config.apoderado.check; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S79` - migrate apoderado_check bare emit site to _emit_envelope using typed ApoderadoCheckResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P07.S80` - author BucketHistoryResult OutputSchema subclass with @register_schema decorator for config.bucket.history; `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W02.P07.S81` - migrate bucket_history bare emit site to _emit_envelope using typed BucketHistoryResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S66` - author AuthProvidersResult OutputSchema subclass with @register_schema decorator for config.auth.providers; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S67` - migrate auth_providers bare emit site to _emit_envelope using typed AuthProvidersResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S68` - author AuthConfigureResult OutputSchema subclass with @register_schema decorator for config.auth.configure; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S69` - migrate auth_configure bare emit site to _emit_envelope using typed AuthConfigureResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S70` - author AuthStatusResult OutputSchema subclass with @register_schema decorator for config.auth.status; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S71` - migrate auth_status bare emit site to _emit_envelope using typed AuthStatusResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S72` - author AuthTestResult OutputSchema subclass with @register_schema decorator for config.auth.test; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S73` - migrate auth_test bare emit site to _emit_envelope using typed AuthTestResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S74` - author AuthLoginResult OutputSchema subclass with @register_schema decorator for config.auth.login; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S75` - migrate auth_login bare emit site to _emit_envelope using typed AuthLoginResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S76` - author AuthClearResult OutputSchema subclass with @register_schema decorator for config.auth.clear; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S77` - migrate auth_clear bare emit site to _emit_envelope using typed AuthClearResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S78` - author ApoderadoCheckResult OutputSchema subclass with @register_schema decorator for config.apoderado.check; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S79` - migrate apoderado_check bare emit site to _emit_envelope using typed ApoderadoCheckResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P07.S80` - author BucketHistoryResult OutputSchema subclass with @register_schema decorator for config.bucket.history; `src/aeat/entrypoints/cli/_config_payloads.py`.
+- [x] `W02.P07.S81` - migrate bucket_history bare emit site to _emit_envelope using typed BucketHistoryResult; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `W02.P08` - MIGRATED_COMMANDS extension and surface-test re-baseline for config
 
 Append all 19 config command paths to MIGRATED_COMMANDS and re-baseline affected config CLI surface tests.
 
-- [ ] `W02.P08.S82` - append all 19 config command paths to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W02.P08.S83` - import _config_payloads as side-effect in test_json_schema_conformance so @register_schema decorators populate SCHEMA_REGISTRY; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W02.P08.S84` - re-baseline config CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_config_setter.py`.
+- [x] `W02.P08.S82` - append all 19 config command paths to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W02.P08.S83` - import _config_payloads as side-effect in test_json_schema_conformance so @register_schema decorators populate SCHEMA_REGISTRY; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W02.P08.S84` - re-baseline config CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_config_setter.py`.
 
 ## Wave `W03` - _app_live.py burndown - 23 bare emit sites
 
