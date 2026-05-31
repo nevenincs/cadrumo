@@ -342,10 +342,7 @@ def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if isinstance(raw, bool):
         return raw
     if isinstance(raw, (int, float)):
-        try:
-            return Decimal(str(raw))
-        except (InvalidOperation, ValueError):
-            return None
+        return coerce_decimal(raw)
     if isinstance(raw, str):
         as_decimal = coerce_decimal(raw)
         if as_decimal is not None:

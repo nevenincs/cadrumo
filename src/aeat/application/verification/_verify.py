@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Protocol
 
 from ...adapters.inbound.declaracion import DeclaracionObservation
+from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
@@ -177,8 +178,8 @@ def _verification_policy(snapshot: RegistrySnapshot) -> _VerificationPolicy:
     if not expectations:
         raise VerificationError("registry verification requires verification expectations")
     computed_casillas = {casilla_id for expectation in expectations for casilla_id in expectation.computed_casillas}
-    tolerance = min(Decimal(str(expectation.tolerance)) for expectation in expectations)
-    min_coverage = max(Decimal(str(expectation.min_coverage)) for expectation in expectations)
+    tolerance = min(expectation.tolerance for expectation in expectations)
+    min_coverage = max(expectation.min_coverage for expectation in expectations)
     return _VerificationPolicy(
         expectation_ids=tuple(expectation.id for expectation in expectations),
         computed_casillas=computed_casillas,
@@ -309,7 +310,8 @@ def _derive_status(
     }
     if any(c.cause in blocking for c in classified):
         return VerificationStatus.NEEDS_REVIEW
-    if Decimal(str(coverage)) < min_coverage:
+    coverage_decimal = coerce_decimal(coverage, default=Decimal("0")) or Decimal("0")
+    if coverage_decimal < min_coverage:
         return VerificationStatus.NEEDS_REVIEW
     return VerificationStatus.VERIFIED
 

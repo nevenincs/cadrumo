@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 from pydantic import BaseModel, Field
 
 from ....core.config import Settings as _Settings
+from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
@@ -250,13 +251,13 @@ def _read_sheets_computed(
         cell_value = row[0]
         if cell_value in (None, ""):
             continue
-        try:
-            row_to_value[row_number] = Decimal(str(cell_value))
-        except (ValueError, ArithmeticError):
+        coerced = coerce_decimal(cell_value)
+        if coerced is None:
             # Sheets returned an error cell ("#ERROR!", "#N/A", ...).
             # Leave the row absent so the caller flags it as a
             # divergence rather than silently coercing.
             continue
+        row_to_value[row_number] = coerced
     return {cell.casilla: row_to_value[cell.address.row] for cell in sorted_cells if cell.address.row in row_to_value}
 
 def _compute_local(

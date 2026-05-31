@@ -6,14 +6,9 @@ Production modules under ``src/aeat/`` must not use:
 
 1. ``value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)`` inline.
    All callers must delegate to :func:`aeat.domain.fincas._rounding._round_to_cents`.
-   W03.P18 (S358-S363) enrolled all known sites; this test asserts zero new violations.
 
 2. ``Decimal(str(`` bare coercion patterns inline.
    All callers must delegate to :func:`aeat.core.decimal.coerce_decimal`.
-   W03.P18 (S364-S367) enrolled the targeted sites.  Remaining pre-existing
-   sites are tracked in ``DECIMAL_STR_PENDING`` below and will be addressed in
-   follow-up Steps.  The test asserts the live violation set is a subset of the
-   declared pending set.
 
 Exclusions (permanent)
 ----------------------
@@ -44,30 +39,6 @@ _QUANTIZE_PATTERN = re.compile(
 
 # Pattern 2: bare Decimal(str(...)) coercion.
 _DECIMAL_STR_PATTERN = re.compile(r"Decimal\s*\(\s*str\s*\(")
-
-# ---------------------------------------------------------------------------
-# Pending enrollment for Decimal(str()) — follow-up targets beyond W03.P18
-# ---------------------------------------------------------------------------
-# Format: POSIX path relative to repo root (src/aeat/...).
-# Remove entries as their follow-up Steps land.  The test asserts that no
-# NEW sites appear beyond this declared pending set.
-
-DECIMAL_STR_PENDING: frozenset[str] = frozenset(
-    {
-        "src/aeat/adapters/inbound/financial/providers/_ofx.py",
-        "src/aeat/adapters/outbound/google/_calc_sheets_pull.py",
-        "src/aeat/application/filing/_export.py",
-        "src/aeat/application/invoices/_importing.py",
-        "src/aeat/application/storage/calc_sheets/_parity_harness.py",
-        "src/aeat/application/verification/_verify.py",
-        "src/aeat/domain/calculations/registry/_workbook_parity.py",
-        "src/aeat/domain/categories/_registry.py",
-        "src/aeat/domain/deadlines/_recargo.py",
-        "src/aeat/domain/iva/_rates.py",
-        "src/aeat/entrypoints/cli/_config/_google.py",
-    }
-)
-
 
 def _is_excluded(path: pathlib.Path) -> bool:
     if path.name.startswith("test_"):
@@ -136,26 +107,16 @@ def test_no_inline_quantize_round_half_up() -> None:
 
 
 def test_no_bare_decimal_str_coercion() -> None:
-    """Bare ``Decimal(str(`` coercion must not grow beyond the declared pending set.
+    """Bare ``Decimal(str(`` coercion must be zero in production code.
 
-    W03.P18 (S364-S367) enrolled the targeted sites.  Pre-existing follow-up
-    sites are declared in ``DECIMAL_STR_PENDING``.  Any new site outside that set
-    is a regression.
+    All call-sites must delegate to :func:`aeat.core.decimal.coerce_decimal`.
+    The only permitted occurrence lives in the canonical helper module itself,
+    which is excluded above.
     """
     violations = _collect_decimal_str_violations()
-
-    new_violations: list[str] = []
-    for hit in violations:
-        file_posix = hit.rsplit(":", 1)[0].replace("\\", "/")
-        if file_posix not in DECIMAL_STR_PENDING:
-            new_violations.append(hit)
-
-    if new_violations:
-        joined = "\n  ".join(new_violations)
+    if violations:
+        joined = "\n  ".join(violations)
         raise AssertionError(
-            f"{len(new_violations)} NEW bare Decimal(str()) coercion call(s) found outside the "
-            f"declared pending set:\n  {joined}\n\n"
-            "Either replace each call with coerce_decimal() from aeat.core.decimal,\n"
-            "or add the file to DECIMAL_STR_PENDING in test_decimal_enrollment_inventory.py\n"
-            "with a comment referencing the follow-up Step."
+            f"{len(violations)} bare Decimal(str()) coercion call(s) found in production code:\n  {joined}\n\n"
+            "Replace each call with coerce_decimal() from aeat.core.decimal."
         )

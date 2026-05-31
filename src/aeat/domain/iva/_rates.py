@@ -12,6 +12,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
+from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
@@ -81,7 +82,9 @@ def _parse_rate(raw_rate: object) -> IvaRateRecord:
     try:
         member_state = EUMemberState(str(data.get("member_state")))
         kind = IvaRateKind(str(data.get("kind")))
-        pct = Decimal(str(data.get("pct")))
+        pct = coerce_decimal(data.get("pct"))
+        if pct is None:
+            raise ValueError(f"pct field could not be parsed: {data.get('pct')!r}")
     except (ArithmeticError, TypeError, ValueError) as exc:
         raise IvaValidationError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
     return IvaRateRecord.model_validate(

@@ -26,6 +26,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.config import Settings as _Settings
+from ....core.decimal import coerce_decimal
 from ....core.errors import CoreError
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
@@ -1047,7 +1048,8 @@ def _raise_if_timed_out(started: float, timeout_seconds: float, relative: str) -
 
 
 def _elapsed_decimal(started: float) -> Decimal:
-    return Decimal(str(round(time.monotonic() - started, 6)))
+    elapsed = coerce_decimal(round(time.monotonic() - started, 6), default=Decimal("0"))
+    return elapsed if elapsed is not None else Decimal("0")
 
 
 def _classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
@@ -1275,7 +1277,8 @@ def _coerce_excel_result(value: object) -> Decimal | int | str | bool | None:
     if isinstance(value, int):
         return value
     if isinstance(value, float):
-        return Decimal(str(value))
+        coerced = coerce_decimal(value)
+        return coerced if coerced is not None else str(value)
     return str(value)
 
 
