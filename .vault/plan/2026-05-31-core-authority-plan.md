@@ -157,19 +157,19 @@ Centralise cross-layer TypeAlias, Literal, and Annotated alias declarations per 
 
 Rename ModeloCapability Literal to ModeloFilingCapability in domain/calculations/registry/_schema.py (RENAME-002), collapse ParityStatus to single definition in _parity_tapes.py (RENAME-003), collapse EvidenceTier to single definition in _schema.py (RENAME-004), and update all callers.
 
-- [ ] `W05.P14.S42` - rename ModeloCapability Literal alias to ModeloFilingCapability in domain/calculations/registry/_schema.py and update the three caller sites; `RENAME-002, Rule 4; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `W05.P14.S43` - consolidate ParityStatus to the single definition in domain/calculations/registry/_parity_tapes.py, delete the _workbook_parity.py copy, and update the two callers; `RENAME-003, Rule 4; `src/aeat/domain/calculations/registry/_parity_tapes.py`.
-- [ ] `W05.P14.S44` - consolidate EvidenceTier Literal to the single definition in domain/calculations/registry/_schema.py, delete the _workbook_parity.py copy, and import in _workbook_parity.py; `RENAME-004, Rule 4; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W05.P14.S42` - rename ModeloCapability Literal alias to ModeloFilingCapability in domain/calculations/registry/_schema.py and update the three caller sites; `RENAME-002, Rule 4; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W05.P14.S43` - consolidate ParityStatus to the single definition in domain/calculations/registry/_parity_tapes.py, delete the _workbook_parity.py copy, and update the two callers; `RENAME-003, Rule 4; `src/aeat/domain/calculations/registry/_parity_tapes.py`.
+- [x] `W05.P14.S44` - consolidate EvidenceTier Literal to the single definition in domain/calculations/registry/_schema.py, delete the _workbook_parity.py copy, and import in _workbook_parity.py; `RENAME-004, Rule 4; `src/aeat/domain/calculations/registry/_schema.py`.
 
 ### Phase `W05.P15` - entrypoints Literal duplicate and multi-layer type reviews
 
 Remove the entrypoints _VerifyVerdict private duplicate (RENAME-005), conduct the bounded ApplicabilityVerdict promotion audit (RENAME-011), and execute the three low-risk constant-identifier placement reviews (RENAME-012, RENAME-013, RENAME-014).
 
-- [ ] `W05.P15.S45` - remove the _VerifyVerdict private Literal from entrypoints/cli/_app_live.py and import VerifyVerdict directly from application/live/_verify.py; `RENAME-005, Rule 4; `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `W05.P15.S46` - audit ApplicabilityVerdict consumers across layers; `if consumed outside domain/calculations/registry/ promote to core/, otherwise document the placement decision as same-package-only in the commit message; RENAME-011, Rule 1; `src/aeat/domain/calculations/registry/_applicability.py`.
-- [ ] `W05.P15.S47` - review SECURE_OBJECT_CATALOGUE_KEY, SECURE_OBJECT_DEFAULT_KEY, SECURE_OBJECT_WORKFLOW_STATE_KEY ownership and move to domain/buckets/ or application/workflow/ per the ownership decision, updating the two callers per key; `RENAME-012, Rule 4; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `W05.P15.S48` - move CENSUS_MODELO_SERVICE_OWNER to core/external_constants.py and update the two callers; `RENAME-013, Rule 6; `src/aeat/domain/calculations/registry/_censo_modelos.py`.
-- [ ] `W05.P15.S49` - move CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE to core/external_constants.py or document the adapter-placement rationale, then update the four callers; `RENAME-014, Rule 6; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W05.P15.S45` - remove the _VerifyVerdict private Literal from entrypoints/cli/_app_live.py and import VerifyVerdict directly from application/live/_verify.py; `RENAME-005, Rule 4; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W05.P15.S46` - audit ApplicabilityVerdict consumers across layers; `if consumed outside domain/calculations/registry/ promote to core/, otherwise document the placement decision as same-package-only in the commit message; RENAME-011, Rule 1; `src/aeat/domain/calculations/registry/_applicability.py`.
+- [x] `W05.P15.S47` - review SECURE_OBJECT_CATALOGUE_KEY, SECURE_OBJECT_DEFAULT_KEY, SECURE_OBJECT_WORKFLOW_STATE_KEY ownership and move to domain/buckets/ or application/workflow/ per the ownership decision, updating the two callers per key; `RENAME-012, Rule 4; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `W05.P15.S48` - move CENSUS_MODELO_SERVICE_OWNER to core/external_constants.py and update the two callers; `RENAME-013, Rule 6; `src/aeat/domain/calculations/registry/_censo_modelos.py`.
+- [x] `W05.P15.S49` - move CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE to core/external_constants.py or document the adapter-placement rationale, then update the four callers; `RENAME-014, Rule 6; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
 
 ## Wave `W06` - Protocol centralisation and SnapshotRepository conformance
 
