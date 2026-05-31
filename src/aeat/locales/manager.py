@@ -41,18 +41,24 @@ class LocaleManager:
     def get_codebase_keys(self) -> set[str]:
         """Extract all concrete dotted translation keys from the codebase.
 
-        Combines the regex scanner (``tr("…")`` / ``t("…")`` literal
-        call sites) with the AST scanner's concrete-key extractor that
-        catches programmatic emissions like
-        ``WizardValidationError("wizard.errors.select_unknown")``.
+        Combines three discovery paths:
 
-        Dynamic namespaces (f-string and concatenation forms) are
-        returned by :meth:`get_codebase_namespaces` and checked
+        1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
+        2. AST scanner — programmatic emissions such as
+           ``WizardValidationError("wizard.errors.select_unknown")``,
+           ``message_key=`` kwargs, and ``build_entry`` portal keys.
+        3. F-string registry — bounded f-string patterns whose value sets
+           are fully known at import time (e.g. wizard choice labels
+           keyed by enum values). See :mod:`aeat.locales._fstring_registry`.
+
+        Dynamic namespaces (open-ended f-string and concatenation forms)
+        are returned by :meth:`get_codebase_namespaces` and checked
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
 
         from aeat.locales._ast_scanner import scan_source_tree
+        from aeat.locales._fstring_registry import get_registered_keys
 
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
@@ -66,6 +72,7 @@ class LocaleManager:
             for match in self.pattern.finditer(content):
                 keys.add(match.group(1))
         keys.update(scan_source_tree(self.src_dir))
+        keys.update(get_registered_keys())
         return keys
 
     def get_codebase_namespaces(self) -> set[str]:
