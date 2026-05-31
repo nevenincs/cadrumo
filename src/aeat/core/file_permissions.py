@@ -67,6 +67,11 @@ def restrict_file_permissions(path: Path) -> None:
         # the subprocess.run hits an unexpected OSError.
         try:
             username = getpass.getuser()
+            # os.environ.get allowlist: SYSTEMROOT / USERDOMAIN are Windows OS-integration
+            # variables, not AEAT-prefixed config.  There is no Settings field for them
+            # because they are OS-provided ambient context, not application configuration.
+            # The single-surface invariant test scanner only flags AEAT_* keys; these are
+            # intentionally read directly from the OS environment here.
             icacls_path = Path(os.environ.get(_SYSTEMROOT_ENV_VAR, r"C:\\Windows")) / "System32" / "icacls.exe"
             candidates = [username]
             userdomain = os.environ.get(_USERDOMAIN_ENV_VAR)
