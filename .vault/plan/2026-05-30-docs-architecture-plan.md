@@ -35,17 +35,17 @@ Install the enforcement toolchain and repair the docs build to a runnable, gate-
 
 Add the docstring and link enforcement tooling and enable the ruff D ruleset with Google convention and audience-scoping, per the conventions ADR hard-cut decision.
 
-- [ ] `W01.P01.S01` - add pydoclint, interrogate, and doc8 to the dev dependency group; `pyproject.toml`.
-- [ ] `W01.P01.S02` - enable the ruff D ruleset with pydocstyle convention google; `pyproject.toml`.
-- [ ] `W01.P01.S03` - add D-rule audience-scoping per-file-ignores for test and private modules matching interrogate; `pyproject.toml`.
-- [ ] `W01.P01.S04` - run the docstring lint gate and confirm it reports the expected backlog; `pyproject.toml`.
-- [ ] `W01.P01.S64` - pin the sphinx version floor so the nitpicky gate flag semantics stay stable across the fleet; `pyproject.toml`.
+- [x] `W01.P01.S01` - add pydoclint, interrogate, and doc8 to the dev dependency group; `pyproject.toml`.
+- [x] `W01.P01.S02` - enable the ruff D ruleset with pydocstyle convention google; `pyproject.toml`.
+- [x] `W01.P01.S03` - add D-rule audience-scoping per-file-ignores for test and private modules matching interrogate; `pyproject.toml`.
+- [x] `W01.P01.S04` - run the docstring lint gate and confirm it reports the expected backlog; `pyproject.toml`.
+- [x] `W01.P01.S64` - pin the sphinx version floor so the nitpicky gate flag semantics stay stable across the fleet; `pyproject.toml`.
 
 ### Phase `W01.P02` - lint recipe restoration
 
 Restore the lint recipe to green so the docstring gate can be wired onto a working recipe; the referenced relative-imports check script is currently absent.
 
-- [ ] `W01.P02.S05` - restore the relative-imports check script the lint recipe references; `scripts/check_relative_imports.py`.
+- [x] `W01.P02.S05` - restore the relative-imports check script the lint recipe references; `scripts/check_relative_imports.py`.
 - [ ] `W01.P02.S06` - confirm the lint recipe runs green end to end; `justfile`.
 
 ### Phase `W01.P03` - documentation build recipes
@@ -221,53 +221,26 @@ Run a fresh-context honesty review against the closure summary before declaring 
 
 ## Parallelization
 
-Waves are sequenced: `W01` (tooling) before `W02` (harness) before
-`W03` (remediation) before `W04` (user-doc rewrite) before `W05`
-(rollout). `W02` needs the dependencies and recipes from `W01`; `W03`
-remediates against the gates defined in `W02`; `W04` pages must build
-green under the `W02` gates; `W05` flips gates to blocking only once the
-tree is green from `W03` and `W04`.
-
-Within a Wave, parallelism is high in two places. `W03`'s seven
-subpackage Phases (`P09` through `P15`) share no interdependency and are
-the natural swarm fan-out - one coder agent per subpackage, all
-concurrent. `W01`'s Phases are largely independent (`P02` lint
-restoration, `P03` recipes, `P04` Sphinx config) except that `P01`'s `D`
-ruleset and `P02`'s lint-green precede the docstring gate becoming
-runnable. `W02`'s four Phases are independent and may run concurrently.
-`W04` and `W05` Phases are mostly ordered within their Wave.
+Waves are sequenced: `W01` before `W02` before `W03` before `W04`
+before `W05`. `W02` needs `W01`'s deps and recipes; `W03` remediates
+against `W02`'s gates; `W04` pages build under `W02`'s gates; `W05`
+flips gates to blocking once the tree is green from `W03` and `W04`.
+Within `W03` the seven subpackage Phases (`P09`-`P15`) are independent
+and are the swarm fan-out; `W02`'s four Phases are independent; `W01`'s
+Phases are largely independent.
 
 ## Verification
 
-The epic is structurally complete when every Step in every Wave is closed
-and each of these checks passes:
-
-- `ruff` with the `D` ruleset and `convention="google"` passes tree-wide
-  with only the audience-scoped per-file-ignores, no defect suppressions.
-- `pydoclint --style=google` passes tree-wide (docstrings match
-  signatures).
-- `interrogate` meets or exceeds its configured floor across the public
-  surface, and the tool is a declared dependency.
-- `sphinx-build -n -W` passes with only the curated `nitpick_ignore`
-  baseline and no blanket warning suppression.
-- `doc8` RST formatting linting passes on the `docs/` tree in the
-  docs-check lane, and the advisory `linkcheck` lane runs with a curated
-  `linkcheck_ignore`.
-- The module-to-stub set-correspondence test passes (no undocumented
-  module, no orphan stub).
-- The CLI reference drift, docs-versus-tree completeness, and
-  schema-registry conformance tests pass, with the partial envelope
-  migration documented truthfully.
-- The bootstrap-presence pin passes and provably fails when a bootstrap
-  document is removed (anti-tautology check).
-- The README, getting-started, and architecture pages are authored
-  through the documentation pipeline and build green under the nitpicky
-  gate.
-- `docs-check` is wired into the standing gate set and the docstring,
-  correspondence, and CLI conformance tests are blocking.
-- No documentation path or filename encodes documentation-framework or
-  project-management metadata, reviewer-confirmed on every doc-producing
-  Step (conventions ADR decision 3a).
-- A fresh-context honesty review ran against the closure summary before
-  completion was declared, and the declared project-management
-  association reports the Epic complete.
+The epic is structurally complete when every Step is closed and: `ruff`
+`D` + `convention="google"` passes tree-wide with only audience-scoped
+ignores; `pydoclint --style=google` passes; `interrogate` meets its
+floor; `sphinx-build -n -W` passes with only a curated `nitpick_ignore`;
+`doc8` passes on `docs/` and the advisory `linkcheck` lane runs with a
+curated `linkcheck_ignore`; the module-to-stub correspondence, CLI
+reference drift, docs-versus-tree, and schema-registry conformance tests
+pass; the bootstrap-presence pin passes and fails when a doc is removed;
+README/getting-started/architecture are authored via the documentation
+pipeline and build green; `docs-check` is wired into the standing gate
+set and the gates are blocking; no documentation path or filename
+encodes framework or project-management metadata; and a fresh-context
+honesty review ran before closure.
