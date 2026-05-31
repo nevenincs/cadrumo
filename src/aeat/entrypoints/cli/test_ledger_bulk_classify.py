@@ -153,7 +153,9 @@ def test_rule_add_then_list_shows_rule() -> None:
 
     list_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "list"])
     assert list_result.exit_code == 0, list_result.output
-    payload = json.loads(list_result.output)
+    envelope = json.loads(list_result.output)
+    assert envelope["command"] == "ledger.rule.list"
+    payload = envelope["result"]
     assert len(payload["rules"]) == 1
     assert payload["rules"][0]["description_pattern"] == "acme"
     assert payload["rules"][0]["classification"] == "BUSINESS"
@@ -167,7 +169,7 @@ def test_rule_add_idempotent_same_pattern() -> None:
     assert second.exit_code == 0, second.output
 
     list_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "list"])
-    payload = json.loads(list_result.output)
+    payload = json.loads(list_result.output)["result"]
     # idempotent: same content-addressed id → still exactly one rule
     assert len(payload["rules"]) == 1
 
@@ -183,7 +185,7 @@ def test_rule_add_invalid_regex_rejected() -> None:
 def test_rule_list_empty() -> None:
     list_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "list"])
     assert list_result.exit_code == 0, list_result.output
-    payload = json.loads(list_result.output)
+    payload = json.loads(list_result.output)["result"]
     assert payload["rules"] == []
 
 
@@ -207,7 +209,7 @@ def test_rule_apply_classifies_not_yet_processed_transactions(tmp_path: Path) ->
 
     apply_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "apply"])
     assert apply_result.exit_code == 0, apply_result.output
-    payload = json.loads(apply_result.output)
+    payload = json.loads(apply_result.output)["result"]
     assert payload["matched"] == 2
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -237,7 +239,7 @@ def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) ->
 
     apply_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "apply"])
     assert apply_result.exit_code == 0, apply_result.output
-    payload = json.loads(apply_result.output)
+    payload = json.loads(apply_result.output)["result"]
 
     # tx1 was manually classified → skipped; tx2 is NOT_YET_PROCESSED → matched
     assert payload["skipped_already_classified"] >= 1
@@ -257,7 +259,7 @@ def test_rule_apply_dry_run_does_not_mutate(tmp_path: Path) -> None:
 
     dry_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "apply", "--dry-run"])
     assert dry_result.exit_code == 0, dry_result.output
-    payload = json.loads(dry_result.output)
+    payload = json.loads(dry_result.output)["result"]
     assert payload["dry_run"] is True
     assert payload["count"] >= 1
 
