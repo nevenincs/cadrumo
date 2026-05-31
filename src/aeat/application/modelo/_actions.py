@@ -588,7 +588,7 @@ def create_work_unit(
         bucket_event_repository: Bucket-event repository override for
             testing; defaults to ``BucketEventHistoryRepository``.
         clock: ``datetime`` override for testing the created /
-            updated timestamps. Defaults to ``datetime.now(UTC)``.
+            updated timestamps. Defaults to the canonical clock helper.
 
     Returns:
         The persisted :class:`aeat.domain.modelos.WorkUnit`.

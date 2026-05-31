@@ -97,7 +97,7 @@ def reconcile(
             modelo and period.
         now: Override for the report's ``reconciled_at`` timestamp.
             Supports deterministic testing. Defaults to
-            ``datetime.now(UTC)``.
+            the canonical clock helper.
 
     Returns:
         A frozen :class:`ReconciliationReport` whose
