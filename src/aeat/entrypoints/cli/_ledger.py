@@ -9,6 +9,8 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
+from aeat.core.time import _now
+
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
@@ -53,6 +55,7 @@ from ...application.review import (
 from ...application.workflow._models import resolve_active_bucket_id
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -71,7 +74,6 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionIdPrefixError,
 )
-from ...core.logging import get_logger
 from ._common import (
     _bad,
     _canonical_period,
@@ -2010,8 +2012,6 @@ def _emit_ratios_event(
     from secure-object snapshots. ``prior`` is ``None`` on a first
     set; ``new`` is ``None`` on unset.
     """
-    from datetime import UTC, datetime
-
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -2020,7 +2020,7 @@ def _emit_ratios_event(
         derive_bucket_event_id,
     )
 
-    occurred_at = datetime.now(UTC)
+    occurred_at = _now()
     payload = {
         "category": category,
         "prior": "" if prior is None else str(prior),
@@ -2147,8 +2147,6 @@ def _emit_ratios_census_override_warning(
     planned change — but downstream auditors get a typed record of
     the divergence.
     """
-    from datetime import UTC, datetime
-
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -2157,7 +2155,7 @@ def _emit_ratios_census_override_warning(
         derive_bucket_event_id,
     )
 
-    occurred_at = datetime.now(UTC)
+    occurred_at = _now()
     payload = {
         "category": warning.category.value,
         "override_ratio": str(warning.override_ratio),
