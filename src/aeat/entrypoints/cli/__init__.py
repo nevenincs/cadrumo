@@ -434,4 +434,4 @@ def main() -> None:
     app(prog_name="aeat")
 
 
-__all__ = ["app", "main"]
+__all__ = ["AppRootResult", "RootStatusResult", "app", "main", "tr"]
