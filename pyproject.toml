@@ -449,6 +449,7 @@ markers = [
   "domain_core: exercises core.* foundational cross-cutting (config, logging, errors, paths, observability, identity, i18n, env_io)",
   "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only",
   "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk",
+  "docs: documentation build and conformance gate; runs a real sphinx-build, excluded from the fast unit lane and run via just docs-check",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────

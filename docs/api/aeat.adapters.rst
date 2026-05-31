@@ -4,7 +4,6 @@ aeat.adapters package
 .. automodule:: aeat.adapters
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

@@ -4,7 +4,6 @@ aeat.application.storage package
 .. automodule:: aeat.application.storage
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

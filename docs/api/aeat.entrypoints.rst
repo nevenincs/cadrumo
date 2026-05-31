@@ -4,7 +4,6 @@ aeat.entrypoints package
 .. automodule:: aeat.entrypoints
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

@@ -4,7 +4,6 @@ aeat.application.filing package
 .. automodule:: aeat.application.filing
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------
