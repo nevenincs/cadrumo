@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from ._bucket_session import BucketSession
 
 from .....core._bucket_pointer_io import resolve_active_bucket_id
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
@@ -682,7 +683,7 @@ class FileFallbackMasterKeyProvider:
                 "characters; supply a longer passphrase via "
                 f"{PASSPHRASE_ENV_VAR} or at the prompt.",
             )
-        return value.encode("utf-8")
+        return value.encode(_UTF_8_ENCODING)
 
     def get_master_key(self) -> bytes:
         self._store_dir.mkdir(parents=True, exist_ok=True)
@@ -758,7 +759,7 @@ class FileFallbackMasterKeyProvider:
             return self._mint_new(passphrase)
 
     def _unwrap_existing(self, passphrase: bytes) -> bytes:
-        raw_text = self._kdf_params_path.read_text(encoding="utf-8")
+        raw_text = self._kdf_params_path.read_text(encoding=_UTF_8_ENCODING)
         # Version-gate before strict pydantic parsing so a v1 file
         # produces a typed runbook-pointing error instead of a raw
         # ValidationError.
@@ -836,7 +837,7 @@ class FileFallbackMasterKeyProvider:
         )
         atomic_write_secure_bytes(
             self._kdf_params_path,
-            params.model_dump_json().encode("utf-8"),
+            params.model_dump_json().encode(_UTF_8_ENCODING),
         )
         atomic_write_secure_bytes(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
@@ -907,7 +908,7 @@ class FileFallbackMasterKeyProvider:
             )
             atomic_write_secure_bytes(
                 self._kdf_params_path,
-                params.model_dump_json().encode("utf-8"),
+                params.model_dump_json().encode(_UTF_8_ENCODING),
             )
             atomic_write_secure_bytes(self._salt_path, salt)
         _log.info(
@@ -1077,7 +1078,7 @@ def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
             from ..bucket._manifest_io import manifest_path
 
             paths = _bp(storage_root, bucket_id)
-            payload: dict[str, object] = dict(tomllib.loads(manifest_path(paths).read_text(encoding="utf-8")))
+            payload: dict[str, object] = dict(tomllib.loads(manifest_path(paths).read_text(encoding=_UTF_8_ENCODING)))
             raw = payload.get("key_schedule")
             if raw is not None:
                 return BucketKeySchedule(str(raw))
@@ -1109,7 +1110,7 @@ def _document_from_wrapped_dek(wrapped) -> _WrappedBucketDekDocument:
 
 def _read_wrapped_bucket_dek(path: Path):
     try:
-        document = _WrappedBucketDekDocument.model_validate_json(path.read_text(encoding="utf-8"))
+        document = _WrappedBucketDekDocument.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
     except (OSError, ValueError, ValidationError) as exc:
         raise MasterKeyUnavailableError(
             f"failed to read bucket DEK document at {path}: {exc}",
@@ -1123,7 +1124,7 @@ def _write_wrapped_bucket_dek(path: Path, wrapped) -> None:
         document.model_dump(mode="json"),
         indent=2,
         sort_keys=True,
-    ).encode("utf-8")
+    ).encode(_UTF_8_ENCODING)
     atomic_write_secure_bytes(path, payload + b"\n")
 
 

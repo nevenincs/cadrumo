@@ -8,6 +8,7 @@ from contextlib import nullcontext
 from datetime import UTC, datetime
 from pathlib import Path
 
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -110,7 +111,7 @@ class FiledDeclaracionObservationStore:
                 classification=_OBSERVATION_CLASSIFICATION,
                 schema_version=_OBSERVATION_ENVELOPE_VERSION,
                 written_at=envelope.written_at,
-                payload=envelope.model_dump_json().encode("utf-8"),
+                payload=envelope.model_dump_json().encode(_UTF_8_ENCODING),
             )
         return _logical_path(_OBSERVATION_NAMESPACE, object_key)
 
@@ -127,7 +128,7 @@ class FiledDeclaracionObservationStore:
             )
         if record is None:
             raise ExpedienteNotFoundError(f"filed-declaration observation not found: {object_key}")
-        envelope = Envelope[FiledDeclaracionObservation].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[FiledDeclaracionObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
         if envelope.classification is not _OBSERVATION_CLASSIFICATION:
             raise ClassificationError(
                 f"filed-declaration observation {object_key} has classification {envelope.classification}; "
@@ -162,7 +163,7 @@ class FiledDeclaracionObservationStore:
                 classification=_OBSERVATION_CLASSIFICATION,
                 schema_version=_OBSERVATION_ENVELOPE_VERSION,
                 written_at=envelope.written_at,
-                payload=envelope.model_dump_json().encode("utf-8"),
+                payload=envelope.model_dump_json().encode(_UTF_8_ENCODING),
             )
         return _logical_path(_IVA_WALLET_OBSERVATION_NAMESPACE, object_key)
 
@@ -179,7 +180,7 @@ class FiledDeclaracionObservationStore:
             )
         if record is None:
             raise ExpedienteNotFoundError(f"IVA wallet observation not found: {object_key}")
-        envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode("utf-8"))
+        envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
         if envelope.classification is not _OBSERVATION_CLASSIFICATION:
             raise ClassificationError(
                 f"IVA wallet observation {object_key} has classification {envelope.classification}; "
@@ -203,7 +204,7 @@ class FiledDeclaracionObservationStore:
                 max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
             )
         for record in records:
-            envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode("utf-8"))
+            envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
             if envelope.classification is not _OBSERVATION_CLASSIFICATION:
                 raise ClassificationError(
                     f"IVA wallet observation {record.object_key!r} has classification {envelope.classification}; "
@@ -237,7 +238,7 @@ class FiledDeclaracionObservationStore:
                 _safe_segment(expediente_id),
             )
         )
-        return hashlib.sha256(key.encode("utf-8")).hexdigest()
+        return hashlib.sha256(key.encode(_UTF_8_ENCODING)).hexdigest()
 
     def _crypto_scope(self):
         return nullcontext()
@@ -257,7 +258,7 @@ class FiledDeclaracionObservationStore:
                 captured_at,
             )
         )
-        return hashlib.sha256(key.encode("utf-8")).hexdigest()
+        return hashlib.sha256(key.encode(_UTF_8_ENCODING)).hexdigest()
 
 
 def _safe_segment(value: str) -> str:

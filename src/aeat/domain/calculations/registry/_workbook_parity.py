@@ -119,9 +119,9 @@ class WorkbookArtefactReport(WorkbookParityModel):
 
     @model_validator(mode="after")
     def _validate_status(self) -> WorkbookArtefactReport:
-        if self.scan_status == "scanned" and self.workbook_kind in {"unreadable", "unsupported_binary_xls"}:
+        if self.scan_status == WorkbookScanStatus.SCANNED and self.workbook_kind in {"unreadable", "unsupported_binary_xls"}:
             raise RegistryValidationError("scanned workbook cannot be unreadable or unsupported")
-        if self.scan_status != "scanned" and self.error is None:
+        if self.scan_status != WorkbookScanStatus.SCANNED and self.error is None:
             raise RegistryValidationError("non-scanned workbook report must include an error")
         return self
 
@@ -960,10 +960,10 @@ def verify_workbook_backend(
     report = WorkbookBackendVerificationReport(
         root=root.resolve().as_posix(),
         workbook_count=len(discover_workbooks(root)) if root.exists() else 0,
-        scanned_count=sum(1 for report in reports if report.scan_status == "scanned"),
+        scanned_count=sum(1 for report in reports if report.scan_status == WorkbookScanStatus.SCANNED),
         formula_workbook_count=sum(1 for report in reports if report.workbook_kind == "formula_form"),
         unsupported_xls_count=sum(1 for report in reports if report.workbook_kind == "unsupported_binary_xls"),
-        failed_count=sum(1 for report in reports if report.scan_status in {"failed", "timeout"}),
+        failed_count=sum(1 for report in reports if report.scan_status in {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}),
         runner=runner,
         reports=reports,
         modelo_coverage=_build_modelo_coverage(reports),
@@ -978,7 +978,7 @@ def verify_workbook_backend(
 def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> None:
     """Raise when discovery could not inspect every workbook artefact."""
 
-    failed = tuple(item for item in report.reports if item.scan_status in {"failed", "timeout"})
+    failed = tuple(item for item in report.reports if item.scan_status in {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT})
     if failed:
         details = "\n".join(f" - {item.path}: {item.error}" for item in failed)
         raise RegistryValidationError(f"workbook verification failed to scan {len(failed)} artefact(s):\n{details}")
@@ -1017,7 +1017,7 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
             unsupported_xls_count=sum(
                 1 for report in modelo_reports if report.workbook_kind == "unsupported_binary_xls"
             ),
-            failed_count=sum(1 for report in modelo_reports if report.scan_status in {"failed", "timeout"}),
+            failed_count=sum(1 for report in modelo_reports if report.scan_status in {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}),
         )
         for modelo, modelo_reports in sorted(buckets.items())
     )

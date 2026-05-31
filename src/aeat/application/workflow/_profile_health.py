@@ -14,6 +14,7 @@ from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core._bucket_pointer_io import pointer_path, read_pointer
 from ...core.config import load_settings
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileRecord
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
@@ -253,7 +254,7 @@ def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileMa
     record = _load_active_profile_record()
     status = BucketLifecycleStatus(record.status.value)
     paths = bucket_paths(load_settings().aeat_local_storage_root, before.active_profile)
-    payload = dict(tomllib.loads(manifest_path(paths).read_text(encoding="utf-8")))
+    payload = dict(tomllib.loads(manifest_path(paths).read_text(encoding=_UTF_8_ENCODING)))
     payload.setdefault("last_unlocked_at", None)
     payload.setdefault("idle_lock_minutes", None)
     payload["status"] = status.value
