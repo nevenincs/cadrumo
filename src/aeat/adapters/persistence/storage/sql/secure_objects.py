@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterator
 from datetime import datetime
-from typing import cast
+from typing import Final, cast
 
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
@@ -36,12 +36,14 @@ _log = get_logger(__name__)
 
 _DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
 _DEFAULT_CONFLICT_POLICY = "last-write-wins"
+# SQL column-type constants — centralised so every DDL site stays consistent.
+_VARCHAR_64: Final[str] = "VARCHAR(64)"
 _SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (
-    ("revision_id", "VARCHAR(64)"),
-    ("previous_revision_id", "VARCHAR(64)"),
-    ("previous_payload_hash", "VARCHAR(64)"),
-    ("payload_hash", "VARCHAR(64)"),
-    ("ciphertext_hash", "VARCHAR(64)"),
+    ("revision_id", _VARCHAR_64),
+    ("previous_revision_id", _VARCHAR_64),
+    ("previous_payload_hash", _VARCHAR_64),
+    ("payload_hash", _VARCHAR_64),
+    ("ciphertext_hash", _VARCHAR_64),
     ("revision_written_at", "DATETIME"),
     ("write_provenance", "VARCHAR(255)"),
     ("source_event_id", "VARCHAR(128)"),
@@ -258,11 +260,11 @@ class SecureObjectRepository:
                     "  classification VARCHAR(32) NOT NULL,"
                     "  schema_version INTEGER NOT NULL,"
                     "  written_at DATETIME NOT NULL,"
-                    "  revision_id VARCHAR(64),"
-                    "  previous_revision_id VARCHAR(64),"
-                    "  previous_payload_hash VARCHAR(64),"
-                    "  payload_hash VARCHAR(64),"
-                    "  ciphertext_hash VARCHAR(64),"
+                    f"  revision_id {_VARCHAR_64},"
+                    f"  previous_revision_id {_VARCHAR_64},"
+                    f"  previous_payload_hash {_VARCHAR_64},"
+                    f"  payload_hash {_VARCHAR_64},"
+                    f"  ciphertext_hash {_VARCHAR_64},"
                     "  revision_written_at DATETIME,"
                     "  write_provenance VARCHAR(255),"
                     "  source_event_id VARCHAR(128),"
