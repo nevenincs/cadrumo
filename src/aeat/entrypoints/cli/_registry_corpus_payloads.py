@@ -71,7 +71,7 @@ class ManualRulePayload(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("registry_corpus.citations.list")
+@register_schema("registry.citations.list")
 class CitationListResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations list``."""
 
@@ -83,7 +83,7 @@ class CitationListResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("registry_corpus.citations.show")
+@register_schema("registry.citations.view")
 class CitationShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations view``."""
 
@@ -94,7 +94,7 @@ class CitationShowResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("registry_corpus.citations.verify")
+@register_schema("registry.citations.verify")
 class CitationVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry citations verify``."""
 
@@ -107,7 +107,7 @@ class CitationVerifyResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("registry_corpus.manuals.list")
+@register_schema("registry.manuals.list")
 class ManualListResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals list``."""
 
@@ -120,7 +120,7 @@ class ManualListResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("registry_corpus.manuals.show")
+@register_schema("registry.manuals.view")
 class ManualShowResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals view``."""
 
@@ -138,7 +138,7 @@ class ManualShowResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("registry_corpus.manuals.rules.list")
+@register_schema("registry.manuals.rules")
 class ManualRulesListResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals rules``."""
 
@@ -154,7 +154,7 @@ class ManualRulesListResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("registry_corpus.manuals.verify")
+@register_schema("registry.manuals.verify")
 class ManualVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry manuals verify``."""
 

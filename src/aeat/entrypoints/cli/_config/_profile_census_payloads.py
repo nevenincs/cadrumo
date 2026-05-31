@@ -13,7 +13,7 @@ from __future__ import annotations
 from .._schemas import OutputSchema, register_schema
 
 
-@register_schema("config.census.refresh")
+@register_schema("config.profile.census.refresh")
 class CensusRefreshResult(OutputSchema):
     """JSON envelope for ``aeat config profile census refresh``."""
 
@@ -23,7 +23,7 @@ class CensusRefreshResult(OutputSchema):
     facts: dict = {}
 
 
-@register_schema("config.census.show")
+@register_schema("config.profile.census.show")
 class CensusShowResult(OutputSchema):
     """JSON envelope for ``aeat config profile census show``."""
 
@@ -35,7 +35,7 @@ class CensusShowResult(OutputSchema):
     facts: dict = {}
 
 
-@register_schema("config.census.compare")
+@register_schema("config.profile.census.compare")
 class CensusCompareResult(OutputSchema):
     """JSON envelope for ``aeat config profile census compare``."""
 
@@ -47,7 +47,7 @@ class CensusCompareResult(OutputSchema):
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
-@register_schema("config.census.apply")
+@register_schema("config.profile.census.apply")
 class CensusApplyResult(OutputSchema):
     """JSON envelope for ``aeat config profile census apply``."""
 

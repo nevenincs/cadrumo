@@ -141,7 +141,7 @@ def register(profile_app: typer.Typer) -> None:
             f"captured_at\t{snapshot.captured_at.isoformat()}",
             f"facts\t{len(snapshot.censo_facts)}",
         ]
-        _emit_envelope(ctx, command="config.census.refresh", result=typed_refresh, lines=lines)
+        _emit_envelope(ctx, command="config.profile.census.refresh", result=typed_refresh, lines=lines)
 
     @census_app.command(
         "show",
@@ -187,7 +187,7 @@ def register(profile_app: typer.Typer) -> None:
         ]
         for path, value in sorted(snapshot.censo_facts.items()):
             lines.append(f"{path}\t{value}")
-        _emit_envelope(ctx, command="config.census.show", result=typed_show, lines=lines)
+        _emit_envelope(ctx, command="config.profile.census.show", result=typed_show, lines=lines)
 
     @census_app.command(
         "compare",
@@ -230,7 +230,7 @@ def register(profile_app: typer.Typer) -> None:
                 f"{row.status.value}\t{row.path}\t"
                 f"census={row.census_value or ''}\tprofile={row.profile_value or ''}"
             )
-        _emit_envelope(ctx, command="config.census.compare", result=typed_compare, lines=lines)
+        _emit_envelope(ctx, command="config.profile.census.compare", result=typed_compare, lines=lines)
 
     @census_app.command(
         "apply",
@@ -283,7 +283,7 @@ def register(profile_app: typer.Typer) -> None:
             lines.append(f"written\t{path}")
         for path in result.unchanged_paths:
             lines.append(f"unchanged\t{path}")
-        _emit_envelope(ctx, command="config.census.apply", result=typed_apply, lines=lines)
+        _emit_envelope(ctx, command="config.profile.census.apply", result=typed_apply, lines=lines)
 
     profile_app.add_typer(census_app, name="census")
 

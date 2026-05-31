@@ -131,7 +131,7 @@ class RepairConnectivityResult(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-@register_schema("config.list")
+@register_schema("config.profile.list")
 class ConfigListResult(OutputSchema):
     """JSON envelope for ``aeat config profile list``.
 
@@ -194,7 +194,7 @@ class ConfigProfileDuplicateResult(OutputSchema):
     display_name: str
 
 
-@register_schema("config.status")
+@register_schema("config.profile.status")
 class ConfigStatusResult(OutputSchema):
     """JSON envelope for ``aeat config status``.
 
@@ -305,7 +305,7 @@ class AuthClearResult(OutputSchema):
     cleared_locks: int
 
 
-@register_schema("config.apoderado.check")
+@register_schema("config.auth.apoderado.check")
 class ApoderadoCheckResult(OutputSchema):
     """JSON envelope for ``aeat config apoderado check``."""
 
