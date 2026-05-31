@@ -23,15 +23,14 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from .....core.time._utc import _validate_utc_aware
 from ._errors import BucketValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SALT_BYTES = 16
-
 
 class ManifestKdfParams(BaseModel):
     """Argon2id parameters and salt as carried in the bucket manifest.
@@ -72,7 +71,6 @@ class ManifestKdfParams(BaseModel):
             return base64.b64decode(value.encode("ascii"), validate=True)
         raise ValueError("salt must be bytes or base64 string")
 
-
 class BucketLifecycleStatus(StrEnum):
     """Plaintext lifecycle marker carried on the bucket manifest.
 
@@ -91,13 +89,11 @@ class BucketLifecycleStatus(StrEnum):
     ACTIVE = "active"
     TOMBSTONED = "tombstoned"
 
-
 class BucketKeySchedule(StrEnum):
     """Data-key schedule used by encrypted records in this bucket."""
 
     LEGACY_MASTER_KEY = "legacy-master-key"
     BUCKET_DEK_V1 = "bucket-dek-v1"
-
 
 class BucketManifest(BaseModel):
     """Plaintext manifest for one per-bucket directory.
@@ -167,6 +163,5 @@ class BucketManifest(BaseModel):
         if value is None:
             return None
         return _validate_utc_aware(value)
-
 
 __all__ = ["BucketKeySchedule", "BucketLifecycleStatus", "BucketManifest", "ManifestKdfParams"]

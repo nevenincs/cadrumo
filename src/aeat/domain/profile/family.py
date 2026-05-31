@@ -10,12 +10,12 @@ from __future__ import annotations
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Art. 58.1 LIRPF: first-child cutoff for full-year eligibility is 1 July.
 _FULL_YEAR_CUTOFF_MONTH = 7
@@ -26,13 +26,11 @@ _FULL_YEAR_CUTOFF_DAY = 1
 _MAX_AGE_ORDINARY = 25
 _MAX_AGE_MENOR_TRES = 3
 
-
 def _coerce_iso_date_field(value: object) -> object:
     """Delegate for @field_validator date fields: parse ISO strings, pass through everything else."""
     if isinstance(value, str):
         return _parse_iso8601_date(value)
     return value
-
 
 class DescendantInfo(BaseModel):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
@@ -158,7 +156,6 @@ class DescendantInfo(BaseModel):
             return False
         return (entry.month, entry.day) < (_FULL_YEAR_CUTOFF_MONTH, _FULL_YEAR_CUTOFF_DAY)
 
-
 class RentaDescendantProfile(BaseModel):
     """One descendant row from the official Modelo 100 family section."""
 
@@ -184,7 +181,6 @@ class RentaDescendantProfile(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
-
 
 class RentaAscendantProfile(BaseModel):
     """One ascendant row from the official Modelo 100 family section."""
@@ -212,7 +208,6 @@ class RentaAscendantProfile(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
-
 
 class RentaFamilyProfile(BaseModel):
     """Typed repeated family-member facts consumed by Modelo 100 bindings."""
@@ -439,7 +434,6 @@ class RentaFamilyProfile(BaseModel):
                 amount=amount,
             )
         return None
-
 
 __all__ = [
     "DescendantInfo",

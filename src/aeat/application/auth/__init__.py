@@ -6,7 +6,7 @@ from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
@@ -26,8 +26,7 @@ from ._catalogue import (
     list_auth_providers,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class AuthProviderKind(StrEnum):
     """Closed enumeration of supported AEAT authentication providers.
@@ -39,7 +38,6 @@ class AuthProviderKind(StrEnum):
 
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
-
 
 class AuthProviderDescription(BaseModel):
     """Operator-facing description of one configured auth provider.
@@ -69,7 +67,6 @@ class AuthProviderDescription(BaseModel):
     health_severity: str | None = None
     days_until_expiry: int | None = None
     health_summary: str | None = None
-
 
 @runtime_checkable
 class AuthProvider(Protocol):
@@ -103,7 +100,6 @@ class AuthProvider(Protocol):
         """Return a safe, log-friendly summary of the provider's configured state."""
         ...
 
-
 def select_provider(
     kind: AuthProviderKind,
     *,
@@ -124,7 +120,6 @@ def select_provider(
         browser_session_factory=browser_session_factory,
     )
 
-
 def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
     """Return a one-paragraph operator-facing summary of how ``description`` affects the workflow.
 
@@ -142,7 +137,6 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     if description.kind == AuthProviderKind.CERTIFICATE:
         return tr("application.auth.provider_impact.certificate_ready")
     return tr("application.auth.provider_impact.generic_ready", label=description.label)
-
 
 from ._acquisition_lock import (
     AuthAcquisitionLockedError,

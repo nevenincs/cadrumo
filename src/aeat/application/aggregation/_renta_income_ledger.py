@@ -24,7 +24,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...domain.transactions import (
     BusinessClassification,
@@ -39,11 +39,10 @@ from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS = "01"
-
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce an income observation."""
@@ -59,7 +58,6 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     # and must not feed M130 casillas.
     TRABAJO_INCOME = "trabajo_income"
 
-
 class RentaIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating income ledger rows."""
 
@@ -68,7 +66,6 @@ class RentaIncomeLedgerAggregationIssue(BaseModel):
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: RentaIncomeLedgerAggregationIssueReason
     detail: str = Field(min_length=1, max_length=512)
-
 
 class RentaIncomeObservation(BaseModel):
     """One eligible INCOMING professional-income ledger row.
@@ -100,7 +97,6 @@ class RentaIncomeObservation(BaseModel):
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     filing_date: date
     source_jurisdiction: str | None = None
-
 
 class RentaIncomeLedgerAggregation(BaseModel):
     """Cumulative income observations for one M130 quarter window."""
@@ -151,7 +147,6 @@ class RentaIncomeLedgerAggregation(BaseModel):
     ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
         return tuple(value)
 
-
 def aggregate_renta_income_ledger_from_repositories(
     *,
     bucket_id: str,
@@ -168,7 +163,6 @@ def aggregate_renta_income_ledger_from_repositories(
         )
     transactions = repository.load()
     return aggregate_renta_income_ledger(transactions, bucket_id=bucket_id, period=period)
-
 
 def aggregate_renta_income_ledger(
     transactions: TransactionCatalogue,
@@ -214,7 +208,6 @@ def aggregate_renta_income_ledger(
         casilla_aggregation=casilla_aggregation,
     )
 
-
 def _resolve_quarterly_period(period: Period | str) -> Period:
     resolved = period if isinstance(period, Period) else Period.model_validate(period)
     if resolved.kind is not PeriodKind.QUARTERLY:
@@ -224,10 +217,8 @@ def _resolve_quarterly_period(period: Period | str) -> Period:
         )
     return resolved
 
-
 _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA: str = "actividad_economica"
 _IRPF_CATEGORY_TRABAJO: str = "trabajo"
-
 
 def _classify_income_transaction(
     transaction: Transaction,
@@ -304,7 +295,6 @@ def _classify_income_transaction(
         source_jurisdiction=transaction.source_jurisdiction,
     )
 
-
 def _income_business_amount(transaction: Transaction) -> Decimal | None:
     """Return the business-attributed income amount, or None if not eligible.
 
@@ -324,7 +314,6 @@ def _income_business_amount(transaction: Transaction) -> Decimal | None:
     if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:
         return amount * transaction.business_pct
     return None
-
 
 def _income_casilla_aggregation(
     period: Period,
@@ -353,7 +342,6 @@ def _income_casilla_aggregation(
         casilla_values=totals,
         provenance=tuple(provenance_rows),
     )
-
 
 __all__ = [
     "RentaIncomeLedgerAggregation",

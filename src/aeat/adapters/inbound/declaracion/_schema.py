@@ -14,14 +14,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....domain.calculations.registry._ids import CasillaId
 from ....domain.calculations.registry._schema import RegistrySnapshotRef
 from ..pdf._shared import ExtractedCasilla
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class TemplateRevision(BaseModel):
     """Detected or caller-resolved declaration template identity.
@@ -46,7 +45,6 @@ class TemplateRevision(BaseModel):
     año: int = Field(ge=2000, le=2099)
     revision: str = Field(min_length=1, max_length=32)
     detected_from: Literal["header", "footer", "filename", "explicit_override"] = "header"
-
 
 class ExtractionWarning(BaseModel):
     """One advisory emitted during extraction.
@@ -73,7 +71,6 @@ class ExtractionWarning(BaseModel):
     code: str = Field(min_length=1)
     message: str
     primitive_attempted: Literal["acroform", "label_regex", "bbox", "ocr", "merged"]
-
 
 class DeclaracionObservation(BaseModel):
     """Observed values parsed from a declaración PDF.

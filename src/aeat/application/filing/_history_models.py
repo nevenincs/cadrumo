@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...domain._identifiers import ModeloIdentifier
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ModeloHistoryEntry(BaseModel):
     """One recorded filing event observed by the local filing-state store."""
@@ -20,7 +19,6 @@ class ModeloHistoryEntry(BaseModel):
     period: str = Field(min_length=1, max_length=16)
     submitted_at: datetime
     status: str = Field(min_length=1, max_length=32)
-
 
 class ModeloHistory(BaseModel):
     """Per-modelo filing history persisted as an encrypted audit envelope."""
@@ -38,7 +36,6 @@ class ModeloHistory(BaseModel):
                     f"ModeloHistory.modelo={self.modelo!r} disagrees with entry modelo={entry.modelo!r}",
                 )
         return self
-
 
 __all__ = [
     "ModeloHistory",

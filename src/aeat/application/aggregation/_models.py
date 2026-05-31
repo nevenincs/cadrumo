@@ -19,7 +19,6 @@ from typing import Annotated, Self
 from pydantic import (
     BaseModel,
     BeforeValidator,
-    ConfigDict,
     Field,
     computed_field,
     field_serializer,

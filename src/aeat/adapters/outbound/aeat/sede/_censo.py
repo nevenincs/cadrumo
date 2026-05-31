@@ -31,14 +31,14 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from aeat.core.parsing import parse_bool as _parse_bool
 from aeat.core.parsing import parse_date as _parse_date_canonical
 
 from ._errors import SedeError, SedeFailureMode
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # G313 publishes the operator's elected withholding rate as a percentage
 # string. The closed enum {15, 7, 1} is enforced at the CensoSyncService
@@ -47,7 +47,6 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _WITHHOLDING_RE: Final = re.compile(r"^\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*%?\s*$")
 _M2_RE: Final = re.compile(r"^\s*([0-9]+(?:[.,][0-9]+)?)\s*(?:m²|m2)?\s*$")
 _CADASTRAL_RE: Final = re.compile(r"^[0-9A-Z]{20}$")
-
 
 class CensoFactSet(BaseModel):
     """Typed projection of one G313 (Mis Datos Censales) page read.
@@ -104,7 +103,6 @@ class CensoFactSet(BaseModel):
         description="IAE epigraph the operator is censado under (RDLeg 1175/1990).",
     )
 
-
 class CensoParseError(SedeError):
     """Raised when a value on the G313 page does not parse against the schema."""
 
@@ -114,7 +112,6 @@ class CensoParseError(SedeError):
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={"field": field, "raw_value": raw},
         )
-
 
 _G313_LABELS: Final[dict[str, str]] = {
     "fiscal_address_cadastral_reference": "Referencia catastral",
@@ -127,7 +124,6 @@ _G313_LABELS: Final[dict[str, str]] = {
     "vivienda_office_office_m2": "Superficie afecta a la actividad",
     "iae_epigraph": "Epígrafe IAE",
 }
-
 
 def parse_g313_html(html: str) -> CensoFactSet:
     """Parse a G313 (Mis Datos Censales) result page into a CensoFactSet.
@@ -179,10 +175,8 @@ def parse_g313_html(html: str) -> CensoFactSet:
         ),
     )
 
-
 _TAG_RE: Final = re.compile(r"<[^>]+>")
 _WS_RE: Final = re.compile(r"\s+")
-
 
 def _label_value_table(html: str) -> dict[str, str]:
     """Flatten HTML to a label → value mapping.
@@ -207,7 +201,6 @@ def _label_value_table(html: str) -> dict[str, str]:
                 break
     return table
 
-
 def _take_value_token(after: str) -> str:
     """Return the first value token following a label.
 
@@ -224,13 +217,11 @@ def _take_value_token(after: str) -> str:
                 cutoff = position
     return after[:cutoff].strip().rstrip(":").strip()
 
-
 def _normalise_token(raw: str | None) -> str | None:
     if raw is None:
         return None
     cleaned = raw.strip()
     return cleaned or None
-
 
 def _parse_cadastral(raw: str | None) -> str | None:
     if raw is None:
@@ -246,7 +237,6 @@ def _parse_cadastral(raw: str | None) -> str | None:
         )
     return cleaned
 
-
 def _parse_date(raw: str | None, *, field: str) -> date | None:
     try:
         return _parse_date_canonical(raw, fmt="ddmmyyyy", on_error="raise")
@@ -256,7 +246,6 @@ def _parse_date(raw: str | None, *, field: str) -> date | None:
             field=field,
             raw=raw or "",
         ) from exc
-
 
 def _parse_withholding(raw: str | None) -> str | None:
     if raw is None:
@@ -272,7 +261,6 @@ def _parse_withholding(raw: str | None) -> str | None:
             raw=raw,
         )
     return match.group(1).replace(",", ".")
-
 
 def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
     if raw is None:
@@ -296,7 +284,6 @@ def _parse_m2(raw: str | None, *, field: str) -> Decimal | None:
             field=field,
             raw=raw,
         ) from exc
-
 
 __all__ = [
     "CensoFactSet",

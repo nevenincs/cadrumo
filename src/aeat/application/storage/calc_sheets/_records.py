@@ -28,7 +28,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ....core.time import _now as _utc_now
 from ....core.time._utc import _validate_utc_aware
@@ -53,9 +53,7 @@ from ._errors import CalcSheetsRecordError
 # field is unambiguously a Decimal.
 DecimalValue = _RegistryDecimalValue
 
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class TabName(StrEnum):
     """The tabs the engine emits in every workbook.
@@ -73,9 +71,7 @@ class TabName(StrEnum):
     DETALLE = "Detalle"
     GUIDE = "Guía"
 
-
 _A1_COLUMN = re.compile(r"^[A-Z]{1,3}$")
-
 
 def _column_index_to_letters(column: int) -> str:
     """Translate a 1-based column index to A, B, ..., Z, AA, AB, ..."""
@@ -89,7 +85,6 @@ def _column_index_to_letters(column: int) -> str:
         letters.append(chr(ord("A") + remainder))
     return "".join(reversed(letters))
 
-
 def _column_letters_to_index(letters: str) -> int:
     if not _A1_COLUMN.match(letters):
         raise CalcSheetsRecordError(f"invalid Sheets column letters: {letters!r}")
@@ -97,7 +92,6 @@ def _column_letters_to_index(letters: str) -> int:
     for char in letters:
         cursor = cursor * 26 + (ord(char) - ord("A") + 1)
     return cursor
-
 
 class SheetCellAddress(BaseModel):
     """A single Sheets cell address, expressed as tab + row + column."""
@@ -134,7 +128,6 @@ class SheetCellAddress(BaseModel):
         safe = self.tab.value.replace("'", "''")
         return f"'{safe}'!{self.a1}"
 
-
 class SheetValueCell(BaseModel):
     """A literal value the engine writes verbatim to a cell.
 
@@ -152,7 +145,6 @@ class SheetValueCell(BaseModel):
     parameter: ParameterId | None = None
     role: Literal["operator_input", "parameter_value", "label", "metadata"]
 
-
 class SheetFormulaCell(BaseModel):
     """A computed cell whose value comes from a Sheets formula.
 
@@ -169,7 +161,6 @@ class SheetFormulaCell(BaseModel):
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
     rounding_rule: Literal["money", "integer", "none"]
     note: str | None = None
-
 
 class SheetCellConstraint(BaseModel):
     """A declarative value constraint surfaced to one Sheets cell.
@@ -194,7 +185,6 @@ class SheetCellConstraint(BaseModel):
     legal_refs: tuple[str, ...] = Field(min_length=1)
     casilla: CasillaId
 
-
 class SheetRowSetColumn(BaseModel):
     """One column of a `SheetRowSet`, mapping a binding id to a header cell."""
 
@@ -204,7 +194,6 @@ class SheetRowSetColumn(BaseModel):
     header_address: SheetCellAddress
     header_label: str = Field(min_length=1)
     legal_refs: tuple[str, ...] = ()
-
 
 class SheetRowSet(BaseModel):
     """A repeating-row data block in the `Detalle` tab.
@@ -237,7 +226,6 @@ class SheetRowSet(BaseModel):
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
 
-
 class SheetProtectedRange(BaseModel):
     """A contiguous range the apply adapter marks read-only.
 
@@ -263,7 +251,6 @@ class SheetProtectedRange(BaseModel):
             raise ValueError("end_column must be on or after start_column")
         return self
 
-
 class SheetProvenanceRow(BaseModel):
     """One row of the `Procedencia` audit tab.
 
@@ -284,7 +271,6 @@ class SheetProvenanceRow(BaseModel):
     source_refs: tuple[str, ...] = Field(min_length=1)
     target_address: SheetCellAddress
 
-
 class SheetTariffTableRow(BaseModel):
     """One row of a parameter bracket table mirrored to the `Tarifas` tab."""
 
@@ -296,7 +282,6 @@ class SheetTariffTableRow(BaseModel):
     marginal_rate: DecimalValue
     valid_from: date
     valid_to: date | None = None
-
 
 class SheetTariffTable(BaseModel):
     """A parameter mirrored into the workbook as a lookup table.
@@ -329,7 +314,6 @@ class SheetTariffTable(BaseModel):
                 raise ValueError(f"{self.data_type} tariff must not declare bracket_rows")
         return self
 
-
 class ParameterCell(BaseModel):
     """Pointer from a parameter id to its anchor cell in the `Tarifas` tab.
 
@@ -342,7 +326,6 @@ class ParameterCell(BaseModel):
 
     parameter: ParameterId
     anchor: SheetCellAddress
-
 
 class OperatorInput(BaseModel):
     """One pre-populated operator-input value.
@@ -358,7 +341,6 @@ class OperatorInput(BaseModel):
     casilla: CasillaId
     value: Decimal | str | bool | None = None
 
-
 class OperatorInputs(BaseModel):
     """Caller-supplied seed values for the `Entradas` tab."""
 
@@ -368,7 +350,6 @@ class OperatorInputs(BaseModel):
 
     def by_casilla(self) -> Mapping[CasillaId, OperatorInput]:
         return {item.casilla: item for item in self.values}
-
 
 class RelationValue(BaseModel):
     """One pre-resolved cross-revision relation value.
@@ -398,7 +379,6 @@ class RelationValue(BaseModel):
     resolved_at: datetime | None = None
     note: str | None = None
 
-
 class RelationValues(BaseModel):
     """Caller-supplied relation aggregations for the `Tarifas` tab."""
 
@@ -408,7 +388,6 @@ class RelationValues(BaseModel):
 
     def by_relation(self) -> Mapping[RelationId, RelationValue]:
         return {item.relation: item for item in self.values}
-
 
 class SheetGuideContent(BaseModel):
     """Plain-text content for the `Guía` tab.
@@ -423,7 +402,6 @@ class SheetGuideContent(BaseModel):
 
     title: str = Field(min_length=1)
     paragraphs: tuple[str, ...] = Field(min_length=1)
-
 
 class SheetExportMetadata(BaseModel):
     """Stamps the workbook with the registry + engine identities.
@@ -449,7 +427,6 @@ class SheetExportMetadata(BaseModel):
         _validate_utc_aware(self.exported_at)
         return self
 
-
 class SheetExportPlan(BaseModel):
     """Complete description of the workbook the apply adapter will write."""
 
@@ -473,7 +450,6 @@ class SheetExportPlan(BaseModel):
         for cell in self.formula_cells:
             seen.append(cell.address)
         return tuple(seen)
-
 
 __all__ = [
     "OperatorInput",

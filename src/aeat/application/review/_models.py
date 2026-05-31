@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ...core.i18n import Translatable as tr
 from ...core.time._utc import _validate_utc_aware
@@ -32,7 +32,7 @@ from ..workflow._models import WorkflowEvent
 from ..workflow._utils import utc_now
 from ._enums import ReviewItemKind, ReviewSeverity
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class _ReviewItemBase(BaseModel):
@@ -141,7 +141,7 @@ class LedgerReviewRecord(BaseModel):
     bucket-scoped transaction catalogue.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
     history: tuple[WorkflowEvent, ...] = ()
@@ -151,7 +151,7 @@ class LedgerReviewRecord(BaseModel):
 class InvoiceReviewRecord(BaseModel):
     """Workflow annotations for one persisted invoice."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=1)
     fields: dict[str, str] = Field(default_factory=dict)

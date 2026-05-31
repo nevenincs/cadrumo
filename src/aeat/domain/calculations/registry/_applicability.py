@@ -91,7 +91,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...deadlines.taxpayer_model import (
     EntityType,
@@ -100,7 +100,7 @@ from ...deadlines.taxpayer_model import (
     TaxpayerProfile,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SEED_COVERAGE_NOTICE = (
     "Seed coverage only — the modelos in this table are the core "
@@ -142,7 +142,6 @@ class ApplicabilityVerdict(StrEnum):
     NOT_APPLICABLE = "not_applicable"
     ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
-
 
 class PayerFact(StrEnum):
     """A withholding-payer / trade fact a modelo's applicability needs.
@@ -187,7 +186,6 @@ class PayerFact(StrEnum):
     EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
     BIENES_EXTRANJERO_ABOVE_THRESHOLD = "bienes_extranjero_above_threshold"
 
-
 def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
     """Return whether ``profile`` positively declares the payer ``fact``.
 
@@ -208,7 +206,6 @@ def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
             return profile.third_party_transactions_above_347_threshold
         case PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD:
             return profile.bienes_extranjero_above_threshold
-
 
 class ModeloApplicability(BaseModel):
     """The derived applicability of one modelo for one taxpayer profile.
@@ -253,7 +250,6 @@ class ModeloApplicability(BaseModel):
         """
 
         return self.verdict is ApplicabilityVerdict.APPLICABLE
-
 
 class ModeloApplicabilityRule(BaseModel):
     """A single registry-grounded modelo-applicability rule.
@@ -407,7 +403,6 @@ class ModeloApplicabilityRule(BaseModel):
             legal_refs=self.legal_refs,
         )
 
-
 # Scoped registry citation keys grounding the "declare your taxpayer
 # type first" answer. An undeclared profile cannot be decided, but the
 # verdict still carries the LIRPF / LIS articles that frame the question
@@ -531,7 +526,6 @@ exemption is enforced even when ``bienes_extranjero_above_threshold`` is
 ``True``.
 """
 
-
 def _incomplete_applicability(
     modelo: str,
     *,
@@ -559,7 +553,6 @@ def _incomplete_applicability(
         legal_refs=_INCOMPLETE_LEGAL_REFS,
     )
 
-
 def _undetermined_applicability(modelo: str) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
 
@@ -582,7 +575,6 @@ def _undetermined_applicability(modelo: str) -> ModeloApplicability:
         reason=_INCOMPLETE_UNDETERMINED_REASON,
         legal_refs=_INCOMPLETE_LEGAL_REFS,
     )
-
 
 # ---------------------------------------------------------------------
 # Seed rule table — core persona coverage (see _SEED_COVERAGE_NOTICE)
@@ -1138,12 +1130,10 @@ a rationale pointing at the deferred expansion. See
 :data:`_SEED_COVERAGE_NOTICE`.
 """
 
-
 def has_applicability_rule(modelo: str) -> bool:
     """Return whether a seed applicability rule exists for ``modelo``."""
 
     return modelo in _MODELO_APPLICABILITY_RULES
-
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     """Return the registry-owned seed modelo applicability rules.
@@ -1155,7 +1145,6 @@ def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     """
 
     return tuple(_MODELO_APPLICABILITY_RULES[modelo] for modelo in sorted(_MODELO_APPLICABILITY_RULES))
-
 
 def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     """Return whether the profile carries a usable taxpayer model.
@@ -1173,7 +1162,6 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     if profile.entity_type is EntityType.NATURAL_PERSON:
         return bool(profile.irpf_income_categories)
     return True
-
 
 class TaxRoute(StrEnum):
     """The tax branch a taxpayer profile routes to — corporate-entity ADR §4.
@@ -1203,7 +1191,6 @@ class TaxRoute(StrEnum):
     ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
 
-
 _TAX_ROUTE_FOR_ENTITY_TYPE: dict[EntityType, TaxRoute] = {
     EntityType.NATURAL_PERSON: TaxRoute.IRPF,
     EntityType.LEGAL_ENTITY: TaxRoute.IMPUESTO_SOCIEDADES,
@@ -1216,7 +1203,6 @@ None`` (undeclared) is handled separately by :func:`derive_tax_route`
 and yields :attr:`TaxRoute.INCOMPLETE` — the engine never defaults a
 tax.
 """
-
 
 def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
     """Return the tax branch ``profile`` routes to — corporate-entity ADR §4.
@@ -1242,7 +1228,6 @@ def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
     if profile.entity_type is None:
         return TaxRoute.INCOMPLETE
     return _TAX_ROUTE_FOR_ENTITY_TYPE[profile.entity_type]
-
 
 def derive_modelo_applicability(
     profile: TaxpayerProfile,
@@ -1296,7 +1281,6 @@ def derive_modelo_applicability(
         return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)
 
-
 # ---------------------------------------------------------------------
 # Modelo 202 pago-fraccionado modality gate — LIS Art. 40 (BOE-A-2014-12328)
 # ---------------------------------------------------------------------
@@ -1335,7 +1319,6 @@ corpus). Both keys resolve in the registry ``legal/is.toml`` table.
 # without float rounding.
 _MODELO_202_ART_40_3_INCN_THRESHOLD: Decimal = Decimal("6000000")
 
-
 class Modelo202Modality(StrEnum):
     """The pago-fraccionado modality available to a Modelo 202 filer.
 
@@ -1362,7 +1345,6 @@ class Modelo202Modality(StrEnum):
     ART_40_3_MANDATORY = "art_40_3_mandatory"
     INCOMPLETE = "incomplete"
 
-
 class Modelo202ModalityVerdict(BaseModel):
     """The derived Modelo 202 modality verdict and its grounding.
 
@@ -1380,7 +1362,6 @@ class Modelo202ModalityVerdict(BaseModel):
     modality: Modelo202Modality
     reason: str = Field(min_length=1)
     legal_refs: tuple[str, ...] = Field(min_length=1)
-
 
 _MODELO_202_ART_40_3_MANDATORY_REASON = (
     "Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone "
@@ -1410,7 +1391,6 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
     "contribuyente del Impuesto sobre Sociedades. La modalidad solo se "
     "deriva para entidades jurídicas obligadas al pago fraccionado del IS."
 )
-
 
 def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 pago-fraccionado modality for ``profile``.
@@ -1456,7 +1436,6 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
         reason=_MODELO_202_ART_40_2_OPTIONAL_REASON,
         legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
     )
-
 
 __all__ = [
     "ApplicabilityVerdict",

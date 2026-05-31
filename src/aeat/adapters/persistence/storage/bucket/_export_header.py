@@ -12,17 +12,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from .....core.errors import CoreValidationError
 from .....core.identity import BucketId
 from .....core.time._utc import _validate_utc_aware
 from ._errors import BucketValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SHA256_HEX_LEN = 64
-
 
 class ExportArchiveHeader(BaseModel):
     """Plaintext frontmatter for a sealed bucket-export archive."""
@@ -57,6 +56,5 @@ class ExportArchiveHeader(BaseModel):
             return _validate_utc_aware(value)
         except CoreValidationError as exc:
             raise ValueError(str(exc)) from exc
-
 
 __all__ = ["ExportArchiveHeader"]

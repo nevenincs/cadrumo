@@ -31,7 +31,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ...core.hashing import sha256_file
 from ...core.logging import get_logger
@@ -54,8 +54,7 @@ from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-"""Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 _SHA256_HEX_LENGTH = 64
