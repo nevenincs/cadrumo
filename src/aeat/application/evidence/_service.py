@@ -61,7 +61,7 @@ def _hash_payload(payload: bytes) -> str:
 
 
 class EvidenceBundleService:
-    """Application service implementing the apex audit verb tree.
+    """Application service for the audit verb tree.
 
     Each method maps to one of the verbs in ``aeat app modelo audit``:
     ``build`` is the constructor side of ``add``-equivalent (audit bundles

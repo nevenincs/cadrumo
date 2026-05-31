@@ -1,6 +1,6 @@
 # AEAT apoderamientos scope catalogue (W75A apoderado-scope-vocabulary).
 #
-# Per apex ADR §3.3, --scope SCOPE accepts uppercase AEAT apoderamiento
+# --scope SCOPE accepts uppercase AEAT apoderamiento
 # codes from this shipped catalogue; ALL expands at command time into
 # the union of every listed code. Comma-separated values are rejected
 # at the parser boundary; --scope must be passed repeatedly.
