@@ -1081,6 +1081,71 @@ effective_dated = true
 description = "Business-use ratio in the closed interval 0..1."
 
 [[sections]]
+key = "maritime_worker"
+title = "Maritime worker classification"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "worker_class"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Maritime worker classification. trabajador_del_mar gates three exemption pathways under IRPF: Art. 7.p) foreign-work exemption (Ley 35/2006), REBECA 50% exemption (Ley 19/1994 Arts. 73-75), and DA 41 (inactive pending EU state-aid clearance). Absent this field the engine applies the standard employment income path without maritime adjustment."
+enum_values = ["trabajador_del_mar"]
+schedule_predicates = ["maritime_worker.worker_class"]
+legal_refs = [
+  "Ley 35/2006 Art. 7.p) BOE-A-2006-20764",
+  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100",
+  "Ley 35/2006 DA 41 BOE-A-2006-20764",
+  "Ley 6/2018 BOE-A-2018-9268",
+  "Ley 47/2015 BOE-A-2015-11346",
+]
+
+[[sections.fields]]
+key = "vessel_flag"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Flag state of the vessel. ES (Spanish flag) or foreign. Art. 7.p) eligibility requires work performed outside Spanish territory; foreign-flagged vessels in international waters satisfy this when the employer is a non-resident entity or has a permanent establishment abroad (AEAT accepted practice confirmed by TEAR Galicia December 2024)."
+enum_values = ["ES", "foreign"]
+legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"]
+
+[[sections.fields]]
+key = "waters_type"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Waters classification for the vessel's operating area. international waters qualify as effectively performing work outside Spain under Art. 7.p) LIRPF in AEAT accepted practice."
+enum_values = ["national", "international"]
+legal_refs = ["Ley 35/2006 Art. 7.p) BOE-A-2006-20764"]
+
+[[sections.fields]]
+key = "vessel_registry"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Vessel registry classification. REBECA is the Registro Especial de Buques y Empresas Navieras de Canarias (Ley 19/1994). rebeca_eu_eea covers the 2021 extension to vessels of REBECA-registered companies enrolled in another EU/EEA member state registry. scheduled_canary_route covers vessels on Canary Islands to mainland Spain scheduled routes. Absent this field no REBECA exemption is evaluated."
+enum_values = ["REBECA", "rebeca_eu_eea", "scheduled_canary_route", "other"]
+legal_refs = [
+  "Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-16100",
+]
+
+[[sections.fields]]
+key = "retmar_registered"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is registered in RETMAR (Registro Especial de Trabajadores del Mar). Since January 2023 all RETMAR-registered workers must file an IRPF declaration regardless of income level. This field drives a mandatory-filing profile completeness warning; it does not alter casilla values or formula paths."
+schedule_predicates = ["maritime_worker.retmar_registered"]
+legal_refs = ["Ley 47/2015 BOE-A-2015-11346"]
+
+[[sections]]
 key = "provenance"
 title = "Provenance and effective dating"
 sensitivity = "audit"
