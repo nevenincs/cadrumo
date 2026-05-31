@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
@@ -25,11 +25,10 @@ from ._common import _emit
 
 if TYPE_CHECKING:
     from ...application.auth import LiveAuthPreflightReport
+    from ...application.live._verify import VerifyVerdict
 
-_VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
-
-def _verify_expected(value: str | None) -> _VerifyVerdict | None:
+def _verify_expected(value: str | None) -> VerifyVerdict | None:
     if value is None:
         return None
     if value == "valid":
