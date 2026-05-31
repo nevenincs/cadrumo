@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Awaitable
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    import logging
 
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError

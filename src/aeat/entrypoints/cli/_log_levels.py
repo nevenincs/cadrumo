@@ -11,7 +11,7 @@ consistent across commands.
 
 from __future__ import annotations
 
-import logging
+import logging  # LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE: constants-only; no logger instantiated.
 from collections.abc import Mapping
 from enum import StrEnum
 

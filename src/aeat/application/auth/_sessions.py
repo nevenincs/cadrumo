@@ -17,7 +17,6 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time._utc import _validate_utc_aware
 from . import AuthProviderKind, select_provider
-from ._protocols import SessionStoreProtocol
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -25,6 +24,7 @@ from ._acquisition_lock import (
     auth_lock_ttl_seconds,
     clear_auth_acquisition_lock,
 )
+from ._protocols import SessionStoreProtocol
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
@@ -53,7 +53,7 @@ def configure_session_store(store: SessionStoreProtocol) -> None:
     Called by the entrypoints layer (or test fixtures) to bind the concrete
     adapter implementation before any session function is invoked.
     """
-    global _session_store_impl  # noqa: PLW0603
+    global _session_store_impl
     _session_store_impl = store
 
 
@@ -62,7 +62,7 @@ def _get_session_store() -> SessionStoreProtocol:
         # Lazily import the concrete adapter implementation on first call.
         # This import runs at runtime (not TYPE_CHECKING), so it is not hidden.
         # The module-scope import was removed to break the import-time cycle.
-        from ...adapters.outbound.aeat.auth import _session_store as _impl  # noqa: PLC0415
+        from ...adapters.outbound.aeat.auth import _session_store as _impl
 
         configure_session_store(_impl)  # type: ignore[arg-type]
     return _session_store_impl  # type: ignore[return-value]
@@ -589,11 +589,11 @@ async def _close_provider(provider: AuthProvider) -> None:
         return
     try:
         result = close()
-    except Exception:
+    except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
         _logger.warning("provider close raised", exc_info=True)
         return
     if asyncio.iscoroutine(result):
         try:
             await result
-        except Exception:
+        except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
             _logger.warning("provider async close raised", exc_info=True)

@@ -23,11 +23,12 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError as _AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.paths import file_stat_fingerprint as _file_stat_fingerprint
 from ...core.resources import bundled_path as _bundled_path
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 
 class TopicNotFoundError(_AeatError):
@@ -96,12 +97,8 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     target = root if root is not None else _TOPIC_REGISTRY_ROOT
     resolved = target.resolve()
     paths = tuple(sorted(resolved.glob("*.toml")))
-    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    fingerprint = tuple(_file_stat_fingerprint(path) for path in paths)
     return _load_topic_catalogue_cached(str(resolved), fingerprint)
-
-def _file_fingerprint(path: Path) -> tuple[str, int, int]:
-    stat = path.stat()
-    return (path.name, stat.st_size, stat.st_mtime_ns)
 
 @lru_cache(maxsize=16)
 def _load_topic_catalogue_cached(

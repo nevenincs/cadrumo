@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
+from ...core.paths import file_stat_fingerprint
 from ._schema import NormativeCatalogue, NormativeReference
 from .errors import NormativeNotFoundError, NormativeParseError
 
@@ -52,16 +53,11 @@ def load_catalogue(*, settings: Settings | None = None) -> NormativeCatalogue:
         raise NormativeParseError(f"normatives root is not a directory: {root}")
     resolved = root.resolve()
     paths = tuple(sorted(resolved.glob("*.json")))
-    fingerprint = tuple(_file_fingerprint(path) for path in paths)
-    return _load_catalogue_cached(str(resolved), fingerprint)
-
-
-def _file_fingerprint(path: Path) -> tuple[str, int, int]:
     try:
-        stat = path.stat()
+        fingerprint = tuple(file_stat_fingerprint(path) for path in paths)
     except OSError as exc:
-        raise NormativeParseError(f"{path}: unable to stat file ({exc})") from exc
-    return (path.name, stat.st_size, stat.st_mtime_ns)
+        raise NormativeParseError(f"unable to stat normative file ({exc})") from exc
+    return _load_catalogue_cached(str(resolved), fingerprint)
 
 
 @lru_cache(maxsize=16)

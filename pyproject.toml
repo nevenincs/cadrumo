@@ -365,6 +365,9 @@ convention = "google"
 "src/aeat/domain/deadlines/_festivos.py" = ["S105"]
 "src/aeat/domain/transactions/_llm.py" = ["S603"]
 "src/aeat/entrypoints/cli/test_root_help_shape.py" = ["S603"]
+# W14 aggregate closure test uses RATIONALE marker strings as assertion
+# tokens; ruff's S105 heuristic misreads these as hardcoded passwords.
+"src/aeat/test_w14_p46_survivor_closure.py" = ["S105"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
