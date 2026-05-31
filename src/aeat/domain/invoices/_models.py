@@ -450,11 +450,6 @@ class Invoice(BaseModel):
             The substrate-grounded :class:`IvaInvoiceClassification`
             for the line.
 
-        Raises:
-            InvoiceValidationError: If the line carries
-                :attr:`IvaRate.NOT_SUBJECT` (operations outside the
-                scope of IVA need explicit
-                :attr:`IvaCategory.OPERACION_NO_SUJETA` construction).
         """
         # Local import to avoid circular dependency at module load.
         from ..iva._invoice_classification import classify_invoice_line_for_iva
@@ -535,10 +530,6 @@ class InvoiceCatalogue(BaseModel):
 
         Returns:
             A validated immutable invoice catalogue.
-
-        Raises:
-            pydantic.ValidationError: If any invoice fails validation or a
-                duplicate ``invoice_id`` is encountered.
         """
         return cls.model_validate(tuple(invoices))
 

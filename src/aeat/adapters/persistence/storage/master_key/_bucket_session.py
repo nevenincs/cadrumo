@@ -92,9 +92,12 @@ class BucketSession:
                 against an unsecured (non-OS-keychain) backend; callers
                 use this flag to emit appropriate warnings.
 
+        Returns:
+            A new :class:`BucketSession` with the provided credentials and TTL.
+
         Raises:
-            ValueError: If `bucket_id` is empty, `idle_minutes` is not
-                positive, `kek` is not 32 bytes, or `dek` is not 32 bytes.
+            StorageValidationError: When ``bucket_id`` is empty, ``idle_minutes`` is not
+                positive, ``kek`` is not 32 bytes, or ``dek`` is not 32 bytes.
         """
         if not bucket_id:
             raise StorageValidationError("bucket_id must be non-empty")

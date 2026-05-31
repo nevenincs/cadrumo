@@ -22,7 +22,7 @@ class LocaleError(AeatError):
 class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
 
-    def construct_mapping(self, node, deep=False):
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
         """Construct a mapping node, raising ``LocaleError`` on duplicate keys.
 
         Args:
@@ -31,6 +31,9 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
 
         Returns:
             A plain ``dict`` of the mapping's key-value pairs.
+
+        Raises:
+            LocaleError: When a duplicate key is found in the mapping node.
         """
         mapping = {}
         for key_node, value_node in node.value:

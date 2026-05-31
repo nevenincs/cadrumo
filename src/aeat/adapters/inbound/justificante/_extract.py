@@ -303,9 +303,8 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
         A fully populated :class:`Justificante` record.
 
     Raises:
-        JustificanteCsvNotFoundError: If no CSV can be located in ``text``.
-        JustificanteParseError: If any other required field is missing or
-            cannot be coerced into its target type.
+        JustificanteParseError: If any required field is missing or cannot be
+            coerced into its target type.
     """
     if not text.strip():
         raise JustificanteParseError(f"empty text extracted from {pdf_path}", missing=("text",))

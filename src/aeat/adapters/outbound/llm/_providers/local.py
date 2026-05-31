@@ -71,10 +71,7 @@ class LocalAdapter(_ProviderAdapter):
             and reported token counts.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: When the
-                runtime returns HTTP 429.
-            :exc:`aeat.adapters.outbound.llm.LLMProviderError`: When the
-                runtime returns any other HTTP error status.
+            LLMProviderError: When the runtime returns a non-2xx HTTP error status.
         """
         messages: list[dict[str, str]] = []
         if request.system is not None:

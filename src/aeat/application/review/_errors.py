@@ -36,6 +36,13 @@ class FilterParseError(ReviewError):
     """
 
     def __init__(self, raw_token: str, *, reason: str) -> None:
+        """Construct the error with the offending token and stable reason code.
+
+        Args:
+            raw_token: The string the operator supplied.
+            reason: Stable reason code (e.g. ``"missing-equals"``,
+                ``"empty-key"``, ``"invalid-value-{scope}"``).
+        """
         super().__init__(f"cannot parse filter token {raw_token!r}: {reason}")
         self.raw_token = raw_token
         self.reason = reason
@@ -52,6 +59,13 @@ class EditParseError(ReviewError):
     """
 
     def __init__(self, raw_token: str, *, reason: str) -> None:
+        """Construct the error with the offending token and stable reason code.
+
+        Args:
+            raw_token: The string the operator supplied.
+            reason: Stable reason code (e.g. ``"missing-equals"``,
+                ``"empty-key"``, ``"invalid-value-{scope}"``).
+        """
         super().__init__(f"cannot parse edit token {raw_token!r}: {reason}")
         self.raw_token = raw_token
         self.reason = reason

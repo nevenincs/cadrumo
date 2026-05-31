@@ -123,10 +123,12 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
     rounds to two decimal places — the precision at which ledger
     amounts are persisted.
 
-    Raises:
-        :exc:`aeat.domain.iva.IvaRateNotFoundError`: If the substrate
-            has no registered rate for the destination MS / rate tier
-            at the supply date.
+    Args:
+        candidate: The substrate-classified ledger line whose base amount
+            and rate kind are used to derive the expected IVA amount.
+
+    Returns:
+        The expected IVA amount rounded to two decimal places.
     """
     rate = lookup_rate(
         candidate.destination_member_state,
@@ -157,12 +159,9 @@ def validate_oss_ioss_observation(
         amount, and persisted IVA amount as the candidate.
 
     Raises:
-        :exc:`AggregationValidationError`: When the persisted IVA
-            amount disagrees with the destination MS rate by more
-            than the one-cent tolerance.
-        :exc:`aeat.domain.iva.IvaRateNotFoundError`: When the
-            substrate has no registered rate for the destination MS
-            and rate tier at the supply date.
+        AggregationValidationError: When the persisted IVA amount
+            disagrees with the destination MS rate by more than the
+            one-cent tolerance.
     """
     expected = _expected_iva_amount(candidate)
     persisted = candidate.iva_amount.quantize(Decimal("0.01"))
@@ -203,14 +202,6 @@ def validate_oss_ioss_observations(
     Returns:
         A tuple of registry-ready
         :class:`OssIossLedgerObservation` records in input order.
-
-    Raises:
-        :exc:`AggregationValidationError`: If any candidate's
-            persisted IVA disagrees with the destination MS rate by
-            more than the tolerance.
-        :exc:`aeat.domain.iva.IvaRateNotFoundError`: If the substrate
-            has no registered rate for any candidate's destination /
-            tier at its supply date.
     """
     return tuple(validate_oss_ioss_observation(candidate) for candidate in candidates)
 
@@ -239,11 +230,6 @@ def aggregate_oss_ioss_bindings(
     Returns:
         A mapping from each binding id on the revision to its
         aggregated Decimal value.
-
-    Raises:
-        :exc:`AggregationValidationError`: If any candidate's IVA
-            mismatches the destination MS rate by more than the
-            tolerance.
     """
     observations = validate_oss_ioss_observations(candidates)
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)

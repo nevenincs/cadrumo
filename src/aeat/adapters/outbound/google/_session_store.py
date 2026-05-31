@@ -136,8 +136,11 @@ def load_drive_config(profile: str) -> DriveConfig | None:
 def delete_session(profile: str) -> tuple[bool, bool]:
     """Delete the refresh token and audit metadata; preserve the client and drive config.
 
+    Args:
+        profile: The profile identifier whose token and metadata records to delete.
+
     Returns:
-        A pair `(token_removed, metadata_removed)`.
+        A pair ``(token_removed, metadata_removed)``.
     """
     repo = _repository()
     token_removed = repo.delete(_NAMESPACE_TOKEN, profile)

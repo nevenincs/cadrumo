@@ -831,6 +831,13 @@ class SecureObjectRepository:
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
                 while preserving deterministic ``(object_key ASC)`` order.
+
+        Yields:
+            One :class:`SecureObjectListItem` per stored row — either a
+            :class:`SecureObjectRecord` or a :class:`SecureObjectUnreadable`.
+
+        Raises:
+            StorageValidationError: When ``batch_size`` is less than 1.
         """
         if batch_size < 1:
             raise StorageValidationError(f"batch_size must be at least 1; got {batch_size}")
@@ -1072,8 +1079,7 @@ class SecureObjectRepository:
                 does not match.
 
         Raises:
-            :exc:`ValueError`: If ``hashed_object_key`` is not exactly
-                32 bytes (the size :class:`HashedLookup` requires).
+            StorageValidationError: When ``hashed_object_key`` is not exactly 32 bytes.
             :exc:`RepositoryError`: On underlying SQL integrity errors.
         """
         if len(hashed_object_key) != 32:

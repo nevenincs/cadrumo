@@ -237,6 +237,10 @@ def plan_layout(
             the `Tarifas` rows the engine emits match the registry
             runtime's `_resolve_bracket` selection. When `None`, every
             bracket entry is emitted in `lower_bound` order.
+
+    Returns:
+        A :class:`SheetLayout` carrying cell addresses for every casilla,
+        binding, parameter, and relation defined on the revision.
     """
     value_column = _ENTRADAS_VALUE_COLUMN
     anchor_column = _TARIFFS_ANCHOR_COLUMN

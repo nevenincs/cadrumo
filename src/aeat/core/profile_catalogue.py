@@ -90,6 +90,10 @@ def register_wizard_catalogue(
 def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
     """Return the registered ``SETUP_FLOW`` descriptor.
 
+    Returns:
+        The concrete ``SETUP_FLOW`` descriptor registered by the
+        application layer.
+
     Raises:
         WizardCatalogueNotRegisteredError: When the application layer has
             not yet called :func:`register_wizard_catalogue`.
@@ -101,6 +105,10 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wi
 
 def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
     """Return the registered ``WIZARD_FLOWS`` tuple.
+
+    Returns:
+        Tuple of concrete wizard-flow descriptors registered by the
+        application layer.
 
     Raises:
         WizardCatalogueNotRegisteredError: When the application layer has

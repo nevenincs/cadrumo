@@ -91,10 +91,7 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
         The 32-byte data-encryption key.
 
     Raises:
-        EncryptionError: If `kek` is not 32 bytes or `bucket_id` is empty.
-        cryptography.exceptions.InvalidTag: If the AEAD tag does not
-            verify (wrong KEK, wrong bucket id, tampered ciphertext or
-            tag).
+        EncryptionError: When ``kek`` is not 32 bytes or ``bucket_id`` is empty.
     """
     if len(kek) != _KEK_BYTES:
         raise EncryptionError(f"kek must be exactly {_KEK_BYTES} bytes")

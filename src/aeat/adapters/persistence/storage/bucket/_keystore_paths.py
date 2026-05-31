@@ -32,8 +32,15 @@ def keystore_root(root: Path) -> Path:
 def keystore_path(root: Path, bucket_id: str) -> Path:
     """Return ``<root>/keystore/<bucket_id>/`` (no IO).
 
+    Args:
+        root: The AEAT root directory.
+        bucket_id: Bucket identifier to include in the path.
+
+    Returns:
+        The computed keystore directory path.
+
     Raises:
-        ValueError: If ``bucket_id`` is empty or carries a path separator.
+        BucketValidationError: When ``bucket_id`` is empty or carries a path separator.
     """
     if not bucket_id:
         raise BucketValidationError("bucket_id must be non-empty")
@@ -80,7 +87,7 @@ def validate_keystore_separation(
             relational database directory is rejected.
 
     Raises:
-        ValueError: If the configured keystore path violates separation.
+        BucketValidationError: When the configured keystore path violates separation.
     """
     paths: BucketPaths = bucket_paths(root, bucket_id)
     target = configured_keystore if configured_keystore is not None else keystore_path(root, bucket_id)

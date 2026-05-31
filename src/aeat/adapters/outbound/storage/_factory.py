@@ -143,7 +143,6 @@ def get_storage_provider(
         OutboundStorageValidationError: When the settings value is unknown, the
             Drive backend is selected without `aeat_google_drive_root_folder_id`,
             or the profile lacks the records the chosen backend needs.
-        GoogleAuthProfileUnboundError: When no profile is bound.
     """
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)

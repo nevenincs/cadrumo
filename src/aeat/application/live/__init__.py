@@ -1272,6 +1272,10 @@ async def capture_notifications(*, bucket_id: str):
        repository so this function stays unit-testable against
        a stubbed snapshot.
 
+    Args:
+        bucket_id: The active profile bucket id the notification snapshot
+            is scoped to.
+
     Returns:
         A tuple of (snapshot_id, fetched_row_count, persisted_at).
     """

@@ -145,6 +145,14 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
     consumed by the deadline engine and the filing runtime. Values come
     from the profile bucket selected by the workflow state.
 
+    Args:
+        state: The current :class:`WorkflowState` from which the active
+            profile record is resolved.
+
+    Returns:
+        A :class:`TaxpayerProfile` populated from the active profile's
+        canonical answer values.
+
     Raises:
         WizardStatusError: When no profile is active or the active
             profile does not carry a ``tax.id``.

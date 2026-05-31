@@ -683,15 +683,7 @@ def apply_export_plan(
         A `CalcSheetsApplyResult` with the spreadsheet's id and URL.
 
     Raises:
-        OutboundStoragePermissionError: The Drive scope grant is insufficient
-            (HTTP 401 / 403 mapped from `googleapiclient.errors.HttpError`).
-        OutboundStorageNotFoundError: The supplied root folder id does not exist
-            or is not visible to the operator (HTTP 404).
-        OutboundStorageConflictError: A folder or spreadsheet matching the
-            engine's target name exists but is not marked as app-owned.
-        OutboundStorageNetworkError: A transport or unmapped HTTP failure.
-        OutboundStorageValidationError: The plan is internally inconsistent or
-            the supplied `root_folder_id` is blank.
+        OutboundStorageValidationError: When the supplied ``root_folder_id`` is blank.
     """
     if not root_folder_id.strip():
         raise OutboundStorageValidationError(

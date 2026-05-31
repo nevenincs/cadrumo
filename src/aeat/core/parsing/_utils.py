@@ -21,6 +21,10 @@ _FALSY: frozenset[str] = frozenset({"false", "0", "no", "n"})
 def _parse_bool(raw: str | None) -> bool | None:
     """Parse a raw string token into a three-state boolean.
 
+    Args:
+        raw: The candidate string token; ``None`` and empty string
+            both map to the ``None`` sentinel.
+
     Returns:
         ``True``  — token is a recognised affirmative form.
         ``False`` — token is a recognised negative form.

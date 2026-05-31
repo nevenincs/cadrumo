@@ -31,7 +31,9 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
+from pydantic import BaseModel, Field, PrivateAttr, SecretStr
+
+from aeat.core._models import STRICT_FROZEN_CONFIG
 
 from .....core.access_gate import AeatLiveReadNotEnabledError
 from .....core.config import CertificateBackend
@@ -148,7 +150,7 @@ class CertificateBundle(BaseModel):
         backend: Which backend should consume this bundle.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     path: Path
     password: SecretStr
@@ -178,7 +180,7 @@ class LoadedCertificate(BaseModel):
         backend: Backend this cert should be handed to.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     subject: str
     issuer: str
@@ -200,6 +202,9 @@ class LoadedCertificate(BaseModel):
         Args:
             now: Timezone-aware reference time. Defaults to
                 :func:`datetime.now` in UTC.
+
+        Returns:
+            True when the certificate has expired relative to ``now``.
         """
         reference = now if now is not None else datetime.now(UTC)
         return reference > self.not_after
@@ -240,7 +245,7 @@ class CertificateHealth(BaseModel):
         evaluated_at: Timezone-aware reference timestamp.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     subject: str
     issuer: str
@@ -269,7 +274,7 @@ class HandshakeResult(BaseModel):
             ``success=False``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     success: bool
     status_code: int
@@ -508,8 +513,10 @@ def health(
         A frozen :class:`CertificateHealth` record.
 
     Raises:
-        CertificatePasswordError: Empty or wrong passphrase.
-        CertificateLoadError: PKCS#12 bytes cannot be parsed.
+        CertificateExpiredError: When the certificate has expired and the raw bytes
+            cannot be re-decoded for the health report.
+        CertificateLoadError: When the PKCS#12 bytes cannot be re-decoded for an
+            expired-cert health report.
     """
     bundle = CertificateBundle(
         path=path,
@@ -689,11 +696,6 @@ def preload_into_browser_context(
         cert: The :class:`LoadedCertificate` to verify against ``context``.
         context: A Playwright ``BrowserContext`` duck-typed via
             :class:`_BrowserContextLike`.
-
-    Raises:
-        CertificateError: When the selected backend rejects the context
-            (for example, when the Playwright backend is asked to
-            retrofit a cert after construction, which is not supported).
     """
     backend = _select_backend(cert.backend)
     backend.preload(cert, context)

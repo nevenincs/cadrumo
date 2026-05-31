@@ -297,6 +297,10 @@ class WorkflowEngine:
 
         Returns:
             A fully populated :class:`WorkflowResult`.
+
+        Raises:
+            WorkflowInputMismatchError: When ``resumed_from`` is supplied
+                but is not a valid 16-character lowercase hex run id.
         """
         if resumed_from is not None:
             stripped = resumed_from.strip()

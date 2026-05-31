@@ -212,9 +212,8 @@ def approve_draft(
         A new :class:`ModeloDraft` with approval metadata populated.
 
     Raises:
-        :exc:`aeat.domain.filing.ModeloDraftError`: When
-            ``approved_by`` is blank or the draft is not in
-            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
+        ModeloDraftError: When ``approved_by`` is blank or the draft is
+            not in :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
     """
     normalized_approver = approved_by.strip()
     if not normalized_approver:

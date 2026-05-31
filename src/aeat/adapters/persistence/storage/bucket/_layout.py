@@ -54,7 +54,7 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
         A :class:`BucketPaths` record carrying every resolved subpath.
 
     Raises:
-        ValueError: If ``bucket_id`` is empty or contains a path separator.
+        BucketValidationError: When ``bucket_id`` is empty or contains a path separator.
     """
     if not bucket_id:
         raise BucketValidationError("bucket_id must be non-empty")
@@ -85,10 +85,6 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
 
     Returns:
         A :class:`BucketPaths` record carrying every resolved subpath.
-
-    Raises:
-        FileExistsError: If ``<root>/buckets/<bucket_id>/`` already exists.
-        ValueError: If ``bucket_id`` is empty or contains a path separator.
     """
     paths = bucket_paths(root, bucket_id)
     paths.bucket_dir.parent.mkdir(parents=True, exist_ok=True)

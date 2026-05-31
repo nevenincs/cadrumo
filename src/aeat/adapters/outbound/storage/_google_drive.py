@@ -129,20 +129,18 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
 
 
 class GoogleDriveProvider:
-    """Bytes-in / bytes-out provider against Google Drive v3.
-
-    Args:
-        credentials: A `google.oauth2.credentials.Credentials`-shaped
-            object. The provider does not refresh credentials itself;
-            upper layers refresh via `aeat.adapters.outbound.google._refresh`.
-        root_folder_id: The parent folder ID under which `aeat-vault/`
-            lives. Operator-configured via
-            `aeat_google_drive_root_folder_id`. The provider creates
-            `aeat-vault/` lazily under this parent on first probe /
-            first put.
-    """
+    """Bytes-in / bytes-out provider against Google Drive v3."""
 
     def __init__(self, *, credentials: object, root_folder_id: str) -> None:
+        """Initialise the provider with credentials and the root Drive folder.
+
+        Args:
+            credentials: A ``google.oauth2.credentials.Credentials``-shaped object.
+            root_folder_id: Parent folder ID under which ``aeat-vault/`` lives.
+
+        Raises:
+            OutboundStorageValidationError: When ``root_folder_id`` is blank.
+        """
         if not root_folder_id.strip():
             raise OutboundStorageValidationError(
                 "root_folder_id must not be blank for GoogleDriveProvider",
@@ -226,19 +224,17 @@ class GoogleDriveProvider:
     def _verify_ownership_or_adopt(self, entry: dict[str, Any], *, kind: str) -> None:
         """Refuse to adopt a foreign Drive folder; auto-stamp our own.
 
-        - If the entry carries `appProperties.aeat_vault_app=aeat`,
-          treat it as ours (no-op).
-        - If the entry was created by us in a previous session but
-          predates ownership marking (no `appProperties` at all),
-          stamp the marker on it now (one-time backfill).
-        - If the entry carries `appProperties` but the marker is
-          missing or different, refuse — the operator must rename
-          their own folder or change `aeat_google_drive_root_folder_id`.
+        - If the entry carries ``appProperties.aeat_vault_app=aeat``, treat it as ours (no-op).
+        - If predates ownership marking (no ``appProperties``), stamp the marker now.
+        - If the marker is missing or different, refuse.
+
+        Args:
+            entry: Drive Files API resource dict for the candidate folder.
+            kind: Human-readable label for the folder kind used in error messages.
 
         Raises:
             OutboundStorageConflictError: When the entry has appProperties that
-                do not include our ownership marker — the folder
-                belongs to the operator's pre-existing work.
+                do not include our ownership marker.
         """
         existing = entry.get("appProperties") or {}
         existing_value = existing.get(_OWNERSHIP_KEY)
@@ -315,23 +311,18 @@ class GoogleDriveProvider:
         return folder_id
 
     def _find_file(self, namespace_folder_id: str, object_key_hmac: str) -> dict[str, Any] | None:
-        """Locate a file by `(namespace_folder_id, object_key_hmac)`.
+        """Locate a file by ``(namespace_folder_id, object_key_hmac)``.
 
-        Matches the 8-char prefix on the filename for the SQL query,
-        then verifies the FULL HMAC matches via `appProperties.object_key_hmac`
-        AND that the file carries our ownership marker. Refuses to
-        return any file lacking both — protects operator-placed files
-        whose name happens to collide with the 8-char prefix space.
+        Matches the 8-char prefix on the filename, then verifies the FULL HMAC
+        via ``appProperties.object_key_hmac`` and the ownership marker.
 
-        ``dict[str, Any]`` is the irreducible Google Drive API boundary
-        shape: drive.files().list() returns heterogeneous metadata
-        (id, name, size, md5Checksum, modifiedTime, appProperties)
-        that the google-api-python-client stubs surface as ``Any``.
+        Args:
+            namespace_folder_id: Drive folder ID for the target namespace.
+            object_key_hmac: Full HMAC string used to locate the specific file.
 
         Returns:
-            The Drive entry dict when a marker-verified match exists.
-            `None` when no marker-verified match exists (including the
-            case where a foreign file shares the prefix).
+            The Drive entry dict when a marker-verified match exists,
+            or ``None`` when no marker-verified match exists.
         """
         service = self._get_service()
         prefix = object_key_hmac[:_HMAC_PREFIX_LEN]

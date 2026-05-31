@@ -36,6 +36,12 @@ class StoredTransactionDriftError(TransactionPersistenceError):
     """
 
     def __init__(self, bucket_id: str, error: ValidationError) -> None:
+        """Initialise the drift error with bucket identity and the validation failure.
+
+        Args:
+            bucket_id: Identifier of the bucket whose catalogue failed validation.
+            error: The underlying :exc:`pydantic.ValidationError` from deserialization.
+        """
         super().__init__(
             f"transaction catalogue for bucket {bucket_id!r} failed schema validation on load: {error}"
         )

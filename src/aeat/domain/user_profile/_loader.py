@@ -21,10 +21,6 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
 
     Returns:
         A strict, frozen :class:`ProfileSchemaDefinition`.
-
-    Raises:
-        UserProfileSchemaLoadError: If the file is missing, invalid TOML, or
-            fails strict schema validation.
     """
     target = path if path is not None else bundled_path("registry", "aeat", "user_profile", "schema.toml")
     resolved = target.resolve()

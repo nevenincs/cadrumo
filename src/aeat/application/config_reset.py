@@ -85,6 +85,9 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
 
     Returns:
         A :class:`ConfigResetReport` summarising what was cleared.
+
+    Raises:
+        ConfigResetUnconfirmedError: When ``confirmed`` is ``False``.
     """
     if not confirmed:
         raise ConfigResetUnconfirmedError("config reset refused: confirmed must be True (run with --yes from the CLI)")

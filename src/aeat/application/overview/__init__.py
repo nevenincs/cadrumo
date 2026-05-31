@@ -818,6 +818,9 @@ def overview_status_report_from_projection(
         raw_values: Optional profile raw values mapping. When supplied,
             used to evaluate filing-obligation advisories (e.g., the
             Art. 96.3 LIRPF multiple-pagadores rule).
+
+    Returns:
+        An :class:`OverviewStatusReport` derived from the projection.
     """
     return OverviewStatusReport(
         active_profile=projection.active_profile.profile_id,

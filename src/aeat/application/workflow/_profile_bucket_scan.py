@@ -76,10 +76,14 @@ def read_profile_bucket(
         include_tombstoned: When ``True``, a tombstoned profile is also
             a candidate; default ``False`` matches only live profiles.
 
+    Returns:
+        A :class:`ProfileBucketPointer` for the matching profile, or
+        ``None`` when no profile carries the label.
+
     Raises:
-        ValueError: when two matching profiles share the label (an
-            ambiguous resolution the name-uniqueness guard should have
-            prevented among live profiles).
+        ProfileLabelAmbiguousError: when two or more matching profiles
+            share the label (an ambiguous resolution the name-uniqueness
+            guard should have prevented among live profiles).
     """
     if not label or not label.strip():
         return None
@@ -155,6 +159,9 @@ def list_profile_buckets(
             ``Settings.aeat_local_storage_root`` via ``load_settings``.
         include_tombstoned: When ``True``, tombstoned profiles are
             included; default ``False`` returns only live profiles.
+
+    Returns:
+        A dict mapping each profile UUID to its :class:`ProfileBucketPointer`.
     """
     resolved_root = _resolve_root(root)
     buckets_root = resolved_root / BUCKETS_DIRNAME

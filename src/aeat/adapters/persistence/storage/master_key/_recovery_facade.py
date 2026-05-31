@@ -104,18 +104,19 @@ def unwrap_recovery_envelope(
     mnemonic: str,
     decoder: Callable[[str], bytes] | None = None,
 ) -> bytes:
-    """Decode `mnemonic` and unwrap `envelope` to recover the 32-byte DEK.
+    """Decode ``mnemonic`` and unwrap ``envelope`` to recover the 32-byte DEK.
+
+    Args:
+        envelope: The persisted :class:`RecoveryRecord` to unwrap.
+        mnemonic: The 24-word BIP-39 mnemonic supplied by the operator.
+        decoder: Optional override for mnemonic decoding; production callers omit it.
+
+    Returns:
+        The recovered 32-byte data-encryption key.
 
     Raises:
-        RecoveryVerificationError: If the mnemonic does not decode or
-            the AEAD tag check fails. The error never echoes the typed
-            words; only the position of any decoding failure surfaces
-            (per the `decode_mnemonic` contract).
-
-    The ``decoder`` parameter is a DI seam for the narrowed-except
-    test that asserts a non-``StorageValidationError`` exception
-    propagates unchanged; production callers omit it and the central
-    ``decode_mnemonic`` is used.
+        RecoveryVerificationError: When the mnemonic does not decode or the AEAD tag
+            check fails.
     """
     resolved_decoder = decoder or decode_mnemonic
     try:

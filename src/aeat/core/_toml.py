@@ -25,6 +25,10 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
 
     Returns:
         The parsed top-level TOML mapping.
+
+    Raises:
+        error_factory: When the file cannot be read (``OSError``) or
+            contains invalid TOML (``tomllib.TOMLDecodeError``).
     """
     try:
         with path.open("rb") as fh:

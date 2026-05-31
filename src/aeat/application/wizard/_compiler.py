@@ -30,10 +30,6 @@ def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
         A tuple of :class:`ProfileKey` records, one per distinct
         ``WizardQuestion.profile_key``. None-bound questions are
         skipped.
-
-    Raises:
-        WizardCompileError: When two profile-bound questions across the
-            catalogue declare the same ``profile_key``.
     """
     by_id = {question.id: question for question in _iter_catalogue_questions(flows)}
     keys: dict[str, ProfileKey] = {}

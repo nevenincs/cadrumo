@@ -26,15 +26,14 @@ def pointer_path(root: Path) -> Path:
 def read_pointer(root: Path) -> BucketPointer | None:
     """Read and strict-validate the pointer file.
 
+    Args:
+        root: AEAT local storage root directory that contains the
+            ``active-profile`` pointer file.
+
     Returns:
         The parsed :class:`BucketPointer`, or ``None`` when the pointer
-        file is absent. The higher-level resolver (P04) treats ``None``
-        as "fall through to the next precedence rung".
-
-    Raises:
-        pydantic.ValidationError: If the pointer file carries an unknown
-            key, a wrong type, or a malformed payload.
-        tomllib.TOMLDecodeError: If the TOML is unparsable.
+        file is absent. The higher-level resolver treats ``None`` as
+        "fall through to the next precedence rung".
     """
     target = pointer_path(root)
     if not target.is_file():

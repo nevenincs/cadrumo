@@ -211,9 +211,9 @@ def load_usage_ratios_with_census_guard(
         override disagrees with the census.
 
     Raises:
-        :exc:`CensoRatioMismatchError`: when at least one persisted
-            HOME_OFFICE override disagrees, or when any persisted
-            HOME_OFFICE override exists with ``raw_afectacion_ratio``
+        CensoRatioMismatchError: When at least one persisted HOME_OFFICE
+            override disagrees with the census-derived value, or when any
+            persisted HOME_OFFICE override exists with ``raw_afectacion_ratio``
             unset.
     """
     profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
@@ -275,8 +275,8 @@ def derive_home_office_ratios_from_census(
         deductible percentage.
 
     Raises:
-        :exc:`UsageRatioValidationError`: when ``raw_afectacion_ratio``
-            is outside [0, 1].
+        UsageRatioValidationError: When ``raw_afectacion_ratio`` is outside
+            the ``[0, 1]`` range.
     """
     if raw_afectacion_ratio < Decimal("0") or raw_afectacion_ratio > Decimal("1"):
         raise UsageRatioValidationError(

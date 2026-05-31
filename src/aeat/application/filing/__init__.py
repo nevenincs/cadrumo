@@ -117,6 +117,9 @@ def build_draft(
         deadline_checker: Optional deadline checker.
         fail_on_warning: Raise when validation produces any warning or error.
 
+    Returns:
+        A fully constructed and validated :class:`ModeloDraft`.
+
     Raises:
         ModeloBuilderError: If the registry has no matching snapshot,
             inputs are malformed, or strict validation fails.
@@ -500,8 +503,8 @@ def iter_findings(
         or exceeds the threshold, in declaration order.
 
     Raises:
-        ValueError: When ``severity_at_least`` is not a known
-            severity name.
+        ModeloCalculateError: When ``severity_at_least`` is not a known
+            severity name (``"INFO"``, ``"WARNING"``, or ``"ERROR"``).
     """
     try:
         threshold = _SEVERITY_RANK[_BaseSeverity[severity_at_least]]

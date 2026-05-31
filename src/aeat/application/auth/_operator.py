@@ -206,9 +206,20 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     material; certificate passwords, private keys, and session tokens
     never enter the payload.
 
+    Args:
+        provider: The auth provider identifier to configure (e.g.
+            ``"certificate"``). Must be an implemented provider id.
+        certificate_path: Optional filesystem path to the operator's
+            certificate file. Recorded in the event payload when supplied.
+
+    Returns:
+        An :class:`AuthConfigureResult` carrying the updated workflow state.
+
     Raises:
         AuthConfigureNoActiveBucketError: When no active profile bucket
             exists yet. The operator must run ``aeat config profile create NAME`` first.
+        AuthConfigureDanglingActiveProfileError: When the active-profile
+            pointer does not resolve to a registered bucket.
     """
     from datetime import UTC, datetime
 

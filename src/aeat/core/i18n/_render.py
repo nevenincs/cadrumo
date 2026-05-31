@@ -49,6 +49,13 @@ class UnmatchedPlaceholderError(CoreError):
     """
 
     def __init__(self, *, key: str, name: str, rendered: str) -> None:
+        """Initialise with the translation key, placeholder name, and partial render.
+
+        Args:
+            key: The locale translation key that triggered the error.
+            name: The placeholder name that survived substitution.
+            rendered: The partially-rendered string at the time of detection.
+        """
         super().__init__(
             f"unmatched placeholder {{{name!r}}} in locale key {key!r}: {rendered!r}"
         )
@@ -207,6 +214,11 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
 
     Returns:
         The translated string.
+
+    Raises:
+        UnmatchedPlaceholderError: When strict-placeholder mode is
+            active and the rendered string still contains an
+            un-interpolated ``{name}`` token.
     """
     if "locale" not in kwargs or kwargs["locale"] is None:
         kwargs["locale"] = output_language()

@@ -105,11 +105,14 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
 def read_manifest(paths: BucketPaths) -> BucketManifest:
     """Read and strict-validate the manifest from ``<bucket-dir>/manifest.toml``.
 
+    Args:
+        paths: The resolved bucket paths providing the manifest file location.
+
+    Returns:
+        A strict-validated :class:`BucketManifest`.
+
     Raises:
-        FileNotFoundError: If the manifest is absent.
-        pydantic.ValidationError: If the manifest carries an unknown key,
-            a wrong type, or a malformed structure.
-        tomllib.TOMLDecodeError: If the TOML is unparsable.
+        StorageValidationError: When the manifest TOML is missing the lifecycle status key.
     """
     target = manifest_path(paths)
     text = target.read_text(encoding=_UTF_8_ENCODING)

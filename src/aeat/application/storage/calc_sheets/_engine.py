@@ -714,6 +714,10 @@ def build_export_plan(
             provenance onto the workbook so the pull adapter can
             detect stale prefills. Explicit `relation_values` take
             precedence over the resolver.
+
+    Returns:
+        A complete :class:`SheetExportPlan` ready for the apply adapter
+        to write to disk.
     """
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
     if relation_values is not None:

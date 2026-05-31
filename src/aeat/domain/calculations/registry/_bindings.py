@@ -1130,6 +1130,10 @@ def validate_ledger_oss_aggregation_binding_definition(
 ) -> None:
     """Validate a ``ledger_oss_aggregation`` binding's selector and aggregation.
 
+    Args:
+        binding: The :class:`DataBindingDefinition` to validate. Must
+            have ``source == "ledger_oss_aggregation"``.
+
     Raises:
         RegistryValidationError: If the selector is malformed (unknown
             regime / member state / rate kind / invoice direction /
@@ -1173,9 +1177,6 @@ def resolve_ledger_oss_aggregation_binding_values(
     Returns:
         Mapping of binding id to the aggregated Decimal value. Empty
         match sets resolve to ``Decimal("0")``.
-
-    Raises:
-        RegistryValidationError: If any selector is malformed.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -1299,6 +1300,10 @@ def validate_ledger_iva_aggregation_binding_definition(
     binding: DataBindingDefinition,
 ) -> None:
     """Validate a ``ledger_iva_aggregation`` binding's selector and aggregation.
+
+    Args:
+        binding: The :class:`DataBindingDefinition` to validate. Must
+            have ``source == "ledger_iva_aggregation"``.
 
     Raises:
         RegistryValidationError: If the selector is malformed (unknown

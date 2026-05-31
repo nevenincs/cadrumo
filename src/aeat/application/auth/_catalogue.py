@@ -91,6 +91,13 @@ def get_auth_provider(provider_id: str) -> AuthProviderListing:
     Provider ids are exact. Legacy spellings and unavailable providers
     are rejected instead of being carried as compatibility paths.
 
+    Args:
+        provider_id: The provider identifier to look up (case-insensitive,
+            leading/trailing whitespace stripped before comparison).
+
+    Returns:
+        The matching :class:`AuthProviderListing` from the catalogue.
+
     Raises:
         KeyError: When ``provider_id`` is not in the catalogue. The
             CLI's configure / login commands catch this and render

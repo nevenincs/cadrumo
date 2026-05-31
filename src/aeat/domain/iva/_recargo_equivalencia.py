@@ -79,9 +79,12 @@ def _load_rates() -> LivaArt161RecargoRates:
     is replaced — bypassing the loader was the same architectural drift
     pattern as direct ``os.environ`` reads.
 
+    Returns:
+        A :class:`LivaArt161RecargoRates` record with the four rate values.
+
     Raises:
-        IvaCatalogueError: If any of the four expected parameter ids is absent.
-        IvaValidationError: If any value cannot be parsed as a Decimal.
+        IvaCatalogueError: If any of the four expected parameter ids is absent
+            or if the registry catalogue cannot be loaded.
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports

@@ -23,33 +23,31 @@ def format_decimal(
 ) -> str:
     """Render *value* in fixed-point notation (no scientific notation).
 
-    Parameters
-    ----------
-    value:
-        The decimal to format.  Pass ``None`` only when *none_value* is also
-        provided; otherwise a ``TypeError`` is raised at runtime.
-    normalize:
-        When ``True`` call :meth:`Decimal.normalize` before formatting, which
-        strips trailing zeros (e.g. ``Decimal("1.50")`` → ``"1.5"``).
-    none_value:
-        String to return when *value* is ``None``.  Defaults to ``None``,
-        meaning ``None`` input is treated as a programming error and raises
-        ``TypeError``.
+    Args:
+        value: The decimal to format. Pass ``None`` only when
+            *none_value* is also provided.
+        normalize: When ``True`` call :meth:`Decimal.normalize` before
+            formatting, which strips trailing zeros (e.g.
+            ``Decimal("1.50")`` → ``"1.5"``).
+        none_value: String to return when *value* is ``None``. When
+            ``None`` (the default), a ``None`` *value* raises
+            :exc:`DecimalFormatError`.
 
     Returns:
-    -------
-    str
         Fixed-point string representation of *value*.
 
+    Raises:
+        DecimalFormatError: When *value* is ``None`` and *none_value*
+            was not provided.
+
     Examples:
-    --------
-    >>> from decimal import Decimal
-    >>> format_decimal(Decimal("12.34"))
-    '12.34'
-    >>> format_decimal(Decimal("1.50"), normalize=True)
-    '1.5'
-    >>> format_decimal(None, none_value="0")
-    '0'
+        >>> from decimal import Decimal
+        >>> format_decimal(Decimal("12.34"))
+        '12.34'
+        >>> format_decimal(Decimal("1.50"), normalize=True)
+        '1.5'
+        >>> format_decimal(None, none_value="0")
+        '0'
     """
     if value is None:
         if none_value is None:

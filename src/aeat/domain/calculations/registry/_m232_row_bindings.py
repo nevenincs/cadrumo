@@ -47,7 +47,7 @@ def materialize_m232_related_party_rows(
         Tuple of CasillaObservation objects for all row fields
 
     Raises:
-        ValueError: If rows exceed form capacity (>5 rows) or if
+        RegistryValidationError: If rows exceed form capacity (>5 rows) or if
             a casilla referenced by a row is not defined on the revision.
     """
     if len(rows) > 5:

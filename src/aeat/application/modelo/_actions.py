@@ -685,6 +685,15 @@ def get_work_unit(
 ) -> WorkUnit:
     """Return one work unit by id.
 
+    Args:
+        work_unit_id: The stable content-addressed id of the work unit
+            to retrieve.
+        repository: Optional repository override; defaults to a fresh
+            :class:`WorkUnitCatalogueRepository`.
+
+    Returns:
+        The :class:`WorkUnit` record for ``work_unit_id``.
+
     Raises:
         WorkUnitNotFoundError: When no work unit lives under
             ``work_unit_id``. ``KeyError`` is in the base classes
@@ -776,6 +785,18 @@ def discard_work_unit(
     the operator must create a fresh work unit on the same modelo
     / year / period. A ``modelo.work_unit.discarded`` bucket event
     is emitted alongside the state transition.
+
+    Args:
+        work_unit_id: The stable id of the work unit to discard.
+        actor: Operator identifier recorded in the audit trail.
+        reason: Optional human-readable discard reason.
+        repository: Optional work-unit catalogue repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        clock: Optional UTC timestamp override for the discard event.
+
+    Returns:
+        The updated :class:`WorkUnit` in ``DISCARDED`` state.
 
     Raises:
         WorkUnitNotFoundError: When ``work_unit_id`` is absent.
@@ -1932,6 +1953,16 @@ def mark_revision_verificado_completo(
     transition the revision is immutable; subsequent calculation
     work on the same work unit must produce a new revision.
 
+    Args:
+        calculation_revision_id: The id of the draft revision to promote.
+        actor: Operator identifier stamped as ``verified_by``.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        clock: Optional UTC timestamp override for ``verified_at``.
+
+    Returns:
+        The updated :class:`CalculationRevision` in ``VERIFICADO_COMPLETO`` state.
+
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
             absent.
@@ -2844,17 +2875,36 @@ def verify_modelo_revision(
        to the verification-report catalogue.  Failed attempts are persisted
        so the audit trail records why the transition was refused.
 
+    Args:
+        calculation_revision_id: The id of the draft revision to verify.
+        actor: Operator identifier stamped as ``verified_by``.
+        workflow_profile: The taxpayer profile used to evaluate workflow gate
+            conditions.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        verification_repository: Optional verification-report catalogue
+            repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        iva_compensation_decision_repository: Optional IVA wallet decision
+            repository override.
+        workflow_engine: Optional workflow engine override for the preflight gate.
+        workflow_runs_dir: Optional workflow runs directory override.
+        settings: Optional settings override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The persisted :class:`VerificationReport` for the revision.
+
     Raises:
         CalculationRevisionNotFoundError: When the revision id is absent.
         CalculationRevisionStateError: When the revision is not in BORRADOR
             state.  Re-verifying a verified-complete or filed revision is
             rejected; the operator must produce a fresh calculation revision
             (which lands as a new draft).
-        StoredCalculationDriftError: When the content-address or observation
-            provenance check fails, indicating storage corruption or
-            tampering.
-        ModeloWorkflowGateError: When the workflow preflight gate aborts
-            before the verified-complete transition.
+        WorkUnitNotFoundError: When the revision's parent work unit cannot
+            be loaded.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
@@ -3373,6 +3423,32 @@ def file_modelo_revision(
     7. Advance the work unit's ``filed_calculation_revision_id``
        and ``current_filing_record_id`` pointers.
 
+    Args:
+        calculation_revision_id: The id of the verified-complete revision
+            to file.
+        actor: Operator identifier recorded in the filing record and audit
+            trail.
+        workflow_profile: The taxpayer profile used to evaluate workflow
+            gate conditions.
+        notes: Optional operator-supplied filing notes.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        filing_repository: Optional filing-record catalogue repository
+            override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        iva_compensation_decision_repository: Optional IVA wallet decision
+            repository override.
+        workflow_engine: Optional workflow engine override for the preflight
+            gate.
+        workflow_runs_dir: Optional workflow runs directory override.
+        settings: Optional settings override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
+
     Raises:
         CalculationRevisionNotFoundError: When the revision id is
             absent.
@@ -3380,8 +3456,6 @@ def file_modelo_revision(
             ``VERIFICADO_COMPLETO`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
-        ModeloWorkflowGateError: When the workflow/preflight gate
-            aborts before filing-state mutation.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -3676,6 +3750,28 @@ def amend_modelo_revision(
     6. Emit a ``modelo.amended`` bucket event linking the new
        filing record to the baseline.
 
+    Args:
+        from_filing_record_id: The id of the baseline filing record to amend.
+            Must be CURRENT and carry ``external_evidence``.
+        overrides: Casilla-id to Decimal mapping of corrected values to merge
+            over the baseline revision's casilla map.
+        amendment_kind: Whether the amendment is ``COMPLEMENTARIA`` or
+            ``SUSTITUTIVA``.
+        reason: Operator-supplied explanation for the amendment, recorded in
+            the revision and bucket event.
+        actor: Operator identifier recorded in the audit trail.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        filing_repository: Optional filing-record catalogue repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The newly created :class:`ModeloRecord` in ``CURRENT`` status for the
+        amendment.
+
     Raises:
         ModeloRecordNotFoundError: When ``from_filing_record_id`` is
             absent from the catalogue.
@@ -3685,6 +3781,10 @@ def amend_modelo_revision(
             in ``CURRENT`` status.
         WorkUnitNotFoundError: When the work unit referenced by the
             baseline record cannot be loaded.
+        CalculationRevisionNotFoundError: When the baseline calculation
+            revision referenced by the filing record is absent.
+        CalculationRevisionStateError: When the amendment overrides
+            produce a duplicate revision id already present in the catalogue.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -3922,11 +4022,34 @@ def import_external_filing_evidence(
 
     The amend path consumes records produced here as its baseline.
 
+    Args:
+        work_unit_id: The stable id of the work unit to attach the imported
+            filing to.
+        casilla_values: The AEAT-attested casilla values from the imported
+            filing. Must be non-empty.
+        evidence_kind: The kind of external evidence being imported (e.g.
+            justificante, borrador).
+        evidence_reference_id: The AEAT-issued reference identifier for the
+            imported filing. Must be non-blank after stripping.
+        actor: Operator identifier recorded in the audit trail. Defaults to
+            ``"aeat-import"``.
+        work_unit_repository: Optional work-unit catalogue repository override.
+        calculation_repository: Optional calculation-revision catalogue
+            repository override.
+        filing_repository: Optional filing-record catalogue repository override.
+        bucket_event_repository: Optional bucket-event history repository
+            override.
+        clock: Optional UTC timestamp override.
+
+    Returns:
+        The newly created :class:`ModeloRecord` in ``CURRENT`` status.
+
     Raises:
         WorkUnitNotFoundError: when ``work_unit_id`` is absent.
         WorkUnitMutationRefusedError: when the work unit is discarded.
-        ExternalModeloImportError: when ``casilla_values`` is empty or
-            ``evidence_reference_id`` is empty.
+        ExternalModeloImportError: when ``casilla_values`` is empty,
+            ``evidence_reference_id`` is blank, or the derived revision id
+            already exists in the catalogue.
     """
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()

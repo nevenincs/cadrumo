@@ -86,11 +86,13 @@ def get_active_master_key() -> bytes:
     AES-256-GCM key for the row-ciphertext layer — the KEK only ever
     unwraps the DEK during :meth:`BucketSession.open`.
 
+    Returns:
+        The 32-byte DEK used for AES-256-GCM column-level encryption.
+
     Raises:
-        NoActiveBucketSessionError: When no :func:`activate_session`
-            block is currently active on the calling thread or task.
-            The diagnostic points the operator at ``aeat config
-            profile switch NAME``.
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
     """
     session = _active_session.get()
     if session is None:

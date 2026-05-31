@@ -199,6 +199,13 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     because every modelo fichero-BOE envelope declares ``surnames`` and
     ``name`` as required header fields.
 
+    Args:
+        bucket_id: The active profile bucket id whose persisted profile
+            facts are read for the operator name.
+
+    Returns:
+        A ``(surnames, name)`` tuple of non-blank strings.
+
     Raises:
         ModeloExportError: When the active bucket has no persisted
             profile, or the profile omits either name fact. The export
@@ -300,6 +307,12 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
     resolves the registry snapshot by the registry-native period,
     while ``build_draft`` parses a canonical token. This helper
     normalises whichever shape the work unit carries into both.
+
+    Args:
+        work_unit: The work unit whose period token is to be normalised.
+
+    Returns:
+        A ``(filing_year, registry_period, canonical_period)`` tuple.
 
     Raises:
         ModeloExportError: When the work unit's period token cannot

@@ -73,6 +73,9 @@ class LLMCache:
 
         Returns:
             Cached response when present, otherwise `None`.
+
+        Raises:
+            LLMCacheError: When the cached payload is present but cannot be parsed.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
@@ -123,6 +126,10 @@ class LLMCache:
 
         Returns:
             Persisted cache entry model.
+
+        Raises:
+            LLMCacheError: When redaction produces a non-dict result or the storage
+                write fails with an OS-level error.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
@@ -190,6 +197,9 @@ class LLMCache:
 
         Returns:
             Number of removed cache objects.
+
+        Raises:
+            LLMCacheError: When a cache entry cannot be parsed during iteration.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
@@ -227,12 +237,6 @@ class LLMCache:
         Returns:
             Logical path for displaying the cache entry location. The cache
             itself is persisted in encrypted SQL secure objects.
-
-        Raises:
-            LLMCacheError: When the model identifier contains path-
-                traversal segments (``..``, leading dots), backslashes,
-                drive letters, NUL bytes, or other characters that
-                would compose a path outside ``root_dir``.
         """
         # Sanitise the operator-controllable model string before path
         # composition. ``model_override`` flows through provider

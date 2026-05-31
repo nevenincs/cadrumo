@@ -199,9 +199,11 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
         error_type: Error class being declared.
 
     Returns:
-        The registered :class:`ErrorCode` for ``error_type``, or raises
-        :exc:`ValueError` if the mapping is available and contains no
-        entry for this class.
+        The registered :class:`ErrorCode` for ``error_type``.
+
+    Raises:
+        ValueError: When the mapping is available but contains no entry
+            for this class.
     """
     bound = _CLASS_CODE_REGISTRY.get(error_type)
     if bound is not None:

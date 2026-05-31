@@ -161,12 +161,6 @@ def resolve_reduccion(
         :class:`TierResolution` carrying the tier, the numeric
         reducción percentage, the qualifying share, and the BOE
         citation identifier.
-
-    Raises:
-        TierResolutionError: When tier-90-a is the only candidate
-            but the contract record lacks ``prior_contract_last_rent``
-            (cannot evaluate the 5 % rebaja threshold without prior-
-            contract data).
     """
     resolved_amendment_year = (
         ejercicio_amendment_year

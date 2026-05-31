@@ -95,8 +95,6 @@ def import_filing_from_justificante(
         ``submission``, and any advisory warnings.
 
     Raises:
-        JustificanteParseError: If the PDF cannot be parsed.
-        JustificanteCsvNotFoundError: If the PDF has no CSV.
         ModeloImportError: If the modelo has no registered builder or
             the printed period cannot be canonicalised.
     """

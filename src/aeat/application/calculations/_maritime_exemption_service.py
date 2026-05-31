@@ -114,9 +114,9 @@ def resolve_maritime_exemption(
         MaritimeExemptionResult with typed observations and flat view.
 
     Raises:
-        MaritimeExemptionInactiveError: DA 41 selector resolved True.
-        ProfileCompletenessError: retmar_registered is True.
         RentaValidationError: Eligibility predicate mismatch or invalid input.
+            The DA 41 inactive guard and RETMAR completeness gate (described
+            above) raise their own exceptions from the called guards.
     """
     # DA 41 inactive guard runs first — must not silently produce output.
     guard_da41_inactive(facts)

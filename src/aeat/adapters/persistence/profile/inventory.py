@@ -61,10 +61,6 @@ def create_inventory_ledger(ledger: InventoryLedger) -> InventoryLedgerDocument:
 
     Returns:
         The updated ledger document including the newly inserted ledger.
-
-    Raises:
-        :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When a ledger
-            with the same ``(actividad_id, year)`` pair already exists.
     """
     return InventoryLedgerRepository().create(ledger)
 
@@ -84,11 +80,6 @@ def record_movement(
 
     Returns:
         The updated inventory ledger.
-
-    Raises:
-        :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
-            target ledger does not exist, the movement id is duplicated,
-            or the resulting valuation is invalid.
     """
     return InventoryLedgerRepository().record_movement(
         actividad_id,
@@ -132,8 +123,7 @@ class InventoryLedgerRepository:
             Decrypted inventory ledger document.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
-                envelope exists but cannot be loaded or decrypted.
+            InventoryLedgerError: When the envelope exists but cannot be loaded or decrypted.
         """
         try:
             record = self._objects.load(
@@ -167,8 +157,7 @@ class InventoryLedgerRepository:
             The ledger document including the new ledger.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When a
-                ledger with the same ``(actividad_id, year)`` pair exists.
+            InventoryLedgerError: When a ledger with the same ``(actividad_id, year)`` pair exists.
         """
         current = self._load_unlocked()
         if any(
@@ -200,9 +189,8 @@ class InventoryLedgerRepository:
             The updated inventory ledger.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.InventoryLedgerError`: When the
-                target ledger does not exist, the movement id is duplicated,
-                or the resulting valuation is invalid.
+            InventoryLedgerError: When the target ledger does not exist, the movement id
+                is duplicated, or the resulting valuation is invalid.
         """
         ledgers = list(self._load_unlocked().ledgers)
         for index, ledger in enumerate(ledgers):
