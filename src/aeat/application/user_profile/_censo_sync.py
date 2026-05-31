@@ -44,6 +44,7 @@ from ..live._censo import (
 from ._censo_errors import (
     CensoApplyConflictError,
     CensoNotAvailableError,
+    CensoSyncError,
 )
 from ._repository import UserProfileLifecycleRepository
 
@@ -144,7 +145,7 @@ class CensoSyncService:
     ) -> None:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
-            raise ValueError("bucket_id must not be blank")
+            raise CensoSyncError("bucket_id must not be blank")
         self._snapshots = snapshots or CensoSnapshotService(bucket_id=self._bucket_id)
         self._profiles = profiles or UserProfileLifecycleRepository(bucket_id=self._bucket_id)
 

@@ -98,13 +98,8 @@ class InvalidFinancialSourceError(FinancialProviderError):
     """Raised when a source document is unreadable or structurally invalid."""
 
 
-class FinancialValidationError(FinancialProviderError, ValueError):
-    """Raised when a specific field (date, amount) fails domain validation.
-
-    This error inherits from both :class:`FinancialProviderError` and
-    :class:`ValueError` for compatibility with Pydantic and consistent
-    adapter-layer error handling.
-    """
+class FinancialValidationError(FinancialProviderError):
+    """Raised when a specific field (date, amount) fails domain validation."""
 
     pass
 

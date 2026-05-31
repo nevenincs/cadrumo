@@ -29,6 +29,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ...core.errors import ProfileAnswerTypeError
+
 # Maps the 3-letter ISO-like codes from the former ``RentaCCAA`` enum to
 # the canonical CCAA member names.  Foral regimes (NAV, PVA) and the two
 # autonomous cities (CEU, MEL) were present in RentaCCAA but fall outside
@@ -125,7 +127,7 @@ class CCAA(StrEnum):
         if member_name is not None:
             return cls[member_name]
         valid = ", ".join(sorted(m.value for m in cls))
-        raise ValueError(f"unknown CCAA label {label!r}; valid values: {valid}")
+        raise ProfileAnswerTypeError(f"unknown CCAA label {label!r}; valid values: {valid}")
 
 
 __all__ = ["CCAA"]

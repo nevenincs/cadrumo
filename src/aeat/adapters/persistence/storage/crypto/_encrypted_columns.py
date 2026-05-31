@@ -122,7 +122,7 @@ class EncryptedString(TypeDecorator[str]):
         if value is None:
             return None
         if not isinstance(value, str):
-            raise TypeError(f"EncryptedString expects str; got {type(value).__name__}")
+            raise StorageValidationError(f"EncryptedString expects str; got {type(value).__name__}")
         key = _resolve_master_key()
         blob = encrypt_record(value.encode("utf-8"), key=key, associated_data=_AAD_STRING)
         return blob.to_wire()
@@ -151,7 +151,7 @@ class EncryptedBytes(TypeDecorator[bytes]):
         if value is None:
             return None
         if not isinstance(value, bytes | bytearray | memoryview):
-            raise TypeError(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
+            raise StorageValidationError(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
         key = _resolve_master_key()
         blob = encrypt_record(bytes(value), key=key, associated_data=_AAD_BYTES)
         return blob.to_wire()
@@ -187,7 +187,7 @@ class EncryptedJSON(TypeDecorator[object]):
                 sort_keys=True,
             ).encode("utf-8")
         except (TypeError, ValueError) as exc:
-            raise TypeError(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
+            raise StorageValidationError(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
         key = _resolve_master_key()
         blob = encrypt_record(serialised, key=key, associated_data=_AAD_JSON)
         return blob.to_wire()
@@ -254,7 +254,7 @@ class HashedLookup(TypeDecorator[bytes]):
             32 raw bytes — the deterministic lookup digest.
         """
         if not isinstance(plaintext, str):
-            raise TypeError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
+            raise StorageValidationError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
         key = _resolve_master_key()
         sub_key = cls._derive_lookup_key(key)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
@@ -271,7 +271,7 @@ class HashedLookup(TypeDecorator[bytes]):
                     f"HashedLookup pre-computed digest must be {_HASHED_LOOKUP_DIGEST_SIZE} bytes; got {len(digest)}",
                 )
             return digest
-        raise TypeError(
+        raise StorageValidationError(
             f"HashedLookup expects str or bytes; got {type(value).__name__}",
         )
 

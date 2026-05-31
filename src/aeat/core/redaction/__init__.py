@@ -271,7 +271,9 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         TypeError: When ``value`` is not a :class:`str`.
     """
     if not isinstance(value, str):
-        raise TypeError(f"redact() expects str; got {type(value).__name__}")
+        from ..errors import RedactionError
+
+        raise RedactionError(f"redact() expects str; got {type(value).__name__}")
     result = value
     for rule in rules:
         result = _apply_one(rule, result)
@@ -427,7 +429,9 @@ def redact_for_cli_output(text: str) -> str:
         Redacted CLI-safe text.
     """
     if not isinstance(text, str):
-        raise TypeError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
+        from ..errors import RedactionError
+
+        raise RedactionError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
     return _redact_cli_string(text)
 
 
