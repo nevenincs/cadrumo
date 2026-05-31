@@ -1145,6 +1145,34 @@ description = "Whether the taxpayer is registered in RETMAR (Registro Especial d
 schedule_predicates = ["maritime_worker.retmar_registered"]
 legal_refs = ["Ley 47/2015 BOE-A-2015-11346"]
 
+[[sections.fields]]
+key = "tuna_fleet"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the vessel is a qualifying tuna fleet (flota de pesca de túnidos / atunero). One of the two conjunctive selectors for DA 41 LIRPF: when combined with pending_eu_clearance the engine raises MaritimeExemptionInactiveError to refuse silent application of an exemption that lacks EU state-aid clearance."
+model_selectors = ["maritime_worker.tuna_fleet"]
+schedule_predicates = ["maritime_worker.tuna_fleet"]
+legal_refs = [
+  "Ley 35/2006 DA 41 BOE-A-2006-20764",
+  "Ley 6/2018 BOE-A-2018-9268",
+]
+
+[[sections.fields]]
+key = "pending_eu_clearance"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the DA 41 LIRPF tuna-fleet exemption is pending European Commission state-aid clearance under TFEU rules. Mirrors the inactive_pending_eu_clearance binding status: when True alongside tuna_fleet, the engine refuses to silently produce an exempt-income observation. Flip to False only after EU clearance is granted and the trabajador_del_mar binding status is updated accordingly."
+model_selectors = ["maritime_worker.pending_eu_clearance"]
+schedule_predicates = ["maritime_worker.pending_eu_clearance"]
+legal_refs = [
+  "Ley 35/2006 DA 41 BOE-A-2006-20764",
+  "Ley 6/2018 BOE-A-2018-9268",
+]
+
 [[sections]]
 key = "provenance"
 title = "Provenance and effective dating"
