@@ -23,7 +23,6 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core.errors import AeatError
-from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...domain.modelos._ids import WorkUnitId
 from ._actions import WorkUnitNotFoundError
@@ -139,7 +138,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     """
     if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
-            tr("application.modelo.errors.reconcile_declaration_unsupported"),
+            translated_message="application.modelo.errors.reconcile_declaration_unsupported",
         )
 
     from datetime import UTC, datetime
@@ -160,7 +159,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
         raise WorkUnitNotFoundError(
-            tr("application.modelo.errors.reconcile_no_active_bucket"),
+            translated_message="application.modelo.errors.reconcile_no_active_bucket",
         )
 
     catalogue = WorkUnitCatalogueRepository().load()

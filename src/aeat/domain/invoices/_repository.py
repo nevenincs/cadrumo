@@ -38,11 +38,12 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
     if trimmed:
         return trimmed
     from ...core._bucket_pointer_io import resolve_active_bucket_id
-    from ...core.i18n import tr
 
     active = resolve_active_bucket_id()
     if active is None:
-        raise InvoicePersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise InvoicePersistenceError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     return active
 
 
@@ -52,9 +53,9 @@ class InvoiceCatalogueRepository:
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if bucket_id is not None and not self._bucket_id:
-            from ...core.i18n import tr
-
-            raise InvoicePersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+            raise InvoicePersistenceError(
+                translated_message="application.workflow.errors.no_active_profile_bucket",
+            )
         if objects is not None:
             self._objects = objects
             return

@@ -23,7 +23,6 @@ from datetime import UTC, date, datetime
 
 from pydantic import BaseModel, Field
 
-from ...core.i18n import tr
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
 from aeat.domain.calculations.registry.applicability import (
@@ -199,7 +198,9 @@ def build_overview_explain(
             for a reason other than a missing deadline-window dataset.
     """
     if not modelo.strip():
-        raise OverviewExplainError(tr("application.overview.explain.errors.modelo_blank"))
+        raise OverviewExplainError(
+            translated_message="application.overview.explain.errors.modelo_blank",
+        )
     resolved_year = year or date.today().year
 
     applicability = derive_modelo_applicability(profile, modelo)

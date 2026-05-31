@@ -1638,7 +1638,12 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
             period_override="1T",
         )
     except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n  error: {exc}")
+        detail = exc.translated_message or str(exc) or type(exc).__name__
+        context = exc.context if exc.context else {}
+        pytest.fail(
+            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n"
+            f"  error: {detail} (context={context})"
+        )
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 

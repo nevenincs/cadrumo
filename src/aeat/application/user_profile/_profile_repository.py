@@ -51,7 +51,6 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
 from ...core.config import load_settings
-from ...core.i18n import tr
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...domain.user_profile import (
@@ -233,12 +232,8 @@ class ProfileRepository:
         resolved_id = profile_id if profile_id is not None else new_profile_id()
         if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
             raise UserProfileValidationError(
-                tr(
-                    "application.user_profile.errors.profile_create_route_mismatch",
-                    default="Profile create route '%{route}' does not match profile id '%{profile}'.",
-                    route=routing_profile_id,
-                    profile=resolved_id,
-                )
+                translated_message="application.user_profile.errors.profile_create_route_mismatch",
+                context={"route": routing_profile_id, "profile": resolved_id},
             )
         paths = bucket_paths(self._root, resolved_id)
         # Capture the genuine pre-create pointer before any store write
@@ -251,12 +246,8 @@ class ProfileRepository:
         # nothing to roll back.
         if manifest_path(paths).is_file():
             raise ProfileNotFoundError(
-                tr(
-                    "application.user_profile.errors.profile_manifest_already_registered",
-                    default=("Profile '%{profile}' already has a registered bucket manifest at %{bucket_dir}."),
-                    profile=resolved_id,
-                    bucket_dir=paths.bucket_dir,
-                )
+                translated_message="application.user_profile.errors.profile_manifest_already_registered",
+                context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
             )
         self._refuse_duplicate_label(label)
         if enforce_unique_tax_id:
@@ -360,12 +351,8 @@ class ProfileRepository:
         paths = bucket_paths(self._root, profile_id)
         if not manifest_path(paths).is_file():
             raise ProfileNotFoundError(
-                tr(
-                    "application.user_profile.errors.profile_manifest_missing",
-                    default="Profile '%{profile}' has no registered bucket manifest at %{bucket_dir}.",
-                    profile=profile_id,
-                    bucket_dir=paths.bucket_dir,
-                )
+                translated_message="application.user_profile.errors.profile_manifest_missing",
+                context={"profile": profile_id, "bucket_dir": paths.bucket_dir},
             )
         manifest = read_manifest(paths)
         record = self._lifecycle_repository(profile_id).load(profile_id)
@@ -460,24 +447,15 @@ class ProfileRepository:
             from ...domain.user_profile._errors import UserProfileValidationError
 
             raise UserProfileValidationError(
-                tr(
-                    "application.user_profile.errors.profile_label_blank",
-                    default="Profile label must not be blank.",
-                )
+                translated_message="application.user_profile.errors.profile_label_blank",
             )
 
         if trimmed.casefold() != aggregate.label.casefold():
             clash = read_profile_bucket(trimmed, root=self._root)
             if clash is not None and clash.bucket_id != profile_id:
                 raise ProfileAlreadyRegisteredError(
-                    tr(
-                        "application.user_profile.errors.profile_already_exists",
-                        default=(
-                            "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
-                            "to activate it or `aeat config profile delete NAME` first."
-                        ),
-                        profile=trimmed,
-                    ),
+                    translated_message="application.user_profile.errors.profile_already_exists",
+                    context={"profile": trimmed},
                 )
 
         result = self._lifecycle_service(profile_id).rename(
@@ -580,11 +558,8 @@ class ProfileRepository:
         aggregate = self.load(profile_id)
         if aggregate.status is UserProfileStatus.TOMBSTONED:
             raise ProfileNotFoundError(
-                tr(
-                    "application.user_profile.errors.profile_tombstoned_not_selectable",
-                    default="Profile '%{profile}' is tombstoned and cannot be selected.",
-                    profile=profile_id,
-                )
+                translated_message="application.user_profile.errors.profile_tombstoned_not_selectable",
+                context={"profile": profile_id},
             )
         write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
         return aggregate
@@ -656,14 +631,8 @@ class ProfileRepository:
         if read_profile_bucket(label, root=self._root) is None:
             return
         raise ProfileAlreadyRegisteredError(
-            tr(
-                "application.user_profile.errors.profile_already_exists",
-                default=(
-                    "Profile '%{profile}' already exists; run `aeat config profile switch NAME` "
-                    "to activate it or `aeat config profile delete NAME` first."
-                ),
-                profile=label,
-            ),
+            translated_message="application.user_profile.errors.profile_already_exists",
+            context={"profile": label},
         )
 
     def _refuse_duplicate_tax_id(self, facts: Sequence[UserProfileFact]) -> None:
@@ -710,15 +679,8 @@ class ProfileRepository:
             existing_tax_id = _canonical_tax_id(aggregate.record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:
                 raise ProfileAlreadyRegisteredError(
-                    tr(
-                        "application.user_profile.errors.duplicate_tax_id",
-                        default=(
-                            "Tax id '%{tax_id}' is already used by profile "
-                            "'%{profile}'; one taxpayer must have one profile."
-                        ),
-                        tax_id=new_tax_id,
-                        profile=summary.label,
-                    ),
+                    translated_message="application.user_profile.errors.duplicate_tax_id",
+                    context={"tax_id": new_tax_id, "profile": summary.label},
                 )
 
     def _lifecycle_repository(self, profile_id: str) -> UserProfileLifecycleRepository:

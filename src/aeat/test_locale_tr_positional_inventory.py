@@ -118,36 +118,19 @@ def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:
             yield exc.lineno, f"raise {class_name}(tr(...))"
 
 
-# The modules addressed by the W6.P27 locale sweep.  Once a module is added
-# to this list it must remain at zero tr-positional violations forever.
-_SWEPT_MODULES: frozenset[str] = frozenset(
-    {
-        "application/wizard/_persistence.py",
-        "application/workflow/_models.py",
-        "application/aggregation/_models.py",
-        "application/user_profile/_orchestration.py",
-        "application/filing/_runtime_repository.py",
-        "application/wizard/_prompter.py",
-        "application/wizard/_commands.py",
-        "application/modelo/_actions.py",
-        "entrypoints/cli/_config/__init__.py",
-        "entrypoints/cli/_config/_google.py",
-        "entrypoints/cli/_config/_profile_census.py",
-        # W07.P31 adapters sweep (S500-S501):
-        "adapters/outbound/aeat/auth/_authenticator.py",
-    }
-)
+def _collect_violations() -> list[str]:
+    """Walk every production module under ``src/aeat/`` and collect violations.
 
-
-def _collect_violations(*, swept_only: bool = True) -> list[str]:
+    The invariant is applied unconditionally: every non-test module that
+    raises an :class:`AeatError` subclass must use the
+    ``translated_message=`` keyword rather than passing ``tr(...)`` as
+    the positional ``message`` argument.
+    """
     violations: list[str] = []
     for path in sorted(_SRC_ROOT.rglob("*.py")):
         if path.name.startswith("test_"):
             continue
         rel = path.relative_to(_SRC_ROOT.parent.parent)
-        rel_str = rel.as_posix().replace("src/aeat/", "")
-        if swept_only and not any(module in rel_str for module in _SWEPT_MODULES):
-            continue
         source = path.read_text(encoding="utf-8", errors="replace")
         try:
             tree = ast.parse(source, filename=str(path))
@@ -158,12 +141,15 @@ def _collect_violations(*, swept_only: bool = True) -> list[str]:
     return violations
 
 
-def test_no_aeat_error_raise_with_positional_tr_in_swept_modules() -> None:
-    """Swept modules must have zero raise-with-positional-tr() violations.
+def test_no_aeat_error_raise_with_positional_tr() -> None:
+    """Every production module must have zero raise-with-positional-tr() violations.
 
-    The modules listed in ``_SWEPT_MODULES`` were migrated as part of
-    W6.P27 (S465-S475).  Once swept, they must stay at zero violations.
-    New modules are added to ``_SWEPT_MODULES`` as they are migrated.
+    The invariant applies unconditionally to every non-test module under
+    ``src/aeat/``.  Passing ``tr(...)`` as the positional ``message``
+    argument resolves the locale string eagerly at raise time using the
+    ambient output language, rather than deferring resolution to the CLI
+    render layer where the operator's chosen ``--output-language`` is
+    active.
 
     The canonical pattern is::
 
@@ -173,11 +159,11 @@ def test_no_aeat_error_raise_with_positional_tr_in_swept_modules() -> None:
 
         raise SomeError(tr("key"))   # WRONG — eager resolution
     """
-    violations = _collect_violations(swept_only=True)
+    violations = _collect_violations()
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
-            f"{len(violations)} raise(s) pass tr() as a positional AeatError arg "
-            f"in swept modules:\n  {joined}\n\n"
+            f"{len(violations)} raise(s) pass tr() as a positional AeatError arg:\n"
+            f"  {joined}\n\n"
             "Convert to: raise SomeError(translated_message='key', context={{...}})"
         )

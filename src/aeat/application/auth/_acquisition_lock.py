@@ -177,7 +177,7 @@ def acquire_auth_acquisition_lock(
                 _remove_lock_file(path)
                 continue
             raise AuthAcquisitionLockedError(
-                tr("application.auth.acquisition_lock.errors.lock_held"),
+                translated_message="application.auth.acquisition_lock.errors.lock_held",
                 context=_status_context(status),
                 suggestion=tr("application.auth.acquisition_lock.errors.lock_held_suggestion"),
             ) from None
@@ -193,7 +193,7 @@ def acquire_auth_acquisition_lock(
     if not acquired:
         status = inspect_auth_acquisition_lock(settings, kind)
         raise AuthAcquisitionLockedError(
-            tr("application.auth.acquisition_lock.errors.acquire_failed"),
+            translated_message="application.auth.acquisition_lock.errors.acquire_failed",
             context=_status_context(status),
         )
 

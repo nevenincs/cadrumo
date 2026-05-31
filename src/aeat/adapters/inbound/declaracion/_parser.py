@@ -9,7 +9,6 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from ....core.i18n import tr
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
@@ -252,7 +251,10 @@ def _resolve_template(
 
     detected = detect_template_revision_from_pages(pages) if pages is not None else detect_template_revision(path)
     if detected is None and not (modelo_override and año_override):
-        raise TemplateNotDetectedError(tr("adapters.inbound.declaracion.errors.template_not_detected", path=path))
+        raise TemplateNotDetectedError(
+            translated_message="adapters.inbound.declaracion.errors.template_not_detected",
+            context={"path": path},
+        )
 
     if detected is None:
         assert modelo_override and año_override  # narrowed by the check above
@@ -265,15 +267,13 @@ def _resolve_template(
 
     if modelo_override and modelo_override != detected.modelo:
         raise DeclaracionParseError(
-            tr(
-                "adapters.inbound.declaracion.errors.modelo_conflict",
-                modelo=modelo_override,
-                detected=detected.modelo,
-            )
+            translated_message="adapters.inbound.declaracion.errors.modelo_conflict",
+            context={"modelo": modelo_override, "detected": detected.modelo},
         )
     if año_override and año_override != detected.año:
         raise DeclaracionParseError(
-            tr("adapters.inbound.declaracion.errors.year_conflict", year=año_override, detected=detected.año)
+            translated_message="adapters.inbound.declaracion.errors.year_conflict",
+            context={"year": año_override, "detected": detected.año},
         )
 
     if template_revision_override:
@@ -291,7 +291,9 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
         return period_override.upper()
     match = _PERIOD_RE.search(text)
     if match is None:
-        raise DeclaracionParseError(tr("adapters.inbound.declaracion.errors.period_unresolved"))
+        raise DeclaracionParseError(
+            translated_message="adapters.inbound.declaracion.errors.period_unresolved",
+        )
     return match.group("period").upper()
 
 
@@ -305,7 +307,9 @@ def _extract_tax_id(text: str) -> str:
     row_match = _DECLARANT_ROW_RE.search(text)
     if row_match is not None:
         return row_match.group("tax_id").upper()
-    raise DeclaracionParseError(tr("adapters.inbound.declaracion.errors.tax_id_unresolved"))
+    raise DeclaracionParseError(
+        translated_message="adapters.inbound.declaracion.errors.tax_id_unresolved",
+    )
 
 
 def _load_registry_snapshot(
@@ -325,24 +329,24 @@ def _load_registry_snapshot(
         )
     except RegistrySnapshotError as exc:
         raise DeclaracionParseError(
-            tr(
-                "adapters.inbound.declaracion.errors.registry_snapshot_required",
-                modelo=template.modelo,
-                year=template.año,
-                period=period,
-                error=exc,
-            )
+            translated_message="adapters.inbound.declaracion.errors.registry_snapshot_required",
+            context={
+                "modelo": template.modelo,
+                "year": template.año,
+                "period": period,
+                "error": str(exc),
+            },
         ) from exc
 
 
 def _validate_snapshot_matches_template(snapshot: RegistrySnapshot, template: TemplateRevision) -> None:
     if snapshot.modelo.id != template.modelo:
         raise DeclaracionParseError(
-            tr(
-                "adapters.inbound.declaracion.errors.snapshot_modelo_conflict",
-                snapshot_modelo=snapshot.modelo.id,
-                detected=template.modelo,
-            )
+            translated_message="adapters.inbound.declaracion.errors.snapshot_modelo_conflict",
+            context={
+                "snapshot_modelo": snapshot.modelo.id,
+                "detected": template.modelo,
+            },
         )
 
 
@@ -361,20 +365,17 @@ def _select_extraction_profile(
             if profile.id == extraction_profile_id:
                 return profile
         raise DeclaracionParseError(
-            tr(
-                "adapters.inbound.declaracion.errors.profile_unavailable",
-                profile=extraction_profile_id,
-                modelo=snapshot.modelo.id,
-            )
+            translated_message="adapters.inbound.declaracion.errors.profile_unavailable",
+            context={
+                "profile": extraction_profile_id,
+                "modelo": snapshot.modelo.id,
+            },
         )
     if len(profiles) != 1:
         available = ", ".join(sorted(profile.id for profile in profiles)) or "none"
         raise DeclaracionParseError(
-            tr(
-                "adapters.inbound.declaracion.errors.profile_count_invalid",
-                modelo=snapshot.modelo.id,
-                available=available,
-            )
+            translated_message="adapters.inbound.declaracion.errors.profile_count_invalid",
+            context={"modelo": snapshot.modelo.id, "available": available},
         )
     return profiles[0]
 
@@ -446,11 +447,8 @@ def _extract_profile_values(
             details.append(f"ambiguous={','.join(ambiguous)}")
         details.append(f"coverage={coverage}")
         raise DeclaracionParseError(
-            tr(
-                "adapters.inbound.declaracion.errors.extraction_failed",
-                profile=profile.id,
-                details="; ".join(details),
-            ),
+            translated_message="adapters.inbound.declaracion.errors.extraction_failed",
+            context={"profile": profile.id, "details": "; ".join(details)},
             missing=tuple(missing),
             malformed=tuple(malformed),
             ambiguous=tuple(ambiguous),

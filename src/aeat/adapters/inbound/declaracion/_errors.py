@@ -9,6 +9,7 @@ specifics.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 
 from ..pdf._errors import PdfModeloImportError
@@ -43,6 +44,9 @@ class DeclaracionParseError(PdfModeloImportError):
         self,
         message: str | None = None,
         *,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: str | None = None,
         missing: tuple[str, ...] = (),
         malformed: tuple[str, ...] = (),
         ambiguous: tuple[str, ...] = (),
@@ -52,12 +56,23 @@ class DeclaracionParseError(PdfModeloImportError):
 
         Args:
             message: Optional human-readable description of the failure.
+            context: Optional structured context forwarded to the
+                :class:`~aeat.core.errors.AeatError` boundary.
+            suggestion: Optional copy-paste recovery hint forwarded to
+                :class:`~aeat.core.errors.AeatError`.
+            translated_message: Optional locale key rendered at the CLI
+                boundary.
             missing: Casilla IDs that produced no hit in the PDF.
             malformed: Casilla IDs whose captured value could not be parsed.
             ambiguous: Casilla IDs that matched more than one region.
             coverage: Fraction of target casillas successfully extracted.
         """
-        super().__init__(message)
+        super().__init__(
+            message,
+            context=context,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed
         self.ambiguous: tuple[str, ...] = ambiguous
