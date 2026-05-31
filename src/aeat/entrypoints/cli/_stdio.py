@@ -55,27 +55,14 @@ _COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
 _HELP_TOKENS = frozenset({"--help", "-h"})
 
 
-def _help_surface_requested(*, argv: list[str] | None = None) -> bool:
-    """Return whether the current invocation renders a ``--help`` surface.
+def _help_surface_requested() -> bool:
+    """Return whether the current invocation renders a ``--help`` surface."""
 
-    ``argv`` is a DI seam: tests pass an explicit argv to exercise the
-    decision branches; production callers pass ``None`` and the helper
-    reads :data:`sys.argv`.
-    """
-
-    source = sys.argv if argv is None else argv
-    return any(token in _HELP_TOKENS for token in source[1:])
-
-
-_UNSET: Final = object()
+    return any(token in _HELP_TOKENS for token in sys.argv[1:])
 
 
 @contextlib.contextmanager
-def _ensure_help_render_width(
-    *,
-    argv: list[str] | None = None,
-    columns_env: str | None | object = _UNSET,
-) -> Iterator[None]:
+def _ensure_help_render_width() -> Iterator[None]:
     """Context manager that widens the console width floor for ``--help`` surfaces.
 
     Rich (used by Typer for ``--help``) derives its console width from
@@ -91,20 +78,18 @@ def _ensure_help_render_width(
     ``COLUMNS`` (or its absence) is restored on exit so the environment
     mutation does not leak into sibling processes or tests.
 
-    The ``argv`` and ``columns_env`` parameters are DI seams for tests:
-    when ``argv`` is ``None`` (production), the helper reads
-    ``sys.argv``; when ``columns_env`` is the ``_UNSET`` sentinel
-    (production), the helper reads ``os.environ[COLUMNS]``. Tests pass
-    explicit values rather than mutating process-global state through
-    a hand-rolled scope helper. The os.environ write side is unchanged:
-    the helper still mutates and restores the real ``COLUMNS`` slot
-    because Rich reads it from the live environment.
+    Tests that exercise the decision branches scope ``sys.argv`` and
+    ``os.environ[COLUMNS]`` via the centralized backend helpers in
+    :mod:`aeat.tests.env_scope` (``scoped_sys_argv`` /
+    ``scoped_env_var``) rather than rebinding process state directly.
+    Rich reads the env var from the live environment at render time,
+    so a DI-seam that bypassed the os.environ write would misrepresent
+    the production contract.
     """
 
-    _original = os.environ.get(_COLUMNS_ENV_VAR) if columns_env is _UNSET else (columns_env if isinstance(columns_env, str) else None)
-    _argv_view = sys.argv if argv is None else argv
+    _original = os.environ.get(_COLUMNS_ENV_VAR)
 
-    if not _help_surface_requested(argv=_argv_view):
+    if not _help_surface_requested():
         yield
         return
 

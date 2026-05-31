@@ -32,6 +32,7 @@ new function here so the surface stays auditable.
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -40,6 +41,7 @@ from aeat.core.config import Settings
 __all__ = [
     "isolated_aeat_env",
     "scoped_env_var",
+    "scoped_sys_argv",
 ]
 
 
@@ -85,6 +87,36 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
         for name, value in saved.items():
             if value is not None:
                 os.environ[name] = value
+
+
+@contextmanager
+def scoped_sys_argv(argv: list[str]) -> Iterator[None]:
+    """Pin ``sys.argv`` for the with-block.
+
+    The CLI startup helpers in :mod:`aeat.entrypoints.cli._stdio` (and
+    a small set of sibling utilities) inspect ``sys.argv`` to decide
+    whether the invocation is a ``--help`` surface. Tests exercising
+    those branches need argv pinned to a known value.
+
+    Sys.argv is process infrastructure, not AEAT configuration, so it
+    has no Settings equivalent. This helper is the centralized scope
+    helper tests must call rather than rebinding ``sys.argv`` in a
+    test-local context manager.
+
+    Arguments:
+        argv: The argv list to install for the with-block.
+
+    Examples:
+        >>> with scoped_sys_argv(["aeat", "--help"]):
+        ...     with _ensure_help_render_width():
+        ...         ...
+    """
+    saved = sys.argv
+    sys.argv = argv
+    try:
+        yield
+    finally:
+        sys.argv = saved
 
 
 @contextmanager
