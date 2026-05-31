@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.time._utc import _validate_utc_aware
@@ -208,7 +209,7 @@ class SecretStore:
         index_path = self._index_path()
         if not index_path.exists():
             return _SecretIndex()
-        return _SecretIndex.model_validate_json(index_path.read_text(encoding="utf-8"))
+        return _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
 
     def _write_index(self, index: _SecretIndex) -> None:
         """Atomically write ``index`` to disk.
@@ -229,7 +230,7 @@ class SecretStore:
         try:
             with tempfile.NamedTemporaryFile(
                 mode="w",
-                encoding="utf-8",
+                encoding=UTF_8_ENCODING,
                 dir=target.parent,
                 prefix=f"{target.stem}.",
                 suffix=".tmp",
@@ -259,7 +260,7 @@ class SecretStore:
     @staticmethod
     def _envelope_bytes(envelope: Envelope[SecretRecord]) -> bytes:
         """Return the JSON-encoded byte representation of ``envelope``."""
-        return envelope.model_dump_json().encode("utf-8")
+        return envelope.model_dump_json().encode(UTF_8_ENCODING)
 
     def put(
         self,
@@ -378,7 +379,7 @@ class SecretStore:
             classification=entry.classification,
         )
         wire = self._blob_store.get(blob_ref)
-        envelope = Envelope[SecretRecord].model_validate_json(wire.decode("utf-8"))
+        envelope = Envelope[SecretRecord].model_validate_json(wire.decode(UTF_8_ENCODING))
         return envelope.payload
 
     def delete(self, key: str) -> None:

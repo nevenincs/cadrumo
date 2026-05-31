@@ -21,6 +21,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time._clock import _now
 from ._errors import (
@@ -132,7 +133,7 @@ class LocalFileSystemProvider:
 
     def _load_sidecar(self, sidecar_path: Path) -> dict[str, object]:
         try:
-            payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, json.JSONDecodeError) as exc:
             raise OutboundStorageIntegrityError(
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
@@ -210,7 +211,7 @@ class LocalFileSystemProvider:
             "written_at": written_at.isoformat(),
         }
         try:
-            sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding="utf-8")
+            sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
         except OSError as exc:
             target_path.unlink(missing_ok=True)
             raise OutboundStoragePermissionError(

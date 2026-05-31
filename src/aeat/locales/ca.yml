@@ -234,6 +234,17 @@ aggregation:
         de Renda.
       quarterly_period_required: Es requereix un període trimestral per a l'agregació
         d'ingressos del Model 130 (p.ex. 2024Q1).
+  service:
+    errors:
+      envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
+      envelope_period_mismatch: aggregation.service.errors.envelope_period_mismatch
+      envelope_provider_payload_mismatch: aggregation.service.errors.envelope_provider_payload_mismatch
+      observations_mismatch: aggregation.service.errors.observations_mismatch
+      per_modelo_modelos_not_unique: aggregation.service.errors.per_modelo_modelos_not_unique
+      per_modelo_providers_not_unique: aggregation.service.errors.per_modelo_providers_not_unique
+      provider_modelos_not_unique: aggregation.service.errors.provider_modelos_not_unique
+      result_source_kinds_not_unique: aggregation.service.errors.result_source_kinds_not_unique
+      source_kinds_mismatch: aggregation.service.errors.source_kinds_mismatch
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -1714,14 +1725,8 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
-        ambiguous_profile: 'Ambiguous profile label: %{profile}'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: No active profile and no --profile NAME supplied; run `aeat
-          config profile switch NAME` first.
-        profile_empty: --profile must not be empty when supplied.
-        unknown_profile: 'Unknown profile: %{profile}'
-        unknown_profile_key: 'Unknown profile key: %{key}'
       get_help: Read one profile key stored value.
       help: Engineer-only profile field inspection and surgical edits.
       key_help: Profile key.
@@ -2823,6 +2828,8 @@ errors:
     error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
       de terminis vàlid. Comprova l'any sol·licitat i les dades del perfil.
     error_deadlines_validation: Un registre de termini no ha superat la validació.
+    error_decimal_format: 'S''ha produït un error de format decimal: el valor és None
+      però no s''ha configurat cap substitut.'
     error_declaracion_template_not_detected: No s'ha pogut detectar automàticament
       la versió de plantilla del PDF de la declaració.
     error_domain: S'ha produït un error en la lògica de negoci.
@@ -2942,6 +2949,7 @@ errors:
     error_profile_tax_residence: S'ha produït un error en el perfil de residència
       fiscal.
     error_profile_validation: Un registre de perfil no ha superat la validació.
+    error_redaction: Un auxiliar de redacció ha rebut un argument del tipus incorrecte.
     error_renta: S'ha produït un error en el càlcul de la declaració de la Renda.
     error_renta_validation: Un valor de la declaració de la Renda no és vàlid.
     error_rental_amortization_cap_exceeded: L'amortització acumulada superaria el
@@ -3541,6 +3549,11 @@ filing:
     out_of_range: Valor fora de rang permès
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
+live:
+  errors:
+    expediente_not_found: live.errors.expediente_not_found
+    iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
+    year_range_invalid: live.errors.year_range_invalid
 locales:
   cli:
     audit:
@@ -3574,12 +3587,21 @@ profile:
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 review:
+  adapters:
+    errors:
+      invoices_load_failed: review.adapters.errors.invoices_load_failed
+      transactions_load_failed: review.adapters.errors.transactions_load_failed
   filing:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany
     stale_approval_summary: L'aprovació de l'esborrany ha caducat
   invoice:
     summary: Justificant pendent de revisió
+  operator:
+    errors:
+      item_not_found: review.operator.errors.item_not_found
+      unknown_kind: review.operator.errors.unknown_kind
+      unsupported_item_type: review.operator.errors.unsupported_item_type
   transaction:
     summary: Transacció pendent de classificació
 sheets:
@@ -3618,6 +3640,9 @@ sheets:
       supplier_tax_id: NIF del proveïdor
       transfer_pricing_method_code: Mètode de valoració
       valuation_amount: Valoració
+some:
+  locale:
+    key: some.locale.key
 topic:
   authentication:
     body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat

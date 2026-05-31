@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.invoices._errors import InvoiceValidationError
 
@@ -85,7 +85,7 @@ def import_invoices_from_path(
 ) -> InvoiceImportResult:
     """Import invoices from ``path`` through the secure invoice repository."""
 
-    invoices = parse_invoice_payload(path.read_text(encoding="utf-8"), default_kind=kind)
+    invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
     if dry_run:
         return InvoiceImportResult(rows=len(invoices), dry_run=True)
 

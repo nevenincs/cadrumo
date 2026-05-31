@@ -40,7 +40,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
-from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time._clock import _now
@@ -1506,7 +1506,7 @@ class ClaveMovilAuthProvider:
                 classification=SensitivityClass.SESSION,
                 schema_version=1,
                 written_at=_now(),
-                payload=json.dumps(payload, sort_keys=True, default=str).encode("utf-8"),
+                payload=json.dumps(payload, sort_keys=True, default=str).encode(UTF_8_ENCODING),
             )
             log.warning(
                 "ClaveMovilAuthProvider: encrypted diagnostic captured id=%s (url=%s reason=%s)",

@@ -238,6 +238,17 @@ aggregation:
         Renta.
       quarterly_period_required: Se requiere un periodo trimestral para la agregación
         de ingresos del Modelo 130 (p.ej. 2024Q1).
+  service:
+    errors:
+      envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
+      envelope_period_mismatch: aggregation.service.errors.envelope_period_mismatch
+      envelope_provider_payload_mismatch: aggregation.service.errors.envelope_provider_payload_mismatch
+      observations_mismatch: aggregation.service.errors.observations_mismatch
+      per_modelo_modelos_not_unique: aggregation.service.errors.per_modelo_modelos_not_unique
+      per_modelo_providers_not_unique: aggregation.service.errors.per_modelo_providers_not_unique
+      provider_modelos_not_unique: aggregation.service.errors.provider_modelos_not_unique
+      result_source_kinds_not_unique: aggregation.service.errors.result_source_kinds_not_unique
+      source_kinds_mismatch: aggregation.service.errors.source_kinds_mismatch
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -1735,14 +1746,8 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
-        ambiguous_profile: 'Etiqueta de perfil ambigua: %{profile}'
         invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: No hay perfil activo ni se proporcionó --profile NAME;
-          ejecuta `aeat config profile switch NAME` primero.
-        profile_empty: --profile no puede estar vacío cuando se proporciona.
-        unknown_profile: 'Perfil desconocido: %{profile}'
-        unknown_profile_key: 'Clave de perfil desconocida: %{key}'
       get_help: Lee el valor guardado de una clave de perfil.
       help: Inspección de campos de perfil y ediciones quirúrgicas solo para ingeniería.
       key_help: Clave de perfil.
@@ -2861,6 +2866,8 @@ errors:
     error_deadlines_schedule_computation: El motor no pudo generar un calendario de
       plazos válido. Comprueba el año solicitado y los datos del perfil.
     error_deadlines_validation: Un registro de plazo no superó la validación.
+    error_decimal_format: 'Se produjo un error de formato decimal: el valor es None
+      pero no se configuró un sustituto.'
     error_declaracion_template_not_detected: No se pudo detectar automáticamente la
       versión de plantilla del PDF de la declaración.
     error_domain: Se produjo un error en la lógica de negocio.
@@ -2976,6 +2983,7 @@ errors:
       no es válida.
     error_profile_tax_residence: Se produjo un error en el perfil de residencia fiscal.
     error_profile_validation: Un registro de perfil no superó la validación.
+    error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
     error_renta: Se produjo un error en el cálculo de la declaración de la Renta.
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
     error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
@@ -3571,6 +3579,11 @@ filing:
     out_of_range: Valor fuera de rango permitido
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
+live:
+  errors:
+    expediente_not_found: live.errors.expediente_not_found
+    iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
+    year_range_invalid: live.errors.year_range_invalid
 locales:
   cli:
     audit:
@@ -3606,12 +3619,21 @@ profile:
     tax:
       id: Identificador fiscal (NIF/NIE/CIF)
 review:
+  adapters:
+    errors:
+      invoices_load_failed: review.adapters.errors.invoices_load_failed
+      transactions_load_failed: review.adapters.errors.transactions_load_failed
   filing:
     draft_placeholder_summary: Borrador pendiente
     finding_summary: Incidencia detectada en el borrador
     stale_approval_summary: Aprobación obsoleta del borrador
   invoice:
     summary: Justificante pendiente de revisión
+  operator:
+    errors:
+      item_not_found: review.operator.errors.item_not_found
+      unknown_kind: review.operator.errors.unknown_kind
+      unsupported_item_type: review.operator.errors.unsupported_item_type
   transaction:
     summary: Transacción pendiente de clasificación
 sheets:
@@ -3650,6 +3672,9 @@ sheets:
       supplier_tax_id: NIF del proveedor
       transfer_pricing_method_code: Método de valoración
       valuation_amount: Valoración
+some:
+  locale:
+    key: some.locale.key
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado

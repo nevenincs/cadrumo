@@ -504,7 +504,11 @@ def select_declarations_for_capture(
     if expediente_id is not None:
         selected = tuple(row for row in selected if row.expediente_id == expediente_id)
     if expediente_id is not None and not selected:
-        raise LiveApplicationInputError(f"AEAT declaration register did not return expediente {expediente_id!r}")
+        raise LiveApplicationInputError(
+            message=f"AEAT declaration register did not return expediente {expediente_id!r}",
+            translated_message="live.errors.expediente_not_found",
+            context={"expediente_id": str(expediente_id)},
+        )
     if limit is not None:
         selected = selected[:limit]
     return selected
@@ -537,7 +541,10 @@ async def list_filed_data(
     """List filed declaration rows through the active AEAT session without downloading artefacts."""
 
     if year_from > year_to:
-        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
 
     session, settings = await _active_verified_session()
     rows: list[FiledDataListingRow] = []
@@ -812,7 +819,10 @@ async def capture_iva_compensation_history(
     """Capture filed Modelo 303s across years and verify secure history reload."""
 
     if year_from > year_to:
-        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
 
     session, settings = await _active_verified_session()
     return await _capture_iva_compensation_history_with_session(
@@ -1053,7 +1063,10 @@ def _persist_iva_compensation_history_observations_strict(
     latest: dict[tuple[int, str], _FiledDeclaracionObservation] = {}
     for observation in observations:
         if observation.modelo != "303":
-            raise LiveApplicationInputError("IVA compensation history capture only accepts Modelo 303 observations")
+            raise LiveApplicationInputError(
+                message="IVA compensation history capture only accepts Modelo 303 observations",
+                translated_message="live.errors.iva_history_modelo_303_only",
+            )
         key = (observation.ejercicio, observation.period)
         current = latest.get(key)
         if current is None or (observation.presented_at, observation.expediente_id) > (
@@ -1370,7 +1383,10 @@ async def _capture_iva_remote_state_for_active_storage(
 
     async with _suppress_live_iva_playwright_cancellation_noise():
         if year_from > year_to:
-            raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+            raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
 
         settings = _load_settings()
         _AeatAccessGate(settings).require_live_read()

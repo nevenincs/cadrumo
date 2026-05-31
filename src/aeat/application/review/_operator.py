@@ -106,7 +106,11 @@ def project_review_item(item_id: str, *, settings: Settings | None = None) -> Re
     for row in report.rows:
         if row.item_id == item_id:
             return row
-    raise ReviewError(f"review item not found: {item_id}")
+    raise ReviewError(
+        message=f"review item not found: {item_id}",
+        translated_message="review.operator.errors.item_not_found",
+        context={"item_id": str(item_id)},
+    )
 
 
 def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
@@ -117,7 +121,11 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
     for kind in accepted:
         mapped = _ACCEPTED_KIND_TO_INTERNAL.get(kind)
         if mapped is None:
-            raise ReviewError(f"unknown review kind: {kind}")
+            raise ReviewError(
+                message=f"unknown review kind: {kind}",
+                translated_message="review.operator.errors.unknown_kind",
+                context={"kind": kind},
+            )
         internal.update(mapped)
     return frozenset(internal)
 
@@ -192,7 +200,11 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
             legal_refs=tuple(legal_refs),
         )
-    raise ReviewError(f"unsupported review item type: {type(item).__name__}")
+    raise ReviewError(
+        message=f"unsupported review item type: {type(item).__name__}",
+        translated_message="review.operator.errors.unsupported_item_type",
+        context={"item_type": type(item).__name__},
+    )
 
 
 def _render_summary(value: str) -> str:
