@@ -1090,3 +1090,15 @@ Land 3 marker batches + 1 structural-prevention ratchet + aggregate test.
 - [x] `W21.P53.S648` - A8: add ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE markers on Google API Resource parameter positions in _calc_sheets_apply.py (drive: Any at :114, :162, :182, :195, :233, :234) and _calc_sheets_pull.py (raw: Any / row_set: Any at :339, :655, :686, :711); `googleapiclient Resource objects have no stub types; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py` + `_calc_sheets_pull.py`.
 - [x] `W21.P53.S649` - structural prevention: introduce test_any_param_rationale_inventory.py (AST-walk all production files for parameter-Any and **kwargs-Any annotations; `require KWARGS-ANY-RATIONALE-* / ADAPTER-INTERNAL-ALIAS-RATIONALE-* / ANY-RETURN-RATIONALE-* marker within 3 lines above the signature); enrol all currently-known violating sites in _KNOWN_VIOLATING_LINES allowlist; gate new sites; mirror W11 UTF-8 ratchet pattern; `src/aeat/test_any_param_rationale_inventory.py`.
 - [x] `W21.P53.S650` - aggregate test asserting all 3 W21 marker batches landed + ratchet S649 imports cleanly + prior-wave inventory ratchets remain green; `src/aeat/test_w21_p53_closure.py`.
+
+## Wave `W22` - close W22 findings: 0 regressions + 2 survivor-missed (8 of 9 axes clean)
+
+W22 swarm re-audit: 8 of 9 axes returned ZERO findings (parameter-Any ratchet from W21 holding — no new A8 drift). 2 survivor-missed: 1 A2 TYPE_CHECKING-only logging import lacking rationale marker; 1 P09 mock.patch site needing real-subclass-injection rewrite per project mock-prohibition rule. Close counter resets to 0/3.
+
+### Phase `W22.P54` - W22 audit closure
+
+Land 2 closures + aggregate test.
+
+- [ ] `W22.P54.S651` - A2: add LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY marker on the TYPE_CHECKING-guarded `import logging` at _browser_stage.py:8-9 (import never executes at runtime; marker documents the intent); grep-post token resolves on the line preceding the TYPE_CHECKING block; `src/aeat/adapters/outbound/aeat/sede/_browser_stage.py`.
+- [ ] `W22.P54.S652` - P09: rewrite test_unexpected_exception_raises_auth_validation_error and test_certificate_error_returns_unavailable_description in test_except_clause_narrowing.py to use real-subclass injection (subclass AeatAuthenticator and override _certificate_health_check) instead of unittest.mock.patch.object; remove `from unittest.mock import patch` imports; grep-post zero `from unittest.mock import patch` in this file; `src/aeat/test_except_clause_narrowing.py`.
+- [ ] `W22.P54.S653` - aggregate test asserting both W22 closures landed (marker present + zero mock.patch in named file) + parameter-Any ratchet from W21 remains green + prior-wave inventory ratchets remain green; `src/aeat/test_w22_p54_closure.py`.
