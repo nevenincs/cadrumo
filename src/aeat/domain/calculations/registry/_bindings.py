@@ -1653,11 +1653,8 @@ class CounterpartAggregationObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    # CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND: bridging AggregationSourceKind StrEnum
-    # value to CounterpartSourceKind Literal alias; the runtime value is identical but the
-    # type system cannot infer the Literal subset.
     source_kind: CounterpartSourceKind = Field(
-        default=cast(CounterpartSourceKind, AggregationSourceKind.LEDGER_TRANSACTION),
+        default=cast(CounterpartSourceKind, AggregationSourceKind.LEDGER_TRANSACTION),  # CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND: bridging AggregationSourceKind StrEnum value to CounterpartSourceKind Literal alias; runtime value is identical but the type system cannot infer the Literal subset.
     )
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)
