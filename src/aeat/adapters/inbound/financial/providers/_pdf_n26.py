@@ -192,7 +192,7 @@ class PdfN26Provider(FinancialProvider):
                     text = page.extract_text() or ""
                     lines = tuple(line.strip() for line in text.splitlines() if line.strip())
                     pages.append(lines)
-        except Exception as exc:
+        except Exception as exc:  # BROAD-EXCEPT-RATIONALE-PDF-N26-TEARDOWN: pdfplumber raises OSError (I/O failure), ValueError (malformed structure), and struct.error (corrupt binary data) from its C-level PDF parser; the upstream exception surface is not fully typed and grows with library versions, so the broad catch is intentional to guarantee conversion to InvalidFinancialSourceError.
             raise InvalidFinancialSourceError(f"could not parse PDF file: {path}") from exc
         if not pages:
             raise InvalidFinancialSourceError("PDF file contains no pages")
