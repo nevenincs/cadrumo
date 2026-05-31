@@ -17,25 +17,29 @@ Implement Clause 7 asserting no `domain.<a>` module imports from `domain.<b>._pr
 
 ## Status
 
-BLOCKED
+DONE
 
 ## Implementation
 
-Added `find_sibling_domain_protocol_imports()` to `src/aeat/diagnostics/_identity_placement.py`.
-Anti-tautology proof `test_sibling_domain_protocol_detector_flags_synthetic_violation` added.
+Fixed clause-7 violation:
+- `src/aeat/domain/filing/_schema.py:23` — changed from
+  `from ..submission._protocols import ModeloDraftStatus` to
+  `from ..submission import ModeloDraftStatus` (public surface import).
 
-## Blocked reason
+`ModeloDraftStatus` is already exported through `domain/submission/__init__.py`.
 
-1 production violation:
+Zero-violation assertion `test_no_sibling_domain_protocol_imports` added to
+diagnostics test in S95 commit.
 
-- `src/aeat/domain/filing/_schema.py:23` — imports `ModeloDraftStatus` from
-  `domain.submission._protocols`. Owning wave: W06 (Protocol centralisation / MIGRATE-003).
+## Action class
 
-## Commit
+MOVE (import path correction — no symbol relocation required)
 
-`8a08cac3f` — diagnostics(W11.P28): extend enforcement test to 10 clauses per Rule 11
+## Commits
+
+- `fc96b9bdd` — exec(core-authority): W11.P28.S94 clause-7 sibling-domain _protocols fix
 
 ## Files touched
 
-- `src/aeat/diagnostics/_identity_placement.py`
-- `src/aeat/diagnostics/test_identity_primitive_placement.py`
+- `src/aeat/domain/filing/_schema.py`
+- `src/aeat/diagnostics/test_identity_primitive_placement.py` (clause-7 zero-violation test added in S95)

@@ -17,37 +17,39 @@ Implement Clause 5 asserting no `domain.<a>` module imports from `domain.<b>._en
 
 ## Status
 
-BLOCKED
+DONE
 
 ## Implementation
 
-Added `find_sibling_domain_enum_imports()` to `src/aeat/diagnostics/_identity_placement.py`.
-The detector walks every module under `domain/`, resolves relative and absolute imports,
-and flags any `from domain.<b>._enums import ...` where `<b>` differs from the consumer's
-subpackage and both are named (non-underscore-prefixed) subpackages.
+Fixed all 4 clause-5 sibling-domain _enums violations:
 
-Anti-tautology proof `test_sibling_domain_enum_detector_flags_synthetic_violation` added to
-`src/aeat/diagnostics/test_identity_primitive_placement.py`. Proof passes.
+- `src/aeat/domain/iva/_invoice_classification.py:56` — changed from
+  `from ..invoices._enums import IvaRate` to `from ..invoices import IvaRate`.
+- `src/aeat/domain/iva/test_invoice_classification.py:13` — same fix.
+- `src/aeat/domain/iva/test_legal_basis_binding.py:37` — changed to
+  `from aeat.domain.invoices import iva_rate_percentage` (required adding
+  `iva_rate_percentage` to `domain/invoices/__init__.py` public surface).
+- `src/aeat/domain/iva/test_legal_basis_binding.py:243` — removed inline
+  import of private `_IVA_RATE_TO_VAT_KIND`; rewrote test to use public
+  `lookup_rate` and `iva_rate_percentage` helpers instead.
 
-## Blocked reason
+`iva_rate_percentage` exported through `domain/invoices/__init__.py`.
 
-The current tree has 4 violations (3 in test files + 1 production):
+Zero-violation assertion `test_no_sibling_domain_enum_imports` added to
+diagnostics test in S95 commit (covers clauses 5-8 together).
 
-- `src/aeat/domain/iva/_invoice_classification.py:56` — imports `IvaRate` from
-  `domain.invoices._enums`. Owning wave: W04 (enum centralisation / MERGE-013).
-- `src/aeat/domain/iva/test_invoice_classification.py:13` — test import of `IvaRate` from
-  `domain.invoices._enums`.
-- `src/aeat/domain/iva/test_legal_basis_binding.py:37,243` — two test imports from
-  `domain.invoices._enums`.
+## Action class
 
-The zero-violation assertion `test_no_sibling_domain_enum_imports` is NOT added to the
-test file until W04 closes the production violation.
+MOVE (import path correction — no symbol relocation required)
 
-## Commit
+## Commits
 
-`8a08cac3f` — diagnostics(W11.P28): extend enforcement test to 10 clauses per Rule 11
+- `d49fdf3b9` — exec(core-authority): W11.P28.S92 clause-5 sibling-domain _enums fix
 
 ## Files touched
 
-- `src/aeat/diagnostics/_identity_placement.py` (detector added)
-- `src/aeat/diagnostics/test_identity_primitive_placement.py` (proof added)
+- `src/aeat/domain/iva/_invoice_classification.py`
+- `src/aeat/domain/iva/test_invoice_classification.py`
+- `src/aeat/domain/iva/test_legal_basis_binding.py`
+- `src/aeat/domain/invoices/__init__.py`
+- `src/aeat/diagnostics/test_identity_primitive_placement.py` (clause-5 zero-violation test added in S95)
