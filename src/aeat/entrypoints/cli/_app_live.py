@@ -21,7 +21,7 @@ from ...application.live import (
 from ...application.overview import FilingStatus
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
-from ._common import _emit, _emit_envelope
+from ._common import _emit_envelope
 
 if TYPE_CHECKING:
     from ...application.auth import LiveAuthPreflightReport
@@ -201,7 +201,24 @@ def iva_wallet_pull_cmd(
             taxpayer_nif=taxpayer_nif,
         )
     )
-    _emit(ctx, report, _iva_wallet_pull_lines(report))
+    from ._app_live_payloads import IvaWalletPullResult
+
+    result = IvaWalletPullResult(
+        taxpayer_ref=report.taxpayer_ref,
+        target_year=report.target_year,
+        target_period=report.target_period,
+        observation_path=report.observation_path,
+        decision_key=report.decision_key,
+        row_count=report.row_count,
+        total_pending=report.total_pending,
+        selected_authority=report.selected_authority,
+        selected_amount=report.selected_amount,
+        local_recurrence_amount=report.local_recurrence_amount,
+        divergence=report.divergence,
+        blocked=report.blocked,
+        captured_at=report.captured_at.isoformat(),
+    )
+    _emit_envelope(ctx, command="app.live.iva_wallet.pull", result=result, lines=_iva_wallet_pull_lines(report))
 
 
 def _iva_wallet_pull_lines(report: IvaWalletCaptureReport) -> tuple[str, ...]:
@@ -245,7 +262,68 @@ def iva_wallet_history_cmd(
     from ...application.live import list_iva_compensation_history
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
-    _emit(ctx, report, _iva_wallet_history_lines(report))
+    from ._app_live_payloads import (
+        IvaCompensationCarryForwardLotPayload,
+        IvaCompensationHistoryRowPayload,
+        IvaWalletAuthorityDecisionPayload,
+        IvaWalletHistoryResult,
+    )
+
+    result = IvaWalletHistoryResult(
+        row_count=report.row_count,
+        as_of_year=report.as_of_year,
+        carry_forward_lot_count=report.carry_forward_lot_count,
+        unallocated_applied_amount=report.unallocated_applied_amount,
+        authority_decision_count=report.authority_decision_count,
+        rows=[
+            IvaCompensationHistoryRowPayload(
+                year=row.year,
+                period=row.period,
+                status=row.status,
+                presented_at=row.presented_at.isoformat(),
+                prior_pending_amount=row.prior_pending_amount,
+                applied_amount=row.applied_amount,
+                pending_for_later_amount=row.pending_for_later_amount,
+                period_result_amount=row.period_result_amount,
+                final_result_amount=row.final_result_amount,
+                generated_amount=row.generated_amount,
+                available_end_amount=row.available_end_amount,
+            )
+            for row in report.rows
+        ],
+        carry_forward_lots=[
+            IvaCompensationCarryForwardLotPayload(
+                taxpayer_ref=lot.taxpayer_ref,
+                source_filing_year=lot.source_filing_year,
+                source_period=lot.source_period,
+                generated_amount=lot.generated_amount,
+                applied_amount=lot.applied_amount,
+                remaining_amount=lot.remaining_amount,
+                age_years=lot.age_years,
+                expiry_review_state=lot.expiry_review_state,
+                source_observation_key=lot.source_observation_key,
+            )
+            for lot in report.carry_forward_lots
+        ],
+        authority_decisions=[
+            IvaWalletAuthorityDecisionPayload(
+                taxpayer_ref=decision.taxpayer_ref,
+                target_year=decision.target_year,
+                target_period=decision.target_period,
+                selected_authority=decision.selected_authority,
+                selected_amount=decision.selected_amount,
+                wallet_amount=decision.wallet_amount,
+                local_recurrence_amount=decision.local_recurrence_amount,
+                override_amount=decision.override_amount,
+                divergence=decision.divergence,
+                blocked=decision.blocked,
+                stale_wallet=decision.stale_wallet,
+                authority_sources=list(decision.authority_sources),
+            )
+            for decision in report.authority_decisions
+        ],
+    )
+    _emit_envelope(ctx, command="app.live.iva_wallet.history", result=result, lines=_iva_wallet_history_lines(report))
 
 
 def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str, ...]:
@@ -374,7 +452,17 @@ def iva_wallet_capture_history_cmd(
         _metric_line("reloaded_history_count", report.reloaded_history_count),
         _metric_line("output_root", report.output_root),
     )
-    _emit(ctx, report, lines)
+    from ._app_live_payloads import IvaWalletCaptureHistoryResult
+
+    result = IvaWalletCaptureHistoryResult(
+        output_root=report.output_root,
+        year_from=report.year_from,
+        year_to=report.year_to,
+        captured_count=report.captured_count,
+        calculation_observation_count=report.calculation_observation_count,
+        reloaded_history_count=report.reloaded_history_count,
+    )
+    _emit_envelope(ctx, command="app.live.iva_wallet.capture_history", result=result, lines=lines)
 
 
 @iva_wallet_app.command(
@@ -437,7 +525,49 @@ def iva_wallet_capture_remote_state_cmd(
             output_root=output_root,
         )
     )
-    _emit(ctx, report, _iva_remote_state_capture_lines(report))
+    from ._app_live_payloads import (
+        IvaWalletCaptureRemoteStateResult,
+        LiveIvaAuthOutcomePayload,
+        LiveIvaSurfaceOutcomePayload,
+    )
+
+    result = IvaWalletCaptureRemoteStateResult(
+        output_root=report.output_root,
+        year_from=report.year_from,
+        year_to=report.year_to,
+        target_year=report.target_year,
+        target_period=report.target_period,
+        acquisition_manifest_id=report.acquisition_manifest_id or "",
+        auth=LiveIvaAuthOutcomePayload(
+            status=report.auth.status.value,
+            outcome_mode=report.auth.outcome_mode.value,
+            failure_mode=report.auth.failure_mode.value if report.auth.failure_mode else None,
+            failure_type=report.auth.failure_type,
+            provider_kind=report.auth.provider_kind,
+            reused_persisted_session=report.auth.reused_persisted_session,
+            fresh=report.auth.fresh,
+        ),
+        filed_history_succeeded=report.filed_history_succeeded,
+        wallet_succeeded=report.wallet_succeeded,
+        outcomes=[
+            LiveIvaSurfaceOutcomePayload(
+                surface=outcome.surface.value,
+                status=outcome.status.value,
+                outcome_mode=outcome.outcome_mode.value,
+                failure_mode=outcome.failure_mode.value if outcome.failure_mode else None,
+                failure_type=outcome.failure_type,
+                captured_count=outcome.captured_count,
+                calculation_observation_count=outcome.calculation_observation_count,
+            )
+            for outcome in report.outcomes
+        ],
+    )
+    _emit_envelope(
+        ctx,
+        command="app.live.iva_wallet.capture_remote_state",
+        result=result,
+        lines=_iva_remote_state_capture_lines(report),
+    )
 
 
 def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
@@ -695,7 +825,7 @@ def filed_capture_sources_cmd(
         calculation_observation_count=report.calculation_observation_count,
         calculation_observation_keys=list(report.calculation_observation_keys),
     )
-    _emit_envelope(ctx, command="app.live.filed.capture.sources", result=result, lines=lines)
+    _emit_envelope(ctx, command="app.live.filed.capture_sources", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -742,14 +872,16 @@ def notifications_capture(ctx: typer.Context) -> None:
     bucket_id = _active_bucket_id()
     _emit_live_auth_preflight()
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
-    payload = {
-        "bucket_id": bucket_id,
-        "snapshot_id": persisted.snapshot_id,
-        "captured_at": persisted.captured_at.isoformat(),
-        "persisted_at": persisted.persisted_at.isoformat(),
-        "row_count": len(persisted.rows),
-        "source_url": persisted.source_url,
-    }
+    from ._app_live_payloads import NotificationsCaptureResult
+
+    result = NotificationsCaptureResult(
+        bucket_id=bucket_id,
+        snapshot_id=persisted.snapshot_id,
+        captured_at=persisted.captured_at.isoformat(),
+        persisted_at=persisted.persisted_at.isoformat(),
+        row_count=len(persisted.rows),
+        source_url=persisted.source_url,
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{persisted.snapshot_id}",
@@ -757,7 +889,7 @@ def notifications_capture(ctx: typer.Context) -> None:
         f"row_count\t{len(persisted.rows)}",
         f"source_url\t{persisted.source_url}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.notifications.capture", result=result, lines=lines)
 
 
 @notifications_app.command(
@@ -772,22 +904,24 @@ def notifications_list(ctx: typer.Context) -> None:
 
     bucket_id = _active_bucket_id()
     rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
-    payload = {
-        "bucket_id": bucket_id,
-        "count": len(rows),
-        "rows": [
-            {
-                "snapshot_id": r.snapshot_id,
-                "captured_at": r.captured_at.isoformat(),
-                "row_count": len(r.rows),
-            }
+    from ._app_live_payloads import NotificationSnapshotListingPayload, NotificationsListResult
+
+    result = NotificationsListResult(
+        bucket_id=bucket_id,
+        count=len(rows),
+        rows=[
+            NotificationSnapshotListingPayload(
+                snapshot_id=r.snapshot_id,
+                captured_at=r.captured_at.isoformat(),
+                row_count=len(r.rows),
+            )
             for r in rows
         ],
-    }
+    )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.snapshot_id}\t{r.captured_at.isoformat()}\trows={len(r.rows)}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.notifications.list", result=result, lines=lines)
 
 
 @notifications_app.command(
@@ -806,14 +940,33 @@ def notifications_show(
 
     bucket_id = _active_bucket_id()
     record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
-    payload = {
-        "bucket_id": bucket_id,
-        "snapshot_id": record.snapshot_id,
-        "captured_at": record.captured_at.isoformat(),
-        "source_url": record.source_url,
-        "row_count": len(record.rows),
-        "rows": [r.model_dump(mode="json") for r in record.rows],
-    }
+    from ._app_live_payloads import NotificationRowPayload, NotificationsViewResult
+
+    result = NotificationsViewResult(
+        bucket_id=bucket_id,
+        snapshot_id=record.snapshot_id,
+        captured_at=record.captured_at.isoformat(),
+        source_url=record.source_url,
+        row_count=len(record.rows),
+        rows=[
+            NotificationRowPayload(
+                certificado_id=r.certificado_id,
+                tipo=r.tipo,
+                concepto=r.concepto,
+                titular_nif=r.titular_nif,
+                titular_nombre=r.titular_nombre,
+                destinatario_nif=r.destinatario_nif,
+                destinatario_nombre=r.destinatario_nombre,
+                fecha_emision=r.fecha_emision.isoformat(),
+                fecha_notificacion=r.fecha_notificacion.isoformat() if r.fecha_notificacion else None,
+                modo_notificacion=r.modo_notificacion,
+                leida=r.leida,
+                source_url=str(r.source_url),
+                mode=r.mode,
+            )
+            for r in record.rows
+        ],
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{record.snapshot_id}",
@@ -823,7 +976,7 @@ def notifications_show(
     ]
     for r in record.rows:
         lines.append("\t".join(f"{k}={v}" for k, v in r.model_dump(mode="json").items()))
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -900,11 +1053,16 @@ def portals_list(
         entries = tuple(PORTAL_REGISTRY.values())
 
     rows = [_portal_row(m) for m in entries]
-    payload = {"count": len(rows), "rows": rows}
+    from ._app_live_payloads import PortalEntryPayload, PortalsListResult
+
+    result = PortalsListResult(
+        count=len(rows),
+        rows=[PortalEntryPayload(**row) for row in rows],  # type: ignore[arg-type]
+    )
     lines = [f"count\t{len(rows)}"]
     for row in rows:
         lines.append(f"{row['portal']}\t{row['category']}\t{row['url_stability']}\t{row['label']}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.portals.list", result=result, lines=lines)
 
 
 @portals_app.command(
@@ -923,8 +1081,11 @@ def portals_show(
     except UnknownPortalError as exc:
         raise typer.BadParameter(resolve_error_message(exc)) from exc
     payload = _portal_row(metadata)
+    from ._app_live_payloads import PortalsViewResult
+
+    result = PortalsViewResult(**payload)  # type: ignore[arg-type]
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -973,14 +1134,16 @@ def expedientes_capture(
     bucket_id = _active_bucket_id()
     _emit_live_auth_preflight()
     persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year))
-    payload = {
-        "bucket_id": bucket_id,
-        "snapshot_id": persisted.snapshot_id,
-        "captured_at": persisted.captured_at.isoformat(),
-        "persisted_at": persisted.persisted_at.isoformat(),
-        "declaration_count": len(persisted.declarations),
-        "source_url": persisted.source_url,
-    }
+    from ._app_live_payloads import ExpedientesCaptureResult
+
+    result = ExpedientesCaptureResult(
+        bucket_id=bucket_id,
+        snapshot_id=persisted.snapshot_id,
+        captured_at=persisted.captured_at.isoformat(),
+        persisted_at=persisted.persisted_at.isoformat(),
+        declaration_count=len(persisted.declarations),
+        source_url=persisted.source_url,
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{persisted.snapshot_id}",
@@ -988,7 +1151,7 @@ def expedientes_capture(
         f"declaration_count\t{len(persisted.declarations)}",
         f"source_url\t{persisted.source_url}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.expedientes.capture", result=result, lines=lines)
 
 
 @expedientes_app.command(
@@ -1003,15 +1166,17 @@ def expedientes_list(ctx: typer.Context) -> None:
 
     bucket_id = _active_bucket_id()
     rows = ExpedientesService().list_snapshots(bucket_id=bucket_id)
-    payload = {
-        "bucket_id": bucket_id,
-        "count": len(rows),
-        "rows": [_expedientes_row(r) for r in rows],
-    }
+    from ._app_live_payloads import ExpedienteSnapshotSummaryPayload, ExpedientesListResult
+
+    result = ExpedientesListResult(
+        bucket_id=bucket_id,
+        count=len(rows),
+        rows=[ExpedienteSnapshotSummaryPayload(**_expedientes_row(r)) for r in rows],  # type: ignore[arg-type]
+    )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.snapshot_id}\t{r.captured_at.isoformat()}\tdeclarations={len(r.declarations)}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.expedientes.list", result=result, lines=lines)
 
 
 @expedientes_app.command(
@@ -1037,11 +1202,35 @@ def expedientes_show(
 
     bucket_id = _active_bucket_id()
     record = ExpedientesService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
-    payload = {
-        "bucket_id": bucket_id,
-        **_expedientes_row(record),
-        "declarations": [d.model_dump(mode="json") for d in record.declarations],
-    }
+    from ._app_live_payloads import ExpedienteDeclarationPayload, ExpedientesViewResult
+
+    result = ExpedientesViewResult(
+        bucket_id=bucket_id,
+        snapshot_id=record.snapshot_id,
+        captured_at=record.captured_at.isoformat(),
+        source_url=record.source_url,
+        declaration_count=len(record.declarations),
+        declarations=[
+            ExpedienteDeclarationPayload(
+                modelo=d.modelo,
+                ejercicio=d.ejercicio,
+                period=d.period,
+                expediente_id=d.expediente_id,
+                estado=d.estado,
+                tipo_solicitud=d.tipo_solicitud,
+                observaciones=d.observaciones,
+                presented_at=d.presented_at.isoformat(),
+                justificante_link_text=d.justificante_link_text,
+                archive_link_text=d.archive_link_text,
+                declaration_copy_link_text=d.declaration_copy_link_text,
+                justificante_cell_index=d.justificante_cell_index,
+                archive_cell_index=d.archive_cell_index,
+                declaration_copy_cell_index=d.declaration_copy_cell_index,
+                mode=d.mode,
+            )
+            for d in record.declarations
+        ],
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{record.snapshot_id}",
@@ -1053,7 +1242,7 @@ def expedientes_show(
         lines.append(
             f"{d.expediente_id}\t{d.modelo}\t{d.ejercicio}\t{d.period}\t{d.estado}\t{d.presented_at.isoformat()}"
         )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.expedientes.view", result=result, lines=lines)
 
 
 @expedientes_app.command(
@@ -1068,21 +1257,31 @@ def expedientes_latest(ctx: typer.Context) -> None:
 
     bucket_id = _active_bucket_id()
     record = ExpedientesService().latest(bucket_id=bucket_id)
+    from ._app_live_payloads import ExpedientesLatestResult
+
     if record is None:
-        payload = {"bucket_id": bucket_id, "snapshot_id": None}
-        _emit(ctx, payload, [f"bucket\t{bucket_id}", "snapshot_id\t-"])
+        empty = ExpedientesLatestResult(bucket_id=bucket_id, snapshot_id=None)
+        _emit_envelope(
+            ctx,
+            command="app.live.expedientes.latest",
+            result=empty,
+            lines=[f"bucket\t{bucket_id}", "snapshot_id\t-"],
+        )
         return
-    payload = {
-        "bucket_id": bucket_id,
-        **_expedientes_row(record),
-    }
+    result = ExpedientesLatestResult(
+        bucket_id=bucket_id,
+        snapshot_id=record.snapshot_id,
+        captured_at=record.captured_at.isoformat(),
+        source_url=record.source_url,
+        declaration_count=len(record.declarations),
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{record.snapshot_id}",
         f"captured_at\t{record.captured_at.isoformat()}",
         f"declaration_count\t{len(record.declarations)}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.expedientes.latest", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1153,15 +1352,17 @@ def verify_list(
         surface=resolved_surface,
         nif=nif,
     )
-    payload = {
-        "bucket_id": bucket_id,
-        "count": len(rows),
-        "rows": [_verify_row(r) for r in rows],
-    }
+    from ._app_live_payloads import VerifyListResult, VerifyObservationSummaryPayload
+
+    result = VerifyListResult(
+        bucket_id=bucket_id,
+        count=len(rows),
+        rows=[VerifyObservationSummaryPayload(**_verify_row(r)) for r in rows],  # type: ignore[arg-type]
+    )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.observation_id}\t{r.surface.value}\t{r.nif}\t{r.verdict}\t{r.checked_at.isoformat()}")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.verify.list", result=result, lines=lines)
 
 
 @verify_app.command(
@@ -1184,9 +1385,11 @@ def verify_show(
 
     bucket_id = _active_bucket_id()
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
-    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    from ._app_live_payloads import VerifyViewResult
+
+    result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
 
 @verify_app.command(
@@ -1227,12 +1430,20 @@ def verify_latest(
         surface=resolved_surface,
         nif=nif,
     )
+    from ._app_live_payloads import VerifyLatestResult
+
     if record is None:
-        payload = {"bucket_id": bucket_id, "surface": surface, "nif": nif, "observation_id": None}
-        _emit(
+        empty = VerifyLatestResult(
+            bucket_id=bucket_id,
+            surface=surface,
+            nif=nif,
+            observation_id=None,
+        )
+        _emit_envelope(
             ctx,
-            payload,
-            [
+            command="app.live.verify.latest",
+            result=empty,
+            lines=[
                 f"bucket\t{bucket_id}",
                 f"surface\t{surface}",
                 f"nif\t{nif}",
@@ -1240,9 +1451,9 @@ def verify_latest(
             ],
         )
         return
-    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    result = VerifyLatestResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
 
 @verify_app.command(
@@ -1292,9 +1503,11 @@ def verify_nif_iva(
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
-    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    from ._app_live_payloads import VerifyNifIvaResult
+
+    result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
 
 @verify_app.command(
@@ -1343,9 +1556,11 @@ def verify_tgvi(
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
-    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    from ._app_live_payloads import VerifyTgviResult
+
+    result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1414,18 +1629,20 @@ def borrador_100_list(
     rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(
         state=state_filter,
     )
-    payload = {
-        "bucket_id": bucket_id,
-        "count": len(rows),
-        "rows": [_borrador_row(r) for r in rows],
-    }
+    from ._app_live_payloads import Borrador100ListResult, Borrador100SnapshotSummaryPayload
+
+    result = Borrador100ListResult(
+        bucket_id=bucket_id,
+        count=len(rows),
+        rows=[Borrador100SnapshotSummaryPayload(**_borrador_row(r)) for r in rows],  # type: ignore[arg-type]
+    )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(
             f"{r.snapshot_id}\t{r.filing_year}\t{r.period}\t{r.captured_at.isoformat()}\t"
             f"bindings={len(r.binding_values)}\t{r.state.value}"
         )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.borrador.100.list", result=result, lines=lines)
 
 
 @borrador_100_app.command(
@@ -1451,11 +1668,19 @@ def borrador_100_show(
 
     bucket_id = _active_bucket_id()
     record = Borrador100SnapshotService(bucket_id=bucket_id).show(snapshot_id)
-    payload = {
-        "bucket_id": bucket_id,
-        **_borrador_row(record),
-        "binding_values": dict(record.binding_values),
+    from decimal import Decimal as _Decimal
+
+    from ._app_live_payloads import Borrador100ViewResult
+
+    binding_values_str = {
+        key: format(value, "f") if isinstance(value, _Decimal) else str(value)
+        for key, value in record.binding_values.items()
     }
+    result = Borrador100ViewResult(
+        bucket_id=bucket_id,
+        **_borrador_row(record),  # type: ignore[arg-type]
+        binding_values=binding_values_str,
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{record.snapshot_id}",
@@ -1466,7 +1691,7 @@ def borrador_100_show(
         f"binding_count\t{len(record.binding_values)}",
         f"state\t{record.state.value}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.borrador.100.view", result=result, lines=lines)
 
 
 @borrador_100_app.command(
@@ -1492,19 +1717,35 @@ def borrador_100_latest(
 
     bucket_id = _active_bucket_id()
     record = Borrador100SnapshotService(bucket_id=bucket_id).latest_for_year(filing_year=filing_year)
+    from ._app_live_payloads import Borrador100LatestResult
+
     if record is None:
-        payload = {"bucket_id": bucket_id, "filing_year": filing_year, "snapshot_id": None}
-        _emit(
+        empty = Borrador100LatestResult(
+            bucket_id=bucket_id,
+            filing_year=filing_year,
+            snapshot_id=None,
+        )
+        _emit_envelope(
             ctx,
-            payload,
-            [
+            command="app.live.borrador.100.latest",
+            result=empty,
+            lines=[
                 f"bucket\t{bucket_id}",
                 f"filing_year\t{filing_year}",
                 "snapshot_id\t-",
             ],
         )
         return
-    payload = {"bucket_id": bucket_id, **_borrador_row(record)}
+    result = Borrador100LatestResult(
+        bucket_id=bucket_id,
+        filing_year=record.filing_year,
+        snapshot_id=record.snapshot_id,
+        captured_at=record.captured_at.isoformat(),
+        period=record.period,
+        source_url=record.source_url,
+        binding_count=len(record.binding_values),
+        state=record.state.value,
+    )
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{record.snapshot_id}",
@@ -1513,7 +1754,7 @@ def borrador_100_latest(
         f"captured_at\t{record.captured_at.isoformat()}",
         f"binding_count\t{len(record.binding_values)}",
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="app.live.borrador.100.latest", result=result, lines=lines)
 
 
 __all__ = [
