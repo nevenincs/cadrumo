@@ -306,7 +306,7 @@ Extend the diagnostics test from 4 to 10 cumulative clauses per Rule 11. One Ste
 - [ ] `W11.P28.S94` - implement Clause 7 asserting no domain.<a> module imports from domain.<b>._protocols for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [ ] `W11.P28.S95` - implement Clause 8 asserting no production module imports a _-prefixed name from a cross-package module other than _ids.py, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [x] `W11.P28.S96` - implement Clause 9 asserting no two production modules outside the protect list declare an UPPER_SNAKE_CASE constant with the same name and same literal value, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
-- [ ] `W11.P28.S97` - implement Clause 10 asserting no pydantic field at a persisted or wire boundary ending in _kind, _status, or _state uses bare str with only a length/pattern constraint when a typed alias exists, with anti-tautology proof; `verify all 10 clauses pass as Wave W11 close gate; Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W11.P28.S97` - implement Clause 10 asserting no pydantic field at a persisted or wire boundary ending in _kind, _status, or _state uses bare str with only a length/pattern constraint when a typed alias exists, with anti-tautology proof; `verify all 10 clauses pass as Wave W11 close gate; Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 
 ## Wave `W12` - identity-primitive promotion and bare-str enrollment
 
@@ -316,8 +316,8 @@ Promote BundleId and EvidenceId from application/evidence/_ids.py to core/identi
 
 Promote BundleId and EvidenceId to core/identity/ (RELOC-037, RELOC-038), enroll the 54 bare-str _id/_kind/_status/_state sites onto typed aliases (PROMOTE-001, Rule 5), and annotate SubjectTaxId on the remaining domain Protocol method signatures (PROMOTE-002). Wave close gate: sequential pytest across all packages; W11 Clause 10 enforcement must remain zero-violation.
 
-- [ ] `W12.P29.S98` - declare BundleId alias in core/identity/_bundle.py, re-export through core/identity/__init__, delete the application/evidence/_ids.py declaration, and update all callers; `RELOC-037, Rule 1; `src/aeat/core/identity/_bundle.py`.
-- [ ] `W12.P29.S99` - declare EvidenceId alias in core/identity/_evidence.py, re-export through core/identity/__init__, delete the application/evidence/_ids.py declaration, and update all callers; `RELOC-038, Rule 1; `src/aeat/core/identity/_evidence.py`.
-- [ ] `W12.P29.S100` - enroll the first 18 bare-str _id/_kind/_status/_state field sites onto their typed aliases, asserting pydantic shape enforcement at construction for each site; `PROMOTE-001, Rule 5; `src/aeat/domain/`.
-- [ ] `W12.P29.S101` - enroll the next 18 bare-str _id/_kind/_status/_state field sites onto typed aliases across the application layer; `PROMOTE-001, Rule 5; `src/aeat/application/`.
-- [ ] `W12.P29.S102` - enroll the remaining 18 bare-str _id/_kind/_status/_state field sites onto typed aliases across adapters and entrypoints, run sequential pytest across all packages, and confirm W11 Clause 10 reports zero violations; `PROMOTE-001, Rule 5; `src/aeat/`.
+- [x] `W12.P29.S98` - declare BundleId alias in core/identity/_bundle.py, re-export through core/identity/__init__, delete the application/evidence/_ids.py declaration, and update all callers; `RELOC-037, Rule 1; `src/aeat/core/identity/_bundle.py`.
+- [x] `W12.P29.S99` - declare EvidenceId alias in core/identity/_evidence.py, re-export through core/identity/__init__, delete the application/evidence/_ids.py declaration, and update all callers; `RELOC-038, Rule 1; `src/aeat/core/identity/_evidence.py`.
+- [x] `W12.P29.S100` - enroll the first 18 bare-str _id/_kind/_status/_state field sites onto their typed aliases, asserting pydantic shape enforcement at construction for each site; `PROMOTE-001, Rule 5; `src/aeat/domain/`.
+- [x] `W12.P29.S101` - enroll the next 18 bare-str _id/_kind/_status/_state field sites onto typed aliases across the application layer; `PROMOTE-001, Rule 5; `src/aeat/application/`.
+- [x] `W12.P29.S102` - enroll the remaining 18 bare-str _id/_kind/_status/_state field sites onto typed aliases across adapters and entrypoints, run sequential pytest across all packages, and confirm W11 Clause 10 reports zero violations; `PROMOTE-001, Rule 5; `src/aeat/`.
