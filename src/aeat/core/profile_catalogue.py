@@ -87,7 +87,7 @@ def register_wizard_catalogue(
     _log.debug("wizard catalogue registered: setup_flow=%r flows=%d", setup_flow.id, len(wizard_flows))
 
 
-def get_setup_flow() -> Any:
+def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
     """Return the registered ``SETUP_FLOW`` descriptor.
 
     Raises:
@@ -100,7 +100,7 @@ def get_setup_flow() -> Any:
     return _SETUP_FLOW_SLOT[0]
 
 
-def get_wizard_flows() -> tuple[Any, ...]:
+def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
     """Return the registered ``WIZARD_FLOWS`` tuple.
 
     Raises:

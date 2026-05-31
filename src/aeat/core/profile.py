@@ -281,7 +281,7 @@ class SetupAnswers(BaseModel):
     # a circular import at module load time.
     @field_validator("iva_regime", mode="before")
     @classmethod
-    def _parse_iva_regime(cls, value: object) -> Any:
+    def _parse_iva_regime(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         iva_regime_cls = _m().IVARegime
         if isinstance(value, iva_regime_cls):
             return value
@@ -293,7 +293,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod
-    def _parse_tax_residence_ccaa(cls, value: object) -> Any:
+    def _parse_tax_residence_ccaa(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         ccaa_cls = _ccaa()
         if isinstance(value, ccaa_cls):
             return value
@@ -305,7 +305,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("entity_type", mode="before")
     @classmethod
-    def _parse_entity_type(cls, value: object) -> Any:
+    def _parse_entity_type(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         entity_type_cls = _m().EntityType
@@ -317,7 +317,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("legal_entity_form", mode="before")
     @classmethod
-    def _parse_legal_entity_form(cls, value: object) -> Any:
+    def _parse_legal_entity_form(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         legal_entity_form_cls = _m().LegalEntityForm
@@ -329,7 +329,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_estimation_regime", mode="before")
     @classmethod
-    def _parse_irpf_estimation_regime(cls, value: object) -> Any:
+    def _parse_irpf_estimation_regime(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         irpf_estimation_regime_cls = _m().IrpfEstimationRegime
@@ -343,7 +343,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("situacion_familiar", mode="before")
     @classmethod
-    def _parse_situacion_familiar(cls, value: object) -> Any:
+    def _parse_situacion_familiar(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         situacion_familiar_cls = _p().SituacionFamiliar
@@ -355,7 +355,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("unidad_familiar_descendientes_exclusivos", mode="before")
     @classmethod
-    def _parse_unidad_familiar_descendientes_exclusivos(cls, value: object) -> Any:
+    def _parse_unidad_familiar_descendientes_exclusivos(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         if isinstance(value, bool):
@@ -371,7 +371,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("irpf_special_regime", mode="before")
     @classmethod
-    def _parse_irpf_special_regime(cls, value: object) -> Any:
+    def _parse_irpf_special_regime(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         irpf_special_regime_cls = _m().IrpfSpecialRegime
@@ -383,7 +383,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("fiscal_residency", mode="before")
     @classmethod
-    def _parse_fiscal_residency(cls, value: object) -> Any:
+    def _parse_fiscal_residency(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         fiscal_residency_cls = _m().FiscalResidency
@@ -404,7 +404,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxation_type", mode="before")
     @classmethod
-    def _parse_taxation_type(cls, value: object) -> Any:
+    def _parse_taxation_type(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         renta_declaracion_type_cls = _p().RentaDeclaracionType
@@ -416,7 +416,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
     @classmethod
-    def _parse_sex_code(cls, value: object) -> Any:
+    def _parse_sex_code(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         sex_code_cls = _p().RentaSexCode
@@ -428,7 +428,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxpayer_marital_status", mode="before")
     @classmethod
-    def _parse_marital_status(cls, value: object) -> Any:
+    def _parse_marital_status(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         marital_status_cls = _p().RentaMaritalStatus
@@ -457,7 +457,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("taxpayer_disability_grade", "spouse_disability_grade", mode="before")
     @classmethod
-    def _parse_disability_grade(cls, value: object) -> Any:
+    def _parse_disability_grade(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "":
             return ""
         disability_grade_cls = _p().RentaDisabilityGrade
@@ -484,7 +484,7 @@ class SetupAnswers(BaseModel):
 
     @field_validator("new_entity_first_two_profit_periods", mode="before")
     @classmethod
-    def _parse_new_entity_first_two_profit_periods(cls, value: object) -> Any:
+    def _parse_new_entity_first_two_profit_periods(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic field_validator(mode='before') requires -> Any; actual return is always a typed StrEnum/enum member.
         if value == "" or value is None:
             return ""
         if isinstance(value, bool):
