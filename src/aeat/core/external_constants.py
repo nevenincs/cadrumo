@@ -307,6 +307,9 @@ PROVENANCE_SOURCE_MANUAL_CLI: Final[str] = "manual_cli"
 
 #: Environment variable name used to override the CLI output language at runtime.
 OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
+
+#: BCP-47 language tag for the default CLI and API output language (Spanish).
+DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
 """Canonical encoding probe order for CSV financial sources.
 
 The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`
