@@ -273,6 +273,12 @@ class SetupAnswers(BaseModel):
     # Validators — each lazily resolves domain types via _m() / _p()
     # ------------------------------------------------------------------
 
+    # CAST-RATIONALE-PROFILE-FIELD-VALIDATOR-ANY: pydantic's @field_validator
+    # with mode="before" requires the validator to return Any; the post-coercion
+    # value is validated by pydantic against the field's declared type after
+    # this validator returns.  A narrower return type (e.g., IVARegime) is not
+    # expressible here because IVARegime is resolved lazily via _m() to avoid
+    # a circular import at module load time.
     @field_validator("iva_regime", mode="before")
     @classmethod
     def _parse_iva_regime(cls, value: object) -> Any:
