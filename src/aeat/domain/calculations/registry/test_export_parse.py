@@ -23,9 +23,11 @@ from ._export_parse import (
     _local_name,
     _normalize_dictionary_casilla,
     _parse_boolean,
+    _parse_decimal,
     _parse_xml_decimal,
     _parse_xml_dictionary_value,
 )
+from ._schema import ExportFieldDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -184,3 +186,49 @@ def test_parse_xml_dictionary_value_data_type_dispatch_is_case_insensitive() -> 
     so lowercase codes still route to the right branch."""
     assert _parse_xml_dictionary_value("n15.2", "100") == Decimal("100")
     assert _parse_xml_dictionary_value("l1", "X") is True
+
+
+# ---------------------------------------------------------------------------
+# _parse_decimal argument-order regression
+# ---------------------------------------------------------------------------
+
+
+def _decimal_field(field_id: str = "casilla.0501") -> ExportFieldDefinition:
+    return ExportFieldDefinition.model_validate(
+        {
+            "id": field_id,
+            "offset": None,
+            "length": None,
+            "kind": "literal",
+            "literal": "0",
+            "data_type": "decimal",
+            "required": False,
+            "padding": "right_space",
+            "justification": "left",
+            "signed": False,
+            "legal_refs": ("ley-37-1992:art-1",),
+            "source_refs": ("aeat-dr-303-2025",),
+        }
+    )
+
+
+def test_parse_decimal_raw_first_yields_correct_value() -> None:
+    """_parse_decimal(raw, field) parses a comma-decimal BOE string correctly.
+
+    Verifies that raw is treated as the numeric string and field is used only
+    for error context.  The canonical argument order is (raw, field).
+    """
+    field = _decimal_field()
+    assert _parse_decimal("3005,06", field) == Decimal("3005.06")
+
+
+def test_parse_decimal_invalid_raw_includes_field_id_in_error() -> None:
+    """_parse_decimal raises RegistryValidationError with the field id in the message.
+
+    Proves that field is passed as the ExportFieldDefinition (not as raw),
+    so the error message correctly names the field id rather than trying to
+    parse the field object as a decimal string.
+    """
+    field = _decimal_field("casilla.0501")
+    with pytest.raises(RegistryValidationError, match="casilla.0501"):
+        _parse_decimal("invalid", field)
