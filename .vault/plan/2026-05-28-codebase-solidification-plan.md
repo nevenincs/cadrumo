@@ -814,3 +814,44 @@ Delete dormant aeat.core._time module (utc_now duplicate of canonical _now). Re-
 - [x] `W07.P33.S528` - delete aeat.core._time module entirely (utc_now duplicates canonical _now in aeat.core.time._clock; `module unused); `src/aeat/core/_time.py`.
 - [x] `W07.P33.S529` - re-place CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker inline at _bindings.py:1660 (W6 placement drifted); `src/aeat/domain/calculations/registry/_bindings.py`.
 - [x] `W07.P33.S530` - add aggregate test asserting no aeat.core._time imports exist + cast rationale inventory passes; `src/aeat/test_w07_p33_cleanup.py`.
+
+## Wave `W08` - close W8 audit findings: 2 regressions + 21 new/survivor
+
+W8 audit confirmed broader-Step grammar works (regressions 8→2, findings 32→23). W08 closes 2 strict regressions (canonical_decimal_string dedup, LATIN_1 test-package gap) + 21 new/survivor findings with continued grep-post-condition discipline. Target: zero regressions in W9 audit to start consecutive-clean-wave streak (currently 0/3 for ADR close).
+
+### Phase `W08.P34` - A3 + A7 broad sweep
+
+Fix NonTtyRefusedError positional message swallowing locale resolver. Sweep LATIN_1 across BOE export-formats test package (W7 missed). Enroll PeriodKind in domain/deadlines/_engine. Introduce RowSetGroupingKind StrEnum. Extract _FILED_HISTORY_OBSERVATION constant. ArtefactKind enrollment in fixture generator. Wizard tab-key labels. Operator-surface ValueError invariant guards.
+
+- [ ] `W08.P34.S531` - fix NonTtyRefusedError positional message at entrypoints/cli/_tty.py:46 to drop super().__init__(message) positional and rely on registered message_key for locale resolution; `src/aeat/entrypoints/cli/_tty.py`.
+- [ ] `W08.P34.S532` - fix regression: broad-sweep LATIN_1_ENCODING enrollment across BOE export-formats test package (test_fichero_boe_roundtrip, test_currency_edge_cases, test_envelope, test_record_spec — 20+ iso-8859-1 literals); `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
+- [ ] `W08.P34.S533` - enroll PeriodKind StrEnum imports in domain/deadlines/_engine.py:368,370,372,379,381 + reference in _schema.py Literal annotations; `src/aeat/domain/deadlines/_engine.py`.
+- [ ] `W08.P34.S534` - introduce RowSetGroupingKind(StrEnum) with WITHHOLDING/RELATED_PARTY/FOREIGN_ASSET/ATRIBUCION/REFUND members + migrate _row_set_assembly.py:109-117, _schema.py:1790-1794, _bindings.py:2027,2860; `src/aeat/application/calculations/_row_set_assembly.py`.
+- [ ] `W08.P34.S535` - extract _FILED_HISTORY_OBSERVATION constant in iva_wallet_reconciliation.py:37,488,514,529 and frozenset; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
+- [ ] `W08.P34.S536` - enroll ArtefactKind StrEnum in test fixture generator modelo_100_generator.py:111,115,134; `src/aeat/tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py`.
+- [ ] `W08.P34.S537` - wrap wizard/_commands.py:906,909 profile and active_profile tab-key labels through tr(); `src/aeat/application/wizard/_commands.py`.
+- [ ] `W08.P34.S538` - reclassify operator_surface/_models.py:155,162,192,199,201,260,273,284 ValueError invariant guards as InternalInvariantError or AeatError subclass (developer-surface); `src/aeat/application/operator_surface/_models.py`.
+- [ ] `W08.P34.S539` - optional: tr-wrap or document --version short-format CLI output at entrypoints/cli/__init__.py:142; `src/aeat/entrypoints/cli/__init__.py`.
+- [ ] `W08.P34.S540` - add inventory test asserting LATIN_1 enrollment is complete in adapters/outbound/aeat/export package; `src/aeat/test_w08_p34_latin1_inventory.py`.
+
+### Phase `W08.P35` - A1 exceptions sweep
+
+Narrow 5 silent except Exception swallows in auth/browser/registry adapters (clave_movil persistence, authenticator describe, workbook_parity scan, formula tokenizer fallback, diagnostic context helper). Replace bare TypeError in browser validator. Verify pdfplumber backend re-raise pattern.
+
+- [ ] `W08.P35.S541` - narrow except Exception swallow in _clave_movil.py:455 encrypted-deadline-persist failure with typed AuthError re-raise; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W08.P35.S542` - narrow except Exception in _authenticator.py:862 describe path to CertificateError+OSError with AuthError wrap on unexpected; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W08.P35.S543` - narrow except Exception in _workbook_parity.py:308 scan to InvalidFileException+OSError with RegistryValidationError wrap; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `W08.P35.S544` - narrow except Exception in _workbook_parity.py:1076 tokenizer fallback to TokenizerError-only; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `W08.P35.S545` - narrow except Exception in _clave_movil.py:804 diagnostic helper to (KeyError, AttributeError, TaxResidenceProfileError); `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W08.P35.S546` - replace TypeError at _site_health.py:100 pydantic field_validator with BrowserValidationError or plain ValueError per validator-compat; `src/aeat/adapters/outbound/aeat/browser/_site_health.py`.
+- [ ] `W08.P35.S547` - verify pdfplumber backend except Exception at _pdfplumber_backend.py:95 re-raises or wraps; `add typed wrapper if bare; `src/aeat/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
+- [ ] `W08.P35.S548` - wrap _invalidate_persisted cleanup in nested try/except at _clave_movil.py:1039 to preserve original exception; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W08.P35.S549` - aggregate test asserting all narrowed exception sites honestly propagate unexpected types; `src/aeat/test_w08_p35_exceptions.py`.
+
+### Phase `W08.P36` - A5 dedup + A8 marker cleanup
+
+Dedup canonical_decimal_string (regression — exists in both _identifiers.py and _decimal.py). Add CAST-RATIONALE markers to remaining test-scope + production cast sites identified by W8 A8 audit.
+
+- [ ] `W08.P36.S550` - fix regression: dedup canonical_decimal_string in _identifiers.py vs _decimal.py — canonical lives at aeat.domain._identifiers; `delete duplicate in _decimal.py and migrate callers; `src/aeat/adapters/inbound/financial/_decimal.py`.
+- [ ] `W08.P36.S551` - add CAST-RATIONALE markers to production cast sites at justificante/_extract.py:435 -> Any, live/_borrador_100.py:311 kwargs-Any, core/profile.py:278 pydantic field_validator -> Any; `src/aeat/adapters/inbound/justificante/_extract.py`.
+- [ ] `W08.P36.S552` - add inventory test asserting no canonical_decimal_string duplicates survive; `src/aeat/test_w08_p36_dedup.py`.
