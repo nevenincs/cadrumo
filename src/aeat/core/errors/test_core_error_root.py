@@ -60,6 +60,40 @@ def test_catching_aeat_error_catches_core_error_subclass() -> None:
     assert isinstance(caught, CoreError)
 
 
+def test_core_validation_error_catch_order_is_well_defined() -> None:
+    """CoreValidationError is catchable as CoreError, AeatError, and ValueError.
+
+    The MRO for CoreValidationError is:
+      CoreValidationError -> CoreError -> AeatError -> Exception
+                         -> ValueError -> Exception
+
+    A handler that catches the most specific type wins. Assert all three
+    catch sites fire correctly so the catch order is unambiguous.
+    """
+    exc = CoreValidationError("bad input")
+    assert isinstance(exc, CoreValidationError)
+    assert isinstance(exc, CoreError)
+    assert isinstance(exc, AeatError)
+    assert isinstance(exc, ValueError)
+
+    # Narrowest catch fires first
+    caught_as_validation: CoreValidationError | None = None
+    try:
+        raise CoreValidationError("narrow catch")
+    except CoreValidationError as e:
+        caught_as_validation = e
+    assert caught_as_validation is not None
+
+    # ValueError arm also works (pydantic field validator compatibility)
+    caught_as_value_error: ValueError | None = None
+    try:
+        raise CoreValidationError("value error arm")
+    except ValueError as e:
+        caught_as_value_error = e
+    assert caught_as_value_error is not None
+    assert isinstance(caught_as_value_error, CoreValidationError)
+
+
 def test_core_error_does_not_catch_non_core_aeat_error() -> None:
     """CoreError does not catch AeatError subclasses from other hierarchies.
 
