@@ -23,13 +23,16 @@ from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import BaseSeverity
 from ._models import ModeloPresentado
+
+if TYPE_CHECKING:  # pragma: no cover — type-only import
+    from ...core.identity import SubjectTaxId
 
 
 @runtime_checkable
@@ -178,7 +181,7 @@ class ModeloDraftLike(Protocol):
     def period(self) -> str: ...
 
     @property
-    def profile_tax_id(self) -> str: ...
+    def profile_tax_id(self) -> SubjectTaxId: ...
 
     @property
     def status(self) -> object: ...
