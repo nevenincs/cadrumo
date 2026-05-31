@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from aeat.domain.fincas._rounding import _round_to_cents
 
-from .._errors import ExportFormatError
+from .._errors import AeatExportFormatError
 from ._record_spec import (
     DateFmt,
     FicheroBoeEncoding,
@@ -82,19 +82,19 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     The fichero-BOE spec requires every CURRENCY field to be zero-
     padded with ASCII digits; blank bytes are a wire-format error.
     Reject blank input explicitly so a malformed payload surfaces as
-    ``ExportFormatError`` at parse time, instead of silently decoding
+    ``AeatExportFormatError`` at parse time, instead of silently decoding
     to ``Decimal("0.00")`` and leaving the operator unable to
     distinguish "filed as zero" from "field was blank on the wire".
     """
     if inline_sign:
         if not raw:
-            raise ExportFormatError("INLINE_SIGN CURRENCY field cannot be empty")
+            raise AeatExportFormatError("INLINE_SIGN CURRENCY field cannot be empty")
         sign_byte = raw[:1]
         magnitude_bytes = raw[1:]
         is_negative = sign_byte == b"N"
         text = magnitude_bytes.decode("ascii").strip()
         if not text:
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 "INLINE_SIGN CURRENCY magnitude is blank; expected zero-padded digits "
                 "(use 0000000000 for an explicit zero, not whitespace)"
             )
@@ -104,7 +104,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
 
     text = raw.decode("ascii").strip()
     if not text:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             "CURRENCY field is blank; expected zero-padded digits "
             "(use 0000000000 for an explicit zero, not whitespace)"
         )
@@ -149,7 +149,7 @@ def deserialise(
     # stream (content + CRLF) or already-stripped content bytes.
     body = payload[: -len(_CRLF)] if payload.endswith(_CRLF) else payload
     if len(body) != total_length:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"payload content is {len(body)} bytes but total_length={total_length} "
             f"was declared; likely wrong record spec or corrupted stream."
         )
@@ -180,7 +180,7 @@ def _slice_field_bytes(body: bytes, spec: RecordFieldSpec) -> bytes:
     end = start + spec.length
     raw = body[start:end]
     if len(raw) != spec.length:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"field {spec.field_id!r} expects {spec.length} bytes "
             f"at offset {spec.offset}; got {len(raw)} — payload too short?"
         )
@@ -224,7 +224,7 @@ def _decode_reserved_field(
     assert spec.literal_value is not None
     expected = spec.literal_value.encode(encoding).ljust(spec.length, b" ")
     if raw != expected and raw != spec.literal_value.encode(encoding):
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"RESERVED field {spec.field_id!r} expected {spec.literal_value!r}; got {raw!r}",
         )
     field_values[spec.field_id] = spec.literal_value
@@ -327,12 +327,12 @@ def deserialise_envelope(
             segments.
     """
     if not segments:
-        raise ExportFormatError("segments must not be empty")
+        raise AeatExportFormatError("segments must not be empty")
 
     body = payload[: -len(_CRLF)] if payload.endswith(_CRLF) else payload
     expected_total = sum(s.total_length for s in segments)
     if len(body) != expected_total:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"envelope payload is {len(body)} bytes but segments sum to "
             f"{expected_total}; wrong envelope composition or corrupted stream."
         )
@@ -353,7 +353,7 @@ def deserialise_envelope(
         parsed[segment.segment_id] = record
         for cid, value in record.casilla_values.items():
             if cid in merged and merged[cid] != value:
-                raise ExportFormatError(
+                raise AeatExportFormatError(
                     f"casilla {cid!r} appears with divergent values across "
                     f"segments (got {merged[cid]} then {value}); record spec "
                     f"must not duplicate casilla_id across pages."
@@ -361,7 +361,7 @@ def deserialise_envelope(
             merged[cid] = value
         for fid, fvalue in record.field_values.items():
             if fid in merged_fields and merged_fields[fid] != fvalue:
-                raise ExportFormatError(
+                raise AeatExportFormatError(
                     f"field {fid!r} appears with divergent values across "
                     f"segments (got {merged_fields[fid]!r} then {fvalue!r}); "
                     f"record spec must not duplicate field_id across pages "

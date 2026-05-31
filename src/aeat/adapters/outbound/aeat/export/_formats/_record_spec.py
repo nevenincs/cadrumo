@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from aeat.domain.fincas._rounding import _round_to_cents
 
-from .._errors import ExportFormatError
+from .._errors import AeatExportFormatError
 
 # Per-BOE encoding choices. Windows-1252 is a superset of ISO-8859-1
 # that adds characters in the 0x80-0x9F range; AEAT treats them as
@@ -197,15 +197,15 @@ class RecordFieldSpec(BaseModel):
         fields.
         """
         if self.kind is FieldKind.RESERVED and self.literal_value is None:
-            raise ExportFormatError(f"RESERVED fields must carry a literal_value; got None for {self.field_id!r}")
+            raise AeatExportFormatError(f"RESERVED fields must carry a literal_value; got None for {self.field_id!r}")
         if self.kind is not FieldKind.RESERVED and self.literal_value is not None:
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"literal_value is only valid when kind=RESERVED; got {self.kind!r} for {self.field_id!r}"
             )
         if self.kind is FieldKind.DATE and self.date_fmt is None:
-            raise ExportFormatError(f"DATE fields must carry a date_fmt; got None for {self.field_id!r}")
+            raise AeatExportFormatError(f"DATE fields must carry a date_fmt; got None for {self.field_id!r}")
         if self.signed_mode is SignedMode.INLINE_SIGN and self.kind is not FieldKind.CURRENCY:
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"signed_mode=INLINE_SIGN is only valid on CURRENCY fields; got {self.kind!r} for {self.field_id!r}"
             )
         return self
@@ -303,13 +303,13 @@ def encode_currency(
         The fixed-width byte sequence for the currency field.
 
     Raises:
-        ExportFormatError: If ``value`` is negative without ``signed`` or
+        AeatExportFormatError: If ``value`` is negative without ``signed`` or
             ``inline_sign``, the magnitude overflows ``length``, or
             ``inline_sign=True`` is used with ``length < 2``.
     """
     negative = value < 0
     if negative and not (signed or inline_sign):
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"encode_currency received negative {value!r} without "
             f"signed=True or inline_sign=True. Pass signed=True after "
             f"wiring a separate sign field, or inline_sign=True for an "
@@ -320,13 +320,13 @@ def encode_currency(
 
     if inline_sign:
         if length < 2:
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"inline_sign=True requires length >= 2 (1 sign byte + ≥1 magnitude byte); got length={length}"
             )
         magnitude_width = length - 1
         s_magnitude = str(cents).rjust(magnitude_width, "0")
         if len(s_magnitude) > magnitude_width:
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"currency value {value} overflows inline-sign length-"
                 f"{length} field (magnitude needs {len(s_magnitude)} "
                 f"bytes, {magnitude_width} available)"
@@ -336,7 +336,7 @@ def encode_currency(
 
     s = str(cents).rjust(length, "0")
     if len(s) > length:
-        raise ExportFormatError(f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)")
+        raise AeatExportFormatError(f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)")
     return s.encode(encoding)
 
 
@@ -367,13 +367,13 @@ def encode_text(
         The fixed-width byte sequence.
 
     Raises:
-        ExportFormatError: If ``pad_char`` is not exactly one character or
+        AeatExportFormatError: If ``pad_char`` is not exactly one character or
             ``len(value) > length`` and ``truncate`` is ``False``.
     """
     if len(pad_char) != 1:
-        raise ExportFormatError("pad_char must be a single character")
+        raise AeatExportFormatError("pad_char must be a single character")
     if len(value) > length and not truncate:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"text value {value!r} overflows length-{length} field "
             f"(would need {len(value)} bytes); set truncate=True to "
             f"allow silent clipping."
@@ -445,21 +445,21 @@ def validate_segment_specs(segments: tuple[SegmentSpec, ...]) -> None:
     global offset — each segment resets to 1.
 
     Raises:
-        ExportFormatError: If ``segments`` is empty, a ``segment_id`` repeats,
+        AeatExportFormatError: If ``segments`` is empty, a ``segment_id`` repeats,
             or any segment fails its internal :func:`validate_record_specs`
             check.
     """
     if not segments:
-        raise ExportFormatError("segments must not be empty")
+        raise AeatExportFormatError("segments must not be empty")
     seen: set[str] = set()
     for i, seg in enumerate(segments):
         if seg.segment_id in seen:
-            raise ExportFormatError(f"duplicate segment_id={seg.segment_id!r} at index {i}")
+            raise AeatExportFormatError(f"duplicate segment_id={seg.segment_id!r} at index {i}")
         seen.add(seg.segment_id)
         try:
             validate_record_specs(seg.specs, total_length=seg.total_length)
-        except ExportFormatError as exc:
-            raise ExportFormatError(f"segment {seg.segment_id!r} at index {i}: {exc}") from exc
+        except AeatExportFormatError as exc:
+            raise AeatExportFormatError(f"segment {seg.segment_id!r} at index {i}: {exc}") from exc
 
 
 def validate_record_specs(
@@ -484,13 +484,13 @@ def validate_record_specs(
         total_length: Expected segment byte content length.
 
     Raises:
-        ExportFormatError: Carries a precise pointer (field id, offset,
+        AeatExportFormatError: Carries a precise pointer (field id, offset,
             expected vs actual) for any violation.
     """
     if not specs:
-        raise ExportFormatError("record specs must not be empty")
+        raise AeatExportFormatError("record specs must not be empty")
     if specs[0].offset != 1:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"first spec must start at offset=1 (BOE 1-based); "
             f"got offset={specs[0].offset} for field_id={specs[0].field_id!r}"
         )
@@ -501,23 +501,23 @@ def validate_record_specs(
         if spec.offset != expected:
             prev = specs[i - 1] if i > 0 else None
             prev_hint = f"(prev {prev.field_id!r} ends at {prev.offset + prev.length - 1})" if prev is not None else ""
-            raise ExportFormatError(
+            raise AeatExportFormatError(
                 f"spec #{i} {spec.field_id!r} offset={spec.offset} "
                 f"breaks monotonic contiguity; expected offset={expected} {prev_hint}"
             )
         if spec.field_id in seen_field_ids:
-            raise ExportFormatError(f"duplicate field_id={spec.field_id!r} at spec #{i}")
+            raise AeatExportFormatError(f"duplicate field_id={spec.field_id!r} at spec #{i}")
         seen_field_ids.add(spec.field_id)
         if spec.casilla_id is not None:
             if spec.casilla_id in seen_casilla_ids:
-                raise ExportFormatError(
+                raise AeatExportFormatError(
                     f"duplicate casilla_id={spec.casilla_id!r} at spec #{i} (field_id={spec.field_id!r})"
                 )
             seen_casilla_ids.add(spec.casilla_id)
         expected = spec.offset + spec.length
     terminal_end = expected - 1
     if terminal_end != total_length:
-        raise ExportFormatError(
+        raise AeatExportFormatError(
             f"record specs fill {terminal_end} bytes but total_length={total_length} "
             f"was declared; adjust the final field or the declared length."
         )

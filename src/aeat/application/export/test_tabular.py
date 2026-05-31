@@ -67,6 +67,28 @@ def test_export_format_error_is_in_error_registry() -> None:
     assert "REFUSED_EXPORT_FORMAT" in ERROR_REGISTRY
 
 
+def test_export_format_error_registry_has_no_name_collision() -> None:
+    """The error registry must contain exactly one class named ExportFormatError.
+
+    After the adapter rename, only the application-layer ExportFormatError
+    (code REFUSED_EXPORT_FORMAT) should appear under that simple name.  The
+    adapter class is now AeatExportFormatError (code FAIL_EXPORT_FORMAT).
+    """
+    from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES
+
+    qualnames_named_export_format_error = [
+        qualname
+        for qualname, _ in _ALL_DECLARED_ERROR_CODES
+        if qualname.split(".")[-1] == "ExportFormatError"
+    ]
+    assert qualnames_named_export_format_error == [
+        "aeat.application.export._errors.ExportFormatError"
+    ], (
+        f"Expected exactly one ExportFormatError in the registry "
+        f"(application canonical), got: {qualnames_named_export_format_error}"
+    )
+
+
 def test_export_field_error_is_in_error_registry() -> None:
     """ExportFieldError must be registered so the CLI can handle it."""
     from aeat.core.errors import ERROR_REGISTRY

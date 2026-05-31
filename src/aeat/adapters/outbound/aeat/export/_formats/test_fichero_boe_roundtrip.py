@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import ExportFormatError
+from .._errors import AeatExportFormatError
 from ._deserialise import deserialise
 from ._record_spec import (
     DateFmt,
@@ -216,7 +216,7 @@ def test_alphanumeric_zero_padded_field_round_trips() -> None:
 
 
 def test_currency_blank_input_rejected_at_decode() -> None:
-    """A blank CURRENCY field is rejected with ExportFormatError.
+    """A blank CURRENCY field is rejected with AeatExportFormatError.
 
     A blank CURRENCY field is a wire-format error per the fichero-
     BOE spec (zero-padded ASCII digits required). The decode path
@@ -225,7 +225,7 @@ def test_currency_blank_input_rejected_at_decode() -> None:
     from a legitimate zero.
     """
 
-    from .._errors import ExportFormatError
+    from .._errors import AeatExportFormatError
     from ._deserialise import deserialise
 
     specs = (
@@ -241,7 +241,7 @@ def test_currency_blank_input_rejected_at_decode() -> None:
 
     # 12 spaces — a wire shape that earlier silently decoded to 0.00.
     blank_payload = b" " * 12 + b"\r\n"
-    with pytest.raises(ExportFormatError, match=r"CURRENCY field is blank"):
+    with pytest.raises(AeatExportFormatError, match=r"CURRENCY field is blank"):
         deserialise(blank_payload, specs=specs, encoding="iso-8859-1", total_length=12)
 
 
@@ -253,7 +253,7 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     decode to a negative-zero.
     """
 
-    from .._errors import ExportFormatError
+    from .._errors import AeatExportFormatError
     from ._deserialise import deserialise
 
     specs = (
@@ -269,7 +269,7 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     validate_record_specs(specs, total_length=12)
     # Sign byte 'N' + 11 blank magnitude bytes
     blank_payload = b"N" + b" " * 11 + b"\r\n"
-    with pytest.raises(ExportFormatError, match=r"magnitude is blank"):
+    with pytest.raises(AeatExportFormatError, match=r"magnitude is blank"):
         deserialise(blank_payload, specs=specs, encoding="iso-8859-1", total_length=12)
 
 
@@ -346,7 +346,7 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
     corrupted = payload.replace(b"AEAT", b"XXXX")
     assert corrupted != payload
 
-    with pytest.raises(ExportFormatError, match="RESERVED"):
+    with pytest.raises(AeatExportFormatError, match="RESERVED"):
         deserialise(corrupted, specs=specs, encoding="iso-8859-1", total_length=4)
 
 
