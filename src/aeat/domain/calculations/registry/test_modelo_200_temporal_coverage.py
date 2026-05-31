@@ -1,10 +1,11 @@
 """Modelo 200 pyme bracket temporal coverage regression.
 
 LIS Art. 29 pyme/micro-empresa rates apply across the full
-``2024-y-siguientes`` revision date range (2024-01-01 onward).  Before the
-W03.P14.S56 backfill the ``is.modelo-200.tipo-gravamen-pyme`` bracket table
-had windows only from 2025-01-01, so any 2024 filing_period raised a
-``bracket_no_window`` runtime error.
+``2024-y-siguientes`` revision date range (2024-01-01 onward).  An
+earlier ``is.modelo-200.tipo-gravamen-pyme`` bracket table had windows
+only from 2025-01-01, so any 2024 filing_period raised a
+``bracket_no_window`` runtime error; the table now carries the 2024
+window and this gate locks it.
 
 Two invariants are pinned here:
 

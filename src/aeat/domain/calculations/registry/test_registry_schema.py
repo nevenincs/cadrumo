@@ -1372,7 +1372,7 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 
 
 # ---------------------------------------------------------------------------
-# keyed_bracket_table parameter shape (W09.P41.S388)
+# keyed_bracket_table parameter shape
 #
 # Sister shape to bracket_table for parameters that dispatch on a
 # categorical enum key rather than a numeric interval. First consumer:
@@ -1473,13 +1473,13 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
 
 
 # ---------------------------------------------------------------------------
-# convenio_rate_table parameter shape (W09.P41.S389a)
+# convenio_rate_table parameter shape
 #
 # Sister shape to keyed_bracket_table for IRNR Convenio doble imposición
 # overrides keyed on (country_code, tipo_renta). The rate field accepts
 # the NOT_YET_AUTHORED sentinel so partially-authored treaty rosters
 # can land at construction time and surface BLOCKING findings at
-# lookup time. First consumer: M210 IRNR m210-convenio-rates (S389b).
+# lookup time. First consumer: M210 IRNR m210-convenio-rates.
 # ---------------------------------------------------------------------------
 
 
