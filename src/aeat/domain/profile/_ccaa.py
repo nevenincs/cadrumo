@@ -30,6 +30,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 from ...core.errors import ProfileAnswerTypeError
+from ...core.logging import get_logger
 
 # Maps the 3-letter ISO-like codes from the former ``RentaCCAA`` enum to
 # the canonical CCAA member names.  Foral regimes (NAV, PVA) and the two
@@ -93,6 +94,12 @@ class CCAA(StrEnum):
         ``MEL``) are not members of this enum; pass-through to the
         foral-regime error path is the caller's responsibility.
 
+        Args:
+            code: 3-letter ISO-like CCAA code (e.g. ``"AND"``, ``"MAD"``).
+
+        Returns:
+            The matching :class:`CCAA` member.
+
         Raises:
             KeyError: when ``code`` is not a recognised 3-letter alias.
         """
@@ -112,15 +119,25 @@ class CCAA(StrEnum):
         Underscores and hyphens are normalised to underscores before
         matching.
 
+        Args:
+            label: Free-form label to parse into a :class:`CCAA` member.
+
+        Returns:
+            The matching :class:`CCAA` member.
+
         Raises:
-            ValueError: when ``label`` cannot be mapped to any member.
+            ProfileAnswerTypeError: when ``label`` cannot be mapped to any member.
         """
         normalised = label.strip().lower().replace("-", "_")
         # Try canonical value first.
         try:
             return cls(normalised)
-        except ValueError:
-            pass
+        except ValueError as exc:
+            get_logger(__name__).debug(
+                "CCAA.from_label: canonical lookup failed for %r; trying ISO code (%s)",
+                label,
+                exc,
+            )
         # Try 3-letter ISO code (case-insensitive).
         upper = normalised.upper()
         member_name = _ISO_CODE_MAP.get(upper)
