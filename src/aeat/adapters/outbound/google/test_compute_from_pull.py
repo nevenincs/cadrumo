@@ -24,6 +24,7 @@ from ...outbound.storage._errors import OutboundStorageConflictError
 from ....domain.calculations.registry._schema import InputKind
 from ._calc_sheets_pull import (
     BindingEdit,
+    MetadataMatchState,
     OperatorEdit,
     PullMetadata,
     PullResult,
@@ -115,11 +116,11 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_stale_metadata(snapshot),
-        metadata_match="stale",
+        metadata_match=MetadataMatchState.STALE,
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match="metadata_match='stale'"):
+    with pytest.raises(OutboundStorageConflictError, match="metadata_match=<MetadataMatchState.STALE"):
         compute_from_pull(snapshot, pull)
 
 
@@ -131,11 +132,11 @@ def test_compute_from_pull_refuses_missing_metadata() -> None:
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_stale_metadata(snapshot),
-        metadata_match="missing",
+        metadata_match=MetadataMatchState.MISSING,
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match="metadata_match='missing'"):
+    with pytest.raises(OutboundStorageConflictError, match="metadata_match=<MetadataMatchState.MISSING"):
         compute_from_pull(snapshot, pull)
 
 
@@ -149,7 +150,7 @@ def test_compute_from_pull_runs_against_matching_snapshot() -> None:
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_matching_metadata(snapshot),
-        metadata_match="matches",
+        metadata_match=MetadataMatchState.MATCHES,
         cells_read=0,
     )
 
@@ -172,7 +173,7 @@ def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_matching_metadata(snapshot),
-        metadata_match="matches",
+        metadata_match=MetadataMatchState.MATCHES,
         cells_read=1,
     )
 
@@ -195,7 +196,7 @@ def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_matching_metadata(snapshot),
-        metadata_match="matches",
+        metadata_match=MetadataMatchState.MATCHES,
         cells_read=1,
     )
 
