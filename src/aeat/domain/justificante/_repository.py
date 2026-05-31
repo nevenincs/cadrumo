@@ -29,7 +29,12 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):
-    """Repository over encrypted SQL-backed justificante metadata."""
+    """Repository over encrypted SQL-backed justificante metadata.
+
+    Domain port previously at ``_protocols.py`` removed 2026-06-01 as
+    zero-consumer; re-add via ADR amendment if a domain-layer caller needs
+    typed substitutability.
+    """
 
     namespace: ClassVar[str] = "aeat.domain.justificante.metadata"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
