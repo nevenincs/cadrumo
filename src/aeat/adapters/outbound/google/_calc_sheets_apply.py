@@ -110,6 +110,7 @@ def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _find_folder(
     drive: Any,
     *,
@@ -158,6 +159,7 @@ def _find_folder(
     return None
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _create_folder(
     drive: Any,
     *,
@@ -178,6 +180,7 @@ def _create_folder(
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _ensure_folder(
     drive: Any,
     *,
@@ -191,6 +194,7 @@ def _ensure_folder(
     return created["id"]
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _find_spreadsheet(
     drive: Any,
     *,
@@ -229,6 +233,7 @@ def _find_spreadsheet(
     return None
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _create_spreadsheet(
     drive: Any,
     sheets: Any,

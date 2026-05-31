@@ -336,6 +336,7 @@ def _classify_metadata_match(
     return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if raw is None or raw == "":
         return None
@@ -652,6 +653,7 @@ def _read_row_set_edits(
     return tuple(edits), cells_read
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _row_set_block_range(row_set: Any) -> str:
     """Build the A1 range covering the 50-row data block of one row-set."""
     last_column = max(col.header_address.column for col in row_set.columns)
@@ -681,6 +683,7 @@ def _batch_get_values_for_row_sets(
     return response.get("valueRanges", []) or []
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _decode_row_set_block(
     rows: list[list[object]],
     row_set: Any,
@@ -704,6 +707,7 @@ def _decode_row_set_block(
     return tuple(cells), cells_in_block
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
 def _decode_row_set_cell(
     raw: object,
     col_index: int,
