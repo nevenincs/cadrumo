@@ -262,3 +262,38 @@ def test_assemble_observations_for_grouping_rejects_unknown_grouping() -> None:
             revision,
             filing_year=2025,
         )
+
+
+# ---------------------------------------------------------------------------
+# F5 — non-fabrication: mandatory AEAT fields must not be silently defaulted
+# (cross-domain-handoffs-swarm-audit 2026-05-16)
+# ---------------------------------------------------------------------------
+
+
+def test_assemble_withholding_missing_nif_raises_not_fabricates() -> None:
+    """A row missing perceptor_tax_id raises RegistryValidationError, not a fabricated value.
+
+    The assembler previously silently defaulted country_code to ``"ES"``,
+    member_tax_id to ``"A"`` etc. via hard-coded fallback strings when
+    the row did not supply them. This is an AEAT-required field; a
+    fabricated value would produce a filing with a legally-invalid NIF.
+    The fix (``_optional_text_kwarg``) omits the kwarg entirely when the
+    row does not supply it, so the ``WithholdingObservation`` pydantic model
+    rejects the malformed row and the assembler wraps the pydantic
+    ``ValidationError`` into a ``RegistryValidationError``.
+
+    If this test stops raising (the assembler silently returns an
+    observation with a blank or fabricated NIF), the non-fabrication
+    contract has regressed.
+    """
+
+    revision = _modelo("190", "2024-y-siguientes")
+    cells = (
+        # Deliberately omit perceptor_tax_id — the model's min_length=1
+        # constraint must surface, not be masked by a fabricated empty-string default.
+        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
+        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("10000")),
+    )
+
+    with pytest.raises(RegistryValidationError, match="perceptor_tax_id"):
+        assemble_withholding_observations(cells, revision, filing_year=2025)
