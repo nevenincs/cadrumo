@@ -42,7 +42,8 @@ from ._command_suggestions import (
 from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
-from ._common import _FORMAT_TEXT, _emit
+from ._common import _FORMAT_TEXT, _emit, _emit_envelope
+from ._root_payloads import AppRootResult, RootStatusResult
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._errors import write_stderr as _write_stderr
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
@@ -151,7 +152,8 @@ def _root(
         from ...application.operator_surface import build_help_document, render_help_text
 
         document = build_help_document("root")
-        _emit(ctx, document, render_help_text(document).splitlines())
+        typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
         raise typer.Exit()
     # Wire the active-profile output-language resolver into ``core.i18n``
     # before any subcommand renders prose. Importing the side-effect
@@ -184,11 +186,13 @@ def _root(
             # require an active session the operator has not yet
             # established — the F1 / F2 deadlock the disaster ADR
             # closes.
-            _emit(ctx, landing, render_cli_root_landing_lines(landing))
+            typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
+            _emit_envelope(ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing))
             raise typer.Exit()
         workflow_state = workflow_state_repository().load()
         overview_report = build_overview_status_report(state=workflow_state)
-        _emit(ctx, overview_report, render_cli_root_landing_lines(landing))
+        typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
         raise typer.Exit()
 
 
@@ -367,7 +371,8 @@ def _app_root(
         from ...application.operator_surface import build_help_document, render_help_text
 
         document = build_help_document("app")
-        _emit(ctx, document, render_help_text(document).splitlines())
+        typed_app = AppRootResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(ctx, command="root.app", result=typed_app, lines=render_help_text(document).splitlines())
         raise typer.Exit()
 
 
