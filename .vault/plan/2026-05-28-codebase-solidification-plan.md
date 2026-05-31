@@ -926,11 +926,11 @@ W11 audit broke the streak with 1 regression: locales/manager.py new file in com
 
 Fix locales/manager.py 9 bare utf-8 regression. Close _session_store.py ×8 + _iva_compensation_wallet.py ×3 survivor sites. Extend UTF_8 inventory test to AST-walk ALL production files (not a fixed allowlist) so new files added by any campaign immediately fail the test.
 
-- [ ] `W11.P42.S582` - fix regression: enroll locales/manager.py 9 bare utf-8 sites with UTF_8_ENCODING (commit 9407b2e93 bypass); `src/aeat/locales/manager.py`.
-- [ ] `W11.P42.S583` - close survivors at adapters/outbound/google/_session_store.py:44,59,71,86 + 4 more sites with UTF_8_ENCODING; `src/aeat/adapters/outbound/google/_session_store.py`.
-- [ ] `W11.P42.S584` - close survivors at sede/_iva_compensation_wallet.py:228,243,562 sha256.encode utf-8 sites; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
-- [ ] `W11.P42.S585` - extend test_utf8_enrollment_inventory.py to AST-walk all production files (not fixed allowlist) so new files trigger failure at every commit; `src/aeat/test_utf8_enrollment_inventory.py`.
-- [ ] `W11.P42.S586` - aggregate inventory test asserting zero new utf-8 bypass sites can be added; `src/aeat/test_w11_p42_utf8_regression_proof.py`.
+- [x] `W11.P42.S582` - fix regression: enroll locales/manager.py 9 bare utf-8 sites with UTF_8_ENCODING (commit 9407b2e93 bypass); `src/aeat/locales/manager.py`.
+- [x] `W11.P42.S583` - close survivors at adapters/outbound/google/_session_store.py:44,59,71,86 + 4 more sites with UTF_8_ENCODING; `src/aeat/adapters/outbound/google/_session_store.py`.
+- [x] `W11.P42.S584` - close survivors at sede/_iva_compensation_wallet.py:228,243,562 sha256.encode utf-8 sites; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
+- [x] `W11.P42.S585` - extend test_utf8_enrollment_inventory.py to AST-walk all production files (not fixed allowlist) so new files trigger failure at every commit; `src/aeat/test_utf8_enrollment_inventory.py`.
+- [x] `W11.P42.S586` - aggregate inventory test asserting zero new utf-8 bypass sites can be added; `src/aeat/test_w11_p42_utf8_regression_proof.py`.
 
 ### Phase `W11.P43` - axis finishers: A1+A3+A4
 
