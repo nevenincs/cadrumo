@@ -4996,6 +4996,23 @@ def modelo_project(
     cuota_liquida_autonomica = engine_result.values.get("0596", Decimal("0"))
     cuota_resultante = engine_result.values.get("0597", Decimal("0"))
 
+    # Typed provenance for every formula-computed casilla in the M100
+    # projection.  The grounding rule requires every casilla observation
+    # emitted by a CLI surface to carry legal_refs, source_refs, and
+    # formula_id.  Non-computed (input/bound) casillas have no entry in
+    # engine_result.entries and do not appear here; their values are
+    # operator-supplied inputs already visible in the m130_accumulated block.
+    casilla_observations = [
+        {
+            "casilla_id": entry.target,
+            "value": str(entry.value),
+            "formula_id": entry.formula_id,
+            "legal_refs": list(entry.legal_refs),
+            "source_refs": list(entry.source_refs),
+        }
+        for entry in engine_result.entries
+    ]
+
     payload: dict[str, object] = {
         "operation": "modelo.project",
         "year": year,
@@ -5009,6 +5026,7 @@ def modelo_project(
             "rendimiento_neto": str(total_rendimiento_neto),
             "pagos_fraccionados": str(total_pagos_fraccionados),
         },
+        "casilla_observations": casilla_observations,
         "m100_projection": {
             "base_liquidable_general_0505": str(projected_rendimiento_neto),
             "pagos_fraccionados_0604": str(total_pagos_fraccionados),
