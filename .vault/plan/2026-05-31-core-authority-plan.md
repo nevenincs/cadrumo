@@ -305,7 +305,7 @@ Extend the diagnostics test from 4 to 10 cumulative clauses per Rule 11. One Ste
 - [ ] `W11.P28.S93` - implement Clause 6 asserting no domain.<a> module imports from domain.<b>._constants for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [ ] `W11.P28.S94` - implement Clause 7 asserting no domain.<a> module imports from domain.<b>._protocols for a != b, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [ ] `W11.P28.S95` - implement Clause 8 asserting no production module imports a _-prefixed name from a cross-package module other than _ids.py, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
-- [ ] `W11.P28.S96` - implement Clause 9 asserting no two production modules outside the protect list declare an UPPER_SNAKE_CASE constant with the same name and same literal value, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W11.P28.S96` - implement Clause 9 asserting no two production modules outside the protect list declare an UPPER_SNAKE_CASE constant with the same name and same literal value, with anti-tautology proof; `Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 - [ ] `W11.P28.S97` - implement Clause 10 asserting no pydantic field at a persisted or wire boundary ending in _kind, _status, or _state uses bare str with only a length/pattern constraint when a typed alias exists, with anti-tautology proof; `verify all 10 clauses pass as Wave W11 close gate; Rule 11; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
 
 ## Wave `W12` - identity-primitive promotion and bare-str enrollment
