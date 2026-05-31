@@ -3,30 +3,19 @@
 from __future__ import annotations
 
 import json
-import os
-from collections.abc import Iterator
-from contextlib import contextmanager
 
 import pytest
 
-from ..i18n import OUTPUT_LANGUAGE_ENV_VAR
+from ..config import override_settings
 from ..locks_errors import LockAcquisitionError
 from . import build_error_envelope, render_error_json, render_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
-@contextmanager
-def _output_language(language: str) -> Iterator[None]:
-    previous = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
-    os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language
-    try:
-        yield
-    finally:
-        if previous is None:
-            os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
-        else:
-            os.environ[OUTPUT_LANGUAGE_ENV_VAR] = previous
+def _output_language(language: str):
+    """Pin ``aeat_output_language`` via the canonical Settings override."""
+    return override_settings(aeat_output_language=language)
 
 
 def test_error_envelope_serializes_deterministically() -> None:
