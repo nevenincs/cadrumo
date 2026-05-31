@@ -811,6 +811,6 @@ Drop ValueError mixin from FinancialValidationError (W6 sibling missed). Close 9
 
 Delete dormant aeat.core._time module (utc_now duplicate of canonical _now). Re-place cast-rationale marker inline at _bindings.py:1660 (W6 placement drifted). Document 3 _parse_date wrappers as canonical-delegators (acceptable).
 
-- [ ] `W07.P33.S528` - delete aeat.core._time module entirely (utc_now duplicates canonical _now in aeat.core.time._clock; `module unused); `src/aeat/core/_time.py`.
-- [ ] `W07.P33.S529` - re-place CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker inline at _bindings.py:1660 (W6 placement drifted); `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W07.P33.S530` - add aggregate test asserting no aeat.core._time imports exist + cast rationale inventory passes; `src/aeat/test_w07_p33_cleanup.py`.
+- [x] `W07.P33.S528` - delete aeat.core._time module entirely (utc_now duplicates canonical _now in aeat.core.time._clock; `module unused); `src/aeat/core/_time.py`.
+- [x] `W07.P33.S529` - re-place CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker inline at _bindings.py:1660 (W6 placement drifted); `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W07.P33.S530` - add aggregate test asserting no aeat.core._time imports exist + cast rationale inventory passes; `src/aeat/test_w07_p33_cleanup.py`.
