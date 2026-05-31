@@ -186,11 +186,16 @@ class CensoSyncService:
         into a :class:`CensoFactSet`, projects it into the dotted
         snapshot mapping, and captures via :meth:`refresh_census`.
 
+        Args:
+            profile_id: The profile id the captured census snapshot is
+                scoped to.
+
+        Returns:
+            The persisted :class:`CensoSnapshot` for the profile.
+
         Raises:
-            :exc:`CensoNotAvailableError`: when AEAT publishes no
-                census for the operator's NIF (empty CensoFactSet).
-            Any auth-layer or sede-layer error: propagated for the CLI
-                handler to surface.
+            CensoNotAvailableError: when AEAT publishes no census for
+                the operator's NIF (empty CensoFactSet).
         """
         from ...adapters.outbound.aeat.sede._censo_live import (
             G313_LAUNCHER_URL,

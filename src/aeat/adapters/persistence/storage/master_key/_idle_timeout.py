@@ -60,8 +60,7 @@ def evaluate_idle(
         when expired).
 
     Raises:
-        ValueError: If `configured_minutes` is not a strict positive
-            integer.
+        StorageValidationError: When ``configured_minutes`` is not a strict positive integer.
     """
     if configured_minutes <= 0:
         raise StorageValidationError("configured_minutes must be a strict positive integer")

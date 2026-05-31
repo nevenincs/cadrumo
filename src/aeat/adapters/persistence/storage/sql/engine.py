@@ -111,8 +111,7 @@ def create_engine_from_settings(settings: Settings) -> Engine:
         A new SQLAlchemy :class:`~sqlalchemy.engine.Engine`.
 
     Raises:
-        :exc:`aeat.adapters.persistence.storage.errors.StorageError`: If the
-            configured URL is empty or cannot be parsed.
+        StorageError: When the configured URL is empty or cannot be parsed.
     """
     url = settings.aeat_database_url
     if not url:

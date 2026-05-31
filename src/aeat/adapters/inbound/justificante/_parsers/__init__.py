@@ -28,11 +28,6 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
 
     Returns:
         The concatenated text of every page in the PDF, joined by newlines.
-
-    Raises:
-        :exc:`aeat.domain.justificante._errors.JustificanteParseError`: When
-            the backend is unknown or the underlying library fails to open
-            the PDF.
     """
     resolved = pdf_path.expanduser().resolve()
     stat = resolved.stat()

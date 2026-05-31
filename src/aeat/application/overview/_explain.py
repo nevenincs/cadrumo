@@ -182,6 +182,17 @@ def build_overview_explain(
     is unaffected. A genuinely unknown modelo identifier still raises
     :class:`OverviewExplainError`.
 
+    Args:
+        profile: The taxpayer profile whose attributes determine
+            applicability.
+        modelo: Modelo identifier to explain (e.g. ``"130"``).
+        year: Optional calendar year. Defaults to the current year.
+        engine: Optional deadline engine override.
+
+    Returns:
+        An :class:`OverviewExplain` carrying the applicability verdict,
+        optional scheduling rationale, and applicable obligation windows.
+
     Raises:
         OverviewExplainError: When the modelo identifier is blank or
             unknown to the registry, or when the deadline engine fails

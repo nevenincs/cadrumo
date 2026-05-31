@@ -48,12 +48,6 @@ def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
     Returns:
         Tuple with one stripped string per page in the source order.
         Empty pages preserve their slot as the empty string.
-
-    Raises:
-        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
-            When ``pdf_path`` does not exist, when pdfplumber cannot open
-            the file, or when every page is empty (suggesting a
-            scan-only / XFA PDF without an embedded text layer).
     """
     return _extract_pages_text_with_fast_path_impl(
         pdf_path,

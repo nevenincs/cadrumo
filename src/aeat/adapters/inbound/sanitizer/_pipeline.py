@@ -117,13 +117,9 @@ def sanitize_pdf(
         bytes, audit log, and warnings.
 
     Raises:
-        SanitizerSourceParseError: If the source bytes cannot be
-            opened by :mod:`pikepdf`.
-        SignaturePresentError: If the source carries a digital
-            signature dictionary.
-        AlreadySanitizedError: If ``refuse_if_already_sanitized``
-            is True and the source SHA-256 is in
-            :data:`fixtures.SANITIZED_SHAS`.
+        SanitizerSourceParseError: If the source bytes cannot be opened by :mod:`pikepdf`.
+        AlreadySanitizedError: If ``refuse_if_already_sanitized`` is True and the source
+            SHA-256 is in :data:`fixtures.SANITIZED_SHAS`.
     """
     source_sha, source_size_bytes = _digest_source(source)
 

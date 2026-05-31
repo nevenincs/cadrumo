@@ -78,12 +78,10 @@ class InvoiceCatalogueRepository:
             instance when no database object is present.
 
         Raises:
-            :exc:`aeat.adapters.persistence.storage.errors.ClassificationError`:
-                If the persisted object's classification is not
-                :attr:`~aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`.
-            :exc:`aeat.adapters.persistence.storage.errors.EnvelopeVersionError`:
-                If the envelope schema version is higher than the
-                consumer supports.
+            ClassificationError: If the persisted object's classification is
+                not ``SensitivityClass.FINANCIAL``.
+            EnvelopeVersionError: If the envelope schema version is higher
+                than the consumer supports.
         """
         from ...adapters.persistence.storage import (
             Envelope,

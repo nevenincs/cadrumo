@@ -443,10 +443,12 @@ def validate_segment_specs(segments: tuple[SegmentSpec, ...]) -> None:
     segment IDs are unique across the envelope. Does NOT enforce a
     global offset — each segment resets to 1.
 
+    Args:
+        segments: Ordered tuple of :class:`SegmentSpec` to validate.
+
     Raises:
         AeatExportFormatError: If ``segments`` is empty, a ``segment_id`` repeats,
-            or any segment fails its internal :func:`validate_record_specs`
-            check.
+            or any segment fails its internal :func:`validate_record_specs` check.
     """
     if not segments:
         raise AeatExportFormatError("segments must not be empty")

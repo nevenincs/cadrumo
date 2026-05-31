@@ -14,8 +14,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from aeat.core._models import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
 
 # Scopes the desktop app requests at first login. Per Google's
@@ -46,7 +47,7 @@ class OAuthClient(BaseModel):
     in status output for operator orientation.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     client_id: str = Field(min_length=1)
     client_secret: str = Field(min_length=1)

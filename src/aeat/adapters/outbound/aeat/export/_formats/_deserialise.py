@@ -142,7 +142,7 @@ def deserialise(
         A :class:`ParsedRecord` carrying field and casilla values.
 
     Raises:
-        ValueError: On length mismatch, literal mismatch, or decode
+        AeatExportFormatError: On length mismatch, literal mismatch, or decode
             errors (unparseable date, non-ASCII currency, etc.).
     """
     # Strip any trailing CRLF so we can parse either an on-wire
@@ -321,7 +321,7 @@ def deserialise_envelope(
         casilla and field views.
 
     Raises:
-        ValueError: If the payload length does not match the sum of
+        AeatExportFormatError: If the payload length does not match the sum of
             segment lengths, any segment fails its shape check, or a
             casilla / field id collides with a divergent value across
             segments.

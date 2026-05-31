@@ -69,6 +69,10 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
             because the bare-invocation landing page reads the
             workflow state and therefore requires a session when
             an active profile resolves.
+
+    Returns:
+        ``True`` if ``verb_path`` matches a bootstrap-exempt prefix,
+        ``False`` otherwise.
     """
     if verb_path is None:
         return False

@@ -301,6 +301,10 @@ def verify_corpus_manifest(
         corpus_root: The corpus directory to verify.
         manifest: The manifest to verify against.
 
+    Returns:
+        A :class:`CorpusManifestDiff` enumerating added, removed,
+        and changed files. An empty diff means the corpus is clean.
+
     Raises:
         FileNotFoundError: If ``corpus_root`` does not exist.
     """
@@ -365,6 +369,9 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
 
     Args:
         target: Source file. Must exist.
+
+    Returns:
+        The validated :class:`CorpusManifest` loaded from ``target``.
 
     Raises:
         FileNotFoundError: If ``target`` does not exist.

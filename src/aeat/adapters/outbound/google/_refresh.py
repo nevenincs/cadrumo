@@ -126,13 +126,9 @@ def refresh_credentials(
         toward re-consent before the Testing-project cap fires.
 
     Raises:
-        GoogleAuthRevokedError: When the refresh endpoint returns
-            `invalid_grant`. The metadata returned via `mark_reauth_required`
-            on the exception's `context["metadata"]` field captures the
-            state callers must persist before raising onward.
-        GoogleAuthExpiredError: When `metadata.reauth_required` was
-            already True at call entry — the refresh path is closed
-            and only `aeat config google login` can recover.
+        GoogleAuthExpiredError: When ``metadata.reauth_required`` was already True.
+        GoogleAuthRevokedError: When the refresh endpoint returns ``invalid_grant``.
+        GoogleAuthError: Re-raised unchanged for other typed Google auth errors.
         GoogleAuthNetworkError: When the token endpoint is unreachable.
     """
     if metadata.reauth_required:
@@ -176,6 +172,10 @@ def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str
     Imports `google-auth` lazily so a missing transitive dependency
     surfaces as a typed `GoogleAuthNetworkError` rather than an opaque
     ImportError.
+
+    Args:
+        client: The operator's OAuth client metadata.
+        token: The current OAuth token carrying the refresh credential.
 
     Returns:
         `(new_refresh_token, new_access_token, new_expiry_utc)`.

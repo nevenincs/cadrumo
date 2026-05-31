@@ -470,6 +470,9 @@ class AeatAuthenticator:
         Args:
             url: Optional override. When omitted, the authenticator
                 uses :attr:`Settings.aeat_certificate_verify_url`.
+
+        Returns:
+            A :class:`HandshakeResult` with the probe outcome.
         """
         target = url or self._settings.aeat_certificate_verify_url
         cert = self.load_certificate()
@@ -489,8 +492,6 @@ class AeatAuthenticator:
     ) -> AeatSession:
         """Produce an authenticated :class:`AeatSession`.
 
-        Steps:
-
         The method first attempts to resume a previously captured
         Playwright ``storage_state``. If that persisted state is
         missing, malformed, stale, certificate-mismatched, or fails
@@ -498,11 +499,18 @@ class AeatAuthenticator:
         falls back to a fresh certificate handshake plus browser
         login flow.
 
+        Args:
+            browser_session: Optional existing browser session to reuse.
+            target_url: Optional override URL for the authentication target.
+
+        Returns:
+            An authenticated :class:`AeatSession` ready for use.
+
         Raises:
-            CertificateError: Any of the cert load / health / handshake
-                errors propagate unchanged.
-            AeatLoginAssertionError: When the browser session factory
-                returns a context missing the thumbprint marker.
+            AeatLoginAssertionError: When the browser session factory returns a context
+                missing the thumbprint marker, or when the login probe fails.
+            Exception: Re-raised when storage-state capture fails after a successful
+                context creation.
         """
         async with self._lock:
             if self._active_session is not None:

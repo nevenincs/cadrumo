@@ -172,7 +172,6 @@ def load_manual(
 
     Raises:
         ManualNotFoundError: If the required metadata files are absent.
-        ManualParseError: If a file is malformed or fails validation.
     """
     part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=settings)
     structure_dir = part_root / "structure"
@@ -224,8 +223,8 @@ def load_section(part_root: Path, section_ref: SectionRef) -> Section:
         A fully validated :class:`Section` record.
 
     Raises:
-        ManualNotFoundError: If the referenced file does not exist.
-        ManualParseError: If the file fails schema validation.
+        ManualParseError: If the file path escapes the manual root or
+            fails schema validation.
     """
     try:
         section_path = resolve_relative_subpath(part_root, section_ref.relative_path, context="manual section path")

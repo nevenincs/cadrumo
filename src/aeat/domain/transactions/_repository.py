@@ -116,11 +116,17 @@ class TransactionCatalogueRepository:
     def load(self) -> TransactionCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
+        Returns:
+            The deserialised :class:`TransactionCatalogue`, or a fresh empty
+            instance when no database object is present.
+
         Raises:
             ClassificationError: If the persisted object's class is not
-                FINANCIAL.
+                ``SensitivityClass.FINANCIAL``.
             EnvelopeVersionError: If the persisted object's schema version is
                 higher than the consumer supports.
+            StoredTransactionDriftError: If the persisted payload fails
+                pydantic schema validation on deserialization.
         """
         from ...adapters.persistence.storage.envelope._envelope import Envelope
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError

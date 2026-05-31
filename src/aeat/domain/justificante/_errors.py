@@ -50,6 +50,16 @@ class JustificanteParseError(JustificanteError):
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
     ) -> None:
+        """Initialise the error with optional structured field-extraction context.
+
+        Args:
+            message: Human-readable error message.
+            missing: Field names that produced no match in the PDF text.
+            malformed: Field names whose captured value could not be coerced.
+            ambiguous: Field names that matched more than one region.
+            coverage: Fraction of required fields successfully extracted,
+                or ``None`` when the error is not a coverage failure.
+        """
         super().__init__(message)
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed

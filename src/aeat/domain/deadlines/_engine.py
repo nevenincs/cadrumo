@@ -160,13 +160,9 @@ class DeadlineEngine:
             applies to ``profile`` for ``year``.
 
         Raises:
-            :exc:`aeat.domain.deadlines.NoDeadlineWindowsError`: If no
-                validated registry deadline windows are registered for
-                ``year`` — the benign data gap callers degrade around.
-            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If
-                the registry fails validation or a profile condition
-                cannot be evaluated — a genuine integrity fault that
-                must not be masked.
+            NoDeadlineWindowsError: If no validated registry deadline windows
+                are registered for ``year`` — the benign data gap callers
+                degrade around.
         """
         reference_today = today or date.today()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)

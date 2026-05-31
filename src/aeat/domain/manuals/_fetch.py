@@ -157,6 +157,9 @@ def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
     Args:
         manifest_path: Destination path for the JSON manifest.
         manifest: Manifest record to serialise.
+
+    Raises:
+        ManifestError: If the file cannot be written due to an OS error.
     """
     try:
         manifest_path.parent.mkdir(parents=True, exist_ok=True)

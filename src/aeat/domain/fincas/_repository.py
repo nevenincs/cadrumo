@@ -60,6 +60,12 @@ class FincaRepository:
     def get(self, record_id: int) -> Finca:
         """Return the record with surrogate id ``record_id``.
 
+        Args:
+            record_id: Surrogate integer primary key.
+
+        Returns:
+            The matching :class:`Finca` record.
+
         Raises:
             RepositoryError: When no row matches.
         """
@@ -205,6 +211,12 @@ class ArrendamientoRepository:
 
     def get(self, record_id: int) -> Arrendamiento:
         """Return the record with surrogate id ``record_id``.
+
+        Args:
+            record_id: Surrogate integer primary key.
+
+        Returns:
+            The matching :class:`Arrendamiento` record.
 
         Raises:
             RepositoryError: When no row matches.

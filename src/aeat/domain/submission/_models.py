@@ -145,8 +145,8 @@ def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:
         A 16-character lowercase hex string.
 
     Raises:
-        ValueError: If ``draft_id`` is empty or ``attempt_ordinal``
-            is not a positive integer.
+        SubmissionValidationError: If ``draft_id`` is empty or
+            ``attempt_ordinal`` is not a positive integer.
     """
     if not draft_id:
         raise SubmissionValidationError("draft_id must be non-empty")

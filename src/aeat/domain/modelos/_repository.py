@@ -64,14 +64,14 @@ class WorkUnitCatalogueRepository:
     def load(self) -> WorkUnitCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
+        Returns:
+            The deserialised :class:`WorkUnitCatalogue`, or an empty instance
+            when no object has been persisted yet.
+
         Raises:
             WorkUnitPersistenceError: When the persisted envelope's
                 classification or schema version disagrees with the
-                consumer's contract. The underlying
-                :exc:`ClassificationError` and
-                :exc:`EnvelopeVersionError` are wrapped so callers
-                can catch a single typed error from the modelo
-                domain.
+                consumer's contract.
         """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError

@@ -76,10 +76,6 @@ def parse_http_url(value: str) -> AnyHttpUrl:
 
     Returns:
         A validated :class:`pydantic.AnyHttpUrl`.
-
-    Raises:
-        :exc:`pydantic.ValidationError`: When the input is not a
-            valid HTTP / HTTPS URL.
     """
     return _HTTP_URL_ADAPTER.validate_python(value)
 
@@ -256,8 +252,7 @@ def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> D
         ``chosen_ratio * (rule.statutory_multiplier or Decimal("1"))``.
 
     Raises:
-        :exc:`CategoryValidationError`: When ``rule.kind`` is not a
-            usage-ratio kind.
+        CategoryValidationError: When ``rule.kind`` is not a usage-ratio kind.
     """
     if rule.kind not in {
         ProportionalityKind.USAGE_RATIO_HOME_AREA,

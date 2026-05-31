@@ -134,9 +134,8 @@ def link_transaction(
         transaction returns a value-equal catalogue rather than raising.
 
     Raises:
-        :exc:`InvoiceNotFoundError`: If ``invoice_id`` is missing.
-        :exc:`InvoiceLinkError`: If ``transaction_id`` is not a
-            64-character lowercase hex digest.
+        InvoiceLinkError: If ``transaction_id`` is not a 64-character
+            lowercase hex digest.
     """
     invoice = _require_invoice(catalogue, invoice_id)
     normalized_tx = transaction_id.strip().lower()

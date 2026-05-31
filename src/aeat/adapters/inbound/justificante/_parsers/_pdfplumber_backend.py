@@ -24,9 +24,5 @@ def extract_text_pdfplumber(pdf_path: Path) -> str:
     Returns:
         A single string with every page's ``extract_text`` result joined by
         newlines. Empty pages are skipped.
-
-    Raises:
-        :exc:`aeat.domain.justificante._errors.JustificanteParseError`: If
-            pdfplumber cannot open the PDF.
     """
     return extract_pages_text_concatenated(pdf_path, error_class=JustificanteParseError)

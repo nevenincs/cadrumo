@@ -47,6 +47,9 @@ def session_scope(engine: Engine | None = None) -> Iterator[Session]:
 
     Yields:
         A live :class:`~sqlalchemy.orm.Session`.
+
+    Raises:
+        Exception: Re-raised after rolling back when the session body raises.
     """
     factory = get_sessionmaker(engine)
     session = factory()

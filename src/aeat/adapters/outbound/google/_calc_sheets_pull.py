@@ -383,11 +383,7 @@ def pull_operator_edits(
         local store may corrupt data.
 
     Raises:
-        OutboundStorageConflictError: The spreadsheet is not marked as app-owned.
-        OutboundStoragePermissionError: The Drive scope grant is insufficient.
-        OutboundStorageNotFoundError: The supplied spreadsheet id is unknown.
-        OutboundStorageValidationError: `spreadsheet_id` is blank.
-        OutboundStorageNetworkError: A transport or unmapped HTTP failure.
+        OutboundStorageValidationError: When ``spreadsheet_id`` is blank.
     """
     if not spreadsheet_id.strip():
         raise OutboundStorageValidationError(

@@ -68,8 +68,15 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
     ``modelo=context.modelo`` and ``period=context.period`` to produce
     a fresh :class:`WorkflowResult`.
 
+    Args:
+        run_id: The 16-character hex run id of the prior aborted workflow
+            run to resume.
+
+    Returns:
+        A :class:`WorkflowResumeContext` carrying the modelo, period,
+        obligation, and aborted reason for the prior run.
+
     Raises:
-        WorkflowError: When the prior run cannot be loaded.
         WorkflowResumeRefusedError: When the prior run is not in
             ``ABORTED`` state, was aborted for a non-resumable reason,
             or lacks an ``obligation``.

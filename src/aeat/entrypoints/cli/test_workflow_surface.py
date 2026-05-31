@@ -674,11 +674,9 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
 def test_ledger_import_verify_source_rejects_missing_original_file(
     isolated_user_cli: Path,
 ) -> None:
-    """Use contextlib.chdir (stdlib, live-tests-friendly) instead of
-    monkeypatch.chdir per the project no-monkeypatch mandate (CLAUDE.md).
-    The CLI under test resolves the --source relative path against cwd;
-    pinning cwd to the isolated_user_cli dir is process-global isolation
-    just like a temp-dir context manager.
+    """The CLI under test resolves the --source relative path against
+    cwd; ``contextlib.chdir`` pins cwd to the isolated_user_cli dir for
+    the duration of the call (stdlib, live-tests-friendly).
     """
 
     import contextlib

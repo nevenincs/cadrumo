@@ -539,6 +539,10 @@ def _incomplete_applicability(
             modelo — the profile may be fully declared. ``False`` (the
             default) when the cause is an *undeclared taxpayer model* —
             the operator must declare their taxpayer type first.
+
+    Returns:
+        A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
+        appropriate rationale for the given cause.
     """
     reason = _INCOMPLETE_UNRULED_REASON if unruled else _INCOMPLETE_UNDECLARED_REASON
     return ModeloApplicability(
@@ -562,6 +566,10 @@ def _undetermined_applicability(modelo: str) -> ModeloApplicability:
 
     Args:
         modelo: The AEAT modelo identifier the verdict decides.
+
+    Returns:
+        A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
+        undetermined-payer-fact rationale.
     """
     return ModeloApplicability(
         modelo=modelo,

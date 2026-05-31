@@ -99,8 +99,8 @@ def resolve_recargo_band(days_late: int, bands: Sequence[RecargoBand]) -> Recarg
         The matching :class:`RecargoBand`.
 
     Raises:
-        ValueError: When ``days_late < 1`` or no band's window covers
-            the value (which would indicate a TOML gap).
+        DeadlineValidationError: When ``days_late < 1`` or no band's window
+            covers the value (which would indicate a TOML gap).
     """
     if days_late < 1:
         raise DeadlineValidationError(f"resolve_recargo_band: days_late must be >= 1; got {days_late}")

@@ -51,34 +51,28 @@ def coerce_decimal(
 ) -> Decimal | None:
     """Coerce *value* to a :class:`~decimal.Decimal`, falling back to *default*.
 
-    Parameters
-    ----------
-    value:
-        Raw input.  Accepts :class:`~decimal.Decimal`, :class:`int`,
-        :class:`float`, :class:`str`, or ``None``.  Empty strings (``""``)
-        are treated as absent.
-    default:
-        Value returned when *value* is ``None``, an empty string, or
-        cannot be parsed.  Defaults to ``None``.
+    Args:
+        value: Raw input. Accepts :class:`~decimal.Decimal`, :class:`int`,
+            :class:`float`, :class:`str`, or ``None``. Empty strings (``""``)
+            are treated as absent.
+        default: Value returned when *value* is ``None``, an empty string,
+            or cannot be parsed. Defaults to ``None``.
 
     Returns:
-    -------
-    Decimal | None
         Parsed decimal, or *default* when coercion fails.
 
     Examples:
-    --------
-    >>> from decimal import Decimal
-    >>> coerce_decimal("12.34")
-    Decimal('12.34')
-    >>> coerce_decimal(None) is None
-    True
-    >>> coerce_decimal(None, default=Decimal("0"))
-    Decimal('0')
-    >>> coerce_decimal("bad", default=Decimal("0"))
-    Decimal('0')
-    >>> coerce_decimal(42)
-    Decimal('42')
+        >>> from decimal import Decimal
+        >>> coerce_decimal("12.34")
+        Decimal('12.34')
+        >>> coerce_decimal(None) is None
+        True
+        >>> coerce_decimal(None, default=Decimal("0"))
+        Decimal('0')
+        >>> coerce_decimal("bad", default=Decimal("0"))
+        Decimal('0')
+        >>> coerce_decimal(42)
+        Decimal('42')
     """
     if value is None or value == "":
         return default

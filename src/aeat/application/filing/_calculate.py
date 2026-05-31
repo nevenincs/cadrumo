@@ -181,10 +181,6 @@ def summarise_calculation(
 
     Returns:
         A frozen :class:`DeclaracionCalculateSummary`.
-
-    Raises:
-        ModeloCalculateError: When ``repair_hints`` violates the
-            ``RESOLVE_BLOCKERS`` invariant.
     """
     counts: dict[BaseSeverity, int] = {
         BaseSeverity.INFO: 0,

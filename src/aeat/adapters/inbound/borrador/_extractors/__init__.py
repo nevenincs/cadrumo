@@ -40,8 +40,7 @@ def get_extractor(año: int) -> _Modelo100ObservedV2025Extractor:
         A freshly-instantiated extractor matching the requested ``año``.
 
     Raises:
-        :exc:`aeat.adapters.inbound.borrador._errors.BorradorParseError`:
-            When no extractor is registered for ``año``.
+        _BorradorParseError: When no extractor is registered for ``año``.
     """
     cls = _REGISTRY_BY_AÑO.get(año)
     if cls is None:

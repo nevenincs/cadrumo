@@ -99,6 +99,10 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
 def get_project_answers() -> ProjectAnswersFn:
     """Return the registered project_answers implementation.
 
+    Returns:
+        The :class:`ProjectAnswersFn` registered via
+        :func:`register_project_answers`.
+
     Raises:
         ProjectAnswersNotRegisteredError: When the application layer has not yet
             called :func:`register_project_answers`.
@@ -116,8 +120,15 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     ``aeat.core.profile`` so they never acquire a direct dependency on
     ``aeat.application.wizard._persistence``.
 
-    Raises:
-        ProjectAnswersNotRegisteredError: When registration has not occurred.
+    Args:
+        flow: The wizard flow descriptor identifying which flow to
+            project answers for.
+        values: Mapping of canonical token keys to raw string values
+            collected from the wizard.
+
+    Returns:
+        A typed answers model instance produced by the registered
+        implementation.
     """
     return get_project_answers()(flow, values)
 

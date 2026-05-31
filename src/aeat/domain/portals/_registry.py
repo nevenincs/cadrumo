@@ -285,8 +285,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
         value for deterministic output.
 
     Raises:
-        ValueError: If ``code`` is not a modelo identifier.
-        PortalIntegrityError: If the registry binds an unknown portal.
+        PortalValidationError: If ``code`` is not a recognised modelo identifier.
     """
     if isinstance(code, ModeloCode):
         member = code

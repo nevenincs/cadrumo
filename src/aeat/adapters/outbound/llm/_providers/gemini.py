@@ -91,8 +91,7 @@ class GeminiAdapter(_ProviderAdapter):
             timeout_s: Per-request HTTP timeout in seconds.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm.LLMConfigError`: When ``api_key``
-                is empty.
+            LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
             msg = "AEAT_LLM_GEMINI_API_KEY must be set for the Gemini provider."
@@ -111,10 +110,7 @@ class GeminiAdapter(_ProviderAdapter):
             first candidate and reported token counts.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: When the API
-                returns HTTP 429.
-            :exc:`aeat.adapters.outbound.llm.LLMProviderError`: When the API
-                returns any other HTTP error status.
+            LLMProviderError: When the API returns a 4xx or 5xx HTTP error status.
         """
         parts: list[dict[str, str]] = []
         if request.system is not None:

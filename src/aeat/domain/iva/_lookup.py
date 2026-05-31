@@ -31,8 +31,7 @@ def lookup_rate(
         The matching :class:`aeat.domain.iva.IvaRateRecord`.
 
     Raises:
-        :exc:`aeat.domain.iva.IvaRateNotFoundError`: If no registered rate
-            satisfies the query.
+        IvaRateNotFoundError: If no registered rate satisfies the query.
     """
     rates = load_iva_rate_table().get(member_state)
     if not rates:
@@ -73,8 +72,7 @@ def cite(
         ``"Ley 37/1992, Art. 90.Uno — <quoted_text>"``.
 
     Raises:
-        :exc:`aeat.domain.iva.IvaCategoryNotFoundError`: If ``category`` is
-            absent from the catalogue.
+        IvaCatalogueError: If both ``catalogue`` and ``on`` are ``None``.
     """
     if catalogue is None and on is None:
         raise IvaCatalogueError("cite requires either an explicit catalogue or an effective date")

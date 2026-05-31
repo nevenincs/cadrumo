@@ -77,9 +77,15 @@ async def _open_browser_page(
     goto, target navigation, request.get, etc.) and the context manager
     cleans up on exit even if the body raises.
 
+    Args:
+        session: Authenticated AEAT session whose storage-state path carries valid cookies.
+        settings: Settings instance used for browser factory configuration.
+
+    Yields:
+        A ``(context, page)`` tuple ready for navigation.
+
     Raises:
-        SedeNavigationError: When the session has no persisted auth
-            state (the operator has not configured authentication under ``aeat config auth``).
+        SedeNavigationError: When the session has no persisted auth state.
     """
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
@@ -130,7 +136,6 @@ async def walk_expedientes_tree(
 
     Raises:
         SedeNavigationError: If ``goto`` or a required expansion fails.
-        SedeParseError: If the ResumenVlt page cannot be parsed.
     """
     settings = settings or Settings()
     async with _open_browser_page(session, settings) as (_context, page):
@@ -172,7 +177,6 @@ async def resolve_justificante_ref(
 
     Raises:
         SedeNavigationError: If the detail page cannot be loaded.
-        SedeParseError: If the detail HTML does not expose a CSV link.
     """
     settings = settings or Settings()
     detail_url = str(expediente.detail_url)
@@ -225,7 +229,6 @@ async def capture_justificante(
 
     Raises:
         SedeNavigationError: On goto failures.
-        SedeParseError: On detail-HTML extraction failures.
         JustificanteFetchError: On PDF download failures.
     """
     settings = settings or Settings()
@@ -281,9 +284,17 @@ async def find_expediente(
 ) -> Expediente:
     """Convenience lookup: first expediente matching ``(modelo, ejercicio)``.
 
+    Args:
+        session: Authenticated AEAT session.
+        modelo: Modelo code to filter on (e.g. ``"100"``).
+        ejercicio: Tax year to match.
+        settings: Optional :class:`Settings` override.
+
+    Returns:
+        The first :class:`Expediente` whose ``ejercicio`` matches.
+
     Raises:
-        ExpedienteNotFoundError: If no expediente in the corpus
-            matches the filter.
+        ExpedienteNotFoundError: If no expediente in the corpus matches the filter.
     """
     expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
     for expediente in expedientes:

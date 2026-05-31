@@ -69,6 +69,14 @@ def verify_profile_integrity(
     disagreeing stores so a ``repair`` surface — or the operator — can
     act on a concrete delta rather than a silent inconsistency.
 
+    Args:
+        profile_id: The canonical UUID the caller expects all stores to agree on.
+        directory_name: The ``<root>/buckets/<name>/`` directory name.
+        manifest_bucket_id: The ``bucket_id`` key from the plaintext manifest.
+        record_profile_id: The ``profile_id`` from the decrypted record.
+        manifest_status: The lifecycle status mirrored in the manifest.
+        record_status: The authoritative lifecycle status from the record.
+
     Raises:
         ProfileIntegrityError: If any store disagrees on the UUID, or
             the manifest and record disagree on the lifecycle status.

@@ -610,7 +610,10 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
 
     Returns:
         Frozen mapping of parameter-id → :class:`LegalParameter`.
-        Duplicates across files raise :class:`RegistryLoadError`.
+
+    Raises:
+        RegistryLoadError: When duplicate parameter ids are found across
+            multiple TOML files in ``root/legal/``.
     """
     resolved = root.resolve()
     legal_dir = resolved / "legal"

@@ -41,6 +41,16 @@ class _DeterministicAdapter(_ProviderAdapter):
         output_tokens: int = 4,
         error_mode: str | None = None,
     ) -> None:
+        """Initialise the deterministic adapter with canned response parameters.
+
+        Args:
+            response_text: Prefix prepended to the prompt to form the response text.
+            model: Reported model identifier echoed in completions.
+            input_tokens: Synthetic prompt token count reported in completions.
+            output_tokens: Synthetic output token count reported in completions.
+            error_mode: When ``"provider"`` or ``"rate-limit"``, the next call raises
+                the corresponding error; ``None`` returns a normal completion.
+        """
         self.response_text = response_text
         self.model = model
         self.input_tokens = input_tokens
@@ -60,10 +70,8 @@ class _DeterministicAdapter(_ProviderAdapter):
             ``"{response_text}:{request.prompt}"``.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm.LLMProviderError`: When
-                :attr:`error_mode` is ``"provider"``.
-            :exc:`aeat.adapters.outbound.llm.LLMRateLimitError`: When
-                :attr:`error_mode` is ``"rate-limit"``.
+            LLMProviderError: When :attr:`error_mode` is ``"provider"``.
+            LLMRateLimitError: When :attr:`error_mode` is ``"rate-limit"``.
         """
         self.calls += 1
         if self.error_mode == "provider":

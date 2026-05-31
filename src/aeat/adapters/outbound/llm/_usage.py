@@ -85,8 +85,7 @@ class UsageRecorder:
             Logical daily usage path for operator display only.
 
         Raises:
-            :exc:`aeat.adapters.outbound.llm.LLMCacheError`: When the JSONL
-                file cannot be appended to.
+            LLMCacheError: When the storage write fails.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass

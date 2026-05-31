@@ -84,6 +84,10 @@ def verify_declaracion(
         :class:`aeat.application.verification.ClassifiedDiscrepancy`,
         the coverage fraction, a multilingual narrative, and the UTC
         timestamp the verdict was produced.
+
+    Raises:
+        VerificationError: When the registry snapshot cannot be loaded for
+            the declaracion's modelo and period.
     """
     snapshot = _load_snapshot(declaracion, registry_root=registry_root)
     policy = _verification_policy(snapshot)

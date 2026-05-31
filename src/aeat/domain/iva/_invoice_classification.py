@@ -245,6 +245,10 @@ def invoice_line_to_iva_observation(
     Returns:
         An :class:`IvaLedgerObservation` with the full classification
         triple ready for binding-resolver consumption.
+
+    Raises:
+        InvoiceValidationError: If the classification produces a ``None``
+            rate_kind (e.g. when ``iva_rate`` is ``NOT_SUBJECT``).
     """
     from ..calculations.registry import IvaLedgerObservation
 

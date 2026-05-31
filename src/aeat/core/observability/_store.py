@@ -103,9 +103,12 @@ def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
     shape so ``runs_dir / run_id`` cannot traverse out of the
     configured runs directory.
 
-    Raises:
-        RunTraceValidationError: When ``run_id`` is not 16 lowercase
-            hex characters.
+    Args:
+        run_id: 16-char lowercase hex run identifier.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        Absolute path to the per-run subdirectory (created if absent).
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id
@@ -231,11 +234,11 @@ def iter_events(
     *,
     settings: Settings | None = None,
 ) -> Iterator[RunEvent]:
-    """Yield one :class:`RunEvent` per line from the per-run ``events.jsonl``.
+    """Return an iterator of :class:`RunEvent` records from the per-run ``events.jsonl``.
 
     Streams records so callers processing a long-running run's event
     log can avoid holding the entire file in memory. The ``run_id`` is
-    validated *eagerly* — before the generator starts — so a bad id
+    validated *eagerly* — before the iterator starts — so a bad id
     surfaces at the call site instead of on first iteration.
 
     Read-only: does not create a run directory when absent. A missing
@@ -245,13 +248,8 @@ def iter_events(
         run_id: 16-char lowercase hex run identifier.
         settings: Optional :class:`aeat.core.config.Settings` override.
 
-    Yields:
-        Each :class:`RunEvent` recorded for the run, in append order.
-
-    Raises:
-        RunTraceValidationError: When the ``run_id`` shape is invalid
-            (raised at call time), or when any JSONL line fails strict
-            validation (raised during iteration).
+    Returns:
+        An iterator of :class:`RunEvent` records in append order.
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id / _EVENTS_FILENAME
@@ -300,10 +298,6 @@ def load_events(
 
     Returns:
         Tuple of every recorded :class:`RunEvent` in append order.
-
-    Raises:
-        RunTraceValidationError: When the ``run_id`` shape is invalid or
-            any JSONL line fails strict validation.
     """
     return tuple(iter_events(run_id, settings=settings))
 

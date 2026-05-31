@@ -133,6 +133,15 @@ class BankStatementParseError(FinancialProviderError):
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
     ) -> None:
+        """Initialise with an optional human-readable message and structured coverage fields.
+
+        Args:
+            message: Optional human-readable description of the failure.
+            missing: Field or row identifiers that produced no match.
+            malformed: Field identifiers whose captured value could not be coerced.
+            ambiguous: Field identifiers that matched more than one region.
+            coverage: Fraction of expected transaction rows successfully extracted.
+        """
         super().__init__(message)
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed
@@ -209,10 +218,13 @@ class FinancialProvider(ABC):
         class-variable declaration syntax that every concrete provider already
         uses.
 
+        Args:
+            **kwargs: Forwarded to ``super().__init_subclass__``.
+
         Raises:
-            TypeError: When a concrete (non-abstract) subclass does not declare
-                       ``verification_source`` or ``provisional_pending_specimen``,
-                       or when ``verification_source`` carries an unknown literal.
+            FinancialProviderConfigError: When a concrete (non-abstract) subclass does not
+                declare ``verification_source`` or ``provisional_pending_specimen``,
+                or when ``verification_source`` carries an unknown literal.
         """
         super().__init_subclass__(**kwargs)
         # Skip enforcement for abstract subclasses (those that still have
@@ -273,12 +285,11 @@ class FinancialProvider(ABC):
         Args:
             path: Source document to ingest.
 
-        Yields:
-            One raw transaction per source row.
+        Returns:
+            An iterator that yields one raw transaction per source row.
 
         Raises:
-            :exc:`InvalidFinancialSourceError`: When the document
-                cannot be parsed or a row is malformed.
+            InvalidFinancialSourceError: When the document cannot be parsed or a row is malformed.
         """
 
     @abstractmethod
@@ -446,7 +457,7 @@ def parse_amount_value(
         A :class:`Decimal` preserving the printed precision and sign.
 
     Raises:
-        ValueError: When the value is empty or cannot be parsed.
+        FinancialValidationError: When the value is empty or cannot be parsed.
     """
     if isinstance(value, Decimal):
         return value

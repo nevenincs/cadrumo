@@ -140,7 +140,7 @@ def encode_mnemonic(entropy: bytes) -> str:
         A space-joined string of 24 lowercase English words.
 
     Raises:
-        ValueError: If ``entropy`` is not exactly 32 bytes.
+        StorageValidationError: When ``entropy`` is not exactly 32 bytes.
     """
     if len(entropy) != _RECOVERY_KEY_SIZE:
         raise StorageValidationError(
@@ -167,14 +167,8 @@ def decode_mnemonic(mnemonic: str) -> bytes:
         The 32-byte entropy.
 
     Raises:
-        ValueError: If the mnemonic does not have 24 words, contains
-            an unknown word, or fails the BIP-39 checksum. Error
-            messages report the failing **position** but never echo
-            the operator's typed word — a wrong word at position N
-            tells an attacker watching stderr / shell history /
-            session logs nothing about the recovery-key contents
-            beyond "position N has a typo", which is a 1-of-2048
-            disclosure rather than a full-word disclosure.
+        StorageValidationError: When the mnemonic does not have 24 words, contains
+            an unknown word, or fails the BIP-39 checksum.
     """
     words = mnemonic.strip().lower().split()
     if len(words) != _MNEMONIC_WORD_COUNT:
@@ -234,7 +228,7 @@ def wrap_master_key(*, master_key: bytes, recovery_key: RecoveryKey) -> WrappedM
         persist to ``master.recovery.key``.
 
     Raises:
-        ValueError: If ``master_key`` is not exactly 32 bytes.
+        StorageValidationError: When ``master_key`` is not exactly 32 bytes.
     """
     if len(master_key) != KEY_SIZE:
         raise StorageValidationError(
@@ -257,9 +251,7 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -
         The 32-byte master key.
 
     Raises:
-        ValueError: If ``recovery_key_bytes`` is not exactly 32 bytes.
-        DecryptionError: If the AEAD tag check fails (wrong recovery
-            key or tampered file).
+        StorageValidationError: When ``recovery_key_bytes`` is not exactly 32 bytes.
     """
     if len(recovery_key_bytes) != _RECOVERY_KEY_SIZE:
         raise StorageValidationError(

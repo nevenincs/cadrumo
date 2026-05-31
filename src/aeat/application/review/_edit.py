@@ -94,6 +94,12 @@ class EditClause(BaseModel):
 def parse_edit_clause(raw: str) -> EditClause:
     """Parse one raw ``KEY=VALUE`` string into an :class:`EditClause`.
 
+    Args:
+        raw: The raw ``KEY=VALUE`` token supplied by the operator.
+
+    Returns:
+        A validated :class:`EditClause` with the parsed key and value.
+
     Raises:
         EditParseError: When the token is missing ``=``, has an empty
             key, or has an empty value.

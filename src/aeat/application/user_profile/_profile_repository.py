@@ -208,14 +208,27 @@ class ProfileRepository:
         profile with no record) is unreachable because the pointer
         write and the record write are one unit of work.
 
+        Args:
+            label: Operator-visible display name for the new profile.
+            facts: Initial profile fact sequence. Defaults to empty.
+            profile_id: Optional explicit UUID. When ``None``, a fresh
+                UUID is minted.
+            enforce_unique_tax_id: When ``True`` (default), refuses a
+                create whose tax id is already carried by a live profile.
+            routing_profile_id: Optional routing assertion; must match
+                ``profile_id`` when supplied.
+
         Returns:
             The assembled :class:`ProfileAggregate`.
 
         Raises:
             ProfileNotFoundError: If the profile already carries a
                 manifest (it is already a registered profile).
-            ProfileAlreadyRegisteredError: If the label is already
-                carried by a live profile.
+            AeatError: If an error occurs during the all-or-nothing write.
+            OSError: If a filesystem error occurs during directory staging.
+            UserProfileValidationError: If the routing profile id does not
+                match the resolved profile id.
+            ValidationError: If the encrypted record fails schema validation.
         """
         resolved_id = profile_id if profile_id is not None else new_profile_id()
         if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
@@ -334,11 +347,15 @@ class ProfileRepository:
         manifest, and the record all agree on the UUID and on the
         lifecycle status, then builds the :class:`ProfileAggregate`.
 
+        Args:
+            profile_id: The UUID of the profile to load.
+
+        Returns:
+            The assembled :class:`ProfileAggregate` for the profile.
+
         Raises:
             ProfileNotFoundError: If the bucket directory or manifest
                 is absent.
-            ProfileIntegrityError: If the stores disagree on the UUID
-                or on the lifecycle status.
         """
         paths = bucket_paths(self._root, profile_id)
         if not manifest_path(paths).is_file():
@@ -421,11 +438,18 @@ class ProfileRepository:
         :class:`ProfileIntegrityError` rather than being relabelled in
         a torn state.
 
+        Args:
+            profile_id: The UUID of the profile to rename.
+            new_label: The new operator-visible display name.
+
+        Returns:
+            The updated :class:`ProfileAggregate` with the new label.
+
         Raises:
-            ProfileNotFoundError: If the profile is not registered.
-            ProfileIntegrityError: If the stores disagree on the UUID.
             ProfileAlreadyRegisteredError: If ``new_label`` is already
                 carried by another live profile.
+            UserProfileValidationError: If ``new_label`` is blank after
+                stripping.
         """
         from ..workflow._profile_bucket_scan import read_profile_bucket
         from ._orchestration import ProfileAlreadyRegisteredError
@@ -500,10 +524,11 @@ class ProfileRepository:
         :class:`ProfileIntegrityError` on the next load — reclaiming a
         drifted profile is the ``repair`` surface's domain.
 
-        Raises:
-            ProfileNotFoundError: If the profile is not registered.
-            ProfileIntegrityError: If the stores disagree on the UUID
-                or on the lifecycle status.
+        Args:
+            profile_id: The UUID of the profile to tombstone.
+
+        Returns:
+            The updated :class:`ProfileAggregate` with tombstoned status.
         """
         aggregate = self.load(profile_id)
         if self._active_pointer_targets(profile_id):
@@ -542,10 +567,15 @@ class ProfileRepository:
         profile so the operator cannot unknowingly work inside a
         deleted profile.
 
+        Args:
+            profile_id: The UUID of the profile to activate.
+
+        Returns:
+            The :class:`ProfileAggregate` for the newly active profile.
+
         Raises:
             ProfileNotFoundError: If the profile is not registered, or
                 is registered but tombstoned.
-            ProfileIntegrityError: If the stores disagree on the UUID.
         """
         aggregate = self.load(profile_id)
         if aggregate.status is UserProfileStatus.TOMBSTONED:

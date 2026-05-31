@@ -250,13 +250,14 @@ class EncryptedBlobStore:
     def get(self, reference: BlobReference) -> bytes:
         """Return the plaintext bytes for ``reference``.
 
+        Args:
+            reference: The blob reference identifying the stored object.
+
+        Returns:
+            Decrypted plaintext bytes for the referenced blob.
+
         Raises:
-            BlobNotFoundError: If the manifest or payload file is
-                missing.
-            BlobIntegrityError: If the on-disk SHA-256 disagrees with
-                the manifest (tampering or storage corruption).
-            ClassificationError: If the manifest declares a different
-                classification than the reference (defensive).
+            BlobNotFoundError: When the manifest or payload file is missing.
         """
         manifest_path = self._manifest_path_for(reference.sha256_plaintext_hex)
         if not manifest_path.exists():

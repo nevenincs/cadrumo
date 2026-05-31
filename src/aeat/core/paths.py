@@ -90,8 +90,8 @@ def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) ->
         The resolved absolute path inside ``root``.
 
     Raises:
-        ValueError: When ``relative_path`` is malformed or when the
-            resolved path escapes ``root``.
+        CoreValidationError: When ``relative_path`` is malformed or
+            when the resolved path escapes ``root``.
     """
     if "\\" in relative_path:
         raise CoreValidationError(f"{context} must use forward slashes only")
@@ -124,8 +124,8 @@ def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Pat
         The resolved absolute path of the JSON sidecar.
 
     Raises:
-        ValueError: When ``record_id`` is not a simple filename token
-            or the resolved path escapes ``root``.
+        CoreValidationError: When ``record_id`` is not a simple
+            filename token or the resolved path escapes ``root``.
     """
     if not _SAFE_FILE_TOKEN_RE.fullmatch(record_id):
         raise CoreValidationError(f"{context} must be a simple filename token")

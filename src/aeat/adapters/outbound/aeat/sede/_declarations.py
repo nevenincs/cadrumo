@@ -240,9 +240,6 @@ async def shared_playwright(
     Yields:
         A live :class:`Playwright` instance. Cleaned up automatically
         on exit.
-
-    Raises:
-        SedeNavigationError: When the session has no encrypted browser state.
     """
     storage_state_for_session(session)
     async with shared_playwright_runtime() as pw:
@@ -423,12 +420,6 @@ async def walk_declarations_register(
     Returns:
         Tuple of :class:`Declaracion` records, one per filing row.
         Empty when AEAT returns "No se han encontrado resultados".
-
-    Raises:
-        SedeNavigationError: When the form fails to load, the
-            modelo / ejercicio cannot be selected, or Buscar does not
-            settle within the timeout.
-        SedeParseError: When the result table cannot be parsed.
     """
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
@@ -818,26 +809,21 @@ async def capture_declaration(
 
     Args:
         session: Authenticated AEAT session.
-        declaration: The Declaracion row to capture, typically
-            obtained from :func:`walk_declarations_register`.
+        declaration: The Declaracion row to capture, typically obtained from
+            :func:`walk_declarations_register`.
         settings: Optional :class:`Settings` override.
-        playwright: Optional pre-started Playwright instance
-            (typically from :func:`shared_playwright`). Reused
-            across the call to amortise the ~1s startup cost in
-            bulk sweeps. When ``None``, a fresh instance is started
+        playwright: Optional pre-started Playwright instance (typically from
+            :func:`shared_playwright`). When ``None`` a fresh instance is started
             and torn down per call.
 
     Returns:
-        A :class:`SedeCapture` whose ``ref`` carries the resolved
-        CSV / cotejo URL / PDF URL and whose ``pdf_bytes`` carries
-        the raw response body.
+        A :class:`SedeCapture` whose ``ref`` carries the resolved CSV / cotejo URL /
+        PDF URL and whose ``pdf_bytes`` carries the raw response body.
 
     Raises:
         SedeNavigationError: When the form drive or row click fails.
-        SedeParseError: When the cotejo URL cannot be parsed for
-            its CSV.
-        JustificanteFetchError: When the PDF GET returns non-2xx,
-        an empty body, or a non-PDF content type.
+        JustificanteFetchError: When the PDF GET returns a non-2xx status code,
+            an empty body, or an unexpected content type.
     """
     read_policy = _read_guard_policy_from_snapshot(_registry_snapshot_for_declaration(declaration))
     async with _open_register_page(session, settings=settings, playwright=playwright) as (

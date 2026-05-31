@@ -522,9 +522,9 @@ application:
       modelo_work_create: aeat app modelo work create
     output_labels:
       active_profile: active_profile
+      next: Kovetkezo
       profile: profile
       status: állapot
-      next: 'Kovetkezo'
     status:
       errors:
         missing_tax_id: Az aktív profilból hiányzik a tax.id azonosító.
@@ -2964,6 +2964,7 @@ errors:
     error_profile_validation: Egy profil-rekord nem ment át az érvényesítésen.
     error_redaction: Egy szerkesztési segédprogram rossz típusú argumentumot kapott.
     error_renta: Hiba történt a RENTA-számítás során.
+    error_renta_profile_completeness_warning: errors.error.error_renta_profile_completeness_warning
     error_renta_validation: Egy RENTA-mezőérték érvénytelen.
     error_rental_amortization_cap_exceeded: A halmozott amortizáció meghaladná a bérleti
       vagyonelem jogszabályi felső határát.
@@ -3422,6 +3423,7 @@ errors:
       profilválasztót. A folytatás előtt töltse ki a profilt.
     refused_profile_schema_validation: A profiladatok sértik a séma-szerződést. Javítsa
       a megjelenített értékeket.
+    refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
     refused_review_edit_parse: A  paramétert nem sikerült elemezni. Ellenőrizze a
       megadott érték szintaxisát.
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze

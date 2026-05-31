@@ -57,7 +57,7 @@ def exit_with(code: ExitCode, *, message: str | None = None) -> None:
         message: Optional stderr message to emit before exiting.
 
     Raises:
-        :exc:`typer.Exit`: Always, with the integer value of ``code``.
+        typer.Exit: Always, with the integer value of ``code``.
     """
     if message:
         typer.echo(message, err=True)

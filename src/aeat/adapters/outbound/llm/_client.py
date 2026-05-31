@@ -68,6 +68,9 @@ class LLMClient:
 
         Returns:
             The provider response enriched with cache and cost metadata.
+
+        Raises:
+            Exception: Re-raised after logging when the LLM provider adapter fails.
         """
         provider = request.provider_override or self._default_provider()
         model = request.model_override or self._default_model(provider)

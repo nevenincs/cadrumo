@@ -98,8 +98,8 @@ class AeatAccessGate:
         AEAT-prefixed variables.
 
         Raises:
-            :exc:`aeat.core.access_gate._errors.AeatLiveReadNotEnabledError`:
-                When ``Settings.aeat_live_tests_enabled`` is not True.
+            AeatLiveReadNotEnabledError: When
+                ``Settings.aeat_live_tests_enabled`` is not ``"1"``.
         """
         if self.settings.aeat_live_tests_enabled != "1":
             raise AeatLiveReadNotEnabledError(
@@ -116,8 +116,8 @@ class AeatAccessGate:
         typed, auditable refusal rather than a silent no-op.
 
         Raises:
-            :exc:`aeat.core.access_gate._errors.LiveSubmitForbiddenError`:
-                Always.
+            LiveSubmitForbiddenError: Always — live writes are
+                permanently forbidden.
         """
         raise LiveSubmitForbiddenError()
 
@@ -135,12 +135,11 @@ class AeatAccessGate:
         field, so it is read directly from ``os.environ`` as the only
         legitimate exception in this surface.
 
-        The ``pytest_current_test`` parameter is a DI seam for tests:
-        when ``None`` (production), the helper reads ``os.environ``;
-        when ``""``, the helper records the "absent" path; when any
-        other string, the helper records the explicit value. Tests
-        pass explicit values rather than mutating process-global env
-        through a hand-rolled scope helper.
+        Args:
+            pytest_current_test: DI seam for tests. When ``None``
+                (production), the helper reads ``os.environ``; when
+                ``""``, the helper records the "absent" path; when any
+                other string, the helper records the explicit value.
 
         Returns:
             A :class:`AeatGateEnvSnapshot` capturing the current

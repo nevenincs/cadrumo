@@ -169,9 +169,8 @@ class MasterKeyProvider(Protocol):
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
 
-        Raises:
-            MasterKeyUnavailableError: If the master key cannot be
-                acquired from this provider.
+        Returns:
+            The 32-byte AES-256 master key for the active session.
         """
         ...
 
@@ -726,9 +725,15 @@ class FileFallbackMasterKeyProvider:
         """Mint the file-fallback master key for explicit enrollment.
 
         Args:
-            force: When true, replace complete existing material. This
-                is reserved for explicit re-provision flows; normal
-                enrollment leaves it false and refuses existing state.
+            force: When True, replace complete existing material. Reserved for
+                explicit re-provision flows; normal enrollment leaves it False.
+
+        Returns:
+            The newly minted 32-byte master key.
+
+        Raises:
+            SecretAlreadyExistsError: When the store is already provisioned and ``force`` is False.
+            MasterKeyMaterialMissingError: When the store is in a torn state.
         """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         passphrase = self._resolve_passphrase()
@@ -976,8 +981,10 @@ class EphemeralMasterKeyProvider:
         """Construct a provider with an optional fixed key.
 
         Args:
-            key: Optional 32-byte key. When ``None``, a fresh random
-                key is minted.
+            key: Optional 32-byte key. When ``None``, a fresh random key is minted.
+
+        Raises:
+            SecretStoreError: When ``key`` is provided but is not exactly 32 bytes.
         """
         if key is None:
             key = secrets.token_bytes(KEY_SIZE)
@@ -1556,9 +1563,9 @@ def get_master_key_provider(
         A live provider instance honouring the resolved backend.
 
     Raises:
-        KeyringUnavailableError: When the resolved backend is
-            ``keyring`` and no usable keychain is detected.
         SecretStoreError: When ``backend`` is not a known value.
+        UnsecuredModeRefusedError: When the unsecured backend is selected with a real tax id.
+        MasterKeyKeychainLockedError: When the keyring backend detects no usable keychain.
     """
     from .....core.config import SecretStoreBackend, load_settings  # local import to avoid cycles
 

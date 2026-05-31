@@ -88,6 +88,10 @@ def build_entry(
 
     Returns:
         A validated, frozen :class:`PortalMetadata`.
+
+    Raises:
+        PortalValidationError: If neither or both of ``url`` and ``path``
+            are supplied, or if ``path`` does not start with ``/``.
     """
     if (url is None) == (path is None):
         raise PortalValidationError("build_entry: pass exactly one of `url=` or `path=`")

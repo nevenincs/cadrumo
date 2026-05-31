@@ -91,6 +91,13 @@ class ProfileKey(BaseModel):
         folds dashes into dots so ``"TAX.ID"`` and ``"tax.id"`` resolve
         to the same registry entry.
 
+        Args:
+            raw: Raw profile key string, possibly with non-canonical
+                casing or separator characters.
+
+        Returns:
+            The matching :class:`ProfileKey` from the registry.
+
         Raises:
             KeyError: When the normalised form is not in the registry.
         """
@@ -163,8 +170,11 @@ def get_profile_key(key: str) -> ProfileKey:
     before the registry lookup so case-insensitive callers resolve to
     the same entry as the canonical form.
 
-    Raises:
-        KeyError: When the normalised form is not in the registry.
+    Args:
+        key: Raw profile key string to look up.
+
+    Returns:
+        The matching :class:`ProfileKey` from the registry.
     """
     return ProfileKey.from_key(key)
 

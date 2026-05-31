@@ -68,9 +68,9 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     bypassing the loader was the same architectural drift pattern as
     direct ``os.environ`` reads.
 
-    Raises:
-        FincaValidationError: If any expected parameter is absent or
-            cannot be parsed as the expected type.
+    Returns:
+        A :class:`LirpfArt85ImputacionParameters` record loaded from the
+        registry catalogue.
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports

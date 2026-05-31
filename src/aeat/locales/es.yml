@@ -195,8 +195,10 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket de agregación solicitado.
-      candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo de agregacion.'
-      unsupported_iva_category: 'Error interno: categoria IVA no admitida para la agregacion.'
+      candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
+        de agregacion.'
+      unsupported_iva_category: 'Error interno: categoria IVA no admitida para la
+        agregacion.'
   modelo_bindings:
     errors:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
@@ -240,20 +242,26 @@ aggregation:
         de ingresos del Modelo 130 (p.ej. 2024Q1).
   service:
     errors:
-      envelope_modelo_mismatch: 'El modelo del envoltorio no coincide con el modelo esperado.'
-      envelope_period_mismatch: 'El periodo del envoltorio no coincide con el periodo esperado.'
-      envelope_provider_payload_mismatch: 'La carga del proveedor del envoltorio no coincide con la esperada.'
-      observations_mismatch: 'Las observaciones devueltas no coinciden con las esperadas.'
-      per_modelo_modelos_not_unique: 'Los modelos por modelo no son unicos.'
-      per_modelo_providers_not_unique: 'Los proveedores por modelo no son unicos.'
-      provider_modelos_not_unique: 'Los modelos del proveedor no son unicos.'
-      result_source_kinds_not_unique: 'Los tipos de fuente del resultado no son unicos.'
-      source_kinds_mismatch: 'Los tipos de fuente no coinciden con la taxonomia aceptada.'
+      envelope_modelo_mismatch: El modelo del envoltorio no coincide con el modelo
+        esperado.
+      envelope_period_mismatch: El periodo del envoltorio no coincide con el periodo
+        esperado.
+      envelope_provider_payload_mismatch: La carga del proveedor del envoltorio no
+        coincide con la esperada.
+      observations_mismatch: Las observaciones devueltas no coinciden con las esperadas.
+      per_modelo_modelos_not_unique: Los modelos por modelo no son unicos.
+      per_modelo_providers_not_unique: Los proveedores por modelo no son unicos.
+      provider_modelos_not_unique: Los modelos del proveedor no son unicos.
+      result_source_kinds_not_unique: Los tipos de fuente del resultado no son unicos.
+      source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
-      duplicate_binding_owner: 'Error interno: propietario de vinculacion duplicado en la malla de fuentes.'
-      duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada duplicado en la malla de fuentes.'
-      duplicate_relation_owner: 'Error interno: propietario de relacion duplicado en la malla de fuentes.'
+      duplicate_binding_owner: 'Error interno: propietario de vinculacion duplicado
+        en la malla de fuentes.'
+      duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
+        duplicado en la malla de fuentes.'
+      duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
+        en la malla de fuentes.'
 application:
   auth:
     acquisition_lock:
@@ -546,10 +554,10 @@ application:
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
-      active_profile: 'Perfil activo'
-      profile: 'Perfil'
+      active_profile: Perfil activo
+      next: Siguiente
+      profile: Perfil
       status: estado
-      next: 'Siguiente'
     status:
       errors:
         missing_tax_id: El perfil activo no tiene tax.id.
@@ -982,15 +990,16 @@ cli:
         seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
           no se puede sembrar otro.
         seed_filing_year_help: Ejercicio fiscal del importe inicial.
-        seed_help: "Declaración de un saldo inicial del monedero de compensación de IVA
-          para un período anterior al historial local. Se rechaza si ya existe un registro
-          para el período.\n\nDos casos:\n\n  --amount 0   Primer período real: es la
-          primera declaración del Modelo 303 del contribuyente bajo este NIF. La casilla
-          110 es cero porque no existe saldo previo (LIVA art. 99.5, Ley 37/1992). El
-          módulo de conciliación lo trata como first_period_zero, no bloqueante.\n\n
-          --amount X   Traspaso: el contribuyente ha presentado M303 anteriores con otra
-          herramienta o directamente en la AEAT. X es la compensación pendiente de períodos
-          posteriores de la última declaración presentada."
+        seed_help: "Declaración de un saldo inicial del monedero de compensación de\
+          \ IVA para un período anterior al historial local. Se rechaza si ya existe\
+          \ un registro para el período.\n\nDos casos:\n\n  --amount 0   Primer período\
+          \ real: es la primera declaración del Modelo 303 del contribuyente bajo\
+          \ este NIF. La casilla 110 es cero porque no existe saldo previo (LIVA art.\
+          \ 99.5, Ley 37/1992). El módulo de conciliación lo trata como first_period_zero,\
+          \ no bloqueante.\n\n --amount X   Traspaso: el contribuyente ha presentado\
+          \ M303 anteriores con otra herramienta o directamente en la AEAT. X es la\
+          \ compensación pendiente de períodos posteriores de la última declaración\
+          \ presentada."
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
         seed_negative_amount: El importe inicial no puede ser negativo.
         seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
@@ -1751,11 +1760,13 @@ cli:
       target_browser: navegador
       target_label: Destino
     dead_end:
-      registry_bundled: 'Error interno: el registro esta empaquetado en la aplicacion y no puede repararse manualmente.'
+      registry_bundled: 'Error interno: el registro esta empaquetado en la aplicacion
+        y no puede repararse manualmente.'
       registry_integrity_internal: Problema interno de la aplicación; no es un fallo
         de tu perfil ni algo que puedas corregir tú.
     next_action:
-      inspect_registry_toml: 'Inspeccione las fuentes TOML del registro para identificar el problema.'
+      inspect_registry_toml: Inspeccione las fuentes TOML del registro para identificar
+        el problema.
     profile:
       errors:
         invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
@@ -1792,7 +1803,7 @@ cli:
       help: Inventariar el índice de objetos seguros por espacio de nombres.
       labels:
         count: recuento
-        namespace: 'Espacio de nombres'
+        namespace: Espacio de nombres
       list_help: Lista las claves de objetos seguros guardadas en un espacio de nombres.
       namespace_help: Espacio de nombres que se va a inventariar.
       unreadable_help: Limita el listado a filas no descifrables.
@@ -1812,18 +1823,18 @@ cli:
       registry_integrity_failed: 'Comprobacion de integridad del registro: FALLIDA.'
       registry_integrity_ok: 'Comprobacion de integridad del registro: correcta.'
       registry_integrity_skipped: 'Comprobacion de integridad del registro: omitida.'
-      registry_unavailable: 'El registro no esta disponible.'
-      secure_objects_empty: 'El almacen de objetos seguros esta vacio.'
+      registry_unavailable: El registro no esta disponible.
+      secure_objects_empty: El almacen de objetos seguros esta vacio.
       secure_objects_readable: '%{readable} namespaces de objetos seguros legibles:
         %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
-      state_backend_readable: 'El almacen de estado del flujo de trabajo es accesible.'
-      state_backend_unreadable: 'El almacen de estado del flujo de trabajo no es accesible.'
-      venv_in_sync: 'El entorno virtual esta sincronizado.'
-      venv_stale: 'El entorno virtual esta desactualizado.'
+      state_backend_readable: El almacen de estado del flujo de trabajo es accesible.
+      state_backend_unreadable: El almacen de estado del flujo de trabajo no es accesible.
+      venv_in_sync: El entorno virtual esta sincronizado.
+      venv_stale: El entorno virtual esta desactualizado.
     version:
-      no_revisions: 'No hay revisiones del registro disponibles.'
+      no_revisions: No hay revisiones del registro disponibles.
       registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
         %{formulas} fórmulas, %{revisions} revisiones.'
       registry_unavailable: '%{package} %{version}: registro no disponible (%{error}).'
@@ -2148,9 +2159,9 @@ cli:
     remove_key_help: Clave de locale con puntos que se eliminará.
     remove_locale_help: Código de locale a actualizar.
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
-    set_key_help: 'Clave de locale con formato de puntos a establecer.'
-    set_locale_help: 'Codigo del locale a actualizar (p. ej. en, es, ca).'
-    set_value_help: 'Valor de locale a establecer.'
+    set_key_help: Clave de locale con formato de puntos a establecer.
+    set_locale_help: Codigo del locale a actualizar (p. ej. en, es, ca).
+    set_value_help: Valor de locale a establecer.
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -2158,126 +2169,148 @@ cli:
         %{value}.'
   operator_surface:
     errors:
-      accepted_roots_only: 'Solo se aceptan los comandos raiz ''app'' y ''config''.'
+      accepted_roots_only: Solo se aceptan los comandos raiz 'app' y 'config'.
       contract_not_accepted: 'La superficie %{surface} no aceptó el contrato del operador:
         %{reason}.'
       source_kind_options: 'Opciones de tipo de fuente disponibles: %{options}.'
-      unknown_source_kind: 'Tipo de fuente desconocido: %{kind}. Use --help para ver las opciones disponibles.'
+      unknown_source_kind: 'Tipo de fuente desconocido: %{kind}. Use --help para ver
+        las opciones disponibles.'
     help:
       app:
-        footer: 'Ejecute ''aeat app <comando> --help'' para obtener mas informacion sobre cada comando.'
-        heading: 'Operaciones de declaracion fiscal AEAT.'
-        ledger_allocate: 'Asignar transacciones a un periodo fiscal.'
-        ledger_archive: 'Archivar entradas del libro de transacciones.'
-        ledger_attach: 'Adjuntar un fichero de origen a una entrada del libro.'
-        ledger_classify: 'Clasificar transacciones del libro segun su naturaleza fiscal.'
-        ledger_export: 'Exportar el libro de transacciones.'
-        ledger_import: 'Importar transacciones al libro desde una fuente externa.'
-        ledger_list: 'Listar entradas del libro de transacciones.'
-        ledger_remove: 'Eliminar una entrada del libro de transacciones.'
-        ledger_reset: 'Reiniciar el estado del libro de transacciones.'
-        ledger_review: 'Revisar entradas del libro para su clasificacion fiscal.'
-        ledger_stash: 'Guardar temporalmente cambios del libro pendientes.'
-        ledger_status: 'Mostrar el estado del libro de transacciones.'
-        ledger_update: 'Actualizar una entrada del libro de transacciones.'
-        ledger_view: 'Ver el detalle de una entrada del libro.'
-        live_filed_capture: 'Capturar declaraciones presentadas en vivo desde la AEAT.'
-        live_filed_capture_sources: 'Mostrar las fuentes disponibles para captura de declaraciones en vivo.'
-        live_filed_list: 'Listar declaraciones presentadas capturadas desde la AEAT.'
-        modelo_bindings: 'Gestionar las vinculaciones de un modelo fiscal.'
-        modelo_describe: 'Describir la estructura de un modelo fiscal.'
-        modelo_list: 'Listar los modelos fiscales disponibles.'
-        modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y exportar.'
-        overview_status: 'Mostrar el estado general de la declaracion activa.'
-        paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe transacciones -> trabaje el modelo -> revise -> exporte.'
-        registry_inspect: 'Inspeccionar el registro de modelos fiscales.'
-        registry_verify: 'Verificar la integridad del registro de modelos.'
-        review_queue: 'Mostrar la cola de revision pendiente.'
-        review_view: 'Ver el detalle de un elemento de la cola de revision.'
-        section_ledger: 'Libro de transacciones'
-        section_live_reads: 'Lecturas en vivo AEAT'
-        section_modelo: 'Modelos fiscales'
-        section_overview: 'Estado general'
-        section_review_and_registry: 'Revision y registro'
+        footer: Ejecute 'aeat app <comando> --help' para obtener mas informacion sobre
+          cada comando.
+        heading: Operaciones de declaracion fiscal AEAT.
+        ledger_allocate: Asignar transacciones a un periodo fiscal.
+        ledger_archive: Archivar entradas del libro de transacciones.
+        ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
+        ledger_classify: Clasificar transacciones del libro segun su naturaleza fiscal.
+        ledger_export: Exportar el libro de transacciones.
+        ledger_import: Importar transacciones al libro desde una fuente externa.
+        ledger_list: Listar entradas del libro de transacciones.
+        ledger_remove: Eliminar una entrada del libro de transacciones.
+        ledger_reset: Reiniciar el estado del libro de transacciones.
+        ledger_review: Revisar entradas del libro para su clasificacion fiscal.
+        ledger_stash: Guardar temporalmente cambios del libro pendientes.
+        ledger_status: Mostrar el estado del libro de transacciones.
+        ledger_update: Actualizar una entrada del libro de transacciones.
+        ledger_view: Ver el detalle de una entrada del libro.
+        live_filed_capture: Capturar declaraciones presentadas en vivo desde la AEAT.
+        live_filed_capture_sources: Mostrar las fuentes disponibles para captura de
+          declaraciones en vivo.
+        live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
+        modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
+        modelo_describe: Describir la estructura de un modelo fiscal.
+        modelo_list: Listar los modelos fiscales disponibles.
+        modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
+          exportar.'
+        overview_status: Mostrar el estado general de la declaracion activa.
+        paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe
+          transacciones -> trabaje el modelo -> revise -> exporte.'
+        registry_inspect: Inspeccionar el registro de modelos fiscales.
+        registry_verify: Verificar la integridad del registro de modelos.
+        review_queue: Mostrar la cola de revision pendiente.
+        review_view: Ver el detalle de un elemento de la cola de revision.
+        section_ledger: Libro de transacciones
+        section_live_reads: Lecturas en vivo AEAT
+        section_modelo: Modelos fiscales
+        section_overview: Estado general
+        section_review_and_registry: Revision y registro
       config:
-        auth_clear: 'Eliminar las credenciales de autenticacion almacenadas.'
-        auth_configure: 'Configurar el proveedor de autenticacion con la AEAT.'
-        auth_providers: 'Listar los proveedores de autenticacion disponibles.'
-        auth_status: 'Mostrar el estado actual de la autenticacion con la AEAT.'
-        auth_test: 'Probar la autenticacion con la AEAT.'
-        diagnostics_logs: 'Consultar los registros de diagnostico de la aplicacion.'
-        diagnostics_quarantine: 'Gestionar los elementos en cuarentena.'
-        diagnostics_repair: 'Ejecutar comprobaciones de salud y reparar el estado de la aplicacion.'
-        diagnostics_reset_state: 'Reiniciar el estado interno de la aplicacion.'
-        first_run_bootstrap: 'Inicializar la configuracion en el primer uso.'
-        first_run_edit: 'Editar la configuracion inicial.'
-        footer: 'Ejecute ''aeat config <comando> --help'' para obtener mas informacion sobre cada comando.'
-        heading: 'Configuracion y diagnostico del contribuyente.'
-        paragraph_durable_state: 'El estado duradero (perfil, autenticacion, libro) persiste entre sesiones.'
-        profile_census: 'Mostrar el estado del censo del perfil activo.'
-        profile_delete: 'Eliminar un perfil de contribuyente.'
-        profile_duplicate: 'Duplicar un perfil de contribuyente existente.'
-        profile_list: 'Listar los perfiles de contribuyente disponibles.'
-        profile_rename: 'Renombrar un perfil de contribuyente.'
-        profile_show: 'Mostrar los datos del perfil activo.'
-        profile_status: 'Mostrar el estado del perfil activo.'
-        profile_switch: 'Cambiar al perfil de contribuyente indicado.'
-        section_authentication: 'Autenticacion AEAT'
-        section_diagnostics: 'Diagnostico'
-        section_first_run: 'Primera ejecucion'
-        section_profile_inspection: 'Inspeccion de perfil'
-        section_profile_lifecycle: 'Ciclo de vida del perfil'
+        auth_clear: Eliminar las credenciales de autenticacion almacenadas.
+        auth_configure: Configurar el proveedor de autenticacion con la AEAT.
+        auth_providers: Listar los proveedores de autenticacion disponibles.
+        auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
+        auth_test: Probar la autenticacion con la AEAT.
+        diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
+        diagnostics_quarantine: Gestionar los elementos en cuarentena.
+        diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
+          la aplicacion.
+        diagnostics_reset_state: Reiniciar el estado interno de la aplicacion.
+        first_run_bootstrap: Inicializar la configuracion en el primer uso.
+        first_run_edit: Editar la configuracion inicial.
+        footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
+          sobre cada comando.
+        heading: Configuracion y diagnostico del contribuyente.
+        paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
+          persiste entre sesiones.
+        profile_census: Mostrar el estado del censo del perfil activo.
+        profile_delete: Eliminar un perfil de contribuyente.
+        profile_duplicate: Duplicar un perfil de contribuyente existente.
+        profile_list: Listar los perfiles de contribuyente disponibles.
+        profile_rename: Renombrar un perfil de contribuyente.
+        profile_show: Mostrar los datos del perfil activo.
+        profile_status: Mostrar el estado del perfil activo.
+        profile_switch: Cambiar al perfil de contribuyente indicado.
+        section_authentication: Autenticacion AEAT
+        section_diagnostics: Diagnostico
+        section_first_run: Primera ejecucion
+        section_profile_inspection: Inspeccion de perfil
+        section_profile_lifecycle: Ciclo de vida del perfil
       root:
-        diagnostics_live_filed: 'Diagnosticar las declaraciones presentadas capturadas en vivo.'
-        diagnostics_overview: 'Mostrar el diagnostico general del estado del sistema.'
-        diagnostics_registry_inspect: 'Inspeccionar el registro de modelos fiscales.'
-        diagnostics_repair: 'Ejecutar comprobaciones de salud y reparar el estado de la aplicacion.'
-        diagnostics_review_queue: 'Mostrar la cola de revision pendiente.'
-        footer: 'Ejecute ''aeat <comando> --help'' para obtener mas informacion sobre cada comando.'
-        heading: 'Herramienta de declaraciones fiscales AEAT.'
-        ledger_allocate: 'Asignar transacciones a un periodo fiscal.'
-        ledger_archive: 'Archivar entradas del libro de transacciones.'
-        ledger_attach: 'Adjuntar un fichero de origen a una entrada del libro.'
-        ledger_classify: 'Clasificar transacciones del libro segun su naturaleza fiscal.'
-        ledger_export: 'Exportar el libro de transacciones.'
-        ledger_import: 'Importar transacciones al libro desde una fuente externa.'
-        ledger_list: 'Listar entradas del libro de transacciones.'
-        ledger_remove: 'Eliminar una entrada del libro de transacciones.'
-        ledger_reset: 'Reiniciar el estado del libro de transacciones.'
-        ledger_review: 'Revisar entradas del libro para su clasificacion fiscal.'
-        ledger_stash: 'Guardar temporalmente cambios del libro pendientes.'
-        ledger_status: 'Mostrar el estado del libro de transacciones.'
-        ledger_update: 'Actualizar una entrada del libro de transacciones.'
-        ledger_view: 'Ver el detalle de una entrada del libro.'
-        modelo_bindings_list: 'Listar las vinculaciones del modelo fiscal activo.'
-        modelo_list: 'Listar los modelos fiscales disponibles.'
-        modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y exportar.'
-        paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones de declaracion y ''config'' para configuracion y diagnostico.'
-        paragraph_type_help: 'Escriba ''aeat <comando> --help'' para obtener ayuda detallada.'
-        section_daily_ledger: 'Libro diario de transacciones'
-        section_diagnostics: 'Diagnostico'
-        section_modelo_lifecycle: 'Ciclo de vida del modelo'
-        section_setup: 'Configuracion'
-        setup_configure_auth: 'Configurar la autenticacion con la AEAT.'
-        setup_create_profile: 'Crear un nuevo perfil de contribuyente.'
-        setup_inspect_profile: 'Inspeccionar el perfil de contribuyente activo.'
+        diagnostics_live_filed: Diagnosticar las declaraciones presentadas capturadas
+          en vivo.
+        diagnostics_overview: Mostrar el diagnostico general del estado del sistema.
+        diagnostics_registry_inspect: Inspeccionar el registro de modelos fiscales.
+        diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
+          la aplicacion.
+        diagnostics_review_queue: Mostrar la cola de revision pendiente.
+        footer: Ejecute 'aeat <comando> --help' para obtener mas informacion sobre
+          cada comando.
+        heading: Herramienta de declaraciones fiscales AEAT.
+        ledger_allocate: Asignar transacciones a un periodo fiscal.
+        ledger_archive: Archivar entradas del libro de transacciones.
+        ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
+        ledger_classify: Clasificar transacciones del libro segun su naturaleza fiscal.
+        ledger_export: Exportar el libro de transacciones.
+        ledger_import: Importar transacciones al libro desde una fuente externa.
+        ledger_list: Listar entradas del libro de transacciones.
+        ledger_remove: Eliminar una entrada del libro de transacciones.
+        ledger_reset: Reiniciar el estado del libro de transacciones.
+        ledger_review: Revisar entradas del libro para su clasificacion fiscal.
+        ledger_stash: Guardar temporalmente cambios del libro pendientes.
+        ledger_status: Mostrar el estado del libro de transacciones.
+        ledger_update: Actualizar una entrada del libro de transacciones.
+        ledger_view: Ver el detalle de una entrada del libro.
+        modelo_bindings_list: Listar las vinculaciones del modelo fiscal activo.
+        modelo_list: Listar los modelos fiscales disponibles.
+        modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
+          exportar.'
+        paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
+          de declaracion y ''config'' para configuracion y diagnostico.'
+        paragraph_type_help: Escriba 'aeat <comando> --help' para obtener ayuda detallada.
+        section_daily_ledger: Libro diario de transacciones
+        section_diagnostics: Diagnostico
+        section_modelo_lifecycle: Ciclo de vida del modelo
+        section_setup: Configuracion
+        setup_configure_auth: Configurar la autenticacion con la AEAT.
+        setup_create_profile: Crear un nuevo perfil de contribuyente.
+        setup_inspect_profile: Inspeccionar el perfil de contribuyente activo.
     landing:
       active_profile_message: 'Perfil activo: %{profile}.'
-      no_active_profile_message: 'No hay ningun perfil activo. Ejecute ''aeat config first-run'' para comenzar.'
+      no_active_profile_message: No hay ningun perfil activo. Ejecute 'aeat config
+        first-run' para comenzar.
       text_template: '%{message} Comando sugerido: %{command}'
     retired:
       archive_reason: 'Comando retirado: use el subcomando de archivo del libro.'
-      data_reason: 'Comando retirado: acceda a los datos a traves del libro o del perfil.'
-      declaration_reason: 'Comando retirado: use ''aeat app modelo work'' para gestionar declaraciones.'
-      filing_reason: 'Comando retirado: use ''aeat app modelo work'' para preparar la declaracion.'
-      financial_reason: 'Comando retirado: use ''aeat app ledger'' para el libro de transacciones.'
-      invoice_reason: 'Comando retirado: las facturas se gestionan desde el libro de transacciones.'
+      data_reason: 'Comando retirado: acceda a los datos a traves del libro o del
+        perfil.'
+      declaration_reason: 'Comando retirado: use ''aeat app modelo work'' para gestionar
+        declaraciones.'
+      filing_reason: 'Comando retirado: use ''aeat app modelo work'' para preparar
+        la declaracion.'
+      financial_reason: 'Comando retirado: use ''aeat app ledger'' para el libro de
+        transacciones.'
+      invoice_reason: 'Comando retirado: las facturas se gestionan desde el libro
+        de transacciones.'
       llm_reason: 'Comando retirado: las funciones de asistencia IA se han eliminado.'
-      preflight_reason: 'Comando retirado: las comprobaciones previas se ejecutan automaticamente.'
+      preflight_reason: 'Comando retirado: las comprobaciones previas se ejecutan
+        automaticamente.'
       presentation_reason: 'Comando retirado: use el flujo de exportacion del modelo.'
       sanitize_reason: 'Comando retirado: el saneamiento de datos es automatico.'
-      setup_reason: 'Comando retirado: use ''aeat config first-run'' para la configuracion inicial.'
-      submit_reason: 'Comando retirado: la presentacion debe realizarse manualmente a traves de la Sede Electronica.'
+      setup_reason: 'Comando retirado: use ''aeat config first-run'' para la configuracion
+        inicial.'
+      submit_reason: 'Comando retirado: la presentacion debe realizarse manualmente
+        a traves de la Sede Electronica.'
       topic_reason: 'Comando retirado: consulte la documentacion del modelo correspondiente.'
       workflow_reason: 'Comando retirado: use el flujo principal de ''aeat app''.'
   overview:
@@ -2767,7 +2800,8 @@ errors:
       necesario para esta operación de almacenamiento.
     auth_session_corrupt: Los metadatos de la sesión guardada no se pueden leer. Vuelve
       a autenticarte para crear una sesión nueva.
-    auth_session_deserialization: 'Los datos de sesion de autenticacion almacenados no se pudieron deserializar. Vuelve a autenticarte para crear una sesion nueva.'
+    auth_session_deserialization: Los datos de sesion de autenticacion almacenados
+      no se pudieron deserializar. Vuelve a autenticarte para crear una sesion nueva.
     auth_session_unavailable: No hay ninguna sesión activa verificada con la AEAT
       disponible. Autentícate antes de continuar.
     auth_storage_bucket_recovery_verification: El código de recuperación introducido
@@ -2789,11 +2823,13 @@ errors:
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
-    age_at_year_end_no_filing_year: 'Error interno: el calculo de edad a fin de ejercicio no tiene ejercicio de declaracion.'
+    age_at_year_end_no_filing_year: 'Error interno: el calculo de edad a fin de ejercicio
+      no tiene ejercicio de declaracion.'
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
       asignado.
-    bound_input_smuggled_without_binding_value: 'Error interno: casilla de entrada vinculada pasada sin valor de vinculacion.'
+    bound_input_smuggled_without_binding_value: 'Error interno: casilla de entrada
+      vinculada pasada sin valor de vinculacion.'
     bound_projection_inconsistent: 'Error interno: la proyeccion vinculada es inconsistente.'
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
@@ -2807,8 +2843,9 @@ errors:
       de evaluar su fórmula.
     computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas
       calculadas: {casilla_ids}.'
-    date_binding_used_as_decimal_leaf: 'Error interno: vinculacion de fecha utilizada como hoja decimal.'
-    date_binding_value_missing: 'Falta el valor de la vinculacion de fecha.'
+    date_binding_used_as_decimal_leaf: 'Error interno: vinculacion de fecha utilizada
+      como hoja decimal.'
+    date_binding_value_missing: Falta el valor de la vinculacion de fecha.
     dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla
       del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
     dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador
@@ -2822,9 +2859,11 @@ errors:
       sea una hoja de tipo {expected_kind}.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
-    text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no textuales: %{casilla_ids}.'
+    text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
+      textuales: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
-    unknown_text_input_casillas: 'Identificadores de casilla de entrada de texto desconocidos: %{casilla_ids}.'
+    unknown_text_input_casillas: 'Identificadores de casilla de entrada de texto desconocidos:
+      %{casilla_ids}.'
     unsupported_comparison_op: 'Operador de comparacion no admitido: %{op}.'
     unsupported_op: 'Operador de formula no admitido: %{op}.'
   censo:
@@ -2872,7 +2911,7 @@ errors:
     error_categories_validation: Un registro de categoría no superó la validación.
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
-    error_deadlines_missing_windows: 'Faltan las ventanas de plazo de presentacion.'
+    error_deadlines_missing_windows: Faltan las ventanas de plazo de presentacion.
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
       el cálculo de plazos.
     error_deadlines_schedule_computation: El motor no pudo generar un calendario de
@@ -2997,6 +3036,7 @@ errors:
     error_profile_validation: Un registro de perfil no superó la validación.
     error_redaction: Un helper de redacción recibió un argumento del tipo incorrecto.
     error_renta: Se produjo un error en el cálculo de la declaración de la Renta.
+    error_renta_profile_completeness_warning: errors.error.error_renta_profile_completeness_warning
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
     error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
       límite legal del activo arrendado.
@@ -3101,7 +3141,7 @@ errors:
       Comprueba tu conexión a internet y vuelve a intentarlo.
     fail_outbound_storage_unavailable: El servicio de almacenamiento está temporalmente
       no disponible. Espera unos minutos y vuelve a intentarlo.
-    fail_repair_decision_not_found: 'No se encontro la decision de reparacion solicitada.'
+    fail_repair_decision_not_found: No se encontro la decision de reparacion solicitada.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
@@ -3113,7 +3153,7 @@ errors:
     fail_sede_validation: Los datos capturados de la Sede de la AEAT no tienen la
       forma esperada.
     fail_site_health: La comprobación de estado del sitio falló.
-    fail_snapshot_not_found: 'No se encontro la instantanea solicitada.'
+    fail_snapshot_not_found: No se encontro la instantanea solicitada.
     fail_storage: Se produjo un error en el almacenamiento.
     fail_storage_blob_not_found: No se encontró el objeto solicitado en el almacén
       cifrado.
@@ -3122,7 +3162,7 @@ errors:
     fail_storage_persistence: Se produjo un error de persistencia en el almacenamiento
       seguro.
     fail_storage_repository: Una operación de repositorio falló.
-    fail_storage_repository_setup: 'Error al inicializar el repositorio de almacenamiento.'
+    fail_storage_repository_setup: Error al inicializar el repositorio de almacenamiento.
     fail_storage_secret_not_found: No se encontró ningún secreto para la clave solicitada.
     fail_storage_secret_store: Se produjo un error de entrada o salida en el almacén
       de secretos.
@@ -3213,7 +3253,7 @@ errors:
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
       el identificador indicado.
-    integrity_repair_integrity: 'La comprobacion de integridad de reparacion ha fallado.'
+    integrity_repair_integrity: La comprobacion de integridad de reparacion ha fallado.
     integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
       el de su manifiesto.
     integrity_storage_bucket_validation: Un parámetro del depósito o campo del manifiesto
@@ -3260,11 +3300,15 @@ errors:
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
-    internal_profile_keys_registration: 'Error interno: no se pudieron registrar las claves del perfil.'
-    internal_profile_project_answers_not_registered: 'Error interno: las respuestas del proyecto de perfil no estan registradas.'
+    internal_profile_keys_registration: 'Error interno: no se pudieron registrar las
+      claves del perfil.'
+    internal_profile_project_answers_not_registered: 'Error interno: las respuestas
+      del proyecto de perfil no estan registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
-    internal_wizard_catalogue_already_registered: 'Error interno: el catalogo del asistente ya esta registrado.'
-    internal_wizard_catalogue_not_registered: 'Error interno: el catalogo del asistente no esta registrado.'
+    internal_wizard_catalogue_already_registered: 'Error interno: el catalogo del
+      asistente ya esta registrado.'
+    internal_wizard_catalogue_not_registered: 'Error interno: el catalogo del asistente
+      no esta registrado.'
     internal_wizard_script_overflow: 'Error interno: el asistente se cerró con respuestas
       guionizadas sin consumir.'
     internal_wizard_script_underflow: 'Error interno: el asistente solicitó más respuestas
@@ -3349,12 +3393,15 @@ errors:
       puede ejecutar con los datos indicados.
     refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
       resuelve a un bucket registrado.
-    refused_auth_diagnostic_payload: 'Rechazado: la carga de diagnostico de autenticacion no es valida.'
+    refused_auth_diagnostic_payload: 'Rechazado: la carga de diagnostico de autenticacion
+      no es valida.'
     refused_auth_diagnostic_phone_state: El valor de estado del teléfono proporcionado
       no se reconoce. Utilice uno de los valores válidos de estado de teléfono del
       operador.
-    refused_auth_login_live_tests_disabled: 'Las pruebas de inicio de sesion en vivo estan deshabilitadas.'
-    refused_auth_login_precondition: 'La precondicion para el inicio de sesion de autenticacion no se cumple.'
+    refused_auth_login_live_tests_disabled: Las pruebas de inicio de sesion en vivo
+      estan deshabilitadas.
+    refused_auth_login_precondition: La precondicion para el inicio de sesion de autenticacion
+      no se cumple.
     refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
       reservado pero no implementado.
     refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
@@ -3369,7 +3416,8 @@ errors:
       Ejecuta `aeat config repair` o restablece el estado del perfil.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
-    refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico incumplida.'
+    refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico
+      incumplida.'
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
       el identificador indicado.
     refused_evidence_bundle_verification: La verificación del paquete de evidencias
@@ -3414,8 +3462,10 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
-    refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensacion de IVA no se pudo interpretar como decimal.'
-    refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensacion de IVA esta fuera del rango aceptado.'
+    refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensacion
+      de IVA no se pudo interpretar como decimal.'
+    refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensacion
+      de IVA esta fuera del rango aceptado.'
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.
@@ -3488,6 +3538,7 @@ errors:
       un dato de perfil obligatorio. Completa el perfil antes de continuar.
     refused_profile_schema_validation: Los datos del perfil infringen el contrato
       del esquema. Corrige los valores indicados.
+    refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
     refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
       la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
@@ -3538,7 +3589,7 @@ errors:
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
   snapshot:
-    modelo_not_registered: 'El modelo no esta registrado en el registro.'
+    modelo_not_registered: El modelo no esta registrado en el registro.
   storage:
     engine:
       create_failed: No se pudo crear el motor de base de datos de almacenamiento.
@@ -3593,9 +3644,10 @@ filing:
     schema_mismatch: Discrepancia con el esquema esperado
 live:
   errors:
-    expediente_not_found: 'No se encontro el expediente solicitado en la AEAT.'
-    iva_history_modelo_303_only: 'El historial de IVA solo esta disponible para el Modelo 303.'
-    year_range_invalid: 'El rango de ejercicios indicado no es valido.'
+    expediente_not_found: No se encontro el expediente solicitado en la AEAT.
+    iva_history_modelo_303_only: El historial de IVA solo esta disponible para el
+      Modelo 303.
+    year_range_invalid: El rango de ejercicios indicado no es valido.
 locales:
   cli:
     audit:
@@ -3633,8 +3685,8 @@ profile:
 review:
   adapters:
     errors:
-      invoices_load_failed: 'No se pudieron cargar las facturas del adaptador.'
-      transactions_load_failed: 'No se pudieron cargar las transacciones del adaptador.'
+      invoices_load_failed: No se pudieron cargar las facturas del adaptador.
+      transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
   filing:
     draft_placeholder_summary: Borrador pendiente
     finding_summary: Incidencia detectada en el borrador
@@ -3643,7 +3695,7 @@ review:
     summary: Justificante pendiente de revisión
   operator:
     errors:
-      item_not_found: 'No se encontro el elemento solicitado en la cola de revision.'
+      item_not_found: No se encontro el elemento solicitado en la cola de revision.
       unknown_kind: 'Tipo de elemento de revision desconocido: %{kind}.'
       unsupported_item_type: 'Tipo de elemento de revision no admitido: %{item_type}.'
   transaction:
@@ -3686,7 +3738,7 @@ sheets:
       valuation_amount: Valoración
 some:
   locale:
-    key: 'Clave de locale de prueba'
+    key: Clave de locale de prueba
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado

@@ -62,10 +62,6 @@ def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
 
     Returns:
         The updated ledger document including the newly inserted asset.
-
-    Raises:
-        :exc:`aeat.domain.profile.errors.AssetRecordError`: When ``asset.identifier``
-            is already present in the ledger.
     """
     return AssetsLedgerRepository().add(asset)
 
@@ -117,8 +113,7 @@ class AssetsLedgerRepository:
             Decrypted assets ledger document.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.AssetRecordError`: When the
-                envelope exists but cannot be loaded or decrypted.
+            AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
         """
         try:
             record = self._objects.load(
@@ -152,8 +147,7 @@ class AssetsLedgerRepository:
             The ledger document including the new asset.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.AssetRecordError`: When an asset
-                with the same :attr:`AssetRecord.identifier` already exists.
+            AssetRecordError: When an asset with the same identifier already exists.
         """
         current = self._load_unlocked()
         if any(existing.identifier == asset.identifier for existing in current.assets):
@@ -214,8 +208,7 @@ class AmortizacionLedgerRepository:
             Decrypted amortizacion ledger.
 
         Raises:
-            :exc:`aeat.domain.profile.errors.AssetRecordError`: When the
-                envelope exists but cannot be loaded or decrypted.
+            AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
         """
         try:
             record = self._objects.load(

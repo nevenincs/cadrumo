@@ -268,7 +268,7 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         The redacted string.
 
     Raises:
-        TypeError: When ``value`` is not a :class:`str`.
+        RedactionError: When ``value`` is not a :class:`str`.
     """
     if not isinstance(value, str):
         from ..errors import RedactionError
@@ -427,6 +427,9 @@ def redact_for_cli_output(text: str) -> str:
 
     Returns:
         Redacted CLI-safe text.
+
+    Raises:
+        RedactionError: When ``text`` is not a :class:`str`.
     """
     if not isinstance(text, str):
         from ..errors import RedactionError

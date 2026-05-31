@@ -97,15 +97,6 @@ def parse_declaracion(
         A strict :class:`DeclaracionObservation` populated with the extracted
         casillas, warnings, and provenance metadata.
 
-    Raises:
-        :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
-            When auto-detection fails and the caller did not supply both
-            ``modelo_override`` and ``año_override``.
-        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
-            For other parse errors (PDF not found, empty text, required
-            header field missing, override conflicts with detected
-            metadata, malformed casilla values, or missing extraction
-            coverage).
     """
     path = Path(pdf_path)
     pages = extract_pages_text(path)
@@ -247,11 +238,9 @@ def _resolve_template(
         The resolved :class:`TemplateRevision`.
 
     Raises:
-        :exc:`aeat.adapters.inbound.declaracion._errors.TemplateNotDetectedError`:
-            When detection fails and the caller did not supply both
+        TemplateNotDetectedError: When detection fails and the caller did not supply both
             modelo and año.
-        :exc:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`:
-            When an override conflicts with the detected metadata.
+        DeclaracionParseError: When an override conflicts with the detected metadata.
     """
     if modelo_override and año_override and template_revision_override:
         return TemplateRevision(
@@ -566,6 +555,10 @@ def _resolve_value_word(
             words whose ``x0`` is at most this value.  Useful in multi-column
             layouts where an empty cell would otherwise match the next column's
             box number.
+
+    Returns:
+        The matched value word, or ``None`` if no candidate satisfies the offset
+        and proximity constraints.
     """
     anchor_top = anchor_word["top"]
     anchor_x1 = anchor_word["x1"]

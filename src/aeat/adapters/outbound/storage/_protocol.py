@@ -54,33 +54,30 @@ class StorageProvider(Protocol):
 
         Returns:
             The newly-written object's metadata.
-
-        Raises:
-            OutboundStorageConflictError: Concurrent write detected.
-            OutboundStoragePermissionError: Credentials lack write scope.
-            OutboundStorageQuotaError: Backend quota exhausted.
-            OutboundStorageNetworkError: Endpoint unreachable.
         """
         ...
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
         """Read an object's payload and metadata.
 
-        Raises:
-            OutboundStorageNotFoundError: Object does not exist.
-            OutboundStorageIntegrityError: Stored content hash mismatches the
-                fetched payload.
-            OutboundStoragePermissionError: Credentials lack read scope.
-            OutboundStorageNetworkError: Endpoint unreachable.
+        Args:
+            namespace: Source namespace to read from.
+            object_key_hmac: Stable HMAC identifying the object.
+
+        Returns:
+            A ``(payload_bytes, metadata)`` tuple.
         """
         ...
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
         """Remove an object. Return True iff it existed before this call.
 
-        Raises:
-            OutboundStoragePermissionError: Credentials lack delete scope.
-            OutboundStorageNetworkError: Endpoint unreachable.
+        Args:
+            namespace: Namespace containing the object.
+            object_key_hmac: Stable HMAC identifying the object to remove.
+
+        Returns:
+            True if the object existed and was removed; False if it was absent.
         """
         ...
 
@@ -94,28 +91,30 @@ class StorageProvider(Protocol):
         ...
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
-        """Yield every object in `namespace`. Order is backend-defined.
+        """Yield every object in ``namespace``. Order is backend-defined.
 
-        Raises:
-            OutboundStorageNotFoundError: Namespace does not exist.
-            OutboundStoragePermissionError: Credentials lack listing scope.
-            OutboundStorageNetworkError: Endpoint unreachable.
+        Args:
+            namespace: Namespace to enumerate.
+
+        Returns:
+            An iterator of :class:`ProviderObjectMetadata` for each object.
         """
         ...
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
         """Health-check the backend; return a structured report.
 
-        When `read_only=False`, performs a sentinel-file round-trip
-        (put + get + delete in the `_probe/` namespace) to verify write
-        capability. When `read_only=True`, only attempts to list
-        namespaces.
+        When ``read_only=False``, performs a sentinel-file round-trip
+        (put + get + delete in the ``_probe/`` namespace) to verify write
+        capability. When ``read_only=True``, only attempts to list namespaces.
+
+        Args:
+            read_only: When True, skips the write round-trip and only checks listing.
 
         Returns:
-            A `ProviderProbeReport` describing the backend's state.
+            A :class:`ProviderProbeReport` describing the backend's state.
             Never raises on transient failures; failure modes surface
-            via the report's `reachable` / `writable` fields and
-            `detail` string.
+            via the report's ``reachable`` / ``writable`` fields and ``detail`` string.
         """
         ...
 
