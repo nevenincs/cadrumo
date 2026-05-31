@@ -13,19 +13,16 @@ import re
 from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import Final
-
 import i18n
 import yaml
 
 from ..config import PROJECT_ROOT, _settings_override, load_settings
 from ..errors import CoreError
-from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR
+from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
-SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
