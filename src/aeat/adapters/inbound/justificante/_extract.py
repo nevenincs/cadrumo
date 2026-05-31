@@ -439,6 +439,12 @@ def _extract_verification_url(text: str, pdf_path: Path) -> AnyHttpUrl:
         raise JustificanteParseError(f"no verification URL found in {pdf_path}", missing=("verification_url",))
     verification_url_raw = url_match.group(0).rstrip(".,);")
     try:
+        # CAST-RATIONALE-JUSTIFICANTE-EXTRACT-TYPEADAPTER: pydantic's
+        # TypeAdapter.validate_python() is typed as returning Any in pydantic's
+        # public stubs; the caller constrains the return to AnyHttpUrl via the
+        # function's own -> AnyHttpUrl annotation.  The PDF text-extraction
+        # boundary does not permit a narrower construction without an explicit
+        # cast that would add noise without safety benefit.
         return TypeAdapter(AnyHttpUrl).validate_python(verification_url_raw)
     except ValidationError as exc:
         raise JustificanteParseError(
