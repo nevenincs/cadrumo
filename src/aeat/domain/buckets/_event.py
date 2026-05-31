@@ -30,7 +30,7 @@ _EventId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
 ]
-_ActorLabel = Annotated[
+BucketActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
@@ -236,7 +236,7 @@ class BucketEvent(BaseModel):
     bucket_id: _ProfileName
     event_type: BucketEventType
     occurred_at: datetime
-    actor: _ActorLabel
+    actor: BucketActorLabel
     object_type: BucketEventObjectType
     object_id: _ObjectId
     payload_version: int = Field(ge=1)
