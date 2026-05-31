@@ -1005,3 +1005,24 @@ Single-phase closure of 5 maintenance findings.
 - [x] `W15.P47.S617` - extract _REGISTRY_INTEGRITY_PROBE_YEAR + _REGISTRY_INTEGRITY_PROBE_DATE Final constants in application/diagnostics.py and migrate :640,642; `src/aeat/application/diagnostics.py`.
 - [x] `W15.P47.S618` - document filing/runtime.py:281-287 alt fingerprint variant — either align with file_stat_fingerprint canonical (if name vs relative path semantic is reconcilable) or add # ALT-FINGERPRINT-RATIONALE: relative-path fingerprint for registry-tree change detection (distinct from filename-keyed file_stat_fingerprint canonical); `src/aeat/application/filing/runtime.py`.
 - [x] `W15.P47.S619` - aggregate test asserting all 5 W15 closures landed + W14 ratchets intact; `src/aeat/test_w15_p47_maintenance_closure.py`.
+
+## Wave `W16` - close W16 audit findings: 0 regressions + 11 survivor-missed
+
+W16 swarm re-audit confirmed 5 consecutive zero-strict-regression waves. 11 survivor-missed findings across A1 (2), A4 (3), A7 (1), A8 (2), P09 (3) drive the open survivor backlog toward zero across remaining axes.
+
+### Phase `W16.P48` - W16 audit closure
+
+Land 11 survivor-missed findings + aggregate test asserting all closures landed and prior-wave inventory ratchets remain green.
+
+- [ ] `W16.P48.S620` - A1: replace bare ValueError re-box with IdentityError AeatError subclass; add registry binding if missing; grep-post zero bare ValueError re-raises in core/identity/; `src/aeat/core/identity/__init__.py`.
+- [ ] `W16.P48.S621` - A1: replace bare ValueError with RegistryValidationError AeatError subclass; grep-post zero bare raises outside pydantic validators in this module; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
+- [ ] `W16.P48.S622` - A4: narrow 17 dict[str, Any] fields in RevisionValidationContext to concrete value types using `_schema` imports already in package; grep-post zero dict[str, Any] in RevisionValidationContext; `src/aeat/domain/calculations/registry/_validate_revision_context.py`.
+- [ ] `W16.P48.S623` - A4: add ANY-RETURN-RATIONALE-PRE303-RAW-STAGING marker on AeatExternalConstants.pre303_raw (raw TOML staging slot; cached_property converts to AeatPre303Surface); `src/aeat/core/external_constants.py`.
+- [ ] `W16.P48.S624` - A4: replace _synthesise_single_line_if_needed(payload: dict[str, Any]) with typed pydantic intermediate (partial InvoiceImportPayload); grep-post zero dict[str, Any] in invoices/_importing.py; `src/aeat/application/invoices/_importing.py`.
+- [ ] `W16.P48.S625` - A7: add CLASSIFIED_BY_MANUAL='manual' Final constant to core/external_constants.py alongside CLASSIFIED_BY_AUTO; replace bare 'manual' literal at transactions/_models.py:170; grep-post zero bare 'manual' literal in transactions/_models.py; `src/aeat/domain/transactions/_models.py`.
+- [ ] `W16.P48.S626` - A8: replace deferred prose-only type-ignore at errors/_registry.py:219 with typed sentinel value or proper CAST-RATIONALE-* marker; grep-post zero 'deferred' prose-only type-ignore in errors/_registry.py; `src/aeat/core/errors/_registry.py`.
+- [ ] `W16.P48.S627` - A8: introduce ClassVar Protocol slot for verification_source / provisional_pending_specimen OR attach inline CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE marker on both lines 242, 252; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [ ] `W16.P48.S628` - P09: replace runtime pytest.skip at line 127 with subprocess-isolated fixture or restructure as separate test module; grep-post zero pytest.skip in core/test_profile.py; `src/aeat/core/test_profile.py`.
+- [ ] `W16.P48.S629` - P09: provision M303 2025 3T snapshot fixture OR remove test until snapshot can be provisioned; grep-post zero pytest.skip in this file; `src/aeat/application/modelo/test_taxation_comparison.py`.
+- [ ] `W16.P48.S630` - P09: add domain-typed assertion after 'is not None' shape check at lines 69 and 98 (e.g., isinstance(result, TopicCatalogue) and len(result) > 0); `src/aeat/core/resources/_repos/test_singletons.py`.
+- [ ] `W16.P48.S631` - aggregate test asserting all 11 W16.P48 closures landed (markers present, canonicals imported, no pytest.skip in named files, no bare 'manual') + all prior-wave inventory ratchets remain green; `src/aeat/test_w16_p48_closure.py`.
