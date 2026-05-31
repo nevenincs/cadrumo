@@ -21,7 +21,7 @@ from ...application.live import (
 from ...application.overview import FilingStatus
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
-from ._common import _emit
+from ._common import _emit, _emit_envelope
 
 if TYPE_CHECKING:
     from ...application.auth import LiveAuthPreflightReport
@@ -524,6 +524,8 @@ def filed_list_cmd(
         )
         total_count += report.row_count
         all_rows.extend(report.rows)
+    from ._app_live_payloads import FiledListingRowPayload, FiledListResult
+
     lines = [_metric_line("row_count", total_count)]
     for row in all_rows:
         lines.append(
@@ -544,14 +546,27 @@ def filed_list_cmd(
                 ),
             )
         )
-    payload = {
-        "modelo_filter": modelo,
-        "year_from": resolved_from,
-        "year_to": resolved_to,
-        "row_count": total_count,
-        "rows": [row.model_dump(mode="json") for row in all_rows],
-    }
-    _emit(ctx, payload, lines)
+    result = FiledListResult(
+        modelo_filter=modelo,
+        year_from=resolved_from,
+        year_to=resolved_to,
+        row_count=total_count,
+        rows=[
+            FiledListingRowPayload(
+                modelo=row.modelo,
+                year=row.year,
+                period=row.period,
+                expediente_id=row.expediente_id,
+                status=row.status,
+                presented_at=row.presented_at.isoformat(),
+                has_submitted_file=row.has_submitted_file,
+                has_declaration_copy=row.has_declaration_copy,
+                has_justificante=row.has_justificante,
+            )
+            for row in all_rows
+        ],
+    )
+    _emit_envelope(ctx, command="app.live.filed.list", result=result, lines=lines)
 
 
 @filed_app.command("capture", help=tr("cli.app.live.filed.capture_help"))
@@ -574,6 +589,8 @@ def filed_capture_cmd(
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
 ) -> None:
     """Capture filed-declaration data from the authenticated AEAT register."""
+    from ._app_live_payloads import FiledCaptureResult
+
     _emit_live_auth_preflight()
     report = asyncio.run(
         capture_filed_data(
@@ -585,18 +602,26 @@ def filed_capture_cmd(
             limit=limit,
         )
     )
-    _emit(
-        ctx,
-        report,
-        (
-            _metric_line("captured_count", report.captured_count),
-            _metric_line("casilla_count", report.casilla_count),
-            _metric_line("calculation_observation_count", report.calculation_observation_count),
-            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-            _metric_line("observation_paths", ",".join(report.observation_paths)),
-            _metric_line("artefact_refs", ",".join(report.artefact_refs)),
-        ),
+    lines = (
+        _metric_line("captured_count", report.captured_count),
+        _metric_line("casilla_count", report.casilla_count),
+        _metric_line("calculation_observation_count", report.calculation_observation_count),
+        _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
+        _metric_line("observation_paths", ",".join(report.observation_paths)),
+        _metric_line("artefact_refs", ",".join(report.artefact_refs)),
     )
+    result = FiledCaptureResult(
+        output_root=report.output_root,
+        modelo=report.modelo,
+        year=report.year,
+        captured_count=report.captured_count,
+        observation_paths=list(report.observation_paths),
+        artefact_refs=list(report.artefact_refs),
+        casilla_count=report.casilla_count,
+        calculation_observation_count=report.calculation_observation_count,
+        calculation_observation_keys=list(report.calculation_observation_keys),
+    )
+    _emit_envelope(ctx, command="app.live.filed.capture", result=result, lines=lines)
 
 
 @filed_app.command("capture-sources", help=tr("cli.app.live.filed.capture_sources_help"))
@@ -637,6 +662,8 @@ def filed_capture_sources_cmd(
     ] = None,
 ) -> None:
     """Capture filed observations required by a target filing's dependencies."""
+    from ._app_live_payloads import FiledCaptureSourcesResult
+
     _emit_live_auth_preflight()
     report = asyncio.run(
         capture_source_filed_data(
@@ -648,18 +675,27 @@ def filed_capture_sources_cmd(
             source_root=source_root,
         )
     )
-    _emit(
-        ctx,
-        report,
-        (
-            _metric_line("captured_count", report.captured_count),
-            _metric_line("casilla_count", report.casilla_count),
-            _metric_line("calculation_observation_count", report.calculation_observation_count),
-            _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
-            _metric_line("observation_paths", ",".join(report.observation_paths)),
-            _metric_line("artefact_refs", ",".join(report.artefact_refs)),
-        ),
+    lines = (
+        _metric_line("captured_count", report.captured_count),
+        _metric_line("casilla_count", report.casilla_count),
+        _metric_line("calculation_observation_count", report.calculation_observation_count),
+        _metric_line("calculation_observation_keys", ",".join(report.calculation_observation_keys)),
+        _metric_line("observation_paths", ",".join(report.observation_paths)),
+        _metric_line("artefact_refs", ",".join(report.artefact_refs)),
     )
+    result = FiledCaptureSourcesResult(
+        output_root=report.output_root,
+        target_modelo=report.target_modelo,
+        target_year=report.target_year,
+        target_period=report.target_period,
+        captured_count=report.captured_count,
+        observation_paths=list(report.observation_paths),
+        artefact_refs=list(report.artefact_refs),
+        casilla_count=report.casilla_count,
+        calculation_observation_count=report.calculation_observation_count,
+        calculation_observation_keys=list(report.calculation_observation_keys),
+    )
+    _emit_envelope(ctx, command="app.live.filed.capture.sources", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
