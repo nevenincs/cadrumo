@@ -846,6 +846,81 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# S19 — M347_THRESHOLD_EUR centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_m347_threshold_eur_value() -> None:
+    """``M347_THRESHOLD_EUR`` equals €3,005.06 per RD 1065/2007 art. 31.1."""
+
+    from decimal import Decimal
+
+    from aeat.core.external_constants import M347_THRESHOLD_EUR
+
+    assert M347_THRESHOLD_EUR == Decimal("3005.06")
+
+
+def test_m347_threshold_eur_is_final_decimal() -> None:
+    """``M347_THRESHOLD_EUR`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
+
+    from decimal import Decimal
+
+    from aeat.core.external_constants import M347_THRESHOLD_EUR
+
+    assert isinstance(M347_THRESHOLD_EUR, Decimal)
+
+
+def test_counterpart_aggregator_reads_threshold_from_external_constants() -> None:
+    """``_counterpart.py`` must import ``M347_THRESHOLD_EUR`` from core, not define it locally."""
+
+    import importlib
+
+    from aeat.core.external_constants import M347_THRESHOLD_EUR
+
+    mod = importlib.import_module("aeat.application.aggregation._counterpart")
+
+    assert hasattr(mod, "M347_THRESHOLD_EUR"), (
+        "_counterpart must import M347_THRESHOLD_EUR from aeat.core.external_constants"
+    )
+    assert mod.M347_THRESHOLD_EUR is M347_THRESHOLD_EUR
+
+
+def test_no_bare_threshold_347_literal_in_counterpart() -> None:
+    """No bare ``Decimal("3005.06")`` threshold literal in ``_counterpart.py``.
+
+    Anti-tautology: parses the real AST so any future re-introduction of the
+    local constant triggers immediate failure.
+    """
+
+    repo_root = Path(__file__).parents[3]
+    source = (
+        repo_root / "src/aeat/application/aggregation/_counterpart.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        # Flag any Decimal("3005.06") call-expression literal in the file.
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        func_name = (
+            func.id
+            if isinstance(func, ast.Name)
+            else (func.attr if isinstance(func, ast.Attribute) else "")
+        )
+        if func_name != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "3005.06":
+            offenders.append(f"_counterpart.py:{node.lineno}: bare Decimal('3005.06'); use M347_THRESHOLD_EUR")
+
+    assert offenders == [], (
+        "Local M347 threshold literals found; import M347_THRESHOLD_EUR from core instead:\n"
+        + "\n".join(offenders)
+    )
+
+
 def test_no_bare_csv_mime_literal_in_tabular() -> None:
     """No bare ``"text/csv"`` literal in ``_tabular.py`` argument positions.
 
