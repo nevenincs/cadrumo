@@ -1050,6 +1050,6 @@ W18 swarm re-audit confirmed 7 consecutive zero-strict-regression waves. Eight o
 
 Land 2 cast-rationale token formalizations + aggregate test confirming sustained 8-of-9-axes clean state.
 
-- [ ] `W18.P50.S638` - A8: replace prose-only comment with canonical CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST token on cast() at _streams.py:155; grep-post token appears on line preceding the cast; `src/aeat/adapters/inbound/sanitizer/_streams.py`.
-- [ ] `W18.P50.S639` - A8: replace prose-only comment with canonical CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS token on cast() at _engine.py:1270; grep-post token appears on line preceding the cast; `src/aeat/application/workflow/_engine.py`.
-- [ ] `W18.P50.S640` - aggregate test asserting both W18 cast-rationale tokens present + 8-of-9-axes clean state holds (audit-trail assertion: re-run cast-rationale and other inventory ratchets and assert zero new violations); `src/aeat/test_w18_p50_closure.py`.
+- [x] `W18.P50.S638` - A8: replace prose-only comment with canonical CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST token on cast() at _streams.py:155; `grep-post token appears on line preceding the cast; `src/aeat/adapters/inbound/sanitizer/_streams.py`.
+- [x] `W18.P50.S639` - A8: replace prose-only comment with canonical CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS token on cast() at _engine.py:1270; `grep-post token appears on line preceding the cast; `src/aeat/application/workflow/_engine.py`.
+- [x] `W18.P50.S640` - aggregate test asserting both W18 cast-rationale tokens present + 8-of-9-axes clean state holds (audit-trail assertion: re-run cast-rationale and other inventory ratchets and assert zero new violations); `src/aeat/test_w18_p50_closure.py`.
