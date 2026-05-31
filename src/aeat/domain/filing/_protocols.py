@@ -15,7 +15,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:  # pragma: no cover — type-only import
+    from ...core.identity import SubjectTaxId
 
 
 @runtime_checkable
@@ -177,7 +180,7 @@ class ModeloProfile(Protocol):
     """
 
     @property
-    def tax_id(self) -> str:
+    def tax_id(self) -> SubjectTaxId:
         """Return the taxpayer's NIF / NIE."""
         ...
 
