@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._errors import ModeloError
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import Envelope, SensitivityClass
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 # namespace string preserved across rename to avoid orphaning persisted envelopes
@@ -42,6 +45,9 @@ class ModeloRecordCatalogueRepository:
         return self._objects.exists(_FILING_NAMESPACE, _FILING_OBJECT_KEY)
 
     def load(self) -> ModeloRecordCatalogue:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+
         try:
             record = self._objects.load(
                 _FILING_NAMESPACE,
@@ -69,6 +75,8 @@ class ModeloRecordCatalogueRepository:
         return envelope.payload
 
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=datetime.now(UTC),
