@@ -149,7 +149,7 @@ def _load_authority(
 ) -> ValidatedRegistryAuthority:
     del _fingerprint
     modelos, catalogues = load_registry_tree(root)
-    return ValidatedRegistryAuthority(
+    authority = ValidatedRegistryAuthority(
         root=root,
         source_root=source_root,
         modelos=modelos,
@@ -164,3 +164,5 @@ def _load_authority(
         _validated_modelos=set(),
         _snapshots={},
     )
+    authority.validate_registry()
+    return authority
