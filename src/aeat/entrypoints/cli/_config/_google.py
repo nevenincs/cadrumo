@@ -92,8 +92,7 @@ from ....application.storage.calc_sheets import (
 )
 from ....core.config import load_settings
 from ....core.i18n import tr
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import ValidatedRegistryAuthority
+from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
@@ -763,37 +762,25 @@ def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
     root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
     if not root_folder_id:
         raise CliRefusedBoundaryError(
-            tr("cli.config.google.sync.calc.export.root_folder_required"),
+            translated_message="cli.config.google.sync.calc.export.root_folder_required",
         )
     return credentials, root_folder_id
 
 
 def _load_snapshot(modelo: str, period: str, year: int):
-    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+    authority = _bundled_authority()
     if modelo not in {candidate.id for candidate in authority.modelos}:
         available = ", ".join(sorted(candidate.id for candidate in authority.modelos))
         raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.google.sync.calc.export.unknown_modelo",
-                modelo=modelo,
-                available=available,
-            ),
+            translated_message="cli.config.google.sync.calc.export.unknown_modelo",
+            context={"modelo": modelo, "available": available},
         )
     try:
         return authority.snapshot(modelo, filing_year=year, period=period)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.google.sync.calc.export.snapshot_failure",
-                modelo=modelo,
-                period=period,
-                year=year,
-                detail=str(exc),
-                default=(
-                    "Cannot build registry snapshot for modelo "
-                    f"{modelo} ({period} {year}): {exc}"
-                ),
-            ),
+            translated_message="cli.config.google.sync.calc.export.snapshot_failure",
+            context={"modelo": modelo, "period": period, "year": year, "detail": str(exc)},
         ) from exc
 
 
@@ -1254,10 +1241,8 @@ def _compute_pull_casillas(
         return []
     if result.metadata_match != "matches":
         raise CliRefusedBoundaryError(
-            tr(
-                "cli.config.google.sync.calc.pull.compute_refused_stale",
-                metadata_match=result.metadata_match,
-            ),
+            translated_message="cli.config.google.sync.calc.pull.compute_refused_stale",
+            context={"metadata_match": result.metadata_match},
         )
     try:
         calc = compute_from_pull(snapshot, result)
