@@ -37,13 +37,15 @@ import os
 import secrets
 import tempfile
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
+from aeat.core.time import _now
+
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
-from .....core.external_constants import BINARY_MIME_TYPE, UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import BINARY_MIME_TYPE
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
@@ -230,7 +232,7 @@ class EncryptedBlobStore:
 
         envelope = Envelope[BlobManifest](
             schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=classification,
             payload=manifest,
         )
@@ -434,7 +436,7 @@ class EncryptedBlobStore:
             new_manifest = manifest.model_copy(update={"wrapped_dek": new_meta})
             new_envelope = Envelope[BlobManifest](
                 schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
-                written_at=datetime.now(UTC),
+                written_at=_now(),
                 classification=manifest.classification,
                 payload=new_manifest,
             )

@@ -18,7 +18,9 @@ cases at refresh time:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+
+from aeat.core.time import _now
 
 from ....core.config import Settings as _Settings
 from ....core.i18n import tr
@@ -221,7 +223,7 @@ def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str
     return (
         str(creds.refresh_token or token.refresh_token),
         str(creds.token or ""),
-        creds.expiry if creds.expiry is not None else datetime.now(UTC),
+        creds.expiry if creds.expiry is not None else _now(),
     )
 
 

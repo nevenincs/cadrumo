@@ -13,6 +13,8 @@ from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
+from aeat.core.time import _now
+
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
@@ -377,8 +379,6 @@ class SecureObjectRepository:
         the active-gate at the CLI root callback already refused
         non-exempt verbs that lack a session.
         """
-        from datetime import UTC, datetime
-
         from ..errors import SessionExpiredError
         from ..master_key._active_session import _active_session
         from ..master_key._idle_timeout import evaluate_idle
@@ -386,7 +386,7 @@ class SecureObjectRepository:
         session = _active_session.get()
         if session is None:
             return
-        now = datetime.now(UTC)
+        now = _now()
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
@@ -538,11 +538,9 @@ class SecureObjectRepository:
             A :class:`SecureObjectIntegrityReport`-shaped summary
             describing how many rows were quarantined per namespace.
         """
-        from datetime import UTC
-
         self._ensure_quarantine_table()
         with session_scope(self._engine) as session:
-            quarantined_at = datetime.now(UTC).isoformat()
+            quarantined_at = _now().isoformat()
             namespaces = (
                 session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
                 .scalars()

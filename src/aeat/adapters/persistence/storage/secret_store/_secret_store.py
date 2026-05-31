@@ -29,11 +29,13 @@ import hmac
 import os
 import tempfile
 from collections.abc import Iterable
-from datetime import UTC, datetime
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from aeat.core.time import _now
 
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError
@@ -59,6 +61,7 @@ from ..master_key._master_key import MasterKeyProvider
 _log = get_logger(__name__)
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
@@ -252,7 +255,7 @@ class SecretStore:
         """Wrap ``record`` in a versioned, classified envelope."""
         return Envelope[SecretRecord](
             schema_version=SECRET_RECORD_SCHEMA_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=record.classification,
             payload=record,
         )
@@ -451,7 +454,7 @@ class SecretStore:
                 value=new_value,
                 classification=existing.classification,
                 metadata=existing.metadata,
-                created_at=datetime.now(UTC),
+                created_at=_now(),
                 expires_at=expires_at,
             )
             return self._put_locked(rotated, overwrite=True)

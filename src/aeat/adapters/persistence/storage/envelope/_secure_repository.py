@@ -21,11 +21,12 @@ under separate steps.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, cast
 
 from pydantic import BaseModel
+
+from aeat.core.time import _now
 
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
@@ -190,7 +191,7 @@ class SecureBoundRepository[T: BaseModel]:
         safe_repository_id(identifier, context="identifier")
         envelope = self._envelope_cls()(
             schema_version=self.schema_version,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=self.sensitivity,
             payload=payload,
         )
