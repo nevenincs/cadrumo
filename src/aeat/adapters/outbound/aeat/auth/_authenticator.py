@@ -61,6 +61,7 @@ from ._providers import (
 from .certificate import (
     CertificateBackend,
     CertificateBundle,
+    CertificateError,
     CertificateHealth,
     CertificateLoadError,
     CertificateNifParseError,
@@ -859,7 +860,7 @@ class AeatAuthenticator:
                 days_until_expiry=health.days_until_expiry,
                 health_summary=f"{health.severity.value}:{health.days_until_expiry}",
             )
-        except Exception as exc:
+        except (CertificateError, OSError) as exc:
             log.debug(
                 "AeatAuthenticator.describe: surfacing unavailable status (%s)",
                 type(exc).__name__,
@@ -872,6 +873,15 @@ class AeatAuthenticator:
                 available=False,
                 health_summary=f"{type(exc).__name__}: {exc}",
             )
+        except Exception as exc:
+            log.debug(
+                "AeatAuthenticator.describe: unexpected error surfacing unavailable status (%s)",
+                type(exc).__name__,
+                exc_info=True,
+            )
+            raise AuthValidationError(
+                f"Unexpected error reading certificate health: {type(exc).__name__}: {exc}"
+            ) from exc
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.
