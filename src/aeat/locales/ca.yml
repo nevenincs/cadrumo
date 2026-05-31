@@ -545,6 +545,7 @@ application:
       active_profile: 'Perfil actiu'
       profile: 'Perfil'
       status: estat
+      next: 'Seguent'
     status:
       errors:
         missing_tax_id: El perfil actiu no té tax.id.

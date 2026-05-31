@@ -508,6 +508,7 @@ application:
       active_profile: 'Active profile'
       profile: 'Profile'
       status: 'Status'
+      next: 'Next'
     status:
       errors:
         missing_tax_id: Active profile is missing tax.id.
