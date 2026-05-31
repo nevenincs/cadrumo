@@ -348,6 +348,10 @@ convention = "google"
 # Test fixtures construct synthetic env-var names / temp-file paths /
 # subprocess invocations that ruff's S105/S106/S108/S603 heuristics
 # misread as secrets or unsafe shell calls.
+# The docs build gate runs sphinx via `sys.executable -m sphinx` with a fixed,
+# literal argv (no user/untrusted input), in an isolated subprocess so the
+# build's package imports and global state do not leak into the test process.
+"src/aeat/tests/test_docs_build.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/_test_path_safety.py" = ["S105"]
 "src/aeat/adapters/persistence/storage/bucket/test_lockfile.py" = ["S603"]
 "src/aeat/adapters/persistence/storage/test_substrate_smoke.py" = ["S603"]
