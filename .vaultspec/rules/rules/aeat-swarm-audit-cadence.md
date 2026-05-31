@@ -6,7 +6,7 @@ name: aeat-swarm-audit-cadence
 
 Run the multi-agent audit swarm on a recurring schedule, not only when something feels off. The swarm is the most reliable surface for catching cross-domain drift, persistence-boundary gaps, type-erasure regressions, and discriminator coverage holes — drift that no single-agent pass would notice. Treat it as a periodic gate, not an ad-hoc rescue tool.
 
-Trigger the swarm under three conditions. First, before any release cut that has crossed a domain boundary or persisted a new record type. Second, after any major structural refactor that touches more than two domain subpackages. Third, on a calendar cadence (suggest monthly while the codebase is in flux; quarterly once the structural baseline is steady).
+Trigger the swarm under four conditions. First, before any release cut that has crossed a domain boundary or persisted a new record type. Second, after any major structural refactor that touches more than two domain subpackages. Third, on a calendar cadence (suggest monthly while the codebase is in flux; quarterly once the structural baseline is steady). Fourth, every 6–8 commits on a long-running branch when no other trigger has fired in the interim, to surface drift before it accumulates.
 
 Cover the six standard axes. Dispatch one agent per axis: calculation-engine grounding, persistence-boundary identity, cross-domain handoffs, export/import fidelity, workflow + CLI surface, selector + binding drift. Each agent gets a focused scope plus an explicit reference to the established roundtrip-test pattern so findings come back as actionable structural deltas rather than open-ended commentary.
 
