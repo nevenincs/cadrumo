@@ -273,8 +273,10 @@ application:
         operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
           por el operador.
     errors:
-      provider_reserved: 'El proveedor de autenticación {provider} está reservado y no está implementado.'
-      session_field_not_datetime: 'El campo {field} de sesión persistida debe ser una fecha-hora o cadena ISO-8601.'
+      provider_reserved: El proveedor de autenticación {provider} está reservado y
+        no está implementado.
+      session_field_not_datetime: El campo {field} de sesión persistida debe ser una
+        fecha-hora o cadena ISO-8601.
     operator:
       alignment:
         both_missing_detail: No están configurados ni la identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -523,6 +525,8 @@ application:
         compatible con esta versión de la aplicación.
   wizard:
     errors:
+      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
+        requires supplied_question_ids — edit is a patch, not a full rewrite.
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
         'default' implícito).
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
@@ -539,23 +543,36 @@ application:
           como SetupAnswers.
   workflow:
     errors:
-      adapter_missing_deadline_engine: 'El motor de flujo de trabajo requiere un adaptador deadline_engine.'
-      adapter_missing_filing_draft_builder: 'El motor de flujo de trabajo requiere un adaptador filing_draft_builder.'
-      adapter_missing_inputs_provider: 'El motor de flujo de trabajo requiere un proveedor de entradas respaldado por depósito.'
+      adapter_missing_deadline_engine: El motor de flujo de trabajo requiere un adaptador
+        deadline_engine.
+      adapter_missing_filing_draft_builder: El motor de flujo de trabajo requiere
+        un adaptador filing_draft_builder.
+      adapter_missing_inputs_provider: El motor de flujo de trabajo requiere un proveedor
+        de entradas respaldado por depósito.
       no_active_profile_bucket: No hay un perfil activo.
-      no_run_for_period: 'No se encontró ejecución de flujo de trabajo para el modelo {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.'
-      period_registry_unmappable: 'No se puede asignar el período de flujo de trabajo {period} a un período del registro.'
-      period_registry_year_unresolvable: 'No se puede derivar el año del registro a partir del período de flujo de trabajo {period}.'
-      profile_label_ambiguous: 'La etiqueta de perfil {label} es ambigua: {count} depósitos activos la comparten.'
-      resume_refused_no_aborted_reason: 'La ejecución de flujo de trabajo {run_id} está ABORTED sin razón registrada; se rechaza reanudar un registro inconsistente.'
-      resume_refused_no_obligation: 'La ejecución {run_id} no tiene obligación asociada; no se puede determinar el modelo y período para reintentar.'
-      resume_refused_not_aborted: 'La ejecución de flujo de trabajo {run_id} no se puede reanudar: está en estado {final_stage}, no ABORTED.'
-      resume_refused_terminal_reason: 'La ejecución {run_id} se abortó por {reason}, que es terminal por diseño y no puede reanudarse.'
-      run_id_invalid_blank: 'El identificador de ejecución no debe estar en blanco.'
-      run_id_invalid_separators: 'El identificador de ejecución no debe contener separadores de ruta.'
+      no_run_for_period: No se encontró ejecución de flujo de trabajo para el modelo
+        {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.
+      period_registry_unmappable: No se puede asignar el período de flujo de trabajo
+        {period} a un período del registro.
+      period_registry_year_unresolvable: No se puede derivar el año del registro a
+        partir del período de flujo de trabajo {period}.
+      profile_label_ambiguous: 'La etiqueta de perfil {label} es ambigua: {count}
+        depósitos activos la comparten.'
+      resume_refused_no_aborted_reason: La ejecución de flujo de trabajo {run_id}
+        está ABORTED sin razón registrada; se rechaza reanudar un registro inconsistente.
+      resume_refused_no_obligation: La ejecución {run_id} no tiene obligación asociada;
+        no se puede determinar el modelo y período para reintentar.
+      resume_refused_not_aborted: 'La ejecución de flujo de trabajo {run_id} no se
+        puede reanudar: está en estado {final_stage}, no ABORTED.'
+      resume_refused_terminal_reason: La ejecución {run_id} se abortó por {reason},
+        que es terminal por diseño y no puede reanudarse.
+      run_id_invalid_blank: El identificador de ejecución no debe estar en blanco.
+      run_id_invalid_separators: El identificador de ejecución no debe contener separadores
+        de ruta.
       run_not_found: 'Ejecución de flujo de trabajo no encontrada: {run_id}.'
       state_unreadable: No se pudo leer el estado de configuración local.
-      state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo: carga útil no válida.'
+      state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo:
+        carga útil no válida.'
 auth:
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
@@ -2541,7 +2558,9 @@ cli:
 core:
   profile:
     errors:
-      registration_duplicate_callable: 'La implementación de respuestas de proyecto se registró dos veces con distintos invocables; debe registrarse exactamente una vez.'
+      registration_duplicate_callable: La implementación de respuestas de proyecto
+        se registró dos veces con distintos invocables; debe registrarse exactamente
+        una vez.
 dotted:
   key: Clave con puntos
 entries:
@@ -2818,6 +2837,12 @@ errors:
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
       de borrador de Modelo 100 conocido.
+    error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
+      un estado irresoluble al generar el plan de exportación.
+    error_calc_sheets_parity: El escenario del arnés de paridad hace referencia a
+      números de casilla que no están presentes en la instantánea del registro.
+    error_calc_sheets_record: Una operación de registro de hoja de cálculo falló por
+      un índice de columna inválido o una dirección A1 malformada.
     error_calculations_registry: Se produjo un error al cargar, resolver o validar
       el registro de cálculo.
     error_calculations_registry_load: Los archivos del registro de cálculo no se pudieron
@@ -2867,6 +2892,8 @@ errors:
     error_financial_invoices_invoice_link: No se pudo enlazar la factura con la transacción.
     error_financial_invoices_invoice_not_found: No se encontró la factura solicitada.
     error_financial_provider: Se produjo un error al importar el documento financiero.
+    error_financial_provider_config: Una subclase de proveedor financiero tiene declaraciones
+      de atributos de corpus inválidas o faltantes.
     error_financial_transactions_transaction: Se produjo un error en el catálogo de
       transacciones.
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes

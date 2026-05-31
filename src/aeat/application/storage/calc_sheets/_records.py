@@ -41,6 +41,7 @@ from ....domain.calculations.registry._ids import (
     RevisionId,
 )
 from ....domain.calculations.registry._schema import DecimalValue as _RegistryDecimalValue
+from ._errors import CalcSheetsRecordError
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
 # BeforeValidator that coerces int / str inputs through `Decimal(...)`.
@@ -80,7 +81,7 @@ def _column_index_to_letters(column: int) -> str:
     """Translate a 1-based column index to A, B, ..., Z, AA, AB, ..."""
 
     if column < 1:
-        raise ValueError("column index must be 1-based and positive")
+        raise CalcSheetsRecordError("column index must be 1-based and positive")
     letters: list[str] = []
     cursor = column
     while cursor:
@@ -91,7 +92,7 @@ def _column_index_to_letters(column: int) -> str:
 
 def _column_letters_to_index(letters: str) -> int:
     if not _A1_COLUMN.match(letters):
-        raise ValueError(f"invalid Sheets column letters: {letters!r}")
+        raise CalcSheetsRecordError(f"invalid Sheets column letters: {letters!r}")
     cursor = 0
     for char in letters:
         cursor = cursor * 26 + (ord(char) - ord("A") + 1)

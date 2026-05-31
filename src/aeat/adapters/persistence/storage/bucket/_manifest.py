@@ -56,7 +56,7 @@ class ManifestKdfParams(BaseModel):
     @classmethod
     def _check_salt_length(cls, value: bytes) -> bytes:
         if len(value) != _SALT_BYTES:
-            raise BucketValidationError(f"salt must be exactly {_SALT_BYTES} bytes")
+            raise ValueError(f"salt must be exactly {_SALT_BYTES} bytes")
         return value
 
     @field_serializer("salt")
@@ -70,7 +70,7 @@ class ManifestKdfParams(BaseModel):
             return value
         if isinstance(value, str):
             return base64.b64decode(value.encode("ascii"), validate=True)
-        raise BucketValidationError("salt must be bytes or base64 string")
+        raise ValueError("salt must be bytes or base64 string")
 
 
 class BucketLifecycleStatus(StrEnum):
@@ -145,7 +145,7 @@ class BucketManifest(BaseModel):
             return value
         if isinstance(value, str):
             return BucketLifecycleStatus(value)
-        raise BucketValidationError("status must be a BucketLifecycleStatus or its string value")
+        raise ValueError("status must be a BucketLifecycleStatus or its string value")
 
     @field_validator("key_schedule", mode="before")
     @classmethod
@@ -154,7 +154,7 @@ class BucketManifest(BaseModel):
             return value
         if isinstance(value, str):
             return BucketKeySchedule(value)
-        raise BucketValidationError("key_schedule must be a BucketKeySchedule or its string value")
+        raise ValueError("key_schedule must be a BucketKeySchedule or its string value")
 
     @field_validator("created_at")
     @classmethod

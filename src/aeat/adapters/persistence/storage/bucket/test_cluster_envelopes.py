@@ -88,21 +88,16 @@ def test_error_envelope_round_trips_json(error: BucketError) -> None:
 
 
 # ---------------------------------------------------------------------------
-# BucketValidationError dual-inheritance contract
+# BucketValidationError MRO contract
 # ---------------------------------------------------------------------------
 
 
-def test_bucket_validation_error_is_value_error() -> None:
-    """BucketValidationError must satisfy ValueError so pydantic validators accept it."""
+def test_bucket_validation_error_is_not_value_error() -> None:
+    """BucketValidationError must NOT be a ValueError subclass (MRO leak removed)."""
+    assert not issubclass(BucketValidationError, ValueError)
     err = BucketValidationError("bad salt length")
-    assert isinstance(err, ValueError)
     assert isinstance(err, BucketError)
-
-
-def test_bucket_validation_error_caught_as_value_error() -> None:
-    """Confirm the dual-inheritance is live at runtime — not just a class attribute."""
-    with pytest.raises(ValueError, match="bad salt length"):
-        raise BucketValidationError("bad salt length")
+    assert not isinstance(err, ValueError)
 
 
 def test_bucket_validation_error_caught_as_bucket_error() -> None:

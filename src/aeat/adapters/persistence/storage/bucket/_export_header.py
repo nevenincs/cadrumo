@@ -41,13 +41,13 @@ class ExportArchiveHeader(BaseModel):
         """Reject anything other than a lowercase hex SHA-256 digest."""
 
         if len(value) != _SHA256_HEX_LEN:
-            raise BucketValidationError("manifest_digest must be a 64-char SHA-256 hex string")
+            raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
         try:
             int(value, 16)
         except ValueError as exc:
-            raise BucketValidationError("manifest_digest must be hex") from exc
+            raise ValueError("manifest_digest must be hex") from exc
         if value != value.lower():
-            raise BucketValidationError("manifest_digest must be lowercase hex")
+            raise ValueError("manifest_digest must be lowercase hex")
         return value
 
     @field_validator("created_at")
@@ -56,7 +56,7 @@ class ExportArchiveHeader(BaseModel):
         try:
             return _validate_utc_aware(value)
         except CoreValidationError as exc:
-            raise BucketValidationError(str(exc)) from exc
+            raise ValueError(str(exc)) from exc
 
 
 __all__ = ["ExportArchiveHeader"]
