@@ -226,9 +226,9 @@ Sever the 143 application-to-adapters illegal import edges per Rule 2. Phases co
 
 Extract AuthSessionProtocol to application/auth/_protocols.py, migrate the 17 bi-directional auth adapter edges to depend inward on the Protocol, and run the auth test suite (MIGRATE-001, RELOC-016, Rule 2 and Rule 8).
 
-- [ ] `W08.P20.S69` - declare AuthSessionProtocol in application/auth/_protocols.py capturing the interface currently satisfied by the adapter auth session shapes; `MIGRATE-001, Rule 8; `src/aeat/application/auth/_protocols.py`.
-- [ ] `W08.P20.S70` - update application/auth/_sessions.py to depend on AuthSessionProtocol rather than the adapters session shape and remove the adapters import; `MIGRATE-001, RELOC-016, Rule 2; `src/aeat/application/auth/_sessions.py`.
-- [ ] `W08.P20.S71` - migrate the 15 remaining bi-directional auth adapter import edges to depend inward on AuthSessionProtocol and run the auth test suite sequentially; `MIGRATE-001, Rule 2; `src/aeat/adapters/outbound/aeat/auth/`.
+- [x] `W08.P20.S69` - declare AuthSessionProtocol in application/auth/_protocols.py capturing the interface currently satisfied by the adapter auth session shapes; `MIGRATE-001, Rule 8; `src/aeat/application/auth/_protocols.py`.
+- [x] `W08.P20.S70` - update application/auth/_sessions.py to depend on AuthSessionProtocol rather than the adapters session shape and remove the adapters import; `MIGRATE-001, RELOC-016, Rule 2; `src/aeat/application/auth/_sessions.py`.
+- [x] `W08.P20.S71` - migrate the 15 remaining bi-directional auth adapter import edges to depend inward on AuthSessionProtocol and run the auth test suite sequentially; `MIGRATE-001, Rule 2; `src/aeat/adapters/outbound/aeat/auth/`.
 
 ### Phase `W08.P21` - IvaCompensation port extraction and Google adapter cycle break
 
