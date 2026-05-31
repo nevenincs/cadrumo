@@ -1026,3 +1026,18 @@ Land 11 survivor-missed findings + aggregate test asserting all closures landed 
 - [x] `W16.P48.S629` - P09: provision M303 2025 3T snapshot fixture OR remove test until snapshot can be provisioned; `grep-post zero pytest.skip in this file; `src/aeat/application/modelo/test_taxation_comparison.py`.
 - [x] `W16.P48.S630` - P09: add domain-typed assertion after 'is not None' shape check at lines 69 and 98 (e.g., isinstance(result, TopicCatalogue) and len(result) > 0); `src/aeat/core/resources/_repos/test_singletons.py`.
 - [x] `W16.P48.S631` - aggregate test asserting all 11 W16.P48 closures landed (markers present, canonicals imported, no pytest.skip in named files, no bare 'manual') + all prior-wave inventory ratchets remain green; `src/aeat/test_w16_p48_closure.py`.
+
+## Wave `W17` - close W17 audit findings: 0 regressions + 5 survivor-missed (7 rejected by substitutability pre-filter)
+
+W17 swarm re-audit confirmed 6 consecutive zero-strict-regression waves. Auditor surfaced 12 candidate findings; pre-filter rejected 7 (5 A5 sites carry domain-specific error translation / extended token sets; 2 A6 sites use Protocol not ABC — legitimate NotImplementedError per protocol pattern). 5 actionable: A1, A4, A7, A8, P09.
+
+### Phase `W17.P49` - W17 audit closure
+
+Land 5 survivor-missed findings + aggregate test.
+
+- [ ] `W17.P49.S632` - A1: add BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY marker on bare ValueError raises in core/parsing/_dates.py:59, 90, 105 (functions called exclusively from @field_validator stacks; ValueError propagates into pydantic validation chain); `src/aeat/core/parsing/_dates.py`.
+- [ ] `W17.P49.S633` - A4: add ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING marker on OAuthClientDesktop.installed (line 186) and _OAuthClientWrapper.installed (line 200); irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `W17.P49.S634` - A7: replace bare 'EUR' literal at _ledger_expenses.py:114 and :209 with DEFAULT_CURRENCY imported from aeat.core.external_constants; preserve Literal type annotation; grep-post zero bare 'EUR' default in _ledger_expenses.py; `src/aeat/domain/renta/_ledger_expenses.py`.
+- [ ] `W17.P49.S635` - A8: narrow prefill_report: Any to BindingPrefillReport at _iva_wallet_reconciliation.py:137 (import from ._binding_prefill; callee already returns the typed shape); grep-post zero ': Any' on prefill_report field; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
+- [ ] `W17.P49.S636` - P09: replace runtime pytest.skip at test_calc_sheets_pull_typing.py:101 with assert manual_casillas precondition (130/2T-2024 snapshot is bundled and stable; skip is a false-negative gate); grep-post zero pytest.skip in this file; `src/aeat/adapters/outbound/google/test_calc_sheets_pull_typing.py`.
+- [ ] `W17.P49.S637` - aggregate test asserting all 5 W17.P49 closures landed (markers present, canonicals imported, no pytest.skip in named file, no bare 'EUR' default in _ledger_expenses) + all prior-wave inventory ratchets remain green; `src/aeat/test_w17_p49_closure.py`.
