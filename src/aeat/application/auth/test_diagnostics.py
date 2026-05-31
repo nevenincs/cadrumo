@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.outbound.aeat.auth import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+from ...core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.external_constants import load_external_constants

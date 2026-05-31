@@ -40,6 +40,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
+from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....core.time._clock import _now
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -80,7 +81,6 @@ _OWN_NAME_REPRESENTATION_ACTION: Final[str] = "representation-gate-own-name-cont
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 """Distinct from certificate metadata v1 so stale certificate objects are rejected."""
 
-CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
 _DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 
 

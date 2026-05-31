@@ -14,7 +14,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from aeat.adapters.outbound.aeat.auth import _session_store
-from aeat.adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+from aeat.core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from aeat.adapters.outbound.aeat.sede import ExpedienteNotFoundError
 from aeat.adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
 from aeat.adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact
