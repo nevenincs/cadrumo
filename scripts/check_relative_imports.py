@@ -150,6 +150,15 @@ def _resolve_targets(args: list[str]) -> list[Path]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Scan the target files and report any absolute ``aeat`` imports.
+
+    Args:
+        argv: Optional explicit path list; defaults to ``sys.argv[1:]``.
+
+    Returns:
+        ``0`` when the tree is clean, ``1`` on findings or unscannable
+        files, and ``2`` when ``src/aeat`` is not present.
+    """
     args = list(argv) if argv is not None else sys.argv[1:]
 
     if not SRC_AEAT.is_dir():

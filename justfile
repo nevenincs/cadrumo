@@ -57,7 +57,7 @@ env-setup:
 
 # ── Dev loop ─────────────────────────────────────────────────────────────────
 
-# Lint with ruff and enforce the #162 relative-imports mandate.
+# Lint with ruff and enforce the relative-imports mandate.
 lint:
     uv run ruff check .
     uv run python scripts/check_relative_imports.py
@@ -137,7 +137,6 @@ test-live-write:
     uv run pytest -m live_write
 
 # Run the unit suite with coverage and enforce the fail-under floor.
-# See .vault/adr/2026-04-17-pytest-only-testing-adr.md (#15).
 [unix]
 test-cov:
     uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60
