@@ -108,6 +108,24 @@ class CoreError(AeatError):
     """Base error for internal framework and core-primitive failures."""
 
 
+class DecimalFormatError(CoreError):
+    """Raised when :func:`~aeat.core.decimal._format.format_decimal` receives an invalid argument.
+
+    Replaces the bare :class:`TypeError` previously raised when ``value``
+    is ``None`` but ``none_value`` was not provided.
+    """
+
+
+class RedactionError(CoreError):
+    """Raised when a redaction helper receives an argument of the wrong type.
+
+    Replaces bare :class:`TypeError` previously raised by
+    :func:`~aeat.core.redaction.redact` and
+    :func:`~aeat.core.redaction.redact_for_cli_output` when passed a
+    non-``str`` argument.
+    """
+
+
 class CoreValidationError(CoreError, ValueError):
     """Raised when core primitives or configuration violate invariants.
 
@@ -206,7 +224,6 @@ class McpLaunchError(AeatError):
 
 
 from ._not_found import CoreNotFoundError
-
 from ._registry import (
     ERROR_REGISTRY,
     ErrorCategory,
@@ -233,13 +250,15 @@ __all__ = [
     "CoreError",
     "CoreNotFoundError",
     "CoreValidationError",
-    "ProfileAnswerTypeError",
+    "DecimalFormatError",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",
-    "ModeloFixtureError",
     "FixtureProvisioningError",
     "McpLaunchError",
+    "ModeloFixtureError",
+    "ProfileAnswerTypeError",
+    "RedactionError",
     "SiteHealthError",
     "SiteHealthEvidenceLike",
     "SiteHealthStatusLike",

@@ -24,6 +24,7 @@ from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
+    FinancialValidationError,
     InvalidFinancialSourceError,
     ProviderValidation,
     build_raw_transaction,
@@ -261,7 +262,7 @@ class CsvProvider(FinancialProvider):
                 currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
                 description = _required_value(raw_fields, lookup, layout.columns.description, "description")
                 counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
-            except ValueError as exc:
+            except (ValueError, FinancialValidationError) as exc:
                 _logger.warning(
                     "csv_provider: parse error row=%d file=%s",
                     source_row_index,

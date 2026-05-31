@@ -23,6 +23,7 @@ from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
+    FinancialValidationError,
     InvalidFinancialSourceError,
     ProviderValidation,
     build_raw_transaction,
@@ -130,7 +131,7 @@ class OfxProvider(FinancialProvider):
                     posted_at = getattr(transaction, "date", None)
                     amount = Decimal(str(getattr(transaction, "amount", "0")))
                     booked_date = parse_date_value(posted_at, day_first=False)
-                except ValueError as exc:
+                except (ValueError, FinancialValidationError) as exc:
                     _logger.warning(
                         "ofx_provider: parse error transaction=%d file=%s",
                         source_row_index,

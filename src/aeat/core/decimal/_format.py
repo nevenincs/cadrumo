@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from aeat.core.errors import DecimalFormatError
 from aeat.core.logging import get_logger
 
 _logger = get_logger(__name__)
@@ -52,7 +53,7 @@ def format_decimal(
     """
     if value is None:
         if none_value is None:
-            raise TypeError("format_decimal: value is None but none_value was not provided")
+            raise DecimalFormatError("format_decimal: value is None but none_value was not provided")
         return none_value
 
     text = format(value.normalize() if normalize else value, "f")

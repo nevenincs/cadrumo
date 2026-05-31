@@ -23,6 +23,7 @@ from __future__ import annotations
 import re
 from datetime import date
 
+from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing._dates import _parse_iso8601_date
 
 _MARRIAGE_DATE_PATH = "renta_taxpayer.marriage_date"
@@ -100,7 +101,7 @@ def parse_marriage_date_flag(raw: str) -> date:
     try:
         return _parse_iso8601_date(stripped)
     except ValueError as exc:
-        raise ValueError(
+        raise ProfileAnswerTypeError(
             f"--taxpayer-marriage-date must be YYYY-MM-DD; got: {raw!r}"
         ) from exc
 

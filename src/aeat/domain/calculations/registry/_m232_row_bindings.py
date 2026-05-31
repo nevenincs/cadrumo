@@ -17,8 +17,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...domain.modelos._row_models import Modelo232VinculadaRow
-from ._schema import CasillaObservation
+from ...modelos._row_models import Modelo232VinculadaRow
+from ._bindings import CasillaObservation
+from ._errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from ._schema import ModeloRevision
@@ -50,7 +51,7 @@ def materialize_m232_related_party_rows(
             a casilla referenced by a row is not defined on the revision.
     """
     if len(rows) > 5:
-        raise ValueError(f"M232 form supports maximum 5 related-party rows; got {len(rows)}")
+        raise RegistryValidationError(f"M232 form supports maximum 5 related-party rows; got {len(rows)}")
 
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     observations: list[CasillaObservation] = []
@@ -62,7 +63,7 @@ def materialize_m232_related_party_rows(
             casilla_id = _resolve_casilla_id_for_field(row_slot, field_name)
             registry_casilla = casillas_by_id.get(casilla_id)
             if registry_casilla is None:
-                raise ValueError(
+                raise RegistryValidationError(
                     f"M232 casilla {casilla_id!r} ({row_slot}.{field_name}) "
                     f"not found in revision casillas"
                 )

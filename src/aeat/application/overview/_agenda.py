@@ -29,6 +29,7 @@ from . import (
     OverviewPeriodState,
     build_overview_calendar,
 )
+from ._errors import OverviewAgendaError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -105,7 +106,7 @@ def build_overview_agenda(
     """
 
     if horizon_days <= 0:
-        raise ValueError(f"horizon_days must be positive; got {horizon_days}")
+        raise OverviewAgendaError(f"horizon_days must be positive; got {horizon_days}")
 
     window = OverviewCalendarRange(
         from_date=as_of - timedelta(days=_OVERDUE_LOOKBACK_DAYS),
