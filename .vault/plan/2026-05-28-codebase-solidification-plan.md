@@ -873,11 +873,11 @@ Enroll WorkbookScanStatus StrEnum at 5+ comparison sites within its own defining
 
 Add rationale comments to 3 financial-provider teardown except-Exception sites (_pdf_n26, _xlsx, _ofx). Add ANY-RETURN-RATIONALE-* markers on 3 profile lazy-module helpers. Add KWARGS-ANY-RATIONALE-* markers on 4 live snapshot abstract methods. Browser stage stdlib Logger annotation cleanup.
 
-- [ ] `W09.P38.S557` - add inline rationale comment on financial-provider teardown except-Exception sites (_pdf_n26.py:195, _xlsx.py:189, _ofx.py:173) enumerating known upstream exception types; `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
-- [ ] `W09.P38.S558` - add ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE markers on profile.py:138,145,152 _m/_p/_ccaa lazy-module helpers (block comment present but per-def markers missing); `src/aeat/core/profile.py`.
-- [ ] `W09.P38.S559` - add KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH markers on _censo.py:393, _expedientes.py:156, _notifications.py:171, _snapshot_base.py:209 (sibling of borrador W08.P36.S551 pattern); `src/aeat/application/live/_censo.py`.
-- [ ] `W09.P38.S560` - replace stdlib Logger import at sede/_browser_stage.py:6 with aeat.core.logging Logger re-export or annotate with type-only exemption; `src/aeat/adapters/outbound/aeat/sede/_browser_stage.py`.
-- [ ] `W09.P38.S561` - add inventory test asserting all financial-provider teardown raises have rationale comments + Any-return/kwargs-Any rationale markers complete; `src/aeat/test_w09_p38_rationale_inventory.py`.
+- [x] `W09.P38.S557` - add inline rationale comment on financial-provider teardown except-Exception sites (_pdf_n26.py:195, _xlsx.py:189, _ofx.py:173) enumerating known upstream exception types; `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
+- [x] `W09.P38.S558` - add ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE markers on profile.py:138,145,152 _m/_p/_ccaa lazy-module helpers (block comment present but per-def markers missing); `src/aeat/core/profile.py`.
+- [x] `W09.P38.S559` - add KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH markers on _censo.py:393, _expedientes.py:156, _notifications.py:171, _snapshot_base.py:209 (sibling of borrador W08.P36.S551 pattern); `src/aeat/application/live/_censo.py`.
+- [x] `W09.P38.S560` - replace stdlib Logger import at sede/_browser_stage.py:6 with aeat.core.logging Logger re-export or annotate with type-only exemption; `src/aeat/adapters/outbound/aeat/sede/_browser_stage.py`.
+- [x] `W09.P38.S561` - add inventory test asserting all financial-provider teardown raises have rationale comments + Any-return/kwargs-Any rationale markers complete; `src/aeat/test_w09_p38_rationale_inventory.py`.
 
 ### Phase `W09.P39` - A3+A4 closure
 
