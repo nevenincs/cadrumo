@@ -1102,3 +1102,22 @@ Land 2 closures + aggregate test.
 - [x] `W22.P54.S651` - A2: add LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY marker on the TYPE_CHECKING-guarded `import logging` at _browser_stage.py:8-9 (import never executes at runtime; `marker documents the intent); grep-post token resolves on the line preceding the TYPE_CHECKING block; `src/aeat/adapters/outbound/aeat/sede/_browser_stage.py`.
 - [x] `W22.P54.S652` - P09: rewrite test_unexpected_exception_raises_auth_validation_error and test_certificate_error_returns_unavailable_description in test_except_clause_narrowing.py to use real-subclass injection (subclass AeatAuthenticator and override _certificate_health_check) instead of unittest.mock.patch.object; `remove `from unittest.mock import patch` imports; grep-post zero `from unittest.mock import patch` in this file; `src/aeat/test_except_clause_narrowing.py`.
 - [x] `W22.P54.S653` - aggregate test asserting both W22 closures landed (marker present + zero mock.patch in named file) + parameter-Any ratchet from W21 remains green + prior-wave inventory ratchets remain green; `src/aeat/test_w22_p54_closure.py`.
+
+## Wave `W26` - close the W17/W19 deferred 77-site type-ignore corpus via structural ratchet + paydown
+
+Post-ADR-close deferred work. W17 first noted the 77-site bare `# type: ignore` corpus as a known structural gap (count drifted to ~103 by W25 audit). Mirror the W21 parameter-Any ratchet pattern: introduce `TYPE-IGNORE-RATIONALE-*` token convention, AST-walk inventory ratchet, enrol all currently-existing sites in `_KNOWN_VIOLATING_LINES` allowlist, gate new sites. Paydown of the allowlist proceeds incrementally; the ratchet itself caps further drift.
+
+### Phase `W26.P55` - type-ignore inventory ratchet introduction
+
+Land the ratchet + initial enrolment. Paydown follows in subsequent W26 phases as time permits.
+
+- [ ] `W26.P55.S654` - structural prevention: introduce test_type_ignore_rationale_inventory.py (AST-walk all production files for `# type: ignore` comments; parse trailing rationale; require TYPE-IGNORE-RATIONALE-* / CAST-RATIONALE-* / ANY-RETURN-RATIONALE-* token within 3 lines OR inline on the same line); enrol every currently-existing site in _KNOWN_VIOLATING_LINES allowlist; gate new sites; mirror W11 UTF-8 / W21 parameter-Any pattern. Report exact enrolment count; `src/aeat/test_type_ignore_rationale_inventory.py`.
+- [ ] `W26.P55.S655` - document TYPE-IGNORE-RATIONALE-* token convention in standing review gates: add G7 (type-ignore must carry rationale token) to the standing-review-gates memory entry [[standing_review_gates]] semantics surfaced as plain prose in this Step's exec record (memory edit out-of-scope for the plan layer); `src/aeat/test_type_ignore_rationale_inventory.py` docstring head.
+- [ ] `W26.P55.S656` - aggregate test asserting ratchet S654 imports cleanly + every prior-wave inventory ratchet remains green; `src/aeat/test_w26_p55_closure.py`.
+
+### Phase `W26.P56` - first paydown batch: high-confidence canonical-type-narrowable sites
+
+Pay down ~10-15 enrolled sites where the type-ignore can be replaced with proper typing (TypedDict refinement, Protocol introduction, cast() with proper rationale, or eliminating the ignore entirely). Coder must inventory the allowlist, select the highest-confidence candidates, and pay them down one commit per site per the broader-Step grammar.
+
+- [ ] `W26.P56.S657` - inventory the type-ignore allowlist from S654 and classify each site by paydown difficulty (trivial / moderate / hard); produce a typed paydown classification report under .vault/audit/; `.vault/audit/2026-05-31-type-ignore-paydown-classification-audit.md`.
+- [ ] `W26.P56.S658` - pay down 10-15 high-confidence sites from the trivial bucket; each fix is one commit; allowlist shrinks by the same count; aggregate test re-runs ratchet post-paydown; `src/aeat/...` (sites selected from S657 report) + `src/aeat/test_type_ignore_rationale_inventory.py` (allowlist update).
