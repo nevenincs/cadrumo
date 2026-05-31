@@ -68,26 +68,26 @@ Relocate cross-layer constants to core/external_constants.py per Rules 4 and 6, 
 
 Move the three i18n constants OUTPUT_LANGUAGE_ENV_VAR, DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES from core/i18n/_render.py to core/external_constants.py per Rule 4 and RELOC-001..003, then update the three consumer import paths.
 
-- [ ] `W03.P04.S11` - move OUTPUT_LANGUAGE_ENV_VAR from core/i18n/_render.py to core/external_constants.py and update the three consumer import paths to the canonical location; `RELOC-001, Rule 4; `src/aeat/core/external_constants.py`.
-- [ ] `W03.P04.S12` - move DEFAULT_OUTPUT_LANGUAGE from core/i18n/_render.py to core/external_constants.py and update the two consumer import paths; `RELOC-002, Rule 4; `src/aeat/core/external_constants.py`.
-- [ ] `W03.P04.S13` - move SUPPORTED_OUTPUT_LANGUAGES from core/i18n/_render.py to core/external_constants.py, update the twelve consumer import paths, and run the i18n test suite sequentially; `RELOC-003, Rule 4; `src/aeat/core/external_constants.py`.
+- [x] `W03.P04.S11` - move OUTPUT_LANGUAGE_ENV_VAR from core/i18n/_render.py to core/external_constants.py and update the three consumer import paths to the canonical location; `RELOC-001, Rule 4; `src/aeat/core/external_constants.py`.
+- [x] `W03.P04.S12` - move DEFAULT_OUTPUT_LANGUAGE from core/i18n/_render.py to core/external_constants.py and update the two consumer import paths; `RELOC-002, Rule 4; `src/aeat/core/external_constants.py`.
+- [x] `W03.P04.S13` - move SUPPORTED_OUTPUT_LANGUAGES from core/i18n/_render.py to core/external_constants.py, update the twelve consumer import paths, and run the i18n test suite sequentially; `RELOC-003, Rule 4; `src/aeat/core/external_constants.py`.
 
 ### Phase `W03.P05` - URL constants to Settings migration
 
 Replace the five module-scope AnyUrl constant declarations in domain oracle modules with Settings.external_constants() lazy call-site reads per Rule 6 and RELOC-004..008, eliminating domain-layer URL constants as Rule 6 violations.
 
-- [ ] `W03.P05.S14` - replace AEAT_GROI_URL module-scope constant with Settings.external_constants() lazy read at all five call sites and confirm oracle test passes sequentially; `RELOC-004, Rule 6; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
-- [ ] `W03.P05.S15` - replace AEAT_NIF_IVA_VERIFICATION_URL module-scope constant with Settings.external_constants() lazy read at the three call sites; `RELOC-005, Rule 6; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
-- [ ] `W03.P05.S16` - replace AEAT_NIF_IVA_ENTRY_URL module-scope constant with Settings.external_constants() lazy read at the three call sites; `RELOC-006, Rule 6; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
-- [ ] `W03.P05.S17` - replace RENTA_WEB_OPEN_LANDING_URL module-scope constant with Settings.external_constants() lazy read at the two call sites; `RELOC-007, Rule 6; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
-- [ ] `W03.P05.S18` - replace RENTA_WEB_OPEN_APP_URL module-scope constant with Settings.external_constants() lazy read at the three call sites and run the oracle test suite sequentially; `RELOC-008, Rule 6; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
+- [x] `W03.P05.S14` - replace AEAT_GROI_URL module-scope constant with Settings.external_constants() lazy read at all five call sites and confirm oracle test passes sequentially; `RELOC-004, Rule 6; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
+- [x] `W03.P05.S15` - replace AEAT_NIF_IVA_VERIFICATION_URL module-scope constant with Settings.external_constants() lazy read at the three call sites; `RELOC-005, Rule 6; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
+- [x] `W03.P05.S16` - replace AEAT_NIF_IVA_ENTRY_URL module-scope constant with Settings.external_constants() lazy read at the three call sites; `RELOC-006, Rule 6; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
+- [x] `W03.P05.S17` - replace RENTA_WEB_OPEN_LANDING_URL module-scope constant with Settings.external_constants() lazy read at the two call sites; `RELOC-007, Rule 6; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
+- [x] `W03.P05.S18` - replace RENTA_WEB_OPEN_APP_URL module-scope constant with Settings.external_constants() lazy read at the three call sites and run the oracle test suite sequentially; `RELOC-008, Rule 6; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
 
 ### Phase `W03.P06` - regulatory threshold consolidation
 
 Consolidate the two M347 threshold declarations to core/external_constants.py as M347_THRESHOLD_EUR and migrate four callers (RELOC-012, MERGE-001), then move THRESHOLD_720_EUR_PER_CLASS to core/external_constants.py as MODELO_720_REPORTING_THRESHOLD_EUR (RELOC-013).
 
-- [ ] `W03.P06.S19` - add M347_THRESHOLD_EUR = Decimal('3005.06') to core/external_constants.py, delete the domain/modelos copy and the application/aggregation copy, and update the four caller import paths; `MERGE-001, RELOC-012, Rule 6; `src/aeat/core/external_constants.py`.
-- [ ] `W03.P06.S20` - move THRESHOLD_720_EUR_PER_CLASS to core/external_constants.py as MODELO_720_REPORTING_THRESHOLD_EUR and update the one caller import path; `RELOC-013, Rule 6; `src/aeat/core/external_constants.py`.
+- [x] `W03.P06.S19` - add M347_THRESHOLD_EUR = Decimal('3005.06') to core/external_constants.py, delete the domain/modelos copy and the application/aggregation copy, and update the four caller import paths; `MERGE-001, RELOC-012, Rule 6; `src/aeat/core/external_constants.py`.
+- [x] `W03.P06.S20` - move THRESHOLD_720_EUR_PER_CLASS to core/external_constants.py as MODELO_720_REPORTING_THRESHOLD_EUR and update the one caller import path; `RELOC-013, Rule 6; `src/aeat/core/external_constants.py`.
 
 ### Phase `W03.P07` - dead-constant deletion
 
@@ -103,10 +103,10 @@ Delete all eight zero-consumer constants (DELETE-001..008) after ripgrep confirm
 Eliminate constant name collisions: verify and delete the five zero-consumer constants in application/aggregation/_shared_issue_reasons.py (RENAME-006), disambiguate SCHEMA_VERSION to ASSETS_SCHEMA_VERSION and INVENTORY_SCHEMA_VERSION in the two domain/profile subpackages (RENAME-007), rename the two ERROR_CODES constants to domain-specific names (RENAME-009).
 
 - [ ] `W03.P08.S25` - verify zero callers via ripgrep then delete UNSUPPORTED_DIRECTION, UNSUPPORTED_CURRENCY, UNCLASSIFIED_BUSINESS_STATE, PERSONAL_TRANSACTION, and OUTSIDE_PERIOD from application/aggregation/_shared_issue_reasons.py; `RENAME-006, aeat-source-hygiene; `src/aeat/application/aggregation/_shared_issue_reasons.py`.
-- [ ] `W03.P08.S26` - rename SCHEMA_VERSION to ASSETS_SCHEMA_VERSION in domain/profile/assets/__init__.py and update the two call sites; `RENAME-007, Rule 4; `src/aeat/domain/profile/assets/__init__.py`.
-- [ ] `W03.P08.S27` - rename SCHEMA_VERSION to INVENTORY_SCHEMA_VERSION in domain/profile/inventory/__init__.py and update its call sites; `RENAME-007, Rule 4; `src/aeat/domain/profile/inventory/__init__.py`.
-- [ ] `W03.P08.S28` - rename application/aggregation/_service.py ERROR_CODES to AggregationErrorCodes and update the four caller references; `RENAME-009, Rule 4; `src/aeat/application/aggregation/_service.py`.
-- [ ] `W03.P08.S29` - rename application/operator_surface/_contract.py ERROR_CODES to OperatorSurfaceErrorCodes and update caller references; `RENAME-009, Rule 4; `src/aeat/application/operator_surface/_contract.py`.
+- [x] `W03.P08.S26` - rename SCHEMA_VERSION to ASSETS_SCHEMA_VERSION in domain/profile/assets/__init__.py and update the two call sites; `RENAME-007, Rule 4; `src/aeat/domain/profile/assets/__init__.py`.
+- [x] `W03.P08.S27` - rename SCHEMA_VERSION to INVENTORY_SCHEMA_VERSION in domain/profile/inventory/__init__.py and update its call sites; `RENAME-007, Rule 4; `src/aeat/domain/profile/inventory/__init__.py`.
+- [x] `W03.P08.S28` - rename application/aggregation/_service.py ERROR_CODES to AggregationErrorCodes and update the four caller references; `RENAME-009, Rule 4; `src/aeat/application/aggregation/_service.py`.
+- [x] `W03.P08.S29` - rename application/operator_surface/_contract.py ERROR_CODES to OperatorSurfaceErrorCodes and update caller references; `RENAME-009, Rule 4; `src/aeat/application/operator_surface/_contract.py`.
 
 ## Wave `W04` - enum centralisation
 
