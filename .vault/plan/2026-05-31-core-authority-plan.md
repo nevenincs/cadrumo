@@ -242,16 +242,16 @@ Extract IvaCompensationRepositoryProtocol to application/calculations/_ports.py,
 
 Extract port protocols for application/filing/_runtime_repository.py (RELOC-015), application/filing/_export.py (RELOC-019), application/ledger/_actions.py (RELOC-020), and move the shared error base for application/live/_errors.py to core/errors/ (RELOC-018). Each removes one application-to-adapters import edge.
 
-- [ ] `W08.P22.S75` - introduce domain-layer repository protocol for application/filing/_runtime_repository.py and remove the adapters import; `RELOC-015, Rule 2, Rule 8; `src/aeat/application/filing/_runtime_repository.py`.
-- [ ] `W08.P22.S76` - extract shared export contract to application/export/_contracts.py and update application/filing/_export.py to use the contract instead of the adapters import; `RELOC-019, Rule 2; `src/aeat/application/export/_contracts.py`.
-- [ ] `W08.P22.S77` - extract repository protocol to application/ledger/_protocols.py and update application/ledger/_actions.py to depend on the Protocol instead of the adapters import; `RELOC-020, Rule 2, Rule 8; `src/aeat/application/ledger/_protocols.py`.
-- [ ] `W08.P22.S78` - move the shared error base referenced by application/live/_errors.py to core/errors/ and update the two import sites; `RELOC-018, Rule 2; `src/aeat/application/live/_errors.py`.
+- [x] `W08.P22.S75` - introduce domain-layer repository protocol for application/filing/_runtime_repository.py and remove the adapters import; `RELOC-015, Rule 2, Rule 8; `src/aeat/application/filing/_runtime_repository.py`.
+- [x] `W08.P22.S76` - extract shared export contract to application/export/_contracts.py and update application/filing/_export.py to use the contract instead of the adapters import; `RELOC-019, Rule 2; `src/aeat/application/export/_contracts.py`.
+- [x] `W08.P22.S77` - extract repository protocol to application/ledger/_protocols.py and update application/ledger/_actions.py to depend on the Protocol instead of the adapters import; `RELOC-020, Rule 2, Rule 8; `src/aeat/application/ledger/_protocols.py`.
+- [x] `W08.P22.S78` - move the shared error base referenced by application/live/_errors.py to core/errors/ and update the two import sites; `RELOC-018, Rule 2; `src/aeat/application/live/_errors.py`.
 
 ### Phase `W08.P23` - adapter-to-application inbound edge corrections
 
 Break the 52 adapter-to-application inbound import edges (RELOC-032) by ensuring each adapter depends on the Protocol ports declared in W08.P20..P22, not on application concrete types. Wave close gate: sequential pytest across adapters/ and application/.
 
-- [ ] `W08.P23.S79` - correct the 52 adapter-to-application inbound import edges by switching each adapter to depend on the Protocol ports introduced in P20..P22 rather than application concrete types, and run sequential pytest across adapters/ and application/; `RELOC-032, Rule 2; `src/aeat/adapters/`.
+- [x] `W08.P23.S79` - correct the 52 adapter-to-application inbound import edges by switching each adapter to depend on the Protocol ports introduced in P20..P22 rather than application concrete types, and run sequential pytest across adapters/ and application/; `RELOC-032, Rule 2; `src/aeat/adapters/`.
 
 ## Wave `W09` - import-direction violation purge - domain and core outbound clusters
 
