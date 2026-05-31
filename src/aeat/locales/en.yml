@@ -504,6 +504,9 @@ application:
         from an interactive terminal to use the guided setup.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    output_labels:
+      active_profile: active_profile
+      profile: profile
     status:
       errors:
         missing_tax_id: Active profile is missing tax.id.

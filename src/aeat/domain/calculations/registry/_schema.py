@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
-from ....core.aggregation import AggregationSourceKind
+from ....core.aggregation import AggregationSourceKind, PeriodKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from ....core.decimal import coerce_decimal
 from ....core.identity._documents import IdentityError
@@ -1787,9 +1787,9 @@ class DataBindingDefinition(RegistryModel):
         AggregationSourceKind.COLLECTIBLE_INVOICE,
         AggregationSourceKind.LEDGER_TRANSACTION,
         AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        "withholding",
+        RowSetGroupingKind.WITHHOLDING,
         "related_party_operation",
-        "foreign_asset",
+        RowSetGroupingKind.FOREIGN_ASSET,
         "atribucion_member",
         "refund_operation",
     ]

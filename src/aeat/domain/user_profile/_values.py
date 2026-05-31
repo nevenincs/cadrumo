@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from ...core._time import utc_now
+from ...core.time._clock import _now as utc_now
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
@@ -23,7 +23,7 @@ from ..modelos._work_unit import WorkUnit as _WorkUnit
 from ..transactions._models import Transaction as _Transaction
 from ._errors import UserProfileValidationError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _ProfileId = Annotated[
     str,

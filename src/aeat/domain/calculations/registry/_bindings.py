@@ -9,7 +9,7 @@ from typing import Literal, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core.aggregation import AggregationSourceKind
+from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ...iva import (
     EUMemberState,
@@ -2024,7 +2024,7 @@ def withholding_binding_requirements(
 
     grouped: dict[tuple[str, ...], set[str]] = {}
     for binding in revision.bindings:
-        if binding.source != "withholding":
+        if binding.source != RowSetGroupingKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
         key = tuple(sorted(selector.claves))
@@ -2058,7 +2058,7 @@ def resolve_withholding_binding_values(
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
-        if binding.source != "withholding":
+        if binding.source != RowSetGroupingKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
         if selector.fact == "row_field":
@@ -2094,7 +2094,7 @@ def resolve_withholding_binding_row_values(
         list[tuple[DataBindingDefinition, _WithholdingSelector]],
     ] = {}
     for binding in revision.bindings:
-        if binding.source != "withholding":
+        if binding.source != RowSetGroupingKind.WITHHOLDING:
             continue
         selector = _validated_withholding_selector(binding)
         if selector.fact != "row_field":
@@ -2388,7 +2388,7 @@ def resolve_foreign_asset_binding_row_values(
     members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
     cohort_classes: set[tuple[str, ...]] = set()
     for binding in revision.bindings:
-        if binding.source != "foreign_asset":
+        if binding.source != RowSetGroupingKind.FOREIGN_ASSET:
             continue
         selector = _validated_foreign_asset_selector(binding)
         members.append((binding, selector))
@@ -2857,9 +2857,9 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "ledger_iva_aggregation": _IvaLedgerSelector,
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
     "ledger_renta_income_aggregation": _RentaLedgerIncomeSelector,
-    "withholding": _WithholdingSelector,
+    RowSetGroupingKind.WITHHOLDING: _WithholdingSelector,
     "related_party_operation": _RelatedPartySelector,
-    "foreign_asset": _ForeignAssetSelector,
+    RowSetGroupingKind.FOREIGN_ASSET: _ForeignAssetSelector,
     "atribucion_member": _AtributionSelector,
     "refund_operation": _RefundSelector,
     "manual_input": _ManualInputSelector,

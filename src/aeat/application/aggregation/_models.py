@@ -48,19 +48,12 @@ def _coerce_spending_category(value: object) -> object:
 
 _SpendingCategoryField = Annotated[SpendingCategory, BeforeValidator(_coerce_spending_category)]
 
+from ...core.aggregation import PeriodKind
 from ...core.i18n import Translatable as tr
 from ._errors import AggregationPeriodError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
-
-
-class PeriodKind(StrEnum):
-    """Authoritative period cadences used by the calculation registry."""
-
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    ANNUAL = "annual"
 
 
 class Quarter(StrEnum):
