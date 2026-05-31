@@ -70,6 +70,7 @@ class ProjectAnswersFn(Protocol):
     Domain code depends only on this protocol.
     """
 
+    # KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR: WizardFlow type lives in aeat.application.wizard; importing here would create circular dependency.
     def __call__(self, flow: Any, values: Mapping[str, str]) -> BaseModel:
         """Project canonical-token values into the typed answers model."""
         ...  # pragma: no cover
@@ -112,6 +113,7 @@ def get_project_answers() -> ProjectAnswersFn:
     return _PROJECT_ANSWERS_SLOT[0]
 
 
+# KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR: WizardFlow type lives in aeat.application.wizard; importing here would create circular dependency.
 def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     """Invoke the registered project_answers implementation.
 

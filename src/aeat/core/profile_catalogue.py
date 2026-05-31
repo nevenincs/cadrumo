@@ -61,6 +61,7 @@ _SETUP_FLOW_SLOT: list[Any] = []
 _WIZARD_FLOWS_SLOT: list[tuple[Any, ...]] = []
 
 
+# KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR: same circular-import rationale as core/profile.py KWARGS-ANY markers.
 def register_wizard_catalogue(
     setup_flow: Any,
     wizard_flows: tuple[Any, ...],
