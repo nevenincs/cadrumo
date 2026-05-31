@@ -71,8 +71,10 @@ from ...domain.modelos._row_models import (
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.profile import parse_tax_region
-from ...domain.profile._deduccion_maternidad import compute_deduccion_maternidad_0611 as _compute_deduccion_maternidad_0611
-from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
+from ...domain.profile._deduccion_maternidad import (
+    compute_deduccion_maternidad_0611 as _compute_deduccion_maternidad_0611,
+)
+from ._common import _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 _log = get_logger(__name__)
 
@@ -1256,7 +1258,7 @@ def formulas(
             ],
         ]
     from ._common import _emit_envelope
-    from ._modelo_payloads import FormulasResult, FormulaPayload
+    from ._modelo_payloads import FormulaPayload, FormulasResult
 
     result = FormulasResult(
         code=report.code,
@@ -1690,17 +1692,11 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     if allow_not_applicable:
         return
     raise CliRefusedBoundaryError(
-        tr(
-            "cli.app.modelo.work.create_not_applicable_refused",
-            default=(
-                "Modelo {modelo} no aplica al tipo de contribuyente del "
-                "perfil activo: {reason} Si tiene un motivo para crear la "
-                "unidad de trabajo de todas formas, repita el comando con "
-                "--allow-not-applicable."
-            ),
-            modelo=modelo.strip(),
-            reason=applicability.reason,
-        )
+        translated_message="cli.app.modelo.work.create_not_applicable_refused",
+        context={
+            "modelo": modelo.strip(),
+            "reason": applicability.reason,
+        },
     )
 
 
@@ -3814,7 +3810,7 @@ def work_runs(ctx: typer.Context) -> None:
 
     runs = list_runs()
     from ._common import _emit_envelope
-    from ._modelo_payloads import WorkRunsResult, WorkflowRunPayload
+    from ._modelo_payloads import WorkflowRunPayload, WorkRunsResult
 
     result = WorkRunsResult(
         run_count=len(runs),
@@ -4631,9 +4627,37 @@ def modelo_history(
     _emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
 
 
-def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport) -> None:
-    """Render a :class:`ModeloReconciliationReport` to the active emitter."""
-    payload = report.model_dump(mode="json")
+def _render_reconciliation_report(
+    ctx: typer.Context,
+    report: ModeloReconciliationReport,
+    *,
+    command: str,
+) -> None:
+    """Render a :class:`ModeloReconciliationReport` through the typed envelope."""
+    from ._common import _emit_envelope
+    from ._modelo_payloads import (
+        ModeloReconcileResult,
+        ModeloReconciliationDiffPayload,
+    )
+
+    result = ModeloReconcileResult(
+        work_unit_id=report.work_unit_id,
+        bucket_id=report.bucket_id,
+        source_kind=report.source_kind.value,
+        source_path=report.source_path,
+        verdict=report.verdict.value,
+        diffs=tuple(
+            ModeloReconciliationDiffPayload(
+                field_name=diff.field_name,
+                work_unit_value=diff.work_unit_value,
+                evidence_value=diff.evidence_value,
+                kind=diff.kind,
+            )
+            for diff in report.diffs
+        ),
+        reconciled_at=report.reconciled_at.isoformat(),
+        narrative=report.narrative,
+    )
     lines = [
         f"work_unit_id\t{report.work_unit_id}",
         f"bucket\t{report.bucket_id}",
@@ -4646,7 +4670,7 @@ def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliati
         lines.append(
             f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}",
         )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command=command, result=result, lines=lines)
 
 
 @app.command(
@@ -4741,7 +4765,7 @@ def modelo_reconcile_verb(
             actor=resolved_actor,
         ),
     )
-    _render_reconciliation_report(ctx, report)
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile")
 
 
 @app.command(
@@ -4792,7 +4816,7 @@ def modelo_reconcile_from_justificante_verb(
             source_path=justificante_path,
         ),
     )
-    _render_reconciliation_report(ctx, report)
+    _render_reconciliation_report(ctx, report, command="modelo.reconcile_from_justificante")
 
 
 @app.command(

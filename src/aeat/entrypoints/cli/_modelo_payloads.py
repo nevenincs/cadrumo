@@ -972,6 +972,36 @@ class WorkPreviewMaritimeExemptionResult(OutputSchema):
     observations: list[CasillaObservationPayload] = Field(default_factory=list)
 
 
+class ModeloReconciliationDiffPayload(OutputSchema):
+    """One per-casilla disagreement surfaced in a reconciliation report."""
+
+    field_name: str
+    work_unit_value: str = ""
+    evidence_value: str = ""
+    kind: str
+
+
+@register_schema("modelo.reconcile")
+@register_schema("modelo.reconcile_from_justificante")
+class ModeloReconcileResult(OutputSchema):
+    """Result payload for ``modelo reconcile`` and ``reconcile-from-justificante``.
+
+    Both verbs share the :class:`ModeloReconciliationReport` shape from
+    the application service: a work-unit-level verdict, the bucket
+    scope, the external-evidence source kind and path, the per-casilla
+    diff list, the reconciliation timestamp, and an optional narrative.
+    """
+
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
+    source_kind: str
+    source_path: str
+    verdict: str
+    diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
+    reconciled_at: str
+    narrative: str = ""
+
+
 @register_schema("modelo.work.compare_taxation")
 class WorkCompareTaxationResult(OutputSchema):
     """Result payload for ``aeat app modelo work compare-taxation``.
@@ -1030,6 +1060,8 @@ __all__ = [
     "ModeloProjectResult",
     "ModeloReadinessMissingRequirementPayload",
     "ModeloReadinessResult",
+    "ModeloReconcileResult",
+    "ModeloReconciliationDiffPayload",
     "ModeloRecordListResult",
     "ModeloRecordPayload",
     "ModeloRecordShowResult",
