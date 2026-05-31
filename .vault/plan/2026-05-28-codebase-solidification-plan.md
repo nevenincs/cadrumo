@@ -910,10 +910,10 @@ Extract VARCHAR(64) SQL column-type constant. Promote WorkbookKind Literal to St
 
 Add ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR markers on 12 profile field_validator(mode=before) methods. Add ANY-RETURN-RATIONALE-CATALOGUE-SLOT markers on profile_catalogue.get_setup_flow/get_wizard_flows. Add ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY markers on _calc_sheets_apply._drive_service/_sheets_service. Fix borrador_100 KWARGS-ANY marker token (was CAST-RATIONALE-*). Extend inventory test to cover _borrador_100. Add ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL on logging._scrub_value.
 
-- [ ] `W10.P41.S575` - add ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR markers on 12 profile.py @field_validator def lines at 284,296,308,320,332,346,358,374,386,407,419,431,460,487 (mode=before requires Any return); `src/aeat/core/profile.py`.
-- [ ] `W10.P41.S576` - add ANY-RETURN-RATIONALE-CATALOGUE-SLOT markers on profile_catalogue.py:90,103 (get_setup_flow + get_wizard_flows runtime-registered types); `src/aeat/core/profile_catalogue.py`.
-- [ ] `W10.P41.S577` - add ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY markers on _calc_sheets_apply.py:89,101 (_drive_service + _sheets_service googleapiclient.discovery.build untyped Resource); `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
-- [ ] `W10.P41.S578` - fix marker token at _borrador_100.py:304 from CAST-RATIONALE-* to KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH (matches sibling pattern); `src/aeat/application/live/_borrador_100.py`.
-- [ ] `W10.P41.S579` - extend test_w09_p38_rationale_inventory.py to cover _borrador_100.py in S559 mandate (currently omitted); `src/aeat/test_w09_p38_rationale_inventory.py`.
-- [ ] `W10.P41.S580` - add ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL marker on core/logging.py:147 _scrub_value implementation overload; `src/aeat/core/logging.py`.
-- [ ] `W10.P41.S581` - aggregate inventory test asserting all -> Any returns + **kwargs: Any signatures carry RATIONALE markers outside documented allowlist; `src/aeat/test_w10_p41_rationale_inventory.py`.
+- [x] `W10.P41.S575` - add ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR markers on 12 profile.py @field_validator def lines at 284,296,308,320,332,346,358,374,386,407,419,431,460,487 (mode=before requires Any return); `src/aeat/core/profile.py`.
+- [x] `W10.P41.S576` - add ANY-RETURN-RATIONALE-CATALOGUE-SLOT markers on profile_catalogue.py:90,103 (get_setup_flow + get_wizard_flows runtime-registered types); `src/aeat/core/profile_catalogue.py`.
+- [x] `W10.P41.S577` - add ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY markers on _calc_sheets_apply.py:89,101 (_drive_service + _sheets_service googleapiclient.discovery.build untyped Resource); `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
+- [x] `W10.P41.S578` - fix marker token at _borrador_100.py:304 from CAST-RATIONALE-* to KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH (matches sibling pattern); `src/aeat/application/live/_borrador_100.py`.
+- [x] `W10.P41.S579` - extend test_w09_p38_rationale_inventory.py to cover _borrador_100.py in S559 mandate (currently omitted); `src/aeat/test_w09_p38_rationale_inventory.py`.
+- [x] `W10.P41.S580` - add ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL marker on core/logging.py:147 _scrub_value implementation overload; `src/aeat/core/logging.py`.
+- [x] `W10.P41.S581` - aggregate inventory test asserting all -> Any returns + **kwargs: Any signatures carry RATIONALE markers outside documented allowlist; `src/aeat/test_w10_p41_rationale_inventory.py`.
