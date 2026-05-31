@@ -33,8 +33,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.parsing import _parse_bool
-from aeat.core.parsing._dates import _parse_date as _parse_date_canonical
+from aeat.core.parsing import parse_bool as _parse_bool
+from aeat.core.parsing import parse_date as _parse_date_canonical
 
 from ._errors import SedeError, SedeFailureMode
 
