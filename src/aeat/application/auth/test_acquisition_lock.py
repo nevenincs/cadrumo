@@ -34,9 +34,13 @@ def _active_profile() -> Iterator[None]:
 
 
 def _settings(tmp_path: Path) -> Settings:
-    return Settings().model_copy(
-        update={"aeat_token_dir": tmp_path / "tokens"}
-    )
+    """Build a validated Settings instance with the tokens dir pinned.
+
+    Direct constructor kwargs route through the pydantic validator chain;
+    the previous ``model_copy(update=)`` form bypassed validators per
+    pydantic v2 semantics.
+    """
+    return Settings(aeat_token_dir=tmp_path / "tokens")
 
 
 def test_auth_acquisition_lock_blocks_second_live_owner(tmp_path: Path) -> None:
