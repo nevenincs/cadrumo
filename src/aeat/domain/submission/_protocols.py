@@ -25,11 +25,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import BaseSeverity
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 @runtime_checkable

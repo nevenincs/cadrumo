@@ -10,12 +10,11 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ._errors import UserProfileNotFoundError, UserProfileValidationError
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _SchemaId = Annotated[
     str,
