@@ -27,6 +27,13 @@ _MAX_AGE_ORDINARY = 25
 _MAX_AGE_MENOR_TRES = 3
 
 
+def _coerce_iso_date_field(value: object) -> object:
+    """Delegate for @field_validator date fields: parse ISO strings, pass through everything else."""
+    if isinstance(value, str):
+        return _parse_iso8601_date(value)
+    return value
+
+
 class DescendantInfo(BaseModel):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
 
@@ -80,9 +87,7 @@ class DescendantInfo(BaseModel):
     @field_validator("birth_date", "adoption_date", mode="before")
     @classmethod
     def _parse_date(cls, value: object) -> object:
-        if isinstance(value, str):
-            return _parse_iso8601_date(value)
-        return value
+        return _coerce_iso_date_field(value)
 
     @field_validator("nif")
     @classmethod
@@ -178,9 +183,7 @@ class RentaDescendantProfile(BaseModel):
     @field_validator("birth_date", "death_date", mode="before")
     @classmethod
     def _parse_date(cls, value: object) -> object:
-        if isinstance(value, str):
-            return _parse_iso8601_date(value)
-        return value
+        return _coerce_iso_date_field(value)
 
 
 class RentaAscendantProfile(BaseModel):
@@ -208,9 +211,7 @@ class RentaAscendantProfile(BaseModel):
     @field_validator("birth_date", "death_date", mode="before")
     @classmethod
     def _parse_date(cls, value: object) -> object:
-        if isinstance(value, str):
-            return _parse_iso8601_date(value)
-        return value
+        return _coerce_iso_date_field(value)
 
 
 class RentaFamilyProfile(BaseModel):
