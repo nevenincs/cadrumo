@@ -7,7 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...domain.filing import ModeloDraftStatus, ModeloValue, ModeloValueKind
+from ...domain.filing import ModeloValue, ModeloValueKind
+from ...domain.submission import ModeloDraftStatus
 from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from . import (
     ModeloAmendmentError,

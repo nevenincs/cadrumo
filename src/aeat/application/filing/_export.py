@@ -48,8 +48,8 @@ from ...domain.filing import (
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
-    ModeloDraftStatus,
 )
+from ...domain.submission._protocols import ModeloDraftStatus
 from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
 _logger = get_logger(__name__)

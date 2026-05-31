@@ -27,8 +27,8 @@ from ...core.decimal import coerce_decimal
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
-from ..iva import EUMemberState, IvaCategory
-from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
+from ..iva import EUMemberState, InvoiceKind, IvaCategory
+from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
 
