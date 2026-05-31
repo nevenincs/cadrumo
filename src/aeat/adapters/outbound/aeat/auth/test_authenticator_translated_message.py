@@ -1,16 +1,19 @@
-"""Real-behavior tests for AeatLoginAssertionError translated_message threading (S281).
+"""Real-behavior tests for AeatLoginAssertionError translated_message threading.
 
 Coverage:
-- S281-A: AeatAuthenticator.authenticate raises AeatLoginAssertionError with
-  translated_message set to already_active when an active session already exists.
-- S281-B: AeatAuthenticator.authenticate raises AeatLoginAssertionError with
-  translated_message set to assertion_failed when the login probe returns invalid.
-- S281-C: AeatLoginAssertionError raised with resume_failed translated_message key
-  carries the correct key attribute (defensive-guard path).
-- S281-D: AeatLoginAssertionError raised with metadata_parse_failed translated_message key
-  carries the correct key attribute (defensive-guard path).
-- S281-E: All four authenticator locale keys resolve to non-placeholder strings
-  in the catalogue.
+- already_active: AeatAuthenticator.authenticate raises AeatLoginAssertionError
+  with translated_message set to already_active when an active session exists.
+- assertion_failed: AeatAuthenticator.authenticate raises AeatLoginAssertionError
+  with translated_message set to assertion_failed when the login probe returns
+  invalid.
+- resume_failed: AeatLoginAssertionError raised with the resume_failed
+  translated_message key carries the correct key attribute (defensive-guard
+  path).
+- metadata_parse_failed: AeatLoginAssertionError raised with the
+  metadata_parse_failed translated_message key carries the correct key
+  attribute (defensive-guard path).
+- locale resolution: All four authenticator locale keys resolve to
+  non-placeholder strings in the catalogue.
 """
 
 from __future__ import annotations
@@ -249,7 +252,7 @@ def _certificate_session(
 
 
 # ---------------------------------------------------------------------------
-# S281-A: already_active translated_message
+# already_active translated_message
 # ---------------------------------------------------------------------------
 
 
@@ -280,7 +283,7 @@ def test_authenticate_already_active_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S281-B: assertion_failed translated_message (failed login probe)
+# assertion_failed translated_message (failed login probe)
 # ---------------------------------------------------------------------------
 
 
@@ -308,7 +311,7 @@ def test_authenticate_assertion_failed_carries_translated_message(
 
 
 # ---------------------------------------------------------------------------
-# S281-C: resume_failed translated_message carries correct key
+# resume_failed translated_message carries correct key
 # ---------------------------------------------------------------------------
 
 
@@ -331,7 +334,7 @@ def test_resume_failed_exception_carries_translated_message_key() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S281-D: metadata_parse_failed translated_message carries correct key
+# metadata_parse_failed translated_message carries correct key
 # ---------------------------------------------------------------------------
 
 
@@ -353,7 +356,7 @@ def test_metadata_parse_failed_exception_carries_translated_message_key() -> Non
 
 
 # ---------------------------------------------------------------------------
-# S281-E: locale keys resolve to non-placeholder strings
+# locale keys resolve to non-placeholder strings
 # ---------------------------------------------------------------------------
 
 
