@@ -225,7 +225,7 @@ class AeatSection(_Frozen):
     domains: AeatDomains
     sede_paths: AeatSedePaths
     clave_movil: AeatClaveMovilSurface
-    pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")
+    pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")  # ANY-RETURN-RATIONALE-PRE303-RAW-STAGING: raw TOML parse staging slot; cached_property converts to typed AeatPre303Surface boundary model.
     help_pages: AeatHelpPages
     oracles: AeatOracles
     live_safety: AeatLiveSafety

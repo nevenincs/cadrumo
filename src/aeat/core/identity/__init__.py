@@ -42,18 +42,11 @@ from ._transaction import TransactionId
 def _subject_tax_id_validator(value: str) -> str:
     """Adapt :func:`validate_spanish_tax_id` for pydantic field validation.
 
-    Pydantic wraps :class:`ValueError`, :class:`AssertionError`, and
-    :class:`pydantic.PydanticCustomError` raised inside an
-    :class:`AfterValidator` into :class:`pydantic.ValidationError`.
-    :class:`IdentityError` does not extend :class:`ValueError`, so the
-    raw exception would escape the validation boundary. This wrapper
-    re-raises as :class:`ValueError` while preserving the original
-    cause, so callers see a uniform :class:`pydantic.ValidationError`.
+    :class:`IdentityError` extends :class:`ValueError`, so pydantic's
+    :class:`~pydantic.AfterValidator` wraps it directly into a
+    :class:`~pydantic.ValidationError`. No re-raise shim is needed.
     """
-    try:
-        return validate_spanish_tax_id(value)
-    except IdentityError as exc:
-        raise ValueError(str(exc)) from exc
+    return validate_spanish_tax_id(value)
 
 
 type SubjectTaxId = Annotated[str, AfterValidator(_subject_tax_id_validator)]
