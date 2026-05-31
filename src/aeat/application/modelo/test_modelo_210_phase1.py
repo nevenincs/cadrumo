@@ -8,22 +8,22 @@ m210-irnr-full-engine ADR (§D2.4):
   to the same Decimal as the baseline. Exercises the real registry
   snapshot end-to-end.
 - Khadija (MA / interest): the Convenio override REPLACES the TRLIRNR
-  baseline. The real MA/interest Convenio row authored under S389b
-  carries rate=0.10; the helper returns the override. A mutation-pair
-  anti-tautology test rewrites the same row to rate=0.15 and asserts
-  the helper picks the mutated value.
+  baseline. The real MA/interest Convenio row carries rate=0.10; the
+  helper returns the override. A mutation-pair anti-tautology test
+  rewrites the same row to rate=0.15 and asserts the helper picks the
+  mutated value.
 - Felipe (AR / pension): the real AR/pension Convenio row carries
   ``NOT_YET_AUTHORED``; the helper emits the
   ``m210-convenio-rate-not-yet-authored`` BLOCKING finding. The
-  ``pension`` baseline row stays absent per task #229 corpus-blocking;
-  this case exercises the patched helper's "baseline absent BUT
-  Convenio override exists" branch (post-S401).
+  ``pension`` baseline row stays absent (corpus-blocking); this case
+  exercises the helper's "baseline absent BUT Convenio override
+  exists" branch.
 - Non-Convenio fall-through (ZW): a country with no Convenio row at
   all fires the ``m210-convenio-rate-missing`` BLOCKING finding.
 - Deferred-baseline / no-treaty (resident persona, ``pension``): a
   profile with no ``country_of_fiscal_residence`` cannot fall back to
-  a Convenio override; the patched helper emits the
-  ``m210-baseline-tipo-deferred`` BLOCKING finding (post-S401 branch).
+  a Convenio override; the helper emits the
+  ``m210-baseline-tipo-deferred`` BLOCKING finding.
 """
 
 from __future__ import annotations

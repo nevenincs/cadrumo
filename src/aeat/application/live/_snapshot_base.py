@@ -87,7 +87,7 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     """Structural contract for bucket-scoped snapshot persistence backends.
 
     Implementations may be SecureObjectRepository-backed (Borrador100, Census)
-    or file-system-backed (legacy stateless services in Phase 3).
+    or file-system-backed (legacy stateless services).
     """
 
     @property
@@ -237,12 +237,12 @@ class SnapshotService[TPayload: BaseModel](ABC):
     def _capture_with_lifecycle(self, **kwargs: Any) -> TPayload:
         """Template method: subclasses expose a typed ``capture`` wrapper.
 
-        Phase 1 deviation from the proposal: the proposal placed ``capture``
-        directly on the base with ``**kwargs``. That forces every concrete
-        subclass to either accept ``**kwargs`` (losing type safety on
-        operator-visible signatures) or override ``capture`` with a narrower
-        signature (LSP-violating). Renaming the base hook resolves the
-        Liskov conflict while preserving the operator-facing keyword-only
+        The base intentionally does not place ``capture`` on itself with
+        ``**kwargs``. That would force every concrete subclass to either
+        accept ``**kwargs`` (losing type safety on operator-visible
+        signatures) or override ``capture`` with a narrower signature
+        (LSP-violating). Renaming the base hook resolves the Liskov
+        conflict while preserving the operator-facing keyword-only
         signatures on each service.
         """
         snapshot_id = self._derive_snapshot_id(**kwargs)
