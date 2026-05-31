@@ -301,6 +301,9 @@ XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"
 
+#: UTF-8 character encoding used for all text file I/O in the application layer.
+UTF_8_ENCODING: Final[str] = "utf-8"
+
 CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
 
 #: Provenance source identifier for facts entered interactively via the CLI.

@@ -42,9 +42,9 @@ from typing import TYPE_CHECKING, Final, NoReturn, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from .....core.config import Settings as _Settings
+from .....core.logging import get_logger
 from .....core.time._clock import _now
 from .....core.time._utc import _coerce_utc_aware
-from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from . import _session_store
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthValidationError
@@ -79,6 +79,10 @@ if TYPE_CHECKING:
     from .....core.config import Settings
 
 log = get_logger(__name__)
+
+# Environment variable name referenced in operator-facing error messages.
+# Named constant so grepping for the env-var name surfaces every usage site.
+_CERT_PASSWORD_SECRET_ENV: Final[str] = "AEAT_CERTIFICATE_PASSWORD_SECRET"  # noqa: S105
 
 
 AEAT_SESSION_IDLE_TTL: Final[timedelta] = timedelta(minutes=18)
@@ -810,7 +814,7 @@ class AeatAuthenticator:
                 label="AEAT certificate",
                 configured=True,
                 available=False,
-                health_summary="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
+                health_summary=f"{_CERT_PASSWORD_SECRET_ENV} not set",
             )
         # CertificateBundle now carries the passphrase as a SecretStr
         # directly. The authenticator passes the settings-resolved

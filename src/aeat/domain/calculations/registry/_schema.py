@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ....core.aggregation import AggregationSourceKind
 from ....core.classification import SensitivityClass
 from ....core.decimal import coerce_decimal
 from ....core.identity._documents import IdentityError
@@ -1774,7 +1775,7 @@ class ParameterDefinition(RegistryModel):
 class DataBindingDefinition(RegistryModel):
     id: BindingId
     source: Literal[
-        "invoice",
+        AggregationSourceKind.INVOICE,
         "profile",
         "previous_filing",
         "manual_input",
@@ -1782,10 +1783,10 @@ class DataBindingDefinition(RegistryModel):
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
         "ledger_renta_income_aggregation",
-        "payable_invoice",
-        "collectible_invoice",
-        "ledger_transaction",
-        "purchase_invoice_evidence",
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
         "withholding",
         "related_party_operation",
         "foreign_asset",

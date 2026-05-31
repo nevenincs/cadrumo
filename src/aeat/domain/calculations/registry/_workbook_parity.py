@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 import shutil
 import subprocess
@@ -27,6 +26,7 @@ from ....core.config import Settings as _Settings
 from ....core.errors import CoreError
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
+from ....core.hashing import hash_file as _hash_file
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
@@ -100,7 +100,7 @@ class WorkbookArtefactReport(WorkbookParityModel):
 
     path: str
     modelo: str | None
-    extension: Literal[".xlsx", ".xls"]
+    extension: Literal[_XLSX_EXTENSION, _XLS_EXTENSION]
     bytes: int = Field(ge=0)
     sha256: str = Field(min_length=64, max_length=64)
     sheets: tuple[str, ...] = ()
@@ -130,7 +130,7 @@ class WorkbookConversionReport(WorkbookParityModel):
     modelo: str | None
     bytes: int = Field(ge=0)
     sha256: str = Field(min_length=64, max_length=64)
-    converted_extension: Literal[".xlsx"] | None = None
+    converted_extension: Literal[_XLSX_EXTENSION] | None = None
     sheets: tuple[str, ...] = ()
     formula_cells: int = Field(ge=0)
     input_candidates: tuple[WorkbookCellRef, ...] = ()
@@ -355,7 +355,7 @@ def _unsupported_binary_xls_report(
     return WorkbookArtefactReport(
         path=relative,
         modelo=modelo,
-        extension=".xls",
+        extension=_XLS_EXTENSION,
         bytes=byte_count,
         sha256=digest,
         workbook_kind="unsupported_binary_xls",
@@ -637,7 +637,7 @@ def _binary_xls_conversion_context(workbook_path: Path, *, root: Path) -> _Binar
     resolved_path = workbook_path.resolve()
     if resolved_root not in resolved_path.parents and resolved_root != resolved_path:
         raise RegistryValidationError(f"workbook path escapes conversion root: {workbook_path}")
-    if resolved_path.suffix.lower() != ".xls":
+    if resolved_path.suffix.lower() != _XLS_EXTENSION:
         raise RegistryValidationError("binary workbook conversion accepts only XLS artefacts")
     relative = resolved_path.relative_to(resolved_root).as_posix()
     digest, byte_count = _hash_file(resolved_path)
@@ -991,16 +991,6 @@ def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationRepo
         )
 
 
-def _hash_file(path: Path) -> tuple[str, int]:
-    digest = hashlib.sha256()
-    length = 0
-    with path.open("rb") as handle:
-        while chunk := handle.read(65_536):
-            digest.update(chunk)
-            length += len(chunk)
-    return digest.hexdigest(), length
-
-
 def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[WorkbookModeloCoverage, ...]:
     buckets: dict[str, list[WorkbookArtefactReport]] = {}
     for report in reports:
@@ -1120,7 +1110,7 @@ def _failed_report(
     *,
     relative: str,
     modelo: str | None,
-    suffix: Literal[".xlsx", ".xls"],
+    suffix: Literal[_XLSX_EXTENSION, _XLS_EXTENSION],
     byte_count: int,
     digest: str,
     status: WorkbookScanStatus,
