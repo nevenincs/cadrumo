@@ -899,12 +899,12 @@ W10 audit confirmed ZERO strict regressions for second consecutive wave. Counter
 
 Extract VARCHAR(64) SQL column-type constant. Promote WorkbookKind Literal to StrEnum (or extract _WK_* constants). Extract WorkbookRunnerEngine libreoffice-headless constant. Document file_permissions os.environ.get sites as Windows-only OS-integration allowlist. Document i18n _render.py output-language env-var direct read pattern.
 
-- [ ] `W10.P40.S569` - extract _VARCHAR_64 SQL column-type constant at adapters/persistence/storage/sql/secure_objects.py:40-44,261-265 (5+5 sites); `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `W10.P40.S570` - promote WorkbookKind Literal to StrEnum or extract named constants for unreadable/unsupported_binary_xls/scanned; `migrate _workbook_parity.py:47-48,122,367,374,965,1018 set-literal comparisons; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
-- [ ] `W10.P40.S571` - extract _ENGINE_LIBREOFFICE = libreoffice-headless constant and migrate _workbook_parity.py:59,477,486,844 callsites; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
-- [ ] `W10.P40.S572` - document file_permissions.py:70,72 os.environ.get SYSTEMROOT/USERDOMAIN as Windows-OS-integration allowlist exception in test_settings_single_surface_invariant; `src/aeat/core/file_permissions.py`.
-- [ ] `W10.P40.S573` - document i18n/_render.py:145 OUTPUT_LANGUAGE_KEY_ENV_VARS os.environ.get cache-key read as documented locale-resolution allowlist; `src/aeat/core/i18n/_render.py`.
-- [ ] `W10.P40.S574` - aggregate inventory test asserting VARCHAR(64) + WorkbookKind + libreoffice-headless extracted; `src/aeat/test_w10_p40_constants_inventory.py`.
+- [x] `W10.P40.S569` - extract _VARCHAR_64 SQL column-type constant at adapters/persistence/storage/sql/secure_objects.py:40-44,261-265 (5+5 sites); `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `W10.P40.S570` - promote WorkbookKind Literal to StrEnum or extract named constants for unreadable/unsupported_binary_xls/scanned; `migrate _workbook_parity.py:47-48,122,367,374,965,1018 set-literal comparisons; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [x] `W10.P40.S571` - extract _ENGINE_LIBREOFFICE = libreoffice-headless constant and migrate _workbook_parity.py:59,477,486,844 callsites; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [x] `W10.P40.S572` - document file_permissions.py:70,72 os.environ.get SYSTEMROOT/USERDOMAIN as Windows-OS-integration allowlist exception in test_settings_single_surface_invariant; `src/aeat/core/file_permissions.py`.
+- [x] `W10.P40.S573` - document i18n/_render.py:145 OUTPUT_LANGUAGE_KEY_ENV_VARS os.environ.get cache-key read as documented locale-resolution allowlist; `src/aeat/core/i18n/_render.py`.
+- [x] `W10.P40.S574` - aggregate inventory test asserting VARCHAR(64) + WorkbookKind + libreoffice-headless extracted; `src/aeat/test_w10_p40_constants_inventory.py`.
 
 ### Phase `W10.P41` - A8 rationale finishers
 
