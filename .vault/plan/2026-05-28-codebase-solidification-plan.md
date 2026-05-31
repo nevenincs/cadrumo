@@ -1064,3 +1064,15 @@ Two relocations observed in flight on 2026-05-31: InvoiceKind to aeat.domain.iva
 
 - [ ] `W19.P51.S641` - Land relocation:InvoiceKind as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/iva/_classification.py` + every consumer of `InvoiceKind`.
 - [ ] `W19.P51.S642` - Land relocation:ModeloDraftStatus as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/submission/_protocols.py` + every consumer of `ModeloDraftStatus`.
+
+## Wave `W20` - close W20 audit findings: 0 regressions + 2 survivor-missed Any-parameter annotations
+
+W20 swarm re-audit: 7 of 9 axes returned ZERO findings. A8 surfaced 2 sites that W19 missed (W19 scanned return-Any but not parameter-Any annotations on small helper functions). Both are mechanical marker additions. Close counter resets to 0/3.
+
+### Phase `W20.P52` - W20 audit closure
+
+Land 2 ANY-RETURN-RATIONALE-* markers on bare Any parameter annotations + aggregate test confirming markers present.
+
+- [ ] `W20.P52.S643` - A8: add ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION marker on _iva_wallet_blocked_message(decision: Any) at _actions.py:1341 (concrete type is IvaWalletCompensationDecision; cross-module import cycle prevents direct annotation; duck-typed via .divergence/.reason protocol access); `src/aeat/application/modelo/_actions.py`.
+- [ ] `W20.P52.S644` - A8: add ANY-RETURN-RATIONALE-SOURCE-PROFILE-FINGERPRINT marker on _profile_fingerprint(profile_record: Any) at _source_profile.py:71 (concrete type is a pydantic model registered at runtime; duck-typed via hasattr(model_dump_json) to avoid cross-domain import); `src/aeat/application/aggregation/_source_profile.py`.
+- [ ] `W20.P52.S645` - aggregate test asserting both W20 ANY-RETURN-RATIONALE-* tokens present on the named helper functions + prior-wave inventory ratchets remain green; `src/aeat/test_w20_p52_closure.py`.
