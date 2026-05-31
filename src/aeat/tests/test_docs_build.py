@@ -29,7 +29,7 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
         tmp_path: Pytest-provided isolated output directory.
     """
     env = {**os.environ, "AEAT_DOCS_OFFLINE": "1"}
-    result = subprocess.run(  # noqa: S603
+    result = subprocess.run(
         [
             sys.executable,
             "-m",
