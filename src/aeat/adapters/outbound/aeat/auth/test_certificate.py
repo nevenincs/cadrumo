@@ -33,7 +33,7 @@ from . import (
     preload_into_browser_context,
     verify_handshake,
 )
-from ._test_fixtures import SECRET_PASSPHRASE
+from ._fixtures import SECRET_PASSPHRASE
 from .certificate import _select_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._test_fixtures import SECRET_PASSPHRASE
+from ._fixtures import SECRET_PASSPHRASE
 
 
 @pytest.fixture(scope="session")

@@ -52,7 +52,7 @@ from . import (
 from . import _authenticator as authenticator_module
 from .certificate import CertificateBundle
 
-from ._test_fixtures import SECRET_PASSPHRASE
+from ._fixtures import SECRET_PASSPHRASE
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
