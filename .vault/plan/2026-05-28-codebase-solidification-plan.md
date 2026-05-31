@@ -760,7 +760,7 @@ Fix 2 regressions: _bindings.py/_schema.py ledger_transaction sibling sites; _wo
 
 Add CAST-RATIONALE marker on _bindings.py:1651 cast (regression). Consolidate 3 _parse_date validator wrappers in domain/profile/family.py into single helper.
 
-- [ ] `W06.P30.S496` - fix regression: add CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker on cast at _bindings.py:1651 (added in W05.P25.S459 without marker); `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `W06.P30.S497` - verify cast inventory test (W2.P13.S312) catches the _bindings.py:1651 site and document why it didn't fire in W6; `src/aeat/test_cast_rationale_inventory.py`.
-- [ ] `W06.P30.S498` - consolidate 3 _parse_date validator wrappers in domain/profile/family.py:80,98,122 into single module-level factory used by all 3 validator methods; `src/aeat/domain/profile/family.py`.
-- [ ] `W06.P30.S499` - add real-behavior test asserting consolidated _parse_date factory matches each validator's input/output contract; `src/aeat/domain/profile/test_family_parse_date.py`.
+- [x] `W06.P30.S496` - fix regression: add CAST-RATIONALE-LEDGER-COUNTERPART-SOURCEKIND marker on cast at _bindings.py:1651 (added in W05.P25.S459 without marker); `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W06.P30.S497` - verify cast inventory test (W2.P13.S312) catches the _bindings.py:1651 site and document why it didn't fire in W6; `src/aeat/test_cast_rationale_inventory.py`.
+- [x] `W06.P30.S498` - consolidate 3 _parse_date validator wrappers in domain/profile/family.py:80,98,122 into single module-level factory used by all 3 validator methods; `src/aeat/domain/profile/family.py`.
+- [x] `W06.P30.S499` - add real-behavior test asserting consolidated _parse_date factory matches each validator's input/output contract; `src/aeat/domain/profile/test_family_parse_date.py`.
