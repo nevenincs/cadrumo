@@ -30,7 +30,7 @@ from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
-from ._schema import RegistrySnapshot
+from ._schema import EvidenceTier, RegistrySnapshot
 
 _PARITY_DEFAULTS = _Settings()
 
@@ -55,12 +55,6 @@ WorkbookConversionStatus = Literal["converted", "failed"]
 WorkbookRunnerStatus = Literal["available"]
 WorkbookRunnerEngine = Literal["libreoffice-headless", "excel-com"]
 ParityStatus = Literal["match", "mismatch", "not_run"]
-EvidenceTier = Literal[
-    "legal_authority",
-    "official_source_guidance",
-    "executable_parity_evidence",
-    "layout_authority",
-]
 
 _WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
