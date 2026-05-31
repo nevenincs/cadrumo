@@ -9,8 +9,8 @@ to operators. Verifies the four observable contracts the verb must hold:
    typed CasillaObservation rows with ``legal_refs`` traceable to the
    pathway BOE anchor.
 3. The DA 41 inactive guard refuses with the registered error code when
-   the facts dataclass carries the tuna-fleet selector (exercised through
-   the verb body via the facts-reader seam).
+   the active profile carries the tuna-fleet selector facts, driven
+   end-to-end through the CLI verb body.
 4. The RETMAR completeness gate surfaces the translated warning when the
    active profile carries ``retmar_registered=True`` while still emitting
    the observation payload (non-blocking).
@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -30,7 +29,7 @@ from aeat.application.user_profile._orchestration import profile_create_storage_
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import override_settings
-from aeat.domain.renta import MaritimeWorkerFacts
+from aeat.core.errors import ErrorCategory, get_error_exit_code
 from aeat.entrypoints.cli import _modelo as modelo_cli
 from aeat.entrypoints.cli._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,
@@ -182,45 +181,42 @@ class TestRetmarMandatoryFilingWarningSurface:
 
 
 class TestDa41InactiveGuard:
-    """DA 41 inactive guard refuses through the registered error code.
+    """DA 41 inactive guard refuses through the CLI verb body end-to-end.
 
-    The user_profile schema does not currently expose ``tuna_fleet`` or
-    ``pending_eu_clearance`` as profile facts, so the DA 41 selector
-    cannot be triggered through ``profile edit``. The contract the verb
-    must hold is verified at the seam: facts read by
-    :func:`_maritime_facts_from_active_profile` feed into the same
-    application service which the verb invokes, and the service raises
-    the registered :class:`MaritimeExemptionInactiveError` that the CLI
-    error boundary renders. The verb body would propagate the refusal
-    untouched to ``aeat.entrypoints.cli._errors`` — the same boundary
-    that handles every ``AeatError`` subclass in the registry.
+    The active profile carries ``maritime_worker.tuna_fleet=true`` and
+    ``maritime_worker.pending_eu_clearance=true`` schema facts; the verb
+    body resolves them via :func:`_maritime_facts_from_active_profile`
+    and dispatches the maritime exemption service, which raises
+    :class:`MaritimeExemptionInactiveError`. The CLI error boundary maps
+    that exception to the registered ``REFUSED`` exit category and
+    renders the translated message in the operator's active locale.
     """
 
-    def test_da41_guard_fires_when_tuna_fleet_facts_present(self) -> None:
-        from aeat.application.calculations._maritime_exemption_service import (
-            resolve_maritime_exemption,
+    def test_da41_refusal_propagates_through_cli_verb(
+        self, isolated_backend: None
+    ) -> None:
+        _register_maritime_profile(
+            overrides={
+                "maritime_worker.worker_class": "trabajador_del_mar",
+                "maritime_worker.tuna_fleet": "true",
+                "maritime_worker.pending_eu_clearance": "true",
+            }
         )
-        from aeat.core.errors import resolve_error_message
-        from aeat.domain.renta import MaritimeExemptionInactiveError
-
-        facts = MaritimeWorkerFacts(
-            worker_class="trabajador_del_mar",
-            tuna_fleet=True,
-            pending_eu_clearance=True,
-        )
-        with pytest.raises(MaritimeExemptionInactiveError) as exc_info:
-            resolve_maritime_exemption(
-                facts=facts,
-                annual_salary=Decimal("36500"),
-                qualifying_days=100,
-            )
-        # The CLI error boundary calls resolve_error_message(exc) to map
-        # the exception class to the registered error code's translated
-        # message. Asserting against that rendered message proves the
-        # verb-level refusal will name the DA 41 / BOE anchor.
-        rendered = resolve_error_message(exc_info.value)
-        assert "DA 41" in rendered
-        assert "BOE-A-2006-20764" in rendered
+        result = invoke_cached_cli(
+            [
+                "--language", "es",
+                "app", "modelo", "work", "preview-maritime-exemption",
+                "--annual-salary", "36500",
+                "--qualifying-days", "100",
+            ]
+        )  # fmt: skip
+        refused_exit = get_error_exit_code(ErrorCategory.REFUSED)
+        assert result.exit_code == refused_exit, result.output
+        # The Spanish-locale error envelope must name the DA 41 anchor
+        # and the Ley 35/2006 BOE id; the boundary renders the message
+        # registered for ``REFUSED_RENTA_MARITIME_EXEMPTION_INACTIVE``.
+        assert "DA 41" in result.output
+        assert "BOE-A-2006-20764" in result.output
 
 
 class TestVerbWiringIntegration:
