@@ -17,12 +17,8 @@ class GoogleAuthError(AeatError):
     """Base class for every Google OAuth Desktop authentication failure."""
 
 
-class GoogleAuthValidationError(GoogleAuthError, ValueError):
-    """Raised when input parameters fail validation.
-
-    Inherits from `ValueError` to remain compatible with pydantic
-    validators while staying catchable under the unified hierarchy.
-    """
+class GoogleAuthValidationError(GoogleAuthError):
+    """Raised when input parameters fail validation."""
 
 
 class GoogleAuthClientNotRegisteredError(GoogleAuthError):

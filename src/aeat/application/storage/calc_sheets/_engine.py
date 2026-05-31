@@ -38,6 +38,7 @@ from ._records import (
     TabName,
     _utc_now,
 )
+from ._errors import CalcSheetsEngineError
 from ._translator import translate_formula
 
 _ENGINE_VERSION: Final[str] = "calc-sheets/0.1.0"
@@ -54,7 +55,7 @@ def _rounding_rule_for(
         return ("money", 2)
     if formula.rounding == "integer":
         return ("integer", 0)
-    raise ValueError(f"unsupported registry rounding code {formula.rounding!r}")
+    raise CalcSheetsEngineError(f"unsupported registry rounding code {formula.rounding!r}")
 
 
 def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
@@ -297,7 +298,7 @@ def _resolve_scalar(parameter: ParameterDefinition, today: date) -> Decimal:
     """
 
     if parameter.data_type == "bracket_table":
-        raise ValueError(f"bracket_table parameter {parameter.id!r} has no scalar value")
+        raise CalcSheetsEngineError(f"bracket_table parameter {parameter.id!r} has no scalar value")
     chosen: Decimal | None = None
     for dated in parameter.values:
         if dated.valid_from > today:
@@ -306,7 +307,7 @@ def _resolve_scalar(parameter: ParameterDefinition, today: date) -> Decimal:
             continue
         chosen = dated.value
     if chosen is None:
-        raise ValueError(f"parameter {parameter.id!r} has no dated value valid for {today.isoformat()}")
+        raise CalcSheetsEngineError(f"parameter {parameter.id!r} has no dated value valid for {today.isoformat()}")
     return chosen
 
 

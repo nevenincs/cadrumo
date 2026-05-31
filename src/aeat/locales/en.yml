@@ -249,8 +249,10 @@ application:
           one before continuing.
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     errors:
-      provider_reserved: 'Authentication provider {provider} is reserved and not yet implemented.'
-      session_field_not_datetime: 'Persisted session field {field} must be a datetime or ISO-8601 string.'
+      provider_reserved: Authentication provider {provider} is reserved and not yet
+        implemented.
+      session_field_not_datetime: Persisted session field {field} must be a datetime
+        or ISO-8601 string.
     operator:
       alignment:
         both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -480,6 +482,8 @@ application:
         by this application version.
   wizard:
     errors:
+      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
+        requires supplied_question_ids — edit is a patch, not a full rewrite.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
         fallback).
       quiet_missing_flags: 'This --quiet run is missing required details. Add these
@@ -2427,7 +2431,8 @@ cli:
 core:
   profile:
     errors:
-      registration_duplicate_callable: 'Project answers implementation registered twice with different callables; it must be registered exactly once.'
+      registration_duplicate_callable: Project answers implementation registered twice
+        with different callables; it must be registered exactly once.
 dotted:
   key: Dotted key
 entries:
@@ -2690,6 +2695,12 @@ errors:
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
+    error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
+      state while building the export plan.
+    error_calc_sheets_parity: The parity harness scenario references casilla numbers
+      that are not present in the registry snapshot.
+    error_calc_sheets_record: A spreadsheet record operation failed due to an invalid
+      column index or malformed A1 address.
     error_calculations_registry: An error occurred loading, resolving or validating
       the calculation registry.
     error_calculations_registry_load: The calculation registry files could not be
@@ -2738,6 +2749,8 @@ errors:
       linked.
     error_financial_invoices_invoice_not_found: The requested invoice was not found.
     error_financial_provider: An error occurred while importing the financial document.
+    error_financial_provider_config: A financial provider subclass declaration is
+      missing or carries an invalid corpus attribute.
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
     error_financial_vat: A VAT calculation error occurred.

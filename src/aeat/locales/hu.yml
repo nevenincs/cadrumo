@@ -260,8 +260,10 @@ application:
         operator_completion_required: Kész; operátor által közvetített Cl@ve befejezés
           szükséges.
     errors:
-      provider_reserved: 'A(z) {provider} hitelesítési szolgáltató foglalt és még nincs implementálva.'
-      session_field_not_datetime: 'A(z) {field} munkamenet-mező csak datetime vagy ISO-8601 karakterlánc lehet.'
+      provider_reserved: A(z) {provider} hitelesítési szolgáltató foglalt és még nincs
+        implementálva.
+      session_field_not_datetime: A(z) {field} munkamenet-mező csak datetime vagy
+        ISO-8601 karakterlánc lehet.
     operator:
       alignment:
         both_missing_detail: Sem a Cl@ve azonosító (AEAT_CLAVE_MOVIL_DNI_NIE), sem
@@ -499,6 +501,8 @@ application:
         az alkalmazásverzióban.
   wizard:
     errors:
+      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
+        requires supplied_question_ids — edit is a patch, not a full rewrite.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit
         "default" tartalék).
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
@@ -514,23 +518,36 @@ application:
           SetupAnswers-re.
   workflow:
     errors:
-      adapter_missing_deadline_engine: 'A munkafolyamat-motorhoz deadline_engine adapter szükséges.'
-      adapter_missing_filing_draft_builder: 'A munkafolyamat-motorhoz filing_draft_builder adapter szükséges.'
-      adapter_missing_inputs_provider: 'A munkafolyamat-motorhoz tároló-alapú bejegyzési bemenetek szolgáltató szükséges.'
+      adapter_missing_deadline_engine: A munkafolyamat-motorhoz deadline_engine adapter
+        szükséges.
+      adapter_missing_filing_draft_builder: A munkafolyamat-motorhoz filing_draft_builder
+        adapter szükséges.
+      adapter_missing_inputs_provider: A munkafolyamat-motorhoz tároló-alapú bejegyzési
+        bemenetek szolgáltató szükséges.
       no_active_profile_bucket: Nincs aktív profil bucket.
-      no_run_for_period: 'Nem található munkafolyamat-futás a(z) {modelo} modellhez {period} időszakra. Futtassa a munkafolyamatot legalább egyszer a folytatás előtt.'
-      period_registry_unmappable: 'A(z) {period} munkafolyamat-időszak nem képezhető le nyilvántartási időszakra.'
-      period_registry_year_unresolvable: 'Nem vezethető le a nyilvántartás éve a(z) {period} munkafolyamat-időszakból.'
-      profile_label_ambiguous: 'A(z) {label} profilcímke kétértelmű: {count} aktív tároló viseli.'
-      resume_refused_no_aborted_reason: 'A(z) {run_id} futás ABORTED állapotban van rögzített ok nélkül; inkonzisztens rekord folytatása megtagadva.'
-      resume_refused_no_obligation: 'A(z) {run_id} futáshoz nincs kötelezettség rendelve; nem határozható meg a modell és az időszak az újrapróbáláshoz.'
-      resume_refused_not_aborted: 'A(z) {run_id} futás nem folytatható: {final_stage} állapotban van, nem ABORTED.'
-      resume_refused_terminal_reason: 'A(z) {run_id} futás {reason} miatt megszakadt, ami tervezetten terminális és nem folytatható.'
-      run_id_invalid_blank: 'A futásazonosító nem lehet üres.'
-      run_id_invalid_separators: 'A futásazonosító nem tartalmazhat elérési út elválasztókat.'
+      no_run_for_period: Nem található munkafolyamat-futás a(z) {modelo} modellhez
+        {period} időszakra. Futtassa a munkafolyamatot legalább egyszer a folytatás
+        előtt.
+      period_registry_unmappable: A(z) {period} munkafolyamat-időszak nem képezhető
+        le nyilvántartási időszakra.
+      period_registry_year_unresolvable: Nem vezethető le a nyilvántartás éve a(z)
+        {period} munkafolyamat-időszakból.
+      profile_label_ambiguous: 'A(z) {label} profilcímke kétértelmű: {count} aktív
+        tároló viseli.'
+      resume_refused_no_aborted_reason: A(z) {run_id} futás ABORTED állapotban van
+        rögzített ok nélkül; inkonzisztens rekord folytatása megtagadva.
+      resume_refused_no_obligation: A(z) {run_id} futáshoz nincs kötelezettség rendelve;
+        nem határozható meg a modell és az időszak az újrapróbáláshoz.
+      resume_refused_not_aborted: 'A(z) {run_id} futás nem folytatható: {final_stage}
+        állapotban van, nem ABORTED.'
+      resume_refused_terminal_reason: A(z) {run_id} futás {reason} miatt megszakadt,
+        ami tervezetten terminális és nem folytatható.
+      run_id_invalid_blank: A futásazonosító nem lehet üres.
+      run_id_invalid_separators: A futásazonosító nem tartalmazhat elérési út elválasztókat.
       run_not_found: 'Munkafolyamat-futás nem található: {run_id}.'
       state_unreadable: A helyi konfigurációs állapot nem olvasható.
-      state_write_invalid_payload: 'A munkafolyamat-állapot nem menthető: érvénytelen adattartalom.'
+      state_write_invalid_payload: 'A munkafolyamat-állapot nem menthető: érvénytelen
+        adattartalom.'
 auth:
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
@@ -2533,7 +2550,8 @@ cli:
 core:
   profile:
     errors:
-      registration_duplicate_callable: 'A projektválaszok implementációja kétszer lett regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.'
+      registration_duplicate_callable: A projektválaszok implementációja kétszer lett
+        regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
 dotted:
   key: Pontozott kulcs
 entries:
@@ -2812,6 +2830,12 @@ errors:
       el lett utasítva.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
       100 tervezet-sémával sem.
+    error_calc_sheets_engine: A táblázatexportáló motor feloldhatatlan állapotba került
+      az exportálási terv elkészítésekor.
+    error_calc_sheets_parity: A paritás-tesztelési forgatókönyv olyan casilla-számokra
+      hivatkozik, amelyek nem találhatók a registry pillanatképében.
+    error_calc_sheets_record: Egy táblázat-rekordművelet érvénytelen oszlopindex vagy
+      hibás A1-cím miatt meghiúsult.
     error_calculations_registry: Hiba történt a számítási nyilvántartás betöltése,
       feloldása vagy érvényesítése során.
     error_calculations_registry_load: A számítási nyilvántartás fájljai nem elemezhetők.
@@ -2856,6 +2880,8 @@ errors:
       összekapcsolni.
     error_financial_invoices_invoice_not_found: A kért számla nem található.
     error_financial_provider: Hiba történt a pénzügyi dokumentum importálása során.
+    error_financial_provider_config: Egy pénzügyi szolgáltató alosztályának corpus-attribútum
+      deklarációi hiányoznak vagy érvénytelenek.
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
     error_financial_vat: IVA-számítási hiba történt.

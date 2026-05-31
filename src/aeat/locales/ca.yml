@@ -269,8 +269,10 @@ application:
         operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
           per l'operador.
     errors:
-      provider_reserved: 'El proveïdor d''autenticació {provider} està reservat i no està implementat.'
-      session_field_not_datetime: 'El camp {field} de la sessió persistent ha de ser una data-hora o cadena ISO-8601.'
+      provider_reserved: El proveïdor d'autenticació {provider} està reservat i no
+        està implementat.
+      session_field_not_datetime: El camp {field} de la sessió persistent ha de ser
+        una data-hora o cadena ISO-8601.
     operator:
       alignment:
         both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
@@ -519,6 +521,8 @@ application:
         amb aquesta versió de l'aplicació.
   wizard:
     errors:
+      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
+        requires supplied_question_ids — edit is a patch, not a full rewrite.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
         defecte 'default' implícit).
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
@@ -535,23 +539,36 @@ application:
           com SetupAnswers.
   workflow:
     errors:
-      adapter_missing_deadline_engine: 'El motor de flux de treball requereix un adaptador deadline_engine.'
-      adapter_missing_filing_draft_builder: 'El motor de flux de treball requereix un adaptador filing_draft_builder.'
-      adapter_missing_inputs_provider: 'El motor de flux de treball requereix un proveïdor d''entrades basat en dipòsit.'
+      adapter_missing_deadline_engine: El motor de flux de treball requereix un adaptador
+        deadline_engine.
+      adapter_missing_filing_draft_builder: El motor de flux de treball requereix
+        un adaptador filing_draft_builder.
+      adapter_missing_inputs_provider: El motor de flux de treball requereix un proveïdor
+        d'entrades basat en dipòsit.
       no_active_profile_bucket: No hi ha cap perfil actiu.
-      no_run_for_period: 'No s''ha trobat cap execució de flux de treball per al model {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.'
-      period_registry_unmappable: 'No es pot assignar el període de flux de treball {period} a un període del registre.'
-      period_registry_year_unresolvable: 'No es pot derivar l''any del registre a partir del període de flux de treball {period}.'
-      profile_label_ambiguous: 'L''etiqueta de perfil {label} és ambigua: {count} dipòsits actius la comparteixen.'
-      resume_refused_no_aborted_reason: 'L''execució {run_id} és ABORTED sense raó registrada; es rebutja reprendre un registre inconsistent.'
-      resume_refused_no_obligation: 'L''execució {run_id} no té cap obligació; no es pot determinar el model i el període per reintentar.'
-      resume_refused_not_aborted: 'L''execució {run_id} no es pot reprendre: es troba en estat {final_stage}, no ABORTED.'
-      resume_refused_terminal_reason: 'L''execució {run_id} es va avortar per {reason}, que és terminal per disseny i no es pot reprendre.'
-      run_id_invalid_blank: 'L''identificador d''execució no pot estar en blanc.'
-      run_id_invalid_separators: 'L''identificador d''execució no ha de contenir separadors de ruta.'
+      no_run_for_period: No s'ha trobat cap execució de flux de treball per al model
+        {modelo} període {period}. Executeu el flux almenys una vegada abans de reprendre.
+      period_registry_unmappable: No es pot assignar el període de flux de treball
+        {period} a un període del registre.
+      period_registry_year_unresolvable: No es pot derivar l'any del registre a partir
+        del període de flux de treball {period}.
+      profile_label_ambiguous: 'L''etiqueta de perfil {label} és ambigua: {count}
+        dipòsits actius la comparteixen.'
+      resume_refused_no_aborted_reason: L'execució {run_id} és ABORTED sense raó registrada;
+        es rebutja reprendre un registre inconsistent.
+      resume_refused_no_obligation: L'execució {run_id} no té cap obligació; no es
+        pot determinar el model i el període per reintentar.
+      resume_refused_not_aborted: 'L''execució {run_id} no es pot reprendre: es troba
+        en estat {final_stage}, no ABORTED.'
+      resume_refused_terminal_reason: L'execució {run_id} es va avortar per {reason},
+        que és terminal per disseny i no es pot reprendre.
+      run_id_invalid_blank: L'identificador d'execució no pot estar en blanc.
+      run_id_invalid_separators: L'identificador d'execució no ha de contenir separadors
+        de ruta.
       run_not_found: 'Execució de flux de treball no trobada: {run_id}.'
       state_unreadable: No s'ha pogut llegir l'estat de configuració local.
-      state_write_invalid_payload: 'No s''ha pogut desar l''estat del flux de treball: càrrega útil no vàlida.'
+      state_write_invalid_payload: 'No s''ha pogut desar l''estat del flux de treball:
+        càrrega útil no vàlida.'
 auth:
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una
@@ -2505,7 +2522,9 @@ cli:
 core:
   profile:
     errors:
-      registration_duplicate_callable: 'La implementació de respostes del projecte s''ha registrat dues vegades amb invocables distintos; s''ha de registrar exactament una vegada.'
+      registration_duplicate_callable: La implementació de respostes del projecte
+        s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
+        una vegada.
 dotted:
   key: Clau amb punts
 entries:
@@ -2780,6 +2799,12 @@ errors:
       ha estat rebutjada.
     error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
       del Model 100 conegut.
+    error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
+      estat irresoluble en generar el pla d'exportació.
+    error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
+      números de casella que no es troben a la instantània del registre.
+    error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
+      per un índex de columna invàlid o una adreça A1 malformada.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
       el registre de càlcul.
     error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
@@ -2829,6 +2854,8 @@ errors:
       transacció.
     error_financial_invoices_invoice_not_found: No s'ha trobat la factura sol·licitada.
     error_financial_provider: S'ha produït un error en importar el document financer.
+    error_financial_provider_config: Una subclasse de proveïdor financer té declaracions
+      d'atributs de corpus invàlides o que manquen.
     error_financial_transactions_transaction: S'ha produït un error en el catàleg
       de transaccions.
     error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges

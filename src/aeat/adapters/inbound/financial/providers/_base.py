@@ -81,6 +81,15 @@ class FinancialProviderError(AeatError):
     """
 
 
+class FinancialProviderConfigError(FinancialProviderError):
+    """Raised when a :class:`FinancialProvider` subclass declaration is invalid.
+
+    Fired by ``__init_subclass__`` when the concrete provider class is
+    missing or carries an invalid ``verification_source`` or
+    ``provisional_pending_specimen`` class variable.
+    """
+
+
 class UnsupportedFinancialSourceError(FinancialProviderError):
     """Raised when no provider can interpret a source document."""
 
@@ -228,26 +237,26 @@ class FinancialProvider(ABC):
             {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
         )
         if not hasattr(cls, "verification_source"):
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'verification_source' class variable"
             )
         vs = cls.verification_source  # type: ignore[attr-defined]
         if vs not in _VALID_SOURCES:
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.verification_source={vs!r} is not one of "
                 f"{sorted(_VALID_SOURCES)}"
             )
         if not hasattr(cls, "provisional_pending_specimen"):
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable"
             )
         pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]
         if not isinstance(pps, bool):
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}"
             )
         if vs == "no_corpus" and pps is not True:
-            raise TypeError(
+            raise FinancialProviderConfigError(
                 f"{cls.__qualname__}: verification_source='no_corpus' requires "
                 "provisional_pending_specimen=True"
             )

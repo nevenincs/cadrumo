@@ -57,6 +57,7 @@ from ....domain.calculations.registry._ids import CasillaId, RevisionId
 from ....domain.calculations.registry._schema import CasillaDefinition, InputKind
 from ....domain.calculations.registry._schema import RegistrySnapshot
 from ._engine import build_export_plan
+from ._errors import CalcSheetsParityError
 from ._layout import plan_layout
 from ._records import (
     OperatorInput,
@@ -151,7 +152,7 @@ def _build_operator_inputs(
         operator_input_records.append(OperatorInput(casilla=casilla_id, value=value))
         inputs_by_id[casilla_id] = value
     if unknown:
-        raise ValueError(
+        raise CalcSheetsParityError(
             f"scenario references unknown casilla numbers in modelo {snapshot.modelo.id!r}: {sorted(unknown)!r}"
         )
     return OperatorInputs(values=tuple(operator_input_records)), inputs_by_id
