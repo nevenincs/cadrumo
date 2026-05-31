@@ -17,6 +17,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings
 from .....domain.submission import (
+    ModeloDraftStatus,
+    ModeloFinding,
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionEngine,
@@ -26,10 +28,6 @@ from .....domain.submission import (
     make_submission_id,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-from . import (
-    ModeloDraftStatus,
-    ModeloFinding,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 

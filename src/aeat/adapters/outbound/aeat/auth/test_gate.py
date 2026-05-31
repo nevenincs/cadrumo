@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.access_gate import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
 from .....core.config import Settings, override_settings
-from ..export import LiveSubmitForbiddenError
 from . import (
     AeatAccessGate,
     AeatGateEnvSnapshot,
-    AeatLiveReadNotEnabledError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]

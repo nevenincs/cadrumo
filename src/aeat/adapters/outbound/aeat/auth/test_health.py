@@ -18,9 +18,9 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
+from .....core.config import CertificateBackend
 from .....core.errors import AeatError
 from . import (
-    CertificateBackend,
     CertificateBundle,
     CertificateHealth,
     CertificateHealthSeverity,

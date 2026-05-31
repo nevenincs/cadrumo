@@ -7,7 +7,7 @@ reach into the private underscore modules inside this package.
 
 from __future__ import annotations
 
-from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
+from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import (
     InvoiceCatalogueError,
     InvoiceError,
@@ -37,7 +37,6 @@ __all__ = [
     "InvoiceCatalogueError",
     "InvoiceCatalogueRepository",
     "InvoiceError",
-    "InvoiceKind",
     "InvoiceLine",
     "InvoiceLinkError",
     "InvoiceLinkInconsistencyError",

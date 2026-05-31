@@ -9,7 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...core.identity import IdentityError
-from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
+from ..iva import InvoiceKind
+from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

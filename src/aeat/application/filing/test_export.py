@@ -12,13 +12,13 @@ from pydantic import ValidationError
 
 from aeat.domain.calculations.registry import RegistryValidationError, parse_export_payload
 from aeat.domain.filing import FilingExportError
+from aeat.domain.submission import ModeloDraftStatus
 
 from . import (
     DeclaracionExportFormat,
     DeclaracionExportResult,
     DeclaracionVerifyResult,
     DeclaracionVerifyVerdict,
-    ModeloDraftStatus,
     ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,

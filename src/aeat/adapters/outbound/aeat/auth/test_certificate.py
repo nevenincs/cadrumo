@@ -18,10 +18,10 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
+from aeat.core.config import CertificateBackend
 from aeat.tests.env_scope import isolated_aeat_env
 
 from . import (
-    CertificateBackend,
     CertificateBundle,
     CertificateExpiredError,
     CertificateHandshakeError,

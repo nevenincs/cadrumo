@@ -7,8 +7,8 @@ from datetime import date
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
-from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceKind
-from ...domain.iva import IvaCategory
+from ...domain.invoices import Invoice, InvoiceCatalogueRepository
+from ...domain.iva import InvoiceKind, IvaCategory
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,

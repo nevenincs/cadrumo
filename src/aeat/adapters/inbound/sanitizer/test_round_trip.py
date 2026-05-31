@@ -33,7 +33,7 @@ import pytest
 from aeat.tests import FIXTURES_DIR
 from aeat.tests._justificante_parse_cache import parse_committed_justificante_fixture
 
-from ..justificante import Justificante
+from ....domain.justificante import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

@@ -15,11 +15,11 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
-    InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
+from ...domain.iva import InvoiceKind
 from ...domain.renta import RentaExpenseDirection
 from ...domain.transactions import (
     BusinessClassification,

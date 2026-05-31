@@ -32,10 +32,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...domain.invoices import InvoiceKind
-from ._errors import FilterParseError
-
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...domain.iva import InvoiceKind
+from ._errors import FilterParseError
 
 __all__ = (
     "DeclaracionReviewFilterKey",

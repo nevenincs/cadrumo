@@ -30,7 +30,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...domain.invoices import Invoice, InvoiceKind, InvoiceLine, IvaRate, PaymentStatus
+from ...domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
+from ...domain.iva import InvoiceKind
 from ..review import InvoiceReviewRecord
 from . import invoice_display_amounts, invoice_review_status
 
