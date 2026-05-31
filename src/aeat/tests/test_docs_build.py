@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.docs
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core, pytest.mark.docs]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DOCS = _REPO_ROOT / "docs"
