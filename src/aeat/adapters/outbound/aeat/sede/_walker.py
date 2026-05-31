@@ -34,6 +34,7 @@ from ._browser_constants import (
     PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
+from ._declarations import DEFAULT_NAVIGATION_TIMEOUT_MS
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -53,7 +54,6 @@ _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
 DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
-DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
 
 
 def _get_expand_timeout_ms() -> int:
