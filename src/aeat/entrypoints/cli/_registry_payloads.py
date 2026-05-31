@@ -53,3 +53,87 @@ class RegistryVerifyResult(OutputSchema):
     application_link_surfaces: list[str] = []
     modelos: list[str] = []
     model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("registry.audit_oracles")
+class RegistryAuditOraclesResult(OutputSchema):
+    """JSON envelope for ``aeat app registry audit-oracles``.
+
+    Mirrors ``RegistryOracleAuditReport.model_dump(mode='json')``.
+    Sequence fields are typed as ``list[...]`` because tuples serialise
+    to JSON arrays and the strict envelope does not coerce arrays back
+    to tuples on re-validation.
+    """
+
+    environment: str
+    registered_oracle_ids: list[str] = []
+    failure_count: int
+    failures: list[str] = []
+    applicability_declarations: list[dict] = []
+    orphan_oracle_ids: list[str] = []
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("registry.verify_filed_state")
+class RegistryVerifyFiledStateResult(OutputSchema):
+    """JSON envelope for ``aeat app registry verify-filed-state``.
+
+    Mirrors ``FiledStateVerificationReport.model_dump(mode='json')``.
+    """
+
+    observation_path: str
+    source_observation_paths: list[str] = []
+    comparison: dict
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("registry.workbooks.verify")
+class RegistryWorkbooksVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat app registry workbooks verify``.
+
+    Mirrors ``WorkbookBackendVerificationReport.model_dump(mode='json')``.
+    """
+
+    root: str
+    workbook_count: int
+    scanned_count: int
+    formula_workbook_count: int
+    unsupported_xls_count: int
+    failed_count: int
+    runner: dict
+    reports: list[dict] = []
+    modelo_coverage: list[dict] = []
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("registry.parity.run")
+class RegistryParityRunResult(OutputSchema):
+    """JSON envelope for ``aeat app registry parity run``.
+
+    Mirrors ``ParityTape.model_dump(mode='json')``.
+    """
+
+    created_at: str
+    scenario_path: str | None = None
+    scenario: dict
+    workbook: dict
+    runner: dict
+    report: dict
+    path: str | None = None
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("registry.parity.replay")
+class RegistryParityReplayResult(OutputSchema):
+    """JSON envelope for ``aeat app registry parity replay``.
+
+    Mirrors ``ParityTapeReplayReport.model_dump(mode='json')``.
+    """
+
+    tape_path: str
+    scenario_id: str
+    status: str
+    differences: list[str] = []
+    stored: dict
+    current: dict
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
