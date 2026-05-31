@@ -152,12 +152,29 @@ myst_heading_anchors = 3
 # baseline is curated alongside autodoc_mock_imports - adding a mock import
 # without its ignore entry is incomplete.
 nitpick_ignore_regex = [
+    # Heavy native deps are replaced by autodoc mocks; their types have no
+    # cross-reference target.
     (
         r"py:.*",
         r"^(tree_sitter|tree_sitter_language_pack|qdrant_client|playwright|"
         r"playwright_stealth|pikepdf|pdfplumber|ofxparse|openpyxl|reportlab|"
         r"argon2|keyring|anthropic)(\..*)?$",
     ),
+    # pydantic constrained-type metadata and regex pattern fragments leak into
+    # rendered annotations as bogus targets (min_length=1, strict=None,
+    # pattern=^...$, *$, {64}$). Any target containing a non-identifier
+    # character is not a real Python object reference.
+    (r"py:class", r".*[^A-Za-z0-9_.].*"),
+    # pydantic / typing internals and constrained-type alias names that carry
+    # no autodoc cross-reference target.
+    (
+        r"py:.*",
+        r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
+        r"Strict[A-Za-z]*|[A-Za-z]*Constraints)$",
+    ),
+    # Typed-id NewType aliases (CasillaId, SourceRefId, ...) are documented at
+    # their definition, not as standalone class targets.
+    (r"py:.*", r".*\._ids\.[A-Za-z]\w*$"),
 ]
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
