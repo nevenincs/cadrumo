@@ -30,7 +30,7 @@ from urllib.parse import urlsplit
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page, ViewportSize
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -43,8 +43,6 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from .....domain.calculations.registry._aeat_nif_iva_oracle import (
-    AEAT_NIF_IVA_ENTRY_URL,
-    AEAT_NIF_IVA_VERIFICATION_URL,
     AeatNifIvaObservation,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -66,8 +64,8 @@ _AEAT_AUTH_GATE_4033_PATH = _EXTERNAL.aeat.sede_paths.auth_gate_4033
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _GROI_AUTH_UNLOCK_DESCRIPTOR = _EXTERNAL.aeat.oracles.groi_auth_unlock_descriptor
 _NIF_IVA_AUTH_LOCKED_DESCRIPTOR = _EXTERNAL.aeat.oracles.nif_iva_auth_locked_descriptor
-_NIF_IVA_ENTRY_HOST = urlsplit(str(AEAT_NIF_IVA_ENTRY_URL)).netloc
-_NIF_IVA_VERIFICATION_HOST = urlsplit(str(AEAT_NIF_IVA_VERIFICATION_URL)).netloc
+_NIF_IVA_ENTRY_HOST = urlsplit(f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}").netloc
+_NIF_IVA_VERIFICATION_HOST = urlsplit(_EXTERNAL.aeat.oracles.nif_iva_verification).netloc
 
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-nif-iva-direct-driver-read",
@@ -214,9 +212,10 @@ class NifIvaCheckSedeDriver:
         del payload
         if not expected:
             raise RegistryValidationError("NifIvaCheckSedeDriver.planned_operations requires at least one expected NIF")
+        _ext = Settings.external_constants()
         operations: list[RemoteOperation] = [
-            RemoteOperation(kind="http", method="GET", url=AEAT_NIF_IVA_ENTRY_URL),
-            RemoteOperation(kind="http", method="GET", url=AEAT_NIF_IVA_VERIFICATION_URL),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}")),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(_ext.aeat.oracles.nif_iva_verification)),
             RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
         ]
         # Normalise to match AeatNifIvaCheckerOracle._expected_values so the
@@ -315,7 +314,7 @@ async def collect_nif_iva_check_observations(
         )
 
         # Sede entry: acquire the session cookies the form servlet requires.
-        await browser_session.navigate(page, str(AEAT_NIF_IVA_ENTRY_URL))
+        await browser_session.navigate(page, f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}")
         await _playwright_stage(
             page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-entry-networkidle",
@@ -324,7 +323,7 @@ async def collect_nif_iva_check_observations(
         )
 
         # Form servlet: now reachable with sede cookies set.
-        await browser_session.navigate(page, str(AEAT_NIF_IVA_VERIFICATION_URL))
+        await browser_session.navigate(page, _EXTERNAL.aeat.oracles.nif_iva_verification)
         await _playwright_stage(
             page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-form-networkidle",
@@ -343,7 +342,7 @@ async def collect_nif_iva_check_observations(
                 context={
                     "stage": "post-form-navigation",
                     "landing_url": page.url,
-                    "expected_url": str(AEAT_NIF_IVA_VERIFICATION_URL),
+                    "expected_url": _EXTERNAL.aeat.oracles.nif_iva_verification,
                     "auth_tested": "clave_movil",
                     "auth_tested_unlocks": _GROI_AUTH_UNLOCK_DESCRIPTOR,
                     "auth_tested_does_not_unlock": _NIF_IVA_AUTH_LOCKED_DESCRIPTOR,
@@ -576,8 +575,6 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
 
 
 __all__ = [
-    "AEAT_NIF_IVA_ENTRY_URL",
-    "AEAT_NIF_IVA_VERIFICATION_URL",
     "DEFAULT_NIF_IVA_TIMEOUT_MS",
     "NifIvaCheckObservation",
     "NifIvaCheckResult",
