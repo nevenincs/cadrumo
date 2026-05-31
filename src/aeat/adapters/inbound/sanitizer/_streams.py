@@ -146,7 +146,7 @@ def _rewrite_page(
             continue
 
         new_operands = _rewrite_text_show_operands(
-            # CAST-RATIONALE-SANITIZER-PIKEPDF-OPERANDS: pikepdf's
+            # CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST: pikepdf's
             # ``ContentStreamInstruction.operands`` is the private QPDF
             # ``_ObjectList`` type; it is a runtime sequence but is not
             # statically typed as ``Sequence[...]``, so the cast is
