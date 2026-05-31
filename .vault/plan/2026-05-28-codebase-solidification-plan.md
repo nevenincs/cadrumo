@@ -795,17 +795,17 @@ Close 2 A3 regressions in _authenticator.py + extend tr-positional inventory tes
 
 Drop ValueError mixin from FinancialValidationError (W6 sibling missed). Close 9 survivors in _encrypted_columns SQLAlchemy processors, domain profile parse helpers, _agenda, _censo_sync init, portals factory, m232 row bindings, decimal._format, redaction.
 
-- [ ] `W07.P32.S517` - fix regression: drop ValueError mixin from FinancialValidationError at financial/providers/_base.py:101 (W6 dropped sibling MROs but missed this); `src/aeat/adapters/inbound/financial/providers/_base.py`.
-- [ ] `W07.P32.S518` - introduce StorageValidationError migration at _encrypted_columns.py:125,154,190,257,274 (5 SQLAlchemy processor TypeError); `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
-- [ ] `W07.P32.S519` - introduce DecimalFormatError or CoreValidationError migration at decimal/_format.py:55; `src/aeat/core/decimal/_format.py`.
-- [ ] `W07.P32.S520` - introduce RedactionError(CoreError) and migrate redaction/__init__.py:274,430 TypeErrors; `src/aeat/core/redaction/__init__.py`.
-- [ ] `W07.P32.S521` - migrate _coerce_date at domain/invoices/_models.py:100,102 to ValueError (pydantic-compat) or InvoiceValidationError; `src/aeat/domain/invoices/_models.py`.
-- [ ] `W07.P32.S522` - introduce OverviewAgendaError and migrate application/overview/_agenda.py:108 ValueError; `src/aeat/application/overview/_agenda.py`.
-- [ ] `W07.P32.S523` - migrate application/user_profile/_censo_sync.py:147 ValueError to StorageValidationError; `src/aeat/application/user_profile/_censo_sync.py`.
-- [ ] `W07.P32.S524` - introduce PortalConfigError and migrate domain/portals/_entries/_common.py:48,93,96 ValueError; `src/aeat/domain/portals/_entries/_common.py`.
-- [ ] `W07.P32.S525` - migrate 4 sites in domain/profile/_descendant_facts.py + 1 in _marriage_facts.py + 1 in _ccaa.py to ProfileAnswerTypeError or ProfileParseError; `src/aeat/domain/profile/_descendant_facts.py`.
-- [ ] `W07.P32.S526` - introduce M232BindingError or use CalcSheetsEngineError; `migrate domain/calculations/registry/_m232_row_bindings.py:53,65; `src/aeat/domain/calculations/registry/_m232_row_bindings.py`.
-- [ ] `W07.P32.S527` - aggregate test asserting all new error classes registered + envelope-roundtrip + MRO clean; `src/aeat/test_w07_p32_exceptions.py`.
+- [x] `W07.P32.S517` - fix regression: drop ValueError mixin from FinancialValidationError at financial/providers/_base.py:101 (W6 dropped sibling MROs but missed this); `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [x] `W07.P32.S518` - introduce StorageValidationError migration at _encrypted_columns.py:125,154,190,257,274 (5 SQLAlchemy processor TypeError); `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [x] `W07.P32.S519` - introduce DecimalFormatError or CoreValidationError migration at decimal/_format.py:55; `src/aeat/core/decimal/_format.py`.
+- [x] `W07.P32.S520` - introduce RedactionError(CoreError) and migrate redaction/__init__.py:274,430 TypeErrors; `src/aeat/core/redaction/__init__.py`.
+- [x] `W07.P32.S521` - migrate _coerce_date at domain/invoices/_models.py:100,102 to ValueError (pydantic-compat) or InvoiceValidationError; `src/aeat/domain/invoices/_models.py`.
+- [x] `W07.P32.S522` - introduce OverviewAgendaError and migrate application/overview/_agenda.py:108 ValueError; `src/aeat/application/overview/_agenda.py`.
+- [x] `W07.P32.S523` - migrate application/user_profile/_censo_sync.py:147 ValueError to StorageValidationError; `src/aeat/application/user_profile/_censo_sync.py`.
+- [x] `W07.P32.S524` - introduce PortalConfigError and migrate domain/portals/_entries/_common.py:48,93,96 ValueError; `src/aeat/domain/portals/_entries/_common.py`.
+- [x] `W07.P32.S525` - migrate 4 sites in domain/profile/_descendant_facts.py + 1 in _marriage_facts.py + 1 in _ccaa.py to ProfileAnswerTypeError or ProfileParseError; `src/aeat/domain/profile/_descendant_facts.py`.
+- [x] `W07.P32.S526` - introduce M232BindingError or use CalcSheetsEngineError; `migrate domain/calculations/registry/_m232_row_bindings.py:53,65; `src/aeat/domain/calculations/registry/_m232_row_bindings.py`.
+- [x] `W07.P32.S527` - aggregate test asserting all new error classes registered + envelope-roundtrip + MRO clean; `src/aeat/test_w07_p32_exceptions.py`.
 
 ### Phase `W07.P33` - A5 dormant duplicate + A8 cast marker + 3 wrappers
 
