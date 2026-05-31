@@ -29,9 +29,9 @@ from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
+    TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
 from . import _shared_issue_reasons
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
@@ -418,12 +418,12 @@ def _resolve_annual_period(period: Period | str) -> Period:
 
 
 def _renta_direction_for(
-    direction: LedgerTransactionDirection,
+    direction: TransactionDirection,
     purchase_invoice_evidence_id: str | None,
 ) -> RentaExpenseDirection | None:
-    if direction is LedgerTransactionDirection.OUTGOING:
+    if direction is TransactionDirection.OUTGOING:
         return RentaExpenseDirection.OUTGOING_EXPENSE
-    if direction is LedgerTransactionDirection.INCOMING and purchase_invoice_evidence_id is not None:
+    if direction is TransactionDirection.INCOMING and purchase_invoice_evidence_id is not None:
         return RentaExpenseDirection.REFUND
     return None
 
