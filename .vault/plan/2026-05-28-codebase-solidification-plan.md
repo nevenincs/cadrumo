@@ -974,3 +974,19 @@ Single-phase closure of all 7 W13 findings. Mostly marker additions + 1 narrowin
 - [x] `W13.P45.S604` - wrap _entry_from_payload json.loads at adapters/outbound/llm/_cache.py:276 with pydantic _CachePayloadEnvelope model OR add JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT marker; `src/aeat/adapters/outbound/llm/_cache.py`.
 - [x] `W13.P45.S605` - extract _IVA_REGIME_PATH and _TAXPAYER_ENTITY_TYPE_PATH module-level constants in domain/calculations/registry/_schedules.py:83,89; `src/aeat/domain/calculations/registry/_schedules.py`.
 - [x] `W13.P45.S606` - aggregate test asserting all 7 W13 findings closed + ratchets extended; `src/aeat/test_w13_p45_closure.py`.
+
+## Wave `W14` - post-ADR-close maintenance: close W14 survivor backlog
+
+ADR close condition achieved per W14 audit (3 consecutive zero-strict-regression waves). W14 maintenance wave closes the 6 outstanding survivors (4 markers + 1 dedup + 1 constant extraction) the audit identified in unaudited modules. Standing inventory tests prevent fresh drift; this wave finishes the survivor sweep.
+
+### Phase `W14.P46` - W14 audit survivor closure
+
+Add BROAD-EXCEPT-RATIONALE markers on _acquisition_lock + _sessions teardowns. Document _browser_stage + _log_levels stdlib-import rationale (type-only + constants-only). Dedup _file_fingerprint 4-site copy to aeat.core canonical. Extract year=2025 constant in _renta_web_open_oracle.
+
+- [ ] `W14.P46.S607` - add BROAD-EXCEPT-RATIONALE-ACQUISITION-LOCK-TEARDOWN marker on application/auth/_acquisition_lock.py:188 (cleanup-then-reraise, OSError/PermissionError surface from os.fdopen); `src/aeat/application/auth/_acquisition_lock.py`.
+- [ ] `W14.P46.S608` - add BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN markers on application/auth/_sessions.py:592 and :598 (close coroutine, undocumented Playwright+OSError shapes); `src/aeat/application/auth/_sessions.py`.
+- [ ] `W14.P46.S609` - address adapters/outbound/aeat/sede/_browser_stage.py:5 stdlib logging import for type annotation only; `replace with TYPE_CHECKING guard OR add LOGGING-STDLIB-TYPE-ANNOTATION-RATIONALE marker; `src/aeat/adapters/outbound/aeat/sede/_browser_stage.py`.
+- [ ] `W14.P46.S610` - address entrypoints/cli/_log_levels.py:14 stdlib logging import for constant references only; `either extract ERROR/INFO/DEBUG/WARNING constants to aeat.core.logging and re-export, OR add LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE marker; `src/aeat/entrypoints/cli/_log_levels.py`.
+- [ ] `W14.P46.S611` - dedup _file_fingerprint 4-site identical implementation in domain/categories/_registry.py:94 + domain/iva/_catalogue.py:78 + application/topics/__init__.py:102 + domain/normatives/_loader.py:59; `introduce aeat.core.paths.file_stat_fingerprint canonical + migrate; `src/aeat/core/paths.py`.
+- [ ] `W14.P46.S612` - extract _RENTA_WEB_OPEN_DEFAULT_YEAR = 2025 Final constant in domain/calculations/registry/_renta_web_open_oracle.py and migrate :71 + :162 hardcoded year=2025; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
+- [ ] `W14.P46.S613` - aggregate test asserting all 6 W14 survivor closures landed + ratchets unchanged; `src/aeat/test_w14_p46_survivor_closure.py`.
