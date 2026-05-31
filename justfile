@@ -97,6 +97,20 @@ verify-shims:
 lint-imports:
     uv run --no-sync lint-imports
 
+# Build the HTML documentation (furo) from Google-style docstrings plus
+# the narrative pages under docs/. Output to docs/_build/html (gitignored).
+docs:
+    uv run --no-sync sphinx-build -b html docs docs/_build/html
+
+# Documentation conformance gate: a nitpicky, warnings-as-errors Sphinx
+# build (every unresolved cross-reference fails the build) plus doc8 RST
+# formatting. The build-gate, module-to-stub, and CLI conformance tests
+# run in this lane once the conformance-harness wave adds them
+# (docs-architecture epic).
+docs-check:
+    uv run --no-sync sphinx-build -b html -n -W docs docs/_build/html
+    uv run --no-sync doc8 docs
+
 # Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
     uv run pytest -m "unit or live_read"
