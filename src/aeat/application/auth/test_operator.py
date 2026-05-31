@@ -454,13 +454,11 @@ def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
             overrides={"identity.tax_id": "12345678Z"},
         )
     )
-    settings = Settings().model_copy(
-        update={
-            "aeat_clave_movil_dni_nie": SecretStr("12345678Z"),
-            "aeat_clave_movil_nie_soporte": SecretStr("support-present"),
-            "aeat_clave_prefer_non_qr": True,
-            "aeat_clave_movil_timeout_ms": 120_000,
-        }
+    settings = Settings(
+        aeat_clave_movil_dni_nie=SecretStr("12345678Z"),
+        aeat_clave_movil_nie_soporte=SecretStr("support-present"),
+        aeat_clave_prefer_non_qr=True,
+        aeat_clave_movil_timeout_ms=120_000,
     )
 
     report = build_live_auth_preflight_report("clave_movil", settings=settings)
