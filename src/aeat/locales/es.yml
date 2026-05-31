@@ -545,6 +545,9 @@ application:
         sin --quiet desde una terminal interactiva para usar el asistente guiado.'
     next_hint:
       modelo_work_create: aeat app modelo work create
+    output_labels:
+      active_profile: active_profile
+      profile: profile
     status:
       errors:
         missing_tax_id: El perfil activo no tiene tax.id.

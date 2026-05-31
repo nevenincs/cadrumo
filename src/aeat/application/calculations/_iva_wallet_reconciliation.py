@@ -30,11 +30,12 @@ if TYPE_CHECKING:
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
+_FILED_HISTORY_OBSERVATION: Final[str] = "filed_history_observation"
 _AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
     {
         "aeat_sede_justificante",
         "aeat_sede_iva_compensation_history",
-        "filed_history_observation",
+        _FILED_HISTORY_OBSERVATION,
     }
 )
 
@@ -485,7 +486,7 @@ def _authority_sources(
             amount=local_recurrence_amount,
             source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
         )
-        if recurrence_source.source_kind == "filed_history_observation":
+        if recurrence_source.source_kind == _FILED_HISTORY_OBSERVATION:
             sources.append(
                 IvaCompensationAuthoritySource(
                     source_kind="local_recurrence",
@@ -511,7 +512,7 @@ def _authority_sources(
 
 
 def _is_filed_history_source(source: IvaCompensationAuthoritySource | None) -> bool:
-    return source is not None and source.source_kind == "filed_history_observation"
+    return source is not None and source.source_kind == _FILED_HISTORY_OBSERVATION
 
 
 def _local_recurrence_authority_source(
@@ -526,7 +527,7 @@ def _local_recurrence_authority_source(
     source_periods = tuple(str(item) for item in recurrence.source_periods)
     resolved_at = recurrence.resolved_at
     source_kind: IvaCompensationAuthoritySourceKind = (
-        "filed_history_observation"
+        _FILED_HISTORY_OBSERVATION
         if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS
         else "local_recurrence"
     )

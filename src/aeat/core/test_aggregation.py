@@ -42,9 +42,10 @@ def test_aggregation_source_kind_importable_from_core() -> None:
 
 
 def test_aggregation_source_kind_members_are_complete() -> None:
-    """The enum carries exactly the four canonical source-kind members."""
+    """The enum carries the canonical source-kind members including the INVOICE alias."""
 
     expected = {
+        "INVOICE",
         "LEDGER_TRANSACTION",
         "PURCHASE_INVOICE_EVIDENCE",
         "PAYABLE_INVOICE",
@@ -91,7 +92,7 @@ def test_aggregation_source_kind_rejects_unknown_value() -> None:
     """Pydantic raises ValidationError for a value not in the enum."""
 
     with pytest.raises(ValidationError):
-        _SourceKindEnvelope.model_validate({"kind": "invoice"})
+        _SourceKindEnvelope.model_validate({"kind": "not_a_valid_source_kind"})
 
 
 def test_aggregation_source_kind_roundtrip_json() -> None:

@@ -39,14 +39,16 @@ class NonTtyRefusedError(AeatError):
     def __init__(self, suggestion: str) -> None:
         """Initialise the refusal with a copy-paste-ready suggestion.
 
+        The positional ``message`` is intentionally omitted so ``error.args``
+        remains empty. The CLI renderer then falls through to the error
+        registry's ``message_key="errors.refused.refused_cli_non_tty"`` for
+        locale resolution rather than short-circuiting on ``args[0]``.
+
         Args:
             suggestion: Recovery hint to attach to the refusal message.
         """
 
-        message = "Interactive stdin is unavailable on a non-TTY input stream."
-        if suggestion.strip():
-            message = f"{message} {suggestion.strip()}"
-        super().__init__(message)
+        super().__init__(suggestion=suggestion.strip() or None)
         self.suggestion: str = suggestion
 
 
