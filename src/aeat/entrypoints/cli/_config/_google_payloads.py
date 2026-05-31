@@ -11,6 +11,8 @@ because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
 from __future__ import annotations
 
+from pydantic import ConfigDict
+
 from .._schemas import OutputSchema, register_schema
 
 
@@ -60,3 +62,177 @@ class GoogleLogoutResult(OutputSchema):
     token_removed: bool
     metadata_removed: bool
     client_preserved: bool
+
+
+# ---------------------------------------------------------------------------
+# Drive folder sub-app
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.google.folder.set")
+class GoogleFolderSetResult(OutputSchema):
+    """JSON envelope for ``aeat config google folder set``."""
+
+    operation: str = "config.google.folder.set"
+    profile: str
+    root_folder_id: str
+
+
+@register_schema("config.google.folder.get")
+class GoogleFolderGetResult(OutputSchema):
+    """JSON envelope for ``aeat config google folder get``."""
+
+    operation: str = "config.google.folder.get"
+    profile: str
+    configured: bool
+    root_folder_id: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Drive sync sub-app
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.google.sync.probe")
+class GoogleSyncProbeResult(OutputSchema):
+    """JSON envelope for ``aeat config google sync probe``."""
+
+    operation: str = "config.google.sync.probe"
+    profile: str
+    provider_kind: str
+    reachable: bool
+    writable: bool
+    read_only: bool
+    root_folder_present: bool
+    root_folder_id: str
+    detail: str = ""
+
+
+class GoogleSyncFailedObjectPayload(OutputSchema):
+    """One failed mirror object in a sync push report."""
+
+    namespace: str
+    hmac: str
+    error: str
+
+
+class GoogleSyncFailedManifestPayload(OutputSchema):
+    """One failed namespace manifest in a sync push report."""
+
+    namespace: str
+    error: str
+
+
+@register_schema("config.google.sync.push")
+class GoogleSyncPushResult(OutputSchema):
+    """JSON envelope for ``aeat config google sync push``."""
+
+    operation: str = "config.google.sync.push"
+    profile: str
+    root_folder_id: str
+    dry_run: bool
+    namespace_filter: str | None = None
+    limit: int | None = None
+    pushed_total: int
+    skipped_total: int
+    failed_total: int
+    manifest_pushed_total: int
+    manifest_failed_total: int
+    pushed_by_namespace: dict[str, int] = {}
+    skipped_by_namespace: dict[str, int] = {}
+    failed_objects: list[GoogleSyncFailedObjectPayload] = []
+    manifest_pushed_by_namespace: dict[str, int] = {}
+    failed_manifests: list[GoogleSyncFailedManifestPayload] = []
+
+
+# ---------------------------------------------------------------------------
+# Drive sync calc sub-app
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.google.sync.calc.export")
+class GoogleSyncCalcExportResult(OutputSchema):
+    """JSON envelope for ``aeat config google sync calc export``."""
+
+    operation: str = "config.google.sync.calc.export"
+    profile: str
+    modelo: str
+    revision: str
+    period: str
+    year: int
+    engine_version: str
+    registry_sha: str
+    root_folder_id: str
+    folder_id: str
+    spreadsheet_id: str
+    spreadsheet_url: str
+    value_cells_written: int
+    formula_cells_written: int
+    protected_ranges_written: int
+    tab_count: int
+
+
+class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):
+    """One divergence row in a calc verify report."""
+
+    casilla: str
+    label: str
+    local: str | None = None
+    sheets: str | None = None
+    aeat: str | None = None
+
+
+@register_schema("config.google.sync.calc.verify")
+class GoogleSyncCalcVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat config google sync calc verify``."""
+
+    operation: str = "config.google.sync.calc.verify"
+    profile: str
+    modelo: str
+    revision: str
+    period: str
+    year: int
+    spreadsheet_id: str
+    spreadsheet_url: str
+    verdict: str
+    aeat_oracle_present: bool
+    computed_count: int
+    divergence_count: int
+    divergences: list[GoogleSyncCalcVerifyDivergencePayload] = []
+
+
+@register_schema("config.google.sync.calc.pull")
+class GoogleSyncCalcPullResult(OutputSchema):
+    """JSON envelope for ``aeat config google sync calc pull``.
+
+    The payload composes pull metadata, populated operator/binding/relation
+    edits, optional row-set assemblies, and an optional computed-casillas
+    block. The composite shape stays loose to forward registry-grounded
+    fields (``legal_refs``, ``source_refs``) on every computed entry.
+    """
+
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+
+    operation: str = "config.google.sync.calc.pull"
+    profile: str
+    modelo: str
+    revision: str
+    period: str
+    year: int
+    spreadsheet_id: str
+    metadata_match: str
+    metadata: dict[str, object]
+    cells_read: int
+    operator_edits_total: int
+    operator_edits_populated: int
+    binding_edits_populated: int
+    relation_edits_populated: int
+    operator_edits: list[dict[str, object]] = []
+    binding_edits: list[dict[str, object]] = []
+    relation_edits: list[dict[str, object]] = []
+    row_set_edits_populated: int
+    row_set_cells_populated: int
+    assembled_groupings: list[dict[str, object]] = []
+    assembled_observation_count: int
+    row_set_edits: list[dict[str, object]] = []
+    computed: list[dict[str, object]] = []

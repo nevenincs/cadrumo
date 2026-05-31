@@ -327,3 +327,208 @@ class BucketHistoryResult(OutputSchema):
     object_id: str | None = None
     actor: str | None = None
     events: list[dict[str, object]]
+
+
+# ---------------------------------------------------------------------------
+# Profile wizard / lifecycle verb result schemas
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.profile.create")
+class ConfigProfileCreateResult(OutputSchema):
+    """JSON envelope for ``aeat config profile create``."""
+
+    profile_name: str
+    status: str
+    next: str
+    active_profile: str | None = None
+
+
+@register_schema("config.profile.edit")
+class ConfigProfileEditResult(OutputSchema):
+    """JSON envelope for ``aeat config profile edit``."""
+
+    profile_name: str
+    status: str
+    next: str
+
+
+@register_schema("config.profile.export")
+class ConfigProfileExportResult(OutputSchema):
+    """JSON envelope for ``aeat config profile export``."""
+
+    profile_id: str
+    display_name: str
+    out: str
+    schema_version: str
+
+
+@register_schema("config.profile.import")
+class ConfigProfileImportResult(OutputSchema):
+    """JSON envelope for ``aeat config profile import``."""
+
+    profile_id: str
+    display_name: str
+    schema_version: str
+
+
+@register_schema("config.profile.logout")
+class ConfigProfileLogoutResult(OutputSchema):
+    """JSON envelope for ``aeat config profile logout``."""
+
+    logged_out_profile: str
+    active_profile: str | None = None
+    session_warning: str
+
+
+@register_schema("config.profile.rename")
+class ConfigProfileRenameResult(OutputSchema):
+    """JSON envelope for ``aeat config profile rename``."""
+
+    profile_id: str
+    previous_display_name: str
+    display_name: str
+
+
+# ---------------------------------------------------------------------------
+# Repair verb result schemas (profile / integrity sub-app)
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.repair.profile")
+class RepairProfileResult(OutputSchema):
+    """JSON envelope for ``aeat config repair profile``.
+
+    Covers the inspection branch (operator-readable profile-record status),
+    the ``--clear-active`` pointer-repair branch, and the
+    ``--repair-manifest-status`` manifest backfill branch. The application
+    layer model evolves independently across these branches; ``extra="allow"``
+    keeps the envelope shape stable without re-declaring every field.
+    """
+
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+
+
+class RepairIntegrityNamespaceRowPayload(OutputSchema):
+    """One namespace row in a repair-integrity report."""
+
+    namespace: str
+    readable: int
+    unreadable: int
+
+
+@register_schema("config.repair.integrity.objects")
+class RepairIntegrityObjectsResult(OutputSchema):
+    """JSON envelope for ``aeat config repair integrity objects``.
+
+    Covers the no-active-profile guard branch (``readable``/``unreadable``
+    counts with ``reason``) and the live-probe branch (full report with
+    nested namespace breakdown). ``extra="allow"`` forwards the
+    :class:`RepairIntegrityReport` payload without re-declaring every
+    sub-model.
+    """
+
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+
+
+@register_schema("config.repair.integrity.registry")
+class RepairIntegrityRegistryResult(OutputSchema):
+    """JSON envelope for ``aeat config repair integrity registry``.
+
+    Mirrors :class:`RegistryIntegrityReport.model_dump(mode='json')`.
+    ``extra="allow"`` forwards the typed sub-models without re-declaring
+    the registry / diagnostic-check shapes locally.
+    """
+
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+
+
+# ---------------------------------------------------------------------------
+# Apoderado verb result schemas
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.auth.apoderado.status")
+class ApoderadoStatusResult(OutputSchema):
+    """JSON envelope for ``aeat config auth apoderado status``.
+
+    Mirrors :class:`aeat.application.auth._apoderado.ApoderadoStatus`.
+    ``extra="allow"`` lets the application model evolve without
+    breaking the envelope contract here.
+    """
+
+    bucket_id: str
+    configured: bool
+    represented_nif: str | None = None
+    granted_scopes: list[str] = []
+    catalogue_version: str | None = None
+    configured_at: str | None = None
+
+
+@register_schema("config.auth.apoderado.configure")
+class ApoderadoConfigureResult(OutputSchema):
+    """JSON envelope for ``aeat config auth apoderado configure``."""
+
+    bucket_id: str
+    represented_nif: str
+    granted_scopes: list[str] = []
+    catalogue_version: str
+    configured_at: str
+    notes: str = ""
+
+
+@register_schema("config.auth.apoderado.clear")
+class ApoderadoClearResult(OutputSchema):
+    """JSON envelope for ``aeat config auth apoderado clear``."""
+
+    bucket_id: str
+    cleared: bool
+
+
+@register_schema("config.auth.apoderado.scopes.list")
+class ApoderadoScopesListResult(OutputSchema):
+    """JSON envelope for ``aeat config auth apoderado scopes list``.
+
+    Mirrors the apoderado scope catalogue payload.
+    """
+
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+
+
+# ---------------------------------------------------------------------------
+# Auth diagnostics verb result schemas
+# ---------------------------------------------------------------------------
+
+
+@register_schema("config.auth.diagnostics.list")
+class AuthDiagnosticsListResult(OutputSchema):
+    """JSON envelope for ``aeat config auth diagnostics list``.
+
+    Mirrors :class:`AuthDiagnosticListReport.model_dump(mode='json')`.
+    ``extra="allow"`` forwards the per-row diagnostic summary fields
+    without re-declaring the sub-model.
+    """
+
+    row_count: int
+    rows: list[dict[str, object]] = []
+
+
+@register_schema("config.auth.diagnostics.show")
+class AuthDiagnosticsShowResult(OutputSchema):
+    """JSON envelope for ``aeat config auth diagnostics show``.
+
+    Mirrors :class:`AuthDiagnosticDetail.model_dump(mode='json')` with
+    fingerprint fields. ``extra="allow"`` forwards every diagnostic
+    field without re-declaring the application model locally.
+    """
+
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+
+
+@register_schema("config.auth.diagnostics.report")
+class AuthDiagnosticsReportResult(OutputSchema):
+    """JSON envelope for ``aeat config auth diagnostics report``."""
+
+    diagnostic_id: str
+    phone_state: str
+    reported_at: str
