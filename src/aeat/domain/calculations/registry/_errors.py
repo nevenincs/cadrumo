@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Self
 
-from ....core.errors import AeatError
+from ....core.errors import AeatError, CoreValidationError
 
 
 class RegistryError(AeatError, ValueError):
@@ -40,8 +40,12 @@ def _csv(items: Iterable[str]) -> str:
     return ",".join(items)
 
 
-class RegistryValidationError(RegistryError):
+class RegistryValidationError(RegistryError, CoreValidationError):
     """Raised when registry definitions are incomplete or contradictory.
+
+    Inherits from CoreValidationError to participate in the shared
+    CoreValidationError catch surface across all layers. RegistryError
+    already provides ValueError co-inheritance.
 
     Canonical raise scenarios route through one of the ``for_*``
     classmethod factories so the context-dict keys consumed by

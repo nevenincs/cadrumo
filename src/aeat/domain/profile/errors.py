@@ -8,7 +8,7 @@ shared error-code registration hook applies.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreValidationError
 
 
 class AssetRecordError(AeatError):
@@ -27,8 +27,13 @@ class InventoryLedgerError(AeatError):
     """Raised when an inventory ledger operation is invalid."""
 
 
-class InventoryValidationError(InventoryLedgerError, ValueError):
-    """Raised when an inventory ledger fails Pydantic validation."""
+class InventoryValidationError(InventoryLedgerError, CoreValidationError):
+    """Raised when an inventory ledger fails Pydantic validation.
+
+    Inherits from CoreValidationError (which itself inherits from CoreError
+    and ValueError) to participate in the shared CoreValidationError catch
+    surface and remain compatible with pydantic validators.
+    """
 
 
 class LIFOForbiddenError(InventoryLedgerError):

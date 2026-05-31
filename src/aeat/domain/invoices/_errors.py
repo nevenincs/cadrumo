@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreValidationError
 
 __all__ = [
     "InvoiceCatalogueError",
@@ -82,9 +82,10 @@ class InvoiceLinkInconsistencyError(InvoiceLinkError):
         self.transaction_id: str = transaction_id
 
 
-class InvoiceValidationError(InvoiceError, ValueError):
+class InvoiceValidationError(InvoiceError, CoreValidationError):
     """Raised when invoice records violate state or shape invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Inherits from CoreValidationError (which itself inherits from CoreError
+    and ValueError) to participate in the shared CoreValidationError catch
+    surface and remain compatible with pydantic validators.
     """
