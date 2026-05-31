@@ -88,7 +88,6 @@ from ._formula_runtime import (
     read_parameter,
 )
 from ._groi_oracle import (
-    AEAT_GROI_URL,
     GROI_ORACLE_ID,
     GroiDriver,
     GroiObservation,
@@ -304,7 +303,6 @@ from ._workbook_parity import (
 )
 
 __all__ = [
-    "AEAT_GROI_URL",
     "AEAT_WRITE_FORBIDDEN_ACTIONS",
     "AEAT_WRITE_FORBIDDEN_VERB_TOKENS",
     "CENSUS_MODELO_ERROR_CODES",

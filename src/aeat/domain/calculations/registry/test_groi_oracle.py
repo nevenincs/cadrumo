@@ -21,7 +21,6 @@ from aeat.core.config import Settings
 
 from ._errors import RegistryValidationError
 from ._groi_oracle import (
-    AEAT_GROI_URL,
     GROI_ORACLE_ID,
     GroiObservation,
     GroiOracle,
@@ -80,8 +79,9 @@ def test_oracle_satisfies_live_parity_oracle_protocol() -> None:
 def test_oracle_url_stays_inside_aeat_host_pinning_suffix() -> None:
     """The form URL is on www2.agenciatributaria.gob.es; suffix-pinning still covers it."""
 
-    assert str(AEAT_GROI_URL).startswith("https://www2.agenciatributaria.gob.es/")
-    assert str(AEAT_GROI_URL).endswith("/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet")
+    groi_url = Settings.external_constants().aeat.oracles.groi_check
+    assert groi_url.startswith("https://www2.agenciatributaria.gob.es/")
+    assert groi_url.endswith("/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet")
 
 
 def test_planned_operations_returns_form_open_per_nif_then_discard() -> None:
@@ -95,7 +95,7 @@ def test_planned_operations_returns_form_open_per_nif_then_discard() -> None:
     assert len(operations) == 5
     assert operations[0].kind == "http"
     assert operations[0].method == "GET"
-    assert operations[0].url == AEAT_GROI_URL
+    assert str(operations[0].url) == Settings.external_constants().aeat.oracles.groi_check
     assert operations[1].kind == "browser_action"
     assert operations[1].action == "open-groi-form"
     assert operations[2].action == "check-nif-A28015865"
@@ -338,10 +338,11 @@ def test_guard_blocks_fabricated_browser_action_carrying_forbidden_token(forbidd
 def test_guard_blocks_fabricated_http_post_to_aeat_under_groi_policy() -> None:
     """An HTTP POST to AEAT (write method) is rejected before any network call."""
 
+    groi_url = AnyUrl(Settings.external_constants().aeat.oracles.groi_check)
     fabricated = RemoteOperation(
         kind="http",
         method="POST",
-        url=AEAT_GROI_URL,
+        url=groi_url,
     )
     with pytest.raises(RegistryValidationError, match="write method"):
         assert_remote_operation_allowed(_aeat_policy(), fabricated)
@@ -350,8 +351,9 @@ def test_guard_blocks_fabricated_http_post_to_aeat_under_groi_policy() -> None:
 def test_guard_blocks_fabricated_http_put_to_aeat_under_groi_policy() -> None:
     """PUT, DELETE, PATCH — every write method is blocked, not just POST."""
 
+    groi_url = AnyUrl(Settings.external_constants().aeat.oracles.groi_check)
     for method in ("PUT", "DELETE", "PATCH"):
-        fabricated = RemoteOperation(kind="http", method=method, url=AEAT_GROI_URL)
+        fabricated = RemoteOperation(kind="http", method=method, url=groi_url)
         with pytest.raises(RegistryValidationError, match="write method"):
             assert_remote_operation_allowed(_aeat_policy(), fabricated)
 
