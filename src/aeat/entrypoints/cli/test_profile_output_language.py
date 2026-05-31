@@ -73,7 +73,7 @@ def test_config_profile_create_writes_profile_output_language(
 
     assert init_result.exit_code == 0, init_result.output
     assert show_result.exit_code == 0, show_result.output
-    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
+    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["result"]["facts"]}
     assert facts["preferences.output_language"] == "en"
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
@@ -141,7 +141,7 @@ def test_config_profile_create_validates_profile_output_language(
 
     assert valid_result.exit_code == 0, valid_result.output
     assert show_result.exit_code == 0, show_result.output
-    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
+    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["result"]["facts"]}
     assert facts["preferences.output_language"] == "ca"
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
@@ -260,7 +260,7 @@ def test_global_language_flag_overrides_profile_for_invocation(
     # The profile language survives the invocation untouched.
     show_result = _invoke(["--format", "json", "config", "profile", "show", "default"])
     assert show_result.exit_code == 0, show_result.output
-    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
+    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["result"]["facts"]}
     assert facts["preferences.output_language"] == "ca"
 
 

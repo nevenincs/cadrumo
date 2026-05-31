@@ -642,6 +642,8 @@ class ModeloDescribeResult(OutputSchema):
     tax_domain: str
     cadence: str
     revision: str
+    filing_year: int | None = None
+    period: str | None = None
     revision_ids: list[str]
     periods: list[str]
     casilla_count: int

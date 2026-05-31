@@ -440,6 +440,8 @@ def describe_modelo(
         tax_domain=report.tax_domain,
         cadence=report.cadence,
         revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
         revision_ids=list(report.revision_ids),
         periods=list(report.periods),
         casilla_count=report.casilla_count,
@@ -1265,7 +1267,7 @@ def formulas(
         revision=report.revision,
         filing_year=report.filing_year,
         period=report.period,
-        formula_count=report.formula_count,
+        formula_count=len(report.rows),
         rows=tuple(
             FormulaPayload(
                 formula_id=row.formula_id,
