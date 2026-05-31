@@ -93,7 +93,7 @@ class XlsxProvider(FinancialProvider):
             if workbook is not None:
                 try:
                     workbook.close()
-                except Exception as close_exc:
+                except Exception as close_exc:  # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN: openpyxl raises OSError/ValueError/KeyError/IndexError/TypeError; teardown must run unconditionally.
                     _logger.debug(
                         "xlsx provider: workbook.close() after validate_source failed (%s)",
                         close_exc,

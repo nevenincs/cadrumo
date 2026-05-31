@@ -59,7 +59,7 @@ def _resolve_closes_on_cached(modelo: str, filing_year: int, period: str) -> dat
     for query_year in (filing_year, filing_year + 1):
         try:
             windows = authority.deadline_windows(query_year)
-        except (RegistryError, Exception):  # noqa: BLE001
+        except RegistryError:
             continue
         for window_modelo, _revision, window in windows:
             if window_modelo != modelo:
