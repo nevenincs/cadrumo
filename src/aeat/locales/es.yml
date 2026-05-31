@@ -981,8 +981,15 @@ cli:
         seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
           no se puede sembrar otro.
         seed_filing_year_help: Ejercicio fiscal del importe inicial.
-        seed_help: Creación de un registro de importe inicial del monedero de compensación
-          de IVA para inicializar el saldo anterior del monedero.
+        seed_help: "Declaración de un saldo inicial del monedero de compensación de IVA
+          para un período anterior al historial local. Se rechaza si ya existe un registro
+          para el período.\n\nDos casos:\n\n  --amount 0   Primer período real: es la
+          primera declaración del Modelo 303 del contribuyente bajo este NIF. La casilla
+          110 es cero porque no existe saldo previo (LIVA art. 99.5, Ley 37/1992). El
+          módulo de conciliación lo trata como first_period_zero, no bloqueante.\n\n
+          --amount X   Traspaso: el contribuyente ha presentado M303 anteriores con otra
+          herramienta o directamente en la AEAT. X es la compensación pendiente de períodos
+          posteriores de la última declaración presentada."
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
         seed_negative_amount: El importe inicial no puede ser negativo.
         seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo

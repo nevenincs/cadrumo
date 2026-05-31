@@ -502,3 +502,33 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
         "Wallet-seed guidance must not appear without a compensation binding conflict; "
         f"got exit_code={result.exit_code}:\n{result.output}"
     )
+
+
+# ---------------------------------------------------------------------------
+# seed help text — legal grounding phrase coverage
+# ---------------------------------------------------------------------------
+
+
+def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path) -> None:
+    """The iva-wallet seed --help output must cite LIVA art. 99.5.
+
+    The help text distinguishes --amount 0 (true first-period, legally certain
+    under LIVA art. 99.5) from --amount X (carry-in from prior filings).
+    This test asserts the legal grounding phrase survives locale rendering
+    so operators can verify the basis for non-blocking zero treatment.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="help-text-test"):
+        result = _RUNNER.invoke(
+            app,
+            ["app", "modelo", "iva-wallet", "seed", "--help"],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code == 0, result.output
+    help_text = result.output
+    assert "99.5" in help_text, (
+        "seed --help must cite LIVA art. 99.5 for the zero-first-period legal grounding"
+    )
+    assert "Ley 37/1992" in help_text or "LIVA" in help_text, (
+        "seed --help must reference the legal source (Ley 37/1992 or LIVA)"
+    )

@@ -5320,7 +5320,16 @@ def iva_wallet_balance_cmd(
             "Declare a Modelo 303 carry-forward balance for a period that pre-dates "
             "local history. Use this once to seed the first period so subsequent "
             "M303 prefill resolves modelo-303-compensacion-pendiente-anteriores correctly. "
-            "Refuses if a record already exists for the period."
+            "Refuses if a record already exists for the period.\n\n"
+            "Two cases:\n\n"
+            "  --amount 0   True first-period: this is the taxpayer's first ever Modelo 303 "
+            "filing under this NIF. Casilla 110 is zero because no prior compensation "
+            "balance exists (LIVA art. 99.5, Ley 37/1992). The reconciliation layer "
+            "treats this as first_period_zero — non-blocking and legally certain.\n\n"
+            "  --amount X   Carry-in: the taxpayer has filed prior M303s under a different "
+            "tool or directly with AEAT. X is the compensacion pendiente de periodos "
+            "posteriores from the last filed M303. Subsequent periods carry this balance "
+            "forward as prior compensation."
         ),
     ),
 )
