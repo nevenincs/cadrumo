@@ -94,9 +94,9 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     access-gate. With the gate off (default), the CLI surfaces the
     refusal without ever touching a browser session.
 
-    Uses ``override_settings(aeat_live_tests_enabled=False)`` to pin the
-    gate-off state per the project no-monkeypatch mandate (CLAUDE.md);
-    ContextVar-backed override shadows any ambient env value.
+    ``override_settings(aeat_live_tests_enabled=False)`` pins the
+    gate-off state; the ContextVar-backed override shadows any ambient
+    env value.
     """
 
     from aeat.core.config import override_settings

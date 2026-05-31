@@ -56,11 +56,7 @@ def _english_output() -> Iterator[None]:
 
 @pytest.fixture
 def _no_pointer_root(tmp_path: Path) -> Iterator[Path]:
-    """Storage root with no active-profile pointer — clean cold-start state.
-
-    Zombie monkeypatch parameter removed per the project no-monkeypatch
-    mandate (CLAUDE.md); the fixture body never used it.
-    """
+    """Storage root with no active-profile pointer — clean cold-start state."""
     with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
         yield storage_root
 
