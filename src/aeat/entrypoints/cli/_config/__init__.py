@@ -2460,4 +2460,4 @@ from ._google import google_app as _google_app
 
 app.add_typer(_google_app, name="google")
 
-__all__ = ["app"]
+__all__ = ["app", "tr"]
