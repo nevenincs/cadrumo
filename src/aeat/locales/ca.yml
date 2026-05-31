@@ -193,7 +193,7 @@ aggregation:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
       candidate_outside_period: La candidatura queda fora del periode.
-      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
+      unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregacio.'
   modelo_bindings:
     errors:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
@@ -236,20 +236,20 @@ aggregation:
         d'ingressos del Model 130 (p.ex. 2024Q1).
   service:
     errors:
-      envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
-      envelope_period_mismatch: aggregation.service.errors.envelope_period_mismatch
-      envelope_provider_payload_mismatch: aggregation.service.errors.envelope_provider_payload_mismatch
-      observations_mismatch: aggregation.service.errors.observations_mismatch
-      per_modelo_modelos_not_unique: aggregation.service.errors.per_modelo_modelos_not_unique
-      per_modelo_providers_not_unique: aggregation.service.errors.per_modelo_providers_not_unique
-      provider_modelos_not_unique: aggregation.service.errors.provider_modelos_not_unique
-      result_source_kinds_not_unique: aggregation.service.errors.result_source_kinds_not_unique
-      source_kinds_mismatch: aggregation.service.errors.source_kinds_mismatch
+      envelope_modelo_mismatch: 'El model de l''embolcall no coincideix amb el model esperat.'
+      envelope_period_mismatch: 'El periode de l''embolcall no coincideix amb el periode esperat.'
+      envelope_provider_payload_mismatch: 'La carrega del proveidor de l''embolcall no coincideix amb l''esperada.'
+      observations_mismatch: 'Les observacions retornades no coincideixen amb les esperades.'
+      per_modelo_modelos_not_unique: 'Els models per model no son unics.'
+      per_modelo_providers_not_unique: 'Els proveidors per model no son unics.'
+      provider_modelos_not_unique: 'Els models del proveidor no son unics.'
+      result_source_kinds_not_unique: 'Els tipus de font del resultat no son unics.'
+      source_kinds_mismatch: 'Els tipus de font no coincideixen amb la taxonomia acceptada.'
   source_mesh:
     errors:
-      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
-      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
-      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
+      duplicate_binding_owner: 'Error intern: propietari de vinculacio duplicat a la malla de fonts.'
+      duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada duplicat a la malla de fonts.'
+      duplicate_relation_owner: 'Error intern: propietari de relacio duplicat a la malla de fonts.'
 application:
   auth:
     acquisition_lock:
@@ -542,8 +542,8 @@ application:
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
-      active_profile: active_profile
-      profile: profile
+      active_profile: 'Perfil actiu'
+      profile: 'Perfil'
       status: estat
     status:
       errors:
@@ -1711,7 +1711,7 @@ cli:
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
-    app_help: cli.diagnostics.app_help
+    app_help: 'Diagnostics d''us intern per als components de l''AEAT.'
     browser:
       http_status_label: Estat HTTP
       markers_label: Marcadors
@@ -1722,11 +1722,11 @@ cli:
       target_browser: navegador
       target_label: Destinació
     dead_end:
-      registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_bundled: 'Error intern: el registre esta inclus al paquet i no es pot reparar manualment.'
       registry_integrity_internal: Problema intern de l'aplicació; no és un error
         del teu perfil ni una cosa que puguis corregir tu.
     next_action:
-      inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+      inspect_registry_toml: 'Inspecciona les fonts TOML del registre per identificar el problema.'
     profile:
       errors:
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
@@ -1772,28 +1772,28 @@ cli:
       auth_session_ready: Sessió d'autenticació preparada per a %{provider}
       auth_state_unreadable: No es pot comprovar la preparació d'autenticació fins
         que l'estat segur del flux sigui llegible.
-      profile_keys_set: cli.diagnostics.summary.profile_keys_set
-      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_keys_set: '%{present}/%{total} claus de perfil establertes.'
+      profile_missing_keys: '%{count} clau(s) de perfil que falten.'
       profile_none: No hi ha cap perfil configurat
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'No es pot llegir el perfil: %{status}'
-      registry_counts: cli.diagnostics.summary.registry_counts
-      registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
-      registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
-      registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
-      registry_unavailable: cli.diagnostics.summary.registry_unavailable
-      secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
-      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      registry_counts: '%{modelos} models i %{casillas} caselles al registre.'
+      registry_integrity_failed: 'Comprovacio d''integritat del registre: FALLADA.'
+      registry_integrity_ok: 'Comprovacio d''integritat del registre: correcta.'
+      registry_integrity_skipped: 'Comprovacio d''integritat del registre: omesa.'
+      registry_unavailable: 'El registre no esta disponible.'
+      secure_objects_empty: 'L''emmagatzematge d''objectes segurs esta buit.'
+      secure_objects_readable: '%{readable} espai(s) de noms d''objectes segurs llegibles: %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} fila(es) il·legible(s), %{readable}
         fila(es) llegible(s)'
-      state_backend_readable: cli.diagnostics.summary.state_backend_readable
-      state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
-      venv_in_sync: cli.diagnostics.summary.venv_in_sync
-      venv_stale: cli.diagnostics.summary.venv_stale
+      state_backend_readable: 'L''emmagatzematge d''estat del flux de treball es llegible.'
+      state_backend_unreadable: 'L''emmagatzematge d''estat del flux de treball no es llegible.'
+      venv_in_sync: 'L''entorn virtual esta sincronitzat.'
+      venv_stale: 'L''entorn virtual esta desactualitzat.'
     version:
-      no_revisions: cli.diagnostics.version.no_revisions
-      registry_summary: cli.diagnostics.version.registry_summary
-      registry_unavailable: cli.diagnostics.version.registry_unavailable
+      no_revisions: 'No hi ha revisions del registre disponibles.'
+      registry_summary: '%{package} %{version}: %{modelos} models, %{casillas} caselles, %{formulas} formules, %{revisions} revisions.'
+      registry_unavailable: '%{package} %{version}: registre no disponible (%{error}).'
   ledger:
     add:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -2110,9 +2110,9 @@ cli:
     remove_key_help: Clau de locale amb punts que s'eliminarà.
     remove_locale_help: Codi de locale que s'ha d'actualitzar.
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
-    set_key_help: cli.locales.set_key_help
-    set_locale_help: cli.locales.set_locale_help
-    set_value_help: cli.locales.set_value_help
+    set_key_help: 'Clau de locale amb format de punts a establir.'
+    set_locale_help: 'Codi del locale a actualitzar (p. ex. en, es, ca).'
+    set_value_help: 'Valor de locale a establir.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -2120,127 +2120,127 @@ cli:
         %{value}.'
   operator_surface:
     errors:
-      accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
-      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
-      source_kind_options: cli.operator_surface.errors.source_kind_options
-      unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
+      accepted_roots_only: 'Nomes s''accepten les ordres arrel ''app'' i ''config''.'
+      contract_not_accepted: 'La superficie %{surface} no ha acceptat el contracte de l''operador: %{reason}.'
+      source_kind_options: 'Opcions de tipus de font disponibles: %{options}.'
+      unknown_source_kind: 'Tipus de font desconegut: %{kind}. Useu --help per veure les opcions disponibles.'
     help:
       app:
-        footer: cli.operator_surface.help.app.footer
-        heading: cli.operator_surface.help.app.heading
-        ledger_allocate: cli.operator_surface.help.app.ledger_allocate
-        ledger_archive: cli.operator_surface.help.app.ledger_archive
-        ledger_attach: cli.operator_surface.help.app.ledger_attach
-        ledger_classify: cli.operator_surface.help.app.ledger_classify
-        ledger_export: cli.operator_surface.help.app.ledger_export
-        ledger_import: cli.operator_surface.help.app.ledger_import
-        ledger_list: cli.operator_surface.help.app.ledger_list
-        ledger_remove: cli.operator_surface.help.app.ledger_remove
-        ledger_reset: cli.operator_surface.help.app.ledger_reset
-        ledger_review: cli.operator_surface.help.app.ledger_review
-        ledger_stash: cli.operator_surface.help.app.ledger_stash
-        ledger_status: cli.operator_surface.help.app.ledger_status
-        ledger_update: cli.operator_surface.help.app.ledger_update
-        ledger_view: cli.operator_surface.help.app.ledger_view
-        live_filed_capture: cli.operator_surface.help.app.live_filed_capture
-        live_filed_capture_sources: cli.operator_surface.help.app.live_filed_capture_sources
-        live_filed_list: cli.operator_surface.help.app.live_filed_list
-        modelo_bindings: cli.operator_surface.help.app.modelo_bindings
-        modelo_describe: cli.operator_surface.help.app.modelo_describe
-        modelo_list: cli.operator_surface.help.app.modelo_list
-        modelo_work: cli.operator_surface.help.app.modelo_work
-        overview_status: cli.operator_surface.help.app.overview_status
-        paragraph_operational_workflow: cli.operator_surface.help.app.paragraph_operational_workflow
-        registry_inspect: cli.operator_surface.help.app.registry_inspect
-        registry_verify: cli.operator_surface.help.app.registry_verify
-        review_queue: cli.operator_surface.help.app.review_queue
-        review_view: cli.operator_surface.help.app.review_view
-        section_ledger: cli.operator_surface.help.app.section_ledger
-        section_live_reads: cli.operator_surface.help.app.section_live_reads
-        section_modelo: cli.operator_surface.help.app.section_modelo
-        section_overview: cli.operator_surface.help.app.section_overview
-        section_review_and_registry: cli.operator_surface.help.app.section_review_and_registry
+        footer: 'Executeu ''aeat app <ordre> --help'' per obtenir mes informacio sobre cada ordre.'
+        heading: 'Operacions de declaracio fiscal de l''AEAT.'
+        ledger_allocate: 'Assignar transaccions a un periode fiscal.'
+        ledger_archive: 'Arxivar entrades del llibre de transaccions.'
+        ledger_attach: 'Adjuntar un fitxer d''origen a una entrada del llibre.'
+        ledger_classify: 'Classificar transaccions del llibre segons la naturalesa fiscal.'
+        ledger_export: 'Exportar el llibre de transaccions.'
+        ledger_import: 'Importar transaccions al llibre des d''una font externa.'
+        ledger_list: 'Llistar entrades del llibre de transaccions.'
+        ledger_remove: 'Eliminar una entrada del llibre de transaccions.'
+        ledger_reset: 'Reiniciar l''estat del llibre de transaccions.'
+        ledger_review: 'Revisar entrades del llibre per a la classificacio fiscal.'
+        ledger_stash: 'Desar temporalment els canvis pendents del llibre.'
+        ledger_status: 'Mostrar l''estat del llibre de transaccions.'
+        ledger_update: 'Actualitzar una entrada del llibre de transaccions.'
+        ledger_view: 'Veure el detall d''una entrada del llibre.'
+        live_filed_capture: 'Capturar declaracions presentades en viu des de l''AEAT.'
+        live_filed_capture_sources: 'Mostrar les fonts disponibles per a la captura de declaracions en viu.'
+        live_filed_list: 'Llistar declaracions presentades capturades de l''AEAT.'
+        modelo_bindings: 'Gestionar les vinculacions d''un model fiscal.'
+        modelo_describe: 'Descriure l''estructura d''un model fiscal.'
+        modelo_list: 'Llistar els models fiscals disponibles.'
+        modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
+        overview_status: 'Mostrar l''estat general de la declaracio activa.'
+        paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu transaccions -> treballeu el model -> reviseu -> exporteu.'
+        registry_inspect: 'Inspeccionar el registre de models fiscals.'
+        registry_verify: 'Verificar la integritat del registre de models.'
+        review_queue: 'Mostrar la cua de revisio pending.'
+        review_view: 'Veure el detall d''un element de la cua de revisio.'
+        section_ledger: 'Llibre de transaccions'
+        section_live_reads: 'Lectures en viu AEAT'
+        section_modelo: 'Models fiscals'
+        section_overview: 'Estat general'
+        section_review_and_registry: 'Revisio i registre'
       config:
-        auth_clear: cli.operator_surface.help.config.auth_clear
-        auth_configure: cli.operator_surface.help.config.auth_configure
-        auth_providers: cli.operator_surface.help.config.auth_providers
-        auth_status: cli.operator_surface.help.config.auth_status
-        auth_test: cli.operator_surface.help.config.auth_test
-        diagnostics_logs: cli.operator_surface.help.config.diagnostics_logs
-        diagnostics_quarantine: cli.operator_surface.help.config.diagnostics_quarantine
-        diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
-        diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
-        first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
-        first_run_edit: cli.operator_surface.help.config.first_run_edit
-        footer: cli.operator_surface.help.config.footer
-        heading: cli.operator_surface.help.config.heading
-        paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
-        profile_census: cli.operator_surface.help.config.profile_census
-        profile_delete: cli.operator_surface.help.config.profile_delete
-        profile_duplicate: cli.operator_surface.help.config.profile_duplicate
-        profile_list: cli.operator_surface.help.config.profile_list
-        profile_rename: cli.operator_surface.help.config.profile_rename
-        profile_show: cli.operator_surface.help.config.profile_show
-        profile_status: cli.operator_surface.help.config.profile_status
-        profile_switch: cli.operator_surface.help.config.profile_switch
-        section_authentication: cli.operator_surface.help.config.section_authentication
-        section_diagnostics: cli.operator_surface.help.config.section_diagnostics
-        section_first_run: cli.operator_surface.help.config.section_first_run
-        section_profile_inspection: cli.operator_surface.help.config.section_profile_inspection
-        section_profile_lifecycle: cli.operator_surface.help.config.section_profile_lifecycle
+        auth_clear: 'Eliminar les credencials d''autenticacio emmagatzemades.'
+        auth_configure: 'Configurar el proveidor d''autenticacio amb l''AEAT.'
+        auth_providers: 'Llistar els proveidors d''autenticacio disponibles.'
+        auth_status: 'Mostrar l''estat actual de l''autenticacio amb l''AEAT.'
+        auth_test: 'Provar l''autenticacio amb l''AEAT.'
+        diagnostics_logs: 'Consultar els registres de diagnostic de l''aplicacio.'
+        diagnostics_quarantine: 'Gestionar els elements en quarantena.'
+        diagnostics_repair: 'Executar comprovacions de salut i reparar l''estat de l''aplicacio.'
+        diagnostics_reset_state: 'Reiniciar l''estat intern de l''aplicacio.'
+        first_run_bootstrap: 'Inicialitzar la configuracio en el primer us.'
+        first_run_edit: 'Editar la configuracio inicial.'
+        footer: 'Executeu ''aeat config <ordre> --help'' per obtenir mes informacio sobre cada ordre.'
+        heading: 'Configuracio i diagnostic del contribuent.'
+        paragraph_durable_state: 'L''estat durador (perfil, autenticacio, llibre) persisteix entre sessions.'
+        profile_census: 'Mostrar l''estat del cens del perfil actiu.'
+        profile_delete: 'Eliminar un perfil de contribuent.'
+        profile_duplicate: 'Duplicar un perfil de contribuent existent.'
+        profile_list: 'Llistar els perfils de contribuent disponibles.'
+        profile_rename: 'Reanomenar un perfil de contribuent.'
+        profile_show: 'Mostrar les dades del perfil actiu.'
+        profile_status: 'Mostrar l''estat del perfil actiu.'
+        profile_switch: 'Canviar al perfil de contribuent indicat.'
+        section_authentication: 'Autenticacio AEAT'
+        section_diagnostics: 'Diagnostic'
+        section_first_run: 'Primera execucio'
+        section_profile_inspection: 'Inspeccio del perfil'
+        section_profile_lifecycle: 'Cicle de vida del perfil'
       root:
-        diagnostics_live_filed: cli.operator_surface.help.root.diagnostics_live_filed
-        diagnostics_overview: cli.operator_surface.help.root.diagnostics_overview
-        diagnostics_registry_inspect: cli.operator_surface.help.root.diagnostics_registry_inspect
-        diagnostics_repair: cli.operator_surface.help.root.diagnostics_repair
-        diagnostics_review_queue: cli.operator_surface.help.root.diagnostics_review_queue
-        footer: cli.operator_surface.help.root.footer
-        heading: cli.operator_surface.help.root.heading
-        ledger_allocate: cli.operator_surface.help.root.ledger_allocate
-        ledger_archive: cli.operator_surface.help.root.ledger_archive
-        ledger_attach: cli.operator_surface.help.root.ledger_attach
-        ledger_classify: cli.operator_surface.help.root.ledger_classify
-        ledger_export: cli.operator_surface.help.root.ledger_export
-        ledger_import: cli.operator_surface.help.root.ledger_import
-        ledger_list: cli.operator_surface.help.root.ledger_list
-        ledger_remove: cli.operator_surface.help.root.ledger_remove
-        ledger_reset: cli.operator_surface.help.root.ledger_reset
-        ledger_review: cli.operator_surface.help.root.ledger_review
-        ledger_stash: cli.operator_surface.help.root.ledger_stash
-        ledger_status: cli.operator_surface.help.root.ledger_status
-        ledger_update: cli.operator_surface.help.root.ledger_update
-        ledger_view: cli.operator_surface.help.root.ledger_view
-        modelo_bindings_list: cli.operator_surface.help.root.modelo_bindings_list
-        modelo_list: cli.operator_surface.help.root.modelo_list
-        modelo_work: cli.operator_surface.help.root.modelo_work
-        paragraph_two_roots: cli.operator_surface.help.root.paragraph_two_roots
-        paragraph_type_help: cli.operator_surface.help.root.paragraph_type_help
-        section_daily_ledger: cli.operator_surface.help.root.section_daily_ledger
-        section_diagnostics: cli.operator_surface.help.root.section_diagnostics
-        section_modelo_lifecycle: cli.operator_surface.help.root.section_modelo_lifecycle
-        section_setup: cli.operator_surface.help.root.section_setup
-        setup_configure_auth: cli.operator_surface.help.root.setup_configure_auth
-        setup_create_profile: cli.operator_surface.help.root.setup_create_profile
-        setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
+        diagnostics_live_filed: 'Diagnosticar les declaracions presentades capturades en viu.'
+        diagnostics_overview: 'Mostrar el diagnostic general de l''estat del sistema.'
+        diagnostics_registry_inspect: 'Inspeccionar el registre de models fiscals.'
+        diagnostics_repair: 'Executar comprovacions de salut i reparar l''estat de l''aplicacio.'
+        diagnostics_review_queue: 'Mostrar la cua de revisio pendent.'
+        footer: 'Executeu ''aeat <ordre> --help'' per obtenir mes informacio sobre cada ordre.'
+        heading: 'Eina de declaracions fiscals de l''AEAT.'
+        ledger_allocate: 'Assignar transaccions a un periode fiscal.'
+        ledger_archive: 'Arxivar entrades del llibre de transaccions.'
+        ledger_attach: 'Adjuntar un fitxer d''origen a una entrada del llibre.'
+        ledger_classify: 'Classificar transaccions del llibre segons la naturalesa fiscal.'
+        ledger_export: 'Exportar el llibre de transaccions.'
+        ledger_import: 'Importar transaccions al llibre des d''una font externa.'
+        ledger_list: 'Llistar entrades del llibre de transaccions.'
+        ledger_remove: 'Eliminar una entrada del llibre de transaccions.'
+        ledger_reset: 'Reiniciar l''estat del llibre de transaccions.'
+        ledger_review: 'Revisar entrades del llibre per a la classificacio fiscal.'
+        ledger_stash: 'Desar temporalment els canvis pendents del llibre.'
+        ledger_status: 'Mostrar l''estat del llibre de transaccions.'
+        ledger_update: 'Actualitzar una entrada del llibre de transaccions.'
+        ledger_view: 'Veure el detall d''una entrada del llibre.'
+        modelo_bindings_list: 'Llistar les vinculacions del model fiscal actiu.'
+        modelo_list: 'Llistar els models fiscals disponibles.'
+        modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
+        paragraph_two_roots: 'Dues superficies principals: ''app'' per a operacions de declaracio i ''config'' per a configuracio i diagnostic.'
+        paragraph_type_help: 'Escriviu ''aeat <ordre> --help'' per obtenir ajuda detallada.'
+        section_daily_ledger: 'Llibre diari de transaccions'
+        section_diagnostics: 'Diagnostic'
+        section_modelo_lifecycle: 'Cicle de vida del model'
+        section_setup: 'Configuracio'
+        setup_configure_auth: 'Configurar l''autenticacio amb l''AEAT.'
+        setup_create_profile: 'Crear un nou perfil de contribuent.'
+        setup_inspect_profile: 'Inspeccionar el perfil de contribuent actiu.'
     landing:
-      active_profile_message: cli.operator_surface.landing.active_profile_message
-      no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
-      text_template: cli.operator_surface.landing.text_template
+      active_profile_message: 'Perfil actiu: %{profile}.'
+      no_active_profile_message: 'No hi ha cap perfil actiu. Executeu ''aeat config first-run'' per comecar.'
+      text_template: '%{message} Ordre suggerida: %{command}'
     retired:
-      archive_reason: cli.operator_surface.retired.archive_reason
-      data_reason: cli.operator_surface.retired.data_reason
-      declaration_reason: cli.operator_surface.retired.declaration_reason
-      filing_reason: cli.operator_surface.retired.filing_reason
-      financial_reason: cli.operator_surface.retired.financial_reason
-      invoice_reason: cli.operator_surface.retired.invoice_reason
-      llm_reason: cli.operator_surface.retired.llm_reason
-      preflight_reason: cli.operator_surface.retired.preflight_reason
-      presentation_reason: cli.operator_surface.retired.presentation_reason
-      sanitize_reason: cli.operator_surface.retired.sanitize_reason
-      setup_reason: cli.operator_surface.retired.setup_reason
-      submit_reason: cli.operator_surface.retired.submit_reason
-      topic_reason: cli.operator_surface.retired.topic_reason
-      workflow_reason: cli.operator_surface.retired.workflow_reason
+      archive_reason: 'Ordre retirada: useu la subordre d''arxiu del llibre.'
+      data_reason: 'Ordre retirada: accediu a les dades a traves del llibre o del perfil.'
+      declaration_reason: 'Ordre retirada: useu ''aeat app modelo work'' per gestionar declaracions.'
+      filing_reason: 'Ordre retirada: useu ''aeat app modelo work'' per preparar la declaracio.'
+      financial_reason: 'Ordre retirada: useu ''aeat app ledger'' per al llibre de transaccions.'
+      invoice_reason: 'Ordre retirada: les factures es gestionen des del llibre de transaccions.'
+      llm_reason: 'Ordre retirada: les funcions d''assistencia d''IA s''han eliminat.'
+      preflight_reason: 'Ordre retirada: les comprovacions previes s''executen automaticament.'
+      presentation_reason: 'Ordre retirada: useu el flux d''exportacio del model.'
+      sanitize_reason: 'Ordre retirada: el sanejament de dades es automatic.'
+      setup_reason: 'Ordre retirada: useu ''aeat config first-run'' per a la configuracio inicial.'
+      submit_reason: 'Ordre retirada: la presentacio s''ha de fer manualment a la Seu Electronica.'
+      topic_reason: 'Ordre retirada: consulteu la documentacio del model corresponent.'
+      workflow_reason: 'Ordre retirada: useu el flux principal d''''aeat app''.'
   overview:
     agenda:
       allow_incomplete_help: Generar l'agenda encara que les dades del perfil siguin
@@ -2376,51 +2376,51 @@ cli:
       view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       year_help: Any fiscal del manual (p. ex. 2024)
     metrics:
-      applicability_declaration_count: applicability_declaration_count
-      application_link_count: application_link_count
-      application_link_surfaces: application_link_surfaces
-      artefact_refs: artefact_refs
-      backend_exists: backend_exists
-      captured_count: captured_count
-      casilla_count: casilla_count
-      compared_casillas: compared_casillas
-      comparison_count: comparison_count
-      cross_reference_count: cross_reference_count
-      difference_count: difference_count
-      differences: differences
-      drift_count: drift_count
-      environment: environment
-      extraction_profile_count: extraction_profile_count
-      failed_count: failed_count
-      failure_count: failure_count
-      formula_count: formula_count
-      formula_workbook_count: formula_workbook_count
-      legal_reference_count: legal_reference_count
-      missing_filed_casillas: missing_filed_casillas
-      missing_local_casillas: missing_local_casillas
-      modelo: modelo
-      modelo_count: modelo_count
-      modelos: modelos
-      observation_paths: observation_paths
-      orphan_oracle_ids: orphan_oracle_ids
-      passed: passed
-      registered_oracle_ids: registered_oracle_ids
-      revision: revision
-      revision_count: revision_count
-      row_count: row_count
-      runner_detail: runner_detail
-      runner_status: runner_status
-      scanned_count: scanned_count
-      scenario_id: scenario_id
-      source_reference_count: source_reference_count
-      status: status
-      tape_path: tape_path
-      unsupported_xls_count: unsupported_xls_count
-      verification_expectation_count: verification_expectation_count
-      verified: verified
-      workbook_count: workbook_count
-      workbook_parity_ref_count: workbook_parity_ref_count
-      workbook_path: workbook_path
+      applicability_declaration_count: 'declaracions d''aplicabilitat'
+      application_link_count: 'vincles d''aplicacio'
+      application_link_surfaces: 'superficies de vincle d''aplicacio'
+      artefact_refs: 'refs d''artefacte'
+      backend_exists: 'backend existent'
+      captured_count: 'captures'
+      casilla_count: 'caselles'
+      compared_casillas: 'caselles comparades'
+      comparison_count: 'comparacions'
+      cross_reference_count: 'referencies creuades'
+      difference_count: 'diferencies'
+      differences: 'diferencies'
+      drift_count: 'desviacions'
+      environment: 'entorn'
+      extraction_profile_count: 'perfils d''extraccio'
+      failed_count: 'fallades'
+      failure_count: 'errors'
+      formula_count: 'formules'
+      formula_workbook_count: 'llibres de formules'
+      legal_reference_count: 'referencies legals'
+      missing_filed_casillas: 'caselles presentades que falten'
+      missing_local_casillas: 'caselles locals que falten'
+      modelo: 'model'
+      modelo_count: 'models'
+      modelos: 'models'
+      observation_paths: 'rutes d''observacio'
+      orphan_oracle_ids: 'ids d''oracle orfes'
+      passed: 'aprovades'
+      registered_oracle_ids: 'ids d''oracle registrats'
+      revision: 'revisio'
+      revision_count: 'revisions'
+      row_count: 'files'
+      runner_detail: 'detall del runner'
+      runner_status: 'estat del runner'
+      scanned_count: 'escanejades'
+      scenario_id: 'id d''escenari'
+      source_reference_count: 'referencies de font'
+      status: 'estat'
+      tape_path: 'ruta de la cinta'
+      unsupported_xls_count: 'xls no admesos'
+      verification_expectation_count: 'expectatives de verificacio'
+      verified: 'verificades'
+      workbook_count: 'llibres de treball'
+      workbook_parity_ref_count: 'refs de paritat del llibre'
+      workbook_path: 'ruta del llibre de treball'
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
     parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
@@ -2721,7 +2721,7 @@ errors:
       per a aquesta operació d'emmagatzematge.
     auth_session_corrupt: Les metadades de la sessió desada no es poden llegir. Torna
       a autenticar-te per crear una sessió nova.
-    auth_session_deserialization: errors.auth.auth_session_deserialization
+    auth_session_deserialization: 'Les dades de sessio d''autenticacio emmagatzemades no s''han pogut deserialitzar. Torneu a autenticar-vos per crear una sessio nova.'
     auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
       Autentica't abans de continuar.
     auth_storage_bucket_recovery_verification: El codi de recuperació introduït no
@@ -2744,12 +2744,12 @@ errors:
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
   calc:
-    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
+    age_at_year_end_no_filing_year: 'Error intern: el calcul de l''edat a final d''exercici no te exercici de declaracio.'
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
       assignat.
-    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
-    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
+    bound_input_smuggled_without_binding_value: 'Error intern: casella d''entrada vinculada passada sense valor de vinculacio.'
+    bound_projection_inconsistent: 'Error intern: la projeccio vinculada es inconsistent.'
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
@@ -2762,8 +2762,8 @@ errors:
       abans d''avaluar la seva fórmula.
     computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
       calculades: {casilla_ids}.'
-    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
-    date_binding_value_missing: errors.calc.date_binding_value_missing
+    date_binding_used_as_decimal_leaf: 'Error intern: vinculacio de data usada com a fulla decimal.'
+    date_binding_value_missing: 'Falta el valor de la vinculacio de data.'
     dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
       l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
     dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador
@@ -2777,11 +2777,11 @@ errors:
       sigui una fulla de tipus {expected_kind}.
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
-    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
+    text_input_non_text_casillas: 'Entrada de text subministrada per a caselles no textuals: %{casilla_ids}.'
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
-    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
-    unsupported_comparison_op: errors.calc.unsupported_comparison_op
-    unsupported_op: errors.calc.unsupported_op
+    unknown_text_input_casillas: 'Identificadors de casella d''entrada de text desconeguts: %{casilla_ids}.'
+    unsupported_comparison_op: 'Operador de comparacio no ames: %{op}.'
+    unsupported_op: 'Operador de formula no ames: %{op}.'
   censo:
     no_snapshot_captured: No s'ha capturat cap instantània del cens per al perfil
       {profile_id}.
@@ -2826,7 +2826,7 @@ errors:
     error_categories_validation: Un registre de categoria no ha superat la validació.
     error_config_boundary: L'ordre de configuració ha trobat un error intern inesperat.
     error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
-    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
+    error_deadlines_missing_windows: 'Falten les finestres de termini de presentacio.'
     error_deadlines_profile: El perfil d'autònom no s'ha pogut carregar o validar
       per al càlcul de terminis.
     error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
@@ -3060,7 +3060,7 @@ errors:
       Comprova la connexió a internet i torna-ho a provar.
     fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
       temporalment. Espera uns minuts i torna-ho a provar.
-    fail_repair_decision_not_found: errors.fail.fail_repair_decision_not_found
+    fail_repair_decision_not_found: 'No s''ha trobat la decisio de reparacio sol.licitada.'
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sanitization_source_parse: El PDF d'origen no s'ha pogut obrir per sanejar-lo.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
@@ -3072,7 +3072,7 @@ errors:
     fail_sede_validation: Les dades capturades de la Seu de l'AEAT no tenen la forma
       esperada.
     fail_site_health: La comprovació d'estat del lloc ha fallat.
-    fail_snapshot_not_found: errors.fail.fail_snapshot_not_found
+    fail_snapshot_not_found: 'No s''ha trobat la instantania sol.licitada.'
     fail_storage: S'ha produït un error en l'emmagatzematge.
     fail_storage_blob_not_found: No s'ha trobat l'objecte sol·licitat al magatzem
       xifrat.
@@ -3081,7 +3081,7 @@ errors:
     fail_storage_persistence: S'ha produït un error de persistència en l'emmagatzematge
       segur.
     fail_storage_repository: Una operació de repositori ha fallat.
-    fail_storage_repository_setup: errors.fail.fail_storage_repository_setup
+    fail_storage_repository_setup: 'Error en inicialitzar el repositori d''emmagatzematge.'
     fail_storage_secret_not_found: No s'ha trobat cap secret per a la clau sol·licitada.
     fail_storage_secret_store: S'ha produït un error d'entrada o sortida en el magatzem
       de secrets.
@@ -3165,7 +3165,7 @@ errors:
       superat la validació estricta.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
-    integrity_outbound_storage_corruption: errors.integrity.integrity_outbound_storage_corruption
+    integrity_outbound_storage_corruption: 'S''ha detectat corrupcio a l''emmagatzematge de sortida.'
     integrity_portals_portal_integrity: El registre de portals de l'AEAT infringeix
       una invariant estructural.
     integrity_profile_answer_type: Un camp de resposta de perfil ha rebut un tipus
@@ -3174,7 +3174,7 @@ errors:
       no coincideix amb la projecció actual.
     integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb
       l'identificador indicat.
-    integrity_repair_integrity: errors.integrity.integrity_repair_integrity
+    integrity_repair_integrity: 'La comprovacio d''integritat de reparacio ha fallat.'
     integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
       amb el del seu manifest.
     integrity_storage_bucket_validation: Un paràmetre del dipòsit o camp del manifest
@@ -3221,11 +3221,11 @@ errors:
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
-    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
-    internal_profile_project_answers_not_registered: errors.internal.internal_profile_project_answers_not_registered
-    internal_profile_registration: errors.internal.internal_profile_registration
-    internal_wizard_catalogue_already_registered: errors.internal.internal_wizard_catalogue_already_registered
-    internal_wizard_catalogue_not_registered: errors.internal.internal_wizard_catalogue_not_registered
+    internal_profile_keys_registration: 'Error intern: no s''han pogut registrar les claus del perfil.'
+    internal_profile_project_answers_not_registered: 'Error intern: les respostes del projecte de perfil no estan registrades.'
+    internal_profile_registration: 'Error intern: no s''ha pogut registrar el perfil.'
+    internal_wizard_catalogue_already_registered: 'Error intern: el cataleg de l''assistent ja esta registrat.'
+    internal_wizard_catalogue_not_registered: 'Error intern: el cataleg de l''assistent no esta registrat.'
     internal_wizard_script_overflow: 'Error intern: l''assistent s''ha tancat amb
       respostes guionades sense consumir.'
     internal_wizard_script_underflow: 'Error intern: l''assistent ha demanat més respostes
@@ -3311,11 +3311,11 @@ errors:
       pot executar amb les dades indicades.
     refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
       a un bucket registrat.
-    refused_auth_diagnostic_payload: errors.refused.refused_auth_diagnostic_payload
+    refused_auth_diagnostic_payload: 'Refusat: la carrega de diagnostic d''autenticacio no es valida.'
     refused_auth_diagnostic_phone_state: El valor d’estat del telèfon proporcionat
       no es reconeix. Utilitzeu un dels valors vàlids d’estat de telèfon de l’operador.
-    refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
-    refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
+    refused_auth_login_live_tests_disabled: 'Les proves d''inici de sessio en viu estan deshabilitades.'
+    refused_auth_login_precondition: 'La precondicio per a l''inici de sessio d''autenticacio no es compleix.'
     refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
       però no implementat.
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
@@ -3330,7 +3330,7 @@ errors:
       Executa `aeat config repair` o restableix l'estat del perfil.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
-    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
+    refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnostic incomplit.'
     refused_evidence_bundle_not_found: No existeix cap paquet d'evidències amb l'identificador
       indicat.
     refused_evidence_bundle_verification: La verificació del paquet d'evidències ha
@@ -3375,8 +3375,8 @@ errors:
       i l'any indicats.
     refused_inventory_service_input: Una dada indicada infringeix el contracte de
       l'inventari. Corregeix l'entrada i torna-ho a provar.
-    refused_iva_compensation_decimal_parse: errors.refused.refused_iva_compensation_decimal_parse
-    refused_iva_compensation_year_range: errors.refused.refused_iva_compensation_year_range
+    refused_iva_compensation_decimal_parse: 'Refusat: l''import de compensacio d''IVA no s''ha pogut interpretar com a decimal.'
+    refused_iva_compensation_year_range: 'Refusat: l''exercici de compensacio d''IVA es fora del rang acceptat.'
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
       d'antiguitat de la cartera i torneu-ho a intentar.
@@ -3439,7 +3439,7 @@ errors:
       perfil. Selecciona un règim admès.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
       la validació.
-    refused_profile_label_ambiguous: errors.refused.refused_profile_label_ambiguous
+    refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil es ambigua.'
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
     refused_profile_not_configured: La verificació de la declaració de la Renda necessita
@@ -3463,7 +3463,7 @@ errors:
       que el sanejador no sap tractar. Cal una revisió humana.
     refused_sanitization_validation: Els paràmetres del sanejador no han superat la
       validació.
-    refused_source_mesh_invariant: errors.refused.refused_source_mesh_invariant
+    refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
     refused_storage_bucket_already_present: La importació col·lisiona amb un bucket
       d'emmagatzematge que ja existeix.
     refused_storage_bucket_no_active: No s'ha pogut determinar cap bucket actiu. Selecciona
@@ -3499,7 +3499,7 @@ errors:
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
   snapshot:
-    modelo_not_registered: errors.snapshot.modelo_not_registered
+    modelo_not_registered: 'El model no esta registrat al registre.'
   storage:
     engine:
       create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.
@@ -3555,9 +3555,9 @@ filing:
     schema_mismatch: Discrepància amb l'esquema esperat
 live:
   errors:
-    expediente_not_found: live.errors.expediente_not_found
-    iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
-    year_range_invalid: live.errors.year_range_invalid
+    expediente_not_found: 'No s''ha trobat l''expedient sol.licitat a l''AEAT.'
+    iva_history_modelo_303_only: 'L''historial d''IVA nomes esta disponible per al Model 303.'
+    year_range_invalid: 'El rang d''exercicis indicat no es valid.'
 locales:
   cli:
     audit:
@@ -3578,7 +3578,7 @@ profile:
     deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
       € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
       de 3 anys amb mesos de treball declarats.'
-    incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
+    incremento_guarderia_applied: 'Suplement de guarderia (art. 81 bis LIRPF) aplicat: %{amount} EUR (casella 0613). Limit: min(costos reals, fills menors de 3 anys x 1.000 EUR, cotitzacions a la seguretat social 2024).'
   errors:
     foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
       en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
@@ -3593,8 +3593,8 @@ profile:
 review:
   adapters:
     errors:
-      invoices_load_failed: review.adapters.errors.invoices_load_failed
-      transactions_load_failed: review.adapters.errors.transactions_load_failed
+      invoices_load_failed: 'No s''han pogut carregar les factures de l''adaptador.'
+      transactions_load_failed: 'No s''han pogut carregar les transaccions de l''adaptador.'
   filing:
     draft_placeholder_summary: Esborrany pendent
     finding_summary: Incidència detectada a l'esborrany
@@ -3603,9 +3603,9 @@ review:
     summary: Justificant pendent de revisió
   operator:
     errors:
-      item_not_found: review.operator.errors.item_not_found
-      unknown_kind: review.operator.errors.unknown_kind
-      unsupported_item_type: review.operator.errors.unsupported_item_type
+      item_not_found: 'No s''ha trobat l''element sol.licitat a la cua de revisio.'
+      unknown_kind: 'Tipus d''element de revisio desconegut: %{kind}.'
+      unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació
 sheets:
@@ -3646,7 +3646,7 @@ sheets:
       valuation_amount: Valoració
 some:
   locale:
-    key: some.locale.key
+    key: 'Clau de locale de prova'
 topic:
   authentication:
     body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
