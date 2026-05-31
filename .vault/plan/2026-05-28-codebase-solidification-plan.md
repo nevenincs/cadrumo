@@ -852,6 +852,6 @@ Narrow 5 silent except Exception swallows in auth/browser/registry adapters (cla
 
 Dedup canonical_decimal_string (regression — exists in both _identifiers.py and _decimal.py). Add CAST-RATIONALE markers to remaining test-scope + production cast sites identified by W8 A8 audit.
 
-- [ ] `W08.P36.S550` - fix regression: dedup canonical_decimal_string in _identifiers.py vs _decimal.py — canonical lives at aeat.domain._identifiers; `delete duplicate in _decimal.py and migrate callers; `src/aeat/adapters/inbound/financial/_decimal.py`.
-- [ ] `W08.P36.S551` - add CAST-RATIONALE markers to production cast sites at justificante/_extract.py:435 -> Any, live/_borrador_100.py:311 kwargs-Any, core/profile.py:278 pydantic field_validator -> Any; `src/aeat/adapters/inbound/justificante/_extract.py`.
-- [ ] `W08.P36.S552` - add inventory test asserting no canonical_decimal_string duplicates survive; `src/aeat/test_w08_p36_dedup.py`.
+- [x] `W08.P36.S550` - fix regression: dedup canonical_decimal_string in _identifiers.py vs _decimal.py — canonical lives at aeat.domain._identifiers; `delete duplicate in _decimal.py and migrate callers; `src/aeat/adapters/inbound/financial/_decimal.py`.
+- [x] `W08.P36.S551` - add CAST-RATIONALE markers to production cast sites at justificante/_extract.py:435 -> Any, live/_borrador_100.py:311 kwargs-Any, core/profile.py:278 pydantic field_validator -> Any; `src/aeat/adapters/inbound/justificante/_extract.py`.
+- [x] `W08.P36.S552` - add inventory test asserting no canonical_decimal_string duplicates survive; `src/aeat/test_w08_p36_dedup.py`.
