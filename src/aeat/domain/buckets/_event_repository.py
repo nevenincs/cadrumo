@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.logging import get_logger
 from ._errors import BucketsError
 from ._event import BucketEvent, BucketEventHistoryCatalogue
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import Envelope, SensitivityClass
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _NAMESPACE = "aeat.domain.buckets.event_history"
@@ -26,7 +29,12 @@ class BucketEventHistoryRepository:
     """Read / write the bucket-event-history catalogue."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or secure_object_repository_for_active_bucket()
+        if objects is not None:
+            self._objects = objects
+            return
+        from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+
+        self._objects = secure_object_repository_for_active_bucket()
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
@@ -38,6 +46,9 @@ class BucketEventHistoryRepository:
         return self._objects.exists(_NAMESPACE, _OBJECT_KEY)
 
     def load(self) -> BucketEventHistoryCatalogue:
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+
         try:
             record = self._objects.load(
                 _NAMESPACE,
@@ -69,6 +80,8 @@ class BucketEventHistoryRepository:
 
     def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it."""
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ...adapters.persistence.storage.sql import SecureObjectWrite
 
         envelope = Envelope[BucketEventHistoryCatalogue](
             schema_version=_CATALOGUE_VERSION,
