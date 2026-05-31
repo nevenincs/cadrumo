@@ -952,9 +952,9 @@ W12 audit confirmed zero strict regressions (honest re-verification of agent cla
 
 Enroll scripts/check_relative_imports.py utf-8 + extend UTF_8 ratchet to scripts/. Add ANY-RETURN-RATIONALE markers on 4 _google_drive.py Any-returns + extend rationale inventory to cover the file. Document 4 sha256 hash-protocol sites in ratchet commentary. Enroll _stdio.py logging.getLogger in survivor ratchet. Add MACHINE-FORMAT-RATIONALE on secure_objects.py:53 row format.
 
-- [ ] `W12.P44.S594` - enroll scripts/check_relative_imports.py:84 encoding=utf-8 with local _UTF_8 constant or import UTF_8_ENCODING + extend test_utf8_enrollment_inventory.py ratchet scope to include scripts/; `src/aeat/test_utf8_enrollment_inventory.py`.
-- [ ] `W12.P44.S595` - add ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY markers on _google_drive.py:120,163,168,650 (4 -> Any sites); `extend test_w10_p41_rationale_inventory to cover the file; `src/aeat/adapters/outbound/storage/_google_drive.py`.
-- [ ] `W12.P44.S596` - add ratchet commentary annotating _source_profile.py:75 + _iva_wallet_reconciliation.py:173 + _source_resolver.py:145 + _borrador_binding.py:223 as sha256-hash-protocol-exempt; `src/aeat/test_utf8_enrollment_inventory.py`.
-- [ ] `W12.P44.S597` - enroll entrypoints/cli/_stdio.py:156 logging.getLogger in survivor ratchet for the A2 logging inventory test (rationale exists inline at lines 150-155); `src/aeat/test_w10_p41_rationale_inventory.py`.
-- [ ] `W12.P44.S598` - add MACHINE-FORMAT-RATIONALE marker on diagnostics/secure_objects.py:53 raw row tab-pair format OR wrap row format in tr() key; `src/aeat/diagnostics/secure_objects.py`.
-- [ ] `W12.P44.S599` - aggregate test asserting all W12 finishers landed + ratchets extended; `src/aeat/test_w12_p44_finishers.py`.
+- [x] `W12.P44.S594` - enroll scripts/check_relative_imports.py:84 encoding=utf-8 with local _UTF_8 constant or import UTF_8_ENCODING + extend test_utf8_enrollment_inventory.py ratchet scope to include scripts/; `src/aeat/test_utf8_enrollment_inventory.py`.
+- [x] `W12.P44.S595` - add ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY markers on _google_drive.py:120,163,168,650 (4 -> Any sites); `extend test_w10_p41_rationale_inventory to cover the file; `src/aeat/adapters/outbound/storage/_google_drive.py`.
+- [x] `W12.P44.S596` - add ratchet commentary annotating _source_profile.py:75 + _iva_wallet_reconciliation.py:173 + _source_resolver.py:145 + _borrador_binding.py:223 as sha256-hash-protocol-exempt; `src/aeat/test_utf8_enrollment_inventory.py`.
+- [x] `W12.P44.S597` - enroll entrypoints/cli/_stdio.py:156 logging.getLogger in survivor ratchet for the A2 logging inventory test (rationale exists inline at lines 150-155); `src/aeat/test_w10_p41_rationale_inventory.py`.
+- [x] `W12.P44.S598` - add MACHINE-FORMAT-RATIONALE marker on diagnostics/secure_objects.py:53 raw row tab-pair format OR wrap row format in tr() key; `src/aeat/diagnostics/secure_objects.py`.
+- [x] `W12.P44.S599` - aggregate test asserting all W12 finishers landed + ratchets extended; `src/aeat/test_w12_p44_finishers.py`.
