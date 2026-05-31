@@ -71,7 +71,7 @@ from ._api import execute_request
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class OperatorEdit(BaseModel):

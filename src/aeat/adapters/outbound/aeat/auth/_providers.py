@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, Protocol, TypedDict, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from .....application.auth import (
     AuthProvider,
@@ -33,8 +33,7 @@ if TYPE_CHECKING:
         BrowserContextLike,
     )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class CertificateSessionDetail(BaseModel):
     """Certificate-backed session details."""
@@ -45,7 +44,6 @@ class CertificateSessionDetail(BaseModel):
     certificate_thumbprint: str = Field(min_length=1)
     certificate_subject: str = Field(min_length=1)
     handshake: HandshakeResult
-
 
 class ClaveMovilSessionDetail(BaseModel):
     """Detail shape for a Cl@ve Móvil-authenticated AEAT session.
@@ -85,7 +83,6 @@ class ClaveMovilSessionDetail(BaseModel):
         ),
     )
 
-
 class CertificateLoginAssertionDetail(BaseModel):
     """Certificate-backed verification details."""
 
@@ -95,7 +92,6 @@ class CertificateLoginAssertionDetail(BaseModel):
     handshake_success: bool
     certificate_recognised: bool
     parsed_subject: str | None = None
-
 
 class ClaveMovilLoginAssertionDetail(BaseModel):
     """Verification detail for a Cl@ve Móvil-backed session probe.
@@ -121,11 +117,9 @@ class ClaveMovilLoginAssertionDetail(BaseModel):
         description="Final URL Playwright landed on after following redirects.",
     )
 
-
 AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail
 
 AuthLoginAssertionDetail = CertificateLoginAssertionDetail | ClaveMovilLoginAssertionDetail
-
 
 class BrowserContextKwargs(TypedDict, total=False):
     """Subset of Playwright ``Browser.new_context()`` keyword arguments.
@@ -137,7 +131,6 @@ class BrowserContextKwargs(TypedDict, total=False):
 
     client_certificates: list[dict[str, str]]
 
-
 @runtime_checkable
 class BrowserContextProvisioner(Protocol):
     """Hook that decorates BrowserSession.create_context()."""
@@ -145,7 +138,6 @@ class BrowserContextProvisioner(Protocol):
     def build_context_kwargs(self) -> BrowserContextKwargs: ...
 
     def annotate_context(self, context: BrowserContextLike) -> None: ...
-
 
 class CertificateContextProvisioner:
     """Browser-context provisioner for the certificate-backed auth flow."""
@@ -164,7 +156,6 @@ class CertificateContextProvisioner:
 
     def annotate_context(self, context: BrowserContextLike) -> None:
         setattr(context, CERTIFICATE_CONTEXT_MARKER, self._cert.sha256_thumbprint)
-
 
 def describe_certificate_provider(
     cert: LoadedCertificate,
@@ -195,7 +186,6 @@ def describe_certificate_provider(
         days_until_expiry=health.days_until_expiry,
         health_summary=f"{health.severity.value}:{health.days_until_expiry}",
     )
-
 
 __all__ = [
     "CERTIFICATE_CONTEXT_MARKER",

@@ -144,7 +144,7 @@ _KDF_PARAMS_VERSION: Final[int] = 2
 * v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
 """
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 @runtime_checkable

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...domain.profile import (
     ProfileKey,
@@ -30,8 +30,7 @@ from ...domain.profile import (
 )
 from ...domain.profile._keys import _profile_keys as _get_profile_keys
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ProfileValidationResult(BaseModel):
     """Typed result of :func:`validate_profile_values`."""
@@ -46,7 +45,6 @@ class ProfileValidationResult(BaseModel):
     present_keys: int
     total_keys: int
 
-
 class ProfileValueRow(BaseModel):
     """One schema-backed profile value row for CLI/API display."""
 
@@ -58,18 +56,15 @@ class ProfileValueRow(BaseModel):
     requirement: ProfileKeyRequirement
     description: str
 
-
 def _has_value(values: Mapping[str, str], key: str) -> bool:
     raw = values.get(key)
     return raw is not None and raw.strip() != ""
-
 
 def _conditional_requirement_applies(values: Mapping[str, str], entry: ProfileKey) -> bool:
     if entry.required_when_key is None or entry.required_when_value is None:
         return False
     raw = values.get(entry.required_when_key)
     return raw is not None and raw.strip() == entry.required_when_value
-
 
 def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResult:
     """Validate ``values`` against :data:`PROFILE_KEYS`.
@@ -103,12 +98,10 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
         total_keys=len(entries),
     )
 
-
 def list_profile_key_records() -> tuple[ProfileKey, ...]:
     """Return the full :data:`PROFILE_KEYS` tuple in registry order."""
 
     return _get_profile_keys()
-
 
 def list_profile_value_rows(
     values: Mapping[str, str],
@@ -133,7 +126,6 @@ def list_profile_value_rows(
             )
         )
     return tuple(rows)
-
 
 __all__ = [
     "ProfileValidationResult",

@@ -31,7 +31,7 @@ from ...core.identity import BucketId
 from ..auth._models import AuthState
 from ._utils import utc_now
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 class WorkflowEvent(BaseModel):
     """One operator-visible workflow event."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     action: str = Field(min_length=1)
     reason: str = ""
@@ -122,7 +122,7 @@ class WorkflowAbortReason(StrEnum):
 class DeclaracionPointer(BaseModel):
     """Pointer to a persisted filing draft and its status."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     modelo: str
     period: str
@@ -144,7 +144,7 @@ class ProfileBucketPointer(BaseModel):
     profile never leaks into ``list`` / ``switch`` / name-uniqueness.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
     label: str = Field(min_length=1, max_length=160)
@@ -188,7 +188,7 @@ class WorkflowState(BaseModel):
     precedence chain (Settings override > plaintext pointer file).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = _STRICT_FROZEN
 
     auth: AuthState = Field(default_factory=AuthState)
     declarations: dict[str, DeclaracionPointer] = Field(default_factory=dict)

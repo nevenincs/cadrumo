@@ -40,7 +40,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE
@@ -63,11 +63,10 @@ from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _BLOB_AAD = b"aeat.blob.payload.v1"
 _DEK_AAD = b"aeat.blob.dek-wrap.v1"
-
 
 class BlobManifest(BaseModel):
     """Frozen manifest record for one blob in the encrypted blob store.
@@ -105,7 +104,6 @@ class BlobManifest(BaseModel):
     wrapped_dek: EncryptionMetadata | None = None
     payload_metadata: EncryptionMetadata | None = None
 
-
 class BlobReference(BaseModel):
     """Frozen public handle for one blob.
 
@@ -123,10 +121,8 @@ class BlobReference(BaseModel):
     sha256_plaintext_hex: str = Field(min_length=64, max_length=64)
     classification: SensitivityClass
 
-
 def _hex_digest(data: bytes) -> str:
     return _sha256_hex(data)
-
 
 class EncryptedBlobStore:
     """Repository for the at-rest, classification-aware blob store."""
@@ -552,7 +548,6 @@ class EncryptedBlobStore:
                 exc_info=True,
             )
             raise
-
 
 __all__ = [
     "BlobIntegrityError",

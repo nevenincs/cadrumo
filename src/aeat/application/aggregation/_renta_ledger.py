@@ -8,7 +8,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -37,9 +37,8 @@ from ._currency_predicates import effective_eur_amount, is_non_eur_without_conve
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _LEDGER_CATALOGUE_ID = "ledger"
-
 
 class RentaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce an observation.
@@ -72,7 +71,6 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     INVALID_LEDGER_FACT = "invalid_ledger_fact"
     INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"
 
-
 class RentaLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating ledger rows."""
 
@@ -84,7 +82,6 @@ class RentaLedgerAggregationIssue(BaseModel):
     reason: RentaLedgerAggregationIssueReason
     detail: str = Field(min_length=1, max_length=512)
 
-
 class _PurchaseInvoiceEvidencePayload(BaseModel):
     """Typed enrichment fields copied from a reconciled linked invoice."""
 
@@ -93,7 +90,6 @@ class _PurchaseInvoiceEvidencePayload(BaseModel):
     invoice_issue_date: date | None = None
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
-
 
 class RentaLedgerExpenseAggregation(BaseModel):
     """First-slice Renta observations plus binding-ready casilla totals."""
@@ -151,7 +147,6 @@ class RentaLedgerExpenseAggregation(BaseModel):
     ) -> tuple[RentaLedgerAggregationIssue, ...]:
         return tuple(value)
 
-
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
@@ -183,7 +178,6 @@ def aggregate_renta_ledger_expenses_from_repositories(
         activity_key=activity_key,
         modelo=modelo,
     )
-
 
 def aggregate_renta_ledger_expenses(
     transactions: TransactionCatalogue,
@@ -234,7 +228,6 @@ def aggregate_renta_ledger_expenses(
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
     )
-
 
 def _classify_renta_transaction(
     transaction: Transaction,
@@ -406,7 +399,6 @@ def _classify_renta_transaction(
             detail=_bounded_detail(str(exc)),
         )
 
-
 def _resolve_annual_period(period: Period | str) -> Period:
     resolved = period if isinstance(period, Period) else Period.model_validate(period)
     if resolved.kind is not PeriodKind.ANNUAL:
@@ -415,7 +407,6 @@ def _resolve_annual_period(period: Period | str) -> Period:
             context={"period": resolved.raw},
         )
     return resolved
-
 
 def _renta_direction_for(
     direction: TransactionDirection,
@@ -426,7 +417,6 @@ def _renta_direction_for(
     if direction is TransactionDirection.INCOMING and purchase_invoice_evidence_id is not None:
         return RentaExpenseDirection.REFUND
     return None
-
 
 def _business_amount(
     signed_amount: Decimal,
@@ -440,7 +430,6 @@ def _business_amount(
         assert business_pct is not None
         return amount * business_pct
     return None
-
 
 def _purchase_invoice_evidence_payload(
     *,
@@ -508,18 +497,15 @@ def _purchase_invoice_evidence_payload(
         iva_amount=invoice.iva_total,
     )
 
-
 def _taxable_base_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
     if evidence_payload.taxable_base is not None:
         return evidence_payload.taxable_base
     return transaction.taxable_base
 
-
 def _iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
     if evidence_payload.iva_amount is not None:
         return evidence_payload.iva_amount
     return transaction.iva_amount
-
 
 def _casilla_aggregation(
     period: Period,
@@ -551,12 +537,10 @@ def _casilla_aggregation(
         provenance=tuple(provenance_rows),
     )
 
-
 def _bounded_detail(detail: str) -> str:
     if len(detail) <= 512:
         return detail
     return f"{detail[:509]}..."
-
 
 __all__ = [
     "RentaLedgerAggregationIssue",

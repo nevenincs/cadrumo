@@ -21,7 +21,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors import BaseSeverity
 from ...domain.filing import (
@@ -30,8 +30,7 @@ from ...domain.filing import (
 )
 from .errors import ModeloCalculateError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-"""Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class DeclaracionCalculateNextAction(StrEnum):

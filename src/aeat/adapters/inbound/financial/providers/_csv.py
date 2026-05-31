@@ -16,7 +16,7 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from .....core.config import load_settings
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
@@ -38,9 +38,8 @@ from ._base import (
 )
 from ._constants import CSV_EXTENSIONS
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _logger = get_logger(__name__)
-
 
 class CsvColumnMap(BaseModel):
     """Alias sets for one bank CSV layout.
@@ -70,7 +69,6 @@ class CsvColumnMap(BaseModel):
     counterparty: tuple[str, ...] = ()
     external_id: tuple[str, ...] = ()
 
-
 class CsvBankLayout(BaseModel):
     """Named bank CSV layout supported by the provider.
 
@@ -90,7 +88,6 @@ class CsvBankLayout(BaseModel):
     columns: CsvColumnMap
     day_first_dates: bool = True
     decimal_separator: Literal[",", "."] = ","
-
 
 BBVA_LAYOUT = CsvBankLayout(
     bank_name="BBVA",
@@ -164,7 +161,6 @@ CSV_LAYOUTS: tuple[CsvBankLayout, ...] = (
     REVOLUT_LAYOUT,
 )
 """Ordered tuple of bank layouts the CSV provider will try to match."""
-
 
 class CsvProvider(FinancialProvider):
     """Ingest raw transactions from bank CSV exports.
@@ -355,11 +351,9 @@ class CsvProvider(FinancialProvider):
             return 0, None, None, None
         return best_index, best_layout, best_headers, best_lookup
 
-
 def _header_lookup(headers: list[str]) -> dict[str, str]:
     """Build normalized->original header lookup for alias resolution."""
     return {normalize_header(header): header for header in headers if header.strip()}
-
 
 def _layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
     """Return a match score for one layout against one header row."""
@@ -382,7 +376,6 @@ def _layout_score(lookup: Mapping[str, str], layout: CsvBankLayout) -> int:
             score += 1
     return score
 
-
 def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | None:
     """Resolve the first matching original header for ``aliases``."""
     for alias in aliases:
@@ -391,17 +384,14 @@ def _find_column(lookup: Mapping[str, str], aliases: tuple[str, ...]) -> str | N
             return header
     return None
 
-
 def _row_to_mapping(headers: list[str], row: list[str]) -> dict[str, str]:
     """Convert one parsed CSV row into the stored raw-field mapping."""
     padded = row + [""] * max(0, len(headers) - len(row))
     return {header: padded[index] if index < len(padded) else "" for index, header in enumerate(headers)}
 
-
 def _row_is_blank(raw_fields: Mapping[str, str]) -> bool:
     """Return whether a parsed source row carries no usable values."""
     return not any(value.strip() for value in raw_fields.values())
-
 
 def _value_from_aliases(
     raw_fields: Mapping[str, str],
@@ -415,7 +405,6 @@ def _value_from_aliases(
     value = raw_fields.get(header, "")
     normalized = coerce_cell_text(value)
     return normalized or None
-
 
 def _required_value(
     raw_fields: Mapping[str, str],

@@ -58,7 +58,7 @@ from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"

@@ -20,7 +20,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
@@ -63,7 +63,7 @@ if TYPE_CHECKING:
     )
     from ._validation import ProfileValidationService
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
 # hash, the stored-hash snapshot pointer, and the current-hash recompute
@@ -76,11 +76,9 @@ _PROFILE_SNAPSHOT_HASH_KWARGS: dict[str, object] = {
     "pattern": r"^[0-9a-f]{64}$",
 }
 
-
 # ---------------------------------------------------------------------------
 # Lifecycle commands
 # ---------------------------------------------------------------------------
-
 
 class RegisterProfileCommand(BaseModel):
     """Register a new active profile root in the secure DB backend."""
@@ -90,7 +88,6 @@ class RegisterProfileCommand(BaseModel):
     profile_id: ProfileId
     display_name: str = Field(min_length=1, max_length=160)
     facts: tuple[UserProfileFact, ...] = ()
-
 
 class EditProfileFieldCommand(BaseModel):
     """Upsert one effective-dated profile fact."""
@@ -104,7 +101,6 @@ class EditProfileFieldCommand(BaseModel):
     valid_to: date | None = None
     source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
 
-
 class EditProfileSectionCommand(BaseModel):
     """Bulk-upsert every fact in one schema section."""
 
@@ -115,14 +111,12 @@ class EditProfileSectionCommand(BaseModel):
     facts: tuple[UserProfileFact, ...]
     source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
 
-
 class RemoveProfileCommand(BaseModel):
     """Tombstone the live profile root (immutable filing snapshots are retained)."""
 
     model_config = _STRICT_FROZEN
 
     profile_id: ProfileId
-
 
 class DuplicateProfileCommand(BaseModel):
     """Copy an existing profile under a new id and display name."""
@@ -132,7 +126,6 @@ class DuplicateProfileCommand(BaseModel):
     source_profile_id: ProfileId
     target_profile_id: ProfileId
     target_display_name: str = Field(min_length=1, max_length=160)
-
 
 class RenameProfileCommand(BaseModel):
     """Update a live profile's display label.
@@ -150,11 +143,9 @@ class RenameProfileCommand(BaseModel):
     profile_id: ProfileId
     target_display_name: str = Field(min_length=1, max_length=160)
 
-
 # ---------------------------------------------------------------------------
 # Lifecycle results
 # ---------------------------------------------------------------------------
-
 
 class ProfileLifecycleResult(BaseModel):
     """Result of a lifecycle mutation (register / edit / remove / duplicate)."""
@@ -163,7 +154,6 @@ class ProfileLifecycleResult(BaseModel):
 
     profile: UserProfileRecord
     applied_at: datetime
-
 
 class ProfileListing(BaseModel):
     """One row of a profile-listing result."""
@@ -176,7 +166,6 @@ class ProfileListing(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-
 class ProfileListResult(BaseModel):
     """Frozen tuple of profile listings returned by `list_profiles`."""
 
@@ -184,11 +173,9 @@ class ProfileListResult(BaseModel):
 
     profiles: tuple[ProfileListing, ...] = ()
 
-
 # ---------------------------------------------------------------------------
 # Validation and preflight
 # ---------------------------------------------------------------------------
-
 
 class ProfileValidationIssue(BaseModel):
     """One validation finding raised against a profile snapshot."""
@@ -200,7 +187,6 @@ class ProfileValidationIssue(BaseModel):
     path: str | None = None
     message: str = Field(min_length=1, max_length=512)
 
-
 class ProfileValidationReport(BaseModel):
     """Aggregate validation report for a profile or a registration command."""
 
@@ -210,7 +196,6 @@ class ProfileValidationReport(BaseModel):
     schema_version: int = Field(ge=1)
     issues: tuple[ProfileValidationIssue, ...] = ()
 
-
 class ProfilePreflightRequirement(BaseModel):
     """One required-but-missing profile selector for a modelo / revision."""
 
@@ -219,7 +204,6 @@ class ProfilePreflightRequirement(BaseModel):
     selector: str = Field(min_length=1, max_length=128)
     section_key: str = Field(min_length=1, max_length=64)
     field_key: str = Field(min_length=1, max_length=128)
-
 
 class ProfilePreflightReport(BaseModel):
     """Per-`(modelo, revision, filing_year, period)` profile readiness report."""
@@ -234,11 +218,9 @@ class ProfilePreflightReport(BaseModel):
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     ready: bool
 
-
 # ---------------------------------------------------------------------------
 # Filing snapshots
 # ---------------------------------------------------------------------------
-
 
 class ProfileSnapshotRequest(BaseModel):
     """Request an immutable filing-time snapshot of one profile."""
@@ -250,7 +232,6 @@ class ProfileSnapshotRequest(BaseModel):
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: str = Field(min_length=1, max_length=8)
-
 
 class ProfileSnapshot(BaseModel):
     """Immutable filing-time snapshot of one profile's projection."""
@@ -268,7 +249,6 @@ class ProfileSnapshot(BaseModel):
     created_at: datetime
     facts: tuple[UserProfileFact, ...]
 
-
 class ProfileStaleCheckReport(BaseModel):
     """Result of checking a draft's stored snapshot against the current projection."""
 
@@ -279,7 +259,6 @@ class ProfileStaleCheckReport(BaseModel):
     stored_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
     current_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
     stale: bool
-
 
 # ---------------------------------------------------------------------------
 # Portable export / import
@@ -293,7 +272,6 @@ class ProfileImportResult(BaseModel):
     profile: UserProfileRecord
     imported_at: datetime
     issues: tuple[ProfileValidationIssue, ...] = ()
-
 
 def __getattr__(name: str):
     """Lazy-import the service modules to keep the contract surface light."""
@@ -347,7 +325,6 @@ def __getattr__(name: str):
 
         return getattr(_repository, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
 
 __all__ = [
     "CENSUS_SOURCE_TAG",

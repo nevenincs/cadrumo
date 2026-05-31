@@ -12,12 +12,11 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ....domain.calculations.registry._ids import CasillaId
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ExtractedCasilla(BaseModel):
     """One casilla ID + printed value extracted from a filing PDF.

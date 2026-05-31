@@ -38,13 +38,12 @@ from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal import coerce_decimal
 from ._errors import EditParseError
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-"""Shared :class:`pydantic.ConfigDict` for edit records."""
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 _CASILLA_EDIT_RE = re.compile(r"^casilla\.(?P<casilla_id>\d{2,5})$")

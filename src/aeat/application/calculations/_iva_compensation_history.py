@@ -8,7 +8,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
@@ -20,9 +20,8 @@ from ...core.errors import AeatError
 from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _ZERO = Decimal("0")
-
 
 class IvaCompensationExpiryReviewState(StrEnum):
     """Review state for an IVA compensation carry-forward lot."""
@@ -30,7 +29,6 @@ class IvaCompensationExpiryReviewState(StrEnum):
     ACTIVE = "active"
     EXPIRY_REVIEW_DUE = "expiry_review_due"
     EXPIRED_REVIEW_REQUIRED = "expired_review_required"
-
 
 class IvaCompensationPeriodState(BaseModel):
     """Latest known Modelo 303 compensation state for one filed period."""
@@ -53,7 +51,6 @@ class IvaCompensationPeriodState(BaseModel):
     source_observation_key: str = Field(min_length=1, max_length=96)
     source_artefact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
 
-
 class IvaCompensationCarryForwardLot(BaseModel):
     """One generated IVA compensation balance tracked from its source period."""
 
@@ -75,7 +72,6 @@ class IvaCompensationCarryForwardLot(BaseModel):
             raise ValueError("applied_amount + remaining_amount must equal generated_amount")
         return self
 
-
 class IvaCompensationCarryForwardReport(BaseModel):
     """Carry-forward lot projection from filed Modelo 303 compensation history."""
 
@@ -85,14 +81,11 @@ class IvaCompensationCarryForwardReport(BaseModel):
     lots: tuple[IvaCompensationCarryForwardLot, ...]
     unallocated_applied_amount: Decimal = Field(ge=_ZERO)
 
-
 class IvaCompensationCarryForwardPolicyError(AeatError, ValueError):
     """Raised when IVA compensation carry-forward lots violate policy."""
 
-
 class IvaCompensationSeedConflictError(AeatError, ValueError):
     """Raised when a seed is attempted for a period that already has a stored state."""
-
 
 class IvaCompensationYearRangeError(AeatError, ValueError):
     """Raised when a filing_year or as_of_year falls outside the supported range [2000, 2099].
@@ -104,7 +97,6 @@ class IvaCompensationYearRangeError(AeatError, ValueError):
     ValueError`` guard at the call site.
     """
 
-
 class IvaCompensationDecimalParseError(AeatError, ValueError):
     """Raised when a casilla value cannot be coerced to :class:`~decimal.Decimal`.
 
@@ -113,7 +105,6 @@ class IvaCompensationDecimalParseError(AeatError, ValueError):
     preserve compatibility and chains the original :exc:`InvalidOperation` cause.
     """
 
-
 def iva_compensation_period_key(filing_year: int, period: str) -> str:
     """Return the latest-state key for one Modelo 303 period."""
 
@@ -121,7 +112,6 @@ def iva_compensation_period_key(filing_year: int, period: str) -> str:
     if not 2000 <= filing_year <= 2099:
         raise IvaCompensationYearRangeError(f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]")
     return f"303:{filing_year}:{period}"
-
 
 @dataclass(slots=True)
 class _WorkingCarryForwardLot:
@@ -134,7 +124,6 @@ class _WorkingCarryForwardLot:
     applied_amount: Decimal
     remaining_amount: Decimal
     source_observation_key: str
-
 
 def build_iva_compensation_carry_forward_report(
     states: tuple[IvaCompensationPeriodState, ...],
@@ -201,7 +190,6 @@ def build_iva_compensation_carry_forward_report(
         unallocated_applied_amount=unallocated_applied,
     )
 
-
 def enforce_iva_compensation_four_year_window(
     report: IvaCompensationCarryForwardReport,
 ) -> IvaCompensationCarryForwardReport:
@@ -220,7 +208,6 @@ def enforce_iva_compensation_four_year_window(
             f"from {first.source_filing_year}/{first.source_period}"
         )
     return report
-
 
 class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeriodState]):
     """Encrypted profile-local store of Modelo 303 IVA compensation history."""
@@ -248,11 +235,9 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
 
         return tuple(sorted(self.iter_records(), key=lambda item: (item.filing_year, _period_sort_key(item.period))))
 
-
 _SEED_STATUS = "seeded"
 _SEED_EXPEDIENTE_ID = "manual-seed"
 _SEED_SOURCE_OBS_PREFIX = "303:seed"
-
 
 def seed_iva_compensation_period(
     *,
@@ -302,7 +287,6 @@ def seed_iva_compensation_period(
     repo.save_period(state)
     return state
 
-
 def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
@@ -341,7 +325,6 @@ def iva_compensation_state_from_filed_observation(
         source_artefact_sha256=source_artefact_sha256,
     )
 
-
 def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[str, Decimal]:
     values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
@@ -353,14 +336,12 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) ->
             raise IvaCompensationDecimalParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
     return values
 
-
 def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
         if value is not None:
             return value
     return None
-
 
 def _period_sort_key(period: str) -> tuple[int, str]:
     upper = period.upper()
@@ -371,7 +352,6 @@ def _period_sort_key(period: str) -> tuple[int, str]:
     if upper == "0A":
         return (99, upper)
     return (100, upper)
-
 
 def _expiry_review_state(
     *,
@@ -384,7 +364,6 @@ def _expiry_review_state(
     if age_years == 4:
         return IvaCompensationExpiryReviewState.EXPIRY_REVIEW_DUE
     return IvaCompensationExpiryReviewState.ACTIVE
-
 
 __all__ = [
     "IvaCompensationCarryForwardLot",

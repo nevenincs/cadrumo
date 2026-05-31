@@ -33,7 +33,7 @@ from decimal import Decimal, InvalidOperation
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...domain.calculations.registry import (
     DataBindingDefinition,
@@ -52,12 +52,10 @@ from ...domain.user_profile import (
     profile_binding_selectors,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation."""
-
 
 class ProfileSourcedBindingResult(BaseModel):
     """Profile facts projected into engine binding channels.
@@ -84,7 +82,6 @@ class ProfileSourcedBindingResult(BaseModel):
                 "profile-sourced binding trace does not match the resolved binding keys"
             )
         return self
-
 
 def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, ProfileFactValue]:
     """Build a selector -> typed-value index covering both selector forms.
@@ -116,7 +113,6 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
         for selector in selector_index.get(fact.path, ()):
             index[selector] = fact.value
     return index
-
 
 def _inject_derived_marriage_facts(
     fact_index: dict[str, ProfileFactValue],
@@ -153,7 +149,6 @@ def _inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_start"] = Decimal(month_start)
     if "renta_taxpayer.marriage_month_end" not in fact_index:
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
-
 
 def _inject_derived_family_facts(
     fact_index: dict[str, ProfileFactValue],
@@ -198,7 +193,6 @@ def _inject_derived_family_facts(
 
     fact_index[menores_key] = Decimal(count_menores)
 
-
 def _decimal_value(binding_id: str, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
     # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
@@ -231,7 +225,6 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         f"got {value!r} (type {type(value).__name__}). The registry consumes this binding as a "
         f"numeric operand; the profile fact must carry a numeric value"
     )
-
 
 def resolve_profile_sourced_bindings(
     snapshot: RegistrySnapshot,
@@ -336,7 +329,6 @@ def resolve_profile_sourced_bindings(
         bindings_sourced_from_profile=sourced,
     )
 
-
 def _resolve_one(
     binding: DataBindingDefinition, fact_index: Mapping[str, ProfileFactValue]
 ) -> ProfileFactValue | None:
@@ -352,7 +344,6 @@ def _resolve_one(
             continue
         return value.strip() if isinstance(value, str) else value
     return None
-
 
 __all__ = [
     "ProfileBindingResolutionError",

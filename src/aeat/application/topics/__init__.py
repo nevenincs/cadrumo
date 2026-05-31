@@ -21,18 +21,16 @@ import tomllib
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.errors import AeatError as _AeatError
 from ...core.resources import bundled_path as _bundled_path
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
-
 
 class TopicNotFoundError(_AeatError):
     """Raised when a requested slug is not registered in the catalogue."""
-
 
 class Topic(BaseModel):
     """One conceptual topic.
@@ -55,7 +53,6 @@ class Topic(BaseModel):
     body_key: str = Field(min_length=1, max_length=128)
     see_also: tuple[str, ...] = Field(default=())
     legal_refs: tuple[str, ...] = Field(default=())
-
 
 class TopicCatalogue(BaseModel):
     """Closed catalogue of registered conceptual topics."""
@@ -87,7 +84,6 @@ class TopicCatalogue(BaseModel):
 
         return tuple(sorted(topic.slug for topic in self.topics))
 
-
 def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     """Load every ``registry/aeat/topics/<slug>.toml`` into one catalogue.
 
@@ -110,11 +106,9 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     fingerprint = tuple(_file_fingerprint(path) for path in paths)
     return _load_topic_catalogue_cached(str(resolved), fingerprint)
 
-
 def _file_fingerprint(path: Path) -> tuple[str, int, int]:
     stat = path.stat()
     return (path.name, stat.st_size, stat.st_mtime_ns)
-
 
 @lru_cache(maxsize=16)
 def _load_topic_catalogue_cached(
@@ -139,7 +133,6 @@ def _load_topic_catalogue_cached(
     if not topics:
         raise TopicNotFoundError(f"topic catalogue at {target} is empty")
     return TopicCatalogue(topics=tuple(topics))
-
 
 __all__ = [
     "Topic",

@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from aeat.core.config import Settings, StorageRouteKind, classify_storage_route
 from aeat.core.i18n import tr
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
+from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class StorageWritePolicyCode(StrEnum):
     """Machine-readable runtime write-policy outcomes."""
@@ -21,7 +20,6 @@ class StorageWritePolicyCode(StrEnum):
     NO_VERB_PATH = "no_verb_path"
     REFUSED_ROOT_FALLBACK = "refused_root_fallback"
     REFUSED_EXPLICIT_DATABASE_URL = "refused_explicit_database_url"
-
 
 class StorageWritePolicyDecision(BaseModel):
     """Decision returned by the backend storage write-policy query."""
@@ -44,7 +42,6 @@ class StorageWritePolicyDecision(BaseModel):
         if self.detail_message_key:
             return tr(self.message_key, details=tr(self.detail_message_key, locale=locale), locale=locale)
         return tr(self.message_key, locale=locale)
-
 
 PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger add",
@@ -116,7 +113,6 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config reset",
 )
 
-
 def inspect_storage_write_policy(
     verb_path: str | None,
     *,
@@ -175,7 +171,6 @@ def inspect_storage_write_policy(
         route_kind=route.kind,
     )
 
-
 def is_profile_bound_write_verb_path(verb_path: str) -> bool:
     """Return whether ``verb_path`` names a profile-bound mutation surface."""
 
@@ -184,7 +179,6 @@ def is_profile_bound_write_verb_path(verb_path: str) -> bool:
         normalised == guarded or normalised.startswith(f"{guarded} ")
         for guarded in PROFILE_BOUND_WRITE_VERB_PATHS
     )
-
 
 __all__ = [
     "PROFILE_BOUND_WRITE_VERB_PATHS",

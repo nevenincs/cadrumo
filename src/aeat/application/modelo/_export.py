@@ -23,7 +23,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from ...core.i18n import tr
 from ...domain import filing as filing_domain
@@ -66,7 +66,7 @@ from ._actions import (
     _raise_if_persisted_iva_compensation_decision_blocks_work_unit,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 #: AEAT-assigned program-identifier code stamped into the optional
 #: ``program_version`` export header. AEAT requires a 4-character
@@ -85,7 +85,6 @@ _DECLARATION_TYPE_ORDINARY = "I"
 _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
 
-
 class ModeloExportCrossBucketRefusedError(ModeloError):
     """Raised when the addressed revision's parent work unit belongs to
     a bucket other than the active profile bucket.
@@ -95,7 +94,6 @@ class ModeloExportCrossBucketRefusedError(ModeloError):
     operator's history.
     """
 
-
 class ModeloExportNoActiveBucketError(ModeloError):
     """Raised when no active profile bucket is configured.
 
@@ -103,7 +101,6 @@ class ModeloExportNoActiveBucketError(ModeloError):
     event is scoped to a bucket id and the work-unit lookup is
     bucket-bound.
     """
-
 
 class ModeloExportCommand(BaseModel):
     """Strict input contract for ``export_modelo_revision``.
@@ -125,7 +122,6 @@ class ModeloExportCommand(BaseModel):
     calculation_revision_id: CalculationRevisionId
     output_path: Path
     actor: str = Field(min_length=1, max_length=128)
-
 
 class ModeloExportResult(BaseModel):
     """Receipt produced by ``export_modelo_revision``.
@@ -172,7 +168,6 @@ class ModeloExportResult(BaseModel):
     bucket_event_id: str = Field(min_length=1, max_length=128)
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
 
-
 def _load_revision_for_export(
     calculation_revision_id: str,
     *,
@@ -195,7 +190,6 @@ def _load_revision_for_export(
             f"revisions can be exported",
         )
     return revision
-
 
 def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     """Return ``(surnames, name)`` from the active bucket's persisted profile.
@@ -242,12 +236,10 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
         )
     return surnames, name
 
-
 def _ddmmaaaa(value: date) -> str:
     """Render a date as the AEAT ``ddmmaaaa`` fixed-width header token."""
 
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
-
 
 def _compose_export_headers(
     *,
@@ -303,7 +295,6 @@ def _compose_export_headers(
 
     return headers
 
-
 def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
     """Return ``(filing_year, registry_period, canonical_period)`` for export.
 
@@ -337,7 +328,6 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
             f"which cannot be mapped to a registry filing period: {exc}",
         ) from exc
     return filing_year, registry_period, canonical
-
 
 def export_modelo_revision(
     command: ModeloExportCommand,
@@ -501,7 +491,6 @@ def export_modelo_revision(
         bucket_event_id=event.event_id,
         casilla_provenance=receipt.casilla_provenance,
     )
-
 
 __all__ = [
     "ModeloExportCommand",

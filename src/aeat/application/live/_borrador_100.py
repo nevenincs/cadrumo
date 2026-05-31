@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
@@ -38,12 +38,11 @@ from ._snapshot_base import (
     enforce_snapshot_state_invariants,
 )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace
 _BORRADOR_100_SNAPSHOT_VERSION = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version
 _BORRADOR_100_SNAPSHOT_SENSITIVITY = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 type _BorradorValue = Decimal | str
-
 
 class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 100 borrador snapshot lookup misses by id.
@@ -54,7 +53,6 @@ class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
     :class:`KeyError`'s C-level constructor. Listing ``AeatError``
     explicitly here would violate C3 linearization.
     """
-
 
 class Borrador100Snapshot(BaseModel):
     """Captured Modelo 100 borrador values available to application consumers."""
@@ -89,7 +87,6 @@ class Borrador100Snapshot(BaseModel):
             raise LiveApplicationInputError("borrador binding value keys must not be blank")
         return self
 
-
 def borrador_100_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one bucket's Modelo 100 borrador snapshot."""
 
@@ -100,7 +97,6 @@ def borrador_100_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     if not trimmed_snapshot:
         raise LiveApplicationInputError("snapshot_id must not be blank")
     return f"modelo-100-borrador-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
-
 
 def derive_borrador_100_snapshot_id(
     *,
@@ -131,7 +127,6 @@ def derive_borrador_100_snapshot_id(
         }
     )
 
-
 def _snapshot_from_record(record: SecureObjectRecord, requested_snapshot_id: str | None = None) -> Borrador100Snapshot:
     envelope = Envelope[Borrador100Snapshot].model_validate_json(record.payload.decode("utf-8"))
     if envelope.classification is not _BORRADOR_100_SNAPSHOT_SENSITIVITY:
@@ -147,7 +142,6 @@ def _snapshot_from_record(record: SecureObjectRecord, requested_snapshot_id: str
             f"consumer supports up to {_BORRADOR_100_SNAPSHOT_VERSION}",
         )
     return envelope.payload
-
 
 class Borrador100SnapshotRepository:
     """Secure-DB repository for captured Modelo 100 borrador snapshots."""
@@ -247,7 +241,6 @@ class Borrador100SnapshotRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-
 
 class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
     """Canonical backend service for bucket-scoped Modelo 100 borrador snapshots."""
@@ -357,7 +350,6 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
                 "superseded_by_snapshot_id": superseded_by,
             }
         )
-
 
 __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
