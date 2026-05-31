@@ -505,7 +505,7 @@ application:
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Designeu un representant fiscal a Espanya establint profile.representante_fiscal_nif
-          mitjancant l'ordre `aeat config profile set`. El TRLIRNR Art. 10 exigeix
+          mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
   overview:

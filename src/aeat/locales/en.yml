@@ -467,7 +467,7 @@ application:
         period=%{period} could not be resolved
       representante_fiscal_required:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
-          via the `aeat config profile set` command. TRLIRNR Art. 10 requires non-EEA
+          via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
   overview:
     explain:
