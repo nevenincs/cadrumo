@@ -824,7 +824,7 @@ W8 audit confirmed broader-Step grammar works (regressions 8→2, findings 32→
 Fix NonTtyRefusedError positional message swallowing locale resolver. Sweep LATIN_1 across BOE export-formats test package (W7 missed). Enroll PeriodKind in domain/deadlines/_engine. Introduce RowSetGroupingKind StrEnum. Extract _FILED_HISTORY_OBSERVATION constant. ArtefactKind enrollment in fixture generator. Wizard tab-key labels. Operator-surface ValueError invariant guards.
 
 - [x] `W08.P34.S531` - fix NonTtyRefusedError positional message at entrypoints/cli/_tty.py:46 to drop super().__init__(message) positional and rely on registered message_key for locale resolution; `src/aeat/entrypoints/cli/_tty.py`.
-- [x] `W08.P34.S532` - fix regression: broad-sweep LATIN_1_ENCODING enrollment across BOE export-formats test package (test_fichero_boe_roundtrip, test_currency_edge_cases, test_envelope, test_record_spec — 20+ iso-8859-1 literals); `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
+- [x] `W08.P34.S532` - fix regression: broad-sweep LATIN_1_ENCODING enrollment across BOE export-formats test package (test_fichero_boe_roundtrip, test_currency_edge_cases, test_envelope, test_record_spec - 20+ iso-8859-1 literals); `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
 - [x] `W08.P34.S533` - enroll PeriodKind StrEnum imports in domain/deadlines/_engine.py:368,370,372,379,381 + reference in _schema.py Literal annotations; `src/aeat/domain/deadlines/_engine.py`.
 - [x] `W08.P34.S534` - introduce RowSetGroupingKind(StrEnum) with WITHHOLDING/RELATED_PARTY/FOREIGN_ASSET/ATRIBUCION/REFUND members + migrate _row_set_assembly.py:109-117, _schema.py:1790-1794, _bindings.py:2027,2860; `src/aeat/application/calculations/_row_set_assembly.py`.
 - [x] `W08.P34.S535` - extract _FILED_HISTORY_OBSERVATION constant in iva_wallet_reconciliation.py:37,488,514,529 and frozenset; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
@@ -850,9 +850,9 @@ Narrow 5 silent except Exception swallows in auth/browser/registry adapters (cla
 
 ### Phase `W08.P36` - A5 dedup + A8 marker cleanup
 
-Dedup canonical_decimal_string (regression — exists in both _identifiers.py and _decimal.py). Add CAST-RATIONALE markers to remaining test-scope + production cast sites identified by W8 A8 audit.
+Dedup canonical_decimal_string (regression - exists in both _identifiers.py and _decimal.py). Add CAST-RATIONALE markers to remaining test-scope + production cast sites identified by W8 A8 audit.
 
-- [x] `W08.P36.S550` - fix regression: dedup canonical_decimal_string in _identifiers.py vs _decimal.py — canonical lives at aeat.domain._identifiers; `delete duplicate in _decimal.py and migrate callers; `src/aeat/adapters/inbound/financial/_decimal.py`.
+- [x] `W08.P36.S550` - fix regression: dedup canonical_decimal_string in _identifiers.py vs _decimal.py - canonical lives at aeat.domain._identifiers; `delete duplicate in _decimal.py and migrate callers; `src/aeat/adapters/inbound/financial/_decimal.py`.
 - [x] `W08.P36.S551` - add CAST-RATIONALE markers to production cast sites at justificante/_extract.py:435 -> Any, live/_borrador_100.py:311 kwargs-Any, core/profile.py:278 pydantic field_validator -> Any; `src/aeat/adapters/inbound/justificante/_extract.py`.
 - [x] `W08.P36.S552` - add inventory test asserting no canonical_decimal_string duplicates survive; `src/aeat/test_w08_p36_dedup.py`.
 
@@ -934,7 +934,7 @@ Fix locales/manager.py 9 bare utf-8 regression. Close _session_store.py ×8 + _i
 
 ### Phase `W11.P43` - axis finishers: A1+A3+A4
 
-Add BROAD-EXCEPT-RATIONALE markers to 3 diagnostics.py except-Exception sites (lines 425, 429, 569, 761). Wrap wizard _commands.py:910 next tab-label through tr(). Investigate _PdfWord TypeAlias in declaracion/_parser.py:32 — replace with structured type. Wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic model.
+Add BROAD-EXCEPT-RATIONALE markers to 3 diagnostics.py except-Exception sites (lines 425, 429, 569, 761). Wrap wizard _commands.py:910 next tab-label through tr(). Investigate _PdfWord TypeAlias in declaracion/_parser.py:32 - replace with structured type. Wrap _local.py:136 json.loads sidecar in Mapping[str, object] or pydantic model.
 
 - [x] `W11.P43.S587` - add BROAD-EXCEPT-RATIONALE markers on diagnostics.py:425,429 browser context+session teardown except sites; `src/aeat/application/diagnostics.py`.
 - [x] `W11.P43.S588` - add BROAD-EXCEPT-RATIONALE marker on diagnostics.py:569 integrity-probe loop swallow; `src/aeat/application/diagnostics.py`.
@@ -961,7 +961,7 @@ Enroll scripts/check_relative_imports.py utf-8 + extend UTF_8 ratchet to scripts
 
 ## Wave `W13` - ADR close gate: close W13 7-finding backlog (counter at 2/3)
 
-W13 audit zero strict regressions — counter advances 2/3 toward ADR close (3 consecutive zero-regression waves). W13 closes 7 findings (4 new + 3 survivor-missed): _plazo redundant catch + bare noqa, _xlsx:96 teardown sibling marker, _sink Handler-ABC stdlib survivor doc, _ledger:590 machine-format marker, _cache:276 json-loads-rationale, _schedules predicate constants. If W14 audit zero-regression, ADR CLOSE CONDITION ACHIEVED — goal condition met.
+W13 audit zero strict regressions - counter advances 2/3 toward ADR close (3 consecutive zero-regression waves). W13 closes 7 findings (4 new + 3 survivor-missed): _plazo redundant catch + bare noqa, _xlsx:96 teardown sibling marker, _sink Handler-ABC stdlib survivor doc, _ledger:590 machine-format marker, _cache:276 json-loads-rationale, _schedules predicate constants. If W14 audit zero-regression, ADR CLOSE CONDITION ACHIEVED - goal condition met.
 
 ### Phase `W13.P45` - W13 audit-finding closure
 
@@ -993,7 +993,7 @@ Add BROAD-EXCEPT-RATIONALE markers on _acquisition_lock + _sessions teardowns. D
 
 ## Wave `W15` - post-ADR maintenance: close W15 5-finding backlog
 
-W15 maintenance audit zero strict regressions (4/3 sustained — ADR close achieved + holding). W15 closes 5 small findings: 2 rationale markers + 2 year-constant extractions + 1 documentation note. Lowest backlog of the epic.
+W15 maintenance audit zero strict regressions (4/3 sustained - ADR close achieved + holding). W15 closes 5 small findings: 2 rationale markers + 2 year-constant extractions + 1 documentation note. Lowest backlog of the epic.
 
 ### Phase `W15.P47` - W15 audit closure
 
@@ -1003,7 +1003,7 @@ Single-phase closure of 5 maintenance findings.
 - [x] `W15.P47.S615` - add BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK marker on core/config.py:999 (read_pointer raises OSError/JSONDecodeError/ValidationError; `degrade to None for best-effort bucket resolution); `src/aeat/core/config.py`.
 - [x] `W15.P47.S616` - extract _HOME_OFFICE_DEDUCTION_YEAR = 2025 Final constant in application/user_profile/_censo_sync.py and migrate :356; `src/aeat/application/user_profile/_censo_sync.py`.
 - [x] `W15.P47.S617` - extract _REGISTRY_INTEGRITY_PROBE_YEAR + _REGISTRY_INTEGRITY_PROBE_DATE Final constants in application/diagnostics.py and migrate :640,642; `src/aeat/application/diagnostics.py`.
-- [x] `W15.P47.S618` - document filing/runtime.py:281-287 alt fingerprint variant — either align with file_stat_fingerprint canonical (if name vs relative path semantic is reconcilable) or add # ALT-FINGERPRINT-RATIONALE: relative-path fingerprint for registry-tree change detection (distinct from filename-keyed file_stat_fingerprint canonical); `src/aeat/application/filing/runtime.py`.
+- [x] `W15.P47.S618` - document filing/runtime.py:281-287 alt fingerprint variant - either align with file_stat_fingerprint canonical (if name vs relative path semantic is reconcilable) or add # ALT-FINGERPRINT-RATIONALE: relative-path fingerprint for registry-tree change detection (distinct from filename-keyed file_stat_fingerprint canonical); `src/aeat/application/filing/runtime.py`.
 - [x] `W15.P47.S619` - aggregate test asserting all 5 W15 closures landed + W14 ratchets intact; `src/aeat/test_w15_p47_maintenance_closure.py`.
 
 ## Wave `W16` - close W16 audit findings: 0 regressions + 11 survivor-missed
@@ -1029,7 +1029,7 @@ Land 11 survivor-missed findings + aggregate test asserting all closures landed 
 
 ## Wave `W17` - close W17 audit findings: 0 regressions + 5 survivor-missed (7 rejected by substitutability pre-filter)
 
-W17 swarm re-audit confirmed 6 consecutive zero-strict-regression waves. Auditor surfaced 12 candidate findings; pre-filter rejected 7 (5 A5 sites carry domain-specific error translation / extended token sets; 2 A6 sites use Protocol not ABC — legitimate NotImplementedError per protocol pattern). 5 actionable: A1, A4, A7, A8, P09.
+W17 swarm re-audit confirmed 6 consecutive zero-strict-regression waves. Auditor surfaced 12 candidate findings; pre-filter rejected 7 (5 A5 sites carry domain-specific error translation / extended token sets; 2 A6 sites use Protocol not ABC - legitimate NotImplementedError per protocol pattern). 5 actionable: A1, A4, A7, A8, P09.
 
 ### Phase `W17.P49` - W17 audit closure
 
@@ -1044,7 +1044,7 @@ Land 5 survivor-missed findings + aggregate test.
 
 ## Wave `W18` - close W18 audit findings: 0 regressions + 2 survivor-missed (8 of 9 axes completely clean)
 
-W18 swarm re-audit confirmed 7 consecutive zero-strict-regression waves. Eight of nine axes (A1, A2, A3, A4, A5, A6, A7, P09) returned ZERO findings. Only A8 surfaced 4 candidates; pre-filter deferred 2 (bare `# type: ignore` in _sessions.py — part of known 77-site gap awaiting separate inventory ratchet per W17 note). 2 actionable: A8 prose-but-not-token cast() sites.
+W18 swarm re-audit confirmed 7 consecutive zero-strict-regression waves. Eight of nine axes (A1, A2, A3, A4, A5, A6, A7, P09) returned ZERO findings. Only A8 surfaced 4 candidates; pre-filter deferred 2 (bare `# type: ignore` in _sessions.py - part of known 77-site gap awaiting separate inventory ratchet per W17 note). 2 actionable: A8 prose-but-not-token cast() sites.
 
 ### Phase `W18.P50` - W18 audit closure
 
@@ -1053,3 +1053,14 @@ Land 2 cast-rationale token formalizations + aggregate test confirming sustained
 - [x] `W18.P50.S638` - A8: replace prose-only comment with canonical CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST token on cast() at _streams.py:155; `grep-post token appears on line preceding the cast; `src/aeat/adapters/inbound/sanitizer/_streams.py`.
 - [x] `W18.P50.S639` - A8: replace prose-only comment with canonical CAST-RATIONALE-WORKFLOW-SITE-HEALTH-STATUS token on cast() at _engine.py:1270; `grep-post token appears on line preceding the cast; `src/aeat/application/workflow/_engine.py`.
 - [x] `W18.P50.S640` - aggregate test asserting both W18 cast-rationale tokens present + 8-of-9-axes clean state holds (audit-trail assertion: re-run cast-rationale and other inventory ratchets and assert zero new violations); `src/aeat/test_w18_p50_closure.py`.
+
+## Wave `W19` - atomic-relocation-coordination
+
+Land remaining canonical-home symbol relocations as atomic explicit-path commits per the atomic-relocation-coordination ADR. Each Step is one symbol = one atomic commit; commit subject carries the relocation:<symbol> tag.
+
+### Phase `W19.P51` - in-flight relocations
+
+Two relocations observed in flight on 2026-05-31: InvoiceKind to aeat.domain.iva._classification; ModeloDraftStatus to aeat.domain.submission._protocols. Land each as one atomic commit with consumer sweep and pytest --collect-only -q clean check.
+
+- [ ] `W19.P51.S641` - Land relocation:InvoiceKind as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/iva/_classification.py` + every consumer of `InvoiceKind`.
+- [ ] `W19.P51.S642` - Land relocation:ModeloDraftStatus as one atomic commit (canonical-site move plus full consumer sweep plus pytest --collect-only -q clean check before and after); `src/aeat/domain/submission/_protocols.py` + every consumer of `ModeloDraftStatus`.
