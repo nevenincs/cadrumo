@@ -56,29 +56,29 @@ W01 binding entries existing in the validated snapshot.
 Extends the binding-resolution logic in domain/renta/ to branch on worker_class and
 the vessel/waters supporting facts.
 
-- [ ] `W02.P03.S08` - add art_7p_eligible predicate to the binding selector (vessel_flag != ES AND waters_type == international); `src/aeat/domain/renta/`.
-- [ ] `W02.P03.S09` - add rebeca_eligible predicate to the binding selector (vessel_registry == REBECA OR scheduled_canary_route); `src/aeat/domain/renta/`.
-- [ ] `W02.P03.S10` - add da41_eligible predicate as future/inactive gate (tuna_fleet AND pending_eu_clearance); `src/aeat/domain/renta/`.
-- [ ] `W02.P03.S11` - write selector unit tests covering art_7p_eligible true/false, rebeca_eligible true/false, da41_eligible inactive-guard raises domain error; `src/aeat/domain/renta/`.
+- [x] `W02.P03.S08` - add art_7p_eligible predicate to the binding selector (vessel_flag != ES AND waters_type == international); `src/aeat/domain/renta/`.
+- [x] `W02.P03.S09` - add rebeca_eligible predicate to the binding selector (vessel_registry == REBECA OR scheduled_canary_route); `src/aeat/domain/renta/`.
+- [x] `W02.P03.S10` - add da41_eligible predicate as future/inactive gate (tuna_fleet AND pending_eu_clearance); `src/aeat/domain/renta/`.
+- [x] `W02.P03.S11` - write selector unit tests covering art_7p_eligible true/false, rebeca_eligible true/false, da41_eligible inactive-guard raises domain error; `src/aeat/domain/renta/`.
 
 ### Phase `W02.P04` - exemption calculations
 
 Implements the three calculation functions and wires them to produce CasillaObservation
 rows with full provenance.
 
-- [ ] `W02.P04.S12` - implement Art. 7.p) calculation (exempt_amount = min(annual_salary / 365 * qualifying_days, 60100)), output as CasillaObservation with legal_refs from registry binding; `src/aeat/domain/renta/`.
-- [ ] `W02.P04.S13` - implement REBECA calculation (exempt_amount = gross_navigation_income * Decimal(0.50)), output as CasillaObservation with legal_refs from registry binding; `src/aeat/domain/renta/`.
-- [ ] `W02.P04.S14` - implement DA 41 guard raising MaritimeExemptionInactiveError if da41_eligible resolves True; `src/aeat/domain/renta/`.
-- [ ] `W02.P04.S15` - implement RETMAR mandatory-filing status check raising ProfileCompletenessWarning (not a calculation gate) when retmar_registered=True; `src/aeat/domain/renta/`.
-- [ ] `W02.P04.S16` - write calculation tests using registry-authoritative fixture values for Art. 7.p) and REBECA; `verify CasillaObservation.legal_refs populated end-to-end; `src/aeat/domain/renta/`.
+- [x] `W02.P04.S12` - implement Art. 7.p) calculation (exempt_amount = min(annual_salary / 365 * qualifying_days, 60100)), output as CasillaObservation with legal_refs from registry binding; `src/aeat/domain/renta/`.
+- [x] `W02.P04.S13` - implement REBECA calculation (exempt_amount = gross_navigation_income * Decimal(0.50)), output as CasillaObservation with legal_refs from registry binding; `src/aeat/domain/renta/`.
+- [x] `W02.P04.S14` - implement DA 41 guard raising MaritimeExemptionInactiveError if da41_eligible resolves True; `src/aeat/domain/renta/`.
+- [x] `W02.P04.S15` - implement RETMAR mandatory-filing status check raising ProfileCompletenessWarning (not a calculation gate) when retmar_registered=True; `src/aeat/domain/renta/`.
+- [x] `W02.P04.S16` - write calculation tests using registry-authoritative fixture values for Art. 7.p) and REBECA; `verify CasillaObservation.legal_refs populated end-to-end; `src/aeat/domain/renta/`.
 
 ### Phase `W02.P05` - application layer wiring
 
 Connects the calculation results through application/calculations/ to the CLI emit path,
 preserving typed observations.
 
-- [ ] `W02.P05.S17` - wire trabajador_del_mar calculation output through the application calculations service preserving CasillaObservation list alongside flat casilla_values; `src/aeat/application/calculations/`.
-- [ ] `W02.P05.S18` - write integration test asserting CLI JSON emit includes legal_refs and source_refs for each maritime exemption CasillaObservation; `src/aeat/application/calculations/`.
+- [x] `W02.P05.S17` - wire trabajador_del_mar calculation output through the application calculations service preserving CasillaObservation list alongside flat casilla_values; `src/aeat/application/calculations/`.
+- [x] `W02.P05.S18` - write integration test asserting CLI JSON emit includes legal_refs and source_refs for each maritime exemption CasillaObservation; `src/aeat/application/calculations/`.
 
 ## Wave `W03` - CLI surface and locales
 
