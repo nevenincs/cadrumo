@@ -175,12 +175,12 @@ class FormulaPayload(OutputSchema):
 
 
 @register_schema("modelo.work.create")
-@register_schema("modelo.work.reuse")
 class WorkCreateResult(OutputSchema):
     # ``operation`` is either ``modelo.work.create`` (a fresh unit was
     # created) or ``modelo.work.reuse`` (an existing unit matching the
     # natural-key tuple was returned unchanged); the same shape covers
-    # both lanes so the command surface keeps a single typed contract.
+    # both lanes so the command surface keeps a single typed contract
+    # and a single envelope-registry key.
     operation: str = "modelo.work.create"
     status: str
     status_message: str
@@ -401,7 +401,7 @@ class ModeloRecordListResult(OutputSchema):
     records: list[ModeloRecordPayload]
 
 
-@register_schema("modelo.filing_record.show")
+@register_schema("modelo.filing_record.view")
 class ModeloRecordShowResult(OutputSchema):
     operation: str = "modelo.filing_record.show"
     filing_record_id: FilingRecordId
@@ -430,7 +430,7 @@ class VerificationReportListResult(OutputSchema):
     reports: list[VerificationReportPayload]
 
 
-@register_schema("modelo.verification_report.show")
+@register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
