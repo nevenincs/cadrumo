@@ -323,6 +323,10 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: An asset class is declarable iff its total valuation strictly exceeds this amount.
 MODELO_720_REPORTING_THRESHOLD_EUR: Final[Decimal] = Decimal("50000.00")
 
+#: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
+#: Used by the auth diagnostics service and the persistence namespace registry.
+CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
+
 
 @lru_cache(maxsize=1)
 def load_external_constants(path: Path | None = None) -> ExternalConstants:
