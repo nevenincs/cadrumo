@@ -50,7 +50,33 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
         "wizard",
     }
 )
-"""Top-level roots that can legitimately identify dynamic i18n namespaces."""
+"""Top-level roots that can legitimately identify dynamic i18n namespaces.
+
+Documented dynamic-dispatch survivors
+--------------------------------------
+The following f-string patterns in ``aeat.application.wizard._catalogue``
+produce dynamic translation keys. They are bounded (not open-ended) because
+the tail is always an enum member value or a flow-registered question ID —
+the set of runtime keys is fully enumerable from the domain model. They are
+intentional survivors of the static-key constraint and are covered here by
+the ``"wizard"`` root entry:
+
+* ``tr(f"wizard.setup.{suffix}.{qid}.prompt")`` — ``suffix`` is drawn from
+  the wizard flow's registered section ID (e.g. ``"taxpayer-type"``,
+  ``"obligations"``, ``"residence"``); ``qid`` is a flow-registered question
+  ID. Every concrete key exists in all locale files.
+
+* ``tr(f"wizard.setup.taxpayer-type.entity-type.choices.{member.value...}.label")``
+  and equivalent patterns for ``LegalEntityForm``, ``IrpfIncomeCategory``,
+  ``IrpfEstimationRegime``, ``IrpfSpecialRegime``, ``FiscalResidency``,
+  ``CCAA``, and ``SUPPORTED_OUTPUT_LANGUAGES`` — the tail segment is an enum
+  member value (snake_case with underscores replaced by hyphens). The full
+  key space is bounded by the enum definition.
+
+These patterns are picked up by :func:`_extract_fstring_prefixes` and emitted
+as ``wizard.setup.*`` namespace markers, which the parity check validates
+against concrete locale entries. No additional static registration is needed.
+"""
 
 
 def _is_dotted_literal(value: str) -> bool:

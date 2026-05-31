@@ -7,12 +7,35 @@ import json
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, NotRequired, TypedDict
 
 from pydantic import BaseModel, ConfigDict
 
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.invoices._errors import InvoiceValidationError
+
+
+class InvoiceRowPayload(TypedDict, total=False):
+    """Typed shape for a single decoded invoice row from JSON or CSV input.
+
+    All fields are optional at the decode boundary because CSV and JSON
+    sources may omit fields that are defaulted downstream in
+    :func:`parse_invoice_payload`. The downstream coercion stage
+    (``setdefault`` calls + :func:`_synthesise_single_line_if_needed`)
+    fills in required gaps before :class:`Invoice` validation runs.
+    """
+
+    kind: NotRequired[str]
+    currency: NotRequired[str]
+    counterparty_name: NotRequired[str]
+    counterparty_tax_id: NotRequired[str]
+    counterparty_country: NotRequired[str]
+    payment_status: NotRequired[str]
+    lines: NotRequired[list[Any]]
+    base_total: NotRequired[str]
+    iva_rate: NotRequired[str]
+    iva_total: NotRequired[str]
 
 _IVA_RATE_ALIASES = {
     "0": "RATE_0",
@@ -96,21 +119,21 @@ def import_invoices_from_path(
     return result
 
 
-def _decode_invoice_payload(raw: str) -> tuple[Mapping[str, object], ...]:
+def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     raw_stripped = raw.lstrip()
     if raw_stripped.startswith("[") or raw_stripped.startswith("{"):
         decoded = json.loads(raw)
         if isinstance(decoded, Mapping):
-            return (decoded,)
+            return (InvoiceRowPayload(**{k: v for k, v in decoded.items()}),)  # type: ignore[misc]
         if isinstance(decoded, list) and all(isinstance(item, Mapping) for item in decoded):
-            return tuple(decoded)
+            return tuple(InvoiceRowPayload(**{k: v for k, v in item.items()}) for item in decoded)  # type: ignore[misc]
         raise InvoiceValidationError("invoice JSON payload must be an object or a list of objects")
 
     reader = csv.DictReader(raw.splitlines())
-    return tuple(dict(row) for row in reader)
+    return tuple(InvoiceRowPayload(**dict(row)) for row in reader)  # type: ignore[misc]
 
 
-def _synthesise_single_line_if_needed(payload: dict[str, object]) -> None:
+def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return
     base = Decimal(str(payload["base_total"]))

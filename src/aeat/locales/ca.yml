@@ -544,6 +544,7 @@ application:
     output_labels:
       active_profile: active_profile
       profile: profile
+      status: estat
     status:
       errors:
         missing_tax_id: El perfil actiu no té tax.id.
