@@ -249,7 +249,7 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     continuity/evolution contract.
     """
     if example_limit < 1:
-        raise ValueError("example_limit must be at least 1")
+        raise RegistryValidationError("example_limit must be at least 1")
 
     grouped: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     for divergence in _iter_cross_revision_casilla_divergences(modelos):

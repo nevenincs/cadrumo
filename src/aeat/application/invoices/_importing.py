@@ -130,7 +130,7 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     return tuple(InvoiceRowPayload(**dict(row)) for row in reader)  # type: ignore[misc]
 
 
-def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
+def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:  # ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: parse-stage slot assembled from CSV/JSON decode before Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field names but dict mutation is required for the line-synthesis back-fill.
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return
     base = Decimal(str(payload["base_total"]))
