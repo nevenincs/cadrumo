@@ -45,7 +45,7 @@ _FieldPath = Annotated[
 _DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
 _Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
 
-type ProfileFactValue = str | bool | int | Decimal | date | None
+type UserProfileFactValue = str | bool | int | Decimal | date | None
 
 # A JSON-encoded canonical Decimal never carries an insignificant leading
 # zero: ``Decimal`` normalises ``08001`` to ``8001`` and ``model_dump(mode=
@@ -58,7 +58,7 @@ _DECIMAL_STRING_RE = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
 _DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 def _coerce_profile_fact_value(value: object) -> object:
-    """Restore Decimal / date types lost when ``ProfileFactValue`` was JSON-encoded.
+    """Restore Decimal / date types lost when ``UserProfileFactValue`` was JSON-encoded.
 
     JSON has no Decimal or date primitive, so ``model_dump_json`` emits both
     as strings. On re-parse the union ``str | bool | int | Decimal | date``
@@ -125,7 +125,7 @@ class UserProfileFact(BaseModel):
     model_config = _STRICT_FROZEN
 
     path: _FieldPath
-    value: ProfileFactValue
+    value: UserProfileFactValue
     source: _Source = _PROVENANCE_SOURCE_MANUAL_CLI
     valid_from: date | None = None
     valid_to: date | None = None

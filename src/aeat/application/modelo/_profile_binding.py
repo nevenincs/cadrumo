@@ -45,7 +45,7 @@ from ...domain.calculations.registry import (
 from ...domain.modelos._errors import ModeloError
 from ...domain.profile import marriage_full_year, marriage_month_start
 from ...domain.user_profile import (
-    ProfileFactValue,
+    UserProfileFactValue,
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     load_user_profile_schema,
@@ -83,7 +83,7 @@ class ProfileSourcedBindingResult(BaseModel):
             )
         return self
 
-def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, ProfileFactValue]:
+def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
     """Build a selector -> typed-value index covering both selector forms.
 
     A profile binding's selector resolves either as the canonical
@@ -93,7 +93,7 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
     every ``model_selector`` the schema declares for it, so both
     selector forms find the value.
 
-    Values are preserved as their original :data:`ProfileFactValue` type
+    Values are preserved as their original :data:`UserProfileFactValue` type
     (``bool``, ``Decimal``, ``date``, ``str``, …) so that downstream
     channel routing can branch on the concrete Python type rather than
     re-parsing a ``str(value)`` rendering.
@@ -104,7 +104,7 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
         for field in section.fields:
             selector_index[f"{section.key}.{field.key}"] = tuple(field.model_selectors)
 
-    index: dict[str, ProfileFactValue] = {}
+    index: dict[str, UserProfileFactValue] = {}
     facts = getattr(record, "facts", ())
     for fact in facts:
         if fact.value is None:
@@ -115,7 +115,7 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
     return index
 
 def _inject_derived_marriage_facts(
-    fact_index: dict[str, ProfileFactValue],
+    fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
 ) -> None:
     """Inject computed matrimonio-sobrevenido integers into *fact_index* in-place.
@@ -151,7 +151,7 @@ def _inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
 
 def _inject_derived_family_facts(
-    fact_index: dict[str, ProfileFactValue],
+    fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
 ) -> None:
     """Inject computed Art. 81 bis guardería integers into *fact_index* in-place.
@@ -330,8 +330,8 @@ def resolve_profile_sourced_bindings(
     )
 
 def _resolve_one(
-    binding: DataBindingDefinition, fact_index: Mapping[str, ProfileFactValue]
-) -> ProfileFactValue | None:
+    binding: DataBindingDefinition, fact_index: Mapping[str, UserProfileFactValue]
+) -> UserProfileFactValue | None:
     """Return the typed profile fact value for one profile binding, or None if absent."""
 
     for selector in profile_binding_selectors(binding.selector):
