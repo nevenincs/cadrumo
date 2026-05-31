@@ -43,18 +43,38 @@ def _question_for_profile_key(profile_key: str):
     return None
 
 
-_PROFILE_ERROR_LOCALE_KEYS: dict[str, str] = {
-    "profile_empty": "cli.diagnostics.profile.errors.profile_empty",
-    "ambiguous_profile": "cli.diagnostics.profile.errors.ambiguous_profile",
-    "unknown_profile": "cli.diagnostics.profile.errors.unknown_profile",
-    "no_active_profile": "cli.diagnostics.profile.errors.no_active_profile",
-    "unknown_profile_key": "cli.diagnostics.profile.errors.unknown_profile_key",
-}
+def _refuse(message: str) -> typer.Exit:
+    """Emit ``message`` to stderr and return an exit-2 sentinel to raise.
+
+    Emits the localized refusal directly rather than via
+    :class:`typer.BadParameter`, whose Rich-panel renderer truncates the
+    message at narrow terminal widths (the default CliRunner shell). The
+    boundary-check tests assert that the offending input echoes back in
+    the output stream; the raw stderr emit preserves the message
+    verbatim.
+    """
+    typer.echo(message, err=True)
+    return typer.Exit(code=2)
 
 
-def _profile_bad_parameter(key: str, /, **context: object) -> typer.BadParameter:
-    locale_key = _PROFILE_ERROR_LOCALE_KEYS[key]
-    return typer.BadParameter(tr(locale_key, **context))
+def _bad_profile_empty() -> typer.Exit:
+    return _refuse(tr("cli.diagnostics.profile.errors.profile_empty"))
+
+
+def _bad_ambiguous_profile(profile: str) -> typer.Exit:
+    return _refuse(tr("cli.diagnostics.profile.errors.ambiguous_profile", profile=profile))
+
+
+def _bad_unknown_profile(profile: str) -> typer.Exit:
+    return _refuse(tr("cli.diagnostics.profile.errors.unknown_profile", profile=profile))
+
+
+def _bad_no_active_profile() -> typer.Exit:
+    return _refuse(tr("cli.diagnostics.profile.errors.no_active_profile"))
+
+
+def _bad_unknown_profile_key(key: str) -> typer.Exit:
+    return _refuse(tr("cli.diagnostics.profile.errors.unknown_profile_key", key=key))
 
 
 def _resolve_target_profile(profile: str | None):
@@ -73,20 +93,20 @@ def _resolve_target_profile(profile: str | None):
     if profile is not None:
         target = profile.strip()
         if not target:
-            raise _profile_bad_parameter("profile_empty")
+            raise _bad_profile_empty()
         try:
             pointer = read_profile_bucket(target)
         except ValueError as exc:
-            raise _profile_bad_parameter("ambiguous_profile", profile=target) from exc
+            raise _bad_ambiguous_profile(target) from exc
         if pointer is None:
-            raise _profile_bad_parameter("unknown_profile", profile=target)
+            raise _bad_unknown_profile(target)
         return pointer
     active = resolve_active_bucket_id()
     if active is None:
-        raise _profile_bad_parameter("no_active_profile")
+        raise _bad_no_active_profile()
     pointer = read_profile_bucket_by_id(active)
     if pointer is None:
-        raise _profile_bad_parameter("unknown_profile", profile=active)
+        raise _bad_unknown_profile(active)
     return pointer
 
 
@@ -106,7 +126,7 @@ def register(app: typer.Typer) -> None:
         try:
             registered = get_profile_key(key)
         except KeyError as exc:
-            raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
+            raise _bad_unknown_profile_key(key) from exc
         canonical_key = registered.key
         pointer = _resolve_target_profile(profile)
         with profile_storage_session(pointer.bucket_id):
@@ -114,7 +134,7 @@ def register(app: typer.Typer) -> None:
             try:
                 record = service.read(pointer.bucket_id)
             except ProfileNotFoundError as exc:
-                raise _profile_bad_parameter("unknown_profile", profile=pointer.label) from exc
+                raise _bad_unknown_profile(pointer.label) from exc
         value = fact_value(record, canonical_key) or ""
         typer.echo(f"{canonical_key}\t{value or tr('cli.diagnostics.profile.unset_placeholder')}")
 
@@ -127,7 +147,7 @@ def register(app: typer.Typer) -> None:
         try:
             registered = get_profile_key(key)
         except KeyError as exc:
-            raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
+            raise _bad_unknown_profile_key(key) from exc
         canonical_key = registered.key
         question = _question_for_profile_key(canonical_key)
         coerced = value
@@ -163,7 +183,7 @@ def register(app: typer.Typer) -> None:
         try:
             registered = get_profile_key(key)
         except KeyError as exc:
-            raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
+            raise _bad_unknown_profile_key(key) from exc
         canonical_key = registered.key
         fact = UserProfileFact(path=canonical_key, value=None)
         pointer = _resolve_target_profile(profile)

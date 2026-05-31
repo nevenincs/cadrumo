@@ -1250,12 +1250,25 @@ cli:
           o paternidad. NO lo incluyas en --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta debe ser un
           importe decimal; se recibió: {value}.'
-        preview_maritime_exemption_annual_salary_help: 'Salario anual bruto en EUR (Decimal). Obligatorio cuando el perfil activo cumple los requisitos del Art. 7.p) (vessel_flag=foreign o waters_type=international).'
-        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary debe ser un importe decimal; se recibio: {value}.'
-        preview_maritime_exemption_gross_navigation_income_help: 'Total de ingresos brutos de trabajo procedentes de la navegacion en EUR (Decimal). Obligatorio cuando el perfil activo cumple REBECA (vessel_registry en REBECA / rebeca_eu_eea / scheduled_canary_route).'
-        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income debe ser un importe decimal; se recibio: {value}.'
-        preview_maritime_exemption_help: 'Previsualiza la exencion IRPF del trabajador del mar (Art. 7.p) LIRPF / REBECA 50%) a partir de los hechos maritime_worker del perfil activo. Emite filas CasillaObservation tipadas con legal_refs; muestra el aviso RETMAR de declaracion obligatoria cuando retmar_registered=True; rechaza con el codigo DA 41 inactivo cuando el selector tuna_fleet aplica.'
-        preview_maritime_exemption_qualifying_days_help: 'Dias naturales trabajados fuera del territorio espanol en el ejercicio. Obligatorio junto con --annual-salary cuando se aplica el Art. 7.p).'
+        preview_maritime_exemption_annual_salary_help: Salario anual bruto en EUR
+          (Decimal). Obligatorio cuando el perfil activo cumple los requisitos del
+          Art. 7.p) (vessel_flag=foreign o waters_type=international).
+        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary debe
+          ser un importe decimal; se recibio: {value}.'
+        preview_maritime_exemption_gross_navigation_income_help: Total de ingresos
+          brutos de trabajo procedentes de la navegacion en EUR (Decimal). Obligatorio
+          cuando el perfil activo cumple REBECA (vessel_registry en REBECA / rebeca_eu_eea
+          / scheduled_canary_route).
+        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
+          debe ser un importe decimal; se recibio: {value}.'
+        preview_maritime_exemption_help: Previsualiza la exencion IRPF del trabajador
+          del mar (Art. 7.p) LIRPF / REBECA 50%) a partir de los hechos maritime_worker
+          del perfil activo. Emite filas CasillaObservation tipadas con legal_refs;
+          muestra el aviso RETMAR de declaracion obligatoria cuando retmar_registered=True;
+          rechaza con el codigo DA 41 inactivo cuando el selector tuna_fleet aplica.
+        preview_maritime_exemption_qualifying_days_help: Dias naturales trabajados
+          fuera del territorio espanol en el ejercicio. Obligatorio junto con --annual-salary
+          cuando se aplica el Art. 7.p).
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
@@ -1775,8 +1788,13 @@ cli:
         el problema.
     profile:
       errors:
+        ambiguous_profile: 'Nombre de perfil ambiguo: %{profile}.'
         invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: 'No hay perfil activo seleccionado.'
+        profile_empty: '--profile no puede estar en blanco.'
+        unknown_profile: 'Perfil desconocido: %{profile}.'
+        unknown_profile_key: 'Clave de perfil desconocida: %{key}.'
       get_help: Lee el valor guardado de una clave de perfil.
       help: Inspección de campos de perfil y ediciones quirúrgicas solo para ingeniería.
       key_help: Clave de perfil.

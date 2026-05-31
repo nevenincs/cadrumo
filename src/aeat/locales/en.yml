@@ -1159,12 +1159,25 @@ cli:
           this in --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta must be a decimal
           amount; received: {value}.'
-        preview_maritime_exemption_annual_salary_help: 'Gross annual salary in EUR (Decimal). Required when the active profile triggers Art. 7.p) eligibility (vessel_flag=foreign or waters_type=international).'
-        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary must be a decimal amount; received: {value}.'
-        preview_maritime_exemption_gross_navigation_income_help: 'Total gross employment income from navigation in EUR (Decimal). Required when the active profile triggers REBECA eligibility (vessel_registry in REBECA / rebeca_eu_eea / scheduled_canary_route).'
-        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income must be a decimal amount; received: {value}.'
-        preview_maritime_exemption_help: 'Preview the Art. 7.p) / REBECA maritime worker IRPF exemption resolved from the active profile''s maritime_worker facts. Emits typed CasillaObservation rows with legal_refs; surfaces the RETMAR mandatory-filing warning when retmar_registered=True; refuses with the DA 41 inactive code when the tuna-fleet selector resolves.'
-        preview_maritime_exemption_qualifying_days_help: 'Calendar days worked outside Spanish territory in the tax year. Required alongside --annual-salary when Art. 7.p) applies.'
+        preview_maritime_exemption_annual_salary_help: Gross annual salary in EUR
+          (Decimal). Required when the active profile triggers Art. 7.p) eligibility
+          (vessel_flag=foreign or waters_type=international).
+        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary must
+          be a decimal amount; received: {value}.'
+        preview_maritime_exemption_gross_navigation_income_help: Total gross employment
+          income from navigation in EUR (Decimal). Required when the active profile
+          triggers REBECA eligibility (vessel_registry in REBECA / rebeca_eu_eea /
+          scheduled_canary_route).
+        preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
+          must be a decimal amount; received: {value}.'
+        preview_maritime_exemption_help: Preview the Art. 7.p) / REBECA maritime worker
+          IRPF exemption resolved from the active profile's maritime_worker facts.
+          Emits typed CasillaObservation rows with legal_refs; surfaces the RETMAR
+          mandatory-filing warning when retmar_registered=True; refuses with the DA
+          41 inactive code when the tuna-fleet selector resolves.
+        preview_maritime_exemption_qualifying_days_help: Calendar days worked outside
+          Spanish territory in the tax year. Required alongside --annual-salary when
+          Art. 7.p) applies.
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
@@ -1656,8 +1669,13 @@ cli:
       inspect_registry_toml: Inspect the registry TOML sources to identify the problem.
     profile:
       errors:
+        ambiguous_profile: 'Ambiguous profile name: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: 'No active profile selected.'
+        profile_empty: '--profile must not be blank.'
+        unknown_profile: 'Unknown profile: %{profile}.'
+        unknown_profile_key: 'Unknown profile key: %{key}.'
       get_help: Read one profile key stored value.
       help: Engineer-only profile field inspection and surgical edits.
       key_help: Profile key.
