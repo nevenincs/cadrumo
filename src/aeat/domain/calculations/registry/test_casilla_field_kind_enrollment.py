@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
 # ---------------------------------------------------------------------------
 # Paths of the files that carried bare-string kind usages (S233–S236).
 # ---------------------------------------------------------------------------
@@ -77,8 +79,6 @@ def _scan_file(path: Path) -> list[tuple[int, str]]:
     return hits
 
 
-@pytest.mark.unit
-@pytest.mark.domain_model
 def test_no_bare_kind_strings_survive_in_affected_files() -> None:
     """Fail if any affected file still compares field.kind to a bare string."""
     failures: list[str] = []
