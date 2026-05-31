@@ -890,3 +890,30 @@ Thread tr() on _commands.py:907 wizard status tab-key. Enumerate _catalogue.py f
 - [x] `W09.P39.S566` - define InvoiceRowPayload TypedDict for _decode_invoice_payload at application/invoices/_importing.py:99 + downstream coercion; `src/aeat/application/invoices/_importing.py`.
 - [x] `W09.P39.S567` - audit storage/__init__.py and calculations/__init__.py orphan re-export modules; `delete or document; `src/aeat/application/storage/__init__.py`.
 - [x] `W09.P39.S568` - aggregate test asserting locale + pydantic boundary closures landed; `src/aeat/test_w09_p39_locale_pydantic.py`.
+
+## Wave `W10` - consecutive-clean-wave 3/3: close W10 findings (zero regressions, second consecutive)
+
+W10 audit confirmed ZERO strict regressions for second consecutive wave. Counter at 2/3 toward ADR close condition. W10 closes 16 survivor-missed + 1 new finding (smallest backlog since W1). If W11 audit zero-regression, ADR close condition triggers (3 consecutive clean waves; goal: drive solidification fully home + aeat.core remains authoritative).
+
+### Phase `W10.P40` - A7 hardcoded cleanup
+
+Extract VARCHAR(64) SQL column-type constant. Promote WorkbookKind Literal to StrEnum (or extract _WK_* constants). Extract WorkbookRunnerEngine libreoffice-headless constant. Document file_permissions os.environ.get sites as Windows-only OS-integration allowlist. Document i18n _render.py output-language env-var direct read pattern.
+
+- [ ] `W10.P40.S569` - extract _VARCHAR_64 SQL column-type constant at adapters/persistence/storage/sql/secure_objects.py:40-44,261-265 (5+5 sites); `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [ ] `W10.P40.S570` - promote WorkbookKind Literal to StrEnum or extract named constants for unreadable/unsupported_binary_xls/scanned; `migrate _workbook_parity.py:47-48,122,367,374,965,1018 set-literal comparisons; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `W10.P40.S571` - extract _ENGINE_LIBREOFFICE = libreoffice-headless constant and migrate _workbook_parity.py:59,477,486,844 callsites; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `W10.P40.S572` - document file_permissions.py:70,72 os.environ.get SYSTEMROOT/USERDOMAIN as Windows-OS-integration allowlist exception in test_settings_single_surface_invariant; `src/aeat/core/file_permissions.py`.
+- [ ] `W10.P40.S573` - document i18n/_render.py:145 OUTPUT_LANGUAGE_KEY_ENV_VARS os.environ.get cache-key read as documented locale-resolution allowlist; `src/aeat/core/i18n/_render.py`.
+- [ ] `W10.P40.S574` - aggregate inventory test asserting VARCHAR(64) + WorkbookKind + libreoffice-headless extracted; `src/aeat/test_w10_p40_constants_inventory.py`.
+
+### Phase `W10.P41` - A8 rationale finishers
+
+Add ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR markers on 12 profile field_validator(mode=before) methods. Add ANY-RETURN-RATIONALE-CATALOGUE-SLOT markers on profile_catalogue.get_setup_flow/get_wizard_flows. Add ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY markers on _calc_sheets_apply._drive_service/_sheets_service. Fix borrador_100 KWARGS-ANY marker token (was CAST-RATIONALE-*). Extend inventory test to cover _borrador_100. Add ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL on logging._scrub_value.
+
+- [ ] `W10.P41.S575` - add ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR markers on 12 profile.py @field_validator def lines at 284,296,308,320,332,346,358,374,386,407,419,431,460,487 (mode=before requires Any return); `src/aeat/core/profile.py`.
+- [ ] `W10.P41.S576` - add ANY-RETURN-RATIONALE-CATALOGUE-SLOT markers on profile_catalogue.py:90,103 (get_setup_flow + get_wizard_flows runtime-registered types); `src/aeat/core/profile_catalogue.py`.
+- [ ] `W10.P41.S577` - add ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY markers on _calc_sheets_apply.py:89,101 (_drive_service + _sheets_service googleapiclient.discovery.build untyped Resource); `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
+- [ ] `W10.P41.S578` - fix marker token at _borrador_100.py:304 from CAST-RATIONALE-* to KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH (matches sibling pattern); `src/aeat/application/live/_borrador_100.py`.
+- [ ] `W10.P41.S579` - extend test_w09_p38_rationale_inventory.py to cover _borrador_100.py in S559 mandate (currently omitted); `src/aeat/test_w09_p38_rationale_inventory.py`.
+- [ ] `W10.P41.S580` - add ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL marker on core/logging.py:147 _scrub_value implementation overload; `src/aeat/core/logging.py`.
+- [ ] `W10.P41.S581` - aggregate inventory test asserting all -> Any returns + **kwargs: Any signatures carry RATIONALE markers outside documented allowlist; `src/aeat/test_w10_p41_rationale_inventory.py`.
