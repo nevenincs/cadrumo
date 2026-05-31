@@ -1783,11 +1783,11 @@ def _guard_stub_modelo(modelo: str) -> None:
     if modelo_code not in _STUB_ONLY_MODELOS:
         return
 
-    # S391 feature flag — M210 IRNR Phase 1 engine path gates the stub
-    # refusal. When aeat_m210_engine_live is True, modelo 210 falls
-    # through to the engine (S400 m210_resolve_rate + S390
-    # representante-fiscal predicate). Other stub-only modelos continue
-    # to refuse unconditionally per their existing legal-authority paths.
+    # The M210 IRNR engine path gates the stub refusal: when
+    # aeat_m210_engine_live is True, modelo 210 falls through to the
+    # engine (m210_resolve_rate + representante-fiscal predicate).
+    # Other stub-only modelos continue to refuse unconditionally per
+    # their existing legal-authority paths.
     if modelo_code == "210" and load_settings().aeat_m210_engine_live:
         return
 
@@ -2064,7 +2064,11 @@ def work_create(
             _raw = record_to_values(_rec.record) if _rec is not None else None
             for _advisory_key in _build_filing_obligation_advisories(_raw):
                 lines.append(tr(_advisory_key))
-    _emit_envelope(ctx, command=operation, result=result, lines=lines)
+    # The envelope key is pinned to the leaf-command path so the
+    # JSON-contract registry has exactly one key per CLI leaf. The
+    # create-vs-reuse distinction lives in the payload ``operation``
+    # field, which is the durable consumer-facing signal.
+    _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines)
 
 
 @work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
@@ -4174,7 +4178,7 @@ def verification_report_show(
         _verification_report_payload(report).model_dump(mode="python")
     )
     lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
-    _emit_envelope(ctx, command="modelo.verification_report.show", result=result, lines=lines)
+    _emit_envelope(ctx, command="modelo.verification_report.view", result=result, lines=lines)
 
 
 @filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
@@ -4196,7 +4200,7 @@ def filing_record_show(
 
     result = ModeloRecordShowResult.model_validate(_filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
-    _emit_envelope(ctx, command="modelo.filing_record.show", result=result, lines=lines)
+    _emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
 
 
 @filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
