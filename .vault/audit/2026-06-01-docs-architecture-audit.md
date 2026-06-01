@@ -73,3 +73,26 @@ The single most important item before the epic can honestly be called complete:
 the nitpicky build must reach zero unresolved cross-references. Everything that
 depends on a green gate is blocked behind it.
 
+## Resolution
+
+The single blocking item is now closed. The remaining unresolved cross-references
+were remediated as content, not suppressed: forty-five docstrings were corrected
+across the adapters, application, core, and domain layers, and the final
+stragglers were a parameter named as an exception type in a Raises section and a
+PEP 695 type parameter. The nitpicky warnings-as-errors build now exits clean
+with zero unresolved cross-references, zero import failures, and zero duplicate
+descriptions.
+
+With the build green, the docs lane was promoted from advisory to a standing
+blocking gate in the push workflow, running the nitpicky build, the
+module-to-stub correspondence check, the CLI reference drift and conformance
+tests, the reStructuredText formatter, and the docstring-coverage floor. During
+remediation a peer removed a source module; the correspondence check caught the
+resulting orphan stub immediately, which is the drift protection the gate exists
+to provide.
+
+Two items from the recommendations remain open as follow-on hardening rather
+than blockers: wiring the docstring-signature accuracy checker into the docs
+lane once its findings reach zero, and raising the coverage floor as further
+docstrings land. Both are improvements on top of a now-green gate.
+
