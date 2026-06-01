@@ -12,7 +12,15 @@ related:
 
 
 
-# `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `accepted`)
+# `docs-cli-conformance` adr: `cli documentation conformance` | (**status:** `partially superseded`)
+
+> **Decisions 1 and 2 are superseded** by the build-time CLI reference
+> extraction ADR (`2026-06-01-docs-cli-buildtime-adr`). The choice of a bespoke
+> generator over `sphinx-click` (decision 1) and the committed,
+> drift-tested generated pages (decision 2) are replaced by a build-time
+> `sphinx-click` projection of the live command tree. The accepted-surface
+> contract, the import-failure guard, and the English-only scope from the rest
+> of this ADR are retained and re-homed onto the build-time mechanism.
 
 This is the third of three ADRs in the documentation epic. It builds on
 the surface taxonomy and conventions ADR (codebase-state-as-truth; the

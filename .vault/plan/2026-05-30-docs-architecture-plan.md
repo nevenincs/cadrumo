@@ -11,6 +11,15 @@ related:
   - '[[2026-05-30-docs-cli-conformance-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `docs-architecture` `documentation epic` plan
 
@@ -209,3 +218,11 @@ Run a fresh-context honesty review against the closure summary before declaring 
 
 - [ ] `W05.P21.S62` - run a fresh-context honesty review against the epic closure summary; `.vault/audit`.
 - [ ] `W05.P21.S63` - track honesty-review findings as new steps with verification gates; `.vault/plan/2026-05-30-docs-architecture-plan.md`.
+
+## Wave `W06` - build-time CLI reference migration
+
+Replace the generate-and-commit CLI reference (superseded W02.P07 and decisions 1-2 of the CLI-conformance ADR) with a build-time sphinx-click projection of the live command tree, rendered from the English tr() help. Retire the bespoke generator, the committed docs/cli pages, and the drift test.
+
+### Phase `W06.P22` - sphinx-click build-time projection
+
+Sanitize RST-unsafe help, expose the Click command, wire sphinx-click into the build pinned to English, retire the generator and committed pages, and confirm the live reference renders green.
