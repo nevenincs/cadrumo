@@ -117,7 +117,7 @@ Bring the domain subpackage to green against ruff D, pydoclint, interrogate, and
 
 - [x] `W03.P09.S29` - bring every domain module to a true module docstring; `src/aeat/domain`.
 - [x] `W03.P09.S30` - bring every domain public symbol to a signature-matching google docstring; `src/aeat/domain`.
-- [ ] `W03.P09.S31` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for domain; `src/aeat/domain`.
+- [x] `W03.P09.S31` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for domain; `src/aeat/domain`.
 
 ### Phase `W03.P10` - remediate adapters docstrings and links
 
@@ -125,7 +125,7 @@ Bring the adapters subpackage to green against ruff D, pydoclint, interrogate, a
 
 - [x] `W03.P10.S32` - bring every adapters module to a true module docstring; `src/aeat/adapters`.
 - [x] `W03.P10.S33` - bring every adapters public symbol to a signature-matching google docstring; `src/aeat/adapters`.
-- [ ] `W03.P10.S34` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for adapters; `src/aeat/adapters`.
+- [x] `W03.P10.S34` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for adapters; `src/aeat/adapters`.
 
 ### Phase `W03.P11` - remediate application docstrings and links
 
@@ -133,7 +133,7 @@ Bring the application subpackage to green against ruff D, pydoclint, interrogate
 
 - [x] `W03.P11.S35` - bring every application module to a true module docstring; `src/aeat/application`.
 - [x] `W03.P11.S36` - bring every application public symbol to a signature-matching google docstring; `src/aeat/application`.
-- [ ] `W03.P11.S37` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for application; `src/aeat/application`.
+- [x] `W03.P11.S37` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for application; `src/aeat/application`.
 
 ### Phase `W03.P12` - remediate entrypoints docstrings and links
 
@@ -141,7 +141,7 @@ Bring the entrypoints subpackage to green against ruff D, pydoclint, interrogate
 
 - [x] `W03.P12.S38` - bring every entrypoints module to a true module docstring; `src/aeat/entrypoints`.
 - [x] `W03.P12.S39` - bring every entrypoints public symbol to a signature-matching google docstring; `src/aeat/entrypoints`.
-- [ ] `W03.P12.S40` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for entrypoints; `src/aeat/entrypoints`.
+- [x] `W03.P12.S40` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for entrypoints; `src/aeat/entrypoints`.
 
 ### Phase `W03.P13` - remediate core docstrings and links
 
@@ -149,7 +149,7 @@ Bring the core subpackage to green against ruff D, pydoclint, interrogate, and t
 
 - [x] `W03.P13.S41` - bring every core module to a true module docstring; `src/aeat/core`.
 - [x] `W03.P13.S42` - bring every core public symbol to a signature-matching google docstring; `src/aeat/core`.
-- [ ] `W03.P13.S43` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for core; `src/aeat/core`.
+- [x] `W03.P13.S43` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for core; `src/aeat/core`.
 
 ### Phase `W03.P14` - remediate diagnostics docstrings and links
 
@@ -157,7 +157,7 @@ Bring the diagnostics subpackage to green against ruff D, pydoclint, interrogate
 
 - [x] `W03.P14.S44` - bring every diagnostics module to a true module docstring; `src/aeat/diagnostics`.
 - [x] `W03.P14.S45` - bring every diagnostics public symbol to a signature-matching google docstring; `src/aeat/diagnostics`.
-- [ ] `W03.P14.S46` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for diagnostics; `src/aeat/diagnostics`.
+- [x] `W03.P14.S46` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for diagnostics; `src/aeat/diagnostics`.
 
 ### Phase `W03.P15` - remediate locales docstrings and links
 
