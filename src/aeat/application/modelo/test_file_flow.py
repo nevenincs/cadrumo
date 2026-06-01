@@ -592,7 +592,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -666,7 +666,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -927,7 +927,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     # First filing: revision-1, filed at T3.
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -955,7 +955,7 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     # Second filing: revision-2 with corrected inputs, filed at T5.
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1200"), "02": Decimal("100")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200"), "02": Decimal("100")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1046,7 +1046,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
 
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1073,7 +1073,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
 
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1200")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1170,11 +1170,12 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
 
 def test_get_filing_record_raises_on_missing_id(repos) -> None:
     _, _, fr_repo, _, _ = repos
-    with pytest.raises(ModeloRecordNotFoundError, match=r"filing|record|not|found"):
+    with pytest.raises(ModeloRecordNotFoundError) as excinfo:
         get_filing_record(
             "0" * 64,
             filing_repository=fr_repo,
         )
+    assert excinfo.value.translated_message == "application.modelo.errors.filing_record_not_found"
 
 
 def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
@@ -1472,11 +1473,12 @@ def test_list_and_get_verification_reports_real_registry(repos) -> None:
     )
     assert fetched.verification_report_id == report.verification_report_id
 
-    with pytest.raises(VerificationReportNotFoundError, match=r"verification|report|not|found"):
+    with pytest.raises(VerificationReportNotFoundError) as excinfo:
         get_verification_report(
             "0" * 64,
             verification_repository=vr_repo,
         )
+    assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"
 
 
 # ---------------------------------------------------------------------------
@@ -1633,7 +1635,7 @@ def test_file_emits_modelo_filed_event(repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1685,7 +1687,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1713,7 +1715,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={"01": Decimal("1200"), "02": Decimal("100")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200"), "02": Decimal("100")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
