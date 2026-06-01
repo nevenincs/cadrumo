@@ -70,8 +70,8 @@ shared `var/aeat.db` legacy default disappears entirely.
 - [x] `P02.S26` - migrate test fixtures off `WorkflowState(profiles={...})` to manifest-on-disk fixtures; `src/aeat/application/user_profile/_test_lifecycle.py`.
 - [x] `P02.S27` - wire alembic `env.py` to resolve the per-bucket engine and run `upgrade head` per bucket on first connect; `src/aeat/adapters/persistence/storage/alembic/env.py`.
 - [x] `P02.S28` - relocate workflow run-history persistence to the per-bucket database; `src/aeat/application/workflow/_persistence.py`.
-- [ ] `P02.S29` - add per-bucket engine isolation roundtrip test (two buckets, two engines, two distinct histories); `src/aeat/application/workflow/_test_per_bucket_engine_isolation.py`.
-- [ ] `P02.S30` - add anti-tautology test mutating one bucket's DB and asserting cross-bucket reads remain unaffected; `src/aeat/application/workflow/_test_per_bucket_isolation_anti_tautology.py`.
+- [x] `P02.S29` - add per-bucket engine isolation roundtrip test (two buckets, two engines, two distinct histories); `src/aeat/application/workflow/_test_per_bucket_engine_isolation.py`.
+- [x] `P02.S30` - add anti-tautology test mutating one bucket's DB and asserting cross-bucket reads remain unaffected; `src/aeat/application/workflow/_test_per_bucket_isolation_anti_tautology.py`.
 
 ### Phase `P03` - operator CLI tail (validate / preflight / get / set / unset / init)
 
