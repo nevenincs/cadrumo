@@ -11,6 +11,15 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `centralized-output-redaction` `centralized CLI output redaction` plan
 
@@ -68,10 +77,10 @@ This Wave removes command-local privacy assumptions from every production output
 
 Move engineer diagnostics behind the same redacted output path or mark audited exceptions.
 
-- [ ] `W02.P04.S20` - migrate profile diagnostics direct `typer.echo` output to a redacted output helper; `src/aeat/diagnostics/profile.py`.
-- [ ] `W02.P04.S21` - migrate secure-object diagnostics direct `typer.echo` output to a redacted output helper; `src/aeat/diagnostics/secure_objects.py`.
-- [ ] `W02.P04.S22` - update profile diagnostics tests for centralized output redaction and canonical keys; `src/aeat/diagnostics/test_profile.py`.
-- [ ] `W02.P04.S23` - update secure-object diagnostics tests for centralized digest-only output; `src/aeat/diagnostics/test_secure_objects.py`.
+- [x] `W02.P04.S20` - migrate profile diagnostics direct `typer.echo` output to a redacted output helper; `src/aeat/diagnostics/profile.py`.
+- [x] `W02.P04.S21` - migrate secure-object diagnostics direct `typer.echo` output to a redacted output helper; `src/aeat/diagnostics/secure_objects.py`.
+- [x] `W02.P04.S22` - update profile diagnostics tests for centralized output redaction and canonical keys; `src/aeat/diagnostics/test_profile.py`.
+- [x] `W02.P04.S23` - update secure-object diagnostics tests for centralized digest-only output; `src/aeat/diagnostics/test_secure_objects.py`.
 
 ### Phase `W02.P05` - config and auth command surfaces
 
