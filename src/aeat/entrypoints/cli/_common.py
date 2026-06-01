@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, NoReturn
 
 import typer
 
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.output_rendering import render_command_output
 
@@ -358,7 +359,7 @@ def _annual_filing_year(period: str) -> int | None:
 # ---------------------------------------------------------------------
 
 
-def activate_subcommand_output_language(ctx: typer.Context, language: str | None) -> None:
+def activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
     """Apply a subcommand-supplied ``--output-language`` to the render path.
 
     ``--output-language`` on a subcommand short-circuits the root

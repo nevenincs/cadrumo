@@ -30,6 +30,7 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .errors import CoreError, ProfileAnswerTypeError
+from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .logging import get_logger
 
 _log = get_logger(__name__)
@@ -198,7 +199,7 @@ class SetupAnswers(BaseModel):
     activity_start_date: str = ""
     """Optional ISO-8601 censo alta date for the economic activity."""
     taxation_type: Any = ""
-    output_language: str = "es"
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     # ── taxpayer type (three-axis taxpayer model) ────────────────────────
     entity_type: Any = ""
@@ -541,16 +542,6 @@ class SetupAnswers(BaseModel):
             raise ValueError(
                 f"special_regime_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
             ) from exc
-        return value
-
-    @field_validator("output_language")
-    @classmethod
-    def _validate_output_language(cls, value: str) -> str:
-        from .i18n import SUPPORTED_OUTPUT_LANGUAGES
-
-        if value not in SUPPORTED_OUTPUT_LANGUAGES:
-            valid = ", ".join(SUPPORTED_OUTPUT_LANGUAGES)
-            raise ValueError(f"output_language must be one of: {valid}")
         return value
 
     @model_validator(mode="after")

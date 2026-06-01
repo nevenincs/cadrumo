@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.core]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def _read_file(path: Path) -> str:
@@ -46,7 +46,7 @@ def _find_language_axis_fields(src: str) -> list[tuple[int, str]]:
 
 def test_settings_layer_output_language_typed_or_exempt() -> None:
     """Settings field at src/aeat/core/config.py must consume OutputLanguage."""
-    config_file = Path(__file__).resolve().parents[2] / "config.py"
+    config_file = Path(__file__).resolve().parents[1] / "config.py"
     src = _read_file(config_file)
 
     assert _has_output_language_import(src), (
@@ -59,7 +59,7 @@ def test_settings_layer_output_language_typed_or_exempt() -> None:
 
 def test_profile_output_language_typed_or_exempt() -> None:
     """Profile fields referencing language must consume OutputLanguage or be exempted."""
-    profile_file = Path(__file__).resolve().parents[2] / "profile.py"
+    profile_file = Path(__file__).resolve().parents[1] / "profile.py"
     if not profile_file.exists():
         pytest.skip(f"{profile_file} does not exist")
 
