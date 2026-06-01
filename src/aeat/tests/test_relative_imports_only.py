@@ -43,6 +43,11 @@ def test_no_absolute_self_imports_in_aeat_package() -> None:
     """No source file under ``src/aeat`` may import the ``aeat`` package absolutely."""
     violations: list[str] = []
     for path in sorted(_PKG_ROOT.rglob("*.py")):
+        # The _data/ tree carries pytest-collected fixtures that live outside any
+        # importable package (no __init__.py chain), so relative imports are
+        # invalid there and absolute imports are correct.
+        if "/_data/" in path.as_posix():
+            continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:  # pragma: no cover - syntax is its own gate's concern

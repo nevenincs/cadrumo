@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ...core.errors import AeatError

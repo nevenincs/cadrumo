@@ -21,9 +21,9 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
-from aeat.core.aggregation import AggregationSourceKind
-from aeat.core.external_constants import M347_THRESHOLD_EUR
-from aeat.domain.calculations.registry._bindings import CounterpartSourceKind
+from ...core.aggregation import AggregationSourceKind
+from ...core.external_constants import M347_THRESHOLD_EUR
+from ...domain.calculations.registry._bindings import CounterpartSourceKind
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {

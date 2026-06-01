@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+from ...domain import renta as _renta_snapshot_checks  # noqa: F401
 
 from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,

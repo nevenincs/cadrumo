@@ -32,7 +32,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
