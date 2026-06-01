@@ -24,7 +24,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now
+from aeat.core.time import now as _utc_now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
@@ -389,7 +389,7 @@ def export_modelo_revision(
         repository=iva_compensation_decision_repository,
     )
 
-    now = clock or now()
+    now = clock or _utc_now()
     filing_year, registry_period, canonical_period = _resolve_export_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=filing_year,
