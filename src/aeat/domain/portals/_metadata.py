@@ -96,8 +96,8 @@ class PortalMetadata(BaseModel):
         if host != self.subdomain.value:
             raise PortalValidationError(f"url host {host!r} does not match subdomain {self.subdomain.value!r}")
 
-        # G-code path check for active FILING / CENSUS entries.
-        if self.active and self.category in {PortalCategory.FILING, PortalCategory.CENSUS}:
+        # G-code path check for active FILING / CENSO entries.
+        if self.active and self.category in {PortalCategory.FILING, PortalCategory.CENSO}:
             path = self.url.path or ""
             if not _G_CODE_PATH_RE.match(path):
                 raise PortalValidationError(

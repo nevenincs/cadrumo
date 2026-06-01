@@ -68,8 +68,8 @@ from __future__ import annotations
 
 from ._censo_live import (
     G313_LAUNCHER_URL,
-    census_fact_set_to_mapping,
-    fetch_g313_census,
+    censo_fact_set_to_mapping,
+    fetch_g313_censo,
 )
 from ._declarations import (
     Declaracion,
@@ -160,10 +160,10 @@ __all__ = [
     "capture_justificante",
     "capture_previous_filing_observations",
     "capture_relation_source_observations",
-    "census_fact_set_to_mapping",
+    "censo_fact_set_to_mapping",
     "collect_renta_web_open_observation",
     "extract_renta_web_open_summary_value",
-    "fetch_g313_census",
+    "fetch_g313_censo",
     "fetch_iva_compensation_wallet",
     "fetch_notifications_query",
     "fetch_notifications_summary",

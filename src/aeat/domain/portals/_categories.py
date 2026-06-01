@@ -16,7 +16,7 @@ from enum import StrEnum
 class PortalCategory(StrEnum):
     """Functional category of an AEAT portal.
 
-    ``FILING`` and ``CENSUS`` cover per-modelo procedure pages (the
+    ``FILING`` and ``CENSO`` cover per-modelo procedure pages (the
     ``/Sede/procedimientoini/G<code>.shtml`` namespace). ``BORRADOR``
     covers pre-filled draft entry points (Renta Web, Pre303).
     ``CONSULTATION`` covers "Mi área personal" family surfaces.
@@ -27,7 +27,7 @@ class PortalCategory(StrEnum):
 
     AUTH = "auth"
     FILING = "filing"
-    CENSUS = "census"
+    CENSO = "censo"
     CONSULTATION = "consultation"
     BORRADOR = "borrador"
     PAYMENT = "payment"

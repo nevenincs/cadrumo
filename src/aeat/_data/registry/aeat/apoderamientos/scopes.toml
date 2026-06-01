@@ -43,7 +43,7 @@ modelo_codes = ["111", "115", "123", "180", "190", "193"]
 [[scopes]]
 code = "CENSO"
 name_es = "Censo (modelo 036, 037)"
-name_en = "Census declarations (registration, modification, deregistration)"
+name_en = "Censo declarations (registration, modification, deregistration)"
 modelo_codes = ["036", "037"]
 
 [[scopes]]

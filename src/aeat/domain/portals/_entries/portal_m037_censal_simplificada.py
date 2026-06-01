@@ -1,4 +1,4 @@
-"""Catalogue entry for the retired *Modelo 037* simplified census declaration.
+"""Catalogue entry for the retired *Modelo 037* simplified censo declaration.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
 flagged ``active=False`` and superseded by
@@ -19,7 +19,7 @@ ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
     path="/Sede/procedimientoini/G324.shtml",
     subdomain=PortalHost.SEDE,
-    category=PortalCategory.CENSUS,
+    category=PortalCategory.CENSO,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.CLAVE_PIN,

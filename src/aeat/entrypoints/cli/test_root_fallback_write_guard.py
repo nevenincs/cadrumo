@@ -20,7 +20,7 @@ _GUARDED_WRITE_VERBS: tuple[tuple[str, ...], ...] = (
     ("config", "auth", "login"),
     ("app", "ledger", "link", "tx", "--invoice-id", "inv"),
     ("app", "modelo", "work", "verify", "abc"),
-    ("config", "profile", "census", "refresh"),
+    ("config", "profile", "censo", "refresh"),
 )
 
 _BOOTSTRAP_SAFE_PROBES: tuple[tuple[str, ...], ...] = (
@@ -42,8 +42,8 @@ _GUARDED_PREDICATE_PATHS: tuple[str, ...] = (
     "app modelo export work --output out.txt",
     "app live verify nif-iva ESB12345678",
     "app live verify tgvi 12345678Z",
-    "config profile census refresh",
-    "config profile census apply",
+    "config profile censo refresh",
+    "config profile censo apply",
     "app ledger inventory valuation preview actividad 2026",
 )
 

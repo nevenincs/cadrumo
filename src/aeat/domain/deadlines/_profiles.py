@@ -78,8 +78,8 @@ def taxpayer_profile_from_mapping(
         ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
         ("does_intracomunitario", "iva.does_intracomunitario"),
         ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
-        ("enrollment.large_company", "census.large_company"),
-        ("enrollment.public_administration_budget_gt_6000000", "census.public_administration_budget_gt_6000000"),
+        ("enrollment.large_company", "censo.large_company"),
+        ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
     ):
         if bare in canonical and canonical_key not in canonical:
             padded[canonical_key] = canonical[bare]
@@ -134,14 +134,14 @@ def taxpayer_profile_from_mapping(
         ),
         fiscal_address_cadastral_reference=canonical.get("address.cadastral_reference", ""),
         fiscal_address_is_habitual_vivienda=_parse_bool(canonical.get("address.is_habitual_vivienda")) or False,
-        activity_start_date=_parse_date(canonical.get("census.activity_start_date")),
-        activity_end_date=_parse_date(canonical.get("census.activity_end_date")),
+        activity_start_date=_parse_date(canonical.get("censo.activity_start_date")),
+        activity_end_date=_parse_date(canonical.get("censo.activity_end_date")),
         incn_prior_12_months=_parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
         new_entity_first_two_profit_periods=_parse_optional_bool(
             canonical.get("taxpayer_type.new_entity_first_two_profit_periods")
         ),
-        establecimiento_type=canonical.get("census.establecimiento_type", ""),
-        elected_withholding_pct=canonical.get("census.elected_withholding_pct", ""),
+        establecimiento_type=canonical.get("censo.establecimiento_type", ""),
+        elected_withholding_pct=canonical.get("censo.elected_withholding_pct", ""),
         vivienda_office_total_m2=_parse_decimal(canonical.get("vivienda_office.total_m2")),
         vivienda_office_office_m2=_parse_decimal(canonical.get("vivienda_office.office_m2")),
         iae_epigraph=canonical.get("activities.iae_epigraph", ""),
@@ -195,7 +195,7 @@ def _parse_date(raw: str | None) -> date | None:
     try:
         return _parse_date_canonical(raw, fmt="iso8601", on_error="raise")
     except ValueError as exc:
-        raise ProfileError(f"invalid census date {raw!r}; expected ISO-8601") from exc
+        raise ProfileError(f"invalid censo date {raw!r}; expected ISO-8601") from exc
 
 
 def _parse_decimal(raw: str | None) -> Decimal | None:
@@ -204,7 +204,7 @@ def _parse_decimal(raw: str | None) -> Decimal | None:
     try:
         return Decimal(raw.strip())
     except InvalidOperation as exc:
-        raise ProfileError(f"invalid census decimal {raw!r}") from exc
+        raise ProfileError(f"invalid censo decimal {raw!r}") from exc
 
 
 def _parse_optional_int(raw: str | None) -> int | None:

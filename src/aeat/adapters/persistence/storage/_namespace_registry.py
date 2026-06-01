@@ -356,13 +356,13 @@ LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
 )
-LIVE_CENSUS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="live_census_snapshot",
-    namespace="aeat.application.live.census_snapshot",
+LIVE_CENSO_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_censo_snapshot",
+    namespace="aeat.application.live.censo_snapshot",
     owner="aeat.application.live",
     sensitivity=SensitivityClass.IDENTITY,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="census-snapshot:{bucket_id}:{snapshot_id}",
+    object_key_grammar="censo-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
 )
 TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -743,7 +743,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
-        LIVE_CENSUS_SNAPSHOT_NAMESPACE,
+        LIVE_CENSO_SNAPSHOT_NAMESPACE,
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         TEST_SESSION_LIFECYCLE_NAMESPACE,
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
@@ -798,7 +798,7 @@ __all__ = [
     "KEYSTORE_DIRNAME",
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
-    "LIVE_CENSUS_SNAPSHOT_NAMESPACE",
+    "LIVE_CENSO_SNAPSHOT_NAMESPACE",
     "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",

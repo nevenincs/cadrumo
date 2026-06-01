@@ -1,4 +1,4 @@
-"""Registry data tests for the census modelo foundation."""
+"""Registry data tests for the censo modelo foundation."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _snapshot(period: str = "alta") -> RegistrySnapshot:
     )
 
 
-def test_committed_modelo_036_registry_data_loads_as_active_census_foundation() -> None:
+def test_committed_modelo_036_registry_data_loads_as_active_censo_foundation() -> None:
     snapshot = _snapshot()
 
     assert snapshot.modelo.id == "036"
@@ -45,15 +45,15 @@ def test_committed_modelo_036_registry_data_loads_as_active_census_foundation() 
     assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == ("alta", "modificacion", "baja")
 
 
-def test_committed_modelo_036_binds_census_status_from_profile() -> None:
+def test_committed_modelo_036_binds_censo_status_from_profile() -> None:
     snapshot = _snapshot("modificacion")
     binding = snapshot.revision.bindings[0]
     casilla = next(item for item in snapshot.revision.casillas if item.id == "decl.event-kind")
 
-    assert binding.id == "modelo-036-profile-census-status"
+    assert binding.id == "modelo-036-profile-censo-status"
     assert binding.source == "profile"
-    assert binding.selector == {"profile_key": "census.status"}
-    assert binding.typed_enum == "census_event_kind"
+    assert binding.selector == {"profile_key": "censo.status"}
+    assert binding.typed_enum == "censo_event_kind"
     assert casilla.input_kind == InputKind.BOUND
     assert casilla.binding == binding.id
 
@@ -93,7 +93,7 @@ def test_modelo_037_is_historical_catalogue_metadata_not_active_registry_model()
     verify_source_file(PROJECT_ROOT, catalogues.sources["boe-modelo-037-historical-suppression"])
 
 
-def test_modelo_036_rejects_unknown_census_event_period() -> None:
+def test_modelo_036_rejects_unknown_censo_event_period() -> None:
     modelos, _ = _modelos_by_id()
 
     with pytest.raises(RegistrySnapshotError, match="no revision"):
@@ -109,7 +109,7 @@ def _assert_periods_lowercase(label: str, periods: tuple[str, ...]) -> None:
     """Raise AssertionError if any period value contains an uppercase character.
 
     AEAT publishes event-kind values uppercase in Anexo 3 HTML tables (ALTA,
-    MODIFICACION, BAJA). CENSUS_MODELO_EVENT_KINDS canonicalises them lowercase.
+    MODIFICACION, BAJA). CENSO_MODELO_EVENT_KINDS canonicalises them lowercase.
     A registry author mirroring AEAT display text would silently re-introduce
     uppercase, which passes the _temporal.py case-insensitive mask but breaks
     _active_036_ownership_from_registry whose equality guard is case-sensitive.
@@ -118,7 +118,7 @@ def _assert_periods_lowercase(label: str, periods: tuple[str, ...]) -> None:
     non_lowercase = [p for p in periods if p != p.lower()]
     assert not non_lowercase, (
         f"{label}: period values must be lowercase canonical "
-        f"(CENSUS_MODELO_EVENT_KINDS = {('alta', 'modificacion', 'baja')!r}); "
+        f"(CENSO_MODELO_EVENT_KINDS = {('alta', 'modificacion', 'baja')!r}); "
         f"found non-lowercase: {non_lowercase!r}. "
         "Registry authors: do not mirror AEAT Anexo 3 HTML display casing."
     )
@@ -128,7 +128,7 @@ def test_m036_revision_periods_are_lowercase_canonical() -> None:
     """Guard against re-introduction of uppercase ALTA/MODIFICACION/BAJA in M036 TOML.
 
     AEAT publishes period values uppercase in Anexo 3 HTML tables, but the domain
-    layer CENSUS_MODELO_EVENT_KINDS canonicalises them lowercase. A registry author
+    layer CENSO_MODELO_EVENT_KINDS canonicalises them lowercase. A registry author
     mirroring AEAT display text would re-introduce uppercase (history: commit
     33783e00c, fixed 21 min later in 472de9c02). _active_036_ownership_from_registry
     has a case-sensitive equality guard that the _temporal.py case-insensitive mask

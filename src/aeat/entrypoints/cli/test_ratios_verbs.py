@@ -134,10 +134,10 @@ def test_ratios_unset_emits_ledger_ratios_unset_event(cli_runner: CliRunner) -> 
     assert matching[-1].payload["new"] == ""
 
 
-def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
-    """Capture a census snapshot for the active profile with the supplied m².
+def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
+    """Capture a censo snapshot for the active profile with the supplied m².
 
-    Used by census-override-warning tests so the ratios_set handler has
+    Used by censo-override-warning tests so the ratios_set handler has
     a bound raw afectación ratio to compare the operator-supplied value
     against.
     """
@@ -159,7 +159,7 @@ def _capture_census_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     )
 
 
-def test_ratios_set_emits_census_override_warning_when_suministros_diverges(
+def test_ratios_set_emits_censo_override_warning_when_suministros_diverges(
     cli_runner: CliRunner,
 ) -> None:
     """Setting a HOME_OFFICE suministros ratio at a value different from
@@ -169,7 +169,7 @@ def test_ratios_set_emits_census_override_warning_when_suministros_diverges(
 
     from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 
-    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+    _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
     set_result = cli_runner.invoke(ratios_app, ["set", "suministros_home_office_luz", "0.5"])
     assert set_result.exit_code == 0, set_result.output
@@ -178,16 +178,16 @@ def test_ratios_set_emits_census_override_warning_when_suministros_diverges(
     warnings = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
+        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING
         and event.object_id == "suministros_home_office_luz"
     ]
     assert warnings, (
-        "LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING must fire when the operator "
+        "LEDGER_RATIOS_CENSO_OVERRIDE_WARNING must fire when the operator "
         "overrides a suministros ratio away from the LIRPF Art. 30.2 rule 5 value"
     )
     payload = warnings[-1].payload
     assert payload["override_ratio"] == "0.5"
-    assert payload["census_derived_ratio"] == "0.060"
+    assert payload["censo_derived_ratio"] == "0.060"
     assert payload["raw_afectacion_ratio"] == "0.2"
 
 
@@ -200,7 +200,7 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw(
 
     from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 
-    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+    _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
     set_result = cli_runner.invoke(ratios_app, ["set", "suministros_home_office_luz", "0.06"])
     assert set_result.exit_code == 0, set_result.output
@@ -209,21 +209,21 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw(
     warnings = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
+        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING
     ]
-    assert not warnings, "no warning should fire when the override exactly matches the census-derived value"
+    assert not warnings, "no warning should fire when the override exactly matches the censo-derived value"
 
 
-def test_ratios_list_surfaces_census_mismatch_without_hiding_rows(
+def test_ratios_list_surfaces_censo_mismatch_without_hiding_rows(
     cli_runner: CliRunner,
 ) -> None:
-    """list now routes through load_usage_ratios_with_census_guard. If
-    the persisted HOME_OFFICE override disagrees with the bound census,
-    a typed census_mismatch warning row is emitted alongside the regular
+    """list now routes through load_usage_ratios_with_censo_guard. If
+    the persisted HOME_OFFICE override disagrees with the bound censo,
+    a typed censo_mismatch warning row is emitted alongside the regular
     rows — operators see both the persisted value AND the divergence
     against AEAT, never one without the other."""
 
-    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+    _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
     set_result = cli_runner.invoke(ratios_app, ["set", "suministros_home_office_luz", "0.5"])
     assert set_result.exit_code == 0, set_result.output
 
@@ -231,17 +231,17 @@ def test_ratios_list_surfaces_census_mismatch_without_hiding_rows(
 
     assert list_result.exit_code == 0, list_result.output
     assert "suministros_home_office_luz\t0.5" in list_result.output
-    assert "census_mismatch" in list_result.output
+    assert "censo_mismatch" in list_result.output
     assert "suministros_home_office_luz" in list_result.output
 
 
 def test_ratios_set_silent_for_non_home_office_category(cli_runner: CliRunner) -> None:
     """The override-warning event is HOME_OFFICE-scoped per the ADR:
-    other categories don't carry the census-binding contract."""
+    other categories don't carry the censo-binding contract."""
 
     from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 
-    _capture_census_with_vivienda_office(office_m2="20", total_m2="100")
+    _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
     set_result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.9"])
     assert set_result.exit_code == 0, set_result.output
@@ -250,6 +250,6 @@ def test_ratios_set_silent_for_non_home_office_category(cli_runner: CliRunner) -
     warnings = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
+        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING
     ]
     assert not warnings

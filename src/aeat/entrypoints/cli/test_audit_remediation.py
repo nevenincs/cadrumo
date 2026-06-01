@@ -57,7 +57,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
     ``bindings list`` composes ``--year`` and ``--period`` separately,
     so its ``--period`` argument is a bare registry token (``0A``,
     ``1T``-``4T``, ``01``-``12``) — never a composed ``YYYY``-prefixed
-    string. The help text must show those bare tokens and the census
+    string. The help text must show those bare tokens and the censo
     tokens, the same guidance every modelo period surface gives.
     """
 
@@ -72,7 +72,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
         assert "0A" in flat, surface
         assert "1T-4T" in flat, surface
         assert "01-12" in flat, surface
-        # The census tokens are named (the connector word is locale-
+        # The censo tokens are named (the connector word is locale-
         # dependent, so each token is checked on its own).
         assert "alta" in flat and "modificacion" in flat and "baja" in flat, surface
         # The composed YYYY-prefixed forms are no longer advertised on

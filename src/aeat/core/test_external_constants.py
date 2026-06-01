@@ -102,7 +102,7 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.notifications_summary,
         paths.notifications_query,
         paths.certificate_selector,
-        paths.census_g313_launcher,
+        paths.censo_g313_launcher,
         paths.irpf_expediente_detail_year_prefix,
         paths.notificaciones,
         paths.iva_compensation_wallet,

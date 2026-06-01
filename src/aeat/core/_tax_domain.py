@@ -15,8 +15,8 @@ from enum import StrEnum
 class TaxDomain(StrEnum):
     """Spanish-tax taxonomic domains."""
 
-    CENSUS = "census"
-    """Census / structural registrations (modelo 036, 037)."""
+    CENSO = "censo"
+    """Censo / structural registrations (modelo 036, 037)."""
 
     IRPF = "irpf"
     """Impuesto sobre la Renta de las Personas Físicas."""

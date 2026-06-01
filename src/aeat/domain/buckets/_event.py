@@ -83,10 +83,10 @@ class BucketEventType(StrEnum):
     PROFILE_EXPORTED = "profile.exported"
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
-    # 036 census live-sync against the sede Mis Datos Censales endpoint
-    CENSUS_REFRESHED = "profile.census.refreshed"
-    CENSUS_APPLIED = "profile.census.applied"
-    CENSUS_DEPENDENT_STAMPED_STALE = "modelo.census.dependent_stamped_stale"
+    # 036 censo live-sync against the sede Mis Datos Censales endpoint
+    CENSO_REFRESHED = "profile.censo.refreshed"
+    CENSO_APPLIED = "profile.censo.applied"
+    CENSO_DEPENDENT_STAMPED_STALE = "modelo.censo.dependent_stamped_stale"
 
     # bucket maintenance lifecycle
     BUCKET_EXPORTED = "bucket.exported"
@@ -97,7 +97,7 @@ class BucketEventType(StrEnum):
     # ledger usage-ratio mutations
     LEDGER_RATIOS_SET = "ledger.ratios.set"
     LEDGER_RATIOS_UNSET = "ledger.ratios.unset"
-    LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING = "ledger.ratios.census_override_warning"
+    LEDGER_RATIOS_CENSO_OVERRIDE_WARNING = "ledger.ratios.censo_override_warning"
 
     # operator authentication + workspace bootstrap
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"

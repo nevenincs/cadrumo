@@ -1,8 +1,8 @@
 [[revisions."2025-02-03-y-siguientes".bindings]]
-id = "modelo-036-profile-census-status"
+id = "modelo-036-profile-censo-status"
 source = "profile"
-selector = { profile_key = "census.status" }
-typed_enum = "census_event_kind"
+selector = { profile_key = "censo.status" }
+typed_enum = "censo_event_kind"
 legal_refs = [
     "rd-1065-2007:art-9",
     "rd-1065-2007:art-10",

@@ -200,8 +200,8 @@ def test_attribution_entity_profile_creates_without_spouse_flags() -> None:
     assert rows["taxpayer_type.entity_type"] == "attribution_entity"
 
 
-def test_activity_start_date_flag_stores_the_census_alta_date() -> None:
-    """Round-4 D1: `--activity-start-date` lands in the census alta-date
+def test_activity_start_date_flag_stores_the_censo_alta_date() -> None:
+    """Round-4 D1: `--activity-start-date` lands in the censo alta-date
     fact. The optional flag drives the deadline engine's
     pre-registration-obligation gate, so a 2026 registrant is not shown
     overdue 2025 returns."""
@@ -231,11 +231,11 @@ def test_activity_start_date_flag_stores_the_census_alta_date() -> None:
 
     assert result.exit_code == 0, result.output
     rows = _profile_rows(runner, "recent-autonomo")
-    assert rows["census.activity_start_date"] == "2026-03-01"
+    assert rows["censo.activity_start_date"] == "2026-03-01"
 
 
 def test_profile_creates_without_activity_start_date_flag() -> None:
-    """The census alta date is optional: a profile created with no
+    """The censo alta date is optional: a profile created with no
     `--activity-start-date` flag must not carry the fact at all, so the
     deadline engine's pre-registration gate stays inert."""
 
@@ -262,7 +262,7 @@ def test_profile_creates_without_activity_start_date_flag() -> None:
 
     assert result.exit_code == 0, result.output
     rows = _profile_rows(runner, "no-alta-date")
-    assert "census.activity_start_date" not in rows
+    assert "censo.activity_start_date" not in rows
 
 
 def test_natural_person_with_economic_activity_stores_the_activity() -> None:

@@ -1589,7 +1589,7 @@ cli:
       help: Listar todos los perfiles registrados y marcar el activo
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
-      census:
+      censo:
         apply_help: Sobrescribe el perfil con los valores censales comunicados por
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
@@ -2241,7 +2241,7 @@ cli:
         heading: Configuracion y diagnostico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
           persiste entre sesiones.
-        profile_census: Mostrar el estado del censo del perfil activo.
+        profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
         profile_list: Listar los perfiles de contribuyente disponibles.
@@ -2879,10 +2879,10 @@ errors:
       perfil {profile_id}.
     profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
       censo.
-    sede_g313_no_census: La sede de la AEAT (G313) no devolvió ningún censo legible
+    sede_g313_no_censo: La sede de la AEAT (G313) no devolvió ningún censo legible
       para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado
       para este NIF.
-    sede_no_census: La sede de la AEAT no devolvió ningún censo legible para el perfil
+    sede_no_censo: La sede de la AEAT no devolvió ningún censo legible para el perfil
       {profile_id}.
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
@@ -3092,7 +3092,7 @@ errors:
     error_iva_prorrata_sector: 'Los datos de separación sectorial de la prorrata del IVA son inconsistentes.'
     error_iva_validation: 'Un valor del IVA no es válido.'
   fail:
-    census_sync: La sincronización del censo del Modelo 036 falló.
+    censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
     declaration_parse: No se pudo interpretar la exportación de la declaración presentada
       para la conciliación.
@@ -3151,7 +3151,7 @@ errors:
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
-    fail_sede_census_parse: Un valor de la página del censo de la Sede de la AEAT
+    fail_sede_censo_parse: Un valor de la página del censo de la Sede de la AEAT
       no se pudo interpretar.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
       de la AEAT falló o el archivo no es válido.
@@ -3347,11 +3347,11 @@ errors:
     bootstrap_already_complete: Ya existe un perfil; la configuración inicial solo
       se ejecuta una vez. Usa `aeat config profile switch NOMBRE` para cambiar de
       perfil.
-    census_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
+    censo_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
       sobre una unidad dependiente. Resuelve primero el estado pendiente.
-    census_field_validation: El censo de la AEAT devolvió un valor que el esquema
+    censo_field_validation: El censo de la AEAT devolvió un valor que el esquema
       no admite. Revisa el campo indicado con tu asesor.
-    census_not_available: La AEAT no devolvió ningún censo legible. Es posible que
+    censo_not_available: La AEAT no devolvió ningún censo legible. Es posible que
       no estés dado de alta en el IAE o que tu certificado no esté registrado a tu
       NIF.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
@@ -3360,7 +3360,7 @@ errors:
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
       no admite más operaciones.
-    modelo_census_stale: 'La operación se rechaza porque aplicaste un censo nuevo
+    modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo
       después de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve
       a generarlo con el censo actual.'
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
@@ -3453,7 +3453,7 @@ errors:
       este documento de origen.
     refused_financial_provider_validation: Un campo del documento financiero (fecha
       o importe) no superó la validación.
-    refused_financial_usage_ratios_census_mismatch: Un porcentaje de uso de oficina
+    refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona

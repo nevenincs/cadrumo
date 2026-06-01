@@ -29,7 +29,7 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     assert {
         "identity",
         "tax_residence",
-        "census",
+        "censo",
         "activities",
         "irpf",
         "withholding",
@@ -53,7 +53,7 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert tax_id.sensitivity is SensitivityClass.IDENTITY
     assert "tax.id" in tax_id.model_selectors
 
-    large_company = schema.field("census.large_company")
+    large_company = schema.field("censo.large_company")
     assert large_company.type is ProfileFieldType.BOOLEAN
     assert "enrollment.large_company" in large_company.schedule_predicates
 

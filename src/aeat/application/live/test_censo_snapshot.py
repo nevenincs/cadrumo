@@ -1,4 +1,4 @@
-"""Real-behavior tests for the 036 census snapshot service.
+"""Real-behavior tests for the 036 censo snapshot service.
 
 Anti-tautology: ``censo_facts`` is a ``Mapping[str, str]`` — the
 narrowing to ``str``-only avoids the ``Decimal | str`` coercion trap
@@ -18,15 +18,15 @@ from typing import TypedDict
 
 import pytest
 
-from aeat.adapters.persistence.storage import LIVE_CENSUS_SNAPSHOT_NAMESPACE
+from aeat.adapters.persistence.storage import LIVE_CENSO_SNAPSHOT_NAMESPACE
 from aeat.application.live._censo import (
-    CENSUS_SNAPSHOT_NAMESPACE,
+    CENSO_SNAPSHOT_NAMESPACE,
     CensoSnapshot,
     CensoSnapshotRepository,
     CensoSnapshotService,
     SnapshotLifecycleState,
-    census_snapshot_object_key,
-    derive_census_snapshot_id,
+    censo_snapshot_object_key,
+    derive_censo_snapshot_id,
 )
 from aeat.application.live._errors import LiveApplicationInputError
 from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -45,9 +45,9 @@ class _DeriveKwargs(TypedDict):
 
 def _populated_facts() -> dict[str, str]:
     return {
-        "census.activity_start_date": "2024-01-15",
-        "census.establecimiento_type": "propio",
-        "census.elected_withholding_pct": "15",
+        "censo.activity_start_date": "2024-01-15",
+        "censo.establecimiento_type": "propio",
+        "censo.elected_withholding_pct": "15",
         "contact.fiscal_address_cadastral_reference": "9872023VH5797S0001WX",
         "contact.fiscal_address_is_habitual_vivienda": "true",
         "vivienda_office.total_m2": "120.00",
@@ -61,7 +61,7 @@ def isolated_secure_store(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> None:
+def test_derive_censo_snapshot_id_is_deterministic_over_canonical_inputs() -> None:
     """Two calls with identical inputs yield the same SHA-256 hex id;
     changing any of profile_id / captured_at / source_url / a fact
     value changes the id."""
@@ -73,34 +73,34 @@ def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> N
         "source_url": "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
         "censo_facts": _populated_facts(),
     }
-    base_id = derive_census_snapshot_id(**base_kwargs)
+    base_id = derive_censo_snapshot_id(**base_kwargs)
     assert len(base_id) == 64
     assert int(base_id, 16) >= 0
 
     # Identical inputs => identical id.
-    assert derive_census_snapshot_id(**base_kwargs) == base_id
+    assert derive_censo_snapshot_id(**base_kwargs) == base_id
 
     # Different profile_id => different id.
     drift_kwargs: _DeriveKwargs = {**base_kwargs, "profile_id": "other-operator"}
-    assert derive_census_snapshot_id(**drift_kwargs) != base_id
+    assert derive_censo_snapshot_id(**drift_kwargs) != base_id
 
     # Different fact value => different id.
     drift_facts = dict(_populated_facts())
-    drift_facts["census.elected_withholding_pct"] = "7"
+    drift_facts["censo.elected_withholding_pct"] = "7"
     drift_fact_kwargs: _DeriveKwargs = {**base_kwargs, "censo_facts": drift_facts}
-    assert derive_census_snapshot_id(**drift_fact_kwargs) != base_id
+    assert derive_censo_snapshot_id(**drift_fact_kwargs) != base_id
 
 
-def test_census_snapshot_object_key_namespaces_by_bucket_and_snapshot() -> None:
+def test_censo_snapshot_object_key_namespaces_by_bucket_and_snapshot() -> None:
     """The secure-object key embeds bucket and snapshot ids so the
     namespace cannot collide across buckets or snapshots."""
 
-    key = census_snapshot_object_key("bucket-1", "snap-abc")
-    assert key == "census-snapshot:bucket-1:snap-abc"
+    key = censo_snapshot_object_key("bucket-1", "snap-abc")
+    assert key == "censo-snapshot:bucket-1:snap-abc"
     with pytest.raises(LiveApplicationInputError, match=r"bucket_id"):
-        census_snapshot_object_key("   ", "snap-abc")
+        censo_snapshot_object_key("   ", "snap-abc")
     with pytest.raises(LiveApplicationInputError, match=r"snapshot_id"):
-        census_snapshot_object_key("bucket-1", "   ")
+        censo_snapshot_object_key("bucket-1", "   ")
 
 
 def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
@@ -108,7 +108,7 @@ def test_active_snapshot_cannot_carry_supersession_pointer() -> None:
     also names a successor; mirrors Borrador100 invariants verbatim."""
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
-    snapshot_id = derive_census_snapshot_id(
+    snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
@@ -130,7 +130,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
     """A SUPERSEDED snapshot with no successor pointer is invalid."""
 
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
-    snapshot_id = derive_census_snapshot_id(
+    snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
@@ -147,7 +147,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
         )
 
 
-def test_census_snapshot_survives_encrypted_storage_roundtrip(
+def test_censo_snapshot_survives_encrypted_storage_roundtrip(
     isolated_secure_store: TestRuntimeProfile,
     tmp_path: Path,
 ) -> None:
@@ -158,7 +158,7 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
-    snapshot_id = derive_census_snapshot_id(
+    snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml",
@@ -184,14 +184,14 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
     # Every fact value stays str (no numeric-looking string gets silently
     # coerced into Decimal by the union resolver).
     for key in (
-        "census.elected_withholding_pct",
+        "censo.elected_withholding_pct",
         "vivienda_office.total_m2",
         "vivienda_office.office_m2",
-        "census.establecimiento_type",
+        "censo.establecimiento_type",
     ):
         assert isinstance(loaded.censo_facts[key], str), key
     assert loaded.censo_facts["vivienda_office.total_m2"] == "120.00"
-    assert loaded.censo_facts["census.elected_withholding_pct"] == "15"
+    assert loaded.censo_facts["censo.elected_withholding_pct"] == "15"
 
 
 def test_capture_is_idempotent_for_structurally_identical_facts(
@@ -233,7 +233,7 @@ def test_capture_auto_supersedes_prior_active_for_same_profile(
     service = CensoSnapshotService(bucket_id="operator-bucket")
     facts_v1 = _populated_facts()
     facts_v2 = dict(facts_v1)
-    facts_v2["census.elected_withholding_pct"] = "7"
+    facts_v2["censo.elected_withholding_pct"] = "7"
 
     snapshot_v1 = service.capture(
         profile_id="operator",
@@ -270,7 +270,7 @@ def test_capture_marks_older_snapshot_superseded_when_a_newer_active_exists(
     service = CensoSnapshotService(bucket_id="operator-bucket")
     facts_newer = _populated_facts()
     facts_older = dict(facts_newer)
-    facts_older["census.elected_withholding_pct"] = "1"
+    facts_older["censo.elected_withholding_pct"] = "1"
 
     newer = service.capture(
         profile_id="operator",
@@ -352,7 +352,7 @@ def test_discard_marks_snapshot_discarded_with_audit(
 def test_namespace_constant_uses_storage_registry() -> None:
     """Boundary regression: snapshot persistence must use the registry entry."""
 
-    assert LIVE_CENSUS_SNAPSHOT_NAMESPACE.namespace == CENSUS_SNAPSHOT_NAMESPACE
+    assert LIVE_CENSO_SNAPSHOT_NAMESPACE.namespace == CENSO_SNAPSHOT_NAMESPACE
 
 
 def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
@@ -367,7 +367,7 @@ def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
-    snapshot_id = derive_census_snapshot_id(
+    snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
@@ -404,7 +404,7 @@ def test_fixture_built_discarded_snapshot_roundtrips_with_full_audit_triple(
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     discarded_at = datetime(2026, 5, 17, 14, 0, 0, tzinfo=UTC)
     facts = _populated_facts()
-    snapshot_id = derive_census_snapshot_id(
+    snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",
@@ -452,7 +452,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
     repo = CensoSnapshotRepository(bucket_id=bucket_id)
     captured_at = datetime(2026, 5, 16, 9, 30, 0, tzinfo=UTC)
     facts = _populated_facts()
-    snapshot_id = derive_census_snapshot_id(
+    snapshot_id = derive_censo_snapshot_id(
         profile_id="operator",
         captured_at=captured_at,
         source_url="https://example/G313",

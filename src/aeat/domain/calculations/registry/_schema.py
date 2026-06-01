@@ -2473,7 +2473,7 @@ class RegistrySnapshot(RegistryModel):
     #   - Sede outbound models (sede/_declarations.py, sede/_schema.py):
     #     max_length=8 — AEAT-side period codes from the sede HTML are
     #     always ≤ 8 chars (e.g. "1T", "0A"). M036 events never traverse
-    #     these models (census events do not flow through the
+    #     these models (censo events do not flow through the
     #     filed-declaration sede surface).
     #
     # Verified end-to-end: M036's "modificacion" period builds a

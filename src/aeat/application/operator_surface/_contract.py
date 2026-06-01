@@ -190,7 +190,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "import",
             "logout",
             "status",
-            "census",
+            "censo",
         ),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),

@@ -96,7 +96,7 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
     (
         ("app ledger link tx --invoice-id inv", True),
         ("app modelo work file abc", True),
-        ("config profile census refresh", True),
+        ("config profile censo refresh", True),
         ("config profile switch operator", False),
         ("app ledger list", False),
         ("app registry legal view ley-37-1992:art-99", False),

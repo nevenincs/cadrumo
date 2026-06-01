@@ -44,20 +44,20 @@ class UsageRatioValidationError(UsageRatioError, ValueError):
 
 
 class CensoRatioMismatchError(UsageRatioError):
-    """Raised when a persisted HOME_OFFICE ratio disagrees with the census.
+    """Raised when a persisted HOME_OFFICE ratio disagrees with the censo.
 
     Surfaced by
-    :func:`aeat.domain.usage_ratios.load_usage_ratios_with_census_guard`
+    :func:`aeat.domain.usage_ratios.load_usage_ratios_with_censo_guard`
     when a pre-existing per-category override for a HOME_OFFICE category
-    deviates from the legally-binding census-derived value, or when the
-    operator has not yet captured a census snapshot at all. The
-    AEAT is the binding legal source of truth for census-derived values:
-    a profile in conflict with the census must be refused at the load
+    deviates from the legally-binding censo-derived value, or when the
+    operator has not yet captured a censo snapshot at all. The
+    AEAT is the binding legal source of truth for censo-derived values:
+    a profile in conflict with the censo must be refused at the load
     boundary so the calculation surface never silently consumes a stale
     ratio.
 
-    The fix is operator-driven: either refresh the census via
-    ``aeat config profile census refresh`` and ``apply``, or unset the
+    The fix is operator-driven: either refresh the censo via
+    ``aeat config profile censo refresh`` and ``apply``, or unset the
     diverging override via ``aeat app ledger ratios unset``. No
     automatic migration; no shim.
     """

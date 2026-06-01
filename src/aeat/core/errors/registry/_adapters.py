@@ -237,10 +237,10 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.adapters.outbound.aeat.sede._censo.CensoParseError",
         ErrorCode(
-            code="FAIL_SEDE_CENSUS_PARSE",
+            code="FAIL_SEDE_CENSO_PARSE",
             category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_sede_census_parse",
-            default_suggestion="aeat config profile census refresh",
+            message_key="errors.fail.fail_sede_censo_parse",
+            default_suggestion="aeat config profile censo refresh",
             retryable=True,
             runbook_id=None,
         ),

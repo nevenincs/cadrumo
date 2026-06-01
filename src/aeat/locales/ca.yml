@@ -1562,7 +1562,7 @@ cli:
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
-      census:
+      censo:
         apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
         help: Sincronitza el cens 036 d'AEAT amb aquest perfil
@@ -2203,7 +2203,7 @@ cli:
         heading: Configuracio i diagnostic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticacio, llibre) persisteix
           entre sessions.
-        profile_census: Mostrar l'estat del cens del perfil actiu.
+        profile_censo: Mostrar l'estat del cens del perfil actiu.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
         profile_list: Llistar els perfils de contribuent disponibles.
@@ -2833,10 +2833,10 @@ errors:
       {profile_id}.
     profile_not_found: El perfil {profile_id} no existeix; crea'l abans d'aplicar
       el cens.
-    sede_g313_no_census: La seu electrònica de l'AEAT (G313) no ha retornat cap cens
+    sede_g313_no_censo: La seu electrònica de l'AEAT (G313) no ha retornat cap cens
       llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve
       està registrat per a aquest NIF.
-    sede_no_census: La seu electrònica de l'AEAT no ha retornat cap cens llegible
+    sede_no_censo: La seu electrònica de l'AEAT no ha retornat cap cens llegible
       per al perfil {profile_id}.
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
@@ -3044,7 +3044,7 @@ errors:
     error_iva_prorrata_sector: 'Les dades de separació sectorial de la prorrata de l''IVA són inconsistents.'
     error_iva_validation: 'Un valor de l''IVA no és vàlid.'
   fail:
-    census_sync: La sincronització del cens del Model 036 ha fallat.
+    censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
     declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada
       per a la conciliació.
@@ -3104,7 +3104,7 @@ errors:
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sanitization_source_parse: El PDF d'origen no s'ha pogut obrir per sanejar-lo.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
-    fail_sede_census_parse: Un valor de la pàgina del cens de la Seu de l'AEAT no
+    fail_sede_censo_parse: Un valor de la pàgina del cens de la Seu de l'AEAT no
       s'ha pogut interpretar.
     fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
       de l'AEAT ha fallat o el fitxer no és vàlid.
@@ -3304,11 +3304,11 @@ errors:
     bootstrap_already_complete: Ja existeix un perfil; la configuració inicial només
       s'executa una vegada. Fes servir `aeat config profile switch NOM` per canviar
       de perfil.
-    census_apply_conflict: No es pot aplicar el cens perquè hi ha feina en curs sobre
+    censo_apply_conflict: No es pot aplicar el cens perquè hi ha feina en curs sobre
       una unitat dependent. Resol primer l'estat pendent.
-    census_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema
+    censo_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema
       no admet. Revisa el camp indicat amb el teu assessor.
-    census_not_available: L'AEAT no ha retornat cap cens llegible. És possible que
+    censo_not_available: L'AEAT no ha retornat cap cens llegible. És possible que
       no estiguis donat d'alta a l'IAE o que el teu certificat no estigui registrat
       al teu NIF.
     ledger_preflight: La comprovació prèvia del llibre ha rebutjat l'execució del
@@ -3317,7 +3317,7 @@ errors:
       del Model 036 sense una alta prèvia.
     modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
       no admet més operacions.
-    modelo_census_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
+    modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
       de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
       amb el cens actual.'
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
@@ -3409,7 +3409,7 @@ errors:
       document d'origen.
     refused_financial_provider_validation: Un camp del document financer (data o import)
       no ha superat la validació.
-    refused_financial_usage_ratios_census_mismatch: Un percentatge d'ús d'oficina
+    refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina
       a casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona

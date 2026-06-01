@@ -78,7 +78,7 @@ def _window_outside_activity_period(
 ) -> bool:
     """Return True when an AEAT window falls entirely outside the operator's activity period.
 
-    Two gates, both grounded in RGAT Arts. 9 / 11 (census activity
+    Two gates, both grounded in RGAT Arts. 9 / 11 (censo activity
     start / end dates published on G313):
 
     * Pre-start: ``closes_on < activity_start_date`` — the entire

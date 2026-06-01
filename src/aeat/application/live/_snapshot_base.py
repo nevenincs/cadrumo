@@ -2,7 +2,7 @@
 
 This module factors the duplicated state-machine, supersession, and content-
 addressed-id derivation logic shared across the bucket-scoped live snapshot
-services (Borrador100, Census, Expedientes, and Notifications).
+services (Borrador100, Censo, Expedientes, and Notifications).
 
 Design notes:
 
@@ -88,7 +88,7 @@ class SnapshotLifecycleState(StrEnum):
 class SnapshotRepository[TPayload: BaseModel](Protocol):
     """Structural contract for bucket-scoped snapshot persistence backends.
 
-    Implementations may be SecureObjectRepository-backed (Borrador100, Census)
+    Implementations may be SecureObjectRepository-backed (Borrador100, Censo)
     or file-system-backed (legacy stateless services).
     """
 
@@ -142,7 +142,7 @@ def enforce_snapshot_state_invariants(
     DISCARDED: forbids supersession pointer, requires actor + timestamp.
 
     Domain-specific Pydantic model validators wrap this helper so the same
-    rules apply across Borrador100, Census, and future stateful services.
+    rules apply across Borrador100, Censo, and future stateful services.
     """
     discard_metadata_present = (
         discarded_at is not None or bool(discarded_by) or bool(discard_reason)
@@ -186,7 +186,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
 
     * ``_payload_axis_key`` — returns a tuple identifying the domain axis on
       which prior ACTIVE snapshots are superseded (e.g. ``(modelo, year,
-      period)`` for Borrador100, ``(profile_id,)`` for Census).
+      period)`` for Borrador100, ``(profile_id,)`` for Censo).
     * ``_build_active_payload`` — constructs an ACTIVE snapshot from
       keyword-only capture arguments and a derived snapshot id.
 

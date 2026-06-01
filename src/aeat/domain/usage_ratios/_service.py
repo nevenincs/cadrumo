@@ -34,9 +34,9 @@ from ._errors import (
 from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 
 __all__ = [
-    "derive_home_office_ratios_from_census",
+    "derive_home_office_ratios_from_censo",
     "load_usage_ratios",
-    "load_usage_ratios_with_census_guard",
+    "load_usage_ratios_with_censo_guard",
     "save_usage_ratios",
     "usage_ratios_object_key",
 ]
@@ -170,21 +170,21 @@ def _home_office_categories() -> frozenset:
     )
 
 
-def load_usage_ratios_with_census_guard(
+def load_usage_ratios_with_censo_guard(
     *,
     bucket_id: str,
     raw_afectacion_ratio: Decimal | None,
     year: int = 2025,
     objects: SecureObjectRepository | None = None,
 ) -> UsageRatioProfile:
-    """Load a usage-ratio profile and refuse on census disagreement.
+    """Load a usage-ratio profile and refuse on censo disagreement.
 
     Calls :func:`load_usage_ratios` and then enforces the binding-
-    census invariant for HOME_OFFICE_SUMINISTROS and
+    censo invariant for HOME_OFFICE_SUMINISTROS and
     HOME_OFFICE_OWNERSHIP categories: every persisted override must
-    equal the census-derived value
+    equal the censo-derived value
     (``raw_afectacion_ratio * statutory_multiplier``). When the
-    operator has not yet captured a census snapshot, any persisted
+    operator has not yet captured a censo snapshot, any persisted
     HOME_OFFICE override is refused as well, since there is no
     legally-grounded reference to validate against.
 
@@ -193,25 +193,25 @@ def load_usage_ratios_with_census_guard(
     (calculate / verify / file / build_draft / approve_draft /
     export_draft) must therefore surface the underlying
     :exc:`CensoRatioMismatchError` to the operator so they can
-    re-run ``aeat config profile census refresh + apply`` or unset
+    re-run ``aeat config profile censo refresh + apply`` or unset
     the diverging override.
 
     Args:
         bucket_id: Active workflow bucket id.
         raw_afectacion_ratio: ``office_m2 / total_m2`` from the bound
-            census snapshot, or ``None`` if the operator has not yet
-            applied a census.
+            censo snapshot, or ``None`` if the operator has not yet
+            applied a censo.
         year: Registry year whose proportionality rules drive the
             derivation.
         objects: Optional injected repository (testing seam).
 
     Returns:
         The persisted :class:`UsageRatioProfile` when no HOME_OFFICE
-        override disagrees with the census.
+        override disagrees with the censo.
 
     Raises:
         CensoRatioMismatchError: When at least one persisted HOME_OFFICE
-            override disagrees with the census-derived value, or when any
+            override disagrees with the censo-derived value, or when any
             persisted HOME_OFFICE override exists with ``raw_afectacion_ratio``
             unset.
     """
@@ -225,10 +225,10 @@ def load_usage_ratios_with_census_guard(
     if raw_afectacion_ratio is None:
         offending = sorted(c.value for c in persisted_home_office)
         raise CensoRatioMismatchError(
-            f"persisted HOME_OFFICE overrides require an applied census; "
+            f"persisted HOME_OFFICE overrides require an applied censo; "
             f"offending categories: {offending}"
         )
-    derived = derive_home_office_ratios_from_census(raw_afectacion_ratio, year=year)
+    derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year)
     mismatches = {
         category: (persisted, derived.ratios[category])
         for category, persisted in persisted_home_office.items()
@@ -236,24 +236,24 @@ def load_usage_ratios_with_census_guard(
     }
     if mismatches:
         rendered = ", ".join(
-            f"{category.value} persisted={persisted} census={census}"
-            for category, (persisted, census) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
+            f"{category.value} persisted={persisted} censo={censo}"
+            for category, (persisted, censo) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
         )
         raise CensoRatioMismatchError(
-            f"persisted HOME_OFFICE overrides disagree with the bound census: {rendered}"
+            f"persisted HOME_OFFICE overrides disagree with the bound censo: {rendered}"
         )
     return profile
 
 
-def derive_home_office_ratios_from_census(
+def derive_home_office_ratios_from_censo(
     raw_afectacion_ratio: Decimal,
     *,
     year: int,
 ) -> UsageRatioProfile:
-    """Build a :class:`UsageRatioProfile` for HOME_OFFICE categories from the census.
+    """Build a :class:`UsageRatioProfile` for HOME_OFFICE categories from the censo.
 
     The operator's vivienda afectación ratio is the raw
-    ``office_m2 / total_m2`` computed from the AEAT-bound census facts
+    ``office_m2 / total_m2`` computed from the AEAT-bound censo facts
     (LIRPF Art. 30.2 rule 5, Ley 6/2017 BOE-A-2017-12544). For every
     HOME_OFFICE_SUMINISTROS category, the ratio is multiplied by the
     registry rule's ``statutory_multiplier`` (legally 0.30 for utility
