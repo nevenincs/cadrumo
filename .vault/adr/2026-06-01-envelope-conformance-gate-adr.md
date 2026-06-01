@@ -5,6 +5,7 @@ tags:
 date: '2026-06-01'
 related:
   - "[[2026-05-31-coverage-canonicalisation-audit]]"
+  - "[[2026-06-01-envelope-conformance-gate-research]]"
 ---
 
 # `envelope-conformance-gate` adr: cli json schema registry has zero allowlist | (**status:** `accepted`)

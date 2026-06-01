@@ -3,7 +3,8 @@ tags:
   - '#adr'
   - '#calculation-test-oracle-discipline'
 date: '2026-06-01'
-related: []
+related:
+  - "[[2026-06-01-calculation-test-oracle-discipline-research]]"
 ---
 
 # `calculation-test-oracle-discipline` adr: every numeric calculation assertion cites an external oracle | (**status:** `accepted`)
