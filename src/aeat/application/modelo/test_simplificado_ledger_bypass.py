@@ -103,7 +103,7 @@ def _seed_profile(bucket_id: str, *, iva_regime: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Test profile",
+            display_name="Test runtime profile",
             facts=(UserProfileFact(path="iva.regime", value=iva_regime),),
             created_at=_T0,
             updated_at=_T0,
