@@ -757,7 +757,8 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         import contextlib
 
         from ...core.config import override_settings
-        from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+        from ...core.errors import AeatError
+        from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 
         with contextlib.ExitStack() as _language_stack:
             # When the operator supplies `--output-language` on the
@@ -774,7 +775,20 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
                 _language_stack.enter_context(
                     override_settings(aeat_output_language=requested_language)
                 )
-            _command_body(_prompter=_prompter, **kwargs)
+            try:
+                _command_body(_prompter=_prompter, **kwargs)
+            except AeatError as exc:
+                # Pre-render translated_message INSIDE the override so the
+                # error boundary's renderer (which runs after the ExitStack
+                # unwinds) sees the already-localised string. Without this
+                # the override is gone by the time render_error_text fires,
+                # and the refusal falls back to the default language.
+                translated_key = getattr(exc, "translated_message", None)
+                if isinstance(translated_key, str) and translated_key:
+                    rendered = tr(translated_key, **{k: v for k, v in (exc.context or {}).items()})
+                    exc.args = (rendered, *exc.args[1:])
+                    exc.translated_message = None
+                raise
 
     def _command_body(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         from ...domain.user_profile import new_profile_id
