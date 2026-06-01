@@ -37,12 +37,14 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency import (
     CurrencyNormalizationService,
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
@@ -181,8 +183,8 @@ def create_manual_transaction(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     occurred_at: datetime | None = None,
@@ -227,8 +229,8 @@ def attach_manual_transaction_evidence(
     attachment_ids: tuple[str, ...] = (),
     source_command: str = "aeat app ledger attach",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -382,7 +384,7 @@ def import_ledger_transactions(
     raw_transactions: Iterable[RawTransaction],
     direction_resolver: Callable[[RawTransaction], object],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     actor: str = "operator",
     source_command: str = "aeat app ledger import",
     occurred_at: datetime | None = None,
@@ -463,7 +465,7 @@ def import_ledger_source(
     command: LedgerSourceImportCommand,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file."""
     provider = _resolve_financial_provider(command.provider, command.path)
@@ -579,7 +581,7 @@ def archive_manual_transaction(
     reason: str = "",
     source_command: str = "aeat app ledger archive",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
@@ -609,7 +611,7 @@ def stash_manual_transaction(
     reason: str = "",
     source_command: str = "aeat app ledger stash",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
@@ -640,8 +642,8 @@ def remove_manual_transaction(
     dry_run: bool = False,
     source_command: str = "aeat app ledger remove",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
@@ -746,8 +748,8 @@ def reset_ledger_catalogue(
     dry_run: bool = False,
     source_command: str = "aeat app ledger reset",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
@@ -875,7 +877,7 @@ def export_ledger_transactions(
     command: LedgerExportCommand,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
     """Export canonical bucket-local ledger transaction rows and emit an audit event."""
@@ -972,7 +974,7 @@ def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions."""
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
@@ -1005,7 +1007,7 @@ def _filter_ledger_review_rows(
     rows: tuple[Transaction, ...],
     query: LedgerReviewQuery,
     catalogue: TransactionCatalogue,
-    bucket_event_repository: BucketEventHistoryRepository | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> tuple[Transaction, ...]:
     """Apply the four LedgerReviewQuery filters (period / status / import-or-issue / transaction-id).
 
@@ -1222,8 +1224,8 @@ def update_manual_transaction(
     transaction_id: str,
     command: ManualLedgerTransactionCommand,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -1342,8 +1344,8 @@ def update_manual_transaction_fields(
     classified_by_override: str | None = None,
     reaffirm: bool = False,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -1402,7 +1404,7 @@ def split_transaction(
     source_command: str = "aeat app ledger split",
     reason: str = "",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
@@ -1713,7 +1715,7 @@ def merge_transactions(
     source_command: str = "aeat app ledger merge",
     reason: str = "",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
@@ -2040,7 +2042,7 @@ def _transaction_repository(
 def _invoice_repository(
     *,
     bucket_id: str,
-    repository: InvoiceCatalogueRepository | None,
+    repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> InvoiceCatalogueRepository:
     if repository is None:
         return InvoiceCatalogueRepository(bucket_id=bucket_id)
@@ -2186,7 +2188,7 @@ def _transaction_ids_for_review_event_filters(
     bucket_id: str,
     import_id: str | None,
     issue: str | None,
-    bucket_event_repository: BucketEventHistoryRepository | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> frozenset[str]:
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
     events = event_repository.load().for_bucket(
@@ -2365,7 +2367,7 @@ def _transition_manual_transaction_lifecycle(
     reason: str,
     source_command: str,
     transaction_repository: TransactionCatalogueRepository | None,
-    bucket_event_repository: BucketEventHistoryRepository | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
     calculation_repository: CalculationRevisionCatalogueRepository | None,
     occurred_at: datetime | None,
@@ -2715,7 +2717,7 @@ def _verify_evidence_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
-    invoice_repository: InvoiceCatalogueRepository | None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
@@ -2727,7 +2729,7 @@ def _verify_evidence_references(
 def _verify_purchase_invoice_evidence(
     command: ManualLedgerTransactionCommand,
     *,
-    invoice_repository: InvoiceCatalogueRepository | None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> None:
     """Verify the purchase-invoice evidence reference exists, matches the bucket, and is RECEIVED."""
     evidence_id = command.purchase_invoice_evidence_id
@@ -3304,11 +3306,11 @@ def _build_bucket_event(
     return event
 
 
-def _append_bucket_event(*, repository: BucketEventHistoryRepository, event: BucketEvent) -> None:
+def _append_bucket_event(*, repository: BucketEventHistoryRepositoryProtocol, event: BucketEvent) -> None:
     repository.save(append_bucket_event(repository.load(), event))
 
 
-def _append_bucket_events(*, repository: BucketEventHistoryRepository, events: tuple[BucketEvent, ...]) -> None:
+def _append_bucket_events(*, repository: BucketEventHistoryRepositoryProtocol, events: tuple[BucketEvent, ...]) -> None:
     catalogue = repository.load()
     for event in events:
         catalogue = append_bucket_event(catalogue, event)
@@ -3318,6 +3320,8 @@ def _append_bucket_events(*, repository: BucketEventHistoryRepository, events: t
 def _save_transaction_catalogue_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
+    # rationale: calls to_secure_object_write(), an adapter-only escape
+    # hatch absent from BucketEventHistoryRepositoryProtocol.
     event_repository: BucketEventHistoryRepository,
     catalogue: TransactionCatalogue,
     events: tuple[BucketEvent, ...],
@@ -3335,6 +3339,8 @@ def _save_transaction_catalogue_invoices_and_events(
     *,
     transaction_repository: TransactionCatalogueRepository,
     invoice_repository: InvoiceCatalogueRepository,
+    # rationale: calls to_secure_object_write(), an adapter-only escape
+    # hatch absent from BucketEventHistoryRepositoryProtocol.
     event_repository: BucketEventHistoryRepository,
     transaction_catalogue: TransactionCatalogue,
     invoice_catalogue: InvoiceCatalogue,
@@ -3397,7 +3403,7 @@ def bulk_classify_from_csv(
     actor: str,
     source_command: str = "aeat app ledger classify",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> BulkClassifyResult:
     """Apply batch classifications from a CSV string.
 
@@ -3543,7 +3549,7 @@ def apply_classification_rules(
     actor: str,
     source_command: str = "aeat app ledger rule apply",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     rule_repository: object | None = None,
 ) -> ApplyRulesResult:
     """Apply stored classification rules to unclassified ACTIVE transactions.
