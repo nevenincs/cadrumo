@@ -11,11 +11,12 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
+from ...core._toml import to_str_keyed_dict
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
-from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, IvaRegulation
 from ._errors import IvaCatalogueError
+from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, IvaRegulation
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
@@ -103,20 +104,10 @@ def resolve_catalogue(*, on: date) -> IvaCatalogue:
     return catalogue
 
 
-def _to_str_dict(raw: Mapping) -> dict[str, object]:
-    """Convert a Mapping with unknown key types to a str-keyed dict."""
-    result: dict[str, object] = {}
-    for k, v in raw.items():
-        if not isinstance(k, str):
-            raise IvaCatalogueError("TOML table keys must be strings")
-        result[k] = v
-    return result
-
-
 def _parse_regulation(raw_regulation: object) -> IvaRegulation:
     if not isinstance(raw_regulation, dict):
         raise IvaCatalogueError("regulation entry must be a table")
-    data = _to_str_dict(raw_regulation)
+    data = to_str_keyed_dict(raw_regulation, error_factory=IvaCatalogueError)
     category = IvaCategory(str(data.get("category")))
     raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
@@ -145,7 +136,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
 def _parse_citation(raw_citation: object) -> IvaCitation:
     if not isinstance(raw_citation, dict):
         raise IvaCatalogueError("citation entry must be a table")
-    data = _to_str_dict(raw_citation)
+    data = to_str_keyed_dict(raw_citation, error_factory=IvaCatalogueError)
     source = IvaCitationSource(str(data.get("source")))
     return IvaCitation.model_validate(
         {
