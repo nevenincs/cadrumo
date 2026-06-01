@@ -344,5 +344,36 @@ family), with only the `canonical_decimal_string` flag above - which
 verification confirmed divergent. Combined with rg residual-proofs (every
 consolidated cluster's old pattern returns zero hits), the codebase
 satisfiably demonstrates no residual actionable semantic overlaps or code
-duplications. Remaining same-token naming (IVA/VAT, Renta/Rental) is
-sanctioned domain vocabulary, not code duplication.
+duplications.
+
+### CORRECTION - English tax-term drift is NOT sanctioned
+
+An earlier draft of this section wrongly called IVA/VAT "sanctioned
+vocabulary." That is FALSE. The accepted `spanish-stem-terminology-authority`
+ADR (2026-05-19) makes Spanish stems authoritative for tax-domain identifiers:
+`iva` supersedes `vat`/`value_added_tax`; English tax terms are drift to be
+eliminated (only generic infrastructure suffixes and international identifiers
+stay English). `renta` (IRPF income base) and `rental` are explicitly distinct
+and never collapse; the `rental`->`fincas` adjudication is already executed
+(zero `Rental*` identifiers remain).
+
+Status against that authority (verified 2026-06-01):
+
+- DONE (team): the `domain/vat` package and all CamelCase VAT identifiers
+  (`VatClassification`, `VATRateKind`, `VATCatalogue`, `VatRegulation`,
+  `IssuerResidency`/`CustomerResidency`, `InvoiceDirection`) migrated into
+  `domain/iva`; no CamelCase `Vat`/`VAT` identifier remains in production.
+  `rental`->`fincas` rename complete.
+- RESIDUAL (open): snake_case `vat_rate` (persisted pydantic field on
+  `domain/profile/assets` + `inventory` records, JSON-serialised in encrypted
+  SQL; also a CLI option) and `vat_regime` (registry-TOML-bound selector field
+  in `domain/calculations/registry/_bindings.py`). Per the ADR these should be
+  `iva_rate` / `iva_regime`, but each rename is a persisted-schema + registry-
+  authoring migration requiring a data/TOML migration and roundtrip tests -
+  NOT a free rename. Tracked as a follow-up schema-migration slice.
+- CORRECTLY ENGLISH: `vat_number` / `_fill_vat_number` in the VIES foreign-EU
+  VAT-validation path - the ADR's explicit international-identifier exception.
+
+The codebase is free of residual code-logic duplication (the F-clusters); the
+remaining terminology work above is a distinct, schema-gated follow-up, not a
+"sanctioned" no-op.
