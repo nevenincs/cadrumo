@@ -59,7 +59,7 @@ helper is observed.
 - [x] `P02.S05` - migrate `AEAT_OUTPUT_LANGUAGE` read to `get_settings().aeat_output_language`; `src/aeat/core/i18n/_render.py`.
 - [x] `P02.S06` - migrate live-tests opt-in read at line 103 to `get_settings().aeat_live_tests_enabled`; `src/aeat/core/access_gate/__init__.py`.
 - [x] `P02.S07` - migrate diagnostic snapshot read at line 128 to `get_settings().aeat_live_tests_enabled`; `src/aeat/core/access_gate/__init__.py`.
-- [ ] `P02.S08` - add focused tests proving each migrated site observes the override; `src/aeat/core/i18n/test_render_override.py` and `src/aeat/core/access_gate/test_override.py`.
+- [x] `P02.S08` - add focused tests proving each migrated site observes the override; `src/aeat/core/i18n/test_render_override.py` and `src/aeat/core/access_gate/test_override.py`.
 
 ### Phase `P03` - migrate Category B call sites with fail-closed verification
 
