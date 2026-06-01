@@ -3,7 +3,7 @@
 Three independent conformance assertions:
 
 1. **Docs-versus-tree completeness** — every non-retired live leaf command is
-   documented in the committed reference; every documented command path
+   documented in the generated reference; every documented command path
    resolves to a real CLI leaf; no retired surface appears as a live command.
 
 2. **Schema-registry conformance** — every entry in :data:`SCHEMA_REGISTRY`
@@ -44,21 +44,37 @@ def _project_root() -> Path:
     return Path(__file__).parent.parent.parent.parent.parent
 
 
-def _committed_doc_registry_keys() -> set[str]:
-    """Extract registry keys that appear in the committed ``docs/cli/`` pages.
+def _rendered_reference() -> dict[str, str]:
+    """Render the CLI reference fresh in an English-pinned subprocess.
 
-    Parses every ``**Registry key:** ``...``` line from the committed RST files
-    and returns the set of registry-key strings it finds.
+    The CLI reference is generated at build time, not committed, so the
+    conformance gates render it in a fresh subprocess (which pins
+    ``AEAT_OUTPUT_LANGUAGE=en`` before any CLI import) to a temporary directory
+    and inspect the returned content, rather than reading committed pages.
 
     Returns:
-        A set of registry-key strings extracted from the committed reference.
+        A mapping from relative path (for example ``"cli/app.rst"``) to rendered
+        reStructuredText content.
     """
-    cli_dir = _project_root() / "docs" / "cli"
+    import tempfile
+
+    from aeat.entrypoints.cli._doc_reference import generate_cli_reference_in_subprocess
+
+    with tempfile.TemporaryDirectory() as tmp:
+        return generate_cli_reference_in_subprocess(Path(tmp))
+
+
+def _rendered_doc_registry_keys() -> set[str]:
+    """Extract registry keys from a freshly rendered CLI reference.
+
+    Returns:
+        A set of registry-key strings extracted from the rendered family pages.
+    """
     keys: set[str] = set()
-    for rst_file in cli_dir.glob("*.rst"):
-        if rst_file.name == "index.rst":
+    for rel_path, content in _rendered_reference().items():
+        if rel_path.endswith("index.rst"):
             continue
-        for line in rst_file.read_text(encoding="utf-8").splitlines():
+        for line in content.splitlines():
             stripped = line.strip()
             if stripped.startswith("**Registry key:**"):
                 # **Registry key:** ``some.key.here``
@@ -74,11 +90,11 @@ def _committed_doc_registry_keys() -> set[str]:
 
 
 def test_every_live_leaf_is_documented() -> None:
-    """Every non-retired live leaf command must appear in the committed reference.
+    """Every non-retired live leaf command must appear in the generated reference.
 
     Walks the materialised CLI tree via a subprocess (guaranteeing en-language
     pinning) to enumerate the full leaf set, then checks that every normalised
-    registry key is present in the committed ``docs/cli/`` pages.
+    registry key is present in the generated reference.
 
     Failures indicate that a command was added to the tree but the reference
     was not regenerated and committed.
@@ -86,18 +102,18 @@ def test_every_live_leaf_is_documented() -> None:
     from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
-    documented_keys = _committed_doc_registry_keys()
+    documented_keys = _rendered_doc_registry_keys()
 
     missing_from_docs = sorted(live_keys - documented_keys)
     assert not missing_from_docs, (
         f"Live CLI leaf commands not documented in docs/cli/ ({len(missing_from_docs)}):\n"
         + "\n".join(f"  - {k}" for k in missing_from_docs)
-        + "\nRegenerate docs/cli/ and commit the result."
+        + "\nThe reference is generated at build time from the live command tree."
     )
 
 
 def test_every_documented_path_resolves_to_a_live_command() -> None:
-    """Every registry key in the committed reference must map to a live CLI leaf.
+    """Every registry key in the generated reference must map to a live CLI leaf.
 
     Failures indicate that a command was removed from the tree but the reference
     was not regenerated — a stale documentation entry.
@@ -105,13 +121,13 @@ def test_every_documented_path_resolves_to_a_live_command() -> None:
     from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
-    documented_keys = _committed_doc_registry_keys()
+    documented_keys = _rendered_doc_registry_keys()
 
     orphan_docs = sorted(documented_keys - live_keys)
     assert not orphan_docs, (
         f"Documented command paths with no matching live CLI leaf ({len(orphan_docs)}):\n"
         + "\n".join(f"  - {k}" for k in orphan_docs)
-        + "\nRegenerate docs/cli/ and commit the result."
+        + "\nThe reference is generated at build time from the live command tree."
     )
 
 
@@ -170,7 +186,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
 
     This is a non-tautological gate: it compares the live tree (one source of
     truth) against the registry (an independent source of truth).  The
-    committed reference docs are not consulted here so the gate is independent
+    generated reference docs are not consulted here so the gate is independent
     of the drift check.
     """
     from aeat.core.json_contract import SCHEMA_REGISTRY
@@ -205,7 +221,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
 def test_documented_schema_classes_match_registry() -> None:
     """Documented schema class names must match the registered schema for each command.
 
-    For each command that has a schema, the committed reference page states
+    For each command that has a schema, the generated reference page states
     the fully-qualified class name.  This gate verifies that the documented
     class name matches the actual registered schema class — catching renames
     or migrations that updated the registry without regenerating the reference.
@@ -227,18 +243,13 @@ def test_documented_schema_classes_match_registry() -> None:
         _profile_census_payloads,
     )
 
-    cli_dir = _project_root() / "docs" / "cli"
-    if not cli_dir.exists():
-        pytest.skip("docs/cli/ not yet generated; run the generator first.")
-
-    # Parse the committed pages for (registry_key -> documented_class_name) pairs.
+    # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
     documented: dict[str, str] = {}
-    current_key: str | None = None
-    for rst_file in sorted(cli_dir.glob("*.rst")):
-        if rst_file.name == "index.rst":
+    for rel_path, content in sorted(_rendered_reference().items()):
+        if rel_path.endswith("index.rst"):
             continue
-        lines = rst_file.read_text(encoding="utf-8").splitlines()
-        for line in lines:
+        current_key: str | None = None
+        for line in content.splitlines():
             stripped = line.strip()
             if stripped.startswith("**Registry key:**"):
                 parts = stripped.split("``")
@@ -266,7 +277,7 @@ def test_documented_schema_classes_match_registry() -> None:
     assert not mismatches, (
         f"Documented schema classes do not match the registry ({len(mismatches)}):\n"
         + "\n".join(f"  - {m}" for m in mismatches)
-        + "\nRegenerate docs/cli/ and commit the result."
+        + "\nThe reference is generated at build time from the live command tree."
     )
 
 
@@ -310,7 +321,7 @@ def test_retired_surfaces_are_not_live_commands() -> None:
 
 
 def test_retired_surfaces_appear_in_index_as_redirect_notes() -> None:
-    """Every retired surface must be mentioned in the committed ``docs/cli/index.rst``.
+    """Every retired surface must be mentioned in the rendered ``cli/index`` page.
 
     The reference must not silently omit retired surfaces — operators using an
     older ``aeat`` version need redirect guidance even when those roots no
@@ -318,11 +329,7 @@ def test_retired_surfaces_appear_in_index_as_redirect_notes() -> None:
     """
     from aeat.application.operator_surface import RETIRED_OPERATOR_SURFACES
 
-    index_path = _project_root() / "docs" / "cli" / "index.rst"
-    if not index_path.exists():
-        pytest.skip("docs/cli/index.rst not yet generated; run the generator first.")
-
-    index_text = index_path.read_text(encoding="utf-8")
+    index_text = _rendered_reference()["cli/index.rst"]
     missing: list[str] = []
     for surface in RETIRED_OPERATOR_SURFACES:
         if surface.name not in index_text:
@@ -331,5 +338,5 @@ def test_retired_surfaces_appear_in_index_as_redirect_notes() -> None:
     assert not missing, (
         f"Retired surfaces missing from docs/cli/index.rst ({len(missing)}):\n"
         + "\n".join(f"  - {name}" for name in missing)
-        + "\nRegenerate docs/cli/ and commit the result."
+        + "\nThe reference is generated at build time from the live command tree."
     )
