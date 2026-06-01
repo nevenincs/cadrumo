@@ -1172,3 +1172,14 @@ Mechanical fix-up: ratchet line-number realignment + logging marker addition + a
 - [x] `W27.P61.S676` - A8 regression: update _KNOWN_VIOLATING_LINES in test_any_param_rationale_inventory.py — _envelope.py 169→170, 365→366; `_borrador_100.py 310→311, 319→320; _censo.py 400→401; ratchet must run green post-fix; `src/aeat/test_any_param_rationale_inventory.py`.
 - [x] `W27.P61.S677` - A2 regression: add LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK marker on the new import logging at _stdio.py:27 (stdlib logging used for debug-level platform diagnostic on Windows ctypes failure; `core logging unavailable at stream-bootstrap time); `src/aeat/entrypoints/cli/_stdio.py`.
 - [x] `W27.P61.S678` - aggregate test asserting both W27 fixes landed (5 ratchet entries shifted + LOGGING-STDLIB marker present) + all standing inventory ratchets remain green; `src/aeat/test_w27_p61_closure.py`.
+
+## Wave `W28` - close W28 audit finding: 1 survivor-missed A1 site (subprocess guards)
+
+W28 swarm re-audit: 8 of 9 axes clean (no W27 regressions, no new drift). 1 pre-existing survivor-missed: 3 RuntimeError raises in _doc_reference.py subprocess-guard helpers lack BROAD-EXCEPT-RATIONALE markers.
+
+### Phase `W28.P62` - W28 audit closure
+
+Mechanical: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on each of 3 sites + aggregate test.
+
+- [ ] `W28.P62.S679` - A1: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on RuntimeError raises at _doc_reference.py:129, 717, 778 (subprocess invocation failures surfaced as RuntimeError for operator diagnostics; not an operator-facing AeatError contract); 3 markers; `src/aeat/entrypoints/cli/_doc_reference.py`.
+- [ ] `W28.P62.S680` - aggregate test asserting BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD token appears within 3 lines preceding each of the 3 RuntimeError raises in _doc_reference.py + all standing inventory ratchets remain green; `src/aeat/test_w28_p62_closure.py`.
