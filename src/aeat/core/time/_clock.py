@@ -19,7 +19,7 @@ def now() -> datetime:
     """Return the current UTC-aware datetime.
 
     Returns:
-        A :class:`datetime` instance with :data:`datetime.UTC` as its
-        :attr:`tzinfo`.
+        A :class:`datetime.datetime` instance with :data:`datetime.UTC` as its
+        ``tzinfo``.
     """
     return datetime.now(tz=UTC)
