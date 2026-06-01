@@ -126,13 +126,36 @@ def _load_active_taxpayer_profile():
     Used by the three-state assertions below — the projection layer
     is the surface the LIS Art. 29 gate reads, so the contract under
     test must be asserted there, not only at the canonical-dict layer.
+
+    The CLI ``config profile create`` provisioned the bucket but its
+    storage session is scoped to the command invocation.  Read the
+    active bucket pointer minted by create, then re-open a storage
+    session so ``workflow_state_repository()`` can decrypt through
+    the storage runtime.
     """
 
-    from aeat.application.wizard._status import load_active_taxpayer_profile
+    from aeat.application.user_profile._orchestration import profile_storage_session
+    from aeat.application.user_profile._projections import record_to_path_values
     from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.core._bucket_pointer_io import read_pointer
+    from aeat.core.config import load_settings
+    from aeat.domain.deadlines._profiles import taxpayer_profile_from_mapping
 
-    state = workflow_state_repository().load()
-    return load_active_taxpayer_profile(state)
+    pointer = read_pointer(load_settings().aeat_local_storage_root)
+    assert pointer is not None, "config profile create did not mint an active bucket pointer"
+    with profile_storage_session(pointer.bucket_id):
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        canonical = dict(record_to_path_values(record))
+    # The LIS Art. 29 gate consumes the canonical-token mapping projected
+    # via ``taxpayer_profile_from_mapping`` in ``domain.deadlines._profiles``.
+    # That projection carries ``new_entity_first_two_profit_periods`` and
+    # ``incn_prior_12_months`` through to the corporate-tax record, unlike
+    # the narrower wizard-status ``TaxpayerProfile`` projection.
+    return taxpayer_profile_from_mapping(
+        canonical, tax_id_default=canonical.get("identity.tax_id", "")
+    )
 
 
 def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:

@@ -12,6 +12,14 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
+# Import the wizard catalogue + persistence so register_wizard_catalogue()
+# and register_project_answers() run before any domain module under
+# ``aeat app modelo work`` queries SETUP_FLOW or projects answers.  The
+# CLI command tree is lazy-loaded, so ``aeat app modelo`` alone does not
+# trigger these imports (only ``aeat config`` does).
+import aeat.application.wizard._catalogue  # noqa: F401
+import aeat.application.wizard._persistence  # noqa: F401
+
 from aeat.application.calculations._iva_compensation_history import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
@@ -29,6 +37,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
 _NIF = "12345678Z"
+
+
+def _unwrap_envelope(payload: object) -> dict:
+    """Return the inner ``result`` payload from a CLI emit envelope.
+
+    Every CLI verb now emits ``{schema_version, command, result, warnings}``
+    via the centralised output schema.  Tests assert against the
+    operator-visible payload, which lives under ``result``.  Raw payloads
+    (pre-envelope) are returned unchanged so this helper is safe to apply
+    unconditionally.
+    """
+    if (
+        isinstance(payload, dict)
+        and "result" in payload
+        and "schema_version" in payload
+    ):
+        return payload["result"]
+    if not isinstance(payload, dict):
+        raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
+    return payload
 
 
 def _state(
@@ -143,7 +171,7 @@ def test_cli_balance_verb_emits_expected_keys(
         )
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _unwrap_envelope(json.loads(result.output))
     assert payload["total_balance"] == "400.00"
     assert payload["lot_count"] == 1
     assert payload["next_expiry_year"] == 2028
@@ -178,7 +206,12 @@ def test_cli_balance_verb_text_output_lines(
 
 
 def _store_profile_with_nif(nif: str) -> None:
-    """Persist a minimal UserProfileRecord carrying identity.tax_id."""
+    """Persist a minimal UserProfileRecord carrying identity.tax_id.
+
+    The display_name must match the bucket manifest label written by
+    ``isolated_runtime_profile`` so the post-load integrity check
+    (manifest.label vs record.display_name) does not refuse the read.
+    """
     from datetime import UTC, datetime
 
     from aeat.application.user_profile import UserProfileLifecycleRepository
@@ -188,7 +221,7 @@ def _store_profile_with_nif(nif: str) -> None:
     UserProfileLifecycleRepository(bucket_id="seed-test").save(
         UserProfileRecord(
             profile_id="seed-test",
-            display_name="Seed Tester",
+            display_name="Test runtime profile",
             facts=(UserProfileFact(path="identity.tax_id", value=nif),),
             created_at=_created_at,
             updated_at=_created_at,
@@ -299,8 +332,10 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
         stored = repo.load_period(2024, "4T")
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert payload["operation"] == "modelo.iva-wallet.seed"
+    payload = _unwrap_envelope(json.loads(result.output))
+    # IvaWalletSeedResult.operation default is the underscore form; the
+    # tab-separated text-mode emit uses the hyphen form for operator legibility.
+    assert payload["operation"] == "modelo.iva_wallet.seed"
     assert payload["filing_year"] == 2024
     assert payload["period"] == "4T"
     assert payload["amount"] == "1200.50"
@@ -374,7 +409,7 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
-            display_name="Guidance Test Autónomo",
+            display_name="Test runtime profile",
             status=UserProfileStatus.ACTIVE,
             facts=(
                 UserProfileFact(path="identity.name", value="Guidance Test Autónomo"),
