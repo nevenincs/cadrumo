@@ -39,6 +39,7 @@ explicit justification.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -128,13 +129,22 @@ def _is_allowed_sys_target(call_node: ast.Call) -> bool:
     return False
 
 
-def _setattr_sites(path: Path) -> list[tuple[int, str | None]]:
-    """Return ``(lineno, target)`` for production-state monkeypatch calls in *path*."""
-    source = path.read_text(encoding="utf-8")
-    try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError:
-        return []
+def _setattr_sites(
+    path: Path,
+    tree: ast.AST | None = None,
+) -> list[tuple[int, str | None]]:
+    """Return ``(lineno, target)`` for production-state monkeypatch calls in *path*.
+
+    When *tree* is supplied (test-loop path), reuse the cached AST. When
+    omitted, fall back to a per-call parse so the helper signature stays
+    single-path compatible.
+    """
+    if tree is None:
+        source = path.read_text(encoding="utf-8")
+        try:
+            tree = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            return []
 
     hits: list[tuple[int, str | None]] = []
     for node in ast.walk(tree):
@@ -155,14 +165,21 @@ def _setattr_sites(path: Path) -> list[tuple[int, str | None]]:
     return hits
 
 
-def test_monkeypatch_setattr_sites_are_documented() -> None:
-    """Every non-trivial monkeypatch.setattr must appear in the documented inventory."""
+def test_monkeypatch_setattr_sites_are_documented(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    """Every non-trivial monkeypatch.setattr must appear in the documented inventory.
+
+    Consumes the session-scoped AST cache; falls back to per-file parse
+    for modules absent from the cache.
+    """
     modules = _discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
         relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
-        for lineno, target in _setattr_sites(module_path):
+        tree = source_tree_ast.get(module_path)
+        for lineno, target in _setattr_sites(module_path, tree):
             # Check if this file+target combination is documented.
             matched = any(
                 rel == relative and (tgt == target or target is None)
