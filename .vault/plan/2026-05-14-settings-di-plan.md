@@ -70,7 +70,7 @@ includes a test that asserts the fail-closed branch still raises on
 - [x] `P03.S09` - migrate `AEAT_LOG_DIR` read to `get_settings().aeat_log_dir`; `src/aeat/core/logging.py`.
 - [x] `P03.S10` - migrate `_LIBREOFFICE_EXECUTABLE_ENV` reads (two sites) to `get_settings().aeat_libreoffice_executable`; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
 - [x] `P03.S11` - migrate `PASSPHRASE_ENV_VAR` read to `get_settings().aeat_master_key_passphrase`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P03.S12` - add focused test that override of `aeat_master_key_passphrase` to `None` raises the same `MasterKeyError` as the current unset-env path; `src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py`.
+- [x] `P03.S12` - add focused test that override of `aeat_master_key_passphrase` to `None` raises the same `MasterKeyError` as the current unset-env path; `src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py`.
 
 ### Phase `P04` - migrate Category E CLI flag write
 
