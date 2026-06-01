@@ -58,7 +58,26 @@ def _binding_values_2024() -> dict:
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
+        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
+        "renta-2024-profile-marriage-full-year": Decimal("0"),
+        "renta-2024-profile-marriage-month-start": Decimal("0"),
+        "renta-2024-profile-marriage-month-end": Decimal("0"),
     }
+
+
+_RELATION_VALUES_2024: dict[str, Decimal] = {
+    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+}
 
 
 def _run_2024(snapshot, valor_1804: Decimal):
@@ -67,7 +86,9 @@ def _run_2024(snapshot, valor_1804: Decimal):
         inputs={"1804": valor_1804},
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values=_binding_values_2024(),
+        relation_values=_RELATION_VALUES_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)},
     )
 
 
@@ -145,6 +166,13 @@ def _binding_values_2025() -> dict:
     return {
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        # declaration_type = 1 (individual) → 0461 computed = 0
+        "renta-2025-profile-declaration-type": Decimal("1"),
+        "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+        # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
+        "renta-2025-profile-marriage-full-year": Decimal("0"),
+        "renta-2025-profile-marriage-month-start": Decimal("0"),
+        "renta-2025-profile-marriage-month-end": Decimal("0"),
     }
 
 
@@ -172,6 +200,7 @@ def _run_2025(snapshot, valor_1804: Decimal):
         binding_values=_binding_values_2025(),
         relation_values=_relation_values_2025(),
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)},
     )
 
 

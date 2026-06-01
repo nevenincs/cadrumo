@@ -130,6 +130,10 @@ def _binding_values() -> dict:
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
+        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
         "renta-2024-profile-marriage-full-year": Decimal("0"),
         "renta-2024-profile-marriage-month-start": Decimal("0"),
         "renta-2024-profile-marriage-month-end": Decimal("0"),
