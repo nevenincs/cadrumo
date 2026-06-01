@@ -37,6 +37,7 @@ Submodules
    aeat.core._bucket_pointer_io
    aeat.core._models
    aeat.core._period
+   aeat.core._tax_domain
    aeat.core._toml
    aeat.core.aggregation
    aeat.core.click_context
