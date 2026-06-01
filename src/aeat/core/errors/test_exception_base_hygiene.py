@@ -40,7 +40,7 @@ def test_production_exception_classes_do_not_introduce_unregistered_builtin_root
             bare_bases = sorted(
                 base_name for base in node.bases if (base_name := _base_name(base)) in _BARE_EXCEPTION_BASES
             )
-            # Multiple inheritance such as `DomainValidationError(DomainError, ValueError)`
+            # Multiple inheritance such as `DomainValidationError(AeatError, ValueError)`
             # preserves built-in compatibility while still routing through a
             # registry-bound AEAT base. The unsafe shape is a new root whose
             # bases are only Python built-ins.
