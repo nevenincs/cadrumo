@@ -156,8 +156,8 @@ Close calculation-completeness coverage: re-derive the drifted M100/2024 manifes
 
 Refresh the per-module reviewability baselines after benign docstring growth (4 stale baselines) and address the one real module-size regression in _validate_cross_revision.py (387 lines).
 
-- [ ] `W06.P14.S32` - Bump the 4 stale per-module line baselines drifted past by docstring/xlink growth (_validate.py 204->206, _validate_record_sections.py 238->240, _validate_relation_periods.py 198->203, _validate_revision_sections.py 252->254); `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
-- [ ] `W06.P14.S33` - Resolve _validate_cross_revision.py exceeding the 300-line reviewability cap (REAL: 387 lines from the continuity feature): split the continuity-drift helpers into a sibling module, or add a reviewed explicit baseline; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
+- [x] `W06.P14.S32` - Bump the 4 stale per-module line baselines drifted past by docstring/xlink growth (_validate.py 204->206, _validate_record_sections.py 238->240, _validate_relation_periods.py 198->203, _validate_revision_sections.py 252->254); `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
+- [x] `W06.P14.S33` - Resolve _validate_cross_revision.py exceeding the 300-line reviewability cap (REAL: 387 lines from the continuity feature): split the continuity-drift helpers into a sibling module, or add a reviewed explicit baseline; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
 
 ### Phase `W06.P15` - meta-gate allowlist and waiver refresh
 
