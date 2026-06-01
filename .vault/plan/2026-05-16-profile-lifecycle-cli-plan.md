@@ -14,6 +14,15 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `profile-lifecycle-cli` plan
 
@@ -57,8 +66,8 @@ same commit window.
 - [x] `P02.S17` - delete `WorkflowState.active_profile` field and the `active_profile_record` / `active_profile_bucket_id` properties; `src/aeat/application/workflow/_models.py`.
 - [x] `P02.S18` - delete the `"default"` literal fall-through in the wizard; `src/aeat/application/wizard/_commands.py`.
 - [x] `P02.S19` - call `provision_bucket_directory` and `write_manifest` from `initialize_workspace` so profile creation provisions the per-bucket directory tree atomically; `src/aeat/application/setup/_service.py`.
-- [ ] `P02.S20` - thread per-bucket SQLite URL through `create_engine_from_settings` from the resolved `BucketPaths.db_dir`; `src/aeat/adapters/persistence/storage/sql/_engine.py`.
-- [ ] `P02.S21` - wire the local blob-store factory to read its root from `BucketPaths.blobs_dir`; `src/aeat/adapters/outbound/storage/_factory.py`.
+- [x] `P02.S20` - thread per-bucket SQLite URL through `create_engine_from_settings` from the resolved `BucketPaths.db_dir`; `src/aeat/adapters/persistence/storage/sql/_engine.py`.
+- [x] `P02.S21` - wire the local blob-store factory to read its root from `BucketPaths.blobs_dir`; `src/aeat/adapters/outbound/storage/_factory.py`.
 - [x] `P02.S22` - add the startup guard that raises `LegacyLayoutDetectedError` when `<aeat-root>/var/` exists and `<aeat-root>/buckets/` does not; `src/aeat/application/_bootstrap.py`.
 - [x] `P02.S23` - precedence-chain test (flag wins over env, env wins over pointer, pointer wins over absence); `src/aeat/application/workflow/test_active_profile_resolution.py`.
 - [x] `P02.S24` - regression test asserting the pointer-file integration writes on profile create; `src/aeat/application/user_profile/test_orchestration_pointer.py`.
@@ -79,13 +88,13 @@ caching the master key in `ClassVar` buffers inside
 Two parallel chains coexist. This phase removes the ClassVar
 chain and routes the live decrypt path through `BucketSession`.
 
-- [ ] `P03.S27` - rewire `_resolve_master_key` to read from the active `BucketSession` instead of `get_master_key_provider().get_master_key()`; `src/aeat/adapters/persistence/storage/sql/_encrypted_columns.py`.
-- [ ] `P03.S28` - delete the `_lock` / `_cache` `ClassVar`s from `KeyringMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P03.S29` - delete the `_lock` / `_cached_passphrase` / `_cached_master_key` `ClassVar`s from `FileFallbackMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P03.S30` - delete the `_purge_caches_at_exit` atexit hook now that the ClassVar caches are gone; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P03.S31` - register an atexit hook that closes any open `BucketSession`; `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`.
-- [ ] `P03.S32` - regression test asserting `_encrypted_columns` decrypt path reads through `BucketSession`; `src/aeat/adapters/persistence/storage/sql/test_encrypted_columns_session.py`.
-- [ ] `P03.S33` - AST-guard test asserting `KeyringMasterKeyProvider` and `FileFallbackMasterKeyProvider` carry zero `ClassVar` state; `src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py`.
+- [x] `P03.S27` - rewire `_resolve_master_key` to read from the active `BucketSession` instead of `get_master_key_provider().get_master_key()`; `src/aeat/adapters/persistence/storage/sql/_encrypted_columns.py`.
+- [x] `P03.S28` - delete the `_lock` / `_cache` `ClassVar`s from `KeyringMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P03.S29` - delete the `_lock` / `_cached_passphrase` / `_cached_master_key` `ClassVar`s from `FileFallbackMasterKeyProvider`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P03.S30` - delete the `_purge_caches_at_exit` atexit hook now that the ClassVar caches are gone; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P03.S31` - register an atexit hook that closes any open `BucketSession`; `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py`.
+- [x] `P03.S32` - regression test asserting `_encrypted_columns` decrypt path reads through `BucketSession`; `src/aeat/adapters/persistence/storage/sql/test_encrypted_columns_session.py`.
+- [x] `P03.S33` - AST-guard test asserting `KeyringMasterKeyProvider` and `FileFallbackMasterKeyProvider` carry zero `ClassVar` state; `src/aeat/adapters/persistence/storage/master_key/test_master_key_no_classvars.py`.
 
 ### Phase `P04` - persistence-boundary drift fixes (five still-live findings)
 
@@ -108,12 +117,12 @@ new name. No aliases, no shims. The wizard backend
 (`build_wizard_command`) is reused under the new verb names; only
 the Typer registration changes.
 
-- [ ] `P05.S40` - rename `aeat config init` to `aeat config profile create NAME`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P05.S40` - rename `aeat config init` to `aeat config profile create NAME`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P05.S41` - rename `aeat config profile use` to `switch`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P05.S42` - rename `aeat config profile remove` to `delete`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P05.S43` - merge `view` and `status` into one `show` verb that defaults to the active profile and emits a readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S44` - delete `validate` and `preflight` verbs; `their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; `they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P05.S44` - delete `validate` and `preflight` verbs; `their schema-validation surface folds into `show`'s readiness header; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `P05.S45` - delete `get` / `set` / `unset` verbs from the operator CLI; `they re-home under `python -m aeat.diagnostics`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P05.S46` - rewrite the top-level `_config_help` summary to advertise every operator profile verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `P06` - add the genuinely missing operator verbs

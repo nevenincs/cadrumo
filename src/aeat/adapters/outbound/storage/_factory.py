@@ -150,7 +150,9 @@ def get_storage_provider(
     profile = _resolve_profile()
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
-        root = settings_resolved.aeat_local_storage_root / profile
+        from ...persistence.storage.bucket import bucket_paths
+
+        root = bucket_paths(settings_resolved.aeat_local_storage_root, profile).blobs_dir
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
