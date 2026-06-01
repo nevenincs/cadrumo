@@ -79,6 +79,7 @@ from ...domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
+from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
 from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
@@ -552,7 +553,7 @@ def create_work_unit(
     name: str | None = None,
     actor: str = "system",
     causante_ccaa: CCAA | None = None,
-    repository: WorkUnitCatalogueRepository | None = None,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
@@ -646,7 +647,7 @@ def list_work_units(
     *,
     bucket_id: str | None = None,
     include_discarded: bool = False,
-    repository: WorkUnitCatalogueRepository | None = None,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> tuple[WorkUnit, ...]:
     """Return work units, optionally filtered to one bucket.
 
@@ -679,7 +680,7 @@ def list_work_units(
 def get_work_unit(
     work_unit_id: str,
     *,
-    repository: WorkUnitCatalogueRepository | None = None,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> WorkUnit:
     """Return one work unit by id.
 
@@ -714,7 +715,7 @@ def rename_work_unit(
     new_name: str,
     *,
     actor: str,
-    repository: WorkUnitCatalogueRepository | None = None,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
@@ -771,7 +772,7 @@ def discard_work_unit(
     *,
     actor: str,
     reason: str | None = None,
-    repository: WorkUnitCatalogueRepository | None = None,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
@@ -919,7 +920,7 @@ def calculate_modelo_revision(
     relation_values: Mapping[str, Decimal] | None = None,
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
@@ -1442,7 +1443,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
@@ -2824,7 +2825,7 @@ def verify_modelo_revision(
     *,
     actor: str,
     workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -3392,7 +3393,7 @@ def file_modelo_revision(
     actor: str,
     workflow_profile: TaxpayerProfile,
     notes: str | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -3718,7 +3719,7 @@ def amend_modelo_revision(
     amendment_kind: CalculationRevisionAmendmentKind,
     reason: str,
     actor: str,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -3993,7 +3994,7 @@ def import_external_filing_evidence(
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
     actor: str = "aeat-import",
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
