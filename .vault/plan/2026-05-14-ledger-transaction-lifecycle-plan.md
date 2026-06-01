@@ -58,7 +58,7 @@ green tests between Steps.
 - [x] `P01.S07` - wrap `TransactionIdPrefixError` at the CLI boundary into the four locale keys `cli.ledger.errors.id_prefix_empty`, `id_prefix_not_hex`, `id_prefix_not_found`, `id_prefix_collision`; `src/aeat/entrypoints/cli/_ledger.py` and `src/aeat/application/ledger/_id_resolution.py`.
 - [x] `P01.S08` - extend sub-app result models to carry `bucket_event_ids: tuple[str, ...]` and emit the appropriate `LEDGER_INVENTORY_*` / `PAYABLE_INVOICE_*` / `COLLECTIBLE_INVOICE_*` / `PURCHASE_INVOICE_EVIDENCE_*` events on every mutation; `surface in CLI text and JSON; `src/aeat/application/ledger/_evidence.py`, `_business_operation_invoice.py`, `_inventory.py`, `_ratios.py`.
 - [x] `P01.S09` - run `uv run --no-sync python -m aeat.locales scaffold`, then hand-write real translations in `en.yml`, `es.yml`, `ca.yml`, `hu.yml` for every key introduced across S01-S08 (new verbs, args, errors, dry-run, confirm-required); `no scaffold placeholders survive; `src/aeat/locales/{en,es,ca,hu}.yml`.
-- [ ] `P01.S10` - run `uv run --no-sync pytest src/aeat/application/ledger/ src/aeat/entrypoints/cli/ -q` and fix every rename-induced test (every `["create", ...]`, `["edit", ...]`, `["read", ...]` invocation flipped); `run `uv run --no-sync python -m aeat.locales audit` and confirm `ok` for every locale; zero new failures`.
+- [x] `P01.S10` - run `uv run --no-sync pytest src/aeat/application/ledger/ src/aeat/entrypoints/cli/ -q` and fix every rename-induced test (every `["create", ...]`, `["edit", ...]`, `["read", ...]` invocation flipped); `run `uv run --no-sync python -m aeat.locales audit` and confirm `ok` for every locale; zero new failures`.
 
 ## Parallelization
 
