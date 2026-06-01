@@ -87,26 +87,26 @@ Move engineer diagnostics behind the same redacted output path or mark audited e
 Replace bespoke or implicit config/auth output redaction with the central renderer.
 
 - [x] `W02.P05.S24` - remove repair/profile local output redactors that central output redaction supersedes; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W02.P05.S25` - enroll Google config output payloads and token/object-key fields in central redaction; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W02.P05.S26` - enroll profile-census bucket/profile identifiers in central redaction; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `W02.P05.S27` - replace auth diagnostic bespoke refs with shared redaction composition; `src/aeat/application/auth/_diagnostics.py`.
-- [ ] `W02.P05.S28` - replace auth operator preflight bespoke identity redaction with shared redaction composition; `src/aeat/application/auth/_operator.py`.
-- [ ] `W02.P05.S29` - update auth diagnostic tests for shared redaction behavior; `src/aeat/application/auth/test_diagnostics.py`.
-- [ ] `W02.P05.S30` - update auth operator tests for shared redaction behavior; `src/aeat/application/auth/test_operator.py`.
+- [x] `W02.P05.S25` - enroll Google config output payloads and token/object-key fields in central redaction; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W02.P05.S26` - enroll profile-census bucket/profile identifiers in central redaction; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `W02.P05.S27` - replace auth diagnostic bespoke refs with shared redaction composition; `src/aeat/application/auth/_diagnostics.py`.
+- [x] `W02.P05.S28` - replace auth operator preflight bespoke identity redaction with shared redaction composition; `src/aeat/application/auth/_operator.py`.
+- [x] `W02.P05.S29` - update auth diagnostic tests for shared redaction behavior; `src/aeat/application/auth/test_diagnostics.py`.
+- [x] `W02.P05.S30` - update auth operator tests for shared redaction behavior; `src/aeat/application/auth/test_operator.py`.
 
 ### Phase `W02.P06` - app command surfaces
 
 Enroll the high-volume application command modules that emit profile, bucket, tax, token, and URL context.
 
 - [x] `W02.P06.S31` - enroll live-read CLI output and auth preflight lines in central redaction; `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `W02.P06.S32` - enroll ledger CLI profile and bucket output in central redaction; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W02.P06.S33` - enroll modelo CLI profile, bucket, tax, and token output in central redaction; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W02.P06.S34` - enroll overview CLI profile and bucket output in central redaction; `src/aeat/entrypoints/cli/_overview.py`.
-- [ ] `W02.P06.S35` - enroll overview rendering profile display fallbacks in central redaction; `src/aeat/entrypoints/cli/_overview_rendering.py`.
-- [ ] `W02.P06.S36` - enroll review CLI bucket output in central redaction; `src/aeat/entrypoints/cli/_review.py`.
-- [ ] `W02.P06.S37` - enroll registry corpus CLI output and keep non-sensitive registry rows unchanged; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W02.P06.S38` - enroll public registry CLI output and keep non-sensitive registry rows unchanged; `src/aeat/entrypoints/cli/registry.py`.
-- [ ] `W02.P06.S39` - enroll root landing active-profile display behavior in central redaction; `src/aeat/entrypoints/cli/_root_landing.py`.
+- [x] `W02.P06.S32` - enroll ledger CLI profile and bucket output in central redaction; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W02.P06.S33` - enroll modelo CLI profile, bucket, tax, and token output in central redaction; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W02.P06.S34` - enroll overview CLI profile and bucket output in central redaction; `src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W02.P06.S35` - enroll overview rendering profile display fallbacks in central redaction; `src/aeat/entrypoints/cli/_overview_rendering.py`.
+- [x] `W02.P06.S36` - enroll review CLI bucket output in central redaction; `src/aeat/entrypoints/cli/_review.py`.
+- [x] `W02.P06.S37` - enroll registry corpus CLI output and keep non-sensitive registry rows unchanged; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W02.P06.S38` - enroll public registry CLI output and keep non-sensitive registry rows unchanged; `src/aeat/entrypoints/cli/registry.py`.
+- [x] `W02.P06.S39` - enroll root landing active-profile display behavior in central redaction; `src/aeat/entrypoints/cli/_root_landing.py`.
 
 ### Phase `W02.P07` - payload and schema helpers
 
