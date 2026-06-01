@@ -315,6 +315,11 @@ def _bound_inputs_from_available_bindings(
     revision: ModeloRevision,
     binding_values: dict[str, Decimal],
 ) -> dict[str, object]:
+    """Map each bound casilla in a :class:`ModeloRevision` to its supplied value.
+
+    Reads the revision's casillas and keeps those whose ``input_kind`` is
+    ``BOUND`` and whose binding selector has a value in ``binding_values``.
+    """
     from ...domain.calculations.registry import InputKind
 
     return {

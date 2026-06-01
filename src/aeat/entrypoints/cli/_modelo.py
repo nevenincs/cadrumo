@@ -1,4 +1,10 @@
-"""User-facing modelo registry introspection commands."""
+"""User-facing modelo registry introspection commands.
+
+These commands read the registry spine and render it for operators: the
+:class:`ModeloDefinition` and its :class:`ModeloRevision` revisions for
+structure and deadlines, and the :class:`CalculationRevision` produced when a
+modelo is evaluated against a profile.
+"""
 
 from __future__ import annotations
 
@@ -692,8 +698,8 @@ def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -
     # When the token matches a registry-declared period for the modelo
     # verbatim (case-insensitively) it is already the registry period —
     # return it directly. This is the only path that resolves the
-    # non-date census / event tokens ("alta", "modificacion", "baja",
-    # "AD-HOC") declared by census modelos (036, 308, ...); for quarterly
+    # non-date censo / event tokens ("alta", "modificacion", "baja",
+    # "AD-HOC") declared by censo modelos (036, 308, ...); for quarterly
     # / annual modelos it short-circuits to the same value the
     # composition branches below would produce.
     declared = _declared_period_tokens(modelo)
@@ -5169,22 +5175,69 @@ def modelo_project(
         f"renta-{year}-rel-131-pagos-fraccionados": Decimal("0"),
     }
 
-    # Default retenciones bindings to zero; caller may override via --binding.
+    # Verb-baseline bindings: defaults the projection verb supplies for
+    # bindings the registry's M100 formulas consume but the operator
+    # rarely overrides for a single-filer projection. Profile-resolved
+    # values take precedence (per the merge order below); caller
+    # ``--binding`` overrides win over both.
     _retenciones_binding_ids = (
         f"renta-{year}-modelo-111-retenciones-periodicas",
         f"renta-{year}-modelo-115-retenciones-periodicas",
         f"renta-{year}-modelo-123-retenciones-periodicas",
         f"renta-{year}-modelo-193-retenciones-anuales",
     )
-    m100_bindings: dict[str, Decimal] = {
+    verb_baseline_bindings: dict[str, Decimal] = {
         f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        # Individual (Art. 82.1 LIRPF code "1"): projection verb defaults
+        # to single-filer because conjunta requires a unidad familiar
+        # the projection inputs cannot synthesise. Operator-supplied
+        # ``--binding renta-{year}-profile-declaration-type=2`` overrides.
+        f"renta-{year}-profile-declaration-type": Decimal("1"),
+        # Family-unit minor-children count: defaults to zero so the
+        # Art. 84 monoparental branch (€2.150) never fires under the
+        # default single-filer projection. Operator-supplied profile
+        # fact or ``--binding`` overrides.
+        f"renta-{year}-profile-family-minor-children-in-unit": Decimal("0"),
         **{bid: Decimal("0") for bid in _retenciones_binding_ids},
-        **extra_bindings,
     }
-    m100_enum_bindings: dict[str, str] = {
+    verb_baseline_enum_bindings: dict[str, str] = {
         f"renta-{year}-profile-tax-residence-ccaa": ccaa,
-        **extra_enum_bindings,
     }
+
+    # Profile-sourced bindings (birth_date for age_at_year_end, marriage
+    # facts, deduction levers, etc.) are read from the active bucket's
+    # UserProfileRecord via the canonical resolver shared with
+    # work_calculate. Precedence: caller ``--binding``/``--enum-binding``
+    # > profile fact > verb baseline. ``caller_binding_ids`` covers the
+    # caller layer only so the profile resolver still overrides the
+    # baseline.
+    from ...application.modelo._profile_binding import resolve_profile_sourced_bindings
+    from ...application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
+
+    _bucket_for_profile = _resolve_active_bucket_id()
+    profile_decimal_bindings: dict[str, Decimal] = {}
+    profile_date_bindings: dict[str, date] = {}
+    profile_enum_bindings: dict[str, str] = {}
+    if _bucket_for_profile is not None:
+        _caller_owned = (
+            set(extra_bindings) | set(extra_enum_bindings) | set(m100_inputs)
+        )
+        _profile_result = resolve_profile_sourced_bindings(
+            m100_snapshot,
+            bucket_id=_bucket_for_profile,
+            caller_binding_ids=frozenset(_caller_owned),
+        )
+        profile_decimal_bindings = dict(_profile_result.binding_values)
+        profile_date_bindings = dict(_profile_result.date_binding_values)
+        profile_enum_bindings = dict(_profile_result.enum_binding_values)
+
+    merged_bindings = {**verb_baseline_bindings, **profile_decimal_bindings, **extra_bindings}
+    merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
+    merged_date_bindings = dict(profile_date_bindings)
+    # Aliases used by the exception-handler log so the existing
+    # observability surface keeps the original variable names.
+    m100_bindings = merged_bindings
+    m100_enum_bindings = merged_enum_bindings
 
     # -- Run M100 registry snapshot calculation ----------------------------------
     try:
@@ -5192,9 +5245,10 @@ def modelo_project(
             m100_snapshot,
             inputs=m100_inputs,
             date_context={"filing_period": date(year, 12, 31)},
-            binding_values=m100_bindings,
-            enum_binding_values=m100_enum_bindings,
+            binding_values=merged_bindings,
+            enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
+            date_binding_values=merged_date_bindings or None,
         )
     except RegistryValidationError as exc:
         # Operator surface is intentionally terse (the localised
@@ -5204,13 +5258,16 @@ def modelo_project(
         # inputs that drove it; log them here so the AEAT log file and
         # pytest's --log-cli-level=ERROR capture surface the cause.
         _log.exception(
-            "modelo.project: M100 calculation failed for year=%s ccaa=%s; inputs=%r bindings=%r enum_bindings=%r relations=%r; registry_error=%s",
+            "modelo.project: M100 calculation failed for year=%s ccaa=%s; "
+            "inputs=%r bindings=%r enum_bindings=%r relations=%r date_bindings=%r; "
+            "registry_error=%s",
             year,
             ccaa,
             m100_inputs,
-            m100_bindings,
-            m100_enum_bindings,
+            merged_bindings,
+            merged_enum_bindings,
             m100_relations,
+            merged_date_bindings,
             exc,
         )
         raise typer.BadParameter(
