@@ -43,7 +43,7 @@ _S658_MARKER_SITES: list[tuple[str, int]] = [
     ("entrypoints/cli/_registry_payloads.py", 76),
 ]
 
-_EXPECTED_ALLOWLIST_SIZE = 84  # 99 original - 15 paid down
+_EXPECTED_ALLOWLIST_SIZE = 7  # 99 original; later campaigns paid down further
 
 
 def test_s658_markers_present() -> None:
