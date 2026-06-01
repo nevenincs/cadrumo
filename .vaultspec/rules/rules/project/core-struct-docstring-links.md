@@ -24,9 +24,11 @@ runs in the documentation CI lane.
 
 ## How
 
-- When a module imports a core-struct anchor (the spine: `ValidatedRegistryAuthority`,
-  `RegistrySnapshot`, `ModeloDefinition`, `ModeloRevision`, `CasillaObservation`,
-  `CalculationRevision`, `OutputSchema`, `SchemaEnvelope`, `SecureObjectRepository`),
+- When a module imports a core-struct anchor (the spine is the `CORE_STRUCTS`
+  mapping in the gate, which is the authoritative list; it spans the registry
+  authority and snapshots, the JSON contract envelopes, the secure storage
+  primitives, the AEAT portal registry, the financial-input aggregates and their
+  repositories, and the profile/deadline/filing records),
   add a `:class:` (or `:meth:`/`:obj:`) cross-link in the docstring where the
   struct is genuinely used (a return type, a parameter, the operation performed).
   Write a true sentence describing the real relationship; do not fabricate.
