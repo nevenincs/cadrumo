@@ -77,7 +77,7 @@ class RentaIncomeObservation(BaseModel):
     selector and sums ``gross_amount`` (or ``taxable_base_amount``) across
     all observations for that casilla depending on the declared fact.
 
-    ``taxable_base_amount`` is the VAT-exclusive base imponible from the
+    ``taxable_base_amount`` is the IVA-exclusive base imponible from the
     original invoice (``transaction.taxable_base``).  It feeds the
     ``taxable_base_sum`` fact path used by the rendimiento-neto binding
     (casilla 03).  ``None`` when the transaction carries no explicit
@@ -276,7 +276,7 @@ def _classify_income_transaction(
             detail=f"filing date {filing_date} is outside the cumulative income window",
         )
 
-    # taxable_base carries the VAT-exclusive base imponible when set; it
+    # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
     taxable_base_amount: Decimal | None = None
     if transaction.taxable_base is not None:

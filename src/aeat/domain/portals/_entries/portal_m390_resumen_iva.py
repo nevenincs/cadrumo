@@ -1,4 +1,4 @@
-"""Registry entry for Modelo 390 — annual VAT summary.
+"""Registry entry for Modelo 390 — annual IVA summary.
 
 Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
 exposed as :data:`ENTRY` and consumed by
@@ -28,4 +28,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m390_resumen_iva.label",
     purpose="entries.portal_m390_resumen_iva.purpose",
 )
-"""Portal entry for Modelo 390 (annual VAT summary)."""
+"""Portal entry for Modelo 390 (annual IVA summary)."""

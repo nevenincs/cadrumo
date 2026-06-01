@@ -10,7 +10,7 @@ source_refs = ["aeat-modelo-130-instructions"]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Ingresos íntegros", "Ingresos"]
 
-# Alternative income binding that uses the VAT-exclusive taxable_base
+# Alternative income binding that uses the IVA-exclusive taxable_base
 # (base imponible) from tagged invoices rather than the gross amount.
 # Activated when transactions carry an explicit taxable_base field.
 # Feeds the same casilla 01 as the gross_income_sum path; the operator
@@ -28,7 +28,7 @@ source_ref = "aeat-modelo-130-instructions"
 required_text = ["Ingresos íntegros", "Ingresos"]
 
 # RD 439/2007 art. 110.2 — rendimiento neto de actividades económicas en
-# estimación directa. Sums the VAT-exclusive base imponible (taxable_base)
+# estimación directa. Sums the IVA-exclusive base imponible (taxable_base)
 # across actividad-económica income observations within the cumulative YTD
 # window. Feeds casilla 03 directly from the ledger when transactions carry
 # an explicit taxable_base; observations without taxable_base contribute 0.

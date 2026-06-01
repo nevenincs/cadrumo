@@ -4,11 +4,11 @@ Defines :class:`IvaRate` and :class:`PaymentStatus` together with the
 :func:`iva_rate_percentage` helper that resolves the numeric Decimal
 percentage backing each :class:`IvaRate` member.
 
-The percentage helper queries the centralized VAT substrate at
+The percentage helper queries the centralized IVA substrate at
 :mod:`aeat.domain.iva` rather than carrying its own rate literals.
 :class:`IvaRate` keeps its closed-taxonomy role for invoice records;
 the legal-grade percentage value lives in
-``registry/aeat/vat/rates.toml`` and is dated.
+``registry/aeat/iva/rates.toml`` and is dated.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from ..iva._errors import IvaRateNotFoundError
 
 
 class IvaRate(StrEnum):
-    """Closed taxonomy of Spanish VAT rate slots used on invoice lines.
+    """Closed taxonomy of Spanish IVA rate slots used on invoice lines.
 
     The slot names map to substrate :class:`aeat.domain.iva.IvaRateKind`
     tiers and the percentage backing each slot is resolved against
@@ -72,7 +72,7 @@ class PaymentStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
-_IVA_RATE_TO_VAT_KIND: dict[IvaRate, IvaRateKind] = {
+_IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
     IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
     IvaRate.RATE_10: IvaRateKind.REDUCED,
     IvaRate.RATE_21: IvaRateKind.GENERAL,
@@ -88,7 +88,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     ``on_date`` is omitted the lookup uses today's date.
 
     Args:
-        rate: VAT rate slot.
+        rate: IVA rate slot.
         on_date: Date at which to resolve the rate percentage.
             Defaults to ``date.today()``.
 
@@ -104,7 +104,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     if rate in {IvaRate.EXEMPT, IvaRate.NOT_SUBJECT}:
         return None
 
-    kind = _IVA_RATE_TO_VAT_KIND[rate]
+    kind = _IVA_RATE_TO_IVA_KIND[rate]
     effective_date = on_date or date.today()
     rate_record = lookup_rate(EUMemberState.ES, kind, effective_date)
     return rate_record.pct / Decimal("100")

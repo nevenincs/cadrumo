@@ -95,7 +95,7 @@ def _populated_record() -> UserProfileRecord:
                 valid_to=date(2024, 12, 31),
             ),
             UserProfileFact(
-                path="vat.recargo_equivalencia.applied",
+                path="iva.recargo_equivalencia.applied",
                 value=False,
                 source="manual_cli",
             ),
@@ -134,7 +134,7 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
         "identity.given_name",
         "identity.family_name",
         "residency.municipality_code",
-        "vat.recargo_equivalencia.applied",
+        "iva.recargo_equivalencia.applied",
         "irpf.minimum_personal_amount",
     )
     # The Decimal fact survives JSON round-trip strictly.

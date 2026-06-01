@@ -557,7 +557,7 @@ class BusinessInvoiceRecordPayload(OutputSchema):
     total_amount: str
     notes: str = ""
     country_code: str | None = None
-    eu_vat_id: str | None = None
+    eu_iva_id: str | None = None
     operation_type: str | None = None
     created_at: str
     updated_at: str

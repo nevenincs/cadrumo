@@ -1,5 +1,5 @@
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-declarante-numero-operadores"
+id = "iva-349-declarante-numero-operadores"
 source = "collectible_invoice"
 selector = { fact = "operator_count", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "count_distinct" }
@@ -11,7 +11,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["NÚMERO TOTAL DE OPERADORES INTRACOMUNITARIOS"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-declarante-importe-operaciones"
+id = "iva-349-declarante-importe-operaciones"
 source = "collectible_invoice"
 selector = { fact = "base_sum", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "sum" }
@@ -23,7 +23,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["IMPORTE DE LAS OPERACIONES INTRACOMUNITARIAS"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-declarante-numero-rectificaciones"
+id = "iva-349-declarante-numero-rectificaciones"
 source = "collectible_invoice"
 selector = { fact = "operator_count", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications" }
 aggregation = { op = "count_distinct" }
@@ -35,7 +35,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["NÚMERO TOTAL DE OPERADORES INTRACOMUNITARIOS CON RECTIFICACIONES"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-declarante-importe-rectificaciones"
+id = "iva-349-declarante-importe-rectificaciones"
 source = "collectible_invoice"
 selector = { fact = "rectified_base_delta_sum", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications" }
 aggregation = { op = "sum" }
@@ -49,7 +49,7 @@ required_text = ["IMPORTE DE LAS RECTIFICACIONES"]
 # Row-producer bindings: per-operator-clave row sequence (Tipo 2 operador records).
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-operador-row-codigo-pais"
+id = "iva-349-operador-row-codigo-pais"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
@@ -61,7 +61,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["Código país"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-operador-row-nif"
+id = "iva-349-operador-row-nif"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
@@ -73,7 +73,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["NIF OPERADOR COMUNITARIO"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-operador-row-apellidos"
+id = "iva-349-operador-row-apellidos"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
@@ -85,7 +85,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL OPERADOR"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-operador-row-clave"
+id = "iva-349-operador-row-clave"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
@@ -97,7 +97,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["CLAVE DE OPERACIÓN"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-operador-row-base"
+id = "iva-349-operador-row-base"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
@@ -111,7 +111,7 @@ required_text = ["BASE IMPONIBLE O IMPORTE"]
 # Row-producer bindings: per-operator-clave-period row sequence (Tipo 2 rectificacion records).
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-codigo-pais"
+id = "iva-349-rectificacion-row-codigo-pais"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -123,7 +123,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["RECTIFICACIONES"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-nif"
+id = "iva-349-rectificacion-row-nif"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -135,7 +135,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["NIF OPERADOR COMUNITARIO"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-apellidos"
+id = "iva-349-rectificacion-row-apellidos"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -147,7 +147,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL OPERADOR"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-clave"
+id = "iva-349-rectificacion-row-clave"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -159,7 +159,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["CLAVE DE OPERACIÓN"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-ejercicio"
+id = "iva-349-rectificacion-row-ejercicio"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "rectified_year", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -171,7 +171,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["Ejercicio"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-periodo"
+id = "iva-349-rectificacion-row-periodo"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "rectified_period", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -183,7 +183,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["Periodo"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-base-rectificada"
+id = "iva-349-rectificacion-row-base-rectificada"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
@@ -195,7 +195,7 @@ source_ref = "boe-modelo-349-form-2010"
 required_text = ["BASE IMPONIBLE O IMPORTES RECTIFICADOS"]
 
 [[revisions."2020-y-siguientes".bindings]]
-id = "vat-349-rectificacion-row-base-anterior"
+id = "iva-349-rectificacion-row-base-anterior"
 source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "rectified_base_previous", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }

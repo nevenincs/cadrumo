@@ -599,7 +599,7 @@ cli:
         add_help: Registra una nova factura cobrable
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
-        eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
+        eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que un client t'ha de pagar
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
@@ -654,7 +654,7 @@ cli:
         add_help: Registra una nova factura pagable
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
-        eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
+        eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que has de pagar a un proveïdor
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)

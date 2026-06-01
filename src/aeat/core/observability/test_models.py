@@ -75,7 +75,7 @@ class TestRunEventPayload:
             RunEventPayload(
                 assertion=AssertionPayload(expectation="open", passed=True),
             ),
-            RunEventPayload(cache_hit=CacheHitPayload(cache_name="vat", key="2025")),
+            RunEventPayload(cache_hit=CacheHitPayload(cache_name="iva", key="2025")),
             RunEventPayload(error=ErrorPayload(error_type="X", message="boom")),
             RunEventPayload(step=StepBoundaryPayload(step_id="s1", label="t")),
             RunEventPayload(workflow_link=WorkflowLinkPayload(workflow_run_id="abc")),

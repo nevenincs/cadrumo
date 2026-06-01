@@ -79,12 +79,12 @@ class MovementRecord(BaseModel):
         sku: SKU / item identifier; defaults to ``"default"`` for
             single-SKU ledgers.
         quantity: Movement quantity (strictly positive).
-        unit_cost: VAT-exclusive per-unit cost.
-        taxable_base: Invoice taxable base (VAT-exclusive).
-        iva_rate: VAT rate percentage (0-100).
-        vat_amount: Optional explicit VAT amount; when set must equal
+        unit_cost: IVA-exclusive per-unit cost.
+        taxable_base: Invoice taxable base (IVA-exclusive).
+        iva_rate: IVA rate percentage (0-100).
+        iva_amount: Optional explicit IVA amount; when set must equal
             ``taxable_base * iva_rate / 100``.
-        deductible_vat_ratio: Fraction of input VAT the contribuyente
+        deductible_iva_ratio: Fraction of input IVA the contribuyente
             may deduct (0-1).
         schema_version: Forward-compatible schema version. ``"1"``.
     """
@@ -99,13 +99,13 @@ class MovementRecord(BaseModel):
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
     iva_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
-    vat_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
-    deductible_vat_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
+    iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
     schema_version: str = INVENTORY_SCHEMA_VERSION
 
     @property
     def value(self) -> Decimal:
-        """Return the VAT-exclusive movement value."""
+        """Return the IVA-exclusive movement value."""
         if self.taxable_base is not None:
             return self.taxable_base
         if self.unit_cost is None:
@@ -114,7 +114,7 @@ class MovementRecord(BaseModel):
 
     @property
     def resolved_unit_cost(self) -> Decimal:
-        """Return the VAT-exclusive unit cost, falling back to ``taxable_base / quantity``."""
+        """Return the IVA-exclusive unit cost, falling back to ``taxable_base / quantity``."""
         if self.unit_cost is not None:
             return self.unit_cost
         if self.taxable_base is None:
@@ -131,19 +131,19 @@ class MovementRecord(BaseModel):
 
     @model_validator(mode="after")
     def _validate_movement_amounts(self) -> MovementRecord:
-        """Enforce that opening / purchase movements carry a cost and VAT decomposes consistently."""
+        """Enforce that opening / purchase movements carry a cost and IVA decomposes consistently."""
         needs_cost = self.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
         if needs_cost and self.unit_cost is None and self.taxable_base is None:
             raise _InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
         if self.taxable_base is not None:
-            computed_vat = _quantize(self.taxable_base * self.iva_rate / _HUNDRED)
-            if self.vat_amount is not None and self.vat_amount != computed_vat:
-                raise _InventoryValidationError("vat_amount must equal taxable_base * iva_rate")
+            computed_iva = _quantize(self.taxable_base * self.iva_rate / _HUNDRED)
+            if self.iva_amount is not None and self.iva_amount != computed_iva:
+                raise _InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
         return self
 
 
 class StockLayer(BaseModel):
-    """Remaining inventory quantity at one VAT-exclusive unit cost.
+    """Remaining inventory quantity at one IVA-exclusive unit cost.
 
     Attributes:
         sku: SKU / item identifier.
@@ -169,7 +169,7 @@ class InventoryLedger(BaseModel):
         actividad_id: Activity identifier the ledger is keyed by.
         year: Calendar year the ledger covers.
         valuation_method: FIFO, PMP, or coste medio; LIFO is forbidden.
-        opening_stock: Aggregate VAT-exclusive opening valuation.
+        opening_stock: Aggregate IVA-exclusive opening valuation.
         opening_layers: Per-layer breakdown of opening stock; when
             non-empty must value-balance with ``opening_stock``.
         closing_stock: Optional explicit closing valuation; when

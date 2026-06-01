@@ -81,10 +81,10 @@ def test_per_modelo_counterpart_provider_resolves_committed_349_registry_binding
     assert resolution.provider is PerModeloAggregationProvider.COUNTERPART
     assert resolution.source_observation_count == 2
     assert resolution.binding_values == {
-        "vat-349-declarante-numero-operadores": Decimal("2"),
-        "vat-349-declarante-importe-operaciones": Decimal("1500.50"),
-        "vat-349-declarante-numero-rectificaciones": Decimal("0"),
-        "vat-349-declarante-importe-rectificaciones": Decimal("0"),
+        "iva-349-declarante-numero-operadores": Decimal("2"),
+        "iva-349-declarante-importe-operaciones": Decimal("1500.50"),
+        "iva-349-declarante-numero-rectificaciones": Decimal("0"),
+        "iva-349-declarante-importe-rectificaciones": Decimal("0"),
     }
     assert resolution.casilla_values == {
         "decl.numero-operadores": Decimal("2"),
@@ -92,12 +92,12 @@ def test_per_modelo_counterpart_provider_resolves_committed_349_registry_binding
         "decl.numero-rectificaciones": Decimal("0"),
         "decl.importe-rectificaciones": Decimal("0"),
     }
-    assert resolution.row_values[("vat-349-operador-row-codigo-pais", 1)] == "DE"
-    assert resolution.row_values[("vat-349-operador-row-nif", 1)] == "DE111"
-    assert resolution.row_values[("vat-349-operador-row-clave", 1)] == "E"
-    assert resolution.row_values[("vat-349-operador-row-base", 1)] == Decimal("1000.00")
-    assert resolution.row_values[("vat-349-operador-row-codigo-pais", 2)] == "FR"
-    assert resolution.row_values[("vat-349-operador-row-clave", 2)] == "S"
+    assert resolution.row_values[("iva-349-operador-row-codigo-pais", 1)] == "DE"
+    assert resolution.row_values[("iva-349-operador-row-nif", 1)] == "DE111"
+    assert resolution.row_values[("iva-349-operador-row-clave", 1)] == "E"
+    assert resolution.row_values[("iva-349-operador-row-base", 1)] == Decimal("1000.00")
+    assert resolution.row_values[("iva-349-operador-row-codigo-pais", 2)] == "FR"
+    assert resolution.row_values[("iva-349-operador-row-clave", 2)] == "S"
 
 
 def test_per_modelo_registry_provider_uses_committed_source_kind_filters() -> None:
@@ -121,10 +121,10 @@ def test_per_modelo_registry_provider_uses_committed_source_kind_filters() -> No
 
     assert resolution.source_observation_count == 0
     assert resolution.binding_values == {
-        "vat-349-declarante-numero-operadores": Decimal("0"),
-        "vat-349-declarante-importe-operaciones": Decimal("0"),
-        "vat-349-declarante-numero-rectificaciones": Decimal("0"),
-        "vat-349-declarante-importe-rectificaciones": Decimal("0"),
+        "iva-349-declarante-numero-operadores": Decimal("0"),
+        "iva-349-declarante-importe-operaciones": Decimal("0"),
+        "iva-349-declarante-numero-rectificaciones": Decimal("0"),
+        "iva-349-declarante-importe-rectificaciones": Decimal("0"),
     }
 
 

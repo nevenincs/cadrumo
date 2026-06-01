@@ -8,7 +8,7 @@ Persists :class:`InventoryLedgerDocument` (a tuple of
 Anti-tautology: the fixture populates non-default values on every
 optional axis of ``InventoryLedger`` (``opening_layers``,
 ``closing_stock``, ``period_movements`` with two distinct kinds /
-SKUs / vat shapes). Witness clauses pin per-field identity so a drift
+SKUs / iva shapes). Witness clauses pin per-field identity so a drift
 silently flattening movements or layers fails on inequality.
 """
 
@@ -66,8 +66,8 @@ def _populated_ledger() -> InventoryLedger:
                 unit_cost=Decimal("11.00"),
                 taxable_base=Decimal("825.00"),
                 iva_rate=Decimal("21.00"),
-                vat_amount=Decimal("173.25"),
-                deductible_vat_ratio=Decimal("1.00"),
+                iva_amount=Decimal("173.25"),
+                deductible_iva_ratio=Decimal("1.00"),
             ),
             MovementRecord(
                 movement_id="mv-2024-002",
@@ -105,11 +105,11 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
             MovementKind.PURCHASE,
             MovementKind.COGS,
         )
-        # VAT decomposition is FINANCIAL-class identity; pin the
-        # explicit vat_amount survives un-quantised.
+        # IVA decomposition is FINANCIAL-class identity; pin the
+        # explicit iva_amount survives un-quantised.
         purchase = loaded_ledger.period_movements[0]
-        assert purchase.vat_amount == Decimal("173.25")
-        assert purchase.deductible_vat_ratio == Decimal("1.00")
+        assert purchase.iva_amount == Decimal("173.25")
+        assert purchase.deductible_iva_ratio == Decimal("1.00")
 
 
 def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(

@@ -35,7 +35,7 @@ from ._errors import IvaValidationError
 
 
 class IvaCategory(StrEnum):
-    """Closed catalogue of Spanish VAT (IVA) situations.
+    """Closed catalogue of Spanish IVA (IVA) situations.
 
     The member names and string values are the authoritative identifiers used
     by the downstream classifier layers (financial providers, the spending
@@ -110,7 +110,7 @@ class IvaRateKind(StrEnum):
 
 
 class IvaCitationSource(StrEnum):
-    """Closed catalogue of legal/regulatory sources cited by VAT rules."""
+    """Closed catalogue of legal/regulatory sources cited by IVA rules."""
 
     LEY_37_1992 = "ley-37-1992"
     MANUAL_IVA_2025 = "manual-iva-2025"
@@ -186,7 +186,7 @@ class _IvaStrictMutable(BaseModel):
 
 
 class IvaRateRecord(_IvaStrictFrozen):
-    """A single VAT rate line item keyed by member state and rate kind.
+    """A single IVA rate line item keyed by member state and rate kind.
 
     Attributes:
         member_state: Issuing member state.
@@ -263,7 +263,7 @@ class IvaCitation(_IvaStrictFrozen):
 
 
 class IvaRegulation(_IvaStrictFrozen):
-    """A single codified VAT rule for a :class:`IvaCategory`.
+    """A single codified IVA rule for a :class:`IvaCategory`.
 
     Every regulation carries at least one :class:`IvaCitation`. The
     substrate-level invariant enforced by
@@ -272,14 +272,14 @@ class IvaRegulation(_IvaStrictFrozen):
     can surface the legal backing of any classification.
 
     Attributes:
-        category: The VAT situation codified by this rule.
+        category: The IVA situation codified by this rule.
         label: Short human-readable label key.
         description: One-paragraph plain-language description key.
         triggers_when: Plain-language description of when this rule fires (key).
         iva_treatment: Plain-language description of the fiscal treatment (key).
         requires_reverse_charge: Whether the rule triggers
             *inversión del sujeto pasivo*.
-        requires_supplier_vat_id: Whether a supplier NIF-VAT is mandatory.
+        requires_supplier_iva_id: Whether a supplier NIF-IVA is mandatory.
         boe_references: Normative ids (shared with
             :mod:`aeat.domain.normatives`) backing this rule.
         manual_references: Optional Manual práctico IVA rule ids or section
@@ -288,7 +288,7 @@ class IvaRegulation(_IvaStrictFrozen):
         notes: Free-form reviewer notes.
     """
 
-    category: IvaCategory = Field(description="The VAT situation codified by this rule.")
+    category: IvaCategory = Field(description="The IVA situation codified by this rule.")
     label: tr = Field(description="Short human-readable label key.")
     description: tr = Field(description="One-paragraph plain-language description key.")
     triggers_when: tr = Field(
@@ -300,8 +300,8 @@ class IvaRegulation(_IvaStrictFrozen):
     requires_reverse_charge: bool = Field(
         description="Whether the rule triggers inversión del sujeto pasivo.",
     )
-    requires_supplier_vat_id: bool = Field(
-        description="Whether a supplier NIF-VAT is mandatory for this rule.",
+    requires_supplier_iva_id: bool = Field(
+        description="Whether a supplier NIF-IVA is mandatory for this rule.",
     )
     boe_references: tuple[_NormativeId, ...] = Field(
         description="Normative ids (shared with aeat.domain.normatives) backing this rule.",
@@ -380,7 +380,7 @@ class IvaVerificationIssue(_IvaStrictFrozen):
         level: Severity, either ``"error"`` or ``"warning"``.
         code: Short stable issue code.
         message: Human-readable detail.
-        category_id: Affected VAT category value, if any.
+        category_id: Affected IVA category value, if any.
     """
 
     level: str = Field(description="'error' or 'warning'.")
@@ -388,7 +388,7 @@ class IvaVerificationIssue(_IvaStrictFrozen):
     message: str = Field(description="Human-readable detail.")
     category_id: str | None = Field(
         default=None,
-        description="Affected VAT category value, if any.",
+        description="Affected IVA category value, if any.",
     )
 
 

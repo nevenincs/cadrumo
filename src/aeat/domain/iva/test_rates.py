@@ -1,4 +1,4 @@
-"""Unit tests for the EU VAT rate table exposed by :mod:`aeat.domain.iva`.
+"""Unit tests for the EU IVA rate table exposed by :mod:`aeat.domain.iva`.
 
 Covers the 27-state coverage invariant, the Spanish multi-tier expansion, the
 :func:`aeat.domain.iva.lookup_rate` happy and error paths, and the per-record
@@ -80,5 +80,5 @@ def test_every_rate_window_is_well_ordered() -> None:
 def test_load_iva_rate_table_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
     missing = tmp_path / "missing-rates.toml"
 
-    with pytest.raises(IvaCatalogueError, match=r"cannot stat VAT rate registry"):
+    with pytest.raises(IvaCatalogueError, match=r"cannot stat IVA rate registry"):
         load_iva_rate_table(missing)

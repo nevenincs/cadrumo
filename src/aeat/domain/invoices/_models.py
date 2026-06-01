@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 from ._validators import (
     is_eu_member_state_code,
     validate_country_code,
-    validate_vat_number,
+    validate_iva_number,
 )
 
 _LINE_TOLERANCE = Decimal("0.01")
@@ -63,7 +63,7 @@ def derive_invoice_id(
         invoice_number: AEAT-significant invoice number as printed on the
             document.
         issued_at: ISO calendar date printed on the invoice.
-        counterparty_tax_id: Counterparty NIF / NIE / CIF / VAT number
+        counterparty_tax_id: Counterparty NIF / NIE / CIF / IVA number
             already validated and uppercased.
         currency: ISO-4217 currency code already uppercased.
         grand_total: Invoice grand total.
@@ -141,7 +141,7 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
         if isinstance(country, str) and country == "ES":
             payload["counterparty_tax_id"] = validate_spanish_tax_id(tax_id_raw)
         elif isinstance(country, str):
-            payload["counterparty_tax_id"] = validate_vat_number(tax_id_raw, country)
+            payload["counterparty_tax_id"] = validate_iva_number(tax_id_raw, country)
         else:
             payload["counterparty_tax_id"] = tax_id_raw
     return payload

@@ -133,7 +133,7 @@ def test_topic_projection_resolves_central_output_language_override() -> None:
 
     topics = {topic.slug: topic for topic in report.topics}
     assert topics["iva-regime"].title == "IVA regime"
-    assert topics["iva-regime"].body.startswith("VAT regime applicable to the taxpayer")
+    assert topics["iva-regime"].body.startswith("IVA regime applicable to the taxpayer")
 
 
 def test_topic_projection_accepts_explicit_supported_locale() -> None:

@@ -101,7 +101,7 @@ class ProrrataLedgerReference(BaseModel):
     transaction_date: date
     reference: ProrrataReference
     base_amount: Decimal = Field(..., ge=Decimal("0"))
-    input_vat_amount: Decimal = Field(..., ge=Decimal("0"))
+    input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
 
 class IvaLedgerInputKind(StrEnum):
     """Business role of a pre-classified IVA ledger candidate.
@@ -485,7 +485,7 @@ def _resolve_iva_prorrata_attachment(
 
     Returns ``(None, None, None)`` when the transaction carries no
     prorrata_reference. Returns ``(None, issue, None)`` when the
-    reference fails parsing OR the row is not a supported-input VAT
+    reference fails parsing OR the row is not a supported-input IVA
     row (prorrata only attaches to SOPORTADO flows). Returns
     ``(reference, None, transaction_id)`` for a valid attachment.
     """
@@ -501,7 +501,7 @@ def _resolve_iva_prorrata_attachment(
         return None, IvaLedgerAggregationIssue(
             transaction_id=transaction.transaction_id,
             reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
-            detail="prorrata_reference may only be attached to supported input VAT rows",
+            detail="prorrata_reference may only be attached to supported input IVA rows",
         ), None
     return (
         ProrrataLedgerReference(
@@ -509,7 +509,7 @@ def _resolve_iva_prorrata_attachment(
             transaction_date=operation_date,
             reference=raw_reference,
             base_amount=base_amount,
-            input_vat_amount=iva_amount,
+            input_iva_amount=iva_amount,
         ),
         None,
         transaction.transaction_id,

@@ -611,7 +611,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaCatalogueError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_CATALOGUE",
+            code="ERROR_FINANCIAL_IVA_CATALOGUE",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva_catalogue",
             default_suggestion=None,
@@ -622,7 +622,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaCategoryNotFoundError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND",
+            code="ERROR_FINANCIAL_IVA_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva_category_not_found",
             default_suggestion="aeat app ledger review",
@@ -633,7 +633,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaClassificationError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_CLASSIFICATION",
+            code="ERROR_FINANCIAL_IVA_CLASSIFICATION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva_classification",
             default_suggestion=None,
@@ -644,7 +644,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT",
+            code="ERROR_FINANCIAL_IVA",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva",
             default_suggestion=None,
@@ -655,7 +655,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaRateNotFoundError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_RATE_NOT_FOUND",
+            code="ERROR_FINANCIAL_IVA_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva_rate_not_found",
             default_suggestion="aeat app ledger review",
@@ -666,7 +666,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaRateOverlapError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_RATE_OVERLAP",
+            code="ERROR_FINANCIAL_IVA_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva_rate_overlap",
             default_suggestion=None,
@@ -1518,7 +1518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.IvaValidationError",
         ErrorCode(
-            code="ERROR_VAT_VALIDATION",
+            code="ERROR_IVA_VALIDATION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_iva_validation",
             default_suggestion=None,
@@ -1529,7 +1529,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.ProrrataError",
         ErrorCode(
-            code="ERROR_VAT_PRORRATA",
+            code="ERROR_IVA_PRORRATA",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_iva_prorrata",
             default_suggestion=None,
@@ -1540,7 +1540,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.ProrrataInputError",
         ErrorCode(
-            code="ERROR_VAT_PRORRATA_INPUT",
+            code="ERROR_IVA_PRORRATA_INPUT",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_iva_prorrata_input",
             default_suggestion=None,
@@ -1551,7 +1551,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.iva._errors.ProrrataSectorError",
         ErrorCode(
-            code="ERROR_VAT_PRORRATA_SECTOR",
+            code="ERROR_IVA_PRORRATA_SECTOR",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_iva_prorrata_sector",
             default_suggestion=None,

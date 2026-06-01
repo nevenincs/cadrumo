@@ -2,7 +2,7 @@
 
 This module implements the Spanish Value-Added-Tax (IVA) prorrata mechanism
 that governs how a taxable person who performs both deductible and
-non-deductible operations may deduct input VAT. The substrate is pure
+non-deductible operations may deduct input IVA. The substrate is pure
 domain logic: it produces immutable result objects and never touches
 persistence, the registry, or the CLI.
 
@@ -19,7 +19,7 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
 * **Art. 102.Uno** — general prorrata formula:
   ``deductible_percentage = operaciones_con_derecho / total_operaciones``.
   ``operaciones_con_derecho`` is the sum of the year's operations that
-  grant the right to deduct input VAT. ``total_operaciones`` is the sum of
+  grant the right to deduct input IVA. ``total_operaciones`` is the sum of
   ``operaciones_con_derecho`` plus ``operaciones_sin_derecho``
   (LIVA-art.-20 exempt supplies and similar). Subvenciones not linked to
   operations, autoconsumos, and the disposal of bienes de inversión are
@@ -95,7 +95,7 @@ SectorId = Annotated[
 class ProrrataRegime(StrEnum):
     """LIVA-defined prorrata regime kinds.
 
-    * ``GENERAL`` — single deduction percentage applied to every input VAT
+    * ``GENERAL`` — single deduction percentage applied to every input IVA
       amount (art. 102 LIVA).
     * ``ESPECIAL`` — per-input classification: 100% deductible if used
       exclusively in deductible activities, 0% if used exclusively in
@@ -122,7 +122,7 @@ class ProrrataKind(StrEnum):
 
 
 class InputClassification(StrEnum):
-    """How a specific input VAT amount maps to deductible activity under prorrata especial.
+    """How a specific input IVA amount maps to deductible activity under prorrata especial.
 
     Governed by art. 103 LIVA.
 
@@ -153,7 +153,7 @@ class ProrrataInputs(_ProrrataStrictFrozen):
     operaciones_con_derecho_deduccion: Decimal = Field(
         ...,
         ge=Decimal("0"),
-        description=("Sum of the year's operations that grant the right to deduct input VAT. Must be non-negative."),
+        description=("Sum of the year's operations that grant the right to deduct input IVA. Must be non-negative."),
     )
     operaciones_sin_derecho_deduccion: Decimal = Field(
         ...,
@@ -261,16 +261,16 @@ class ProrrataReference(_ProrrataStrictFrozen):
 class ProrrataInputDeduction(_ProrrataStrictFrozen):
     """One per-input deductibility decision under prorrata especial.
 
-    Used to enumerate every input VAT amount classified under art. 103
+    Used to enumerate every input IVA amount classified under art. 103
     LIVA and the resulting deductible portion. The ``deductible_amount``
-    field equals ``input_vat_amount * deductible_percentage / 100``,
+    field equals ``input_iva_amount * deductible_percentage / 100``,
     rounded to two decimals using banker's rounding (the default Decimal
     quantizer); the caller's modelo binding provider is responsible for
     further rounding if the registry casilla requires whole euros.
     """
 
     classification: InputClassification
-    input_vat_amount: Decimal = Field(..., ge=Decimal("0"))
+    input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
     deductible_percentage: Decimal = Field(..., ge=Decimal("0"), le=Decimal("100"))
     deductible_amount: Decimal = Field(..., ge=Decimal("0"))
 
@@ -407,7 +407,7 @@ def _deductible_percentage_for(
 
 def classify_input_deduction(
     classification: InputClassification,
-    input_vat_amount: Decimal,
+    input_iva_amount: Decimal,
     general_percentage: Decimal,
 ) -> ProrrataInputDeduction:
     """Compute one deductible amount under prorrata especial (art. 103).
@@ -416,16 +416,16 @@ def classify_input_deduction(
     :func:`compute_prorrata_general` for the same window; it only enters
     the calculation when the classification is ``COMMON``.
     """
-    if input_vat_amount < 0:
-        raise ProrrataInputError(f"input_vat_amount must be non-negative, got {input_vat_amount}")
+    if input_iva_amount < 0:
+        raise ProrrataInputError(f"input_iva_amount must be non-negative, got {input_iva_amount}")
     if general_percentage < 0 or general_percentage > 100:
         raise ProrrataInputError(f"general_percentage out of range 0..100, got {general_percentage}")
 
     deductible_percentage = _deductible_percentage_for(classification, general_percentage)
-    deductible_amount = _round_to_cents(input_vat_amount * deductible_percentage / Decimal("100"))
+    deductible_amount = _round_to_cents(input_iva_amount * deductible_percentage / Decimal("100"))
     return ProrrataInputDeduction(
         classification=classification,
-        input_vat_amount=input_vat_amount,
+        input_iva_amount=input_iva_amount,
         deductible_percentage=deductible_percentage,
         deductible_amount=deductible_amount,
     )

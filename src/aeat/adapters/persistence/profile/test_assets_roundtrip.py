@@ -6,10 +6,10 @@ under ``aeat.persistence.profile.assets.amortization``, both at
 ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates every defaultable field on
-``AssetRecord`` with non-default values (taxable_base / vat_amount /
-gross_total / deductible_vat_ratio < 1 / useful_life_years /
+``AssetRecord`` with non-default values (taxable_base / iva_amount /
+gross_total / deductible_iva_ratio < 1 / useful_life_years /
 allocation_ratio / actividad_id / a non-empty
-LibertadAmortizacionElection). The VAT-decomposition invariant on
+LibertadAmortizacionElection). The IVA-decomposition invariant on
 ``AssetRecord`` is satisfied so the fixture rejects only on real
 identity drift, not on the model_validator's structural check.
 """
@@ -42,8 +42,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def _populated_asset() -> AssetRecord:
-    # taxable_base 10 000.00 + 21% VAT = 12 100.00 gross; 50%
-    # deductible -> 1 050 non-deductible VAT rolls into cost_basis,
+    # taxable_base 10 000.00 + 21% IVA = 12 100.00 gross; 50%
+    # deductible -> 1 050 non-deductible IVA rolls into cost_basis,
     # producing 11 050.00.
     return AssetRecord(
         identifier="asset-2024-laptop-pro",
@@ -53,8 +53,8 @@ def _populated_asset() -> AssetRecord:
         cost_basis=Decimal("11050.00"),
         taxable_base=Decimal("10000.00"),
         iva_rate=Decimal("21.00"),
-        vat_amount=Decimal("2100.00"),
-        deductible_vat_ratio=Decimal("0.50"),
+        iva_amount=Decimal("2100.00"),
+        deductible_iva_ratio=Decimal("0.50"),
         gross_total=Decimal("12100.00"),
         useful_life_years=4,
         libertad_amortizacion=LibertadAmortizacionElection(
@@ -83,9 +83,9 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
 
         assert loaded_doc == original_doc
         loaded_asset = loaded_doc.assets[0]
-        # Per-field witnesses on the optional VAT / allocation axes.
+        # Per-field witnesses on the optional IVA / allocation axes.
         assert loaded_asset.taxable_base == Decimal("10000.00")
-        assert loaded_asset.deductible_vat_ratio == Decimal("0.50")
+        assert loaded_asset.deductible_iva_ratio == Decimal("0.50")
         assert loaded_asset.allocation_ratio == Decimal("0.75")
         assert loaded_asset.useful_life_years == 4
         assert loaded_asset.actividad_id == "iae.844"
@@ -109,17 +109,17 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
 def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     tmp_path: Path,
 ) -> None:
-    """Anti-tautology proof: corrupting the VAT decomposition must surface.
+    """Anti-tautology proof: corrupting the IVA decomposition must surface.
 
     :class:`AssetRecord` carries a model_validator that cross-checks
-    ``cost_basis == taxable_base + non-deductible VAT``. The
+    ``cost_basis == taxable_base + non-deductible IVA``. The
     persistence boundary serialises every component; if the wire shape
     silently strips one, the rehydrated record's invariant will fail
     at load time (or, if it doesn't, the strict-equality witness will
     flag the drift). Persists a populated ledger, reaches into the
     encrypted SecureObjectRow via ``session_scope``, surgically
     halves the persisted ``cost_basis`` (breaking the
-    ``cost_basis == taxable_base + non-deductible VAT`` cross-check),
+    ``cost_basis == taxable_base + non-deductible IVA`` cross-check),
     and asserts the load path catches the drift.
 
     If this test passes silently with a corrupted cost_basis, the
@@ -152,15 +152,15 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
             assert asset_dict.get("cost_basis"), (
                 "fixture must serialise cost_basis onto the asset for this proof test to be meaningful"
             )
-            # Halve the cost_basis so the VAT decomposition cross-
+            # Halve the cost_basis so the IVA decomposition cross-
             # check fails ("cost_basis must equal taxable_base plus
-            # non-deductible VAT").
+            # non-deductible IVA").
             asset_dict["cost_basis"] = "5525.00"
             row.payload = _json.dumps(document).encode("utf-8")
 
         with pytest.raises(
             pydantic.ValidationError,
-            match="cost_basis must equal taxable_base plus non-deductible VAT",
+            match="cost_basis must equal taxable_base plus non-deductible IVA",
         ):
             assets_repo.load()
 
@@ -175,7 +175,7 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     save-drops-field / load-re-defaults-field regression is invisible
     to a mutation test — only an absent-field probe catches it. The
     load path must raise ``ValidationError`` (``cost_basis`` is
-    required, or a re-defaulted value fails the VAT decomposition
+    required, or a re-defaulted value fails the IVA decomposition
     cross-check), never silently rehydrate an asset with no cost basis.
     """
 

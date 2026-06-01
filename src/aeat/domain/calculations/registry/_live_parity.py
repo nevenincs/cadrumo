@@ -12,7 +12,7 @@ Two-fold hardening underpins the design:
 2. Live conformance — drive a synthetic, registry-rendered payload
    through an AEAT-published verification surface that **must not** modify
    remote state (open simulators, file validators like TGVI online, VIES
-   VAT-ID checkers, pre-filing validators, AEAT integration test services).
+   IVA-ID checkers, pre-filing validators, AEAT integration test services).
    Every planned operation is pre-flighted against the cross-reference's
    :class:`RemoteStateGuardPolicy` before any HTTP or browser action runs;
    any policy-violating step is rejected before it leaves the process.
@@ -76,7 +76,7 @@ ParityVerdict = Literal["match", "mismatch", "unverifiable", "blocked"]
 OracleSurfaceKind = Literal[
     "file_validator",
     "open_simulator",
-    "vat_id_check",
+    "iva_id_check",
     "pre_filing_validator",
     "integration_test_service",
 ]
@@ -104,12 +104,12 @@ _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("open_simulator", "open_simulator"),
         ("integration_test_service", "integration_test_service"),
-        ("public_read_surface", "vat_id_check"),
+        ("public_read_surface", "iva_id_check"),
         ("public_read_surface", "file_validator"),
         ("authenticated_read_surface", "pre_filing_validator"),
-        # AEAT VAT-ID consult surfaces (GROI today, IXVI under cert auth) are
+        # AEAT IVA-ID consult surfaces (GROI today, IXVI under cert auth) are
         # callable verification surfaces gated on cl@ve-movil / certificate.
-        ("authenticated_simulator", "vat_id_check"),
+        ("authenticated_simulator", "iva_id_check"),
     }
 )
 

@@ -1039,7 +1039,7 @@ def _aggregate_invoice_binding(
 # ---------------------------------------------------------------------------
 # Ledger OSS / IOSS aggregation source bindings.
 #
-# These bindings aggregate ledger lines whose VAT classification matches a
+# These bindings aggregate ledger lines whose IVA classification matches a
 # regime + destination Member State + rate tier + invoice direction selector.
 # The classification axes come from :mod:`aeat.domain.iva`; the binding source
 # is the registry's ledger-driven aggregation kind for Modelo 369.
@@ -1066,14 +1066,14 @@ class OssIossLedgerObservation(BaseModel):
         regime: OSS / IOSS Esquema the line is filed under.
         destination_member_state: Member State of consumption (the
             destination MS for the supply, which determines the
-            applicable VAT rate per the OSS / IOSS rules).
+            applicable IVA rate per the OSS / IOSS rules).
         rate_kind: Substrate rate tier (general / reduced / etc.).
         invoice_direction: Whether the autónomo issued or received
             the invoice.
         transaction_kind: Substrate :class:`aeat.domain.iva.TransactionKind`
             the line resolves to.
         base_amount: Taxable base in EUR.
-        iva_amount: VAT amount in EUR (already applied at the
+        iva_amount: IVA amount in EUR (already applied at the
             destination MS rate per OSS / IOSS rules).
     """
 
@@ -1239,7 +1239,7 @@ class IvaLedgerObservation(BaseModel):
         flow_direction: Substrate :class:`IvaFlowDirection` (output /
             input / self-assessed reverse charge).
         base_amount: Taxable base in EUR.
-        iva_amount: VAT amount in EUR (cuota repercutida or soportada,
+        iva_amount: IVA amount in EUR (cuota repercutida or soportada,
             depending on flow direction).
     """
 
@@ -1255,7 +1255,7 @@ class IvaLedgerObservation(BaseModel):
     prorrata_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
     """Stable id of the linked :class:`ProrrataLedgerReference` row, when set.
 
-    Populated by the aggregator only on ``SOPORTADO`` (input VAT) flows
+    Populated by the aggregator only on ``SOPORTADO`` (input IVA) flows
     that carry a validated prorrata reference. Downstream Modelo 303 /
     390 binding selectors filter prorrata-linked observations without
     a manual join against the parallel ``prorrata_references`` tuple.
@@ -1521,7 +1521,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
       (``raw.amount`` or its business fraction) across the window — the
       ingresos íntegros path feeding casilla ``"01"``.
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
-      (the VAT-exclusive base imponible) — the rendimiento-neto path feeding
+      (the IVA-exclusive base imponible) — the rendimiento-neto path feeding
       casilla ``"03"``.  Observations whose ``taxable_base_amount`` is
       ``None`` contribute zero to this sum.
     """

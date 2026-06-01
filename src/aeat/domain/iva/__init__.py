@@ -1,9 +1,9 @@
-"""Spanish VAT (IVA) taxonomy and registry-backed lookup surface.
+"""Spanish IVA (IVA) taxonomy and registry-backed lookup surface.
 
-Provides strict VAT identifiers, classification primitives, and read-only
+Provides strict IVA identifiers, classification primitives, and read-only
 loaders for committed registry data. Python code owns validation and lookup
 behaviour; rates, effective windows, and catalogue text are loaded from
-`registry/aeat/vat`.
+`registry/aeat/iva`.
 
 The substrate exposes:
 

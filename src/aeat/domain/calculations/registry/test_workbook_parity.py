@@ -280,7 +280,7 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
                 id="base",
                 value=Decimal("10"),
                 workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
-                registry_binding="vat.base",
+                registry_binding="iva.base",
             ),
         ),
     )

@@ -71,7 +71,7 @@ def test_adapter_satisfies_live_parity_oracle_protocol() -> None:
     oracle = AeatNifIvaCheckerOracle()
     assert isinstance(oracle, LiveParityOracle)
     assert oracle.oracle_id == ORACLE_ID
-    assert oracle.surface_kind == "vat_id_check"
+    assert oracle.surface_kind == "iva_id_check"
 
 
 def test_adapter_urls_stay_inside_aeat_host_pinning_suffix() -> None:

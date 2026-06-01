@@ -2260,7 +2260,7 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
     Extraction verdict: VERIFIED — decl.ejercicio (Decimal) and decl.periodo
     (str) extracted.
 
-    Formula verdict: EXTRACTION-ONLY — M369 OSS EU VAT uses the
+    Formula verdict: EXTRACTION-ONLY — M369 OSS EU IVA uses the
     esquema-union revision which has no closure formulas in the registry.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "369" / "2024-1T.pdf"

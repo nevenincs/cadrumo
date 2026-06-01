@@ -41,12 +41,12 @@ Settlement-side cornerstones — devengada vs deducible
 
 The IVA settlement model rests on two cornerstone concepts:
 
-* **IVA devengada** (output VAT, "cuota tributaria devengada") — the
+* **IVA devengada** (output IVA, "cuota tributaria devengada") — the
   amount the sujeto pasivo OWES to the Treasury as the IVA chargeable
   on its sales. LIVA arts. 75-77 establish when IVA accrues
   (devengo); LIVA art. 88 governs how the sujeto pasivo charges it
   to the customer (repercusión).
-* **IVA deducible** (input VAT, "cuotas tributarias deducibles") —
+* **IVA deducible** (input IVA, "cuotas tributarias deducibles") —
   the amount the sujeto pasivo may DEDUCT from its devengada because
   it bore IVA on inputs. LIVA art. 92 establishes the right to
   deduction; arts. 93-104 establish the conditions, scope, and
@@ -124,7 +124,7 @@ _REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     }
 )
-"""VAT categories that route to ``INVERSION_SUJETO_PASIVO`` regardless of the
+"""IVA categories that route to ``INVERSION_SUJETO_PASIVO`` regardless of the
 invoice direction. The substrate's classifier emits these values from
 the rule set R01-R03 (domestic RC) and R11/R13 (intra-community
 acquisitions / EU services received)."""
@@ -175,10 +175,10 @@ class IvaSettlementSide(StrEnum):
     classify cuotas into these two buckets.
 
     Attributes:
-        DEVENGADA: Output VAT — the amount owed to the Treasury,
+        DEVENGADA: Output IVA — the amount owed to the Treasury,
             arising from sales (LIVA art. 88 repercusión) or
             self-assessed reverse-charge entries (LIVA art. 84.Uno.2).
-        DEDUCIBLE: Input VAT — the amount deductible from the
+        DEDUCIBLE: Input IVA — the amount deductible from the
             devengada total because the sujeto pasivo bore IVA on
             inputs (LIVA art. 92 cuotas tributarias deducibles).
     """

@@ -28,4 +28,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m349_intracomunitarias.label",
     purpose="entries.portal_m349_intracomunitarias.purpose",
 )
-"""Portal entry for Modelo 349 (intra-EU recapitulative VAT statement)."""
+"""Portal entry for Modelo 349 (intra-EU recapitulative IVA statement)."""

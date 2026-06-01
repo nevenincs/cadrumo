@@ -1,4 +1,4 @@
-"""Unit tests for the closed VAT enumerations exposed by :mod:`aeat.domain.iva`.
+"""Unit tests for the closed IVA enumerations exposed by :mod:`aeat.domain.iva`.
 
 Pins membership and round-trip semantics for :class:`IvaCategory`,
 :class:`EUMemberState` and :class:`IvaRateKind` so accidental additions or
@@ -14,7 +14,7 @@ from . import EUMemberState, IvaCategory, IvaRateKind
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def test_vat_category_has_every_named_member() -> None:
+def test_iva_category_has_every_named_member() -> None:
     """:class:`IvaCategory` must carry exactly the 17 declared members.
 
     ``DOMESTIC_REVERSE_CHARGE`` exists to disambiguate
@@ -44,7 +44,7 @@ def test_vat_category_has_every_named_member() -> None:
     assert {member.name for member in IvaCategory} == expected
 
 
-def test_vat_category_values_roundtrip_through_strenum() -> None:
+def test_iva_category_values_roundtrip_through_strenum() -> None:
     """Every IvaCategory value re-parses to the same member."""
     for member in IvaCategory:
         assert IvaCategory(member.value) is member

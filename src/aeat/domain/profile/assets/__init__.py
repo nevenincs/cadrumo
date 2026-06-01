@@ -84,10 +84,10 @@ class LibertadAmortizacionElection(BaseModel):
 class AssetRecord(BaseModel):
     """A depreciable asset affected to an economic activity.
 
-    Strict, frozen, no extra fields. Tracks both the invoice-level VAT
-    decomposition (``taxable_base`` / ``vat_amount`` / ``gross_total``)
+    Strict, frozen, no extra fields. Tracks both the invoice-level IVA
+    decomposition (``taxable_base`` / ``iva_amount`` / ``gross_total``)
     and the derived ``cost_basis`` used as the depreciable basis. When
-    only a fraction of input VAT is deductible, the non-deductible
+    only a fraction of input IVA is deductible, the non-deductible
     portion is rolled into ``cost_basis`` per LIS / LIRPF practice.
 
     Attributes:
@@ -97,16 +97,16 @@ class AssetRecord(BaseModel):
             registry definitions, not this record module.
         acquisition_date: Date the asset was acquired.
         cost_basis: Depreciable basis. Strictly positive.
-        taxable_base: Invoice taxable base (VAT-exclusive). When set,
+        taxable_base: Invoice taxable base (IVA-exclusive). When set,
             ``cost_basis`` must equal ``taxable_base + non-deductible
-            VAT``.
-        iva_rate: VAT percentage applied to the invoice (0-100).
-        vat_amount: Optional explicit VAT amount; when set, must equal
+            IVA``.
+        iva_rate: IVA percentage applied to the invoice (0-100).
+        iva_amount: Optional explicit IVA amount; when set, must equal
             ``taxable_base * iva_rate / 100``.
-        deductible_vat_ratio: Fraction of input VAT the contribuyente
+        deductible_iva_ratio: Fraction of input IVA the contribuyente
             may deduct (0-1).
         gross_total: Optional explicit invoice total; when set, must
-            equal ``taxable_base + vat_amount``.
+            equal ``taxable_base + iva_amount``.
         useful_life_years: Override for the LIS art. 12.1.a default
             coefficient. Must not exceed the table maximum coefficient
             or period for ``asset_class``.
@@ -127,8 +127,8 @@ class AssetRecord(BaseModel):
     cost_basis: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, gt=Decimal("0"))
     iva_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
-    vat_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
-    deductible_vat_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
+    iva_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    deductible_iva_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
     gross_total: Decimal | None = Field(default=None, gt=Decimal("0"))
     useful_life_years: int | None = Field(default=None, gt=0)
     libertad_amortizacion: LibertadAmortizacionElection = Field(default_factory=LibertadAmortizacionElection)
@@ -145,20 +145,20 @@ class AssetRecord(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_vat_decomposition(self) -> AssetRecord:
-        """Cross-check VAT decomposition against ``cost_basis``."""
+    def _validate_iva_decomposition(self) -> AssetRecord:
+        """Cross-check IVA decomposition against ``cost_basis``."""
         base = self.taxable_base or self.cost_basis
-        computed_vat = _quantize(base * self.iva_rate / _HUNDRED)
-        if self.vat_amount is not None and self.vat_amount != computed_vat:
-            raise _AssetValidationError("vat_amount must equal taxable_base * iva_rate")
-        computed_gross = _quantize(base + computed_vat)
+        computed_iva = _quantize(base * self.iva_rate / _HUNDRED)
+        if self.iva_amount is not None and self.iva_amount != computed_iva:
+            raise _AssetValidationError("iva_amount must equal taxable_base * iva_rate")
+        computed_gross = _quantize(base + computed_iva)
         if self.gross_total is not None and self.gross_total != computed_gross:
-            raise _AssetValidationError("gross_total must equal taxable_base + vat_amount")
+            raise _AssetValidationError("gross_total must equal taxable_base + iva_amount")
         if self.taxable_base is not None:
-            non_deductible_vat = computed_vat * (_ONE - self.deductible_vat_ratio)
-            expected_basis = _quantize(self.taxable_base + non_deductible_vat)
+            non_deductible_iva = computed_iva * (_ONE - self.deductible_iva_ratio)
+            expected_basis = _quantize(self.taxable_base + non_deductible_iva)
             if self.cost_basis != expected_basis:
-                raise _AssetValidationError("cost_basis must equal taxable_base plus non-deductible VAT")
+                raise _AssetValidationError("cost_basis must equal taxable_base plus non-deductible IVA")
         return self
 
     @property
@@ -167,14 +167,14 @@ class AssetRecord(BaseModel):
         return self.taxable_base or self.cost_basis
 
     @property
-    def resolved_vat_amount(self) -> Decimal:
-        """Return the explicit VAT amount or derive it from the taxable base and rate."""
-        return self.vat_amount or _quantize(self.resolved_taxable_base * self.iva_rate / _HUNDRED)
+    def resolved_iva_amount(self) -> Decimal:
+        """Return the explicit IVA amount or derive it from the taxable base and rate."""
+        return self.iva_amount or _quantize(self.resolved_taxable_base * self.iva_rate / _HUNDRED)
 
     @property
     def resolved_gross_total(self) -> Decimal:
-        """Return the explicit gross total or derive it from base + VAT."""
-        return self.gross_total or _quantize(self.resolved_taxable_base + self.resolved_vat_amount)
+        """Return the explicit gross total or derive it from base + IVA."""
+        return self.gross_total or _quantize(self.resolved_taxable_base + self.resolved_iva_amount)
 
 
 class AmortizacionEntry(BaseModel):

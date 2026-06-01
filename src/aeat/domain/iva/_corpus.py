@@ -1,4 +1,4 @@
-"""VAT catalogue access through committed registry data."""
+"""IVA catalogue access through committed registry data."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ def load_iva_rules_from_manual(
     *,
     settings: Settings | None = None,
 ) -> IvaCatalogue:
-    """Load the reviewed VAT catalogue for ``year``."""
+    """Load the reviewed IVA catalogue for ``year``."""
     del settings
     return resolve_catalogue(on=date(year, 1, 1))
 
