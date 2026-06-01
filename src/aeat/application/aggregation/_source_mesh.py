@@ -18,7 +18,7 @@ from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
 
 class SourceMeshError(CoreValidationError):
-    """Raised when a :class:`CalculationSourceMesh` field validator rejects an invariant.
+    """Raised when a ``CalculationSourceMesh`` field validator rejects an invariant.
 
     Replaces bare :exc:`ValueError` at the ``owned_sources`` uniqueness / blank
     guards and the ``source_transaction_ids`` uniqueness / blank guards so

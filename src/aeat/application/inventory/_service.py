@@ -94,6 +94,7 @@ class InventoryValuationPreviewResult(BaseModel):
 
 _INVENTORY_EVENT_PAYLOAD_VERSION = 1
 InventoryRepositoryFactory = Callable[[str], InventoryLedgerRepository]
+"""Factory that builds an :class:`InventoryLedgerRepository` for a bucket id."""
 
 
 def _emit_inventory_event(

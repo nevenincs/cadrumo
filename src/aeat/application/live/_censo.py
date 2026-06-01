@@ -150,7 +150,7 @@ def derive_census_snapshot_id(
 
     Two structurally identical snapshots (same profile, same captured-
     at instant, same source, same fact values) produce the same id;
-    re-saving is then a no-op via :meth:`CensoSnapshotService.refresh`.
+    re-saving is then a no-op via ``CensoSnapshotService.refresh``.
     """
     return derive_snapshot_id_from_json(
         {
@@ -292,7 +292,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
     Mirrors :class:`Borrador100SnapshotService`. The CLI's
     `CensoSyncService.refresh_census` is the only caller of
     :meth:`capture`; `show_census` reads via :meth:`latest_active`
-    and :meth:`resolve_snapshot`; `apply_census_to_profile` reads
+    and ``resolve_snapshot``; `apply_census_to_profile` reads
     via :meth:`latest_active`.
 
     The caller is responsible for emitting the
