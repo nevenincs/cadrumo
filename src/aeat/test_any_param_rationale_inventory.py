@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
+from collections.abc import Mapping
 
 import pytest
 
@@ -134,22 +135,31 @@ def _preceding_lines_have_marker(
     return False
 
 
-def _collect_violations() -> list[tuple[str, int]]:
-    """Walk all production files and return (rel_path, lineno) pairs without markers."""
+def _collect_violations(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+) -> list[tuple[str, int]]:
+    """Walk all production files and return (rel_path, lineno) pairs without markers.
+
+    Consumes the session-scoped AST cache so the per-file parse cost is
+    paid once per session rather than per ratchet test. The cache holds
+    every parseable ``.py`` file under ``src/aeat/``; this helper applies
+    the test-surface exclusion (``test_*.py`` / ``*_test.py``) as the
+    per-test filter.
+    """
     violations: list[tuple[str, int]] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in sorted(source_tree_ast):
+        try:
+            path.relative_to(_SRC_ROOT)
+        except ValueError:
+            continue
         name = path.name
         if name.startswith("test_") or name.endswith("_test.py"):
             continue
         try:
-            source = path.read_text(encoding="utf-8", errors="replace")
+            source_lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             continue
-        try:
-            tree = ast.parse(source)
-        except SyntaxError:
-            continue
-        source_lines = source.splitlines()
+        tree = source_tree_ast[path]
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
@@ -162,7 +172,9 @@ def _collect_violations() -> list[tuple[str, int]]:
     return violations
 
 
-def test_no_new_any_param_without_rationale() -> None:
+def test_no_new_any_param_without_rationale(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+) -> None:
     """New parameter-level ``Any`` annotations must carry an inline rationale marker.
 
     This test uses a ratchet against ``_KNOWN_VIOLATING_LINES``:
@@ -181,7 +193,7 @@ def test_no_new_any_param_without_rationale() -> None:
       ANY-RETURN-RATIONALE-<LABEL>
       ADAPTER-INTERNAL-ALIAS-RATIONALE-<LABEL>
     """
-    all_violations = _collect_violations()
+    all_violations = _collect_violations(source_tree_ast)
     new_violations = [
         (rel, lineno)
         for rel, lineno in all_violations
