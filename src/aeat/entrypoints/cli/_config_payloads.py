@@ -366,7 +366,9 @@ class ConfigProfileExportResult(OutputSchema):
     profile_id: str
     display_name: str
     out: str
-    schema_version: str
+    # bundle_schema_version is an int (SUPPORTED_BUNDLE_SCHEMA_VERSIONS
+    # is `frozenset[int]`); the export handler passes it through verbatim.
+    schema_version: int
 
 
 @register_schema("config.profile.import")
@@ -375,7 +377,7 @@ class ConfigProfileImportResult(OutputSchema):
 
     profile_id: str
     display_name: str
-    schema_version: str
+    schema_version: int
 
 
 @register_schema("config.profile.logout")
