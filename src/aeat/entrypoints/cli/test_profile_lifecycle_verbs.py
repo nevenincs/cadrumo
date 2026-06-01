@@ -89,10 +89,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def _seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # ``register_minimal_profile`` derives a profile-unique NIF by

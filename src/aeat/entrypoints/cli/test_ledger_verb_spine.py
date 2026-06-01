@@ -52,10 +52,6 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
 LINK_CHECK_PREFLIGHT: frozenset[str] = frozenset({"link", "check", "preflight"})
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def test_ledger_verb_roster_matches_canonical_spine() -> None:
     """The set of mounted ledger verbs equals the canonical roster.
