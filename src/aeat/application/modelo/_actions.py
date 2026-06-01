@@ -57,7 +57,6 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.invoices import InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,

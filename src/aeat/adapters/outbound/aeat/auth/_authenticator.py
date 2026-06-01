@@ -1258,8 +1258,6 @@ class AeatAuthenticator:
         is a structural precondition — callers should have verified presence
         before calling the authenticator.
         """
-        from .....core.i18n import tr
-
         path = self._settings.aeat_certificate_path
         if path is None:
             raise CertificateLoadError(

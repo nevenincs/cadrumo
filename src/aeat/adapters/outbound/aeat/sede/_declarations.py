@@ -44,13 +44,13 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from .....core.config import Settings, load_settings
-from .....core.time import now
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
+from .....core.time import now
 from .....domain.calculations.registry import (
     CasillaFieldKind,
     CasillaObservation,
@@ -78,7 +78,11 @@ from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
+)
+from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+)
+from ._browser_constants import (
     SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING,
 )
 from ._errors import (
