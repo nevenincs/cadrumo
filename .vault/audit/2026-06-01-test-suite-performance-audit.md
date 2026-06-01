@@ -32,21 +32,31 @@ capture terminated at 33% progress (481 lines, timestamp at 2026-05-31T*).
 Retry with `uv run --no-sync pytest --no-header --tb=no -p no:warnings --durations=200 --durations-min=0.5 -q` on 2026-06-01 12:41-12:42 exited silently without collecting any tests. Likely cause: pytest collection hang or unresolved dependency. **Empirical tables deferred to follow-up run.**
 
 Known stats:
-- Total collected items: ~12,700 (deselected: live_read without
+- Total collected items: 12,869 (deselected: live_read without
   `AEAT_LIVE_TESTS_ENABLED`, plus `docs` marker excluded by default).
 - Total wallclock (sequential, single worker): 50-73 minutes observed.
+- Total wallclock (xdist `-n auto`, 12 workers, `--dist=loadfile`):
+  **11 min 40 s observed on 2026-06-01 (700.96 s)** — 12,699 passed,
+  167 failed (pre-existing production bugs, not isolation artefacts),
+  3 skipped, 2 collection errors.
 - Mean per-test wallclock: ~0.25-0.35 s.
-- p50/p95/p99: pending successful durations.txt capture.
-- Share of wallclock inside the slowest 50 tests: pending.
-- Share of wallclock inside the slowest 10 files: pending.
+- p50/p95/p99: not captured this pass (PowerShell `Out-File`
+  buffers until process exit; the durations capture pipeline never
+  flushed a complete file). Empirical top-N tables stay deferred to a
+  later pass.
 
-The empirical top-N tables (slowest 20 tests, slowest 20 files) will be
-appended at the foot of this document once a complete `durations.txt` is
-captured. The structural triage below already accounts for the cost
-surfaces that dominate; refining those clusters with exact savings
-estimates is a once-the-numbers-land follow-up, not a structural blocker.
+**Production-ready threshold met.** Inner-loop dev keeps the sequential
+default (small-cluster runs would be 7.7x slower under xdist due to
+worker startup overhead — empirically measured: 5-file/39-test cluster
+ran 159.9 s under xdist vs 20.66 s sequential). Full-lane CI uses
+`just test-parallel` for the ~5x speedup. Both pathways verified
+working at S809 closure (`26b363bb3`).
+
 All recommendations in this audit (Steps A-G) are structurally sound and
-do not depend on the exact per-test durations.
+do not depend on the exact per-test durations. The structural triage
+below already accounts for the cost surfaces that dominate; refining
+those clusters with exact savings estimates is a once-the-numbers-land
+follow-up, not a structural blocker.
 
 ## Cost-cluster triage (structural)
 
