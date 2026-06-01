@@ -81,7 +81,12 @@ from ...domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
-from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
+from ...domain.modelos._protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+    WorkUnitCatalogueRepositoryProtocol,
+)
 from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
@@ -923,7 +928,7 @@ def calculate_modelo_revision(
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
@@ -1448,7 +1453,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     relation_values: Mapping[str, Decimal] | None = None,
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
@@ -1911,7 +1916,7 @@ def _reject_caller_overrides_of_source_bindings(
 def list_calculation_revisions(
     *,
     work_unit_id: str | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> tuple[CalculationRevision, ...]:
     """List calculation revisions, optionally filtered to one work unit.
 
@@ -1930,7 +1935,7 @@ def list_calculation_revisions(
 def get_calculation_revision(
     calculation_revision_id: str,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> CalculationRevision:
     """Return one calculation revision by id, or raise."""
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -1948,7 +1953,7 @@ def mark_revision_verificado_completo(
     calculation_revision_id: str,
     *,
     actor: str,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Transition a draft revision to ``VERIFICADO_COMPLETO``.
@@ -2830,8 +2835,8 @@ def verify_modelo_revision(
     actor: str,
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    verification_repository: VerificationReportCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
@@ -3398,8 +3403,8 @@ def file_modelo_revision(
     workflow_profile: TaxpayerProfile,
     notes: str | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: ModeloRecordCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
@@ -3639,7 +3644,7 @@ def list_filing_records(
     *,
     bucket_id: str | None = None,
     include_superseded: bool = False,
-    filing_repository: ModeloRecordCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ModeloRecord, ...]:
     """List filing records, optionally filtered to a bucket.
 
@@ -3666,7 +3671,7 @@ def list_filing_records(
 def get_filing_record(
     filing_record_id: str,
     *,
-    filing_repository: ModeloRecordCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> ModeloRecord:
     """Return one filing record by id, or raise."""
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
@@ -3683,7 +3688,7 @@ def get_filing_record(
 def list_verification_reports(
     *,
     calculation_revision_id: str | None = None,
-    verification_repository: VerificationReportCatalogueRepository | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> tuple[VerificationReport, ...]:
     """List verification reports, optionally filtered to one calculation revision.
 
@@ -3702,7 +3707,7 @@ def list_verification_reports(
 def get_verification_report(
     verification_report_id: str,
     *,
-    verification_repository: VerificationReportCatalogueRepository | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> VerificationReport:
     """Return one verification report by id, or raise."""
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
@@ -3724,8 +3729,8 @@ def amend_modelo_revision(
     reason: str,
     actor: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: ModeloRecordCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
@@ -3999,8 +4004,8 @@ def import_external_filing_evidence(
     evidence_reference_id: str,
     actor: str = "aeat-import",
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: ModeloRecordCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
