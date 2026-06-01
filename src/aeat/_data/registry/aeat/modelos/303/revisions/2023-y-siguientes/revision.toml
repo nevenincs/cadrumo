@@ -162,7 +162,7 @@ op = "copy"
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-profile-state-attribution-ratio"
 source = "profile"
-legal_refs = ["ley-37-1992:art-115", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-115", "ley-12-2002:art-29", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]

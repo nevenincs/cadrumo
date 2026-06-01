@@ -1142,6 +1142,27 @@ required_text = [
     "No obstante lo anterior, dichos empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de la",
     "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119. Dos.2.º",
 ]
+
+[legal."ley-12-2002:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-12-2002.html#art-29"
+document_id = "BOE-A-2002-9969"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-9969#a29"
+published_at = 2002-05-24
+effective_from = 2002-05-24
+review_status = "reviewed"
+reviewed_at = 2026-06-01
+reviewed_by = "wgergely"
+notes = "Articulo 29 de la Ley 12/2002 (Concierto Económico con la Comunidad Autónoma del País Vasco): distribución territorial de la recaudación del Impuesto sobre el Valor Añadido entre el Estado y la Administración de la Comunidad Autónoma del País Vasco proporcional al volumen de operaciones en cada territorio, con liquidación provisional anual y regularización en la declaración anual de IVA."
+required_text = [
+    "distribución territorial de la recaudación del Impuesto sobre el Valor Añadido",
+    "proporciones que resulten de las operaciones",
+    "regularización correspondiente en la declaración anual de IVA",
+]
+
 [legal."ley-37-1992:art-94"]
 evidence_tier = "legal_authority"
 authority = "boe"
