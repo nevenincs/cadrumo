@@ -1678,6 +1678,7 @@ def borrador_100_show(
     }
     result = Borrador100ViewResult(
         bucket_id=bucket_id,
+        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PAYLOAD-REFACTOR: **dict splat with extra binding_values_str key; structural Borrador100ViewResult model refactor required. Successor epic required.
         **_borrador_row(record),  # type: ignore[arg-type]
         binding_values=binding_values_str,
     )
