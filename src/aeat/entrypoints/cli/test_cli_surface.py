@@ -77,10 +77,19 @@ def _active_bucket_id() -> str:
     operator-facing label passed to ``profile create``. Ledger and
     evidence records key on this UUID, so seeds and assertions must
     resolve it at runtime rather than assume the human label.
+
+    Reads the real UUID via the application-layer resolver rather than
+    the CLI ``profile status`` surface, because centralized CLI
+    redaction (``redact_structured_for_cli_output``) rewrites the
+    ``profile_id`` field to ``<profile-id>`` and the ``bucket_id``
+    field to ``<bucket-id>``. Test-side seeders (``_seed_purchase_invoice_evidence``)
+    require the un-redacted UUID to persist matching bucket records.
     """
-    status = _invoke(["--format", "json", "config", "profile", "status"])
-    assert status.exit_code == 0, status.output
-    return cast(str, json.loads(status.output)["profile_id"])
+    from aeat.application.workflow._models import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None, "no active profile bucket resolved"
+    return bucket_id
 
 
 def _create_manual_ledger_row(description: str, *, amount: str = "-25.00", key: str) -> dict[str, object]:
@@ -104,7 +113,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "-25.00", key: 
         ]
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)
+    return _json(result)
 
 
 # ---------------------------------------------------------------------
@@ -150,7 +159,7 @@ def test_app_overview_status_bare_renders_counts(monkeypatch: pytest.MonkeyPatch
     _isolate(monkeypatch, tmp_path)
     result = _invoke(["--format", "json", "app", "overview", "status"])
     assert result.exit_code == 0
-    payload = json.loads(result.output)
+    payload = _json(result)
     assert payload["transactions"] == 0
     assert payload["invoices"] == 0
     assert payload["drafts"] == 0
@@ -182,7 +191,7 @@ def _run_ledger_cli_json(args: list[str]) -> dict[str, object]:
     """Invoke the CLI with ``--format json`` prefixed, assert exit-0, return parsed JSON."""
     result = _invoke(["--format", "json", *args])
     assert result.exit_code == 0, result.output
-    return cast(dict[str, object], json.loads(result.output))
+    return cast(dict[str, object], _json(result))
 
 
 def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
@@ -203,7 +212,7 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
             "--idempotency-key", "cash-office-2026-05-02",
         ]
     )
-    assert payload["bucket_id"] == bucket_id
+    assert payload["bucket_id"] == "<bucket-id>"
     assert len(cast(str, payload["transaction_id"])) == 64
     transaction = cast(dict[str, object], payload["transaction"])
     assert transaction["business_classification"] == "BUSINESS"
@@ -216,13 +225,13 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
 def _ledger_list_and_view(transaction_id: str, *, bucket_id: str) -> None:
     """The list verb returns the seed row, the view verb returns its full record."""
     listed = _run_ledger_cli_json(["app", "ledger", "list"])
-    assert listed["bucket_id"] == bucket_id
+    assert listed["bucket_id"] == "<bucket-id>"
     rows = cast(list[dict[str, object]], listed["rows"])
     assert [row["transaction_id"] for row in rows] == [transaction_id]
     assert rows[0]["review_status"] == "reviewed"
 
     read = _run_ledger_cli_json(["app", "ledger", "view", transaction_id])
-    assert read["bucket_id"] == bucket_id
+    assert read["bucket_id"] == "<bucket-id>"
     assert read["transaction_id"] == transaction_id
     assert read["review_status"] == "reviewed"
     transaction = cast(dict[str, object], read["transaction"])
@@ -304,7 +313,7 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
 def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:
     """After one reviewed transaction the status verb reports a single ready row."""
     status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "2026-05"])
-    assert status["bucket_id"] == bucket_id
+    assert status["bucket_id"] == "<bucket-id>"
     assert status["total_count"] == 1
     assert status["active_count"] == 1
     assert status["reviewed_count"] == 1
@@ -322,7 +331,7 @@ def _assert_ledger_track_returns_lineage(
 ) -> None:
     """The track verb returns the transaction body plus its lineage triple."""
     tracked = _run_ledger_cli_json(["app", "ledger", "track", transaction_id])
-    assert tracked["bucket_id"] == bucket_id
+    assert tracked["bucket_id"] == "<bucket-id>"
     transaction = cast(dict[str, object], tracked["transaction"])
     assert transaction["transaction_id"] == transaction_id
     tracking = cast(dict[str, object], tracked["tracking"])
@@ -344,7 +353,8 @@ def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) 
     filtered_out = _run_ledger_cli_json(
         ["app", "ledger", "review", "--id", transaction_id, "--filter", "period=2026-06"]
     )
-    assert filtered_out == {"rows": [], "filters": ["period=2026-06", f"id={transaction_id}"]}
+    assert filtered_out["rows"] == []
+    assert filtered_out["filters"] == ["period=2026-06", f"id={transaction_id}"]
 
 
 def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
@@ -524,7 +534,7 @@ def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, 
         ]
     )  # fmt: skip
     assert attached.exit_code == 0, attached.output
-    return json.loads(attached.output)
+    return _json(attached)
 
 
 def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
@@ -540,7 +550,7 @@ def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) 
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)
+    return _json(result)
 
 
 def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object]]:
@@ -555,7 +565,7 @@ def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object
         ["--format", "json", "app", "ledger", "remove", "--id", str(remove_row["transaction_id"]), "--yes"]
     )
     assert confirmed.exit_code == 0, confirmed.output
-    return json.loads(dry.output), refused.exit_code, json.loads(confirmed.output)
+    return _json(dry), refused.exit_code, _json(confirmed)
 
 
 def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
@@ -571,7 +581,7 @@ def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
         ]
     )  # fmt: skip
     assert exported.exit_code == 0, exported.output
-    return json.loads(exported.output), export_path
+    return _json(exported), export_path
 
 
 def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]]:
@@ -581,7 +591,7 @@ def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]
     refused = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
     confirmed = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
     assert confirmed.exit_code == 0, confirmed.output
-    return json.loads(dry.output), refused.exit_code, json.loads(confirmed.output)
+    return _json(dry), refused.exit_code, _json(confirmed)
 
 
 def test_app_ledger_lifecycle_attach_records_purchase_invoice_evidence(
@@ -641,7 +651,7 @@ def test_app_ledger_lifecycle_export_targets_active_profile_bucket(
     tmp_path: Path,
 ) -> None:
     outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
-    assert outcome.export_payload["bucket_id"] == outcome.bucket_id
+    assert outcome.export_payload["bucket_id"] == "<bucket-id>"
 
 
 def test_app_ledger_lifecycle_export_records_three_rows(
@@ -708,21 +718,21 @@ def test_app_ledger_import_reimport_review_round_trips_state(
     )
     imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0
-    imported_payload = json.loads(imported.output)
+    imported_payload = _json(imported)
     assert imported_payload["rows"] == 2
     assert imported_payload["imported"] == 2
     assert imported_payload["skipped"] == 0
 
     repeated = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
     assert repeated.exit_code == 0
-    repeated_payload = json.loads(repeated.output)
+    repeated_payload = _json(repeated)
     assert repeated_payload["rows"] == 2
     assert repeated_payload["imported"] == 0
     assert repeated_payload["skipped"] == 2
 
     review = _invoke(["--format", "json", "app", "ledger", "review"])
     assert review.exit_code == 0
-    payload = json.loads(review.output)
+    payload = _json(review)
     rows_by_description = {row["description"]: row for row in payload["rows"]}
     assert set(rows_by_description) == {"Invoice 1", "Subscription"}
     assert {row["status"] for row in payload["rows"]} == {"pending"}
@@ -730,7 +740,7 @@ def test_app_ledger_import_reimport_review_round_trips_state(
 
     reviewed = _invoke(["--format", "json", "app", "ledger", "review", "--id", vendor_id])
     assert reviewed.exit_code == 0, reviewed.output
-    reviewed_payload = json.loads(reviewed.output)
+    reviewed_payload = _json(reviewed)
     assert reviewed_payload["id"] == vendor_id
     assert reviewed_payload["description"] == "Subscription"
 
