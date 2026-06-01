@@ -9,12 +9,17 @@ provider-agnostic. Adapters live in sibling modules under
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .._errors import LLMRateLimitError
+from .._errors import LLMProviderError, LLMRateLimitError
 from .._models import LLMProvider
+
+if TYPE_CHECKING:
+    import httpx
 
 
 class ProviderRequest(BaseModel):
@@ -119,3 +124,34 @@ def raise_rate_limit(message: str, retry_after: str | None) -> None:
         LLMRateLimitError: Always raised with the parsed retry hint.
     """
     raise LLMRateLimitError(message, retry_after_seconds=parse_retry_after(retry_after))
+
+
+def check_http_error(
+    response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger
+) -> None:
+    """Raise a normalized error for a non-2xx LLM HTTP response.
+
+    A 429 raises a rate-limit error carrying the parsed ``Retry-After`` hint;
+    any other 5xx or 4xx status raises a provider error. Shared by the OpenAI
+    and Gemini adapters, whose status-dispatch was otherwise identical.
+
+    Args:
+        response: Provider HTTP response to inspect.
+        provider_name: Human-readable provider label for log and error text.
+        model: Model identifier, included in the log context.
+        logger: Adapter logger for status diagnostics.
+
+    Raises:
+        LLMRateLimitError: On HTTP 429.
+        LLMProviderError: On any other 5xx or 4xx status.
+    """
+    status = response.status_code
+    if status == 429:
+        logger.warning("%s: rate limit response status=%d model=%s", provider_name, status, model)
+        raise_rate_limit(f"{provider_name} rate limit exceeded.", response.headers.get("retry-after"))
+    if status >= 500:
+        logger.error("%s: server error status=%d model=%s", provider_name, status, model)
+        raise LLMProviderError(f"{provider_name} API failure ({status}).")
+    if status >= 400:
+        logger.warning("%s: client error status=%d model=%s", provider_name, status, model)
+        raise LLMProviderError(f"{provider_name} API failure ({status}).")
