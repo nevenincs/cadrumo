@@ -38,7 +38,7 @@ _CSV_RE = re.compile(
 class Modelo100ObservedV2025Extractor:
     """Concrete Modelo 100 observed-value extractor for año 2025.
 
-    Reads the printed text via :func:`extract_pages_text`, locates
+    Reads the printed text via ``extract_pages_text``, locates
     printed casilla rows, and returns a
     strict :class:`~aeat.adapters.inbound.borrador._schema.BorradorObservation`.
 

@@ -327,7 +327,7 @@ class BrowserSessionLike(Protocol):
 class CertificateHealthCheck(Protocol):
     """Injection seam for the certificate-health probe.
 
-    The production default is the module-level :func:`certificate_health`
+    The production default is the module-level ``certificate_health``
     function. Tests inject a real callable wrapping a captured-args
     sink so the authenticator's ``describe()`` contract is verified
     against a real implementation rather than a patched module
@@ -410,7 +410,7 @@ class AeatAuthenticator:
             certificate_health_check: Optional
                 :class:`CertificateHealthCheck` callable threaded
                 into :meth:`describe`. Defaults to the module-level
-                :func:`certificate_health` import; tests inject a
+                ``certificate_health`` import; tests inject a
                 real wrapping callable rather than monkeypatching the
                 module attribute.
         """
