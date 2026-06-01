@@ -413,6 +413,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00"),
         # No autoconsumo promotor in this period; zero disables the formula path.
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
     bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -536,6 +537,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
     bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -578,6 +580,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
 
     def _run(base: Decimal) -> Decimal:
