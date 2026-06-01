@@ -14,3 +14,11 @@ Subpackages
    :maxdepth: 4
 
    aeat.domain.calculations.registry
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aeat.domain.calculations._export_field_kind
