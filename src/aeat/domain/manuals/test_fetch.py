@@ -18,7 +18,7 @@ from . import (
     verify_fetched_pdf,
     write_manifest,
 )
-from .errors import ManifestError
+from ._errors import ManifestError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

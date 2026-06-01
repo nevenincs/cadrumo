@@ -27,7 +27,7 @@ from ...domain.manuals import (
 from ...domain.manuals import (
     load_catalogue as load_manual_catalogue,
 )
-from ...domain.manuals.errors import ManualNotFoundError
+from ...domain.manuals._errors import ManualNotFoundError
 from ...domain.normatives import (
     NormativeReference,
     NormativeVerificationIssue,

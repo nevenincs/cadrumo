@@ -20,7 +20,7 @@ from . import (
     load_section,
     resolve_part_root,
 )
-from .errors import ManualNotFoundError, ManualParseError
+from ._errors import ManualNotFoundError, ManualParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

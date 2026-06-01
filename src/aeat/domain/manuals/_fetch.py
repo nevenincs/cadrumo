@@ -25,7 +25,7 @@ from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
 from ._loader import resolve_part_root
 from ._schema import FetchedManualPart, ManualId, ManualPart
-from .errors import ManifestError
+from ._errors import ManifestError
 
 _logger = get_logger(__name__)
 

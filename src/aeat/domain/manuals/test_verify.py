@@ -11,7 +11,7 @@ from pydantic_settings import SettingsConfigDict
 from ...core.config import Settings
 from . import ManualId, ManualPart, verify_manual_dir
 from ._verify import raise_on_errors
-from .errors import ManualNotFoundError, ManualReviewRequiredError
+from ._errors import ManualNotFoundError, ManualReviewRequiredError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
