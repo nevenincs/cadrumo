@@ -1,16 +1,20 @@
-"""Playwright browser wait-state constants for the sede adapter.
+"""Playwright browser wait-state constants and settings accessors for the sede adapter.
 
-Centralises the two Playwright ``wait_until`` / ``wait_for_load_state``
-string literals used throughout the sede adapter so they are defined
-once and verified by static analysis rather than spread as independent
-string literals across every navigation call-site.
+Centralises the Playwright ``wait_until`` / ``wait_for_load_state`` string
+literals and the settings-backed viewport / probe-timeout accessors used
+throughout the sede adapter so they are defined once and verified by static
+analysis rather than duplicated across every navigation module.
 """
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
+from .....core.config import load_settings
 from .....core.external_constants import LATIN_1_ENCODING
+
+if TYPE_CHECKING:
+    from playwright.async_api import ViewportSize
 
 #: Playwright wait state that resolves as soon as the HTML document has
 #: been parsed and the DOM is ready (no sub-resources awaited).
@@ -30,3 +34,17 @@ PLAYWRIGHT_TIMEOUT_SHORT_MS: Final[int] = 2_000
 #: this adapter-local name so existing callers do not need to reach into
 #: ``external_constants`` directly.
 SEDE_BODY_ENCODING: Final[str] = LATIN_1_ENCODING
+
+
+def default_viewport() -> ViewportSize:
+    """Return the configured browser viewport size from settings."""
+    settings = load_settings()
+    return {
+        "width": settings.aeat_browser_viewport_width,
+        "height": settings.aeat_browser_viewport_height,
+    }
+
+
+def selector_probe_timeout_ms() -> int:
+    """Return the configured selector-probe timeout (ms) from settings."""
+    return load_settings().aeat_browser_selector_probe_timeout_ms
