@@ -37,20 +37,20 @@ verifier.
 - [x] `P01.S01` - add `_active_session.py` with `ContextVar`, `activate_session()`, `get_active_master_key()`; `src/aeat/adapters/persistence/storage/master_key/_active_session.py`.
 - [x] `P01.S02` - add typed `NoActiveBucketSessionError` raised when `get_active_master_key()` is called outside a session block; `src/aeat/adapters/persistence/storage/master_key/_active_session.py`.
 - [x] `P01.S03` - replace `_resolve_master_key()` body with one-line delegation to `get_active_master_key()`; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
-- [ ] `P01.S04` - delete `_resolve_master_key_provider()`, `_provider_override`, `_provider_lock`, `override_master_key_provider`; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [x] `P01.S04` - delete `_resolve_master_key_provider()`, `_provider_override`, `_provider_lock`, `override_master_key_provider`; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
 - [x] `P01.S05` - delete `KeyringMasterKeyProvider._cache` ClassVar; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P01.S06` - delete `KeyringMasterKeyProvider._lock` ClassVar; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P01.S07` - delete `FileFallbackMasterKeyProvider._cached_passphrase` and `_cached_master_key` ClassVars; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P01.S08` - replace `_purge_caches_at_exit` atexit hook with `_close_active_session_at_exit`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P01.S09` - add NIST `PassphraseTooShortError` raised when passphrase length is below 8 characters; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [x] `P01.S10` - enforce 8-character minimum in `FileFallbackMasterKeyProvider._resolve_passphrase`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `P01.S11` - migrate test fixtures from literal `"x"` to `secrets.token_hex(8)`; `src/aeat/adapters/persistence/storage/master_key/_test_master_key.py`.
+- [x] `P01.S11` - migrate test fixtures from literal `"x"` to `secrets.token_hex(8)`; `src/aeat/adapters/persistence/storage/master_key/_test_master_key.py`.
 - [x] `P01.S12` - mount `activate_session(BucketSession.open(...))` on the CLI root callback via `ctx.with_resource(...)`; `src/aeat/entrypoints/cli/__init__.py`.
 - [x] `P01.S13` - mount the `activate_session(...)` wiring on the diagnostics entrypoint root; `src/aeat/diagnostics/__main__.py`.
-- [ ] `P01.S14` - narrow `EphemeralMasterKeyProvider` fixture to a `BucketSession` factory mint helper; `src/aeat/tests/conftest.py`.
-- [ ] `P01.S15` - rewrite call sites of `override_master_key_provider` to `with activate_session(...)`; `src/aeat/adapters/persistence/storage/master_key/_test_master_key.py`.
+- [x] `P01.S14` - narrow `EphemeralMasterKeyProvider` fixture to a `BucketSession` factory mint helper; `src/aeat/tests/conftest.py`.
+- [x] `P01.S15` - rewrite call sites of `override_master_key_provider` to `with activate_session(...)`; `src/aeat/adapters/persistence/storage/master_key/_test_master_key.py`.
 - [x] `P01.S16` - add AST-guard test asserting zero ClassVar state on master-key providers; `src/aeat/adapters/persistence/storage/master_key/_test_no_classvar_state.py`.
-- [ ] `P01.S17` - add roundtrip test exercising column encrypt + decrypt inside `activate_session(...)`; `src/aeat/adapters/persistence/storage/crypto/_test_active_session_roundtrip.py`.
+- [x] `P01.S17` - add roundtrip test exercising column encrypt + decrypt inside `activate_session(...)`; `src/aeat/adapters/persistence/storage/crypto/_test_active_session_roundtrip.py`.
 
 ### Phase `P02` - engine cutover + WorkflowState.profiles retirement
 
