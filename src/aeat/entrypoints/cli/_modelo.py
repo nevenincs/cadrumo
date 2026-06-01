@@ -80,7 +80,7 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
-    from ...domain.calculations.registry._schema import ModeloRevision
+    from ...domain.calculations.registry._schema import ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
         ModeloRecordPayload,
@@ -1561,7 +1561,7 @@ def _validate_filing_year(year: int) -> None:
         )
 
 
-def _revision_covers_year(revision_id: str, year: int, definition: object) -> bool:
+def _revision_covers_year(revision_id: str, year: int, definition: ModeloDefinition) -> bool:
     """Return True when the revision's period_selector applies to *year*.
 
     Revisions declare their year scope through ``PeriodSelector``:
@@ -1572,7 +1572,7 @@ def _revision_covers_year(revision_id: str, year: int, definition: object) -> bo
     A revision with no year constraints (``year_from`` is None and
     ``years`` is empty) is treated as applicable to every year.
     """
-    rev = definition.revisions.get(revision_id)  # type: ignore[union-attr]
+    rev = definition.revisions.get(revision_id)
     if rev is None:
         return False
     selector = rev.period_selector
