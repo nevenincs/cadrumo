@@ -1574,7 +1574,7 @@ cli:
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
       help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      iva_regime_help: 'IVA regime (general, simplificado, exento, etc.)'
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
@@ -2964,12 +2964,6 @@ errors:
       transacciones.
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
       de uso.
-    error_financial_vat: Se produjo un error en el cálculo del IVA.
-    error_financial_vat_catalogue: El catálogo de IVA no se pudo cargar, resolver
-      o validar.
-    error_financial_vat_category_not_found: No se encontró la categoría de IVA solicitada
-      en el catálogo.
-    error_financial_vat_classification: No se pudo clasificar el IVA de forma determinista.
     error_fixture_provisioning: No se pudieron preparar los datos de prueba.
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
@@ -3081,12 +3075,6 @@ errors:
     error_usage_ratios_validation: Un perfil de porcentajes de uso infringe sus invariantes
       de dominio.
     error_user_profile: Se produjo un error en el perfil de usuario.
-    error_vat_prorrata: Se produjo un error en el cálculo de la prorrata del IVA.
-    error_vat_prorrata_input: Los datos de entrada de la prorrata del IVA infringen
-      sus invariantes.
-    error_vat_prorrata_sector: Los datos de separación sectorial de la prorrata del
-      IVA son inconsistentes.
-    error_vat_validation: Un valor del IVA no es válido.
     error_wizard: Se produjo un error en el asistente.
     error_wizard_compile: El catálogo del asistente está mal formado y no se pudo
       compilar.
@@ -3095,6 +3083,14 @@ errors:
       inesperada.
     error_financial_iva_rate_not_found: 'No se encontró un tipo de IVA para el estado miembro y el tipo solicitados.'
     error_financial_iva_rate_overlap: 'Dos tipos de IVA comparten una ventana de vigencia.'
+    error_financial_iva: 'Se produjo un error en el cálculo del IVA.'
+    error_financial_iva_catalogue: 'El catálogo de IVA no se pudo cargar, resolver o validar.'
+    error_financial_iva_category_not_found: 'No se encontró la categoría de IVA solicitada en el catálogo.'
+    error_financial_iva_classification: 'No se pudo clasificar el IVA de forma determinista.'
+    error_iva_prorrata: 'Se produjo un error en el cálculo de la prorrata del IVA.'
+    error_iva_prorrata_input: 'Los datos de entrada de la prorrata del IVA infringen sus invariantes.'
+    error_iva_prorrata_sector: 'Los datos de separación sectorial de la prorrata del IVA son inconsistentes.'
+    error_iva_validation: 'Un valor del IVA no es válido.'
   fail:
     census_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.

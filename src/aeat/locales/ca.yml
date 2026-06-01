@@ -1546,7 +1546,7 @@ cli:
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
       help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      iva_regime_help: 'IVA regime (general, simplificado, exento, etc.)'
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
@@ -2917,13 +2917,6 @@ errors:
       de transaccions.
     error_financial_usage_ratios_usage_ratio: S'ha produït un error en els percentatges
       d'ús.
-    error_financial_vat: S'ha produït un error en el càlcul de l'IVA.
-    error_financial_vat_catalogue: El catàleg d'IVA no s'ha pogut carregar, resoldre
-      o validar.
-    error_financial_vat_category_not_found: No s'ha trobat la categoria d'IVA sol·licitada
-      al catàleg.
-    error_financial_vat_classification: No s'ha pogut classificar l'IVA de manera
-      determinista.
     error_fixture_provisioning: No s'han pogut preparar les dades de prova.
     error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
       dessincronitzades. Revisa tots dos catàlegs manualment.
@@ -3034,12 +3027,6 @@ errors:
     error_usage_ratios_validation: Un perfil de percentatges d'ús infringeix les seves
       invariants de domini.
     error_user_profile: S'ha produït un error en el perfil d'usuari.
-    error_vat_prorrata: S'ha produït un error en el càlcul de la prorrata de l'IVA.
-    error_vat_prorrata_input: Les dades d'entrada de la prorrata de l'IVA infringeixen
-      les seves invariants.
-    error_vat_prorrata_sector: Les dades de separació sectorial de la prorrata de
-      l'IVA són inconsistents.
-    error_vat_validation: Un valor de l'IVA no és vàlid.
     error_wizard: S'ha produït un error en l'assistent.
     error_wizard_compile: El catàleg de l'assistent està mal format i no s'ha pogut
       compilar.
@@ -3048,6 +3035,14 @@ errors:
       inesperada.
     error_financial_iva_rate_not_found: 'No s''ha trobat cap tipus d''IVA per a l''estat membre i el tipus sol·licitats.'
     error_financial_iva_rate_overlap: 'Dos tipus d''IVA comparteixen una finestra de vigència.'
+    error_financial_iva: 'S''ha produït un error en el càlcul de l''IVA.'
+    error_financial_iva_catalogue: 'El catàleg d''IVA no s''ha pogut carregar, resoldre o validar.'
+    error_financial_iva_category_not_found: 'No s''ha trobat la categoria d''IVA sol·licitada al catàleg.'
+    error_financial_iva_classification: 'No s''ha pogut classificar l''IVA de manera determinista.'
+    error_iva_prorrata: 'S''ha produït un error en el càlcul de la prorrata de l''IVA.'
+    error_iva_prorrata_input: 'Les dades d''entrada de la prorrata de l''IVA infringeixen les seves invariants.'
+    error_iva_prorrata_sector: 'Les dades de separació sectorial de la prorrata de l''IVA són inconsistents.'
+    error_iva_validation: 'Un valor de l''IVA no és vàlid.'
   fail:
     census_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
