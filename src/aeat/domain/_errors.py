@@ -5,9 +5,5 @@ from __future__ import annotations
 from ..core.errors import AeatError
 
 
-class DomainError(AeatError, ValueError):
-    """Base error for domain logic and record validation."""
-
-
-class DomainValidationError(DomainError):
+class DomainValidationError(AeatError, ValueError):
     """Raised when domain identifiers or models are invalid."""

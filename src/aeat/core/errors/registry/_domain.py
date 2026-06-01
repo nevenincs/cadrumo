@@ -1329,17 +1329,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain._errors.DomainError",
-        ErrorCode(
-            code="ERROR_DOMAIN",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_domain",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain._errors.DomainValidationError",
         ErrorCode(
             code="ERROR_DOMAIN_VALIDATION",
