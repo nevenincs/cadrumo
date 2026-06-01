@@ -43,7 +43,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from .....core.config import Settings as _Settings
 from .....core.logging import get_logger
-from .....core.time._clock import now
+from .....core.time import now
 from .....core.time._utc import coerce_utc_aware
 from .._playwright import PlaywrightError
 from . import _session_store

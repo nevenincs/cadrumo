@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
-from ...core.time._clock import now
+from ...core.time import now
 from ._amendment import (
     BaseAmendment,
     ModeloComplementaria,

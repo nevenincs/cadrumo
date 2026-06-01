@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
-from ...core.time._clock import now as _utc_now
+from ...core.time import now as _utc_now
 from ._enums import BusinessClassification
 from ._errors import TransactionCatalogueError, TransactionNotFoundError
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue

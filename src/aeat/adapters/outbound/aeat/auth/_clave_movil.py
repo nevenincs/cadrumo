@@ -43,7 +43,7 @@ from .....core.config import unwrap_optional_secret
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.time._clock import now
+from .....core.time import now
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .....domain.user_profile._errors import UserProfileError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket

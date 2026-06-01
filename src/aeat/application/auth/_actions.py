@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.time._clock import now as utc_now
+from ...core.time import now as utc_now
 from ._models import AuthState
 
 if TYPE_CHECKING:

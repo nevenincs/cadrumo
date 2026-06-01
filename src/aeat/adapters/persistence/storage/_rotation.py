@@ -38,7 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
 from ....core.logging import get_logger
-from ....core.time._clock import now
+from ....core.time import now
 from .blob_store._blob_store import EncryptedBlobStore
 from .crypto._crypto import decrypt_record, encrypt_record
 from .envelope._envelope import (
