@@ -11,6 +11,16 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `ledger-transaction-lifecycle` plan
 
 ## Proposed Changes
@@ -39,16 +49,16 @@ Deliver the ADR's eight decisions end-to-end across the domain, event,
 application, CLI, and locale layers; ten Steps run in fixed order with
 green tests between Steps.
 
-- [ ] `P01.S01` - extend `TransactionLifecycleState` with `SPLIT` and add `SplitRole(PARENT, CHILD, MERGED)`; update every exhaustive switch on `TransactionLifecycleState` enumerated by pre-Step swarm (currently `src/aeat/application/ledger/_actions.py` lines 419/450/940/958-960/991/1434/1560/2022, `_preflight.py:111`, `src/aeat/application/aggregation/_iva_ledger.py:163`, `_renta_ledger.py:199`, plus tests); `src/aeat/domain/transactions/_enums.py`.
-- [ ] `P01.S02` - introduce `SplitLineage` frozen pydantic v2 record (`split_group_id: str(64-hex)`, `role: SplitRole`, `sibling_transaction_ids: tuple[str, ...]`) and `Transaction.split_lineage: SplitLineage | None = None`; add `derive_split_group_id(parent_id, children_seed)` deterministic helper; `src/aeat/domain/transactions/_models.py`.
-- [ ] `P01.S03` - add `LEDGER_TRANSACTION_SPLIT` and `LEDGER_TRANSACTION_MERGED` to `BucketEventType` (parent id as `object_id`, payload carries `split_group_id` plus child/parent ids plus `reason` plus `source_command`); refresh taxonomy comment; `src/aeat/domain/buckets/_event.py`.
-- [ ] `P01.S04` - implement `split_transaction(*, bucket_id, transaction_id, children, actor, source_command, reason, occurred_at=None)` with `SplitChildCommand` record and `SplitTransactionResult`; enforce parent-ACTIVE, finalized-modelo, sum-equals-parent, direction-inherited invariants; persist via `_save_transaction_catalogue_and_events`; `src/aeat/application/ledger/_actions.py`.
-- [ ] `P01.S05` - implement `merge_transactions(*, bucket_id, child_ids, actor, source_command, reason, occurred_at=None)` with `MergeTransactionsResult`; enforce same-group, parent-SPLIT, no-finalized-modelo, archive-children, archive-parent, content-address fresh merged row invariants; emit one event anchored on the parent id; `src/aeat/application/ledger/_actions.py`.
-- [ ] `P01.S06` - rename `create`->`add` / `edit`->`update` / `read`->`view` with no aliases; add `split`, `merge`, `history` verbs (each with `--yes`, `--reason`, plus `--dry-run` for `split` and `merge`); add `--yes` and `--reason` to `archive` and `stash`; route `track` through `_resolve_id`; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `P01.S07` - wrap `TransactionIdPrefixError` at the CLI boundary into the four locale keys `cli.ledger.errors.id_prefix_empty`, `id_prefix_not_hex`, `id_prefix_not_found`, `id_prefix_collision`; `src/aeat/entrypoints/cli/_ledger.py` and `src/aeat/application/ledger/_id_resolution.py`.
-- [ ] `P01.S08` - extend sub-app result models to carry `bucket_event_ids: tuple[str, ...]` and emit the appropriate `LEDGER_INVENTORY_*` / `PAYABLE_INVOICE_*` / `COLLECTIBLE_INVOICE_*` / `PURCHASE_INVOICE_EVIDENCE_*` events on every mutation; surface in CLI text and JSON; `src/aeat/application/ledger/_evidence.py`, `_business_operation_invoice.py`, `_inventory.py`, `_ratios.py`.
-- [ ] `P01.S09` - run `uv run --no-sync python -m aeat.locales scaffold`, then hand-write real translations in `en.yml`, `es.yml`, `ca.yml`, `hu.yml` for every key introduced across S01-S08 (new verbs, args, errors, dry-run, confirm-required); no scaffold placeholders survive; `src/aeat/locales/{en,es,ca,hu}.yml`.
-- [ ] `P01.S10` - run `uv run --no-sync pytest src/aeat/application/ledger/ src/aeat/entrypoints/cli/ -q` and fix every rename-induced test (every `["create", ...]`, `["edit", ...]`, `["read", ...]` invocation flipped); run `uv run --no-sync python -m aeat.locales audit` and confirm `ok` for every locale; zero new failures.
+- [x] `P01.S01` - extend `TransactionLifecycleState` with `SPLIT` and add `SplitRole(PARENT, CHILD, MERGED)`; `update every exhaustive switch on `TransactionLifecycleState` enumerated by pre-Step swarm (currently `src/aeat/application/ledger/_actions.py` lines 419/450/940/958-960/991/1434/1560/2022, `_preflight.py:111`, `src/aeat/application/aggregation/_iva_ledger.py:163`, `_renta_ledger.py:199`, plus tests); `src/aeat/domain/transactions/_enums.py`.
+- [x] `P01.S02` - introduce `SplitLineage` frozen pydantic v2 record (`split_group_id: str(64-hex)`, `role: SplitRole`, `sibling_transaction_ids: tuple[str, ...]`) and `Transaction.split_lineage: SplitLineage | None = None`; `add `derive_split_group_id(parent_id, children_seed)` deterministic helper; `src/aeat/domain/transactions/_models.py`.
+- [x] `P01.S03` - add `LEDGER_TRANSACTION_SPLIT` and `LEDGER_TRANSACTION_MERGED` to `BucketEventType` (parent id as `object_id`, payload carries `split_group_id` plus child/parent ids plus `reason` plus `source_command`); `refresh taxonomy comment; `src/aeat/domain/buckets/_event.py`.
+- [x] `P01.S04` - implement `split_transaction(*, bucket_id, transaction_id, children, actor, source_command, reason, occurred_at=None)` with `SplitChildCommand` record and `SplitTransactionResult`; `enforce parent-ACTIVE, finalized-modelo, sum-equals-parent, direction-inherited invariants; persist via `_save_transaction_catalogue_and_events`; `src/aeat/application/ledger/_actions.py`.
+- [x] `P01.S05` - implement `merge_transactions(*, bucket_id, child_ids, actor, source_command, reason, occurred_at=None)` with `MergeTransactionsResult`; `enforce same-group, parent-SPLIT, no-finalized-modelo, archive-children, archive-parent, content-address fresh merged row invariants; emit one event anchored on the parent id; `src/aeat/application/ledger/_actions.py`.
+- [x] `P01.S06` - rename `create`->`add` / `edit`->`update` / `read`->`view` with no aliases; `add `split`, `merge`, `history` verbs (each with `--yes`, `--reason`, plus `--dry-run` for `split` and `merge`); add `--yes` and `--reason` to `archive` and `stash`; route `track` through `_resolve_id`; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `P01.S07` - wrap `TransactionIdPrefixError` at the CLI boundary into the four locale keys `cli.ledger.errors.id_prefix_empty`, `id_prefix_not_hex`, `id_prefix_not_found`, `id_prefix_collision`; `src/aeat/entrypoints/cli/_ledger.py` and `src/aeat/application/ledger/_id_resolution.py`.
+- [x] `P01.S08` - extend sub-app result models to carry `bucket_event_ids: tuple[str, ...]` and emit the appropriate `LEDGER_INVENTORY_*` / `PAYABLE_INVOICE_*` / `COLLECTIBLE_INVOICE_*` / `PURCHASE_INVOICE_EVIDENCE_*` events on every mutation; `surface in CLI text and JSON; `src/aeat/application/ledger/_evidence.py`, `_business_operation_invoice.py`, `_inventory.py`, `_ratios.py`.
+- [x] `P01.S09` - run `uv run --no-sync python -m aeat.locales scaffold`, then hand-write real translations in `en.yml`, `es.yml`, `ca.yml`, `hu.yml` for every key introduced across S01-S08 (new verbs, args, errors, dry-run, confirm-required); `no scaffold placeholders survive; `src/aeat/locales/{en,es,ca,hu}.yml`.
+- [ ] `P01.S10` - run `uv run --no-sync pytest src/aeat/application/ledger/ src/aeat/entrypoints/cli/ -q` and fix every rename-induced test (every `["create", ...]`, `["edit", ...]`, `["read", ...]` invocation flipped); `run `uv run --no-sync python -m aeat.locales audit` and confirm `ok` for every locale; zero new failures`.
 
 ## Parallelization
 
