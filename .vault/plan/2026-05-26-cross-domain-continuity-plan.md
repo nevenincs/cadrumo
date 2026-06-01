@@ -12,6 +12,15 @@ related:
   - '[[2026-05-21-taxpayer-type-applicability-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: P02, P64, S01 -->
 
@@ -121,9 +130,9 @@ The domain version is the superset (179 lines more; carries Modelo202Modality sy
 Two parallel mechanisms decide applicability (Python seed table plus per-window TOML applicability_conditions). Calendar drops non-APPLICABLE silently. _GATING_FIELDS is hardcoded.
 
 - [x] `W02.P11.S43` - confirm _MODELO_APPLICABILITY_RULES is the canonical modelo-level applicability authority; `add module docstring documenting that modelo-level rules live in Python while window-level applicability_conditions live on ModeloDeadlineWindow registry slot; audit the 18 modelos to ensure every rule populates applicable_entity_types required_income_categories required_estimation_regimes and required_payer_fact where the modelo demands those axes; `src/aeat/domain/calculations/registry/_applicability.py`.
-- [ ] `W02.P11.S44` - replace the hardcoded 5-entry _GATING_FIELDS dict with a derivation from _MODELO_APPLICABILITY_RULES; `for each rule emit profile_key modelos message_key fix_command tuples covering income-categories entity-types estimation-regimes payer-facts; the resulting projection must be a function not a dict so it stays in sync as rules evolve; `src/aeat/application/overview/__init__.py`.
-- [ ] `W02.P11.S45` - add calendar-side diagnostic surface --show-suppressed surfacing every obligation the calendar dropped and the verdict reason; `src/aeat/application/overview/__init__.py`.
-- [ ] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; `pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
+- [x] `W02.P11.S44` - replace the hardcoded 5-entry _GATING_FIELDS dict with a derivation from _MODELO_APPLICABILITY_RULES; `for each rule emit profile_key modelos message_key fix_command tuples covering income-categories entity-types estimation-regimes payer-facts; the resulting projection must be a function not a dict so it stays in sync as rules evolve; `src/aeat/application/overview/__init__.py`.
+- [x] `W02.P11.S45` - add calendar-side diagnostic surface --show-suppressed surfacing every obligation the calendar dropped and the verdict reason; `src/aeat/application/overview/__init__.py`.
+- [x] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; `pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
 - [x] `W02.P11.S227` - R7-INES-1 CRITICAL fix overview calendar so Modelos 200 and 202 appear for LEGAL_ENTITY profiles; `today applicable=true via explain but calendar entries are absent for IS modelos; only M349 surfaces in the calendar for an SA with INCN 18.4M; calendar applicability gate diverges from explain applicability; `src/aeat/application/overview/`.
 - [x] `W02.P11.S228` - R7-INES-2 CRITICAL fix profile-fact key-namespace divergence between persistence and calendar lookup; `third_party_transactions_above_347_threshold persists as obligations.third_party_transactions_above_347_threshold via config profile show but calendar reads it as unset and warns the key is not declared; same defect class as W01.P05 boolean canonical drift but in a different namespace; `src/aeat/application/overview/__init__.py`.
 - [x] `W02.P11.S230` - R7-INES-4 fix Modelo 303 SII monthly cadence; `work create --period 01 accepted but bindings list --period 01 returns no revision for that period; SII-enrolled profiles must have monthly periods 01-12 accepted by the calculate path not just create; `src/aeat/_data/registry/aeat/modelos/303/`.
@@ -432,8 +441,8 @@ Seven identical copies of _missing_refs across _validate modules. Extract to a s
 
 Three structurally identical guard pairs between _iva_ledger.py and _renta_ledger.py: currency business-classification branch and business-proportion extraction.
 
-- [ ] `W09.P40.S157` - extract shared currency-not-EUR guard to _shared_issue_reasons.py or sibling helper remove duplicates; `src/aeat/application/aggregation/`.
-- [ ] `W09.P40.S158` - extract shared business-classification branch PERSONAL_TRANSACTION vs UNCLASSIFIED_BUSINESS_STATE remove duplicates; `src/aeat/application/aggregation/`.
+- [x] `W09.P40.S157` - extract shared currency-not-EUR guard to _shared_issue_reasons.py or sibling helper remove duplicates; `src/aeat/application/aggregation/`.
+- [x] `W09.P40.S158` - extract shared business-classification branch PERSONAL_TRANSACTION vs UNCLASSIFIED_BUSINESS_STATE remove duplicates; `src/aeat/application/aggregation/`.
 - [ ] `W09.P40.S159` - extract shared business-proportion dispatch BUSINESS full MIXED pct else None remove duplicates; `src/aeat/application/aggregation/`.
 
 ### Phase `W09.P41` - dead stored data dual default ghost comment removal
