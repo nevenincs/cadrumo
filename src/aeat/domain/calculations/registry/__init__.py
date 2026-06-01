@@ -271,9 +271,9 @@ from ._applicability import (
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
+from ._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
-    CrossRevisionCasillaDivergence,
     CrossRevisionCasillaDriftSummary,
     summarize_non_overlapping_cross_revision_casilla_drift,
 )

@@ -17,12 +17,6 @@ _MAX_TOML_LINES = 5_000
 _MAX_TOML_LINE_CHARS = 1_200
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    # _validate_cross_revision.py carries the cross-revision continuity-drift
-    # validation; the continuity feature grew it past the 300 default. Reviewed
-    # and accepted at this size; a split of the continuity-drift helpers into a
-    # sibling module is the preferred follow-up once load-dependent validator
-    # behaviour verification is unblocked.
-    "_validate_cross_revision.py": 387,
     "_validate_references.py": 312,
     "_validate_revision_sections.py": 254,
     "_validate_semantic_roles.py": 243,
