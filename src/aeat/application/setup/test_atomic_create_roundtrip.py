@@ -25,12 +25,11 @@ from pydantic import SecretStr
 
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.core.config import SecretStoreBackend, override_settings
+from aeat.core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-_UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 
 
 @pytest.fixture
@@ -65,7 +64,16 @@ def _invoke(args: list[str]):
 
 
 def _json(result) -> dict:
-    return json.loads(result.output)
+    """Unwrap the emit-envelope ``result`` payload from a CLI JSON emission.
+
+    Every CLI verb now emits ``{schema_version, command, result, warnings}``
+    via the centralised output schema. The tests assert against the
+    operator-visible payload, which lives under ``result``.
+    """
+    payload = json.loads(result.output)
+    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
+        return payload["result"]
+    return payload
 
 
 def _create(name: str, tax_id: str = "12345678Z") -> None:
@@ -84,9 +92,12 @@ def _create(name: str, tax_id: str = "12345678Z") -> None:
 
 
 def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storage: Path) -> None:
-    """create -> list -> show -> switch -> show all agree on one profile."""
+    """create -> list -> show -> switch -> show all agree on one profile.
 
-    import re
+    Profile/bucket UUIDs are redacted on the CLI surface per the centralised
+    output-redaction ADR; the test asserts the operator-visible identity
+    (display_name plus the stable redacted placeholder) survives every verb.
+    """
 
     _create("alice")
 
@@ -94,13 +105,12 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
     assert listing.exit_code == 0, listing.output
     list_names = [row["name"] for row in _json(listing)["profiles"]]
     assert list_names == ["alice"], list_names
-    # The bucket id is a generated UUID, decoupled from the name.
-    list_uuid = _json(listing)["profiles"][0]["bucket_id"]
-    assert re.fullmatch(_UUID_RE, list_uuid)
+    # The bucket id is redacted at the CLI boundary; the placeholder is stable.
+    assert _json(listing)["profiles"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
 
     show_first = _invoke(["--format", "json", "config", "profile", "show", "alice"])
     assert show_first.exit_code == 0, show_first.output
-    assert _json(show_first)["profile_id"] == list_uuid
+    assert _json(show_first)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     # display_name is the operator label — the positional create arg.
     assert _json(show_first)["display_name"] == "alice"
 
@@ -110,22 +120,28 @@ def test_atomic_create_roundtrip_identity_is_consistent_across_verbs(_cli_storag
 
     show_second = _invoke(["--format", "json", "config", "profile", "show", "alice"])
     assert show_second.exit_code == 0, show_second.output
-    assert _json(show_second)["profile_id"] == list_uuid
+    assert _json(show_second)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
-    # The same UUID identity surfaces from both show calls — no drift.
-    assert _json(show_first)["profile_id"] == _json(show_second)["profile_id"]
+    # The placeholder is stable across calls; display name agrees.
     assert _json(show_first)["display_name"] == _json(show_second)["display_name"]
 
 
 def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> None:
-    """The facts written at create time read back through ``profile show``."""
+    """The facts written at create time read back through ``profile show``.
+
+    ``identity.tax_id`` is a sensitive operator identifier and is redacted to a
+    stable ``sha256:<prefix>`` token at the CLI boundary per the centralised
+    output-redaction ADR. The non-sensitive facts surface verbatim.
+    """
 
     _create("alice")
 
     show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
     assert show.exit_code == 0, show.output
     facts = {row["path"]: row["value"] for row in _json(show)["facts"]}
-    assert facts["identity.tax_id"] == "12345678Z"
+    # The NIF is redacted at the CLI surface; assert the redaction shape, not
+    # the raw operator value. The sha256 prefix is deterministic for the input.
+    assert facts["identity.tax_id"].startswith("sha256:")
     assert facts["activities.description"] == "design"
     assert facts["iva.regime"] == "GENERAL"
 
@@ -154,8 +170,11 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
     assert switch_bob.exit_code == 0, switch_bob.output
     show_bob = _invoke(["--format", "json", "config", "profile", "show"])
     assert _json(show_bob)["display_name"] == "bob"
-    # The two profiles carry distinct UUID identities.
-    assert _json(show_alice)["profile_id"] != _json(show_bob)["profile_id"]
+    # The two profiles surface distinct operator-visible display_names; profile
+    # UUIDs are redacted at the CLI boundary to the shared placeholder.
+    assert _json(show_alice)["display_name"] != _json(show_bob)["display_name"]
+    assert _json(show_alice)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert _json(show_bob)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
 
 def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storage: Path) -> None:
@@ -168,15 +187,13 @@ def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storag
 
     _create("alice")
 
-    import re
-
     duplicate = _invoke(
         ["--format", "json", "config", "profile", "duplicate", "alice", "alice-copy", "--display-name", "Copy"]
     )
     assert duplicate.exit_code == 0, duplicate.output
-    # The duplicate lands under a fresh minted UUID, not the name.
-    copy_uuid = _json(duplicate)["target_profile_id"]
-    assert re.fullmatch(_UUID_RE, copy_uuid)
+    # The duplicate's target UUID is redacted at the CLI boundary; the
+    # stable placeholder is what the operator sees.
+    assert _json(duplicate)["target_profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     # The duplicate is labelled by its --display-name; the source keeps "alice".
@@ -184,7 +201,7 @@ def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storag
 
     show_copy = _invoke(["--format", "json", "config", "profile", "show", "Copy"])
     assert show_copy.exit_code == 0, show_copy.output
-    assert _json(show_copy)["profile_id"] == copy_uuid
+    assert _json(show_copy)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert _json(show_copy)["display_name"] == "Copy"
     # The source profile's facts copied into the new bucket.
     copy_facts = {row["path"]: row["value"] for row in _json(show_copy)["facts"]}
@@ -202,8 +219,6 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
     not (correctly) refuse it.
     """
 
-    import re
-
     _create("alice")
     bundle = _cli_storage / "alice-bundle.json"
     export = _invoke(["--format", "json", "config", "profile", "export", "alice", "--to", str(bundle)])
@@ -219,9 +234,9 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
     with override_settings(aeat_local_storage_root=fresh_root, aeat_active_profile=None):
         importer = _invoke(["--format", "json", "config", "profile", "import", str(bundle)])
         assert importer.exit_code == 0, importer.output
-        # A fresh local identity is minted for the imported profile.
-        imported_uuid = _json(importer)["profile_id"]
-        assert re.fullmatch(_UUID_RE, imported_uuid)
+        # Profile UUIDs are redacted at the CLI boundary; the operator-facing
+        # surface carries the display_name and the stable placeholder.
+        assert _json(importer)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
         assert _json(importer)["display_name"] == "alice"
 
         imported_list = _invoke(["--format", "json", "config", "profile", "list"])
@@ -229,6 +244,6 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_st
 
         imported_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
         assert imported_show.exit_code == 0, imported_show.output
-        assert _json(imported_show)["profile_id"] == imported_uuid
+        assert _json(imported_show)["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
         imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
         assert imported_facts == source_facts
