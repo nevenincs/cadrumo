@@ -107,7 +107,7 @@ def test_work_create_refuses_modelo_202_for_a_natural_person(
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "202", "--year", "2025", "--period", "1T",
+            "--modelo", "202", "--year", "2025", "--period", "1P",
             "--revision", "2025-y-siguientes",
         ]
     )  # fmt: skip
@@ -154,7 +154,7 @@ def test_work_create_allow_not_applicable_bypasses_the_guard(
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "202", "--year", "2025", "--period", "1T",
+            "--modelo", "202", "--year", "2025", "--period", "1P",
             "--revision", "2025-y-siguientes",
             "--allow-not-applicable",
         ]
