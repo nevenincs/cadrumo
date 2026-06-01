@@ -38,15 +38,15 @@ in the application layer. Identified via
 `rg "TransactionCatalogueRepository" src/aeat/application/ -l`:
 
 - [x] `S01` - `application/aggregation/_iva_ledger.py` — landed in commit `08ee2dac5`.
-- [ ] `S02` - `application/aggregation/_modelo_bindings.py` — rewire callers.
-- [ ] `S03` - `application/aggregation/_renta_income_ledger.py` — rewire callers.
-- [ ] `S04` - `application/aggregation/_renta_ledger.py` — rewire callers.
-- [ ] `S05` - `application/filing/_review.py` — rewire callers.
-- [ ] `S06` - `application/invoices/_linking.py` — rewire callers.
-- [ ] `S07` - `application/invoices/_queries.py` — rewire callers.
-- [ ] `S08` - `application/invoices/_reconciliation.py` — rewire callers.
-- [ ] `S09` - `application/ledger/_actions.py` — rewire callers (largest file in the cluster).
-- [ ] `S10` - verify every test passes for the touched modules.
+- [x] `S02` - `application/aggregation/_modelo_bindings.py` — rewire callers.
+- [x] `S03` - `application/aggregation/_renta_income_ledger.py` — rewire callers.
+- [x] `S04` - `application/aggregation/_renta_ledger.py` — rewire callers.
+- [x] `S05` - `application/filing/_review.py` — rewire callers.
+- [x] `S06` - `application/invoices/_linking.py` — rewire callers.
+- [x] `S07` - `application/invoices/_queries.py` — rewire callers.
+- [x] `S08` - `application/invoices/_reconciliation.py` — rewire callers.
+- [x] `S09` - `application/ledger/_actions.py` — rewire callers (largest file in the cluster).
+- [x] `S10` - verify every test passes for the touched modules.
 
 ### Phase `P02` - buckets port
 
@@ -54,15 +54,15 @@ Sites for `BucketEventHistoryRepository` and sibling concrete bucket
 repositories → `BucketRepositoryProtocol` / sibling Protocols. Discover
 via `rg "BucketEventHistoryRepository|BucketCatalogueRepository" src/aeat/application/ -l`.
 
-- [ ] `S11` - enumerate the call sites; produce a per-site checklist.
-- [ ] `S12` - rewire each site one at a time, commit per logical sub-cluster.
+- [x] `S11` - enumerate the call sites; produce a per-site checklist.
+- [x] `S12` - rewire each site one at a time, commit per logical sub-cluster.
 
 ### Phase `P03` - invoices port
 
 Sites for `InvoiceCatalogueRepository` → `InvoiceRepositoryProtocol`.
 
-- [ ] `S21` - enumerate the call sites.
-- [ ] `S22` - rewire each site one at a time.
+- [x] `S21` - enumerate the call sites.
+- [x] `S22` - rewire each site one at a time.
 
 ### Phase `P04` - modelos port
 
@@ -72,11 +72,24 @@ Sites for `WorkUnitCatalogueRepository`, `CalculationRevisionCatalogueRepository
 largest port surface — `application/modelo/_actions.py` is 4000+ lines
 and a concurrent-campaign hotspot. Explicit-path staging is mandatory.
 
-- [ ] `S31` - enumerate the call sites; produce a per-site checklist.
-- [ ] `S32` - rewire each site, one logical sub-cluster per commit.
+- [x] `S31` - enumerate the call sites; produce a per-site checklist.
+- [x] `S32` - rewire each site, one logical sub-cluster per commit.
 
 ## Wave `W02` - verification
 
-- [ ] `S41` - `pytest src/aeat/application/ -q` — all green after each rewiring commit.
-- [ ] `S42` - vaultspec-rag query "application layer concrete repository type hint" should return zero hits after the wave.
-- [ ] `S43` - update `.vault/audit/2026-05-31-hexagonal-port-necessity-audit.md` with a closing note confirming the drift is resolved.
+- [x] `S41` - `pytest src/aeat/application/ -q` — all green after each rewiring commit.
+- [x] `S42` - vaultspec-rag query "application layer concrete repository type hint" should return zero hits after the wave.
+- [x] `S43` - update `.vault/audit/2026-05-31-hexagonal-port-necessity-audit.md` with a closing note confirming the drift is resolved.
+
+## Closure note -- 2026-06-01
+
+Plan complete. All four bucket-A ports (transactions, buckets, invoices,
+modelos) wired end-to-end across the application layer; three sibling
+modelo Protocols (CalculationRevisionCatalogueRepositoryProtocol,
+ModeloRecordCatalogueRepositoryProtocol,
+VerificationReportCatalogueRepositoryProtocol) authored alongside in
+`src/aeat/domain/modelos/_protocols.py`. Adoption commits enumerated in
+the closure note of the related `hexagonal-port-necessity-audit`
+(commits `08ee2dac5`, `39a9b1f44`, `c8c785598`, `9ba59706a`,
+`cffae8d91`, `4a65a704e`, `833f57c9a`, `217b6e32f`, `e8397788a`). S43
+audit closure landed in commit `c6b54c641`.
