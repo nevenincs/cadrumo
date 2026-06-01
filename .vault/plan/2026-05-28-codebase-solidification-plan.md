@@ -1169,6 +1169,6 @@ W27 swarm re-audit: 7 of 9 axes clean. 2 real regressions caught by the standing
 
 Mechanical fix-up: ratchet line-number realignment + logging marker addition + aggregate test.
 
-- [ ] `W27.P61.S676` - A8 regression: update _KNOWN_VIOLATING_LINES in test_any_param_rationale_inventory.py — _envelope.py 169→170, 365→366; _borrador_100.py 310→311, 319→320; _censo.py 400→401; ratchet must run green post-fix; `src/aeat/test_any_param_rationale_inventory.py`.
-- [ ] `W27.P61.S677` - A2 regression: add LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK marker on the new import logging at _stdio.py:27 (stdlib logging used for debug-level platform diagnostic on Windows ctypes failure; core logging unavailable at stream-bootstrap time); `src/aeat/entrypoints/cli/_stdio.py`.
-- [ ] `W27.P61.S678` - aggregate test asserting both W27 fixes landed (5 ratchet entries shifted + LOGGING-STDLIB marker present) + all standing inventory ratchets remain green; `src/aeat/test_w27_p61_closure.py`.
+- [x] `W27.P61.S676` - A8 regression: update _KNOWN_VIOLATING_LINES in test_any_param_rationale_inventory.py — _envelope.py 169→170, 365→366; `_borrador_100.py 310→311, 319→320; _censo.py 400→401; ratchet must run green post-fix; `src/aeat/test_any_param_rationale_inventory.py`.
+- [x] `W27.P61.S677` - A2 regression: add LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK marker on the new import logging at _stdio.py:27 (stdlib logging used for debug-level platform diagnostic on Windows ctypes failure; `core logging unavailable at stream-bootstrap time); `src/aeat/entrypoints/cli/_stdio.py`.
+- [x] `W27.P61.S678` - aggregate test asserting both W27 fixes landed (5 ratchet entries shifted + LOGGING-STDLIB marker present) + all standing inventory ratchets remain green; `src/aeat/test_w27_p61_closure.py`.
