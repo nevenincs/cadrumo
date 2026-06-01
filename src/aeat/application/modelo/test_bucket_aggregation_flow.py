@@ -355,13 +355,13 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     _baseline_303_bindings = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+        # State attribution: common-regime fixture supplies the full 100%
+        # the M303 C65 profile binding would derive from the operator's
+        # `tax_residence.jurisdiction_scope`. Without it, the
+        # iva-atribuible-estado formula resolves to 64 × 0 / 100 = 0 and
+        # the whole iva.resultado chain collapses to zero.
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    # Casilla 65 (state-attribution ratio) is operator-input with no
-    # registered default. For territorio común, the ratio is 100 (all
-    # IVA attributable to the state). Without this baseline the
-    # iva-atribuible-estado formula resolves to 64 * 0 / 100 = 0 and
-    # the whole iva.resultado chain collapses to zero.
-    _baseline_303_casilla_inputs = {"65": Decimal("100")}
 
     q1_decision = _wallet_decision(period="1T", selected_amount=Decimal("0.00"))
     wallet_decision_repo.save_decision(q1_decision)
@@ -369,7 +369,6 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _seed_303_work_unit(wu_repo, period="1T").work_unit_id,
         actor="operator-A",
         binding_values=_baseline_303_bindings,
-        casilla_inputs=_baseline_303_casilla_inputs,
         iva_compensation_decision=q1_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -383,7 +382,6 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _seed_303_work_unit(wu_repo, period="2T").work_unit_id,
         actor="operator-A",
         binding_values=_baseline_303_bindings,
-        casilla_inputs=_baseline_303_casilla_inputs,
         iva_compensation_decision=q2_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -397,7 +395,6 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         _seed_303_work_unit(wu_repo, period="3T").work_unit_id,
         actor="operator-A",
         binding_values=_baseline_303_bindings,
-        casilla_inputs=_baseline_303_casilla_inputs,
         iva_compensation_decision=q3_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -414,7 +411,6 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
             **_baseline_303_bindings,
             "modelo-303-compensacion-pendiente-anteriores": Decimal("7.00"),
         },
-        casilla_inputs=_baseline_303_casilla_inputs,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
