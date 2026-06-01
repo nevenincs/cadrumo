@@ -1094,6 +1094,27 @@ remediation is currently HELD at audit-only per the active action policy.
   docstring `:class:` matches; true `from`-anchored import count is 33, and
   `core/_tax_domain.py` is NOT a DB-21 site (clean StrEnum). core/ kernel otherwise
   clean. R17–R20 queued. All six layers now swept; broad-complete first pass.
+- 2026-06-01: EXECUTION begun (policy moved from audit-only to execute per the standing
+  goal). Landed: W01.P01 registry publish (28 symbols onto the public surface,
+  collection-gated) and W01.P03 S14-S18 (16-file `_ids` repoint, commit 072a57a47).
+  Governance triad committed and pushed (5035ca3bd). W01.P02 (the broader
+  registry-package-import sweep, 29 files) was executed then BACKED OUT: it exposed
+  DB-41 and re-staging by a peer `git add -A` risked committing it broken. Recurring
+  maintenance Wave W08 added (ty/pyright, radon/ruff complexity, import-linter triage).
+- DB-41 (HIGH, NEW) — latent order-dependent circular import between `domain.invoices`
+  and `domain.iva._invoice_classification`. `invoices/__init__.py:11` imports from
+  `iva/_invoice_classification`, which at `:62` does `from ..invoices import IvaRate`
+  (the package, not the leaf) while `invoices/__init__` only defines `IvaRate` at `:16`
+  (after line 11). It works ONLY when `domain.iva` is imported before `domain.invoices`;
+  any module that imports the registry package early (registry/_bindings imports
+  `domain.invoices`) flips the order and triggers a partially-initialised-module
+  ImportError. Robust fix: `iva/_invoice_classification.py:62` should import `IvaRate`
+  from the leaf `..invoices._enums` (its definition site) like the adjacent
+  `InvoiceValidationError` already does. A peer is mid-edit on both cycle files (both
+  `MM`), so this is left to their fix or DB-11. **W01.P02 is BLOCKED on DB-41/DB-11**:
+  do not re-run the registry-package-import sweep until the invoices/iva cycle is
+  order-independent. Verified by `rg` and a direct `import aeat.domain.invoices`
+  traceback.
 
 ## Codification candidates
 
