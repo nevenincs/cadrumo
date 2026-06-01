@@ -25,6 +25,21 @@ amendment: |
 
 # `m303-form-vs-semantic-casilla-dual-keying` adr: M303 form-numbered vs semantic casilla dual-keying convention | (**status:** `accepted`)
 
+## Correction (2026-06-01)
+
+The amendment header references an XSD-dictionary axis stored in separate schema fields (e.g. `xsd_id`, `xsd_codes`). That framing is factually incorrect against the current registry. `CasillaDefinition` declares no such field; the XSD-dictionary identifiers live in `casilla.number` itself, which is empirically heterogeneous across modelos:
+
+- id-mirror (`number == id`)
+- form-anchored (`number` matches an `export_refs` suffix)
+- XSD-positional (`*06-09`, `*68 *69`)
+- XSD-attribute kebab-case (`tipo-declaracion`, `vigencia`)
+- dot-hierarchical XSD path (`2.devengo.ejercicio`, `3.vinculada.1.nif`)
+- uppercase XSD identifier (`SAL_RESERVA_DOTACION`, `PH18`)
+
+The ADR's load-bearing contract is unaffected. D1/D2 still hold: the engine consults `casilla.id` exclusively; the engine never resolves casilla state by `casilla.number`. The regression-test gate that locks that contract lives at `test_casilla_keying_convention.py` under `src/aeat/domain/calculations/registry/`; it refuses the literal `casillas_by_number` in `_formula_runtime.py`, `_verify.py`, and `_parser.py`. It does not — and structurally cannot — enforce a shape on the `number` field, which is documentary by intent.
+
+Finding E and Decision D6 below should be read with this correction in mind: the three-shape predicate they describe ("Dual-keying only / Dual-keying + XSD / XSD-only", keyed on hypothetical `xsd_id` / `xsd_codes` fields) does not correspond to any schema axis the registry actually carries. A separate follow-up is open for the original amendment author to author a full revision of Finding E + D6 + the regression-test-gate section to match the registry's empirical shape. Until that revision lands, this Correction is the canonical reference for what the ADR's contract enforces and what the gate at `test_casilla_keying_convention.py` actually checks.
+
 ## Authoring note
 
 Scaffold attempted via `uv run --no-sync vaultspec-core vault add adr --feature m303-form-vs-semantic-casilla-dual-keying`; the architect's bash session is corrupted with an unrecoverable shell-quoting error from earlier in the campaign. The file was authored directly via the Write tool following the canonical frontmatter shape, identical to the path taken by the implies_nonzero ADR (committed at e1b919611), the m210-irnr-full-engine ADR (committed at 7ce4dfa94), and the S399 IRNR catalogue (committed at 8dce6db35) — all three of which the commit-bot validated post-commit via `vault check all`. The validation gate is the same; only the scaffold path differs.
