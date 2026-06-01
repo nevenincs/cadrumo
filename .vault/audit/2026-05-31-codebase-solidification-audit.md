@@ -197,3 +197,44 @@ specialization limits, or multi-checker suppression with cross-tool incompatibil
    addressed in a dedicated annotation pass after the trivial paydown is complete.
 4. Hard sites (`domain/buckets/_event.py:307`, `application/live/_snapshot_base.py:511`)
    are deferred to a structural refactor wave.
+
+## Closure addendum — W26 through W31 trajectory and ADR re-close
+
+The W26 reopening of the codebase-solidification epic introduced the type-ignore inventory ratchet and drove the 99-site corpus down to 7 hard-deferred residuals across six phases. The trajectory:
+
+| Phase | Action | Allowlist |
+|------|--------|-----------|
+| W26.P55 | Introduce `test_type_ignore_rationale_inventory.py` ratchet; enrol all 99 pre-existing sites; mirror W11 UTF-8 / W21 parameter-Any pattern | 99 |
+| W26.P56 | Trivial paydown 1: 15 pydantic `model_config` markers | 84 |
+| W26.P57 | Trivial paydown 2: 35 sites across click stubs, ctypes, TOML, getattr, runtime-CM clusters | 49 |
+| W26.P58 | Moderate paydown 1: 10 sites (Playwright annotations, session-store Protocol, invoice payload casts, ledger annotations) | 39 |
+| W26.P59 | Moderate paydown 2: 28 sites across `_app_live.py` and `_modelo.py` dense clusters plus misc | 11 |
+| W26.P60 | Final moderate paydown: 4 sites + 7 HARD-DEFERRED enrolment markers | 7 |
+
+The W26 paydown touched approximately fifteen production files. The W27 confirmation pass caught two W26-introduced regressions: five stale line-number entries in the parameter-Any ratchet (caused by W26 comment-line insertions shifting `def` linenos by +1) and one new `import logging` site in `_stdio.py` added without a `LOGGING-STDLIB-RATIONALE-*` marker. Both were closed mechanically in W27.P61.
+
+W28 surfaced one pre-existing A1 finding (three `RuntimeError` raises in `_doc_reference.py` subprocess-guard helpers lacking `BROAD-EXCEPT-RATIONALE-*` markers); closed in W28.P62.
+
+W29, W30, and W31 each returned zero findings across all nine axes. Three consecutive strict-zero waves — the ADR re-close condition was met at W31 on 2026-06-01.
+
+The recurring-hardening epic now spans **W1 through W31 across 31 Waves, 62 phases, ~680 Steps**, with the type-ignore corpus drained from 99 sites to 7 hard-deferred residuals (92 % paid down), the parameter-Any pool stable at 30 enrolled survivors, and an empty mock allowlist. Eight standing inventory ratchets defend the converged state at every commit:
+
+- `test_utf8_enrollment_inventory` — AST-walks every production file; W11 `_KNOWN_VIOLATING_FILES` allowlist.
+- `test_cast_rationale_inventory` — every `cast()` call must carry `CAST-RATIONALE-*`.
+- `test_latin1_encoding_constant_enrollment` — bare `"latin-1"` blocked.
+- `test_enum_constant_extraction_inventory` — enum-string-literal use blocked.
+- `test_any_param_rationale_inventory` — W21; parameter-Any drift blocked; 30 enrolled survivors.
+- `test_mock_inventory` — W22; allowlist is empty; any mock usage is a fresh finding.
+- `test_no_skip_xfail` — live-test allowlist only.
+- `test_type_ignore_rationale_inventory` — W26; 7 enrolled HARD-DEFERRED residuals.
+- `test_any_return_rationale_markers` — return-Any annotations require rationale tokens.
+
+Seven HARD-DEFERRED type-ignore sites remain as documented structural debt for a successor epic:
+- `application/live/_snapshot_base.py:511` — runtime generic specialization (`Envelope[self._payload_model]` uses instance attribute as generic).
+- `application/workflow/_adapters.py:105,110,144,151` — Protocol bridging would create cross-module circular imports.
+- `domain/buckets/_event.py:307` — pydantic v2 `BaseModel.__iter__` override requires metaclass-aware base.
+- `entrypoints/cli/_app_live.py:1681` — `**dict` splat with extra key; requires `Borrador100ViewResult` structural refactor.
+
+Each carries an inline `TYPE-IGNORE-RATIONALE-HARD-DEFERRED-<scope>` token explaining why the suppression is genuinely structural and what remediation would entail.
+
+The epic is now in sustained-maintenance mode. The standing ratchet suite plus the recurring-audit cadence detect any new drift within a single wave. The substitutability pre-filter remains the durable repo-level rule preventing audit false positives. The W22 mock-allowlist-empty milestone holds: no test in the codebase depends on `unittest.mock` or `patch.object`. The codebase has converged.
