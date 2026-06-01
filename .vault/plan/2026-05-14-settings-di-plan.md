@@ -5,9 +5,19 @@ tags:
 date: '2026-05-14'
 tier: L2
 related:
-  - "[[2026-05-14-settings-di-adr]]"
-  - "[[2026-05-14-settings-di-research]]"
+  - '[[2026-05-14-settings-di-adr]]'
+  - '[[2026-05-14-settings-di-research]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `settings-di` plan
 
@@ -35,10 +45,10 @@ Lands the new fields and the override context manager. No call sites
 migrate yet; every existing test must continue to pass against the
 unchanged `os.environ.get(...)` reads.
 
-- [ ] `P01.S01` - add `aeat_log_dir`, `aeat_libreoffice_executable`, and `aeat_master_key_passphrase` to the Settings model; `src/aeat/core/config.py`.
-- [ ] `P01.S02` - add `_settings_override` ContextVar and the `override_settings` context manager; `src/aeat/core/config.py`.
-- [ ] `P01.S03` - extend `get_settings` to honour the ContextVar before falling back to the cached env-derived singleton; `src/aeat/core/config.py`.
-- [ ] `P01.S04` - add focused unit tests for the override helper covering scalar override, nested override, restoration on exit, restoration on exception, and Pydantic-validation rejection of malformed override; `src/aeat/core/test_config_override.py`.
+- [x] `P01.S01` - add `aeat_log_dir`, `aeat_libreoffice_executable`, and `aeat_master_key_passphrase` to the Settings model; `src/aeat/core/config.py`.
+- [x] `P01.S02` - add `_settings_override` ContextVar and the `override_settings` context manager; `src/aeat/core/config.py`.
+- [x] `P01.S03` - extend `get_settings` to honour the ContextVar before falling back to the cached env-derived singleton; `src/aeat/core/config.py`.
+- [x] `P01.S04` - add focused unit tests for the override helper covering scalar override, nested override, restoration on exit, restoration on exception, and Pydantic-validation rejection of malformed override; `src/aeat/core/test_config_override.py`.
 
 ### Phase `P02` - migrate Category A call sites
 
@@ -46,9 +56,9 @@ Replace already-modelled env reads with `get_settings()` field reads.
 No new Settings fields needed; per-site test verifies the override
 helper is observed.
 
-- [ ] `P02.S05` - migrate `AEAT_OUTPUT_LANGUAGE` read to `get_settings().aeat_output_language`; `src/aeat/core/i18n/_render.py`.
-- [ ] `P02.S06` - migrate live-tests opt-in read at line 103 to `get_settings().aeat_live_tests_enabled`; `src/aeat/core/access_gate/__init__.py`.
-- [ ] `P02.S07` - migrate diagnostic snapshot read at line 128 to `get_settings().aeat_live_tests_enabled`; `src/aeat/core/access_gate/__init__.py`.
+- [x] `P02.S05` - migrate `AEAT_OUTPUT_LANGUAGE` read to `get_settings().aeat_output_language`; `src/aeat/core/i18n/_render.py`.
+- [x] `P02.S06` - migrate live-tests opt-in read at line 103 to `get_settings().aeat_live_tests_enabled`; `src/aeat/core/access_gate/__init__.py`.
+- [x] `P02.S07` - migrate diagnostic snapshot read at line 128 to `get_settings().aeat_live_tests_enabled`; `src/aeat/core/access_gate/__init__.py`.
 - [ ] `P02.S08` - add focused tests proving each migrated site observes the override; `src/aeat/core/i18n/test_render_override.py` and `src/aeat/core/access_gate/test_override.py`.
 
 ### Phase `P03` - migrate Category B call sites with fail-closed verification
@@ -57,9 +67,9 @@ Each site swaps the env read for the new Settings field. Every commit
 includes a test that asserts the fail-closed branch still raises on
 `None`.
 
-- [ ] `P03.S09` - migrate `AEAT_LOG_DIR` read to `get_settings().aeat_log_dir`; `src/aeat/core/logging.py`.
-- [ ] `P03.S10` - migrate `_LIBREOFFICE_EXECUTABLE_ENV` reads (two sites) to `get_settings().aeat_libreoffice_executable`; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
-- [ ] `P03.S11` - migrate `PASSPHRASE_ENV_VAR` read to `get_settings().aeat_master_key_passphrase`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `P03.S09` - migrate `AEAT_LOG_DIR` read to `get_settings().aeat_log_dir`; `src/aeat/core/logging.py`.
+- [x] `P03.S10` - migrate `_LIBREOFFICE_EXECUTABLE_ENV` reads (two sites) to `get_settings().aeat_libreoffice_executable`; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [x] `P03.S11` - migrate `PASSPHRASE_ENV_VAR` read to `get_settings().aeat_master_key_passphrase`; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `P03.S12` - add focused test that override of `aeat_master_key_passphrase` to `None` raises the same `MasterKeyError` as the current unset-env path; `src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py`.
 
 ### Phase `P04` - migrate Category E CLI flag write
@@ -75,10 +85,10 @@ P02.S05 to have landed.
 
 Final pass before declaring the sprint complete.
 
-- [ ] `P05.S15` - run `prek run --all-files` and confirm green (or only pre-existing other-agent WIP failures, documented inline); shell.
-- [ ] `P05.S16` - run `pytest src/aeat/ -q` and confirm green; shell.
+- [ ] `P05.S15` - run `prek run --all-files` and confirm green (or only pre-existing other-agent WIP failures, documented inline); `shell`.
+- [ ] `P05.S16` - run `pytest src/aeat/ -q` and confirm green; `shell`.
 - [ ] `P05.S17` - run the `vaultspec-code-reviewer` agent against this branch and write the audit record; `.vault/audit/2026-05-14-settings-di-code-review-audit.md`.
-- [ ] `P05.S18` - update task #77, #83, #84, #85, #88, #103 to reflect the unblock status that follows from this sprint; tasks.
+- [ ] `P05.S18` - update task #77, #83, #84, #85, #88, #103 to reflect the unblock status that follows from this sprint; `tasks`.
 
 ## Parallelization
 
