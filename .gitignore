@@ -298,6 +298,25 @@ cache/
 /C\:*
 /*_keys.txt
 /translate_*.py
+# Agent scratch the patterns above missed: commit-message temps, capture
+# dumps, trace/check helpers, ad-hoc runners, underscore-prefixed temp files,
+# and generated-doc backups. Root-level only; never durable.
+/*.tmp
+/.msg
+/_*.py
+/_*.ps1
+/_*.txt
+/trace_*.py
+/check_*.py
+/check_*.ps1
+/test_fix.py
+/run_test.sh
+/run_tests.sh
+/dom_*.txt
+/fails.txt
+/apex.txt
+/campaign_run.txt
+/api.bak/
 
 
 # >>> vaultspec-managed (do not edit this block) >>>
