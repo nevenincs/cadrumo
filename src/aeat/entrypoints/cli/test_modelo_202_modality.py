@@ -31,6 +31,7 @@ No mocks — these tests use the real domain functions directly.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
