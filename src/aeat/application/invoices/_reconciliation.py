@@ -16,6 +16,7 @@ from ...domain.transactions import (
     TransactionError,
     link_invoice,
 )
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 
 
 class ReconciliationSkippedSuggestion(BaseModel):
@@ -110,7 +111,7 @@ def reconcile_invoice_repositories(
     bucket_id: str,
     apply: bool = False,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceReconciliationResult:
     """Reconcile persisted invoice and transaction catalogues.
 

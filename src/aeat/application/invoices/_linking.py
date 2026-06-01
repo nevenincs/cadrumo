@@ -16,6 +16,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     link_invoice,
 )
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 
 
 class InvoiceTransactionLinkResult(BaseModel):
@@ -59,7 +60,7 @@ def link_invoice_transaction_repositories(
     invoice_id: str,
     transaction_id: str,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceTransactionLinkResult:
     """Persist a bidirectional invoice link through the backend repositories."""
     invoices_repo = invoice_repository or InvoiceCatalogueRepository()
