@@ -7,7 +7,7 @@ import re
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
-from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._errors import PortalValidationError
 
@@ -27,7 +27,7 @@ class PortalMetadata(BaseModel):
     Attributes:
         portal: The :class:`Portal` this entry describes.
         url: Canonical HTTPS URL.
-        subdomain: The :class:`Subdomain` the URL is hosted on. Must
+        subdomain: The :class:`PortalHost` the URL is hosted on. Must
             match ``url.host``.
         category: :class:`PortalCategory` the portal belongs to.
         auth_methods: Non-empty frozenset of accepted
@@ -50,7 +50,7 @@ class PortalMetadata(BaseModel):
 
     portal: Portal
     url: HttpUrl
-    subdomain: Subdomain
+    subdomain: PortalHost
     category: PortalCategory
     auth_methods: frozenset[AuthMethod] = Field(min_length=1)
     url_stability: UrlStability
@@ -91,7 +91,7 @@ class PortalMetadata(BaseModel):
         if AuthMethod.ANONYMOUS in self.auth_methods and len(self.auth_methods) != 1:
             raise PortalValidationError("AuthMethod.ANONYMOUS must be the sole method when present")
 
-        # Subdomain must match URL host.
+        # PortalHost must match URL host.
         host = self.url.host
         if host != self.subdomain.value:
             raise PortalValidationError(f"url host {host!r} does not match subdomain {self.subdomain.value!r}")

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._metadata import PortalMetadata
 
@@ -17,7 +17,7 @@ def _base_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "portal": Portal.PORTAL_M303_IVA_AUTOLIQUIDACION,
         "url": "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml",
-        "subdomain": Subdomain.SEDE,
+        "subdomain": PortalHost.SEDE,
         "category": PortalCategory.FILING,
         "auth_methods": frozenset({AuthMethod.CERTIFICATE}),
         "url_stability": UrlStability.STABLE_PROTOCOL_GRADE,

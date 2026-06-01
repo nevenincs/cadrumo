@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._errors import (
     PortalIntegrityError,
@@ -74,7 +74,7 @@ __all__ = (
     "PortalIntegrityError",
     "PortalMetadata",
     "PortalRegistryError",
-    "Subdomain",
+    "PortalHost",
     "UnknownPortalError",
     "UrlStability",
     "get_portal",

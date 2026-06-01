@@ -69,7 +69,7 @@ class UrlStability(StrEnum):
     RETIRED = "retired"
 
 
-class Subdomain(StrEnum):
+class PortalHost(StrEnum):
     """AEAT-family hosts the scraper must navigate.
 
     Values are the exact hostnames the ``PortalMetadata.url`` field

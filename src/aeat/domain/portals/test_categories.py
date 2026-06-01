@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -62,8 +62,8 @@ def test_subdomain_has_exactly_7_members() -> None:
         "www.agenciatributaria.es",
         "clave.gob.es",
     }
-    assert {s.value for s in Subdomain} == expected_values
-    assert len(list(Subdomain)) == 7
+    assert {s.value for s in PortalHost} == expected_values
+    assert len(list(PortalHost)) == 7
 
 
 @pytest.mark.parametrize(

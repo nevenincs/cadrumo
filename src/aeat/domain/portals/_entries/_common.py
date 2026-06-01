@@ -15,7 +15,7 @@ from pydantic import HttpUrl, TypeAdapter
 
 from ....core.config import Settings
 from ....core.i18n import Translatable as tr
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._errors import PortalValidationError
 from .._metadata import PortalMetadata
@@ -28,22 +28,22 @@ def _to_httpurl(value: str) -> HttpUrl:
     return _URL_ADAPTER.validate_python(value)
 
 
-def _resolve_host(subdomain: Subdomain) -> str:
+def _resolve_host(subdomain: PortalHost) -> str:
     """Return the absolute origin (``https://host``) for a portal subdomain."""
     domains = Settings.external_constants().aeat.domains
-    if subdomain is Subdomain.SEDE:
+    if subdomain is PortalHost.SEDE:
         return domains.sede
-    if subdomain is Subdomain.WWW1:
+    if subdomain is PortalHost.WWW1:
         return domains.www1
-    if subdomain is Subdomain.WWW2:
+    if subdomain is PortalHost.WWW2:
         return domains.www2
-    if subdomain is Subdomain.WWW3:
+    if subdomain is PortalHost.WWW3:
         return domains.www3
-    if subdomain is Subdomain.AGENCIATRIBUTARIA_GOB:
+    if subdomain is PortalHost.AGENCIATRIBUTARIA_GOB:
         return domains.aeat_gob
-    if subdomain is Subdomain.AGENCIATRIBUTARIA_ES:
+    if subdomain is PortalHost.AGENCIATRIBUTARIA_ES:
         return domains.legacy_www
-    if subdomain is Subdomain.CLAVE_GOB:
+    if subdomain is PortalHost.CLAVE_GOB:
         return domains.clave
     raise PortalValidationError(f"unsupported AEAT portal subdomain {subdomain!r}")
 
@@ -51,7 +51,7 @@ def _resolve_host(subdomain: Subdomain) -> str:
 def build_entry(
     *,
     portal: Portal,
-    subdomain: Subdomain,
+    subdomain: PortalHost,
     category: PortalCategory,
     auth_methods: Iterable[AuthMethod],
     url_stability: UrlStability,
@@ -72,7 +72,7 @@ def build_entry(
 
     Args:
         portal: The :class:`Portal` member this entry describes.
-        subdomain: The :class:`Subdomain` the URL is hosted on.
+        subdomain: The :class:`PortalHost` the URL is hosted on.
         category: The :class:`PortalCategory` classification.
         auth_methods: Iterable of accepted :class:`AuthMethod` values.
         url_stability: The :class:`UrlStability` tier.
