@@ -439,7 +439,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'unit and not docs' --strict-markers"
+addopts = "-v --tb=short -m 'unit and not docs' --strict-markers -n auto --dist=loadfile"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
