@@ -105,21 +105,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
-    refresh:
-      errors:
-        google_auth_not_importable: The google-auth library is not importable; Google
-          OAuth refresh cannot proceed.
-        reauth_required: The Google OAuth credential is marked as requiring reauthentication;
-          the automatic refresh path is closed.
-        refresh_failed: Google OAuth refresh failed.
-        refresh_refused: Google OAuth refused the refresh request; the refresh token
-          is no longer valid.
-        token_endpoint_unreachable: The Google OAuth token endpoint is unreachable.
-      suggestions:
-        check_network: Check network connectivity to Google OAuth endpoints and retry.
-      testing_project_cap_warning: The Google OAuth refresh token is approaching the
-        7-day Testing-project cap (about {hours_remaining}h remaining); re-run `aeat
-        config google login` to extend the credential lifetime.
   inbound:
     declaracion:
       errors:
@@ -1672,8 +1657,8 @@ cli:
         ambiguous_profile: 'Ambiguous profile name: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'No active profile selected.'
-        profile_empty: '--profile must not be blank.'
+        no_active_profile: No active profile selected.
+        profile_empty: --profile must not be blank.
         unknown_profile: 'Unknown profile: %{profile}.'
         unknown_profile_key: 'Unknown profile key: %{key}.'
       get_help: Read one profile key stored value.
@@ -1737,7 +1722,8 @@ cli:
       venv_stale: Virtual environment is stale.
     version:
       no_revisions: No registry revisions available.
-      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas, %{formulas} formulas, %{revisions} revisions.'
+      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
+        %{formulas} formulas, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registry unavailable (%{error}).'
   ledger:
     add:
@@ -2740,6 +2726,7 @@ errors:
     error_aeat_core_not_found: The requested resource or record was not found.
     error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
+    error_apidocs: errors.error.error_apidocs
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
       returning AEAT evidence.
@@ -2774,7 +2761,6 @@ errors:
       but no fallback was configured.'
     error_declaracion_template_not_detected: The declaration PDF's template revision
       could not be auto-detected.
-    error_domain: A domain logic error occurred.
     error_domain_submission: A submission-domain error occurred.
     error_domain_submission_preflight: The draft could not pass the local submission
       preflight.

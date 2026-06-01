@@ -10,12 +10,15 @@ related:
   - '[[2026-05-31-core-authority-adr]]'
 ---
 
-
-
-
-
-
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `semantic-cluster-hardening` `campaign` plan
 
@@ -44,7 +47,7 @@ Add the standing 7th axis to the swarm-audit cadence and sync it into provider s
 
 Enumerate the changed-module delta since baseline, run the Axis-7 RAG-plus-rg sweep, and persist a verified-cluster audit document.
 
-- [ ] `W01.P02.S03` - Enumerate Python modules added and modified since the 2026-05-19 baseline; `src/aeat`.
+- [x] `W01.P02.S03` - Enumerate Python modules added and modified since the 2026-05-19 baseline; `src/aeat`.
 - [ ] `W01.P02.S04` - Run the Axis-7 RAG functional-concept sweep over the delta and verify candidate clusters with rg; `src/aeat`.
 - [ ] `W01.P02.S05` - Persist the verified functionality-cluster delta-audit document; `.vault/audit`.
 
@@ -95,23 +98,23 @@ Authors the blank exception-restructure ADR, deletes the unused DomainError unde
 Author the exception-restructure ADR and delete the unused DomainError under a safeguarded commit sequence.
 
 - [x] `W04.P07.S16` - Author the exception-restructure ADR content; `.vault/adr/2026-05-09-exception-restructure-adr.md`.
-- [ ] `W04.P07.S17` - Commit surrounding exception work as the safeguard checkpoint before deletion; `src/aeat/domain`.
-- [ ] `W04.P07.S18` - Delete the unused DomainError in its own clearly-messaged commit; `src/aeat/domain/_errors.py`.
+- [x] `W04.P07.S17` - Commit surrounding exception work as the safeguard checkpoint before deletion; `src/aeat/domain`.
+- [x] `W04.P07.S18` - Delete the unused DomainError in its own clearly-messaged commit; `src/aeat/domain/_errors.py`.
 
 ### Phase `W04.P08` - error-module naming normalisation
 
 Rename the four errors.py modules to the dominant _errors.py convention, each with consumer updates.
 
-- [ ] `W04.P08.S19` - Rename the renta error module to the _errors convention with consumer updates; `src/aeat/domain/renta/errors.py`.
-- [ ] `W04.P08.S20` - Rename the iva error module to the _errors convention with consumer updates; `src/aeat/domain/iva/errors.py`.
-- [ ] `W04.P08.S21` - Rename the normatives error module to the _errors convention with consumer updates; `src/aeat/domain/normatives/errors.py`.
-- [ ] `W04.P08.S22` - Rename the manuals error module to the _errors convention with consumer updates; `src/aeat/domain/manuals/errors.py`.
+- [x] `W04.P08.S19` - Rename the renta error module to the _errors convention with consumer updates; `src/aeat/domain/renta/errors.py`.
+- [x] `W04.P08.S20` - Rename the iva error module to the _errors convention with consumer updates; `src/aeat/domain/iva/errors.py`.
+- [x] `W04.P08.S21` - Rename the normatives error module to the _errors convention with consumer updates; `src/aeat/domain/normatives/errors.py`.
+- [x] `W04.P08.S22` - Rename the manuals error module to the _errors convention with consumer updates; `src/aeat/domain/manuals/errors.py`.
 
 ### Phase `W04.P09` - error-root re-verification
 
 Re-verify every domain package error base still roots at AeatError.
 
-- [ ] `W04.P09.S23` - Re-verify every domain package error base roots at AeatError; `src/aeat/domain`.
+- [x] `W04.P09.S23` - Re-verify every domain package error base roots at AeatError; `src/aeat/domain`.
 
 ## Wave `W05` - domain redefinition and taxonomy
 
