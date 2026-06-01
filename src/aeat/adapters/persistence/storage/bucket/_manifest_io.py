@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import base64
 import os
-import tomllib
 from datetime import datetime
 from pathlib import Path
 
+from .....core._toml import parse_toml_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
@@ -116,12 +116,7 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     """
     target = manifest_path(paths)
     text = target.read_text(encoding=_UTF_8_ENCODING)
-    # ``tomllib.loads`` is typed ``dict[str, Any]`` upstream by stdlib
-    # convention; we narrow to ``dict[str, object]`` here so the
-    # ``Any`` lasts a single expression and never escapes this
-    # function. The dict is handed straight to a strict pydantic
-    # model on the next line, so the boundary is one line wide.
-    payload: dict[str, object] = dict(tomllib.loads(text))
+    payload: dict[str, object] = parse_toml_text(text, error_factory=StorageValidationError)
     # TOML carries no native null; an absent ``last_unlocked_at`` key on disk
     # signals "never unlocked" and is hydrated to ``None`` at the boundary so
     # the strict pydantic model still rejects unknown keys.
