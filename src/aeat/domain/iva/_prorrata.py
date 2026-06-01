@@ -72,7 +72,7 @@ from pydantic import (
     model_validator,
 )
 
-from ..fincas._rounding import _round_to_cents
+from ...core.money import round_to_cents as _round_to_cents
 from ._errors import ProrrataInputError, ProrrataSectorError
 
 

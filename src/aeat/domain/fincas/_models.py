@@ -62,10 +62,10 @@ class Finca(_FincaRecord):
         coste_adquisicion: Acquisition cost of the whole property,
             net of taxes that did not enrich the seller.
         coste_adquisicion_construccion: Acquisition cost attributable
-            to the construction component (cost * valor_catastral_
-            construccion / valor_catastral_total). The depreciable
-            basis cap for the LIRPF art. 23.1.f amortización 3 %
-            ledger.
+            to the construction component
+            (``cost * valor_catastral_construccion / valor_catastral_total``).
+            The depreciable basis cap for the LIRPF art. 23.1.f
+            amortización 3 % ledger.
         acquisition_date: Date the contribuyente acquired the property.
         disposal_date: Date the contribuyente disposed of the
             property, or ``None`` if still held.

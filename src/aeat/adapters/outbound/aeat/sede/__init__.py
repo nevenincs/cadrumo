@@ -3,7 +3,7 @@
 This subpackage models the authenticated AEAT surface through typed
 read-only records, URL templates, selectors, and parser outputs.
 
-Public API:
+Public API::
 
     from aeat.adapters.outbound.aeat.sede import (
         # Records

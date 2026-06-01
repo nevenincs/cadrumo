@@ -574,6 +574,7 @@ def collect_orphan_oracle_ids(
     """Return catalogue oracle ids that no cross-reference binds.
 
     A registered-but-unused oracle indicates one of:
+
     - the oracle was registered for a future binding still in flight,
     - a cross-reference's oracle_id was renamed without updating the
       catalogue,

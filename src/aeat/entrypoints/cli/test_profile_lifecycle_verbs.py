@@ -22,6 +22,7 @@ from aeat.application.user_profile._orchestration import profile_create_storage_
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import load_settings
+from aeat.core.identity import nif_check_letter
 from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config import profile_app, repair_app
 from aeat.tests.secure_sql import isolated_profile_storage_root
@@ -701,9 +702,6 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     yield load_settings().aeat_local_storage_root
 
 
-_NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
-
-
 def _distinct_nif(name: str) -> str:
     """Return a checksum-valid NIF derived deterministically from ``name``.
 
@@ -715,7 +713,7 @@ def _distinct_nif(name: str) -> str:
     import hashlib
 
     number = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 100_000_000
-    return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
+    return f"{number:08d}{nif_check_letter(number)}"
 
 
 def _create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) -> None:

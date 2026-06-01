@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.decimal import format_decimal
 from ...core.logging import get_logger
-from ...domain.fincas._rounding import _round_to_cents
+from ...core.money import round_to_cents as _round_to_cents
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
 from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, InvoiceReviewStatus, update_invoice_review

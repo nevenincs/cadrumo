@@ -204,7 +204,7 @@ def snapshot_classification_state(
     the transaction first entered the catalogue. This keeps the
     chain in chronological order. ``fallback_at`` is an optional final
     fallback for callers that want to cap the synthesised timestamp
-    (e.g. ``set_classification`` uses ``datetime.now(UTC)``).
+    (e.g. ``set_classification`` uses the canonical clock helper).
     """
     snapshot_at = transaction.classified_at or transaction.raw.provenance.ingested_at or fallback_at
     if snapshot_at is None:

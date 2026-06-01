@@ -15,13 +15,11 @@ from collections.abc import Mapping
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...core.identity import nif_check_letter
 from ...domain.deadlines._models import IVARegime
 from ...domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
 from ..workflow._models import WorkflowState
 from ._orchestration import register_active_profile, select_profile, set_active_fields
-
-#: NIF control-letter table, indexed by ``8-digit-number % 23``.
-_NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 
 
 def _distinct_valid_nif(profile_id: str) -> str:
@@ -35,7 +33,7 @@ def _distinct_valid_nif(profile_id: str) -> str:
     """
     digest = hashlib.sha256(profile_id.encode("utf-8")).hexdigest()
     number = int(digest, 16) % 100_000_000
-    return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
+    return f"{number:08d}{nif_check_letter(number)}"
 
 
 _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {

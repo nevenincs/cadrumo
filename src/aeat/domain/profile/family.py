@@ -222,8 +222,7 @@ class RentaFamilyProfile(BaseModel):
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
     Used as the statutory cap for the Art. 81 bis guardería incremento:
-    0613 = min(gastos_guarderia_reales, hijos_menores_3 × 1000,
-               cotizaciones_ss_madre_2024).
+    0613 = min(gastos_guarderia_reales, hijos_menores_3 × 1000, cotizaciones_ss_madre_2024).
     Default ``0`` (cap not declared; guardería incremento will be zero).
     """
     """Structured per-descendant data for Art. 58 mínimo calculation.
@@ -283,8 +282,8 @@ class RentaFamilyProfile(BaseModel):
         Only children eligible for the bajo-3-años supplement (age < 3 at
         year-end 2024 AND cohabiting) contribute their ``gastos_guarderia_euros``.
         Used as the ``gastos_reales`` term in the 0613 formula:
-        ``min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
-             cotizaciones_ss_madre_2024)``.
+        min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
+        cotizaciones_ss_madre_2024).
         """
         return sum(
             d.gastos_guarderia_euros

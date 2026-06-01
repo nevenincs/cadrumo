@@ -6,7 +6,8 @@ events. Operators consume it to discover catalogued AEAT portals —
 their canonical URLs, auth methods, stability tiers, and purpose
 strings — without leaving the CLI.
 
-Verbs:
+Verbs::
+
   list [--category C] [--modelo M]   filter the registry by category
                                      and/or modelo binding.
   show PORTAL                        render one portal's full metadata.

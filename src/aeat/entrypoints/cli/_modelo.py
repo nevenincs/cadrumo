@@ -57,7 +57,7 @@ from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import BindingId, CasillaId
 from ...domain.calculations.registry._queries import parse_modelo_period
-from ...domain.fincas._rounding import _round_to_cents
+from ...core.money import round_to_cents as _round_to_cents
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (

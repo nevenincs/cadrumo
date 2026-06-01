@@ -23,6 +23,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
     ProfileNotFoundError,
@@ -64,7 +65,7 @@ class ProfileLifecycleService:
         *,
         repository: UserProfileLifecycleRepository,
         validator: ProfileValidationService,
-        events: BucketEventHistoryRepository | None = None,
+        events: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
         self._repository = repository
         self._validator = validator

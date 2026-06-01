@@ -38,6 +38,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from .._storage_paths import storage_path
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
@@ -178,7 +179,7 @@ def _build_evidence_event(
 
 def _emit_evidence_event(
     *,
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryRepositoryProtocol,
     bucket_id: str,
     event_type: BucketEventType,
     evidence_id: str,
@@ -204,7 +205,7 @@ class PurchaseInvoiceEvidenceService:
     def __init__(
         self,
         settings: Settings | None = None,
-        bucket_event_repository: BucketEventHistoryRepository | None = None,
+        bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var and lands writes in the project default.
