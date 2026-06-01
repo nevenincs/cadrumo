@@ -161,7 +161,7 @@ class SecureObjectRawRow(BaseModel):
 class SecureObjectNamespaceIntegrity(BaseModel):
     """Per-namespace decryptability counts for the integrity diagnostic.
 
-    Unlike :class:`SecureObjectListItem`, this report answers only the
+    Unlike ``SecureObjectListItem``, this report answers only the
     crypto-layer question ``can the payload be decrypted under the current
     master key`` -- classification and schema-version contracts are
     intentionally ignored. Used by ``aeat config repair`` to surface rows
@@ -807,7 +807,7 @@ class SecureObjectRepository:
                 while preserving deterministic ``(object_key ASC)`` order.
 
         Yields:
-            One :class:`SecureObjectListItem` per stored row — either a
+            One ``SecureObjectListItem`` per stored row — either a
             :class:`SecureObjectRecord` or a :class:`SecureObjectUnreadable`.
 
         Raises:

@@ -312,7 +312,7 @@ class CipherEnvelope(BaseModel):
     encryption metadata and the same classification gate. The
     plaintext :class:`Envelope` (with payload) is JSON-serialised,
     encrypted with AES-256-GCM, and the ciphertext lives inside
-    :attr:`encryption.ciphertext_b64`.
+    ``encryption.ciphertext_b64``.
 
     Attributes:
         cipher_schema_version: Wire-format version of the cipher
@@ -380,7 +380,7 @@ def save_encrypted_envelope(
     graft.
 
     The same master-key provider that the test substrate already
-    overrides via :func:`override_master_key_provider` is honoured here;
+    overrides via ``override_master_key_provider`` is honoured here;
     callers can therefore exercise this code path against ephemeral
     keys in tests.
 

@@ -108,7 +108,7 @@ class VerifyBrowserSessionLike(Protocol):
     """Subset of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` consumed by :func:`verify_csv`.
 
     The ``create_context`` signature mirrors
-    :meth:`aeat.adapters.outbound.aeat.browser.session.DefaultBrowserSession.create_context`
+    :meth:`aeat.adapters.outbound.aeat.browser.session.BrowserSession.create_context`
     so static checkers see no unsafe overlap between this protocol and
     the concrete browser sessions. ``verify_csv`` itself calls
     ``create_context()`` with no arguments; production and test

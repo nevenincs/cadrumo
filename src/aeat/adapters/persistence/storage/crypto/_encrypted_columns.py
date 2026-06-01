@@ -20,7 +20,7 @@ at the column level without touching the cipher directly:
 All decorators consult :func:`get_master_key_provider` lazily on
 every bind and result conversion. Tests inject an
 :class:`EphemeralMasterKeyProvider` via the
-:func:`override_master_key_provider` test helper so the SQLite
+``override_master_key_provider`` test helper so the SQLite
 round-trip uses a deterministic key without touching the OS keychain
 or the file backend.
 
