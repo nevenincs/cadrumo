@@ -318,6 +318,14 @@ cache/
 /campaign_run.txt
 /api.bak/
 
+# Quarantined: this plan repeatedly self-corrupts to multi-GB via the
+# vaultspec-core plan round-trip bug (wgergely/vaultspec-core#125) whenever
+# any agent runs a `vault plan` verb on it. Untracked + ignored so the
+# corruption never re-enters git or pollutes status. Clean content lives in
+# git history; restore with `git show <sha>:<path>`. Un-quarantine once #125
+# ships.
+/.vault/plan/2026-05-14-secure-backend-passkey-bucket-plan.md
+
 
 # >>> vaultspec-managed (do not edit this block) >>>
 .vault/.obsidian/
