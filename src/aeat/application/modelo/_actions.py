@@ -37,6 +37,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     M210_RATE_SENTINELS,
     CasillaDefinition,
@@ -56,6 +57,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -153,7 +155,7 @@ regressions without joining against the encrypted revision catalogue.
 
 def _emit_bucket_event(
     *,
-    repository: BucketEventHistoryRepository,
+    repository: BucketEventHistoryRepositoryProtocol,
     bucket_id: str,
     event_type: BucketEventType,
     occurred_at: datetime,
@@ -554,7 +556,7 @@ def create_work_unit(
     actor: str = "system",
     causante_ccaa: CCAA | None = None,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Create or load a work unit for the four-axis key.
@@ -716,7 +718,7 @@ def rename_work_unit(
     *,
     actor: str,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Update a work unit's display name and bump ``updated_at``.
@@ -773,7 +775,7 @@ def discard_work_unit(
     actor: str,
     reason: str | None = None,
     repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Transition a work unit to ``DISCARDED`` state.
@@ -922,7 +924,7 @@ def calculate_modelo_revision(
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
@@ -1346,11 +1348,12 @@ def _iva_wallet_blocked_message(decision: Any) -> str:
 
 def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._profile_repository import ProfileRepository
     from ..user_profile._projections import record_to_path_values
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        profile = ProfileRepository().load(bucket_id)
+        record = profile.record
     except ProfileNotFoundError:
         return None
     value = record_to_path_values(record).get("identity.tax_id")
@@ -1362,11 +1365,12 @@ def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
 def _iva_regime_for_bucket(bucket_id: str) -> str | None:
     """Return the profile's ``iva.regime`` value, or ``None`` if unset or profile absent."""
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._profile_repository import ProfileRepository
     from ..user_profile._projections import record_to_path_values
 
     try:
-        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        profile = ProfileRepository().load(bucket_id)
+        record = profile.record
     except ProfileNotFoundError:
         return None
     value = record_to_path_values(record).get("iva.regime")
@@ -1445,7 +1449,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
@@ -2828,7 +2832,7 @@ def verify_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
@@ -3396,7 +3400,7 @@ def file_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
@@ -3722,7 +3726,7 @@ def amend_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Build and file an amendment over an externally-filed return.
@@ -3997,7 +4001,7 @@ def import_external_filing_evidence(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Persist an externally-filed return as a baseline filing record.
