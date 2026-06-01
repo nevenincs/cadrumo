@@ -345,7 +345,14 @@ class OutputLanguage(StrEnum):
 DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 
 #: Ordered tuple of BCP-47 language tags supported by the CLI and API output layer.
-SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[OutputLanguage, ...]] = tuple(OutputLanguage)
+#: Kept as ``tuple[str, ...]`` (not ``tuple[OutputLanguage, ...]``) so
+#: ``click.Choice(SUPPORTED_OUTPUT_LANGUAGES)`` renders the operator-facing
+#: lowercase tags (``[es|en|ca|hu]``) on parse failure rather than the enum
+#: NAMES (``[ES|EN|CA|HU]``) that Click derives from StrEnum members. The
+#: ``OutputLanguage`` enum stays the canonical closed-set authority above;
+#: this constant is the str-typed projection used at the click.Choice
+#: boundary.
+SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = tuple(lang.value for lang in OutputLanguage)
 
 #: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
 #: Counterparties whose annual operations total at most this amount are NOT declarable.
@@ -368,6 +375,9 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
     ``external_constants.toml`` from the package directory via
     ``importlib.resources`` so the resolution path is identical
     under editable installs and built wheels.
+
+    Returns:
+        The process-wide cached :class:`ExternalConstants` instance.
     """
     if path is not None:
         with path.open("rb") as handle:

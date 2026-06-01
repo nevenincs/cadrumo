@@ -78,8 +78,8 @@ Replace the `os.environ` write at the CLI root with an
 `override_settings` block scoped to the command invocation. Requires
 P02.S05 to have landed.
 
-- [ ] `P04.S13` - wrap the command invocation in `override_settings(aeat_output_language=language)` and delete the env write; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P04.S14` - add focused test proving the CLI flag value reaches the i18n renderer without any env-var manipulation in the test; `src/aeat/entrypoints/cli/test_language_flag_override.py`.
+- [x] `P04.S13` - wrap the command invocation in `override_settings(aeat_output_language=language)` and delete the env write; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P04.S14` - add focused test proving the CLI flag value reaches the i18n renderer without any env-var manipulation in the test; `src/aeat/entrypoints/cli/test_language_flag_override.py`.
 
 ### Phase `P05` - audit and reviewer sign-off
 
