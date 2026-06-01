@@ -100,12 +100,29 @@ The `if status == 429: raise_rate_limit(...)` dispatch is copy-pasted across
 `local.py:93` (local also omits the 5xx band). Remediation: a
 `check_http_error(response, provider_name)` helper in `_providers/base.py`.
 
-### F8 - `FincaRepository` family not enrolled in `SqlRecordRepository[T]` (actionable)
+### F8 - `FincaRepository` family vs `SqlRecordRepository[T]` (EXCLUDED on verification)
 
-`domain/fincas/_repository.py:47` and siblings (`:184`) reimplement the
-`list_all/get/upsert/delete` scaffold that `SqlRecordRepository[T]`
-(`adapters/persistence/storage/sql/repository.py:105`) already provides, with
-no constraint-shape blocker. Remediation: enroll them in the base.
+The discovery agent flagged `domain/fincas/_repository.py` (`FincaRepository`
+and four siblings) as reimplementing the `SqlRecordRepository[T]` CRUD
+scaffold. Live verification (2026-06-01) overturns this under the
+substitutability pre-filter:
+
+- `SqlRecordRepository[RecordT]` is a PURE ABC: every CRUD method
+  (`list_all`/`get`/`upsert`/`delete`) is `@abstractmethod`; only the trivial
+  `__init__(session)` is concrete. It offers NO shared implementation to dedup
+  toward - enrolling would not remove a single method body.
+- The Finca repos carry DIVERGENT interfaces: `get_by_identifier`,
+  `get_for_contract_period`, `get_for_finca_period`, and several lack a
+  `list_all` / `get(record_id:int)`. The ABC's required abstract surface is
+  not a superset of theirs; forcing conformance would add unnatural methods.
+- The only genuinely-shared helper, `_flush_or_wrap`, is import-chain
+  divergent: fincas defers the `RepositoryError` import inside the function to
+  keep `adapters.persistence.storage` out of the CLI import chain; importing
+  the canonical copy would defeat that deferral.
+
+Verdict: constraint-shape mismatch on all three axes. NOT actionable; left as
+five independent record-type repositories. (The repos pass their existing
+roundtrip tests; no duplication of executable logic exists to eliminate.)
 
 ### F9 - Profile ledger repos vs `SecureBoundRepository` (deferred-structural)
 
