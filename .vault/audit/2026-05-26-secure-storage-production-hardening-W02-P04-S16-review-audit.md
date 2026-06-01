@@ -8,20 +8,11 @@ related:
   - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S15]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline `code`. -->
 
 # `secure-storage-production-hardening-W02-P04-S16` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
-<!-- Use: {TOPIC}-### | {LEVEL} | {Summary} \n {DESCRIPTION} format-->
 
 S16-001 | MEDIUM | Touched complementaria test still relies on env/monkeypatch database routing
 `src/aeat/application/filing/test_complementaria.py:28` defines a module autouse fixture with `monkeypatch`, and `src/aeat/application/filing/test_complementaria.py:39` sets `AEAT_DATABASE_URL` directly. That is a touched test surface and conflicts with the S16/S15 route discipline that moved repository defaults to `override_settings(aeat_local_storage_root=...)` plus an active `BucketSession`. Because the package conftest already installs active-bucket runtime setup, this extra fixture can mask whether complementaria flows are using the runtime-created bucket store and violates the explicit no env/monkeypatch shortcut rule for touched tests.

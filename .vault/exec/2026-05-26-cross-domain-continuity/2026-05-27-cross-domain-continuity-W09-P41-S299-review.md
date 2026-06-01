@@ -10,7 +10,6 @@ related:
 
 # cross-domain-continuity Code Review — S299 M303 SIMPLIFICADO ledger-preflight bypass
 
-<!-- Persistent log of audit findings appended below. -->
 
 ## Status: APPROVE+FU
 

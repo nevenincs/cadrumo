@@ -7,8 +7,6 @@ related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
 # `calculation-truth-registry` `phase2` `step15`
 

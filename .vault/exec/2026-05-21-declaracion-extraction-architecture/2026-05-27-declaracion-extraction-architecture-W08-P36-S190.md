@@ -1,17 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/exec/ location)
-# Feature tag (replace {feature} with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#exec'
   - '#declaracion-extraction-architecture'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-27'
-# Originating Step's canonical identifier (S##) from the plan.
 step_id: 'S190'
-# Related documents as quoted wiki-links - MUST link to parent PLAN
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-21-declaracion-extraction-architecture-adr]]'

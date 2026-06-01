@@ -1,24 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/plan/ location)
-# Feature tag (replace google-oauth with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#plan'
   - '#google-oauth'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-13'
-# Complexity tier (mandatory for new plans).
-# Allowed: L1 (Steps only), L2 (Phases above Steps),
-# L3 (Waves above Phases above Steps), L4 (Epic above Waves
-# above Phases above Steps; PM association required).
-# Pre-existing plans without this field default to L2.
 tier: L3
-# Related documents as quoted wiki-links.
-# Carries the AUTHORISING documents (ADR, research, reference,
-# prior plan) for every Step in this plan; Steps inherit this
-# chain; per-row reference footers do not exist.
 related:
   - "[[2026-05-08-google-oauth-adr]]"
   - "[[2026-05-12-google-oauth-adr]]"

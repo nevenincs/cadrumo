@@ -8,14 +8,7 @@ related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline `code`. -->
 
 # `calculation-truth-registry` `Renta` `construct dependency closure`
 

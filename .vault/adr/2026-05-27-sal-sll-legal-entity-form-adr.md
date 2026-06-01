@@ -10,11 +10,6 @@ related:
   - "[[2026-04-13-modelo-inventory-adr]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `sal-sll-legal-entity-form` adr: SAL/SLL legal entity form + reserva especial Ley 44/2015 | (**status:** `accepted`)
 

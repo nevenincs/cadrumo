@@ -8,12 +8,7 @@ related:
   - '[[2026-05-05-calculation-truth-registry-phase2-step13-exec]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body. -->
 
 # `calculation-truth-registry` Code Review
 

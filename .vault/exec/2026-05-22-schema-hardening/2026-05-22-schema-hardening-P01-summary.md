@@ -7,21 +7,8 @@ related:
   - '[[2026-05-22-schema-hardening-plan]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
-<!-- PHASE SUMMARY:
-     This file rolls up every <Step Record> belonging to one Phase
-     of the originating plan. Each Step (S##) in the Phase produces
-     one <Step Record> in `.vault/exec/`; this summary aggregates
-     them, lists modified / created files across the Phase, and
-     reports verification status. -->
 
 # `schema-hardening` `P01` summary
 

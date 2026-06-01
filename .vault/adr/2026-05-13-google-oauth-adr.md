@@ -1,16 +1,8 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/adr/ location)
-# Feature tag (replace google-oauth with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#adr'
   - '#google-oauth'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-13'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-research]]")
 related:
   - "[[2026-05-12-google-oauth-adr]]"
   - "[[2026-05-08-google-oauth-adr]]"

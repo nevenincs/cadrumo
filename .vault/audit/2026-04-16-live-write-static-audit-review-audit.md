@@ -1,5 +1,4 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
 tags:
   - '#audit'
   - '#live-write-static-audit'

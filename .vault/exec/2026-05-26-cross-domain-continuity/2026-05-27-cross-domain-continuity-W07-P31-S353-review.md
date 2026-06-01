@@ -9,7 +9,6 @@ related:
 
 # cross-domain-continuity Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 ## S353 — casilla 0505 formula (commits 94b424c6b / eb8793d07 / 227350dc9)
 

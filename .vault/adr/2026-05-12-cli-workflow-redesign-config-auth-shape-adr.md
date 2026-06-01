@@ -14,8 +14,6 @@ related:
   - "[[2026-05-08-google-oauth-adr]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
 # `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
 

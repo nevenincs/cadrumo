@@ -10,11 +10,6 @@ related:
   - "[[2026-05-21-cross-domain-handoffs-swarm-audit]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cross-domain-continuity` — cross-domain handoff provenance audit closures (F1-F5)
 

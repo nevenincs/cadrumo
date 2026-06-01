@@ -10,8 +10,6 @@ related:
   - '[[2026-05-20-branch-reconciliation-audit]]'
 ---
 
-<!-- LINK RULES: [[wiki-links]] only in related: frontmatter; never in body.
-     Name files/classes in inline backticks. -->
 
 # `registry-casilla-identity` execution summary
 

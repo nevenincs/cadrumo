@@ -8,11 +8,6 @@ related:
   - "[[2026-05-26-modelo-130-relation-regression-adr]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `dsl-conditional-predicate` adr: implies-nonzero conditional Layer 2 verification predicate | (**status:** `accepted`)
 

@@ -8,17 +8,10 @@ related:
   - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S86]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-production-hardening` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 S86-001 | HIGH | SQL secure-object read/list APIs still bypass active-bucket route matching
 `src/aeat/adapters/persistence/storage/sql/secure_objects.py:249` makes route validation optional through `require_matching_route`, but only write/existence/quarantine paths pass `require_matching_route=True`. Read and enumeration APIs still call `_check_session_freshness()` without route matching: `iter_all_records_raw` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:348`, `list_namespaces` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:397`, `probe_namespace_integrity` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:526`, `list_keys` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:561`, `iter_records_with_failures` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:622`, `load` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:705`, and `peek_metadata` at `src/aeat/adapters/persistence/storage/sql/secure_objects.py:890`. This leaves raw or injected `SecureObjectRepository(engine=...)` readers able to inspect/decrypt against a root-fallback, explicit, or mismatched SQLite route as long as any active session exists. The S86 route-guard tests cover mismatched/root-fallback writes and quarantine only (`src/aeat/adapters/persistence/storage/sql/test_secure_objects.py:265`, `src/aeat/adapters/persistence/storage/sql/test_secure_objects.py:296`, `src/aeat/adapters/persistence/storage/sql/test_secure_objects.py:325`), so the read-side bypass is not covered.

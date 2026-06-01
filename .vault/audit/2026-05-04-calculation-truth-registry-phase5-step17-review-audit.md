@@ -8,18 +8,10 @@ related:
   - '[[2026-05-04-calculation-truth-registry-phase5-step17-exec]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline code: `src/module.py`. -->
 
 # `calculation-truth-registry` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 P5S17-001 | MEDIUM | Deletion gates do not prove the removed schema/modelo authority packages stay absent
 

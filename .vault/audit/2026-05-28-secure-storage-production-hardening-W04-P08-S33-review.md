@@ -10,11 +10,6 @@ related:
   - '[[2026-05-22-secure-storage-api-review-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `secure-storage-production-hardening` W04.P08.S33 Code Review
 

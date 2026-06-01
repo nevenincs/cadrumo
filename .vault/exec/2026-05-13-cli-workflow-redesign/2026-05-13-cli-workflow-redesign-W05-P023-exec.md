@@ -9,14 +9,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-root-help-shape-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, function, or command, use inline `code`. -->
 
 # `cli-workflow-redesign` `W05.P023`
 

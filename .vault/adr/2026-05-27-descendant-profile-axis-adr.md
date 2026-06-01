@@ -9,11 +9,6 @@ related:
   - "[[2026-05-08-renta-cuota-integra-state-scale-adr]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `descendant-profile-axis` adr: Descendant profile axis | (**status:** `accepted`)
 

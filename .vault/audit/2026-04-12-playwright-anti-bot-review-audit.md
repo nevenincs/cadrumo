@@ -11,7 +11,6 @@ related:
 
 # `playwright-anti-bot` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 EVASION-001 | INFO | ADR Alignment
 The chosen evasion strategy (`playwright-stealth`) and fallback (`chromium` manual patches) are thoroughly justified in the ADR. Concrete tells covered, proxy rotation risks, and profile stability requirements are adequately documented.

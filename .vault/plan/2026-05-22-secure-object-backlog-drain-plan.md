@@ -10,15 +10,6 @@ related:
   - '[[2026-05-22-secure-object-integrity-P05-S16-review]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `secure-object-backlog-drain` plan: audit-derived catalogue and hygiene cleanup
 

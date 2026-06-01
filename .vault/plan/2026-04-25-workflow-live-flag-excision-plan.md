@@ -1,6 +1,4 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
 tags:
   - '#plan'
   - '#workflow-live-flag-excision'

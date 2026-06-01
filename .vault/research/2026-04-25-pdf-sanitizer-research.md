@@ -1,16 +1,8 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/research/ location)
-# Feature tag (replace pdf-sanitizer with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#research'
   - '#pdf-sanitizer'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-04-25'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-plan]]")
 related:
   - "[[2026-04-25-aeat-verify-research]]"
   - "[[2026-04-25-aeat-verify-adr]]"
@@ -18,14 +10,7 @@ related:
   - "[[2026-04-24-aeat-verify-reference]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `pdf-sanitizer` research: `pdf-sanitizer-prior-art-and-api`
 

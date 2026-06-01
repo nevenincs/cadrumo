@@ -8,13 +8,7 @@ related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body. If you
-       must name a source file, use inline code only. -->
 
 # `calculation-truth-registry` `Wave 3` `Modelo 115 registry foundation`
 

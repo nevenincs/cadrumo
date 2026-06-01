@@ -1,20 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/exec/ location)
-# Feature tag (replace cli-workflow-redesign with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#exec'
   - '#cli-workflow-redesign'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-21'
-# Originating Step's canonical identifier (S##) from the plan.
-# Required: machine-readable linkage from this Step Record back
-# to the Step row in the parent plan document.
 step_id: 'S07'
-# Related documents as quoted wiki-links - MUST link to parent PLAN
-# (e.g., "[[2026-02-04-feature-plan]]")
 related:
   - "[[2026-05-21-taxpayer-type-applicability-plan]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"

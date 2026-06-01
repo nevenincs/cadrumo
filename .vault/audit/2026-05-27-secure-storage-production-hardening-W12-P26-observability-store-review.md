@@ -8,17 +8,10 @@ related:
   - '[[2026-05-27-observability-store-persistence-closeout-audit]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-production-hardening` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 OBS-001 | HIGH | Successful `run_context` exits could still hide trace persistence failure
 

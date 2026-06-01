@@ -9,13 +9,7 @@ related:
   - '[[2026-05-27-observability-store-persistence-closeout-audit]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the body. If you must name a source file,
-       class, or function, use inline `code`. -->
 
 # `secure-storage-production-hardening` `W12.P26.S306`
 

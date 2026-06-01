@@ -8,20 +8,12 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cli-workflow-redesign` W06 Output Rendering Code Review
 
 Status: REVISION REQUIRED
 
-<!-- Persistent log of audit findings appended below. -->
 
 W06-001 | HIGH | Registry CLI still owns backend contracts, service orchestration, and domain policy
 
