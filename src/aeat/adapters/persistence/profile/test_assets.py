@@ -54,7 +54,7 @@ def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile
         asset_class=AssetClass.ELECTRONICA_INFORMATICA,
         acquisition_date=date(2025, 1, 1),
         taxable_base=Decimal("1000.00"),
-        vat_rate=Decimal("21.00"),
+        iva_rate=Decimal("21.00"),
         vat_amount=Decimal("210.00"),
         deductible_vat_ratio=Decimal("0.50"),
         gross_total=Decimal("1210.00"),

@@ -81,9 +81,9 @@ class MovementRecord(BaseModel):
         quantity: Movement quantity (strictly positive).
         unit_cost: VAT-exclusive per-unit cost.
         taxable_base: Invoice taxable base (VAT-exclusive).
-        vat_rate: VAT rate percentage (0-100).
+        iva_rate: VAT rate percentage (0-100).
         vat_amount: Optional explicit VAT amount; when set must equal
-            ``taxable_base * vat_rate / 100``.
+            ``taxable_base * iva_rate / 100``.
         deductible_vat_ratio: Fraction of input VAT the contribuyente
             may deduct (0-1).
         schema_version: Forward-compatible schema version. ``"1"``.
@@ -98,7 +98,7 @@ class MovementRecord(BaseModel):
     quantity: Decimal = Field(gt=Decimal("0"))
     unit_cost: Decimal | None = Field(default=None, ge=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, ge=Decimal("0"))
-    vat_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
     vat_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_vat_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
     schema_version: str = INVENTORY_SCHEMA_VERSION
@@ -136,9 +136,9 @@ class MovementRecord(BaseModel):
         if needs_cost and self.unit_cost is None and self.taxable_base is None:
             raise _InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
         if self.taxable_base is not None:
-            computed_vat = _quantize(self.taxable_base * self.vat_rate / _HUNDRED)
+            computed_vat = _quantize(self.taxable_base * self.iva_rate / _HUNDRED)
             if self.vat_amount is not None and self.vat_amount != computed_vat:
-                raise _InventoryValidationError("vat_amount must equal taxable_base * vat_rate")
+                raise _InventoryValidationError("vat_amount must equal taxable_base * iva_rate")
         return self
 
 

@@ -55,7 +55,7 @@ def test_eu_member_state_has_27_members() -> None:
     assert len(list(EUMemberState)) == 27
 
 
-def test_vat_rate_kind_has_five_tiers() -> None:
+def test_iva_rate_kind_has_five_tiers() -> None:
     """IvaRateKind covers the five tiers used by the substrate."""
     assert {m.name for m in IvaRateKind} == {
         "GENERAL",
