@@ -69,7 +69,6 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("adapters/outbound/storage/_google_drive.py", 226),
         ("adapters/persistence/storage/envelope/_envelope.py", 170),
         ("adapters/persistence/storage/envelope/_envelope.py", 366),
-        ("application/invoices/_importing.py", 135),
         ("application/live/_borrador_100.py", 311),
         ("application/live/_borrador_100.py", 320),
         ("application/live/_censo.py", 401),
