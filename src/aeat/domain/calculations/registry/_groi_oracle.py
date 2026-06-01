@@ -26,7 +26,7 @@ history entry is generated. Every observation captured during live
 probing 2026-05-07 confirmed the form's only side effect is rendering
 a verdict page back to the caller.
 
-Defense-in-depth nonetheless: the registry's :class:`RemoteStateGuard`
+Defense-in-depth nonetheless: the registry's ``RemoteStateGuard``
 fence intercepts every operation the oracle emits BEFORE any browser
 action runs. Any guard policy attached to a GROI cross-reference MUST
 declare ``forbidden_actions`` containing the canonical
@@ -113,7 +113,7 @@ class GroiDriver(Protocol):
 class GroiReplayDriver:
     """Deterministic local replay driver for captured GROI outputs.
 
-    Payload shape:
+    Payload shape::
 
         {
           "observed": {"A28015865": "valid", "B12345678": "invalid"},
