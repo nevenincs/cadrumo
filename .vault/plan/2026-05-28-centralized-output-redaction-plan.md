@@ -63,11 +63,11 @@ Make the success-output renderer the mandatory privacy boundary for text and JSO
 
 Keep run-trace redaction aligned with the shared rule vocabulary.
 
-- [ ] `W01.P03.S15` - derive diagnostic run-trace rules from the shared registry without local drift; `src/aeat/core/observability/_redaction_rules.py`.
-- [ ] `W01.P03.S16` - verify the JSONL sink still redacts nested event payloads via shared rules; `src/aeat/core/observability/_sink.py`.
-- [ ] `W01.P03.S17` - verify trace and event-log storage still redacts nested payloads via shared rules; `src/aeat/core/observability/_store.py`.
-- [ ] `W01.P03.S18` - update sink redaction canaries for profile id, NIF, token, and URL path; `src/aeat/core/observability/test_sink_redaction.py`.
-- [ ] `W01.P03.S19` - update store redaction canaries for profile id, NIF, token, and URL path; `src/aeat/core/observability/test_store_redaction.py`.
+- [x] `W01.P03.S15` - derive diagnostic run-trace rules from the shared registry without local drift; `src/aeat/core/observability/_redaction_rules.py`.
+- [x] `W01.P03.S16` - verify the JSONL sink still redacts nested event payloads via shared rules; `src/aeat/core/observability/_sink.py`.
+- [x] `W01.P03.S17` - verify trace and event-log storage still redacts nested payloads via shared rules; `src/aeat/core/observability/_store.py`.
+- [x] `W01.P03.S18` - update sink redaction canaries for profile id, NIF, token, and URL path; `src/aeat/core/observability/test_sink_redaction.py`.
+- [x] `W01.P03.S19` - update store redaction canaries for profile id, NIF, token, and URL path; `src/aeat/core/observability/test_store_redaction.py`.
 
 ## Wave `W02` - production CLI and diagnostics enrollment
 
@@ -86,7 +86,7 @@ Move engineer diagnostics behind the same redacted output path or mark audited e
 
 Replace bespoke or implicit config/auth output redaction with the central renderer.
 
-- [ ] `W02.P05.S24` - remove repair/profile local output redactors that central output redaction supersedes; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W02.P05.S24` - remove repair/profile local output redactors that central output redaction supersedes; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W02.P05.S25` - enroll Google config output payloads and token/object-key fields in central redaction; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `W02.P05.S26` - enroll profile-census bucket/profile identifiers in central redaction; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
 - [ ] `W02.P05.S27` - replace auth diagnostic bespoke refs with shared redaction composition; `src/aeat/application/auth/_diagnostics.py`.

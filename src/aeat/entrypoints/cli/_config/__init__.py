@@ -7,7 +7,6 @@ through :class:`BucketEventHistoryRepository`.
 from __future__ import annotations
 
 import asyncio
-import re
 import typing
 from collections.abc import Mapping
 from datetime import datetime
@@ -47,6 +46,7 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUA
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
 from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
+from ....core.redaction import redact_for_cli_output
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -96,14 +96,6 @@ bucket_app = typer.Typer(
 )
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(_SUPPORTED_OUTPUT_LANGUAGES)
-_REPAIR_LOG_UUID_RE = re.compile(
-    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-)
-_REPAIR_LOG_TAX_ID_RE = re.compile(r"\b(?:[XYZKLMABCDEFGHJNPQRSUVW]\d{7}[A-Z]|\d{8}[A-Z])\b", re.IGNORECASE)
-_REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE = re.compile(
-    r"(?i)\b(?P<label>object[_-]?key|lookup[_-]?key)\s*(?P<sep>[:=])\s*(?P<value>[^,\s;]+)"
-)
-_REPAIR_LOG_OBJECT_KEY_RE = re.compile(r"\b(?:wallet|transaction-catalogue):[^\s,;]+")
 
 
 @app.callback()
@@ -278,15 +270,7 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     except OSError:
         return ()
     text = tail_bytes.decode("utf-8", errors="replace")
-    return tuple(_redact_repair_log_line(line) for line in text.splitlines()[-count:])
-
-
-def _redact_repair_log_line(line: str) -> str:
-    """Redact identifiers before diagnostic log lines are echoed to the operator."""
-    redacted = _REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE.sub(r"\g<label>\g<sep><object-key>", line)
-    redacted = _REPAIR_LOG_OBJECT_KEY_RE.sub("<object-key>", redacted)
-    redacted = _REPAIR_LOG_UUID_RE.sub("<profile-id>", redacted)
-    return _REPAIR_LOG_TAX_ID_RE.sub("<tax-id>", redacted)
+    return tuple(redact_for_cli_output(line) for line in text.splitlines()[-count:])
 
 
 @repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
