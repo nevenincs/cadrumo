@@ -117,13 +117,23 @@ No closed-enum binding applies.
 
 ## Recommendations
 
-Single actionable remediation pass:
+**No actionable migration.** The F1 sweep was attempted and
+reverted: re-annotating ``output_language: str | None`` to
+``output_language: OutputLanguage | None`` changes Typer's
+auto-derived ``Choice`` to render enum NAMES
+(``[ES|EN|CA|HU]``) instead of the lowercase enum VALUES
+(``[es|en|ca|hu]``) that operator-facing CLI tests assert against.
+Reverting back to the explicit ``click_type=click.Choice(SUPPORTED_OUTPUT_LANGUAGES)``
+form preserves operator-visible help text. To migrate cleanly
+would require either renaming the enum members to lowercase
+(breaks the StrEnum convention) or threading ``use_enum_values=True``
+through every Typer parameter (adds verbosity without operator-
+facing value).
 
-- **F1 sweep:** re-annotate the 8 ``output_language`` parameters
-  to ``OutputLanguage | None``; drop the explicit ``click_type=``
-  on each. Net diff: -8 click_type kwargs, +8 enum imports
-  (or one shared import per file). Zero behavioural change at the
-  Click level; pure typed-binding cleanup.
+The current explicit-Choice form already satisfies the architecture-
+boundaries rule ("hint accepted values at the CLI boundary"): the
+Choice surface IS rendered with the accepted values, just through
+the ``click_type=`` kwarg rather than the annotation. Compliant.
 
 - **F4 follow-up:** if the codebase later promotes
   ``_CONFIG_RESET_SCOPE_CLI_VALUES`` to a StrEnum, the
