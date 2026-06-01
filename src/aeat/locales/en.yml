@@ -608,8 +608,8 @@ cli:
         valuation_group_help: Calculate and preview inventory valuation
         valuation_method_help: Valuation method (fifo or pmp)
         valuation_preview_help: Preview closing stock and cost of sales
-        vat_rate_help: IVA rate as a percentage
         year_help: Tax year
+        iva_rate_help: 'IVA rate as a percentage'
       payable_invoice:
         add_help: Register a new payable invoice
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
@@ -2798,9 +2798,6 @@ errors:
     error_financial_vat_category_not_found: The requested VAT category was not found
       in the catalogue.
     error_financial_vat_classification: The VAT could not be classified deterministically.
-    error_financial_vat_rate_not_found: No VAT rate was found for the requested member
-      state and kind.
-    error_financial_vat_rate_overlap: Two VAT rates share an effective-date window.
     error_fixture_provisioning: The test fixtures could not be provisioned.
     error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
       out of sync. Reconcile both catalogues manually.
@@ -2907,6 +2904,8 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    error_financial_iva_rate_not_found: 'No IVA rate was found for the requested member state and kind.'
+    error_financial_iva_rate_overlap: 'Two IVA rates share an effective-date window.'
   fail:
     census_sync: The Modelo 036 census sync failed.
     currency_error: Currency normalization failed.

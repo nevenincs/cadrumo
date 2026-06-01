@@ -3110,7 +3110,7 @@ def inventory_movement_add(
         None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for VAT).")
     ),
     iva_rate: str = typer.Option(
-        "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.vat_rate_help", default="VAT rate in percent.")
+        "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent.")
     ),
 ) -> None:
     from ...application.inventory import InventoryMovementCommand

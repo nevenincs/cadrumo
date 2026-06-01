@@ -657,7 +657,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_rate_not_found",
+            message_key="errors.error.error_financial_iva_rate_not_found",
             default_suggestion="aeat app ledger review",
             retryable=False,
             runbook_id=None,
@@ -668,7 +668,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_rate_overlap",
+            message_key="errors.error.error_financial_iva_rate_overlap",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
