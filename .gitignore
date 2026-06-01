@@ -308,3 +308,7 @@ cache/
 /.gitignore.lock
 /.mcp.json.lock
 # <<< vaultspec-managed <<<
+
+# Claude Code machine-local (not team-shared)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
