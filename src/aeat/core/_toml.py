@@ -10,7 +10,7 @@ single source of that behaviour.
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 
@@ -38,6 +38,31 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
         raise error_factory(f"{path}: invalid TOML: {exc}") from exc
     except OSError as exc:
         raise error_factory(f"{path}: cannot read TOML: {exc}") from exc
+
+
+def to_str_keyed_dict(
+    raw: Mapping[object, object], *, error_factory: Callable[[str], Exception]
+) -> dict[str, object]:
+    """Convert a parsed TOML mapping to a str-keyed dict, rejecting non-string keys.
+
+    Args:
+        raw: Parsed mapping whose keys may not all be strings.
+        error_factory: Builds the domain-specific exception raised when a
+            key is not a ``str``, so each loader keeps its own error type.
+
+    Returns:
+        A new dict with the same items and string keys.
+
+    Raises:
+        Exception: The exception built by ``error_factory`` when any key is
+            not a ``str``.
+    """
+    result: dict[str, object] = {}
+    for key, value in raw.items():
+        if not isinstance(key, str):
+            raise error_factory("TOML table keys must be strings")
+        result[key] = value
+    return result
 
 
 def freeze_toml_value(value: object) -> object:
