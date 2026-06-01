@@ -156,12 +156,25 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
     with pytest.raises(AuthLoginNotEnabledError) as exc_info:
         asyncio.run(login_operator_auth("certificate"))
 
-    message = str(exc_info.value)
+    # The exception is operator-facing via ``translated_message`` only —
+    # the raise site passes no positional ``message``, so ``str(exc)`` is
+    # empty by construction. Render the i18n key (with its ``provider``
+    # interpolation context) through ``tr`` to get the user-prose
+    # surface this round-5 B2 finding promises.
+    from aeat.core.i18n import tr
+
+    message = tr(exc_info.value.translated_message, **(exc_info.value.context or {}))
     assert "AEAT_LIVE_TESTS_ENABLED" not in message, (
         f"refusal must not echo the env-var name — got {message!r}"
     )
     assert "CertificateBundle" not in message, (
         f"refusal must not echo Python class names — got {message!r}"
+    )
+    # The refusal is intended user prose, not just an absence of leaks —
+    # assert positively against the safety-gate language so a regression
+    # that silences the message can't pass the negative-only checks above.
+    assert "safety gate" in message.lower() or "live" in message.lower(), (
+        f"refusal must name the live-tests safety gate — got {message!r}"
     )
 
 
