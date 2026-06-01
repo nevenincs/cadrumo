@@ -10,6 +10,15 @@ related:
   - '[[2026-05-15-linkage-design-audit-reference]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: W07 -->
 
@@ -271,25 +280,25 @@ Migrate remaining bare emit sites: _overview.py (7), _registry_corpus.py (7), _c
 
 Author OutputSchema subclasses for the 7 overview command emit sites in _overview_payloads.py, register each, and migrate the emit sites.
 
-- [ ] `W05.P18.S148` - author OverviewStatusResult OutputSchema subclass with @register_schema decorator for overview.status; `src/aeat/entrypoints/cli/_overview_payloads.py`.
+- [x] `W05.P18.S148` - author OverviewStatusResult OutputSchema subclass with @register_schema decorator for overview.status; `src/aeat/entrypoints/cli/_overview_payloads.py`.
 - [ ] `W05.P18.S149` - migrate all overview_status bare emit sites to _emit_envelope using typed OverviewStatusResult; `src/aeat/entrypoints/cli/_overview.py`.
-- [ ] `W05.P18.S150` - append overview command paths to MIGRATED_COMMANDS and import _overview_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P18.S150` - append overview command paths to MIGRATED_COMMANDS and import _overview_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
 - [ ] `W05.P18.S151` - re-baseline overview CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_overview.py`.
 
 ### Phase `W05.P19` - _registry_corpus.py payload classes - 7 emit sites
 
 Author OutputSchema subclasses for the 7 registry-corpus command emit sites in _registry_corpus_payloads.py, register each, and migrate the emit sites.
 
-- [ ] `W05.P19.S152` - author CitationListResult OutputSchema subclass with @register_schema decorator for registry_corpus.citations.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S153` - migrate list_citations_cmd bare emit site to _emit_envelope using typed CitationListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S154` - author CitationShowResult OutputSchema subclass with @register_schema decorator for registry_corpus.citations.show; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S155` - migrate show_citation_cmd bare emit site to _emit_envelope using typed CitationShowResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S156` - author CitationVerifyResult OutputSchema subclass with @register_schema decorator for registry_corpus.citations.verify; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S157` - migrate verify_citations_cmd bare emit site to _emit_envelope using typed CitationVerifyResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S158` - author ManualListResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S159` - migrate list_manuals_cmd bare emit site to _emit_envelope using typed ManualListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S160` - author ManualShowResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.show; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S161` - migrate show_manual_cmd bare emit site to _emit_envelope using typed ManualShowResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S152` - author CitationListResult OutputSchema subclass with @register_schema decorator for registry_corpus.citations.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S153` - migrate list_citations_cmd bare emit site to _emit_envelope using typed CitationListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S154` - author CitationShowResult OutputSchema subclass with @register_schema decorator for registry_corpus.citations.show; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S155` - migrate show_citation_cmd bare emit site to _emit_envelope using typed CitationShowResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S156` - author CitationVerifyResult OutputSchema subclass with @register_schema decorator for registry_corpus.citations.verify; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S157` - migrate verify_citations_cmd bare emit site to _emit_envelope using typed CitationVerifyResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S158` - author ManualListResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S159` - migrate list_manuals_cmd bare emit site to _emit_envelope using typed ManualListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S160` - author ManualShowResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.show; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S161` - migrate show_manual_cmd bare emit site to _emit_envelope using typed ManualShowResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
 - [ ] `W05.P19.S162` - author ManualRulesListResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.rules.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
 - [ ] `W05.P19.S163` - migrate list_manual_rules_cmd bare emit site to _emit_envelope using typed ManualRulesListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
 - [ ] `W05.P19.S164` - author ManualVerifyResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.verify; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
