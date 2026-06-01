@@ -103,3 +103,19 @@ warning surfaces in operator-facing output.
 - [x] `W03.P07.S23` - verify CLI accepts worker_class = trabajador_del_mar in the config input path without validation error; `src/aeat/entrypoints/cli/`.
 - [x] `W03.P07.S24` - verify CLI JSON output for a trabajador_del_mar profile includes maritime exemption CasillaObservation rows with legal_refs; `src/aeat/entrypoints/cli/`.
 - [x] `W03.P07.S25` - verify RETMAR mandatory-filing warning appears in CLI output when retmar_registered = True; `src/aeat/entrypoints/cli/`.
+
+## Closure note -- 2026-06-01
+
+Plan complete: 25 of 25 Steps closed across 3 Waves / 7 Phases.
+Twenty `Step Record` artefacts persisted under
+`.vault/exec/2026-05-31-trabajador-del-mar/`; the four W03.P06 locale
+Steps and the three W03.P07 CLI-verification Steps were bundled into
+two combined records (`-W03-P06-S19-S22.md`, `-W03-P07-S23-S25.md`)
+per the locale-scaffold + CLI-verification merge convention.
+Registry-side foundation, profile-fact wiring, calculation entries
+(Art. 7.p exemption, REBECA exemption, DA 41 inactivity), locale
+parity (es full; ca/en/hu via scaffold + audit), and CLI-output
+verification (CasillaObservation legal_refs + RETMAR warning) all
+landed. Phase summaries are deferred to the next vault-curation
+cadence; plan-level closure is asserted via the 20 exec records and
+the unbroken `[x]` row state.
