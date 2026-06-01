@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId
-from ...core.time._utc import _validate_utc_aware
+from ...core.time._utc import validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
 from ._ids import AttachmentId
@@ -168,7 +168,7 @@ class Attachment(BaseModel):
         else:
             raise AttachmentValidationError("captured_at must be a datetime or ISO-8601 string")
         try:
-            return _validate_utc_aware(parsed)
+            return validate_utc_aware(parsed)
         except CoreValidationError as exc:
             raise AttachmentValidationError(str(exc)) from exc
 

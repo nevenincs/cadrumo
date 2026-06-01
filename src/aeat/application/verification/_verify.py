@@ -8,7 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.decimal import coerce_decimal
@@ -163,7 +163,7 @@ def verify_declaracion(
         discrepancies=classified,
         coverage=coverage,
         narrative=_compose_narrative(declaracion, status, classified, coverage),
-        verified_at=_now(),
+        verified_at=now(),
     )
 
 

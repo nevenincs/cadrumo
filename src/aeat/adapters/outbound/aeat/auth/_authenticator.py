@@ -43,8 +43,8 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from .....core.config import Settings as _Settings
 from .....core.logging import get_logger
-from .....core.time._clock import _now
-from .....core.time._utc import _coerce_utc_aware
+from .....core.time._clock import now
+from .....core.time._utc import coerce_utc_aware
 from .._playwright import PlaywrightError
 from . import _session_store
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthValidationError
@@ -238,7 +238,7 @@ class AeatSession(BaseModel):
 
     def is_stale(self, now: datetime | None = None) -> bool:
         """Return True when the session's idle deadline has elapsed."""
-        reference = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
+        reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
         return reference > self.idle_deadline
 
 
@@ -568,7 +568,7 @@ class AeatAuthenticator:
                 raise
 
             storage_state_path = self._resolve_storage_state_path(session_like)
-            provisional_at = _now()
+            provisional_at = now()
             provisional_session = AeatSession(
                 provider_kind=self.kind,
                 authenticated_at=provisional_at,
@@ -941,7 +941,7 @@ class AeatAuthenticator:
         target: str,
     ) -> AeatLoginAssertion:
         """Run the post-auth navigation probe against ``target``."""
-        attempted_at = _now()
+        attempted_at = now()
         start = time.perf_counter()
 
         status_code = 0
@@ -1039,7 +1039,7 @@ class AeatAuthenticator:
                 storage_state_path,
                 "persisted storage_state hash does not match metadata",
             )
-        if metadata.idle_deadline <= _now():
+        if metadata.idle_deadline <= now():
             self._raise_invalid_persisted_state(
                 storage_state_path,
                 "persisted AEAT session is past its idle deadline",

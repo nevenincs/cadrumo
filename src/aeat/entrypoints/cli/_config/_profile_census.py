@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import typer
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
@@ -64,7 +64,7 @@ def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_
         derive_bucket_event_id,
     )
 
-    occurred_at = _now()
+    occurred_at = now()
     payload = {"profile_id": profile_id, "snapshot_id": snapshot_id}
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,

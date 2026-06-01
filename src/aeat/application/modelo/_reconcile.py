@@ -22,7 +22,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
@@ -210,7 +210,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         f"reconciled modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'} "
         f"against work unit {command.work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
     )
-    reconciled_at = _now()
+    reconciled_at = now()
     report = ModeloReconciliationReport(
         work_unit_id=command.work_unit_id,
         bucket_id=work_unit.bucket_id,

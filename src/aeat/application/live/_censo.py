@@ -23,7 +23,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import (
     LIVE_CENSUS_SNAPSHOT_NAMESPACE as CENSUS_SNAPSHOT_STORAGE_NAMESPACE,
@@ -273,7 +273,7 @@ class CensoSnapshotRepository:
             )
         envelope = Envelope[CensoSnapshot](
             schema_version=_CENSUS_SNAPSHOT_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=_CENSUS_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )
@@ -378,7 +378,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         updated = existing.model_copy(
             update={
                 "state": SnapshotLifecycleState.DISCARDED,
-                "discarded_at": _now(),
+                "discarded_at": now(),
                 "discarded_by": trimmed_actor,
                 "discard_reason": discard_reason.strip(),
                 "superseded_by_snapshot_id": None,

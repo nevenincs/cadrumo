@@ -13,7 +13,7 @@ from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
@@ -386,7 +386,7 @@ class SecureObjectRepository:
         session = _active_session.get()
         if session is None:
             return
-        now = _now()
+        now = now()
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
@@ -540,7 +540,7 @@ class SecureObjectRepository:
         """
         self._ensure_quarantine_table()
         with session_scope(self._engine) as session:
-            quarantined_at = _now().isoformat()
+            quarantined_at = now().isoformat()
             namespaces = (
                 session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
                 .scalars()

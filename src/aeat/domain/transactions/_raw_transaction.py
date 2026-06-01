@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
-from ...core.time._utc import _validate_utc_aware
+from ...core.time._utc import validate_utc_aware
 from ._errors import TransactionValidationError
 
 class SourceFormat(StrEnum):
@@ -86,7 +86,7 @@ class RawProvenance(BaseModel):
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive timestamps; ingest must record UTC offsets."""
         try:
-            return _validate_utc_aware(value)
+            return validate_utc_aware(value)
         except CoreValidationError as exc:
             raise TransactionValidationError(str(exc)) from exc
 

@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
@@ -120,7 +120,7 @@ def build_overview_backlog(
         as_of=resolved_as_of,
         items=tuple(items),
         late_count=len(items),
-        generated_at=_now(),
+        generated_at=now(),
         warnings=calendar.warnings,
         completeness=calendar.completeness,
         taxpayer_model_declared=calendar.taxpayer_model_declared,

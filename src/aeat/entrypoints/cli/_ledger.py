@@ -9,7 +9,7 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
@@ -2020,7 +2020,7 @@ def _emit_ratios_event(
         derive_bucket_event_id,
     )
 
-    occurred_at = _now()
+    occurred_at = now()
     payload = {
         "category": category,
         "prior": "" if prior is None else str(prior),
@@ -2155,7 +2155,7 @@ def _emit_ratios_census_override_warning(
         derive_bucket_event_id,
     )
 
-    occurred_at = _now()
+    occurred_at = now()
     payload = {
         "category": warning.category.value,
         "override_ratio": str(warning.override_ratio),

@@ -7,7 +7,7 @@ import re
 from contextlib import nullcontext
 from pathlib import Path
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
@@ -69,7 +69,7 @@ class FiledDeclaracionObservationStore:
                 object_key=digest,
                 classification=_ARTEFACT_CLASSIFICATION,
                 schema_version=1,
-                written_at=_now(),
+                written_at=now(),
                 payload=body,
             )
         return artefact.model_copy(update={"storage_ref": _format_storage_ref(digest)})
@@ -98,7 +98,7 @@ class FiledDeclaracionObservationStore:
         )
         envelope = Envelope[FiledDeclaracionObservation](
             schema_version=_OBSERVATION_ENVELOPE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=_OBSERVATION_CLASSIFICATION,
             payload=observation,
         )
@@ -148,7 +148,7 @@ class FiledDeclaracionObservationStore:
         )
         envelope = Envelope[IvaCompensationWalletObservation](
             schema_version=_OBSERVATION_ENVELOPE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=_OBSERVATION_CLASSIFICATION,
             payload=observation,
         )

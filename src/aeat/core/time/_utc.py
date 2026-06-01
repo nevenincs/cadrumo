@@ -2,11 +2,11 @@
 
 Two semantics exist across the codebase for handling naive datetimes:
 
-* :func:`_coerce_utc_aware` — coerce a naive datetime to UTC-aware by
+* :func:`coerce_utc_aware` — coerce a naive datetime to UTC-aware by
   attaching :data:`datetime.UTC`.  Used where the source produces
   naive datetimes (e.g. PKCS#12 certificate timestamps).
 
-* :func:`_validate_utc_aware` — reject naive datetimes or non-UTC
+* :func:`validate_utc_aware` — reject naive datetimes or non-UTC
   datetimes with :class:`aeat.core.errors.CoreValidationError`.  Used
   at persistence and model boundaries where a naive datetime indicates
   a programming error.
@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 from aeat.core.errors import CoreValidationError
 
 
-def _coerce_utc_aware(value: datetime) -> datetime:
+def coerce_utc_aware(value: datetime) -> datetime:
     """Return a UTC-aware datetime, coercing a naive one if necessary.
 
     Naive datetimes have :data:`datetime.UTC` attached.  Timezone-aware
@@ -37,7 +37,7 @@ def _coerce_utc_aware(value: datetime) -> datetime:
     return value.astimezone(UTC)
 
 
-def _validate_utc_aware(value: datetime) -> datetime:
+def validate_utc_aware(value: datetime) -> datetime:
     """Return *value* unchanged if it is a UTC-aware datetime.
 
     Raises :class:`aeat.core.errors.CoreValidationError` when *value*

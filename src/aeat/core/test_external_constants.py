@@ -331,9 +331,9 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
 
 
 def test_subdomain_enum_aligns_with_aeat_domains() -> None:
-    """The :class:`Subdomain` enum hosts mirror the TOML registry hosts."""
+    """The :class:`PortalHost` enum hosts mirror the TOML registry hosts."""
 
-    from aeat.domain.portals._categories import Subdomain
+    from aeat.domain.portals._categories import PortalHost
 
     domains = load_external_constants().aeat.domains
     configured_hosts = {
@@ -346,14 +346,14 @@ def test_subdomain_enum_aligns_with_aeat_domains() -> None:
         domains.clave.removeprefix("https://"),
     }
 
-    assert Subdomain.SEDE.value == domains.sede.removeprefix("https://")
-    assert Subdomain.WWW1.value == domains.www1.removeprefix("https://")
-    assert Subdomain.WWW2.value == domains.www2.removeprefix("https://")
-    assert Subdomain.WWW3.value == domains.www3.removeprefix("https://")
-    assert Subdomain.AGENCIATRIBUTARIA_GOB.value == domains.aeat_gob.removeprefix("https://")
-    assert Subdomain.AGENCIATRIBUTARIA_ES.value == domains.legacy_www.removeprefix("https://")
-    assert Subdomain.CLAVE_GOB.value == domains.clave.removeprefix("https://")
-    assert {subdomain.value for subdomain in Subdomain} <= configured_hosts
+    assert PortalHost.SEDE.value == domains.sede.removeprefix("https://")
+    assert PortalHost.WWW1.value == domains.www1.removeprefix("https://")
+    assert PortalHost.WWW2.value == domains.www2.removeprefix("https://")
+    assert PortalHost.WWW3.value == domains.www3.removeprefix("https://")
+    assert PortalHost.AGENCIATRIBUTARIA_GOB.value == domains.aeat_gob.removeprefix("https://")
+    assert PortalHost.AGENCIATRIBUTARIA_ES.value == domains.legacy_www.removeprefix("https://")
+    assert PortalHost.CLAVE_GOB.value == domains.clave.removeprefix("https://")
+    assert {subdomain.value for subdomain in PortalHost} <= configured_hosts
 
 
 def test_browser_timeouts_belong_to_settings_not_registry() -> None:

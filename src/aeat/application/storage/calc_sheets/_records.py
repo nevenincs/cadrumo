@@ -29,8 +29,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core.time import _now as _utc_now
-from ....core.time._utc import _validate_utc_aware
+from ....core.time import now as _utc_now
+from ....core.time._utc import validate_utc_aware
 from ....domain.calculations.registry._ids import (
     BindingId,
     CasillaId,
@@ -421,7 +421,7 @@ class SheetExportMetadata(BaseModel):
 
     @model_validator(mode="after")
     def _exported_at_is_utc(self) -> SheetExportMetadata:
-        _validate_utc_aware(self.exported_at)
+        validate_utc_aware(self.exported_at)
         return self
 
 class SheetExportPlan(BaseModel):

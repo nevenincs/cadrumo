@@ -37,7 +37,7 @@ from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL,
 from ...core.identity import BucketId
 from ._ids import TransactionId
 from ...core.errors import CoreValidationError
-from ...core.time._utc import _validate_utc_aware
+from ...core.time._utc import validate_utc_aware
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
@@ -154,7 +154,7 @@ def _coerce_history(raw: object) -> tuple[object, ...]:
 def _require_aware_datetime(value: datetime) -> datetime:
     """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
     try:
-        return _validate_utc_aware(value)
+        return validate_utc_aware(value)
     except CoreValidationError as exc:
         raise TransactionValidationError(str(exc)) from exc
 

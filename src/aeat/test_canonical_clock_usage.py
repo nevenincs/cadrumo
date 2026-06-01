@@ -1,10 +1,10 @@
-"""Production modules must obtain UTC time via :func:`aeat.core.time._now`.
+"""Production modules must obtain UTC time via :func:`aeat.core.time.now`.
 
 Rule
 ----
 No production module under ``src/aeat/`` may call ``datetime.now(UTC)``
 or ``datetime.now(tz=UTC)`` inline. All call-sites delegate to
-:func:`aeat.core.time._clock._now` so the production clock is uniform
+:func:`aeat.core.time._clock.now` so the production clock is uniform
 and traceable.
 
 Exclusions (permanent)
@@ -96,13 +96,13 @@ def _collect_violations() -> list[str]:
 
 
 def test_no_inline_datetime_now_utc() -> None:
-    """Production modules MUST route UTC time through :func:`_now`."""
+    """Production modules MUST route UTC time through :func:`now`."""
     violations = _collect_violations()
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} inline datetime.now(UTC) call(s) outside the canonical clock module:\n  {joined}\n\n"
-            "Replace each call with _now() from aeat.core.time. The only permitted\n"
+            "Replace each call with now() from aeat.core.time. The only permitted\n"
             "inline pattern is the documented escape hatch:\n"
             "    timestamp = now if now is not None else datetime.now(UTC)\n"
             "on signatures that already accept an injectable ``now`` argument."

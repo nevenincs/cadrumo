@@ -21,7 +21,7 @@ from collections.abc import Iterable
 
 from pydantic import ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
@@ -163,7 +163,7 @@ class UserProfileLifecycleRepository:
     def save(self, record: UserProfileRecord) -> None:
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=_USER_PROFILE_VALUE_SENSITIVITY,
             payload=record,
         )
@@ -257,7 +257,7 @@ class UserProfileSnapshotRepository:
     def save(self, snapshot: UserProfileSnapshot) -> None:
         envelope = Envelope[UserProfileSnapshot](
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=_USER_PROFILE_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )

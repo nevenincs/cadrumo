@@ -34,7 +34,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId
@@ -171,7 +171,7 @@ class CensoSyncService:
             )
         return self._snapshots.capture(
             profile_id=profile_id,
-            captured_at=_now(),
+            captured_at=now(),
             source_url=source_url,
             censo_facts=facts,
         )
@@ -223,7 +223,7 @@ class CensoSyncService:
             )
         return self._snapshots.capture(
             profile_id=profile_id,
-            captured_at=_now(),
+            captured_at=now(),
             source_url=G313_LAUNCHER_URL,
             censo_facts=facts,
         )
@@ -305,7 +305,7 @@ class CensoSyncService:
         updated = profile.model_copy(
             update={
                 "facts": retained + new_censo_facts,
-                "updated_at": _now(),
+                "updated_at": now(),
             },
         )
         self._profiles.save(updated)

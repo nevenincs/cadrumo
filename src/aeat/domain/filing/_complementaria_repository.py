@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
-from ...core.time._clock import _now
+from ...core.time._clock import now
 from ._amendment import (
     BaseAmendment,
     ModeloComplementaria,
@@ -104,7 +104,7 @@ class ModeloAmendmentRepository:
         safe_repository_id(amendment.amendment_id, context="amendment_id")
         envelope = Envelope[BaseAmendment](
             schema_version=_AMENDMENT_ENVELOPE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=SensitivityClass.AUDIT,
             payload=amendment,
         )

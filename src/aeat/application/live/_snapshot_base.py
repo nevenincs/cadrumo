@@ -39,7 +39,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -473,7 +473,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             )
         envelope = self._envelope_cls()(
             schema_version=self._namespace_definition.schema_version,
-            written_at=_now(),
+            written_at=now(),
             classification=self._namespace_definition.sensitivity,
             payload=snapshot,
         )

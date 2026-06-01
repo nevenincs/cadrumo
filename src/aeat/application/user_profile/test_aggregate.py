@@ -208,7 +208,7 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
         )
 
 
-# ── UTC helper migration: _validate_utc_aware semantics ─────────────────────
+# ── UTC helper migration: validate_utc_aware semantics ─────────────────────
 
 
 def _aggregate(**overrides: object) -> "ProfileAggregate":

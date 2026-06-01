@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.logging import get_logger
 
@@ -133,7 +133,7 @@ def save_usage_ratios(
 
     envelope = Envelope[UsageRatioProfile](
         schema_version=_USAGE_RATIO_VERSION,
-        written_at=_now(),
+        written_at=now(),
         classification=SensitivityClass.FINANCIAL,
         payload=profile,
     )

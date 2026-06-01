@@ -44,7 +44,7 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from .....core.config import Settings, load_settings
-from .....core.time._clock import _now
+from .....core.time._clock import now
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
@@ -930,7 +930,7 @@ async def capture_declaration(
             ref=ref,
             pdf_bytes=body,
             pdf_sha256=sha256,
-            captured_at=_now(),
+            captured_at=now(),
         )
 
 
@@ -1251,7 +1251,7 @@ def _register_row_artefact(
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    captured_at = _now()
+    captured_at = now()
     return (
         FiledDeclaracionArtefact(
             kind="register_row",
@@ -1721,7 +1721,7 @@ async def _capture_row_pdf_artefact(
             content_type=content_type,
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=_now(),
+            captured_at=now(),
         ),
         body,
     )
@@ -1768,7 +1768,7 @@ async def _capture_submitted_file_artefact(
             content_type=_BINARY_MIME_TYPE,
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=_now(),
+            captured_at=now(),
         ),
         body,
     )

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ....core.config import PROJECT_ROOT
 from ....core.logging import get_logger
@@ -143,7 +143,7 @@ class LLMCache:
             prompt_hash=key.prompt_hash,
             args_hash=key.args_hash,
             response=response,
-            created_at=_now(),
+            created_at=now(),
         )
         redacted = redact_structured(
             entry.model_dump(mode="json"),
@@ -164,7 +164,7 @@ class LLMCache:
                 object_key=self._object_key_for(key),
                 classification=SensitivityClass.DIAGNOSTIC,
                 schema_version=_CACHE_VERSION,
-                written_at=_now(),
+                written_at=now(),
                 payload=payload,
             )
         except OSError as exc:

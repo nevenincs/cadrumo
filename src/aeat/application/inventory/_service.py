@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
-from ...core.time import _now as _now_utc
+from ...core.time import now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,

@@ -23,7 +23,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
@@ -616,7 +616,7 @@ def create_work_unit(
     existing = catalogue.get(work_unit_id)
     if existing is not None:
         return existing
-    now = clock or _now()
+    now = clock or now()
     unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
@@ -749,7 +749,7 @@ def rename_work_unit(
             "create a fresh work unit on the same modelo / year / period to continue",
             translated_message="application.modelo.errors.work_unit_mutation_refused",
         )
-    now = clock or _now()
+    now = clock or now()
     cleaned_name = new_name.strip()
     cleaned_actor = actor.strip()
     renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
@@ -825,7 +825,7 @@ def discard_work_unit(
             f"(by {existing.discarded_by!r} at {existing.discarded_at!s})",
             translated_message="application.modelo.errors.work_unit_already_discarded",
         )
-    now = clock or _now()
+    now = clock or now()
     discarded = existing.model_copy(
         update={
             "state": WorkUnitState.DESCARTADO,
@@ -1125,7 +1125,7 @@ def calculate_modelo_revision(
     existing = revisions.get(revision_id)
     if existing is not None:
         return existing
-    now = clock or _now()
+    now = clock or now()
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -1991,7 +1991,7 @@ def mark_revision_verificado_completo(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete"
         )
-    now = clock or _now()
+    now = clock or now()
     verified = existing.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -2959,7 +2959,7 @@ def verify_modelo_revision(
         missing_required=missing_required,
     )
 
-    now = clock or _now()
+    now = clock or now()
     report_id = derive_verification_report_id(
         calculation_revision_id=calculation_revision_id,
         run_at=now,
@@ -3496,7 +3496,7 @@ def file_modelo_revision(
         repository=iva_compensation_decision_repository,
     )
 
-    now = clock or _now()
+    now = clock or now()
     gate_engine = workflow_engine or _build_revision_workflow_engine(
         revision=target,
         work_unit=work_unit,
@@ -3840,7 +3840,7 @@ def amend_modelo_revision(
         overrides=overrides,
     )
 
-    now = clock or _now()
+    now = clock or now()
     corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(overrides)
 
@@ -4100,7 +4100,7 @@ def import_external_filing_evidence(
     outputs = dict(casilla_values)
     observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
 
-    now = clock or _now()
+    now = clock or now()
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         inputs_snapshot=inputs_snapshot,

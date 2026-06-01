@@ -14,7 +14,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from .....core.time._utc import _validate_utc_aware
+from .....core.time._utc import validate_utc_aware
 from ..errors import StorageValidationError
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -51,6 +51,6 @@ class RecoveryRecord(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _validate_utc_aware(value)
+        return validate_utc_aware(value)
 
 __all__ = ["RecoveryRecord"]

@@ -12,11 +12,11 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.errors import AeatError
 from ...core.logging import get_logger
-from ...core.time._utc import _validate_utc_aware
+from ...core.time._utc import validate_utc_aware
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
@@ -220,7 +220,7 @@ async def require_verified_aeat_session(
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.no_session",
         )
-    if persisted.is_expired(_now()):
+    if persisted.is_expired(now()):
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.session_expired",
         )
@@ -434,7 +434,7 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
         if text.endswith("Z"):
             text = f"{text[:-1]}+00:00"
         parsed = datetime.fromisoformat(text)
-        _validate_utc_aware(parsed)
+        validate_utc_aware(parsed)
         return parsed
     raise SessionDeserializationError(
         translated_message="application.auth.errors.session_field_not_datetime",

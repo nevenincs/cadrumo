@@ -30,7 +30,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -165,7 +165,7 @@ class ApoderadoService:
             represented_nif=represented_nif,
             granted_scopes=granted,
             catalogue_version=self._catalogue.catalogue_version,
-            configured_at=_now(),
+            configured_at=now(),
             notes=notes,
         )
         self._repository_for(config.bucket_id).save(config)

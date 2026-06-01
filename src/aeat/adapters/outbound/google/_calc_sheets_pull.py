@@ -50,7 +50,7 @@ _ValueRange = dict[str, Any]
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.decimal import coerce_decimal
-from ....core.time._utc import _coerce_utc_aware
+from ....core.time._utc import coerce_utc_aware
 from ....application.storage.calc_sheets import collect_row_sets
 from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
@@ -189,7 +189,7 @@ class PullMetadata(BaseModel):
         if not self.exported_at:
             return None
         try:
-            dt = _coerce_utc_aware(datetime.fromisoformat(self.exported_at))
+            dt = coerce_utc_aware(datetime.fromisoformat(self.exported_at))
         except ValueError:
             return None
         return SheetExportMetadata(

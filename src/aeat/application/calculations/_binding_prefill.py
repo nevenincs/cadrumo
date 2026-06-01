@@ -30,7 +30,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.resources import resources
 from ...domain.calculations.registry._bindings import (
@@ -274,7 +274,7 @@ def resolve_bindings_from_local_store(
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
-    when = captured_at if captured_at is not None else _now()
+    when = captured_at if captured_at is not None else now()
     observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_repo)
 
     if not observations:
@@ -360,7 +360,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         source_modelo, source_year, source_periods = _requirements_by_binding(snapshot)[
             _MODELO_303_IVA_COMPENSATION_BINDING_ID
         ]
-        resolved_at = captured_at if captured_at is not None else _now()
+        resolved_at = captured_at if captured_at is not None else now()
         prefilled = PrefilledBinding(
             binding_id=_MODELO_303_IVA_COMPENSATION_BINDING_ID,
             value=Decimal(amount),

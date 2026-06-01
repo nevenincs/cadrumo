@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
@@ -202,7 +202,7 @@ class TransactionCatalogueRepository:
 
         envelope = Envelope[TransactionCatalogue](
             schema_version=_TX_CATALOGUE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
