@@ -231,7 +231,7 @@ class RegistryRevisionInventory(NamedTuple):
 
 
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
-    """Load the registry tree and return stable read-only inventory counts."""
+    """Load the registry tree and return a :class:`RegistryTreeReport` with stable read-only inventory counts."""
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     modelos = authority.modelos
     catalogues = authority.catalogues
@@ -260,7 +260,7 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
 
 
 def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
-    """Load and fail-fast validate every registry modelo against shared catalogues.
+    """Load and fail-fast validate every registry modelo against shared catalogues, returning a :class:`RegistryTreeReport`.
 
     Runs a full strict audit including ``required_text`` corpus checks on
     every legal reference — the checks that the production authority skips
@@ -323,7 +323,7 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
 
 
 def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
-    """Audit registered live-parity oracles against every registry cross-reference."""
+    """Audit registered live-parity oracles against every registry cross-reference and return a :class:`RegistryOracleAuditReport`."""
     typed_environment = _typed_oracle_environment(environment)
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     oracle_catalogue = _LiveParityCatalogue()
@@ -355,7 +355,11 @@ def verify_filed_state(
     required_casillas: tuple[str, ...] = (),
     master_key_provider: _MasterKeyProvider | None = None,
 ) -> FiledStateVerificationReport:
-    """Compare a local registry calculation to a captured filed observation."""
+    """Compare a local registry calculation to a captured filed observation.
+
+    Returns a :class:`FiledStateVerificationReport` with the per-casilla
+    comparison results between the registry calculation and the filed values.
+    """
     filed_observation = _load_filed_observation(observation_path, master_key_provider=master_key_provider)
     registry_observation = _registry_observation_from_filed_declaration(filed_observation)
     source_observations = tuple(

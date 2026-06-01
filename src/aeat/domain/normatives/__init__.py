@@ -58,7 +58,7 @@ class _LazyCatalogue:
         return self._cache
 
     def reload(self) -> NormativeCatalogue:
-        """Force a re-read of the corpus and return the fresh catalogue."""
+        """Force a re-read of the corpus and return the fresh :class:`NormativeCatalogue`."""
         self._cache = load_catalogue()
         return self._cache
 
@@ -75,7 +75,11 @@ class _LazyCatalogue:
         return key in self._ensure()
 
     def get(self, ref_id: str) -> NormativeReference | None:
-        """Return the reference keyed by ``ref_id`` or ``None`` if absent."""
+        """Return the reference keyed by ``ref_id`` or ``None`` if absent.
+
+        Returns:
+            The :class:`NormativeReference` for ``ref_id``, or ``None`` when not found.
+        """
         return self._ensure().get(ref_id)
 
 

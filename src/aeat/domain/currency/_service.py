@@ -31,7 +31,11 @@ class CurrencyNormalizationService:
         self._rate_provider = rate_provider
 
     def normalize(self, amount: MonetaryAmount, rate_date: date) -> NormalizedAmount:
-        """Normalize an amount to EUR using the rate for the given date."""
+        """Normalize an amount to EUR using the rate for the given date.
+
+        Returns:
+            A :class:`NormalizedAmount` with the EUR-equivalent and conversion metadata.
+        """
         if amount.currency == DEFAULT_CURRENCY:
             return NormalizedAmount(
                 original=amount,

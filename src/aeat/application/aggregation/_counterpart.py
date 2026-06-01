@@ -263,6 +263,8 @@ def aggregate_counterpart_347(
     Filters to 347 operation kinds. Threshold gating (the €3,005.06
     declaration floor) belongs to the modelo binding consumer; this
     aggregator returns raw per-counterparty totals.
+
+    Returns a :class:`CounterpartAggregation`.
     """
     return _aggregate_for_modelo(observations, modelo="347", period=period)
 
@@ -278,6 +280,9 @@ def aggregate_counterpart_349(
     the additional NIF-IVA / GROI readiness gates: Spanish
     counterparties require GROI readiness and non-Spanish
     counterparties require NIF-IVA readiness.
+
+    Returns a :class:`CounterpartAggregation` with rollups sorted by
+    ``(source_kind, counterparty_nif, operation_kind)``.
     """
     return _aggregate_for_modelo(observations, modelo="349", period=period)
 

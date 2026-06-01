@@ -1188,6 +1188,9 @@ class Settings(BaseSettings):
         Bridges :mod:`aeat.core.external_constants` to the settings facade
         so callers reach third-party hostnames, AEAT service paths, OAuth
         scopes, and LLM endpoints through a single accessor.
+
+        Returns:
+            The process-wide cached :class:`ExternalConstants` instance.
         """
         from .external_constants import load_external_constants
 
@@ -1239,7 +1242,13 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
-    """Classify the effective primary SQL route for write guards."""
+    """Classify the effective primary SQL route for write guards.
+
+    Returns:
+        A :class:`StorageRouteClassification` identifying whether the
+        resolved database URL was explicitly supplied, derived from the
+        active bucket, or inferred as the root fallback.
+    """
     resolved = settings or load_settings()
     database_url = resolved.aeat_database_url
     database_path = _sqlite_database_path(database_url)
@@ -1281,6 +1290,10 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     that need a named bucket route. Explicit primary database URLs stay
     fail-closed: a caller cannot convert an operator-supplied SQL URL
     into a bucket route by passing a bucket id.
+
+    Returns:
+        A :class:`Settings` instance with ``aeat_database_url`` resolved
+        to the per-bucket SQLite path for ``bucket_id``.
     """
     trimmed = bucket_id.strip()
     if not trimmed:

@@ -175,7 +175,7 @@ def calculate_registry_snapshot(
     date_binding_values: Mapping[str, date] | None = None,
     text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
-    """Evaluate all computed formulas in a validated registry snapshot.
+    """Evaluate all computed formulas and return a :class:`RegistryCalculationResult`.
 
     ``enum_binding_values`` carries string-valued bindings (typically
     profile-sourced enums like ``CCAA``) that the

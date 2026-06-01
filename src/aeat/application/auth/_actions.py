@@ -19,7 +19,10 @@ def update_auth(
     authenticated: bool | None = None,
     subject: str | None = None,
 ) -> WorkflowState:
-    """Update local auth readiness state."""
+    """Update local auth readiness state.
+
+    Returns a :class:`WorkflowState`.
+    """
     auth = state.auth
     if isinstance(auth, dict):
         auth = AuthState.model_validate(auth)

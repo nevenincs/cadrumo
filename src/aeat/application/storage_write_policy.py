@@ -118,7 +118,11 @@ def inspect_storage_write_policy(
     bootstrap_exempt: bool,
     settings: Settings | None = None,
 ) -> StorageWritePolicyDecision:
-    """Return whether ``verb_path`` may perform profile-bound writes."""
+    """Return whether ``verb_path`` may perform profile-bound writes.
+
+    Returns a :class:`StorageWritePolicyDecision` with the allow/deny
+    verdict and the policy code that determined it.
+    """
     if bootstrap_exempt:
         return StorageWritePolicyDecision(
             allowed=True,

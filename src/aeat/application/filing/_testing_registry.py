@@ -40,7 +40,7 @@ def build_registry_filing_draft(
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
-    """Build a filing draft through the validated registry runtime path."""
+    """Build and return a :class:`ModeloDraft` through the validated registry runtime path."""
     runtime_period = _runtime_period(period, filing_year=filing_year)
     snapshot_year, registry_period_token = _snapshot_year_and_token(runtime_period)
     schema_provider = build_runtime_schema_provider(
@@ -93,7 +93,10 @@ def build_registry_filing_draft_from_decimals(
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
-    """Coerce decimal strings before building through the registry runtime."""
+    """Coerce decimal strings before building through the registry runtime.
+
+    Returns a :class:`ModeloDraft`.
+    """
     coerced: dict[str, Decimal] = {}
     for casilla_id, raw in casilla_decimals.items():
         coerced[casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)

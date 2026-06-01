@@ -256,14 +256,18 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
         target_year: int,
         target_period: str,
     ) -> IvaCompensationReconciliationDecision | None:
-        """Return the latest persisted IVA wallet reconciliation decision."""
+        """Return the latest persisted :class:`IvaCompensationReconciliationDecision` for the given period."""
         payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
         if payload is None:
             payload = super().load(_legacy_iva_wallet_decision_key(taxpayer_nif, target_year, target_period))
         return payload.decision if payload is not None else None
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:
-        """Return the latest persisted IVA wallet decisions in target-period order."""
+        """Return the latest persisted IVA wallet decisions in target-period order.
+
+        Each element is an :class:`IvaCompensationReconciliationDecision` sorted
+        by ``(target_year, target_period, taxpayer_nif, decided_at)``.
+        """
         return tuple(
             sorted(
                 (payload.decision for payload in self.iter_records()),
@@ -282,7 +286,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
         target_year: int,
         target_period: str,
     ) -> tuple[IvaCompensationReconciliationDecision, ...]:
-        """Return immutable decision history for one taxpayer and target period."""
+        """Return immutable decision history as a tuple of :class:`IvaCompensationReconciliationDecision` for one taxpayer and target period."""
         taxpayer_token = taxpayer_nif.strip().upper()
         decisions: list[IvaCompensationReconciliationDecision] = []
         for record in self._objects.list_records(

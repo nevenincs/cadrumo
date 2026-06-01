@@ -323,7 +323,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         source_url: str,
         censo_facts: Mapping[str, _CensoFactValue],
     ) -> CensoSnapshot:
-        """Persist a new censo snapshot and auto-supersede prior ACTIVE.
+        """Persist a new censo snapshot and return the :class:`CensoSnapshot`; auto-supersedes the prior ACTIVE.
 
         Re-capturing structurally identical facts (same profile / time /
         source / values) is a no-op: the existing snapshot is loaded
@@ -364,7 +364,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         discarded_by: str,
         discard_reason: str = "",
     ) -> CensoSnapshot:
-        """Mark a snapshot as DISCARDED. Local-only; never contacts AEAT.
+        """Mark a snapshot as DISCARDED and return the updated :class:`CensoSnapshot`. Local-only; never contacts AEAT.
 
         Used when the operator explicitly retires a snapshot captured
         from a sede outage or with malformed values. The discard does

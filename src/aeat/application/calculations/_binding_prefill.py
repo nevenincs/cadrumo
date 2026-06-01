@@ -266,10 +266,10 @@ def resolve_bindings_from_local_store(
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
-    Returns a ``BindingPrefillReport`` carrying the resolved
-    `binding_values` mapping (suitable for passing through
-    `calculate_registry_snapshot`'s `binding_values=` argument) plus
-    a tuple of `PrefilledBinding` records with provenance per entry.
+    Returns a :class:`BindingPrefillReport` carrying the resolved
+    ``binding_values`` mapping (suitable for passing through
+    ``calculate_registry_snapshot``'s ``binding_values=`` argument) plus
+    a tuple of ``PrefilledBinding`` records with provenance per entry.
 
     Bindings the local store cannot satisfy are skipped silently —
     the engine emits blank cells the operator fills by hand. Strict
@@ -342,6 +342,10 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     for the target Modelo 303 period. Callers must feed it into
     reconciliation; they must not use it directly as the effective value while
     fresh AEAT wallet evidence exists.
+
+    Returns a 2-tuple of a :class:`LocalIvaCompensationRecurrence` (or
+    ``None`` when no compensation binding is present) and the underlying
+    :class:`BindingPrefillReport`.
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
         from ..modelo._actions import ModeloApplicabilityFilterError

@@ -84,7 +84,7 @@ class KdfParams(BaseModel):
 
     @classmethod
     def default(cls) -> KdfParams:
-        """Return the canonical OWASP 2024 Argon2id baseline parameters."""
+        """Return a :class:`KdfParams` instance with the canonical OWASP 2024 Argon2id baseline parameters."""
         return cls(
             algorithm="argon2id",
             version=_ARGON2_V13,
@@ -96,7 +96,7 @@ class KdfParams(BaseModel):
         )
 
     def to_manifest_params(self) -> ManifestKdfParams:
-        """Return this canonical parameter set in the bucket-manifest shape."""
+        """Return this canonical parameter set as a :class:`ManifestKdfParams` bucket-manifest shape."""
         from ..bucket._manifest import ManifestKdfParams
 
         return ManifestKdfParams.model_validate(self.model_dump())

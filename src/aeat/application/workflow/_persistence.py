@@ -93,7 +93,11 @@ class WorkflowStateRepository:
         self._emit_reset = emit_reset
 
     def load(self) -> WorkflowState:
-        """Load state or return an empty payload when absent."""
+        """Load state or return an empty payload when absent.
+
+        Returns the persisted :class:`WorkflowState`, or an empty default
+        when no state has been saved yet.
+        """
         record = self._objects.load(
             _STATE_NAMESPACE,
             _STATE_OBJECT_KEY,
@@ -165,7 +169,7 @@ class WorkflowStateRepository:
         *,
         reason_class: str | None = None,
     ) -> WorkflowStateResetFingerprint:
-        """Return a row-level fingerprint of the persisted state envelope.
+        """Return a :class:`WorkflowStateResetFingerprint` of the persisted state envelope.
 
         Reads row-level metadata only; never decrypts the payload for
         the fingerprint fields. The state envelope is loaded once to
@@ -257,6 +261,9 @@ class WorkflowStateRepository:
         idempotent recoverable state) rather than the data discarded
         without a trail. The fingerprint never carries plaintext
         envelope content.
+
+        Returns a :class:`WorkflowStateResetFingerprint` with a hash of
+        the deleted state for audit traceability.
         """
         fingerprint = self.fingerprint_state(reason_class=reason_class)
         self._emit_reset(fingerprint=fingerprint, actor=actor, source=source)
@@ -266,7 +273,7 @@ class WorkflowStateRepository:
         return fingerprint
 
     def update(self, fn: Callable[[WorkflowState], WorkflowState]) -> WorkflowState:
-        """Load, transform, save, and return the updated state."""
+        """Load, transform, save, and return the updated :class:`WorkflowState`."""
         state = self.load()
         updated = fn(state)
         self.save(updated)
@@ -300,7 +307,10 @@ class WorkflowRunRepository:
         return marker_dir / run_id
 
     def load(self, run_id: str) -> WorkflowResult:
-        """Load one persisted workflow result from the secure backend."""
+        """Load one persisted :class:`WorkflowResult` from the secure backend.
+
+        Returns the :class:`WorkflowResult` for ``run_id``.
+        """
         safe_run_id = _validate_run_id(run_id)
         record = self._objects.load(
             _RUN_NAMESPACE,
@@ -326,7 +336,10 @@ class WorkflowRunRepository:
         return envelope.payload
 
     def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
-        """List persisted workflow runs newest-first, optionally filtered by date."""
+        """List persisted workflow runs newest-first, optionally filtered by date.
+
+        Each element is a :class:`WorkflowResult`.
+        """
         records = self._objects.list_records(
             _RUN_NAMESPACE,
             expected_class=_RUN_SENSITIVITY,
@@ -344,7 +357,7 @@ class WorkflowRunRepository:
 
 
 def workflow_state_repository() -> WorkflowStateRepository:
-    """Return the repository bound to the active-bucket database.
+    """Return the :class:`WorkflowStateRepository` bound to the active-bucket database.
 
     When an active profile bucket is present, the repository is backed by
     the bucket's own encrypted database resolved through
@@ -371,7 +384,11 @@ def reset_workflow_state(
     source: str = "aeat config repair reset-state",
     reason_class: str | None = None,
 ) -> WorkflowStateResetFingerprint:
-    """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`."""
+    """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`.
+
+    Returns a :class:`WorkflowStateResetFingerprint` with a hash of the
+    deleted state for audit traceability.
+    """
     return workflow_state_repository().reset_workflow_state(
         actor=actor,
         source=source,
@@ -380,7 +397,7 @@ def reset_workflow_state(
 
 
 def fingerprint_workflow_state(*, reason_class: str | None = None) -> WorkflowStateResetFingerprint:
-    """Module-level helper around :meth:`WorkflowStateRepository.fingerprint_state`."""
+    """Return a :class:`WorkflowStateResetFingerprint` via :meth:`WorkflowStateRepository.fingerprint_state`."""
     return workflow_state_repository().fingerprint_state(reason_class=reason_class)
 
 
@@ -407,10 +424,10 @@ def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
 
 
 def load_run(run_id: str) -> WorkflowResult:
-    """Load one persisted workflow result from the secure backend."""
+    """Load and return one :class:`WorkflowResult` from the secure backend."""
     return WorkflowRunRepository().load(run_id)
 
 
 def list_runs(*, since: date | None = None) -> tuple[WorkflowResult, ...]:
-    """List persisted workflow runs newest-first, optionally filtered by date."""
+    """List persisted :class:`WorkflowResult` runs newest-first, optionally filtered by date."""
     return WorkflowRunRepository().list(since=since)

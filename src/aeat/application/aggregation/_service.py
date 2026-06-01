@@ -180,7 +180,10 @@ class PerModeloAggregationCommand(BaseModel):
     @computed_field
     @property
     def provider(self) -> PerModeloAggregationProvider:
-        """Return the provider family selected by ``modelo``."""
+        """Return the provider family selected by ``modelo``.
+
+        Returns a :class:`PerModeloAggregationProvider`.
+        """
         return provider_for_modelo(self.modelo)
 
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
@@ -240,7 +243,11 @@ class PerModeloAggregationResult(BaseModel):
         return self
 
 def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
-    """Build the immutable backend-owned aggregation contract."""
+    """Build the immutable backend-owned aggregation contract.
+
+    Returns a :class:`PerModeloAggregationContract` enumerating every
+    registered provider, accepted source kinds, and known error codes.
+    """
     providers = (
         PerModeloAggregationProviderContract(
             provider=PerModeloAggregationProvider.RETENCIONES,
@@ -278,11 +285,15 @@ def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
 
 @lru_cache(maxsize=1)
 def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
-    """Return the cached backend-owned aggregation contract."""
+    """Return the cached backend-owned :class:`PerModeloAggregationContract`."""
     return build_per_modelo_aggregation_contract()
 
 def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
-    """Return the provider family for a supported modelo."""
+    """Return the provider family for a supported modelo.
+
+    Returns a :class:`PerModeloAggregationProvider` member identifying
+    the aggregation family that owns the given modelo number.
+    """
     if modelo != modelo.strip():
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.errors.unsupported_modelo"),
@@ -302,7 +313,10 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
     )
 
 def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
-    """Run the central application aggregation service for one modelo."""
+    """Run the central application aggregation service for one modelo.
+
+    Returns a :class:`PerModeloAggregationResult`.
+    """
     provider = provider_for_modelo(command.modelo)
     if provider is PerModeloAggregationProvider.RETENCIONES:
         aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)

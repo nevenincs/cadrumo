@@ -685,7 +685,7 @@ def apply_export_plan(
             folder `GoogleDriveProvider` uses for the ciphertext mirror).
 
     Returns:
-        A `CalcSheetsApplyResult` with the spreadsheet's id and URL.
+        A :class:`CalcSheetsApplyResult` with the spreadsheet's id and URL.
 
     Raises:
         OutboundStorageValidationError: When the supplied ``root_folder_id`` is blank.

@@ -201,7 +201,7 @@ class Period(BaseModel):
     @computed_field
     @property
     def period_type(self) -> PeriodType:
-        """Return the matching aggregation period cadence."""
+        """Return the :class:`PeriodType` matching the aggregation period cadence."""
         if self.kind is PeriodKind.ANNUAL:
             return PeriodType.ANNUAL
         return PeriodType.QUARTERLY

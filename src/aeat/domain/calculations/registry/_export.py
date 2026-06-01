@@ -39,7 +39,11 @@ class ResolvedExportLayout(RegistryModel):
 
 
 def resolve_export_layout(snapshot: RegistrySnapshot, layout_id: str | None = None) -> ResolvedExportLayout:
-    """Resolve one export layout from a validated registry snapshot."""
+    """Resolve one export layout from a validated registry snapshot.
+
+    Returns:
+        The :class:`ResolvedExportLayout` for the selected layout.
+    """
     layouts = snapshot.revision.export_layouts
     if not layouts:
         raise RegistryValidationError(f"modelo {snapshot.modelo.id} revision {snapshot.revision.id} has no exports")
@@ -76,6 +80,9 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     declares the record-level intent via ``binding_record`` and this resolver
     derives field coordinates from the binding selectors instead of requiring a
     second coordinate table in TOML.
+
+    Returns:
+        Tuple of :class:`ExportLayoutDefinition` with binding-derived fields populated.
     """
     if not revision.export_layouts:
         return ()
@@ -231,7 +238,7 @@ def _justification_for_binding_data_type(data_type: _BindingExportDataType) -> _
 
 
 def export_fields_for_casilla(resolved: ResolvedExportLayout, casilla_id: str) -> tuple[ExportFieldDefinition, ...]:
-    """Return all resolved export fields mapped to ``casilla_id``."""
+    """Return all :class:`ExportFieldDefinition` entries mapped to ``casilla_id``."""
     return resolved.fields_by_casilla.get(casilla_id, ())
 
 

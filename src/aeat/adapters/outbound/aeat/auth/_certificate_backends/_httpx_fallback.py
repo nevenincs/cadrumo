@@ -67,7 +67,7 @@ class HttpxFallbackBackend(_CertBackend):
             url: HTTPS endpoint to probe.
 
         Returns:
-            A populated handshake result describing the outcome.
+            A :class:`HandshakeResult` describing the closed-failure outcome.
         """
         from ..certificate import HandshakeResult
 

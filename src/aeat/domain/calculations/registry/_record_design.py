@@ -79,7 +79,11 @@ class _WorkbookHeader:
 
 
 def extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return fixed-width field rows from a supported official record-design source."""
+    """Return fixed-width field rows from a supported official record-design source.
+
+    Returns:
+        Tuple of :class:`RecordDesignSheet` objects parsed from the source file.
+    """
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design source not found: {path}")
@@ -106,7 +110,7 @@ def _extract_record_design_cached(
 
 
 def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return the official fixed-width field rows described by workbook ``path``."""
+    """Return :class:`RecordDesignSheet` rows described by workbook ``path``."""
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design workbook not found: {path}")
@@ -115,7 +119,11 @@ def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
 
 
 def extract_record_design_xls_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return official fixed-width field rows from a legacy binary XLS workbook."""
+    """Return official fixed-width field rows from a legacy binary XLS workbook.
+
+    Returns:
+        Tuple of :class:`RecordDesignSheet` objects parsed from the XLS workbook.
+    """
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design XLS workbook not found: {path}")
@@ -202,7 +210,7 @@ def _ignore_openpyxl_header_footer_metadata_warnings() -> Iterator[None]:
 
 
 def extract_record_design_pdf(path: Path) -> tuple[RecordDesignSheet, ...]:
-    """Return fixed-width field rows extracted from an official AEAT PDF."""
+    """Return :class:`RecordDesignSheet` rows extracted from an official AEAT PDF."""
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
@@ -227,7 +235,11 @@ def extract_record_design_pdf_bytes(
     *,
     source_label: str = "in-memory record-design PDF",
 ) -> tuple[RecordDesignSheet, ...]:
-    """Return fixed-width field rows extracted from PDF bytes."""
+    """Return fixed-width field rows extracted from PDF bytes.
+
+    Returns:
+        Tuple of :class:`RecordDesignSheet` objects extracted from the PDF content.
+    """
     return _extract_record_design_pdf_stream(BytesIO(pdf_bytes), source_label=source_label)
 
 
@@ -1505,6 +1517,9 @@ def derive_calculation_completeness_casillas(
     This is an off-load-path tool. When ``diseno_path`` is supplied it
     parses the multi-megabyte Diseño corpus and must never run on the
     snapshot-build path.
+
+    Returns:
+        Tuple of :class:`DerivedDisenoCasilla` representing the calculation-completeness manifest.
     """
     declared_identities = {
         (casilla.segmento, casilla.number) for casilla in revision.casillas
@@ -1550,11 +1565,11 @@ def derive_diseno_coverage_casillas(
     *,
     multi_segment: bool,
 ) -> tuple[DerivedDisenoCasilla, ...]:
-    """Return the full ``(segmento, number)`` casilla set declared by a Diseño.
+    """Return :class:`DerivedDisenoCasilla` items for the full casilla set declared by a Diseño.
 
     Runs read-only record-design extraction against the official AEAT
     Diseño de Registros source at ``path`` and collects *every*
-    five-digit casilla tag embedded in the field descriptions — including
+    five-digit casilla tag embedded in the field descriptions, including
     the accounting-statement data-entry fields that feed no calculation.
 
     This is the input to the off-load-path advisory coverage report that

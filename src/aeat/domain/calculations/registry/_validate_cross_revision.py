@@ -251,6 +251,9 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     repeated numeric ids; this inventory keeps that drift visible without
     turning it into a load-time error before the schema has an explicit
     continuity/evolution contract.
+
+    Returns:
+        Tuple of :class:`CrossRevisionCasillaDriftSummary` records, one per drifted casilla id.
     """
     if example_limit < 1:
         raise RegistryValidationError("example_limit must be at least 1")

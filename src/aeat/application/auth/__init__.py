@@ -84,7 +84,7 @@ class AuthProvider(Protocol):
         browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
-        """Establish an authenticated session and return the provider's session record."""
+        """Establish an authenticated session and return the :class:`AeatSession` record."""
         ...
 
     async def verify(
@@ -93,11 +93,11 @@ class AuthProvider(Protocol):
         *,
         target_url: str | None = None,
     ) -> AeatLoginAssertion:
-        """Re-probe ``session`` against ``target_url`` and return the provider's assertion record."""
+        """Re-probe ``session`` against ``target_url`` and return the :class:`AeatLoginAssertion` for the provider."""
         ...
 
     def describe(self) -> AuthProviderDescription:
-        """Return a safe, log-friendly summary of the provider's configured state."""
+        """Return a safe, log-friendly :class:`AuthProviderDescription` of the provider's configured state."""
         ...
 
 def select_provider(
@@ -111,6 +111,9 @@ def select_provider(
     The application package owns the selection contract; the concrete
     implementations stay in the outbound adapter layer and are imported
     lazily to avoid an application/adapter import cycle at module load.
+
+    Returns an :class:`AuthProvider` configured for the requested
+    provider kind.
     """
     from ...adapters.outbound.aeat.auth import select_provider as _select_provider
 

@@ -13,7 +13,10 @@ from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
 
 
 def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorkspaceResult:
-    """Initialize a new active workspace profile and bucket."""
+    """Initialize a new active workspace profile and bucket.
+
+    Returns an :class:`InitializeWorkspaceResult`.
+    """
     facts: list[UserProfileFact] = [
         UserProfileFact(path="identity.tax_id", value=command.tax_id),
         UserProfileFact(path="activities.description", value=command.activity),

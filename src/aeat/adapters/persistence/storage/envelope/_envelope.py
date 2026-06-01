@@ -88,7 +88,7 @@ class EncryptionMetadata(BaseModel):
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob, *, associated_data: bytes = b"") -> EncryptionMetadata:
-        """Build encryption metadata from an :class:`EncryptedBlob`."""
+        """Build :class:`EncryptionMetadata` from an :class:`EncryptedBlob`."""
         return cls(
             nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
             ciphertext_b64=base64.b64encode(blob.ciphertext).decode("ascii"),
@@ -143,7 +143,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
 
     @classmethod
     def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
-        """Return the parameterised ``Envelope[payload_cls]`` class.
+        """Return the :class:`Envelope` parameterised for ``payload_cls``.
 
         This typed factory avoids a bare ``cast(Any, Envelope).__class_getitem__(...)``
         at call sites. The returned class is the concrete generic alias Pydantic
@@ -165,7 +165,7 @@ class EnvelopeMigrator[PayloadT: BaseModel](Protocol):
     target_version: int
 
     def migrate(self, envelope: Envelope[PayloadT]) -> Envelope[PayloadT]:
-        """Return the migrated envelope advanced to ``target_version``."""
+        """Return the migrated :class:`Envelope` advanced to ``target_version``."""
         ...
 
 def save_envelope(envelope: Envelope[Any], path: Path) -> None:
@@ -231,7 +231,7 @@ def load_envelope[PayloadT: BaseModel](
             :class:`EnvelopeVersionError`.
 
     Returns:
-        The validated envelope at the consumer's expected version.
+        The validated :class:`Envelope` at the consumer's expected version.
 
     Raises:
         ClassificationError: If the on-disk classification does not

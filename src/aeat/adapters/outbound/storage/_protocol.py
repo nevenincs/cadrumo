@@ -53,7 +53,7 @@ class StorageProvider(Protocol):
                 label deriver registered at the application layer.
 
         Returns:
-            The newly-written object's metadata.
+            The newly-written object's :class:`ProviderObjectMetadata`.
         """
         ...
 
@@ -65,7 +65,7 @@ class StorageProvider(Protocol):
             object_key_hmac: Stable HMAC identifying the object.
 
         Returns:
-            A ``(payload_bytes, metadata)`` tuple.
+            A 2-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
         """
         ...
 

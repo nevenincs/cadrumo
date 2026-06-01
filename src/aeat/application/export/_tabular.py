@@ -61,7 +61,11 @@ def serialize_tabular_rows(
     fieldnames: Sequence[str],
     export_format: ExportSerializationFormat,
 ) -> TabularExportResult:
-    """Serialize string-keyed rows as a deterministic CSV or JSON Lines payload."""
+    """Serialize string-keyed rows as a deterministic CSV or JSON Lines payload.
+
+    Returns a :class:`TabularExportResult` with the encoded bytes, media
+    type, and file extension for the requested format.
+    """
     normalized_fields = _normalize_fieldnames(fieldnames)
     normalized_rows = tuple(_normalize_row(row, fieldnames=normalized_fields) for row in rows)
     if export_format is ExportSerializationFormat.CSV:

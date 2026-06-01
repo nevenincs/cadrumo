@@ -199,7 +199,11 @@ def create_manual_transaction(
     usage_ratio_profile: UsageRatioProfile | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Persist one manual ledger transaction in the command's bucket."""
+    """Persist one manual ledger transaction in the command's bucket.
+
+    Returns a :class:`ManualLedgerTransactionResult` with the created
+    transaction and associated bucket event.
+    """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -247,7 +251,7 @@ def attach_manual_transaction_evidence(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Attach purchase evidence or supplementary attachments to one ledger transaction."""
+    """Attach purchase evidence or supplementary attachments to one ledger transaction and return a :class:`ManualLedgerTransactionResult`."""
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -400,7 +404,11 @@ def import_ledger_transactions(
     occurred_at: datetime | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerImportOperationResult:
-    """Import provider transactions into one bucket catalogue and emit events."""
+    """Import provider transactions into one bucket catalogue and emit events.
+
+    Returns a :class:`LedgerImportOperationResult` summarising the number
+    of imported, skipped, and failed transactions.
+    """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -477,7 +485,10 @@ def import_ledger_source(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> LedgerSourceImportResult:
-    """Validate, ingest, and optionally persist one ledger source file."""
+    """Validate, ingest, and optionally persist one ledger source file.
+
+    Returns a :class:`LedgerSourceImportResult`.
+    """
     provider = _resolve_financial_provider(command.provider, command.path)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
@@ -596,7 +607,11 @@ def archive_manual_transaction(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Mark one bucket-scoped ledger transaction as archived."""
+    """Mark one bucket-scoped ledger transaction as archived.
+
+    Returns a :class:`ManualLedgerTransactionResult` reflecting the
+    archived transaction state.
+    """
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
@@ -626,7 +641,11 @@ def stash_manual_transaction(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Mark one active bucket-scoped ledger transaction as stashed."""
+    """Mark one active bucket-scoped ledger transaction as stashed.
+
+    Returns a :class:`ManualLedgerTransactionResult` reflecting the
+    stashed transaction state.
+    """
     return _transition_manual_transaction_lifecycle(
         bucket_id=bucket_id,
         transaction_id=transaction_id,
@@ -658,7 +677,11 @@ def remove_manual_transaction(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerTransactionRemovalReport:
-    """Remove one bucket-scoped ledger transaction after finalized-modelo checks."""
+    """Remove one bucket-scoped ledger transaction after finalized-modelo checks.
+
+    Returns a :class:`LedgerTransactionRemovalReport` indicating whether
+    the transaction was removed or blocked by a finalized-modelo reference.
+    """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger removal")
     trimmed_source_command = _require_source_command(source_command, operation="ledger removal")
@@ -764,7 +787,7 @@ def reset_ledger_catalogue(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerCatalogueResetReport:
-    """Reset one bucket's ledger catalogue after finalized-modelo checks."""
+    """Reset one bucket's ledger catalogue after finalized-modelo checks and return a :class:`LedgerCatalogueResetReport`."""
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger reset")
     trimmed_source_command = _require_source_command(source_command, operation="ledger reset")
@@ -957,7 +980,7 @@ def get_manual_transaction(
     transaction_id: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Return one transaction from a bucket-scoped catalogue."""
+    """Return one :class:`ManualLedgerTransactionResult` from a bucket-scoped catalogue."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = _require_transaction(repository.load(), transaction_id)
     return _result(bucket_id, transaction, ())
@@ -968,7 +991,11 @@ def list_manual_transactions(
     bucket_id: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
-    """Return every transaction in a bucket, sorted by effective date and id."""
+    """Return every transaction in a bucket, sorted by effective date and id.
+
+    Each element is a :class:`ManualLedgerTransactionResult` for one
+    stored transaction.
+    """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = sorted(
         repository.load().values(),
@@ -986,7 +1013,10 @@ def query_ledger_review_rows(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> LedgerReviewQueryResult:
-    """Return review rows for bucket-local ledger transactions."""
+    """Return review rows for bucket-local ledger transactions.
+
+    Returns a :class:`LedgerReviewQueryResult`.
+    """
     repository = _transaction_repository(bucket_id=query.bucket_id, repository=transaction_repository)
     catalogue = repository.load()
     rows = _filter_ledger_review_rows(
@@ -1071,7 +1101,7 @@ def _ledger_review_filter_labels(query: LedgerReviewQuery) -> tuple[str, ...]:
 
 
 def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
-    """Return the operator review status for a bucket-local transaction fact."""
+    """Return the :class:`LedgerReviewStatus` for the operator review of a bucket-local transaction fact."""
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
         return LedgerReviewStatus.SKIPPED
     if transaction.business_classification in {
@@ -1084,7 +1114,7 @@ def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewSt
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
-    """Return the canonical CLI/API projection for one ledger transaction."""
+    """Return the :class:`LedgerTransactionPayload` for one ledger transaction."""
     raw = transaction.raw
     return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,
@@ -1115,7 +1145,11 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
 
 
 def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransactionReviewPayload:
-    """Return one ledger transaction projection plus derived operator review status."""
+    """Return one ledger transaction projection plus derived operator review status.
+
+    Returns a :class:`LedgerTransactionReviewPayload` with all operator-facing
+    fields populated from the transaction record.
+    """
     raw = transaction.raw
     return LedgerTransactionReviewPayload(
         transaction_id=transaction.transaction_id,
@@ -1147,7 +1181,7 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
 
 
 def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> LedgerTransactionResultPayload:
-    """Return the canonical projection for a single ledger mutation/read result."""
+    """Return the canonical :class:`LedgerTransactionResultPayload` for a single ledger mutation/read result."""
     return LedgerTransactionResultPayload(
         bucket_id=result.ref.bucket_id,
         transaction_id=result.ref.transaction_id,
@@ -1157,7 +1191,7 @@ def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> 
 
 
 def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTransactionTrackingPayload:
-    """Return durable event lineage fields for one ledger transaction."""
+    """Return durable event lineage fields as a :class:`LedgerTransactionTrackingPayload` for one ledger transaction."""
     return LedgerTransactionTrackingPayload(
         transaction_id=transaction.transaction_id,
         created_event_id=transaction.created_event_id,
@@ -1188,7 +1222,7 @@ def summarize_manual_transactions(
     period: str | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
-    """Return a read-only status summary for one bucket's ledger transactions."""
+    """Return a read-only :class:`LedgerStatusReport` for one bucket's ledger transactions."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
     status_counts: dict[LedgerReviewStatus, int] = {
@@ -1242,7 +1276,10 @@ def update_manual_transaction(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Replace one manual ledger transaction with a validated command payload."""
+    """Replace one manual ledger transaction with a validated command payload.
+
+    Returns a :class:`ManualLedgerTransactionResult`.
+    """
     now = _normalise_timestamp(occurred_at)
     repository = _transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
@@ -1366,8 +1403,11 @@ def update_manual_transaction_fields(
 
     When ``reaffirm`` is :data:`True` the automatic re-affirmation no-op guard
     is bypassed and the command is forced through even if the patched fields are
-    field-for-field identical to the stored transaction.  This is the explicit
+    field-for-field identical to the stored transaction. This is the explicit
     operator-driven counterpart to the automatic silent no-op (S14).
+
+    Returns a :class:`ManualLedgerTransactionResult` reflecting the updated
+    transaction state after the patch is applied.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     current = _require_transaction(repository.load(), transaction_id)
@@ -1444,6 +1484,8 @@ def split_transaction(
       the parent transaction id so ``for_object(parent_id)`` returns the
       whole lineage chain in chronological order.
     - Catalogue + event are persisted atomically.
+
+    Returns a :class:`SplitTransactionResult`.
     """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger split")
@@ -1730,7 +1772,7 @@ def merge_transactions(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> MergeTransactionsResult:
-    """Re-merge a complete cohort of split children into a fresh transaction.
+    """Re-merge a complete cohort of split children into a fresh transaction and return a :class:`MergeTransactionsResult`.
 
     Pre-conditions:
 
@@ -3423,6 +3465,8 @@ def bulk_classify_from_csv(
     classification value, pydantic error) are collected in ``failures``
     and the remaining valid rows are applied (partial-success semantics
     matching the ledger import pattern).
+
+    Returns a :class:`BulkClassifyResult`.
     """
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = bucket_event_repository or BucketEventHistoryRepository()
@@ -3572,6 +3616,8 @@ def apply_classification_rules(
     Rules are evaluated in priority order (lower number = higher priority);
     the first matching rule wins. Match is ``re.search(pattern, description,
     re.IGNORECASE)``.
+
+    Returns an :class:`ApplyRulesResult`.
     """
     from typing import cast
 

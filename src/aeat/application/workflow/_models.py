@@ -275,7 +275,7 @@ def active_transaction_catalogue_repository(
     *,
     objects: SecureObjectRepository | None = None,
 ) -> TransactionCatalogueRepository:
-    """Return the transaction catalogue repository for the active profile bucket."""
+    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket."""
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
     from ._errors import NoActiveProfileError
 
@@ -300,7 +300,10 @@ def update_declaration_pointer(
     exported_path: str | None = None,
     verified: bool | None = None,
 ) -> WorkflowState:
-    """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
+    """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``.
+
+    Returns the updated :class:`WorkflowState` with the pointer recorded.
+    """
     import json as _json
 
     declarations: dict[str, DeclaracionPointer] = dict(state.declarations)

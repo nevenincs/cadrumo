@@ -843,7 +843,7 @@ def build_overview_status_report(
     state: WorkflowState | None = None,
     raw_values: Mapping[str, object] | None = None,
 ) -> OverviewStatusReport:
-    """Build the typed readiness report used by root and overview status.
+    """Build and return the :class:`OverviewStatusReport` used by root and overview status.
 
     Consumes the canonical :func:`build_operator_state_projection`; the
     bespoke per-surface store assembly this function once carried is

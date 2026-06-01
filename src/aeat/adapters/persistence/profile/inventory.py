@@ -36,7 +36,7 @@ def load_inventory() -> tuple[InventoryLedger, ...]:
     """Load inventory ledgers from the encrypted ledger.
 
     Returns:
-        Tuple of persisted inventory ledgers, empty when no envelope exists.
+        Tuple of :class:`InventoryLedger` records, empty when no envelope exists.
     """
     return InventoryLedgerRepository().load().ledgers
 
@@ -62,7 +62,7 @@ def create_inventory_ledger(ledger: InventoryLedger) -> InventoryLedgerDocument:
         ledger: Inventory ledger to insert.
 
     Returns:
-        The updated ledger document including the newly inserted ledger.
+        The updated :class:`InventoryLedgerDocument` including the newly inserted ledger.
     """
     return InventoryLedgerRepository().create(ledger)
 
@@ -81,7 +81,7 @@ def record_movement(
         year: Tax year of the target ledger.
 
     Returns:
-        The updated inventory ledger.
+        The updated :class:`InventoryLedger`.
     """
     return InventoryLedgerRepository().record_movement(
         actividad_id,
@@ -122,7 +122,7 @@ class InventoryLedgerRepository:
         """Load the ledger, returning an empty document when absent.
 
         Returns:
-            Decrypted inventory ledger document.
+            Decrypted :class:`InventoryLedgerDocument`.
 
         Raises:
             InventoryLedgerError: When the envelope exists but cannot be loaded or decrypted.
@@ -156,7 +156,7 @@ class InventoryLedgerRepository:
             ledger: Inventory ledger to insert.
 
         Returns:
-            The ledger document including the new ledger.
+            The :class:`InventoryLedgerDocument` including the new ledger.
 
         Raises:
             InventoryLedgerError: When a ledger with the same ``(actividad_id, year)`` pair exists.
@@ -188,7 +188,7 @@ class InventoryLedgerRepository:
             year: Tax year of the target ledger.
 
         Returns:
-            The updated inventory ledger.
+            The updated :class:`InventoryLedger`.
 
         Raises:
             InventoryLedgerError: When the target ledger does not exist, the movement id

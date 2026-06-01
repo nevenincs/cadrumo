@@ -83,7 +83,11 @@ class XlsxProvider(FinancialProvider):
         self._last_header_index = 1
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate workbook accessibility and header detection."""
+        """Validate workbook accessibility and header detection.
+
+        Returns:
+            A :class:`ProviderValidation` with the validation outcome.
+        """
         workbook: Workbook | None = None
         try:
             workbook, rows, _, layout, header_row, _, _ = self._locate_sheet(path)
@@ -122,7 +126,7 @@ class XlsxProvider(FinancialProvider):
         )
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from the first matching worksheet."""
+        """Yield strict :class:`RawTransaction` records from the first matching worksheet."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         workbook, rows, sheet_name, layout, headers, lookup, header_index = self._locate_sheet(path)

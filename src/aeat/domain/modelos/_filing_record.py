@@ -225,7 +225,7 @@ class ModeloRecordCatalogue(BaseModel):
         filing_year: int,
         period: str,
     ) -> ModeloRecord | None:
-        """Return the current (non-superseded) filing record for a tuple.
+        """Return the current (non-superseded) :class:`ModeloRecord` for a filing tuple.
 
         Returns ``None`` when no filing has ever happened for the
         tuple. Returns the active filing record when one exists. Never
@@ -252,7 +252,11 @@ class ModeloRecordCatalogue(BaseModel):
         filing_year: int,
         period: str,
     ) -> tuple[ModeloRecord, ...]:
-        """Return every filing record for a tuple, ordered by filed_at."""
+        """Return every filing record for a tuple, ordered by filed_at.
+
+        Returns:
+            Tuple of :class:`ModeloRecord` objects ordered by filing timestamp.
+        """
         matching = tuple(
             record
             for record in self.records.values()

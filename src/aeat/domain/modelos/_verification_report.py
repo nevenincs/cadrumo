@@ -193,7 +193,7 @@ class VerificationReportCatalogue(BaseModel):
         return self.reports.get(verification_report_id)
 
     def for_calculation_revision(self, calculation_revision_id: str) -> tuple[VerificationReport, ...]:
-        """Return every report against one calculation revision, ordered by run_at."""
+        """Return every :class:`VerificationReport` against one calculation revision, ordered by run_at."""
         matching = tuple(r for r in self.reports.values() if r.calculation_revision_id == calculation_revision_id)
         return tuple(sorted(matching, key=lambda r: r.run_at))
 

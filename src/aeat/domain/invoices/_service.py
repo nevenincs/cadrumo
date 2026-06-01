@@ -106,7 +106,7 @@ def find_unmatched(
         kind: Optional filter on :class:`InvoiceKind`.
 
     Returns:
-        A tuple of invoices whose ``linked_transaction_ids`` is empty,
+        A tuple of :class:`Invoice` objects whose ``linked_transaction_ids`` is empty,
         preserving insertion order. When ``kind`` is supplied, only
         invoices of that kind are returned.
     """
@@ -131,7 +131,7 @@ def link_transaction(
             ``linked_transaction_ids`` tuple.
 
     Returns:
-        A fresh immutable catalogue with the updated invoice. Duplicate
+        A fresh immutable :class:`InvoiceCatalogue` with the updated invoice. Duplicate
         links are idempotent: calling this helper with an already-linked
         transaction returns a value-equal catalogue rather than raising.
 
@@ -184,7 +184,7 @@ def suggest_reconciliations(
             comparisons; defaults to one cent.
 
     Returns:
-        Deterministic tuple of suggestions sorted by
+        Deterministic tuple of :class:`ReconciliationSuggestion` objects sorted by
         ``(score desc, invoice_id asc, transaction_id asc)``.
     """
     unmatched_invoices = tuple(invoice for invoice in invoices.values() if not invoice.linked_transaction_ids)
@@ -240,7 +240,7 @@ def verify_link_consistency(
         transactions: Source transaction catalogue.
 
     Returns:
-        Deterministic tuple of inconsistencies sorted by
+        Deterministic tuple of :class:`LinkInconsistency` items sorted by
         ``(invoice_id, transaction_id)``.
     """
     inconsistencies: list[LinkInconsistency] = []

@@ -1046,10 +1046,10 @@ class TransactionCatalogue(BaseModel):
             transaction_id: Stable transaction identifier.
 
         Returns:
-            The matching transaction, or ``None`` when absent.
+            The matching :class:`Transaction`, or ``None`` when absent.
         """
         return self.transactions.get(transaction_id)
 
     def values(self) -> Iterator[Transaction]:
-        """Iterate over catalogue transactions."""
+        """Iterate over catalogue :class:`Transaction` records."""
         return iter(self.transactions.values())

@@ -84,7 +84,7 @@ def eligible_ratio_categories(profile: UsageRatioProfile) -> tuple[EligibleCateg
     """Return all eligible categories with their default ratio + override flag.
 
     The output is sorted by canonical category value so callers can
-    diff snapshots without ordering noise.
+    diff snapshots without ordering noise. Each row is an :class:`EligibleCategoryRow`.
     """
     rows: list[EligibleCategoryRow] = []
     for category in sorted(ELIGIBLE_USAGE_RATIO_CATEGORIES, key=lambda c: c.value):
@@ -113,6 +113,8 @@ def validate_ratios_profile(
     explicitly populated (e.g. a modelo's pre-calculate readiness check).
     Categories absent from :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` raise a
     ``not_eligible`` finding rather than silently passing.
+
+    Returns a :class:`RatiosValidationReport`.
     """
     findings: list[RatiosValidationFinding] = []
     missing: list[SpendingCategory] = []
@@ -166,7 +168,11 @@ def validate_ratios_profile(
 
 
 def list_eligible_ratios_for_bucket(*, bucket_id: str) -> tuple[EligibleCategoryRow, ...]:
-    """Convenience: load the bucket's profile and project the eligibility report."""
+    """Convenience: load the bucket's profile and project the eligibility report.
+
+    Each element is an :class:`EligibleCategoryRow` describing one
+    spending category's eligibility and configured ratio.
+    """
     profile = load_usage_ratios(bucket_id=bucket_id)
     return eligible_ratio_categories(profile)
 
@@ -176,7 +182,7 @@ def validate_ratios_for_bucket(
     bucket_id: str,
     require_overrides_for: tuple[SpendingCategory, ...] = (),
 ) -> RatiosValidationReport:
-    """Convenience: load the bucket's profile and run validation."""
+    """Load the bucket's profile, run validation, and return a :class:`RatiosValidationReport`."""
     profile = load_usage_ratios(bucket_id=bucket_id)
     return validate_ratios_profile(
         bucket_id=bucket_id,

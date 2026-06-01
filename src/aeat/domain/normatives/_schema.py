@@ -267,7 +267,7 @@ class NormativeCatalogue(_NormativeStrictMutable):
         return key in self.references
 
     def get(self, ref_id: str) -> NormativeReference | None:
-        """Return the reference keyed by ``ref_id`` or ``None`` if absent."""
+        """Return the :class:`NormativeReference` keyed by ``ref_id`` or ``None`` if absent."""
         return self.references.get(ref_id)
 
 
@@ -287,7 +287,11 @@ class NormativeVerificationReport(_NormativeStrictFrozen):
 
     @property
     def errors(self) -> tuple[NormativeVerificationIssue, ...]:
-        """Return the subset of issues whose level is ``error``."""
+        """Return the subset of issues whose level is ``error``.
+
+        Returns:
+            Tuple of :class:`NormativeVerificationIssue` objects with error severity.
+        """
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property

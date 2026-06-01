@@ -139,7 +139,7 @@ def select_provider(
     settings: Settings,
     browser_session_factory: BrowserSessionFactory | None = None,
 ) -> AuthProvider:
-    """Return the concrete outbound auth provider for ``kind``."""
+    """Return the concrete outbound :class:`AuthProvider` for ``kind``."""
     if kind is AuthProviderKind.CERTIFICATE:
         return AeatAuthenticator(
             settings,

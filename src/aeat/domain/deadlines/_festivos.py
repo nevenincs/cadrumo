@@ -372,14 +372,14 @@ def shift_deadline(
     ccaa_code: CalendarCCAA | None,
     calendar: HolidayCalendar | None = None,
 ) -> DeadlineShift:
-    """Apply the AEAT deadline-shift rule to one close date.
+    """Apply the AEAT deadline-shift rule and return a :class:`DeadlineShift` result.
 
     The rule moves the deadline to the next business day when the
     original close date is a Saturday, Sunday, national holiday, or
     CCAA holiday of the taxpayer's tax residence.
 
     Modelo-specific exceptions (e.g., Modelo 369 OSS / IOSS) bypass
-    the shift and return an unshifted result with reason
+    the shift and return an unshifted :class:`DeadlineShift` with reason
     ``modelo_exception``.
 
     When ``calendar`` is omitted the function loads it via

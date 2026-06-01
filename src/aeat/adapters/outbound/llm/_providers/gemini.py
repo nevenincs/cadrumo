@@ -106,7 +106,7 @@ class GeminiAdapter(_ProviderAdapter):
             request: Normalized provider request.
 
         Returns:
-            Normalized completion containing the concatenated text of the
+            A :class:`ProviderCompletion` containing the concatenated text of the
             first candidate and reported token counts.
 
         Raises:

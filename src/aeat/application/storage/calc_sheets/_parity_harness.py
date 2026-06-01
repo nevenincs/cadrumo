@@ -301,6 +301,8 @@ def verify_modelo_parity(
 ) -> ParityReport:
     """Run the full three-way parity verification for one modelo+period.
 
+    Returns a :class:`ParityReport`.
+
     Side effects:
         - Idempotently creates (or updates) a `aeat-vault/calc-sheets/
           {modelo}-{period}-{year}/AEAT … {modelo} {period} {year}`

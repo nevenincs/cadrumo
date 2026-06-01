@@ -70,7 +70,7 @@ class ModeloDraftBuilderProtocol(Protocol):
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Build and return a registry-backed filing draft."""
+        """Build and return a :class:`RegistryModeloDraftProtocol` registry-backed filing draft."""
         ...
 
 
@@ -106,7 +106,11 @@ class CertificateBundleProtocol(Protocol):
     """
 
     def describe(self) -> AuthProviderDescription:
-        """Return the current auth-provider description; raise on failure."""
+        """Return the current auth-provider description; raise on failure.
+
+        Returns an :class:`AuthProviderDescription` with the provider's
+        configured and available state.
+        """
         ...
 
 

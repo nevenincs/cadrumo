@@ -354,8 +354,8 @@ def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassific
         output: The output surface to look up.
 
     Returns:
-        The default output policy. The returned record is frozen and
-        shared.
+        The default :class:`OutputClassificationPolicy`. The returned
+        record is frozen and shared.
     """
     return _DEFAULT_OUTPUT_POLICY_TABLE[output]
 
@@ -363,9 +363,10 @@ def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
     """Return the immutable default-policy mapping for every class.
 
     Returns:
-        The shared :class:`MappingProxyType` view of the default-policy
-        table. The mapping itself and every value are frozen; callers
-        cannot mutate either.
+        The shared :class:`MappingProxyType` view mapping each
+        :class:`SensitivityClass` to its :class:`ClassificationPolicy`.
+        The mapping itself and every value are frozen; callers cannot
+        mutate either.
     """
     return _DEFAULT_POLICY_TABLE
 
@@ -373,8 +374,9 @@ def default_output_policy_table() -> Mapping[OutputSensitivityClass, OutputClass
     """Return the immutable default-output-policy mapping.
 
     Returns:
-        The shared :class:`MappingProxyType` view of output redaction
-        policies. CLI public output is represented here rather than in
-        the persisted sensitivity table.
+        The shared :class:`MappingProxyType` view mapping each
+        :class:`OutputSensitivityClass` to its :class:`OutputClassificationPolicy`.
+        CLI public output is represented here rather than in the
+        persisted sensitivity table.
     """
     return _DEFAULT_OUTPUT_POLICY_TABLE

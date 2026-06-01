@@ -282,6 +282,9 @@ def resolve_profile_sourced_bindings(
     ``profile_record`` is injectable for testing; production callers
     leave it ``None`` and the bucket's :class:`UserProfileRecord` is
     loaded. A bucket with no profile yields an empty result.
+
+    Returns a :class:`ProfileSourcedBindingResult` with resolved binding
+    values split across Decimal and enum channels.
     """
     # A profile binding only matters to the engine when a formula
     # consumes it. Identity / export-layout profile bindings (the

@@ -49,7 +49,7 @@ def detect_template_revision(pdf_path: Path) -> TemplateRevision | None:
 
 
 def detect_template_revision_from_pages(pages: tuple[str, ...]) -> TemplateRevision | None:
-    """Return a template revision from already-extracted PDF page text."""
+    """Return a :class:`TemplateRevision` from already-extracted PDF page text."""
     if not pages:
         return None
     # Union of pages 1-2 header region: some Modelo 100 PDFs print

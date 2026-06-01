@@ -283,7 +283,11 @@ def discover_workbooks(root: Path) -> tuple[Path, ...]:
 
 
 def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None = None) -> WorkbookArtefactReport:
-    """Scan one workbook and classify formula coverage."""
+    """Scan one workbook and classify formula coverage.
+
+    Returns:
+        A :class:`WorkbookArtefactReport` describing the workbook's formula coverage.
+    """
     opts = options or WorkbookScanOptions()
     started = time.monotonic()
     resolved_root = root.resolve()
@@ -450,7 +454,7 @@ def inventory_workbook_coverage(
     limit: int | None = None,
     previous_reports: Iterable[WorkbookArtefactReport] = (),
 ) -> tuple[WorkbookArtefactReport, ...]:
-    """Scan official workbook artefacts and return deterministic coverage reports."""
+    """Scan official workbook artefacts and return :class:`WorkbookArtefactReport` coverage records."""
     paths = discover_workbooks(root)
     if limit is not None:
         paths = paths[:limit]
@@ -474,6 +478,9 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     for the workbook parity backend. This resolver does not attempt a graceful
     fallback: if no runner is locatable, it raises so the caller surfaces the
     missing dependency instead of silently downgrading evidence quality.
+
+    Returns:
+        A :class:`WorkbookRunnerAvailability` describing the detected runner.
     """
     from ....core.config import load_settings
 
@@ -583,7 +590,7 @@ def convert_binary_xls_with_libreoffice(
     root: Path,
     executable: str | None = None,
 ) -> WorkbookConversionReport:
-    """Convert one official binary XLS in isolated storage and classify it."""
+    """Convert one official binary XLS in isolated storage and return a :class:`WorkbookConversionReport`."""
     started = time.monotonic()
     context = _binary_xls_conversion_context(workbook_path, root=root)
     runner = _resolve_libreoffice_runner(executable)
@@ -734,7 +741,7 @@ def run_registry_workbook_parity(
     tolerance: Decimal = Decimal("0"),
     executable: str | None = None,
 ) -> WorkbookParityRunReport:
-    """Execute one registry-vs-workbook parity comparison with shared inputs."""
+    """Execute one registry-vs-workbook parity comparison and return a :class:`WorkbookParityRunReport`."""
     if workbook.workbook_kind != WorkbookKind.FORMULA_FORM:
         raise RegistryValidationError(
             f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle"
@@ -802,7 +809,11 @@ def run_registry_workbook_parity(
 
 
 def parse_workbook_cell_ref(value: str, *, default_sheet: str | None = None) -> WorkbookCellRef:
-    """Parse a workbook cell reference from registry configuration."""
+    """Parse a workbook cell reference from registry configuration.
+
+    Returns:
+        The parsed :class:`WorkbookCellRef` with sheet and coordinate fields.
+    """
     match = _CELL_REF_VALUE_PATTERN.match(value)
     if not match:
         raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
@@ -906,7 +917,11 @@ def compare_registry_to_workbook(
     source_refs: Mapping[str, tuple[str, ...]] | None = None,
     tolerance: Decimal = Decimal("0"),
 ) -> WorkbookParityRunReport:
-    """Build a deterministic parity comparison report from already-computed values."""
+    """Build a deterministic parity comparison report from already-computed values.
+
+    Returns:
+        A :class:`WorkbookParityRunReport` comparing registry output to workbook cells.
+    """
     comparisons: list[WorkbookParityComparison] = []
     for output_id in sorted(set(expected_workbook_values) | set(actual_registry_values)):
         expected = expected_workbook_values.get(output_id)
@@ -948,7 +963,7 @@ def verify_workbook_backend(
     fail_on_scan_error: bool = True,
     require_formula_runner: bool = False,
 ) -> WorkbookBackendVerificationReport:
-    """Verify that the workbook parity backend can discover and classify artefacts."""
+    """Verify the workbook parity backend and return a :class:`WorkbookBackendVerificationReport`."""
     reports = inventory_workbook_coverage(
         root,
         options=WorkbookScanOptions(per_file_timeout_seconds=per_file_timeout_seconds),

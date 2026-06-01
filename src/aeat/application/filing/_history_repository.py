@@ -54,7 +54,7 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
         return tuple(self.iter_ids())
 
     def iter_histories(self) -> Iterator[tuple[str, ModeloHistory]]:
-        """Yield ``(modelo, history)`` tuples for every persisted modelo."""
+        """Yield ``(modelo, history)`` tuples of :class:`ModeloHistory` for every persisted modelo."""
         for history in self.iter_records():
             yield str(history.modelo), history
 

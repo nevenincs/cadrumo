@@ -226,7 +226,11 @@ def export_draft(
     headers: dict[str, str],
     schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclaracionExportResult:
-    """Write an approved draft to a fichero-BOE file and return a receipt."""
+    """Write an approved draft to a fichero-BOE file and return a receipt.
+
+    Returns a :class:`DeclaracionExportResult` with the output path and
+    casilla provenance for the exported declaration.
+    """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
@@ -260,7 +264,7 @@ def verify_export(
     file_path: Path,
     schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclaracionVerifyResult:
-    """Verify an exported file against an approved draft and return a verdict."""
+    """Verify an exported file against an approved draft and return a :class:`DeclaracionVerifyResult`."""
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:

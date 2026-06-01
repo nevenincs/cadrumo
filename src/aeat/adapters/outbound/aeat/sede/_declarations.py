@@ -265,7 +265,7 @@ class DeclaracionesRegisterSession:
         self._context = context
 
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
-        """Return filed-declaration rows for one ``(modelo, ejercicio)`` query."""
+        """Return :class:`Declaracion` rows for one ``(modelo, ejercicio)`` query."""
         if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
                 "DeclaracionesRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
@@ -289,7 +289,7 @@ class DeclaracionesRegisterSession:
         registry_snapshot: RegistrySnapshot | None = None,
         artefact_sink: FiledDeclaracionArtefactSink | None = None,
     ) -> FiledDeclaracionObservation:
-        """Capture a normalized filed-declaration observation using the active page."""
+        """Capture a normalized :class:`FiledDeclaracionObservation` using the active page."""
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
         if not await _drive_search(
@@ -325,7 +325,7 @@ async def open_declarations_register(
     settings: Settings | None = None,
     playwright: Playwright | None = None,
 ) -> AsyncIterator[DeclaracionesRegisterSession]:
-    """Open one browser context for repeated filed-declaration register reads."""
+    """Open a :class:`DeclaracionesRegisterSession` for repeated filed-declaration register reads."""
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
         context,
@@ -953,7 +953,7 @@ async def capture_filed_declaration_observation(
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> FiledDeclaracionObservation:
-    """Capture normalized read-only evidence for one filed declaration.
+    """Capture a :class:`FiledDeclaracionObservation` with read-only evidence for one filed declaration.
 
     The observation begins with the register row and then captures every
     AEAT-served artefact this backend knows how to read from the row:
@@ -1166,7 +1166,7 @@ async def capture_previous_filing_observations(
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
-    """Capture filed declarations required by registry previous-filing bindings."""
+    """Capture :class:`FiledDeclaracionObservation` records required by registry previous-filing bindings."""
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
@@ -1202,7 +1202,7 @@ async def capture_relation_source_observations(
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
-    """Capture filed declarations required by registry cross-model relations."""
+    """Capture :class:`FiledDeclaracionObservation` records required by registry cross-model relations."""
     required_outputs: dict[tuple[str, int, str], set[str]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
         for source_period in requirement.periods:
@@ -1551,7 +1551,7 @@ def _verify_submitted_file_context(
 def registry_observation_from_filed_declaration(
     observation: FiledDeclaracionObservation,
 ) -> RegistryModeloObservation:
-    """Convert a filed-declaration observation into registry binding input."""
+    """Convert a filed-declaration observation into a :class:`RegistryModeloObservation`."""
     if not observation.extraction_coverage:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{observation.period!r} "

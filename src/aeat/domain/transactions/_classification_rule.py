@@ -77,7 +77,7 @@ class LedgerClassificationRule(BaseModel):
         actor: str,
         created_at: datetime | None = None,
     ) -> LedgerClassificationRule:
-        """Construct a rule with the content-addressed ``rule_id``."""
+        """Construct a :class:`LedgerClassificationRule` with the content-addressed ``rule_id``."""
         rule_id = _compute_rule_id(description_pattern, classification, category_id)
         return cls(
             rule_id=rule_id,

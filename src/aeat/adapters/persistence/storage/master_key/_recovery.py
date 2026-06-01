@@ -194,11 +194,11 @@ def decode_mnemonic(mnemonic: str) -> bytes:
 
 
 def generate_recovery_key() -> RecoveryKey:
-    """Mint a fresh 32-byte recovery key + its 24-word mnemonic.
+    """Mint a fresh :class:`RecoveryKey` with 32-byte entropy and its 24-word mnemonic.
 
     Uses :func:`secrets.token_bytes` for the entropy. The returned
     record is the only in-memory copy; callers must arrange for the
-    operator to copy / print the mnemonic before the record falls out
+    operator to copy or print the mnemonic before the record falls out
     of scope.
     """
     raw = secrets.token_bytes(_RECOVERY_KEY_SIZE)
@@ -276,7 +276,7 @@ def save_wrapped_master_key(wrapped: WrappedMasterKey, path: Path) -> None:
 
 
 def load_wrapped_master_key(path: Path) -> WrappedMasterKey:
-    """Read and validate a wrapped-master-key file."""
+    """Read and validate a wrapped-master-key file, returning a :class:`WrappedMasterKey`."""
     return WrappedMasterKey.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
 
 

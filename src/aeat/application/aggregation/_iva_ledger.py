@@ -204,7 +204,10 @@ def aggregate_iva_ledger_observations_from_repositories(
     period: Period | str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> IvaLedgerAggregation:
-    """Load the bucket-local transaction catalogue and project IVA observations."""
+    """Load the bucket-local transaction catalogue and project IVA observations.
+
+    Returns an :class:`IvaLedgerAggregation`.
+    """
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -214,7 +217,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     return aggregate_iva_ledger_observations(repository.load(), period=period)
 
 def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerObservation:
-    """Validate a pre-classified IVA candidate and return an observation.
+    """Validate a pre-classified IVA candidate and return an :class:`IvaLedgerObservation`.
 
     The validator does not re-classify the operation and does not derive
     IVA from the base. It only blocks sentinel categories that are not
@@ -241,7 +244,10 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
     )
 
 def validate_iva_ledger_observations(candidates: Iterable[IvaLedgerCandidate]) -> tuple[IvaLedgerObservation, ...]:
-    """Validate every pre-classified IVA candidate in input order."""
+    """Validate every pre-classified IVA candidate in input order.
+
+    Returns a tuple of :class:`IvaLedgerObservation` instances.
+    """
     return tuple(validate_iva_ledger_observation(candidate) for candidate in candidates)
 
 def aggregate_iva_ledger_candidates(
@@ -256,6 +262,9 @@ def aggregate_iva_ledger_candidates(
     transactions. Pre-classified candidates are required for non-domestic
     IVA and adjustments because those axes cannot be recovered from a
     transaction amount or direction without guessing.
+
+    Returns an :class:`IvaLedgerAggregation` carrying the accepted
+    observations and any period-exclusion issues.
     """
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     observations: list[IvaLedgerObservation] = []
@@ -318,7 +327,7 @@ def aggregate_iva_ledger_observations(
     *,
     period: Period | str,
 ) -> IvaLedgerAggregation:
-    """Project classified ledger transaction tax facts into IVA observations."""
+    """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`."""
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     observations: list[IvaLedgerObservation] = []
     prorrata_references: list[ProrrataLedgerReference] = []
@@ -577,7 +586,11 @@ def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIs
     return reasons[0] if reasons else None
 
 def iva_ledger_missing_fact_reasons(transaction: Transaction) -> tuple[IvaLedgerAggregationIssueReason, ...]:
-    """Return missing IVA fact reasons for a transaction without projecting it."""
+    """Return missing IVA fact reasons for a transaction without projecting it.
+
+    Each element is an :class:`IvaLedgerAggregationIssueReason` describing
+    one absent required tax fact.
+    """
     reasons: list[IvaLedgerAggregationIssueReason] = []
     if transaction.taxable_base is None:
         reasons.append(IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE)

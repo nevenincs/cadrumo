@@ -33,7 +33,11 @@ def resolve_filing_repository_bucket_id(bucket_id: str | None) -> str:
 
 
 def secure_objects_for_filing_bucket(bucket_id: str) -> SecureObjectRepository:
-    """Return runtime-created secure-object storage for ``bucket_id``."""
+    """Return runtime-created secure-object storage for ``bucket_id``.
+
+    Returns:
+        A :class:`SecureObjectRepository` scoped to the given filing bucket.
+    """
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id)

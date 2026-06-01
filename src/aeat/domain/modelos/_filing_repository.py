@@ -99,7 +99,7 @@ class ModeloRecordCatalogueRepository:
 
 
 def upsert_filing_record(catalogue: ModeloRecordCatalogue, record: ModeloRecord) -> ModeloRecordCatalogue:
-    """Return a new catalogue with ``record`` inserted or replaced."""
+    """Return a new :class:`ModeloRecordCatalogue` with ``record`` inserted or replaced."""
     mapping = dict(catalogue.records)
     mapping[record.filing_record_id] = record
     return ModeloRecordCatalogue(records=mapping)

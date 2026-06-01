@@ -123,11 +123,11 @@ class SheetLayout(BaseModel):
     bracket_entries: Mapping[ParameterId, tuple[BracketEntry, ...]]
 
     def address_for(self, casilla: CasillaId) -> SheetCellAddress:
-        """Resolve a casilla reference to the cell holding its value.
+        """Resolve a casilla reference to the :class:`SheetCellAddress` holding its value.
 
-        Computed casillas resolve to their `Cálculos` cell; input
-        casillas resolve to their `Entradas` cell. The translator uses
-        this to compile a `FormulaExpression` casilla leaf into an A1
+        Computed casillas resolve to their ``Calculos`` cell; input
+        casillas resolve to their ``Entradas`` cell. The translator uses
+        this to compile a ``FormulaExpression`` casilla leaf into an A1
         reference.
         """
         if casilla in self.calculos_cells:

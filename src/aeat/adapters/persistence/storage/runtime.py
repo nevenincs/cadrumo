@@ -109,7 +109,7 @@ class StorageRuntime(BaseModel):
         )
 
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Create a bucket-attached secure-object repository for this runtime."""
+        """Create a :class:`SecureObjectRepository` attached to this runtime's bucket."""
         self.require_ready()
         self._require_current_active_session()
         from .sql.engine import get_engine
@@ -190,7 +190,7 @@ def inspect_storage_runtime(
     *,
     now: datetime | None = None,
 ) -> StorageRuntime:
-    """Return the current profile-bound secure-storage runtime state."""
+    """Return the current profile-bound secure-storage :class:`StorageRuntime` state."""
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
     checked_at = now or _utc_now()
@@ -295,7 +295,7 @@ def inspect_bucket_storage_runtime(
     *,
     now: datetime | None = None,
 ) -> StorageRuntime:
-    """Return runtime readiness for a named profile bucket.
+    """Return a :class:`StorageRuntime` with readiness diagnostics for a named profile bucket.
 
     Explicit database URLs remain fail-closed: when the live settings
     carry an explicit primary database route, the runtime reports that

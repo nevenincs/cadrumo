@@ -243,6 +243,8 @@ def build_cli_version_report(
     must see name + version in under a second on cold start). When
     ``--detail`` is on, the caller re-invokes with
     ``with_registry=True`` to populate the registry summary.
+
+    Returns a :class:`CliVersionReport`.
     """
     if with_registry:
         root = registry_root or bundled_path("registry", "aeat")
@@ -257,7 +259,11 @@ def build_cli_version_report(
 
 
 def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
-    """Return local diagnostics for the ``aeat config repair`` surface."""
+    """Return local diagnostics for the ``aeat config repair`` surface.
+
+    Returns a :class:`ConfigRepairReport` enumerating every diagnostic
+    check and any suggested repairs.
+    """
     _ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
@@ -379,7 +385,10 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
 
 def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthStatus:
-    """Probe the configured AEAT browser target through the browser adapter."""
+    """Probe the configured AEAT browser target through the browser adapter.
+
+    Returns a :class:`SiteHealthStatus`.
+    """
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var.
     from ..core.config import load_settings as _load_settings
@@ -675,7 +684,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
 
 
 def build_registry_integrity_report(registry_root: Path | None = None) -> RegistryIntegrityReport:
-    """Run the full registry validation as a standalone, opt-in probe.
+    """Run the full registry validation as a standalone, opt-in probe and return a :class:`RegistryIntegrityReport`.
 
     Backs the ``aeat config repair integrity registry`` verb. Bundles
     the registry version summary with the cross-domain

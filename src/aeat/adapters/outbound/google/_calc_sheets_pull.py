@@ -99,7 +99,7 @@ class OperatorEdit(BaseModel):
     value: Decimal | str | bool | None = None
 
     def to_operator_input(self) -> OperatorInput:
-        """Project onto the canonical OperatorInput shape, dropping display fields."""
+        """Project onto the canonical :class:`OperatorInput` shape, dropping display fields."""
         return OperatorInput(casilla=self.casilla, value=self.value)
 
 
@@ -181,7 +181,7 @@ class PullMetadata(BaseModel):
     exported_at: str | None = None
 
     def to_sheet_export_metadata(self) -> SheetExportMetadata | None:
-        """Project onto SheetExportMetadata, parsing exported_at from ISO string.
+        """Project onto a :class:`SheetExportMetadata`, parsing exported_at from ISO string.
 
         Returns ``None`` when ``exported_at`` is absent or unparseable rather
         than raising, so callers can treat a missing stamp as ``metadata_match="missing"``.
@@ -373,9 +373,9 @@ def pull_operator_edits(
             the `drive.file` + `spreadsheets` scopes.
 
     Returns:
-        A `PullResult` carrying the operator edits, binding edits,
+        A :class:`PullResult` carrying the operator edits, binding edits,
         relation edits, and the metadata-match verdict. A
-        `metadata_match="stale"` result still includes the edits but
+        ``metadata_match="stale"`` result still includes the edits but
         signals to the caller that the workbook's identity does not
         match the supplied snapshot — applying these edits to the
         local store may corrupt data.
@@ -780,7 +780,7 @@ def verify_pull_coverage(
     plan: SheetExportPlan,
     pull: PullResult,
 ) -> tuple[PullCoverageDiscrepancy, ...]:
-    """Return every coverage mismatch between ``plan`` and ``pull``.
+    """Return every :class:`PullCoverageDiscrepancy` between ``plan`` and ``pull``.
 
     Returns an empty tuple when the two sides agree on the surfaces
     the pull captures. Non-empty tuples enumerate structural deltas:
@@ -842,7 +842,7 @@ def compute_from_pull(
     snapshot: RegistrySnapshot,
     pull: PullResult,
 ) -> RegistryCalculationResult:
-    """Run the local Decimal runtime against a `PullResult`'s edits.
+    """Run the local Decimal runtime against a `PullResult`'s edits and return a :class:`RegistryCalculationResult`.
 
     Maps each edit family back to the runtime contract:
 

@@ -37,7 +37,10 @@ class SessionStoreProtocol(Protocol):
         ...
 
     def load(self, path: Path) -> PersistedSessionDataProtocol | None:
-        """Load persisted session data for ``path``, returning None when absent."""
+        """Load persisted session data for ``path``.
+
+        Returns a :class:`PersistedSessionDataProtocol`, or ``None`` when absent.
+        """
         ...
 
     def delete(self, path: Path) -> bool:

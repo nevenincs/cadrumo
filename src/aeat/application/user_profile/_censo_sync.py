@@ -158,7 +158,7 @@ class CensoSyncService:
         source_url: str,
         fact_source: CensoFactSource,
     ) -> CensoSnapshot:
-        """Fetch fresh censo facts and capture them as the new ACTIVE snapshot.
+        """Fetch fresh censo facts, capture them as the new ACTIVE snapshot, and return the :class:`CensoSnapshot`.
 
         Raises :exc:`CensoNotAvailableError` when ``fact_source``
         returns an empty mapping — AEAT publishes no censo for the
@@ -236,7 +236,7 @@ class CensoSyncService:
         profile_id: str,
         snapshot_id: str | None = None,
     ) -> CensoSnapshot:
-        """Return one snapshot — the latest ACTIVE by default."""
+        """Return one :class:`CensoSnapshot` — the latest ACTIVE by default."""
         if snapshot_id is not None:
             return self._snapshots.resolve_snapshot(snapshot_id)
         active = self._snapshots.latest_active(profile_id=profile_id)

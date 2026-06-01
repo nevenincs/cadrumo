@@ -228,6 +228,8 @@ def assemble_withholding_observations(
         modelo 190 / 193 are annual summaries.
       * ``country_code`` — defaults to ``ES`` per the AEAT diseño de
         registro convention for unspecified perceptors.
+
+    Each element in the returned tuple is a :class:`WithholdingObservation`.
     """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
@@ -270,7 +272,10 @@ def assemble_related_party_observations(
     *,
     filing_year: int,
 ) -> tuple[RelatedPartyOperationObservation, ...]:
-    """Reassemble per-operation related-party observations from row-set cells."""
+    """Reassemble per-operation related-party observations from row-set cells.
+
+    Returns a tuple of :class:`RelatedPartyOperationObservation` instances.
+    """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
@@ -308,7 +313,7 @@ def assemble_foreign_asset_observations(
     *,
     filing_year: int,
 ) -> tuple[Modelo720RowObservation, ...]:
-    """Reassemble per-asset observations from row-set cells (modelo 720)."""
+    """Reassemble per-asset :class:`Modelo720RowObservation` rows from row-set cells (modelo 720)."""
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_acquisition_date = date(filing_year, 12, 31)
@@ -345,7 +350,10 @@ def assemble_atribucion_observations(
     *,
     filing_year: int,
 ) -> tuple[AtributionMemberObservation, ...]:
-    """Reassemble per-member atribución observations from row-set cells (modelo 184)."""
+    """Reassemble per-member atribución observations from row-set cells (modelo 184).
+
+    Each element in the returned tuple is an :class:`AtributionMemberObservation`.
+    """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
@@ -384,7 +392,7 @@ def assemble_refund_observations(
     *,
     filing_year: int,
 ) -> tuple[RefundOperationObservation, ...]:
-    """Reassemble per-operation refund observations from row-set cells (modelo 360)."""
+    """Reassemble per-operation :class:`RefundOperationObservation` records from row-set cells (modelo 360)."""
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_operation_date = date(filing_year, 12, 31)

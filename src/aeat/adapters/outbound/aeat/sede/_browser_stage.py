@@ -34,7 +34,7 @@ def build_playwright_stage_runner(
     shape_suggestion: str,
     logger: logging.Logger,
 ) -> PlaywrightStageRunner:
-    """Build a surface-bound stage runner using the shared Sede error mapping."""
+    """Build a :class:`PlaywrightStageRunner` bound to the shared Sede error mapping."""
 
     async def _runner[T](
         operation: Awaitable[T],

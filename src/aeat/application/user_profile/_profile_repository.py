@@ -575,6 +575,8 @@ class ProfileRepository:
         by every :class:`ProfileRepository` write. Tombstoned profiles
         are included so callers that need the full inventory (repair,
         audit) see them; live-surface callers filter on ``status``.
+
+        Each element is a :class:`ProfileSummary`.
         """
         buckets_root = self._root / BUCKETS_DIRNAME
         if not buckets_root.is_dir():

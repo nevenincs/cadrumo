@@ -45,7 +45,7 @@ class LLMCache:
         self.root_dir = root_dir or (PROJECT_ROOT / "var" / "llm-cache")
 
     def build_key(self, request: LLMRequest, provider: LLMProvider, model: str) -> CacheKey:
-        """Derive the content-addressed cache key for a request.
+        """Derive a :class:`CacheKey` from the content-addressed request.
 
         Args:
             request: Structured completion request.
@@ -53,7 +53,7 @@ class LLMCache:
             model: Effective model for the request.
 
         Returns:
-            Deterministic cache key components.
+            Deterministic :class:`CacheKey` components.
         """
         prompt_material = "\n".join([request.system or "", request.prompt])
         args_payload = {
@@ -78,7 +78,7 @@ class LLMCache:
             model: Effective model for the request.
 
         Returns:
-            Cached response when present, otherwise `None`.
+            Cached :class:`LLMResponse` when present, otherwise ``None``.
 
         Raises:
             LLMCacheError: When the cached payload is present but cannot be parsed.
@@ -131,7 +131,7 @@ class LLMCache:
             response: Public response to persist.
 
         Returns:
-            Persisted cache entry model.
+            Persisted :class:`CachedEntry` model.
 
         Raises:
             LLMCacheError: When redaction produces a non-dict result or the storage
@@ -178,11 +178,11 @@ class LLMCache:
         return entry
 
     def stats(self) -> CacheStats:
-        """Return cache entry count and encrypted payload size estimate.
+        """Return a :class:`CacheStats` with entry count and encrypted payload size estimate.
 
         Returns:
-            Aggregate entry count and total decrypted JSON byte size for this
-            logical cache partition.
+            :class:`CacheStats` with aggregate entry count and total decrypted
+            JSON byte size for this logical cache partition.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass

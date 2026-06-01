@@ -298,7 +298,7 @@ def _canonical_prorrata_reference_id(
 
 
 def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
-    """Parse and validate a legal IVA prorrata reference id.
+    """Parse and validate a legal IVA prorrata reference id and return a :class:`ProrrataReference`.
 
     The accepted id shape is ``prorrata:{year}:{kind}:{regime}``, plus
     an optional ``:{sector_id}`` suffix. Values from the expense
@@ -375,6 +375,9 @@ def compute_prorrata_general(
     Raises :class:`ProrrataInputError` when the year is out of the
     supported range or when ``kind``/``period`` combination is
     inconsistent.
+
+    Returns:
+        A :class:`ProrrataResult` with the computed percentage and inputs.
     """
     _validate_year(year)
     percentage = _compute_percentage_general(inputs)
@@ -410,11 +413,11 @@ def classify_input_deduction(
     input_iva_amount: Decimal,
     general_percentage: Decimal,
 ) -> ProrrataInputDeduction:
-    """Compute one deductible amount under prorrata especial (art. 103).
+    """Compute one deductible amount and return a :class:`ProrrataInputDeduction`.
 
-    The ``general_percentage`` is the value produced by
-    :func:`compute_prorrata_general` for the same window; it only enters
-    the calculation when the classification is ``COMMON``.
+    Implements prorrata especial (art. 103). The ``general_percentage`` is the
+    value produced by :func:`compute_prorrata_general` for the same window; it
+    only enters the calculation when the classification is ``COMMON``.
     """
     if input_iva_amount < 0:
         raise ProrrataInputError(f"input_iva_amount must be non-negative, got {input_iva_amount}")

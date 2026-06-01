@@ -207,6 +207,8 @@ def reconcile_modelo_303_iva_compensation(
 
     The local side is not recomputed here. It is read through the same
     previous-filing binding resolver used by the calculation chain.
+
+    Returns an :class:`IvaCompensationReconciliationReport`.
     """
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != "303":
         raise IvaCompensationReconciliationInputError(
@@ -261,7 +263,7 @@ def reconcile_iva_compensation_wallet(
     max_wallet_age_days: int = _DEFAULT_MAX_WALLET_AGE_DAYS,
     is_first_iva_period: bool = False,
 ) -> IvaCompensationReconciliationDecision:
-    """Return the deterministic effective-value decision for casilla `110`.
+    """Return the :class:`IvaCompensationReconciliationDecision` for casilla ``110``.
 
     Authority order is wallet, explicit taxpayer override, local
     recurrence. Divergence between fresh wallet evidence and local

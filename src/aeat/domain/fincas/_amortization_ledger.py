@@ -140,7 +140,11 @@ def computation_to_ledger_entry(
     income: FincaRendimientoRecord,
     computation: AmortizationComputation,
 ) -> FincaAmortizacionLedgerEntry:
-    """Project an :class:`AmortizationComputation` into a persistable record."""
+    """Project an :class:`AmortizationComputation` into a persistable record.
+
+    Returns:
+        A :class:`FincaAmortizacionLedgerEntry` ready for persistence.
+    """
     return FincaAmortizacionLedgerEntry(
         finca_id=finca_id,
         period_year=computation.period_year,

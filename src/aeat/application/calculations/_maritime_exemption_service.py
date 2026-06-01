@@ -112,7 +112,7 @@ def resolve_maritime_exemption(
             Required when REBECA is potentially eligible.
 
     Returns:
-        MaritimeExemptionResult with typed observations and flat view.
+        :class:`MaritimeExemptionResult` with typed observations and flat view.
 
     Raises:
         RentaValidationError: Eligibility predicate mismatch or invalid input.

@@ -57,7 +57,7 @@ class CalculationResultSummary(BaseModel):
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
 
 def calculation_result_summary(revision: CalculationRevision) -> CalculationResultSummary | None:
-    """Return the headline result summary for a persisted calculation revision.
+    """Return the headline :class:`CalculationResultSummary` for a persisted calculation revision.
 
     Resolves the revision's work unit and registry snapshot, then picks
     the headline casillas from the snapshot's verification expectations.

@@ -103,7 +103,11 @@ class VerificationReportCatalogueRepository:
 def upsert_verification_report(
     catalogue: VerificationReportCatalogue, report: VerificationReport
 ) -> VerificationReportCatalogue:
-    """Return a new catalogue with ``report`` inserted or replaced."""
+    """Return a new catalogue with ``report`` inserted or replaced.
+
+    Returns:
+        A :class:`VerificationReportCatalogue` with the given report added or updated.
+    """
     mapping = dict(catalogue.reports)
     mapping[report.verification_report_id] = report
     return VerificationReportCatalogue(reports=mapping)

@@ -141,7 +141,7 @@ def apply_label_regex(
 
     Returns:
         A dict keyed by casilla identifier, populated only for patterns
-        that matched at least once.
+        that matched at least once. Each value is a :class:`LabelHit`.
     """
     hits: dict[str, LabelHit] = {}
     for casilla_id, pattern in label_regex_map.items():

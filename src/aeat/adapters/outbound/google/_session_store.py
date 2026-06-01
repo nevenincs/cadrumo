@@ -46,7 +46,7 @@ def save_client(profile: str, client: OAuthClient) -> None:
 
 
 def load_client(profile: str) -> OAuthClient | None:
-    """Load the OAuth client for ``profile`` or return ``None`` when absent."""
+    """Load the :class:`OAuthClient` for ``profile``, or return ``None`` when absent."""
     record = _repository().load(
         _NAMESPACE_CLIENT,
         profile,
@@ -71,7 +71,7 @@ def save_token(profile: str, token: OAuthToken) -> None:
 
 
 def load_token(profile: str) -> OAuthToken | None:
-    """Load the OAuth refresh token for ``profile`` or return ``None``."""
+    """Load the :class:`OAuthToken` refresh token for ``profile`` or return ``None``."""
     record = _repository().load(
         _NAMESPACE_TOKEN,
         profile,
@@ -96,7 +96,7 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
 
 
 def load_metadata(profile: str) -> OAuthMetadata | None:
-    """Load the OAuth audit metadata for ``profile`` or return ``None``."""
+    """Load the :class:`OAuthMetadata` audit record for ``profile``, or return ``None``."""
     record = _repository().load(
         _NAMESPACE_METADATA,
         profile,
@@ -121,7 +121,7 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
 
 
 def load_drive_config(profile: str) -> DriveConfig | None:
-    """Load the per-profile Drive backend configuration or return ``None``."""
+    """Load the per-profile :class:`DriveConfig` backend configuration or return ``None``."""
     record = _repository().load(
         _NAMESPACE_DRIVE_CONFIG,
         profile,

@@ -143,6 +143,8 @@ def build_iva_compensation_carry_forward_report(
     generated lots. Current-period generation is added after any
     application recorded for that same period, matching Modelo 303's
     prior-balance-before-new-generation shape.
+
+    Returns an :class:`IvaCompensationCarryForwardReport`.
     """
     if not 2000 <= as_of_year <= 2099:
         raise IvaCompensationYearRangeError(f"IVA compensation as_of_year {as_of_year} out of supported range [2000, 2099]")
@@ -199,7 +201,11 @@ def build_iva_compensation_carry_forward_report(
 def enforce_iva_compensation_four_year_window(
     report: IvaCompensationCarryForwardReport,
 ) -> IvaCompensationCarryForwardReport:
-    """Refuse remaining IVA compensation lots beyond the four-year window."""
+    """Refuse remaining IVA compensation lots beyond the four-year window.
+
+    Returns the :class:`IvaCompensationCarryForwardReport` unchanged when
+    all lots are within the window.
+    """
     expired = tuple(
         lot
         for lot in report.lots
@@ -226,7 +232,11 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         return iva_compensation_period_key(payload.filing_year, payload.period)
 
     def load_period(self, filing_year: int, period: str) -> IvaCompensationPeriodState | None:
-        """Return latest stored state for one period."""
+        """Return latest stored state for one period.
+
+        Returns an :class:`IvaCompensationPeriodState` when a record exists,
+        or ``None`` when none has been persisted for the given period.
+        """
         return self.load(iva_compensation_period_key(filing_year, period))
 
     def save_period(self, state: IvaCompensationPeriodState) -> None:
@@ -234,7 +244,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         self.save(state)
 
     def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
-        """Return all stored states in chronological filing order."""
+        """Return all stored states as a tuple of :class:`IvaCompensationPeriodState` in chronological filing order."""
         return tuple(sorted(self.iter_records(), key=lambda item: (item.filing_year, _period_sort_key(item.period))))
 
 _SEED_STATUS = "seeded"
@@ -250,7 +260,7 @@ def seed_iva_compensation_period(
     repository: IvaCompensationHistoryRepository | None = None,
     seeded_at: datetime | None = None,
 ) -> IvaCompensationPeriodState:
-    """Persist a manually declared carry-forward balance for one Modelo 303 period.
+    """Persist a manually declared carry-forward balance for one Modelo 303 period and return an :class:`IvaCompensationPeriodState`.
 
     Intended for first-time users whose historical M303 carry-forward pre-dates
     the local compensation history. The seeded state is structurally identical
@@ -291,7 +301,7 @@ def seed_iva_compensation_period(
 def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
-    """Build one IVA compensation history state from a filed Modelo 303 observation."""
+    """Build and return an :class:`IvaCompensationPeriodState` from a filed Modelo 303 observation."""
     if observation.modelo != "303":
         raise IvaCompensationModeloError(
             "IVA compensation history only accepts Modelo 303 observations"

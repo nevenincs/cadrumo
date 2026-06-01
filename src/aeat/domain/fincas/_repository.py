@@ -51,7 +51,11 @@ class FincaRepository:
         self._session = session
 
     def list_all(self) -> list[Finca]:
-        """Return every record in the table, ordered by surrogate id."""
+        """Return every record in the table, ordered by surrogate id.
+
+        Returns:
+            List of all :class:`Finca` records.
+        """
         from ...adapters.persistence.storage.sql import _orm
 
         rows = self._session.execute(select(_orm.FincaRow).order_by(_orm.FincaRow.id)).scalars().all()
@@ -78,7 +82,11 @@ class FincaRepository:
         return self._to_record(row)
 
     def get_by_identifier(self, identifier: str) -> Finca | None:
-        """Return the record matching ``identifier``, or ``None`` if absent."""
+        """Return the record matching ``identifier``, or ``None`` if absent.
+
+        Returns:
+            The matching :class:`Finca`, or ``None`` when not found.
+        """
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
@@ -87,7 +95,11 @@ class FincaRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: Finca) -> Finca:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted entity.
+
+        Returns:
+            The persisted :class:`Finca` with any database-generated fields populated.
+        """
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
@@ -188,14 +200,14 @@ class ArrendamientoRepository:
         self._session = session
 
     def list_all(self) -> list[Arrendamiento]:
-        """Return every record in the table, ordered by surrogate id."""
+        """Return every :class:`Arrendamiento` record in the table, ordered by surrogate id."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = self._session.execute(select(_orm.ArrendamientoRow).order_by(_orm.ArrendamientoRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[Arrendamiento]:
-        """Return every record attached to the supplied finca."""
+        """Return every :class:`Arrendamiento` record attached to the supplied finca."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -230,7 +242,7 @@ class ArrendamientoRepository:
         return self._to_record(row)
 
     def upsert(self, record: Arrendamiento) -> Arrendamiento:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted :class:`Arrendamiento`."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
@@ -314,7 +326,11 @@ class FincaRendimientoRepository:
         self._session = session
 
     def list_for_period(self, period_year: int) -> list[FincaRendimientoRecord]:
-        """Return every record whose period overlaps the supplied window."""
+        """Return every record whose period overlaps the supplied window.
+
+        Returns:
+            List of :class:`FincaRendimientoRecord` for the given period year.
+        """
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -333,7 +349,7 @@ class FincaRendimientoRepository:
         contract_id: int,
         period_year: int,
     ) -> FincaRendimientoRecord | None:
-        """Return the record for ``contract_id`` matching ``period``, or ``None``."""
+        """Return the :class:`FincaRendimientoRecord` for ``contract_id`` matching ``period``, or ``None``."""
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
@@ -345,7 +361,7 @@ class FincaRendimientoRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: FincaRendimientoRecord) -> FincaRendimientoRecord:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted :class:`FincaRendimientoRecord`."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
@@ -407,7 +423,7 @@ class FincaGastoRepository:
         self._session = session
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[FincaGasto]:
-        """Return every record attached to ``finca_id`` within the period window."""
+        """Return every :class:`FincaGasto` record attached to ``finca_id`` within the period window."""
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -425,7 +441,7 @@ class FincaGastoRepository:
         return [self._to_record(row) for row in rows]
 
     def add(self, record: FincaGasto) -> FincaGasto:
-        """Insert ``record`` into the underlying store and return the persisted entity."""
+        """Insert ``record`` and return the persisted :class:`FincaGasto` entity."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
@@ -445,7 +461,11 @@ class FincaGastoRepository:
         return self._to_record(row)
 
     def upsert(self, record: FincaGasto) -> FincaGasto:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted entity.
+
+        Returns:
+            The persisted :class:`FincaGasto` with any database-generated fields populated.
+        """
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 
@@ -506,7 +526,11 @@ class FincaAmortizacionLedgerRepository:
         self._session = session
 
     def list_for_finca(self, finca_id: int) -> list[FincaAmortizacionLedgerEntry]:
-        """Return every record attached to the supplied finca."""
+        """Return every record attached to the supplied finca.
+
+        Returns:
+            List of :class:`FincaAmortizacionLedgerEntry` for the finca.
+        """
         from ...adapters.persistence.storage.sql import _orm
 
         rows = (
@@ -525,7 +549,11 @@ class FincaAmortizacionLedgerRepository:
         finca_id: int,
         period_year: int,
     ) -> FincaAmortizacionLedgerEntry | None:
-        """Return the record for ``finca_id`` matching ``period``, or ``None``."""
+        """Return the record for ``finca_id`` matching ``period``, or ``None``.
+
+        Returns:
+            The matching :class:`FincaAmortizacionLedgerEntry`, or ``None`` when absent.
+        """
         from ...adapters.persistence.storage.sql import _orm
 
         row = self._session.execute(
@@ -537,7 +565,7 @@ class FincaAmortizacionLedgerRepository:
         return None if row is None else self._to_record(row)
 
     def upsert(self, record: FincaAmortizacionLedgerEntry) -> FincaAmortizacionLedgerEntry:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted :class:`FincaAmortizacionLedgerEntry`."""
         from ...adapters.persistence.storage.errors import RepositoryError
         from ...adapters.persistence.storage.sql import _orm
 

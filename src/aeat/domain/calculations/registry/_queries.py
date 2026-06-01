@@ -289,6 +289,9 @@ class RegistryQueryService:
         integer and registry ``period`` string (e.g. ``"1T"``, ``"01"``) produced
         by the CLI's period-parsing step. This avoids re-parsing a user-facing
         period string when the caller already holds the decomposed values.
+
+        Returns:
+            A :class:`ModeloBindingsReport` for the requested filing scope.
         """
         definition = self._authority.validate_modelo(modelo.strip())
         snapshot = self._authority.snapshot(
@@ -312,7 +315,7 @@ class RegistryQueryService:
         filing_year: int,
         as_of: date | None = None,
     ) -> ModeloBindingsReport:
-        """Return bindings for the revision that covers ``filing_year``.
+        """Return a :class:`ModeloBindingsReport` for the revision that covers ``filing_year``.
 
         ``bindings`` with no period resolves the *latest* revision,
         which for a multi-revision modelo (e.g. Modelo 100, one

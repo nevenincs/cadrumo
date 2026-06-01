@@ -75,7 +75,10 @@ class ProfileLifecycleService:
     # ── register / list / read ─────────────────────────────────────
 
     def register(self, command: RegisterProfileCommand) -> ProfileLifecycleResult:
-        """Register a new active profile aggregate."""
+        """Register a new active profile aggregate.
+
+        Returns a :class:`ProfileLifecycleResult`.
+        """
         if self._repository.exists(command.profile_id):
             raise ProfileAlreadyExistsError(
                 f"profile {command.profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
@@ -108,11 +111,14 @@ class ProfileLifecycleService:
         return ProfileLifecycleResult(profile=record, applied_at=now)
 
     def read(self, profile_id: str) -> UserProfileRecord:
-        """Return the live profile aggregate or raise :class:`ProfileNotFoundError`."""
+        """Return the live :class:`UserProfileRecord` aggregate or raise :class:`ProfileNotFoundError`."""
         return self._repository.load(profile_id)
 
     def list_profiles(self) -> ProfileListResult:
-        """List every profile currently visible in the active bucket."""
+        """List every profile currently visible in the active bucket.
+
+        Returns a :class:`ProfileListResult` with all non-tombstoned profiles.
+        """
         listings: list[ProfileListing] = []
         for record in self._iter_profiles():
             listings.append(
@@ -130,7 +136,7 @@ class ProfileLifecycleService:
     # ── edit / remove / duplicate ──────────────────────────────────
 
     def edit_field(self, command: EditProfileFieldCommand) -> ProfileLifecycleResult:
-        """Upsert one effective-dated fact into a profile aggregate."""
+        """Upsert one effective-dated fact into a profile aggregate and return a :class:`ProfileLifecycleResult`."""
         record = self._repository.load(command.profile_id)
         new_fact = UserProfileFact(
             path=command.path,
@@ -154,7 +160,10 @@ class ProfileLifecycleService:
         return result
 
     def edit_section(self, command: EditProfileSectionCommand) -> ProfileLifecycleResult:
-        """Replace every fact in one schema section with the supplied facts."""
+        """Replace every fact in one schema section with the supplied facts.
+
+        Returns a :class:`ProfileLifecycleResult`.
+        """
         record = self._repository.load(command.profile_id)
         retained = tuple(fact for fact in record.facts if not fact.path.startswith(f"{command.section_key}."))
         merged = self._merge_facts(retained, command.facts)
@@ -169,7 +178,10 @@ class ProfileLifecycleService:
         return result
 
     def remove(self, command: RemoveProfileCommand) -> ProfileLifecycleResult:
-        """Tombstone the live root. Immutable filing snapshots are retained."""
+        """Tombstone the live root. Immutable filing snapshots are retained.
+
+        Returns a :class:`ProfileLifecycleResult` with the tombstoned profile.
+        """
         record = self._repository.load(command.profile_id)
         tombstoned = record.tombstone()
         self._repository.save(tombstoned)
@@ -181,11 +193,11 @@ class ProfileLifecycleService:
         return ProfileLifecycleResult(profile=tombstoned, applied_at=tombstoned.updated_at)
 
     def rename(self, command: RenameProfileCommand) -> ProfileLifecycleResult:
-        """Update a live profile's display label.
+        """Update a live profile's display label and return a :class:`ProfileLifecycleResult`.
 
         Profile identity is an immutable UUID, so a rename touches only
         the operator-visible ``display_name``: the record is loaded,
-        its label updated, and re-saved under the **same** secure-object
+        its label updated, and re-saved under the same secure-object
         key. There is no re-key, no directory move, and no rollback
         machinery. Refuses if the profile is tombstoned. Emits
         ``PROFILE_RENAMED`` carrying the prior label so the audit trail
@@ -219,7 +231,11 @@ class ProfileLifecycleService:
         return ProfileLifecycleResult(profile=target, applied_at=now)
 
     def duplicate(self, command: DuplicateProfileCommand) -> ProfileLifecycleResult:
-        """Copy an existing live profile under a new id and display name."""
+        """Copy an existing live profile under a new id and display name.
+
+        Returns a :class:`ProfileLifecycleResult` with the newly created
+        duplicate profile.
+        """
         if self._repository.exists(command.target_profile_id):
             raise ProfileAlreadyExistsError(
                 f"profile {command.target_profile_id!r} already exists in bucket {self._repository.bucket_id!r}",

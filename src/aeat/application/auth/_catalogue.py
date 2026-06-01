@@ -71,6 +71,8 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
 
     Wraps :data:`AUTH_PROVIDER_CATALOGUE` so callers have a stable
     function-call site.
+
+    Returns a tuple of :class:`AuthProviderListing` entries.
     """
     return AUTH_PROVIDER_CATALOGUE
 

@@ -96,7 +96,11 @@ class LLMClassifier(Protocol):
         ...
 
     def classify(self, transaction: Transaction) -> LLMClassificationResponse:
-        """Return one classification decision for ``transaction``."""
+        """Return one classification decision for ``transaction``.
+
+        Returns:
+            A :class:`LLMClassificationResponse` with the classification result.
+        """
         ...
 
 # ── parametric prompt builder ─────────────────────────────────────
@@ -136,7 +140,11 @@ PIPELINE_ONLY_CLASSIFICATIONS: frozenset[BusinessClassification] = frozenset(
 )
 
 def default_classification_choices() -> tuple[ClassificationChoice, ...]:
-    """Return the default allowed-classifications tuple used by the prompt."""
+    """Return the default allowed-classifications tuple used by the prompt.
+
+    Returns:
+        Tuple of :class:`ClassificationChoice` objects for each allowed category.
+    """
     return tuple(ClassificationChoice(value=value, hint=hint) for value, hint in _DEFAULT_CLASSIFICATION_HINTS.items())
 
 @dataclass(frozen=True)
@@ -156,11 +164,15 @@ class PromptSpec:
     header: str = "You are classifying a Spanish autónomo's bank transaction for tax purposes."
 
     def allowed_classifications(self) -> frozenset[BusinessClassification]:
-        """Return the set of classification values the LLM is allowed to emit."""
+        """Return the set of :class:`BusinessClassification` values the LLM is allowed to emit."""
         return frozenset(choice.value for choice in self.classifications)
 
     def allowed_categories(self) -> frozenset[SpendingCategory]:
-        """Return the set of category values the LLM is allowed to emit (empty = none)."""
+        """Return the set of category values the LLM is allowed to emit (empty = none).
+
+        Returns:
+            Frozenset of :class:`SpendingCategory` values the LLM may emit.
+        """
         return frozenset(choice.value for choice in self.categories)
 
     def render(self, transaction: Transaction) -> str:
@@ -168,7 +180,7 @@ class PromptSpec:
         return _render_prompt(self, transaction)
 
 def default_prompt_spec() -> PromptSpec:
-    """Return the default prompt spec: classification-only, four decision states."""
+    """Return the default :class:`PromptSpec`: classification-only, four decision states."""
     return PromptSpec()
 
 def prompt_spec_with_every_spending_category(
@@ -379,7 +391,11 @@ class SubprocessLLMClassifier:
         return f"llm:{self.name}"
 
     def classify(self, transaction: Transaction) -> LLMClassificationResponse:
-        """Shell out to the LLM CLI, parse, validate, return."""
+        """Shell out to the LLM CLI, parse, validate, return.
+
+        Returns:
+            A :class:`LLMClassificationResponse` with the parsed classification result.
+        """
         prompt = self.spec.render(transaction)
         resolved_binary = shutil.which(self.command[0])
         if resolved_binary is None:

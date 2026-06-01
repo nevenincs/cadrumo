@@ -138,6 +138,7 @@ class VerifyObservationRepository:
         return observation
 
     def list_observations(self) -> tuple[VerifyObservation, ...]:
+        """Return all stored observations as a tuple of :class:`VerifyObservation` sorted by check time."""
         observations = [
             observation
             for record in self._objects.list_records(
@@ -221,7 +222,11 @@ class VerifyService:
         expected: VerifyVerdict | None = None,
         raw_evidence_locator: str | None = None,
     ) -> VerifyObservation:
-        """Persist one verify observation. Deduplicates identical replays."""
+        """Persist one verify observation. Deduplicates identical replays.
+
+        Returns a :class:`VerifyObservation` with the persisted observation id
+        and all supplied fields.
+        """
         observation_id = _derive_observation_id(
             surface=surface,
             nif=nif,
@@ -255,7 +260,7 @@ class VerifyService:
         surface: VerifySurface | None = None,
         nif: str | None = None,
     ) -> tuple[VerifyObservation, ...]:
-        """Return all observations in capture order. Optional filters."""
+        """Return all :class:`VerifyObservation` records in capture order. Optional filters."""
         observations = list(self._repository_for(bucket_id).list_observations())
         if surface is not None:
             observations = [o for o in observations if o.surface is surface]
@@ -269,7 +274,7 @@ class VerifyService:
         bucket_id: str,
         observation_id: str,
     ) -> VerifyObservation:
-        """Look up one observation by full id or unambiguous prefix."""
+        """Look up and return the :class:`VerifyObservation` for the given full id or unambiguous prefix."""
         matches = [
             o
             for o in self._repository_for(bucket_id).list_observations()
@@ -295,7 +300,7 @@ class VerifyService:
         surface: VerifySurface,
         nif: str,
     ) -> VerifyObservation | None:
-        """Return the most recent observation for (surface, nif), or None."""
+        """Return the most recent :class:`VerifyObservation` for (surface, nif), or None."""
         matches = [
             o
             for o in self._repository_for(bucket_id).list_observations()

@@ -27,7 +27,11 @@ class BucketEventHistoryRepositoryProtocol(Protocol):
         ...
 
     def load(self) -> BucketEventHistoryCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent."""
+        """Return the persisted catalogue or an empty catalogue if absent.
+
+        Returns:
+            The :class:`BucketEventHistoryCatalogue` loaded from storage.
+        """
         ...
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:

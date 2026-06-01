@@ -32,7 +32,10 @@ class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificat
         return payload.rule_id
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
-        """Return all stored rules in application order: (priority asc, created_at asc)."""
+        """Return all stored rules in application order: (priority asc, created_at asc).
+
+        Each element is a :class:`LedgerClassificationRule`.
+        """
         return tuple(sorted(self.iter_records(), key=lambda r: (r.priority, r.created_at)))
 
 

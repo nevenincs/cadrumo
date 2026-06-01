@@ -19,7 +19,11 @@ from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, 
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
-    """Load one IVA catalogue TOML file."""
+    """Load one IVA catalogue TOML file.
+
+    Returns:
+        The validated :class:`IvaCatalogue` from the file.
+    """
     resolved = path.resolve()
     try:
         stat = resolved.stat()
@@ -57,7 +61,7 @@ def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
 
 
 def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
-    """Load every year-keyed IVA catalogue under ``root``.
+    """Load every year-keyed :class:`IvaCatalogue` under ``root``.
 
     Resolves the bundled catalogues directory on every call when
     no override is supplied; the ``bundled_path`` boundary is the
@@ -90,7 +94,11 @@ def _load_iva_catalogues_cached(
 
 
 def resolve_catalogue(*, on: date) -> IvaCatalogue:
-    """Return the exact IVA catalogue for ``on``."""
+    """Return the exact IVA catalogue for ``on``.
+
+    Returns:
+        The :class:`IvaCatalogue` for the year of ``on``.
+    """
     catalogue = load_iva_catalogues().get(on.year)
     if catalogue is None:
         raise IvaCatalogueError(f"no IVA catalogue registered for year={on.year}")
