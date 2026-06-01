@@ -339,37 +339,37 @@ Author OutputSchema subclasses for the 4 census command emit sites in _config/_p
 
 Author OutputSchema subclasses for the 4 root-CLI emit sites in _root_payloads.py, register each, and migrate the emit sites in _root_landing.py and __init__.py.
 
-- [ ] `W05.P22.S187` - author RootStatusResult OutputSchema subclass with @register_schema decorator for root.status; `src/aeat/entrypoints/cli/_root_payloads.py`.
-- [ ] `W05.P22.S188` - author AppRootResult OutputSchema subclass with @register_schema decorator for root.app; `src/aeat/entrypoints/cli/_root_payloads.py`.
-- [ ] `W05.P22.S189` - migrate _root and _app_root bare emit sites to _emit_envelope using typed root payload classes; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `W05.P22.S190` - append root command paths to MIGRATED_COMMANDS and import _root_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W05.P22.S191` - re-baseline root CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_root_help_shape.py`.
+- [x] `W05.P22.S187` - author RootStatusResult OutputSchema subclass with @register_schema decorator for root.status; `src/aeat/entrypoints/cli/_root_payloads.py`.
+- [x] `W05.P22.S188` - author AppRootResult OutputSchema subclass with @register_schema decorator for root.app; `src/aeat/entrypoints/cli/_root_payloads.py`.
+- [x] `W05.P22.S189` - migrate _root and _app_root bare emit sites to _emit_envelope using typed root payload classes; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `W05.P22.S190` - append root command paths to MIGRATED_COMMANDS and import _root_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P22.S191` - re-baseline root CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_root_help_shape.py`.
 
 ### Phase `W05.P23` - registry.py payload classes - 2 emit sites
 
 Author OutputSchema subclasses for the 2 registry command emit sites in _registry_payloads.py, register each, and migrate the emit sites.
 
-- [ ] `W05.P23.S192` - author RegistryInspectResult OutputSchema subclass with @register_schema decorator for registry.inspect; `src/aeat/entrypoints/cli/_registry_payloads.py`.
-- [ ] `W05.P23.S193` - migrate inspect_registry_cmd bare emit site to _emit_envelope using typed RegistryInspectResult; `src/aeat/entrypoints/cli/registry.py`.
-- [ ] `W05.P23.S194` - author RegistryVerifyResult OutputSchema subclass with @register_schema decorator for registry.verify; `src/aeat/entrypoints/cli/_registry_payloads.py`.
-- [ ] `W05.P23.S195` - migrate verify_registry_cmd bare emit site to _emit_envelope using typed RegistryVerifyResult; `src/aeat/entrypoints/cli/registry.py`.
-- [ ] `W05.P23.S196` - append registry command paths to MIGRATED_COMMANDS and import _registry_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W05.P23.S197` - re-baseline registry CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_registry_cli.py`.
+- [x] `W05.P23.S192` - author RegistryInspectResult OutputSchema subclass with @register_schema decorator for registry.inspect; `src/aeat/entrypoints/cli/_registry_payloads.py`.
+- [x] `W05.P23.S193` - migrate inspect_registry_cmd bare emit site to _emit_envelope using typed RegistryInspectResult; `src/aeat/entrypoints/cli/registry.py`.
+- [x] `W05.P23.S194` - author RegistryVerifyResult OutputSchema subclass with @register_schema decorator for registry.verify; `src/aeat/entrypoints/cli/_registry_payloads.py`.
+- [x] `W05.P23.S195` - migrate verify_registry_cmd bare emit site to _emit_envelope using typed RegistryVerifyResult; `src/aeat/entrypoints/cli/registry.py`.
+- [x] `W05.P23.S196` - append registry command paths to MIGRATED_COMMANDS and import _registry_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P23.S197` - re-baseline registry CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_registry_cli.py`.
 
 ### Phase `W05.P24` - _review.py payload class - 1 emit site
 
 Extend _review_payloads.py with the OutputSchema subclass for the review view command emit site and migrate the emit site (review queue is already migrated).
 
-- [ ] `W05.P24.S198` - extend _review_payloads.py with ReviewViewResult OutputSchema subclass with @register_schema decorator for review.view; `src/aeat/entrypoints/cli/_review_payloads.py`.
-- [ ] `W05.P24.S199` - migrate review_show bare emit site to _emit_envelope using typed ReviewViewResult; `src/aeat/entrypoints/cli/_review.py`.
-- [ ] `W05.P24.S200` - append review.view to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P24.S198` - extend _review_payloads.py with ReviewViewResult OutputSchema subclass with @register_schema decorator for review.view; `src/aeat/entrypoints/cli/_review_payloads.py`.
+- [x] `W05.P24.S199` - migrate review_show bare emit site to _emit_envelope using typed ReviewViewResult; `src/aeat/entrypoints/cli/_review.py`.
+- [x] `W05.P24.S200` - append review.view to MIGRATED_COMMANDS; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
 
 ### Phase `W05.P25` - MIGRATED_COMMANDS extension and surface-test re-baseline for small modules
 
 Append all small-module command paths to MIGRATED_COMMANDS and re-baseline any affected CLI surface tests for overview, registry corpus, google, census, root, registry, and review commands.
 
-- [ ] `W05.P25.S201` - verify SCHEMA_REGISTRY contains entries for all small-module commands by running the conformance gate parametrised over every newly registered path; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W05.P25.S202` - re-baseline any remaining CLI surface tests across overview, registry-corpus, google, census, root, registry, and review that asserted bare-payload shape; `src/aeat/entrypoints/cli/test_cli_surface.py`.
+- [x] `W05.P25.S201` - verify SCHEMA_REGISTRY contains entries for all small-module commands by running the conformance gate parametrised over every newly registered path; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P25.S202` - re-baseline any remaining CLI surface tests across overview, registry-corpus, google, census, root, registry, and review that asserted bare-payload shape; `src/aeat/entrypoints/cli/test_cli_surface.py`.
 
 ## Wave `W06` - enforcement gate - exhaustive MIGRATED_COMMANDS and zero bare emit sites
 
@@ -379,14 +379,14 @@ Tighten the conformance gate: expand MIGRATED_COMMANDS to enumerate every regist
 
 Assert MIGRATED_COMMANDS equals the full set of registered schema paths; remove the partial-migration guard comment; verify the tightened gate passes for all migrated commands.
 
-- [ ] `W06.P26.S203` - assert MIGRATED_COMMANDS equals the full key set of SCHEMA_REGISTRY with a clear failure message listing any gap; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W06.P26.S204` - remove the partial-migration allow-list guard comment from test_json_schema_conformance and tighten the parametrised gate to iterate SCHEMA_REGISTRY keys directly; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W06.P26.S205` - run the full json-conformance gate and confirm every registered schema path passes the envelope round-trip; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W06.P26.S203` - assert MIGRATED_COMMANDS equals the full key set of SCHEMA_REGISTRY with a clear failure message listing any gap; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W06.P26.S204` - remove the partial-migration allow-list guard comment from test_json_schema_conformance and tighten the parametrised gate to iterate SCHEMA_REGISTRY keys directly; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W06.P26.S205` - run the full json-conformance gate and confirm every registered schema path passes the envelope round-trip; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
 
 ### Phase `W06.P27` - zero-bare-emit structural assertion
 
 Add a structural pytest that walks CLI entrypoint modules under src/aeat/entrypoints/cli/ and asserts zero remaining bare _emit(ctx call sites, with an explicit exclusion list for non-transport _emit helpers in wizard and observability modules.
 
-- [ ] `W06.P27.S206` - author test_zero_bare_emit_sites that walks CLI entrypoint modules under src/aeat/entrypoints/cli/ and asserts zero bare _emit(ctx call sites remain; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W06.P27.S206` - author test_zero_bare_emit_sites that walks CLI entrypoint modules under src/aeat/entrypoints/cli/ and asserts zero bare _emit(ctx call sites remain; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
 - [ ] `W06.P27.S207` - document the explicit exclusion list for non-transport _emit functions in application/wizard/_runner.py and core/observability test_sink files in the structural assertion docstring; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
 - [ ] `W06.P27.S208` - run the full CLI test suite and confirm all gates are green; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
