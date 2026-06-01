@@ -163,7 +163,7 @@ Refresh the per-module reviewability baselines after benign docstring growth (4 
 
 Re-curate the two frozen-list meta-gates that drifted red against legitimate downstream changes: the schema-hygiene validator-test allowlist and the hand-summed-aggregation waiver list.
 
-- [ ] `W06.P15.S34` - Add the 3 legitimate validator-mechanics test files (test_schema.py, test_registry_schema.py, test_catalogue_verification.py) to the schema-authority-construction allowlist (they exercise broken-shape inputs the loader cannot reach); `src/aeat/domain/calculations/registry/test_schema_hygiene.py`.
+- [x] `W06.P15.S34` - Add the 3 legitimate validator-mechanics test files (test_schema.py, test_registry_schema.py, test_catalogue_verification.py) to the schema-authority-construction allowlist (they exercise broken-shape inputs the loader cannot reach); `src/aeat/domain/calculations/registry/test_schema_hygiene.py`.
 - [ ] `W06.P15.S35` - Refresh the hand-summed-aggregation waivers: rename the stale prior_filing_history->prior_year_history key, add waivers for the new legitimate tests, and confirm the 2 cross-dependency cumulative-sum asserts against an oracle or convert to delta-proof; `src/aeat/domain/calculations/registry/test_tautology_gate.py`.
 
 ### Phase `W06.P16` - born-stale test and fixture provenance
