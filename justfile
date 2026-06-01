@@ -107,7 +107,7 @@ docs:
 # formatting. The build-gate, module-to-stub, and CLI conformance tests
 # run in this lane once they exist.
 docs-check:
-    uv run --no-sync sphinx-build -b html -n -W docs docs/_build/html
+    uv run --no-sync pytest -m docs
     uv run --no-sync doc8 docs
 
 # Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
