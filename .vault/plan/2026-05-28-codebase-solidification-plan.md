@@ -1181,5 +1181,5 @@ W28 swarm re-audit: 8 of 9 axes clean (no W27 regressions, no new drift). 1 pre-
 
 Mechanical: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on each of 3 sites + aggregate test.
 
-- [ ] `W28.P62.S679` - A1: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on RuntimeError raises at _doc_reference.py:129, 717, 778 (subprocess invocation failures surfaced as RuntimeError for operator diagnostics; not an operator-facing AeatError contract); 3 markers; `src/aeat/entrypoints/cli/_doc_reference.py`.
-- [ ] `W28.P62.S680` - aggregate test asserting BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD token appears within 3 lines preceding each of the 3 RuntimeError raises in _doc_reference.py + all standing inventory ratchets remain green; `src/aeat/test_w28_p62_closure.py`.
+- [x] `W28.P62.S679` - A1: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on RuntimeError raises at _doc_reference.py:129, 717, 778 (subprocess invocation failures surfaced as RuntimeError for operator diagnostics; `not an operator-facing AeatError contract); 3 markers; `src/aeat/entrypoints/cli/_doc_reference.py`.
+- [x] `W28.P62.S680` - aggregate test asserting BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD token appears within 3 lines preceding each of the 3 RuntimeError raises in _doc_reference.py + all standing inventory ratchets remain green; `src/aeat/test_w28_p62_closure.py`.
