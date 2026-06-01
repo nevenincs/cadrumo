@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile.errors import InventoryLedgerError
+from ....domain.profile._errors import InventoryLedgerError
 from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .inventory import load_inventory, record_movement, save_inventory

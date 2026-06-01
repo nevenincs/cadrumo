@@ -18,7 +18,7 @@ from ....domain.profile.assets import (
     AssetRecord,
     AssetsLedgerDocument,
 )
-from ....domain.profile.errors import AssetRecordError
+from ....domain.profile._errors import AssetRecordError
 from ..storage import SensitivityClass
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
