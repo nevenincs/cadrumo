@@ -617,11 +617,14 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
             continue
         inputs[casilla_id] = value
 
-    # Box 65 (porcentaje atribuible Estado) is now bound to the profile-
-    # derived ``tax_residence.state_attribution_ratio``. For standard
-    # territorio-común filers the ratio is 100. Supply it through the
-    # binding channel so the engine can compute box 66.
-    # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
+    # Box 65 (porcentaje atribuible Estado) is bound to the profile-derived
+    # ``tax_residence.state_attribution_ratio`` via casilla.binding. The engine's
+    # _initial_values only auto-hydrates BOUND casillas from binding_values for
+    # ``previous_filing`` source; profile-sourced bound casillas expect the
+    # application-layer resolver to have populated ``inputs`` before reaching
+    # the calculator. Supply C65 via both channels for the engine-direct test
+    # path.
+    inputs["65"] = Decimal("100")
 
     # The previous_filing binding for compensacion-pendiente-anteriores is
     # required by the engine. Supply the extracted value from the corpus PDF
@@ -728,10 +731,17 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
             continue
         inputs[casilla_id] = value
 
-    # Box 65 — % atribuible Estado; now bound to the profile-derived
-    # ``tax_residence.state_attribution_ratio``. For territorio común
-    # the ratio is 100; supply it through the binding channel.
+    # Box 65 — % atribuible Estado; bound to the profile-derived
+    # ``tax_residence.state_attribution_ratio`` via casilla.binding. The engine's
+    # _initial_values only auto-hydrates BOUND casillas from binding_values when
+    # the binding's source is ``previous_filing``; profile-sourced bound casillas
+    # expect the application-layer resolver to have populated ``inputs`` with the
+    # resolved value before reaching the calculator. This test path bypasses
+    # the application layer, so we supply C65 via both channels: inputs hydrates
+    # the casilla value for the formula multiplier; binding_values satisfies
+    # any explicit binding-fact lookups.
     # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
+    inputs["65"] = Decimal("100")
 
     _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
