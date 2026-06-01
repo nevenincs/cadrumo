@@ -16,7 +16,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core.money import round_to_cents as _quantize
-from ..errors import AssetValidationError as _AssetValidationError
+from .._errors import AssetValidationError as _AssetValidationError
 
 ASSETS_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""

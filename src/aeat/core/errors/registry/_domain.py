@@ -1802,7 +1802,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AssetRecordError",
+        "aeat.domain.profile._errors.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",
             category=ErrorCategory.ERROR,
@@ -1813,7 +1813,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AssetValidationError",
+        "aeat.domain.profile._errors.AssetValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1824,7 +1824,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AmortizacionLedgerError",
+        "aeat.domain.profile._errors.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1835,7 +1835,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.InventoryLedgerError",
+        "aeat.domain.profile._errors.InventoryLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_INVENTORY_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1846,7 +1846,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.InventoryValidationError",
+        "aeat.domain.profile._errors.InventoryValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_INVENTORY_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1857,7 +1857,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.LIFOForbiddenError",
+        "aeat.domain.profile._errors.LIFOForbiddenError",
         ErrorCode(
             code="REFUSED_PROFILE_LIFO_FORBIDDEN",
             category=ErrorCategory.REFUSED,
@@ -1868,7 +1868,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.BasisCapExceededError",
+        "aeat.domain.profile._errors.BasisCapExceededError",
         ErrorCode(
             code="REFUSED_PROFILE_BASIS_CAP_EXCEEDED",
             category=ErrorCategory.REFUSED,
