@@ -374,6 +374,7 @@ def _declaration_pdf_payload(
     modelo: str = "130",
     ejercicio: int = 2026,
     period: str = "1T",
+    profile=None,
 ) -> bytes:
     from io import BytesIO
 
@@ -386,8 +387,28 @@ def _declaration_pdf_payload(
     y -= 18
     pdf.drawString(50, y, f"Ejercicio: {ejercicio}   Periodo: {period}")
     y -= 28
+    # bbox_anchored profiles require the box number to be drawn at the
+    # anchor_x_min..anchor_x_max range, with the value at the
+    # right_of_number offset. Resolve per-casilla anchor coordinates from
+    # the profile when supplied; fall back to the canonical M130 right-
+    # column position otherwise.
+    anchor_x_by_casilla: dict[str, float] = {}
+    if profile is not None:
+        for target in profile.target_casillas:
+            anchor = getattr(target, "bbox_anchor", None)
+            if anchor is None:
+                continue
+            x_min = getattr(anchor, "anchor_x_min", None)
+            x_max = getattr(anchor, "anchor_x_max", None)
+            if x_min is None or x_max is None:
+                continue
+            anchor_x_by_casilla[target.casilla_id] = (float(x_min) + float(x_max)) / 2.0
     for casilla_id, amount in values.items():
-        pdf.drawString(50, y, f"{casilla_id}  Casilla {casilla_id}    {_spanish_amount(amount)}")
+        anchor_x = anchor_x_by_casilla.get(casilla_id, 465.0)
+        value_x = anchor_x + 73.0
+        pdf.drawString(50, y, f"Casilla {casilla_id}")
+        pdf.drawString(anchor_x, y, casilla_id)
+        pdf.drawString(value_x, y, _spanish_amount(amount))
         y -= 22
     pdf.drawString(50, 54, "NIF: 12345678Z")
     getattr(pdf, "sa" + "ve")()
@@ -772,10 +793,15 @@ class TestSubmittedFileObservation:
             artefact=artefact,
         )
         observed_values = {item.casilla_id: Decimal(item.value) for item in observed}
+        # Casilla 15 (resultados-negativos-anteriores) is a previous-filing
+        # bound registry casilla; it must route through binding_values keyed
+        # by the binding id, not through inputs. The _formula_runtime smuggle
+        # guard refuses inputs["15"] without a matching binding entry.
+        carry_forward_value = observed_values.get("15", Decimal("0"))
         input_values = {
             casilla.id: observed_values[casilla.id]
             for casilla in snapshot.revision.casillas
-            if casilla.input_kind != InputKind.COMPUTED
+            if casilla.input_kind != InputKind.COMPUTED and casilla.id != "15"
         }
         binding = next(
             item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"
@@ -804,6 +830,7 @@ class TestSubmittedFileObservation:
             filing_year=2026,
             period="1T",
         )
+        binding_values["modelo-130-resultados-negativos-anteriores"] = carry_forward_value
         computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED}
         assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {"saldo-negativo-fin-periodo"}
 
@@ -1079,7 +1106,7 @@ class TestDeclaracionPdfObservation:
         observed = _observed_casillas_from_declaration_pdf(
             snapshot=snapshot,
             declaration=declaration,
-            body=_declaration_pdf_payload(values),
+            body=_declaration_pdf_payload(values, profile=profile),
         )
 
         assert {item.casilla_id: Decimal(item.value) for item in observed} == values
@@ -1105,7 +1132,7 @@ class TestDeclaracionPdfObservation:
         observed = _observed_casillas_from_declaration_pdf(
             snapshot=snapshot,
             declaration=declaration,
-            body=_declaration_pdf_payload(values, modelo="111", ejercicio=2025),
+            body=_declaration_pdf_payload(values, modelo="111", ejercicio=2025, profile=profile),
         )
 
         assert {item.casilla_id: Decimal(item.value) for item in observed} == values
