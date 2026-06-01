@@ -226,7 +226,7 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
     """Resolve the default rule set for a sensitivity class.
 
     Convenience wrapper that goes through
-    :func:`~aeat.core.classification._default_policy_for` and then
+    ``aeat.core.classification._default_policy_for`` and then
     :func:`default_rules_for` so callers do not need to know about
     the policy table.
 
@@ -396,9 +396,9 @@ def redact_for_log(text: str) -> str:
     The AUDIT rule set is the right default for exception text: it
     redacts NIF (sha256-prefix), URL host-only, and bearer-token
     fingerprints. The
-    :attr:`~aeat.core.classification._SensitivityClass.IDENTITY`
+    ``aeat.core.classification._SensitivityClass.IDENTITY``
     class is for ciphertext-at-rest, not log-shaped strings; the
-    :attr:`~aeat.core.classification._SensitivityClass.DIAGNOSTIC`
+    ``aeat.core.classification._SensitivityClass.DIAGNOSTIC``
     class has the same rules but is named for observability sinks
     specifically.
     :attr:`~aeat.core.classification._SensitivityClass.AUDIT` is the

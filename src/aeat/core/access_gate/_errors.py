@@ -21,7 +21,7 @@ class AccessGateSubmissionError(AeatError):
     """Base class for live-write access-gate submission policy failures.
 
     Attributes:
-        translated_message: Optional :class:`aeat.core.i18n.str`
+        translated_message: Optional :class:`aeat.core.i18n.Translatable`
             payload carrying a user-facing version of the message.
     """
 
