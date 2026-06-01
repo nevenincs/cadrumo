@@ -112,20 +112,20 @@ Enroll the high-volume application command modules that emit profile, bucket, ta
 
 Keep typed payload helpers and schema metadata compatible with centralized output redaction.
 
-- [ ] `W02.P07.S40` - classify schema helper output fields that may carry sensitive values; `src/aeat/entrypoints/cli/_schemas.py`.
-- [ ] `W02.P07.S41` - classify modelo payload helper fields that may carry sensitive values; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W02.P07.S42` - classify review payload helper fields that may carry sensitive values; `src/aeat/entrypoints/cli/_review_payloads.py`.
-- [ ] `W02.P07.S43` - preserve JSON schema conformance after redaction wrappers; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W02.P07.S44` - preserve review payload roundtrips after redaction wrappers; `src/aeat/entrypoints/cli/test_review_payloads_roundtrip.py`.
+- [x] `W02.P07.S40` - classify schema helper output fields that may carry sensitive values; `src/aeat/entrypoints/cli/_schemas.py`.
+- [x] `W02.P07.S41` - classify modelo payload helper fields that may carry sensitive values; `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W02.P07.S42` - classify review payload helper fields that may carry sensitive values; `src/aeat/entrypoints/cli/_review_payloads.py`.
+- [x] `W02.P07.S43` - preserve JSON schema conformance after redaction wrappers; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W02.P07.S44` - preserve review payload roundtrips after redaction wrappers; `src/aeat/entrypoints/cli/test_review_payloads_roundtrip.py`.
 
 ### Phase `W02.P08` - application diagnostics and repair models
 
 Move diagnostic report shaping toward shared policy while preserving useful operator summaries.
 
-- [ ] `W02.P08.S45` - compose config-repair report redaction through the central output policy; `src/aeat/application/diagnostics.py`.
-- [ ] `W02.P08.S46` - compose repair-integrity row and namespace output through shared redaction semantics; `src/aeat/application/repair_integrity.py`.
-- [ ] `W02.P08.S47` - classify active-profile health fields as internal identifiers or operator display labels; `src/aeat/application/workflow/_profile_health.py`.
-- [ ] `W02.P08.S48` - keep live IVA acquisition summaries redacted through shared policy; `src/aeat/application/live/__init__.py`.
+- [x] `W02.P08.S45` - compose config-repair report redaction through the central output policy; `src/aeat/application/diagnostics.py`.
+- [x] `W02.P08.S46` - compose repair-integrity row and namespace output through shared redaction semantics; `src/aeat/application/repair_integrity.py`.
+- [x] `W02.P08.S47` - classify active-profile health fields as internal identifiers or operator display labels; `src/aeat/application/workflow/_profile_health.py`.
+- [x] `W02.P08.S48` - keep live IVA acquisition summaries redacted through shared policy; `src/aeat/application/live/__init__.py`.
 
 ## Wave `W03` - privacy gates and broad regression coverage
 
