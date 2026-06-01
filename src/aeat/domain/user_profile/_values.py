@@ -13,17 +13,16 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core.time import now as utc_now
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
+from ...core.time import now as utc_now
 from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
 from ..modelos._filing_record import ModeloRecord as _ModeloRecord
 from ..modelos._work_unit import WorkUnit as _WorkUnit
 from ..transactions._models import Transaction as _Transaction
 from ._errors import UserProfileValidationError
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _ProfileId = Annotated[
     str,
