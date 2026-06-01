@@ -14,7 +14,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from aeat.core.time import now
+from .....core.time import now
 
 from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla

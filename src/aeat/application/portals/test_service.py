@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.portals import (
+from . import (
     PortalNotFoundError,
     PortalRow,
     PortalsService,
 )
-from aeat.core.i18n import tr
-from aeat.domain.portals import PORTAL_REGISTRY
+from ...core.i18n import tr
+from ...domain.portals import PORTAL_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

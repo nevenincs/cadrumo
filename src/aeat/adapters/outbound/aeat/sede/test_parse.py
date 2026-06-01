@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.tests import FIXTURES_DIR
+from .....tests import FIXTURES_DIR
 
 from ._errors import SedeParseError
 from ._parse import parse_expediente_detail, parse_resumen_tree

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import resources
+from ...core.resources import resources
 
 from . import TopicCatalogue, TopicNotFoundError
 
@@ -67,7 +67,7 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
     entries for at least the default ``es`` locale so the CLI does
     not render bare keys.
     """
-    from aeat.core.i18n import tr
+    from ...core.i18n import tr
 
     catalogue = resources().topics.singleton
     for topic in catalogue.topics:

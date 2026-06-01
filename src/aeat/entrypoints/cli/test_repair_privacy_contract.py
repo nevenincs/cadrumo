@@ -11,18 +11,18 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage import get_master_key_provider
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.workflow._models import resolve_active_bucket_id
-from aeat.core.classification import SensitivityClass
-from aeat.core.config import override_settings
-from aeat.core.logging import default_log_file_path
-from aeat.diagnostics.__main__ import app as diagnostics_app
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage import get_master_key_provider
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.workflow._models import resolve_active_bucket_id
+from ...core.classification import SensitivityClass
+from ...core.config import override_settings
+from ...core.logging import default_log_file_path
+from ...diagnostics.__main__ import app as diagnostics_app
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

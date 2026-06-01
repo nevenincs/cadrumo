@@ -33,9 +33,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import (
+from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
+from . import (
     RegistryValidationError,
     RegistryValidator,
     load_modelo_directory,

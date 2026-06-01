@@ -240,6 +240,16 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
         except ValidationError as error:
             if _UNDER_TEST.get():
                 raise
+            # Log the underlying pydantic detail before wrapping. The wrapped
+            # CliValidationBoundaryError surfaces an operator-friendly refusal
+            # without the per-field error list, which is too noisy for an
+            # end-user but is exactly the diagnostic engineers need to
+            # triage a failing CLI surface or test fixture.
+            _log.error(
+                "command_error_boundary: pydantic ValidationError in %s: %s",
+                getattr(callback, "__name__", repr(callback)),
+                error.errors(),
+            )
             _emit_error_and_exit(CliValidationBoundaryError(error))
         except Exception as error:
             if _is_click_control_flow(error):

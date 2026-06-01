@@ -16,7 +16,7 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
-from aeat.domain.buckets._event import (
+from ._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventObjectType,
@@ -340,7 +340,7 @@ def test_bucket_event_type_includes_workspace_bootstrap_kinds() -> None:
     enum members keeps the bootstrap surface from regressing back
     into free-string actions."""
 
-    from aeat.domain.buckets._event import BucketEventType
+    from ._event import BucketEventType
 
     assert BucketEventType.AUTH_PROVIDER_CONFIGURED.value == "auth.provider.configured"
     assert BucketEventType.CONFIG_ENV_UPDATED.value == "config.env.updated"
@@ -353,7 +353,7 @@ def test_bucket_event_type_includes_profile_lifecycle_extensions() -> None:
     archive-aware lifecycle transitions in the bucket-event-history
     catalogue."""
 
-    from aeat.domain.buckets._event import BucketEventType
+    from ._event import BucketEventType
 
     assert BucketEventType.PROFILE_EXPORTED.value == "profile.exported"
     assert BucketEventType.PROFILE_IMPORTED.value == "profile.imported"
@@ -366,7 +366,7 @@ def test_bucket_event_type_includes_bucket_maintenance_kinds() -> None:
     have dedicated canonical enum slots so the maintenance audit
     trail does not collide with content-mutation events."""
 
-    from aeat.domain.buckets._event import BucketEventType
+    from ._event import BucketEventType
 
     assert BucketEventType.BUCKET_EXPORTED.value == "bucket.exported"
     assert BucketEventType.BUCKET_IMPORTED.value == "bucket.imported"
@@ -380,7 +380,7 @@ def test_bucket_event_type_includes_ledger_ratios_mutation_kinds() -> None:
     bucket-event-history catalogue rather than skipping the audit
     trail entirely."""
 
-    from aeat.domain.buckets._event import BucketEventType
+    from ._event import BucketEventType
 
     assert BucketEventType.LEDGER_RATIOS_SET.value == "ledger.ratios.set"
     assert BucketEventType.LEDGER_RATIOS_UNSET.value == "ledger.ratios.unset"

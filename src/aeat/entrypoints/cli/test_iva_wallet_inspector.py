@@ -17,10 +17,9 @@ from typer.testing import CliRunner
 # ``aeat app modelo work`` queries SETUP_FLOW or projects answers.  The
 # CLI command tree is lazy-loaded, so ``aeat app modelo`` alone does not
 # trigger these imports (only ``aeat config`` does).
-import aeat.application.wizard._catalogue  # noqa: F401
-import aeat.application.wizard._persistence  # noqa: F401
-
-from aeat.application.calculations._iva_compensation_history import (
+from ...application.wizard import _catalogue
+from ...application.wizard import _persistence  # noqa: F401
+from ...application.calculations._iva_compensation_history import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
     IvaCompensationHistoryRepository,
@@ -28,10 +27,10 @@ from aeat.application.calculations._iva_compensation_history import (
     IvaCompensationSeedConflictError,
     seed_iva_compensation_period,
 )
-from aeat.application.calculations._iva_wallet_balance import query_iva_wallet_balance
-from aeat.entrypoints.cli import app
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
+from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
+from . import app
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -214,8 +213,8 @@ def _store_profile_with_nif(nif: str) -> None:
     """
     from datetime import UTC, datetime
 
-    from aeat.application.user_profile import UserProfileLifecycleRepository
-    from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
+    from ...application.user_profile import UserProfileLifecycleRepository
+    from ...domain.user_profile import UserProfileFact, UserProfileRecord
 
     _created_at = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
     UserProfileLifecycleRepository(bucket_id="seed-test").save(
@@ -402,8 +401,8 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
     """Persist a minimal autónomo profile sufficient for M303 work-unit applicability."""
     from datetime import UTC, datetime
 
-    from aeat.application.user_profile import UserProfileLifecycleRepository
-    from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+    from ...application.user_profile import UserProfileLifecycleRepository
+    from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 
     _created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(

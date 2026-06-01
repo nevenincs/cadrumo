@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import re
 
-from ._ids import ManualId, ManualPart
 from ._errors import ManualValidationError
+from ._ids import ManualId, ManualPart
 
 _ID_CHAR_RE = re.compile(r"[^a-z0-9-]+")
 

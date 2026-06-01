@@ -47,7 +47,7 @@ importlib.import_module("aeat.domain.renta")
 @pytest.fixture(scope="module")
 def snapshot_2025():
     """Real Modelo 100 2025 registry snapshot (module-level singleton)."""
-    from aeat.core.resources import resources
+    from ...core.resources import resources
 
     return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
 
@@ -238,8 +238,8 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     registry declaration in aeat.core.errors.registry._application, not
     hand-computed.
     """
-    from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
-    from aeat.core.errors._registry import get_registered_error_code
+    from ...core.errors import ERROR_REGISTRY, build_error_envelope
+    from ...core.errors._registry import get_registered_error_code
 
     from ._taxation_comparison import TaxationComparisonError
 
@@ -285,7 +285,7 @@ def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     profile-declaration-type binding; the function should detect this
     and raise TaxationComparisonError rather than a raw engine error.
     """
-    from aeat.core.resources import resources
+    from ...core.resources import resources
 
     snapshot_303 = resources().modelos.authority.snapshot("303", filing_year=2025, period="3T")
 

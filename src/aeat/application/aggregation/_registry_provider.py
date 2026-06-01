@@ -7,14 +7,13 @@ counterpart binding values for the aggregation pipeline.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing._dates import _parse_iso8601_date
-
 from ...domain.calculations.registry import (
     CounterpartAggregationObservation as RegistryCounterpartObservation,
 )
@@ -26,9 +25,12 @@ from ...domain.calculations.registry import (
 )
 from ._counterpart import CounterpartAggregation, OperationKind349
 from ._errors import AggregationUnsupportedModeloError, AggregationValidationError, t
-from ._service import AggregationSourceKind, PerModeloAggregationCommand, PerModeloAggregationProvider, aggregate_per_modelo
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ._service import (
+    AggregationSourceKind,
+    PerModeloAggregationCommand,
+    PerModeloAggregationProvider,
+    aggregate_per_modelo,
+)
 
 _COUNTERPART_BINDING_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     (

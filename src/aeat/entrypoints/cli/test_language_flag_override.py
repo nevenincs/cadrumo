@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 from click.testing import CliRunner
 
-from aeat.entrypoints.cli import app
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

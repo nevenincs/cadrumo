@@ -25,7 +25,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.domain.invoices._service import (
+from ._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
 )

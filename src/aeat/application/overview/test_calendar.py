@@ -506,7 +506,7 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
     ``NOT_APPLICABLE`` row shown as confidently due is the W02 defect.
     """
 
-    from aeat.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+    from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
@@ -702,7 +702,7 @@ def test_undeclared_profile_message_resolves_to_real_localised_text() -> None:
     supported language (es / en / ca / hu).
     """
 
-    from aeat.core.i18n import tr
+    from ...core.i18n import tr
 
     key = "cli.overview.taxpayer_model_undeclared"
     for locale in ("es", "en", "ca", "hu"):

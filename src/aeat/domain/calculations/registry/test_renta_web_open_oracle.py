@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.config import Settings
+from ....core.config import Settings
 
 from ._errors import RegistryValidationError
 from ._live_parity import ParityFieldComparison
@@ -88,7 +88,7 @@ def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None
 
 
 def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
-    from aeat.adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
+    from ....adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
 
     payload = b'{"casilla_overrides": {"0528": "5000,00"}, "scrape_casillas": ["0695"]}'
     plan = RentaWebOpenSedeDriver().planned_operations(payload, expected={"0180": object()})

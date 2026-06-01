@@ -15,12 +15,12 @@ Ten cumulative clauses:
 
 from __future__ import annotations
 
-import pytest
-
 from pathlib import Path
 
-from aeat.diagnostics import _identity_placement
-from aeat.diagnostics._identity_placement import (
+import pytest
+
+from . import _identity_placement
+from ._identity_placement import (
     ConstraintShape,
     Finding,
     build_alias_inventory,

@@ -8,16 +8,16 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import has_active_bucket_session
-from aeat.adapters.persistence.storage.bucket._manifest_io import read_manifest
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from aeat.core.classification import SensitivityClass
-from aeat.core.config import StorageRouteKind, load_settings, override_settings
-from aeat.tests.secure_sql import (
+from ..adapters.persistence.storage import has_active_bucket_session
+from ..adapters.persistence.storage.bucket._manifest_io import read_manifest
+from ..adapters.persistence.storage.master_key._active_session import activate_session
+from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
+from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..core.classification import SensitivityClass
+from ..core.config import StorageRouteKind, load_settings, override_settings
+from .secure_sql import (
     dev_test_database_password,
     isolated_ephemeral_secure_sql,
     isolated_profile_storage_root,

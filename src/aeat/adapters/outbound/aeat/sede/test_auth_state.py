@@ -24,11 +24,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.auth._authenticator import AeatSession, CertificateSessionDetail, HandshakeResult
-from aeat.adapters.outbound.aeat.auth._providers import AuthProviderKind
-from aeat.adapters.outbound.aeat.sede._auth_state import storage_state_for_session
-from aeat.adapters.outbound.aeat.sede._errors import SedeNavigationError
-from aeat.core.i18n import tr
+from ..auth._authenticator import AeatSession, CertificateSessionDetail, HandshakeResult
+from ..auth._providers import AuthProviderKind
+from ._auth_state import storage_state_for_session
+from ._errors import SedeNavigationError
+from .....core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -89,7 +89,7 @@ def test_storage_state_for_session_unloaded_state_carries_translated_message(
 
     The test creates a synthetic path that passes the None-path guard but
     causes load() to return None under an isolated profile bucket."""
-    from aeat.tests.secure_sql import isolated_runtime_profile
+    from .....tests.secure_sql import isolated_runtime_profile
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="auth-state-test"):
         session = _minimal_session(storage_state_path=tmp_path / "nonexistent.json")
@@ -116,7 +116,7 @@ def test_no_auth_session_locale_key_resolves_to_real_copy() -> None:
 
 
 def test_fetch_notifications_summary_carries_translated_message_on_none_path() -> None:
-    from aeat.adapters.outbound.aeat.sede._notifications import fetch_notifications_summary
+    from ._notifications import fetch_notifications_summary
 
     session = _minimal_session(storage_state_path=None)
 
@@ -133,7 +133,7 @@ def test_fetch_notifications_summary_carries_translated_message_on_none_path() -
 
 
 def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path() -> None:
-    from aeat.adapters.outbound.aeat.sede._iva_compensation_wallet import fetch_iva_compensation_wallet
+    from ._iva_compensation_wallet import fetch_iva_compensation_wallet
 
     session = _minimal_session(storage_state_path=None)
 
@@ -157,7 +157,7 @@ def test_fetch_iva_compensation_wallet_carries_translated_message_on_none_path()
 
 
 def test_walk_expedientes_tree_carries_translated_message_on_none_path() -> None:
-    from aeat.adapters.outbound.aeat.sede._walker import walk_expedientes_tree
+    from ._walker import walk_expedientes_tree
 
     session = _minimal_session(storage_state_path=None)
 

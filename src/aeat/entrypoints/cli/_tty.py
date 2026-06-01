@@ -21,9 +21,9 @@ from __future__ import annotations
 
 import sys
 
+from ...core.click_context import current_cli_flag
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ...core.click_context import current_cli_flag
 
 
 class NonTtyRefusedError(AeatError):

@@ -36,7 +36,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError

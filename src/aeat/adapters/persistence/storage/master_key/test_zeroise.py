@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.persistence.storage.master_key._zeroise import zeroise
+from ._zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

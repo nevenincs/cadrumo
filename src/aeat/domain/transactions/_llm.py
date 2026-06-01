@@ -42,7 +42,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ..categories import resolve_category_profiles, SpendingCategory
+from ..categories import SpendingCategory, resolve_category_profiles
 from ._enums import BusinessClassification
 from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
@@ -51,6 +51,7 @@ from ._models import Transaction
 _logger = get_logger(__name__)
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 _CONFIDENCE_MIN = Decimal("0")
 _CONFIDENCE_MAX = Decimal("1")
 _DEFAULT_TIMEOUT_SECONDS = 120.0

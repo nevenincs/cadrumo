@@ -10,12 +10,12 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from aeat.adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     RepositoryError,
     session_scope,
 )
-from aeat.adapters.persistence.storage.sql.engine import get_engine
-from aeat.domain.fincas import (
+from ...adapters.persistence.storage.sql.engine import get_engine
+from . import (
     Arrendamiento,
     ArrendamientoRepository,
     ExpenseCategory,
@@ -29,7 +29,7 @@ from aeat.domain.fincas import (
     FincaRepository,
     UseType,
 )
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

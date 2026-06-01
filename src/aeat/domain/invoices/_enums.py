@@ -112,7 +112,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
 
 __all__ = [
     "IvaRate",
-    "PaymentStatus",
     "IvaRateNotFoundError",
+    "PaymentStatus",
     "iva_rate_percentage",
 ]

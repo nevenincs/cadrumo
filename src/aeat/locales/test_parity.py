@@ -5,9 +5,9 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from aeat.locales._ast_scanner import scan_namespace_markers, scan_source_tree
-from aeat.locales.cli import app
-from aeat.locales.manager import LocaleError, LocaleManager
+from ._ast_scanner import scan_namespace_markers, scan_source_tree
+from .cli import app
+from .manager import LocaleError, LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -291,7 +291,7 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
     These two enum values caused the #553 structural-repair-exception incident because
     scaffold could not generate their locale keys from the namespace marker alone.
     """
-    from aeat.locales._fstring_registry import get_registered_keys
+    from ._fstring_registry import get_registered_keys
 
     keys = get_registered_keys()
     assert "wizard.setup.taxpayer-type.legal-entity-form.choices.sal.label" in keys, (
@@ -304,8 +304,8 @@ def test_fstring_registry_expands_sal_and_sll_keys() -> None:
 
 def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
     """Every LegalEntityForm member must have a registered locale key."""
-    from aeat.domain.deadlines._models import LegalEntityForm
-    from aeat.locales._fstring_registry import get_registered_keys
+    from ..domain.deadlines._models import LegalEntityForm
+    from ._fstring_registry import get_registered_keys
 
     keys = get_registered_keys()
     missing = []
@@ -321,8 +321,8 @@ def test_fstring_registry_covers_all_legal_entity_form_members() -> None:
 
 def test_fstring_registry_covers_all_fiscal_residency_members() -> None:
     """Every FiscalResidency member must have a registered locale key."""
-    from aeat.domain.deadlines._models import FiscalResidency
-    from aeat.locales._fstring_registry import get_registered_keys
+    from ..domain.deadlines._models import FiscalResidency
+    from ._fstring_registry import get_registered_keys
 
     keys = get_registered_keys()
     missing = []
@@ -346,7 +346,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
     scaffolded. A failure here means a new enum value was added without running
     scaffold (or scaffold does not cover it yet).
     """
-    from aeat.locales._fstring_registry import get_registered_keys
+    from ._fstring_registry import get_registered_keys
 
     registered_keys = get_registered_keys()
     errors = []
@@ -373,7 +373,7 @@ def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
     Simulates the SAL/SLL incident: an empty locale file receives scaffold and
     must contain every registered key as a placeholder afterwards.
     """
-    from aeat.locales._fstring_registry import get_registered_keys
+    from ._fstring_registry import get_registered_keys
 
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()

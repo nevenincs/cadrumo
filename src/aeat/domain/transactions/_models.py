@@ -30,17 +30,18 @@ from typing import Literal, Self
 from pydantic import BaseModel, Field, ValidationError, field_serializer, field_validator, model_validator
 from pydantic_core import core_schema
 
-from .._identifiers import canonical_decimal_string
-from ..iva._schema import EUMemberState, IvaCategory
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.identity import BucketId
-from ._ids import TransactionId
-from ...core.errors import CoreValidationError
 from ...core.time._utc import validate_utc_aware
+from .._identifiers import canonical_decimal_string
+from ..iva._schema import EUMemberState, IvaCategory
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
+from ._ids import TransactionId
 from ._raw_transaction import RawTransaction
+
 
 def derive_transaction_id(raw: RawTransaction) -> str:
     """Return the stable transaction hash for one raw transaction.

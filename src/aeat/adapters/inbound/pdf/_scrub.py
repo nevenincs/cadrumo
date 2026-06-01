@@ -41,8 +41,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from aeat.core._models import STRICT_FROZEN_CONFIG
-from aeat.core.time import now
+from ....core._models import STRICT_FROZEN_CONFIG
+from ....core.time import now
 
 from ._errors import PdfModeloImportError
 from ._utils import sha256_file

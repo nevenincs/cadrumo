@@ -26,7 +26,7 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ._schema import Justificante
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    pass
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):

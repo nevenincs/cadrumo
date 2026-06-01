@@ -12,6 +12,6 @@ re-routing through ``aeat.core.identity`` at every consumer site.
 
 from __future__ import annotations
 
-from aeat.core.identity._transaction import TransactionId
+from ...core.identity._transaction import TransactionId
 
 __all__ = ("TransactionId",)

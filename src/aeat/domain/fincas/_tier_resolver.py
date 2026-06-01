@@ -238,7 +238,7 @@ def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
     Modelo 100. Falls back to the documented module-level constant when the
     registry lookup raises (e.g. unregistered year).
     """
-    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import RegistryValidationError, read_parameter
 
     try:
         return read_parameter(
@@ -263,7 +263,7 @@ def _resolve_ejercicio_amendment_year(period_year: int) -> int:
     Modelo 100. Falls back to the documented module-level constant
     ``DEFAULT_EJERCICIO_AMENDMENT_YEAR`` when the registry lookup raises.
     """
-    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import RegistryValidationError, read_parameter
 
     try:
         value = read_parameter(
@@ -382,7 +382,7 @@ def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
     ``"tier-90"``. Falls back to the documented module-level rate when the
     registry lookup raises (e.g. unregistered period_year).
     """
-    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import RegistryValidationError, read_parameter
 
     try:
         return read_parameter(
@@ -411,7 +411,7 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     Reads ``renta-<period_year>-rental-joven-tenant-age-min`` and
     ``-max``. Falls back to module constants on miss.
     """
-    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import RegistryValidationError, read_parameter
 
     ctx = {"filing_period": date(period_year, 12, 31)}
     try:
@@ -453,7 +453,7 @@ def _resolve_rehab_lookback_days(period_year: int) -> int:
     Reads ``renta-<period_year>-rental-rehab-lookback-days`` from
     Modelo 100. Falls back to ``REHAB_LOOKBACK_DAYS`` constant on miss.
     """
-    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+    from ..calculations.registry import RegistryValidationError, read_parameter
 
     try:
         value = read_parameter(

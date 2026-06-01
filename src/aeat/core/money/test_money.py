@@ -6,14 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.money import CENT, round_to_cents
+from . import CENT, round_to_cents
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def test_cent_constant_is_two_decimal_places() -> None:
     """CENT pins the euro-cent quantum."""
-    assert CENT == Decimal("0.01")
+    assert Decimal("0.01") == CENT
     assert CENT.as_tuple().exponent == -2
 
 

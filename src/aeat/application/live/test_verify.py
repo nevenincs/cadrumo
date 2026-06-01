@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE
-from aeat.application.live._verify import (
+from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE
+from ._verify import (
     VerifyObservationNotFoundError,
     VerifyService,
     VerifySurface,
     verify_observation_object_key,
 )
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

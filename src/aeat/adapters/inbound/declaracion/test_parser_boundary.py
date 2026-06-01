@@ -9,10 +9,10 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from aeat.core.errors import AeatError
-from aeat.core.resources import resources
-from aeat.domain.justificante._errors import PdfModeloImportError
-from aeat.tests import FIXTURES_DIR
+from ....core.errors import AeatError
+from ....core.resources import resources
+from ....domain.justificante._errors import PdfModeloImportError
+from ....tests import FIXTURES_DIR
 
 from . import DeclaracionParseError, TemplateNotDetectedError, parse_declaracion
 

@@ -116,15 +116,15 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ....core.resources import resources
+from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
     RegistryValidationError,
     calculate_registry_snapshot,
     resolve_relation_values_from_observations,
 )
-from aeat.tests import FIXTURES_DIR
+from ....tests import FIXTURES_DIR
 
 from . import DeclaracionParseError, parse_declaracion
 

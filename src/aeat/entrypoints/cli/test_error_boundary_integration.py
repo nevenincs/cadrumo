@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.tests.cli_runner import invoke_cached_cli
+from ...tests.cli_runner import invoke_cached_cli
 
 from ...core.errors import (
     ErrorCategory,
@@ -101,7 +101,7 @@ def test_log_level_resolution_error_exits_refused(
     the error, the runner re-raises it and the test fails with a traceback
     rather than a misleading wrong-exit-code assertion.
     """
-    from aeat.core.config import override_settings
+    from ...core.config import override_settings
 
     if env_key is not None and env_val is not None:
         # Translate the env-var name to the Settings field name. The

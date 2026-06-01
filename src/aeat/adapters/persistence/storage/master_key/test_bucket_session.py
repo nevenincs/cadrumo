@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.bucket._errors import BucketLockedError
-from aeat.adapters.persistence.storage.master_key._bucket_session import (
+from ..bucket._errors import BucketLockedError
+from ._bucket_session import (
     BucketSession,
 )
 

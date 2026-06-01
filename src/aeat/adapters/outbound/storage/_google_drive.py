@@ -32,7 +32,7 @@ from collections.abc import Iterator
 from datetime import datetime
 from typing import Any
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.config import Settings as _Settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE

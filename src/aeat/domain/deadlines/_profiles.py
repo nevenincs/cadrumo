@@ -14,10 +14,10 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from aeat.core.parsing import parse_bool as _parse_bool
-from aeat.core.parsing import parse_date as _parse_date_canonical
-from aeat.core.profile import SetupAnswers, project_answers
-from aeat.core.profile_catalogue import get_setup_flow
+from ...core.parsing import parse_bool as _parse_bool
+from ...core.parsing import parse_date as _parse_date_canonical
+from ...core.profile import SetupAnswers, project_answers
+from ...core.profile_catalogue import get_setup_flow
 
 from ._errors import ProfileError
 from ._models import (

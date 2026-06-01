@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
+from ...core.identity import BucketId
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -42,7 +43,6 @@ from ...domain.buckets import (
     append_bucket_event,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...core.identity import BucketId
 from .._storage_paths import storage_path
 
 

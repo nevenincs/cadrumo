@@ -17,8 +17,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from aeat.core.aggregation import AggregationSourceKind
-from aeat.core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+from ...core.aggregation import AggregationSourceKind
+from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {

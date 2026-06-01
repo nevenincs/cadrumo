@@ -5,9 +5,9 @@ from pathlib import Path
 
 import yaml
 
-from aeat.core.errors import AeatError
-from aeat.core.external_constants import UTF_8_ENCODING
-from aeat.core.logging import get_logger
+from ..core.errors import AeatError
+from ..core.external_constants import UTF_8_ENCODING
+from ..core.logging import get_logger
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"]
@@ -77,8 +77,8 @@ class LocaleManager:
         through a separate parity assertion that verifies at least one
         concrete locale key exists under each declared prefix.
         """
-        from aeat.locales._ast_scanner import scan_source_tree
-        from aeat.locales._fstring_registry import get_registered_keys
+        from ._ast_scanner import scan_source_tree
+        from ._fstring_registry import get_registered_keys
 
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
@@ -103,7 +103,7 @@ class LocaleManager:
         Each marker passes the parity check when at least one
         concrete locale key starts with its prefix.
         """
-        from aeat.locales._ast_scanner import scan_namespace_markers
+        from ._ast_scanner import scan_namespace_markers
 
         return scan_namespace_markers(self.src_dir)
 

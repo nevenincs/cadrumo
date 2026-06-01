@@ -8,12 +8,16 @@ from pathlib import Path
 
 import pytest
 
-from ...core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
-from ...core.external_constants import load_external_constants
+from ...core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, load_external_constants
 from ...tests.secure_sql import isolated_runtime_profile
-from ._diagnostics import _DiagnosticPayload, list_auth_diagnostics, load_auth_diagnostic, record_auth_diagnostic_phone_state
+from ._diagnostics import (
+    _DiagnosticPayload,
+    list_auth_diagnostics,
+    load_auth_diagnostic,
+    record_auth_diagnostic_phone_state,
+)
 from ._errors import AuthDiagnosticPhoneStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from ._renta_web_open_oracle import (

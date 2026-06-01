@@ -25,6 +25,7 @@ from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
 from ...core.time import now as utc_now
 from ._errors import UserProfileValidationError
+
 _SnapshotId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z_0-9.:-]*$"),

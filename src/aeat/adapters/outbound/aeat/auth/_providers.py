@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
+
 class CertificateSessionDetail(BaseModel):
     """Certificate-backed session details."""
 

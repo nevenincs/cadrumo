@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ..profile._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
 
+
 class IVARegime(StrEnum):
     """The IVA regime a taxpayer files under.
 
@@ -205,6 +206,7 @@ class ObligationStatus(StrEnum):
     NOT_APPLICABLE = "NOT_APPLICABLE"
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 
 class ModeloEnrollment(BaseModel):
     """AEAT enrollment facts used by registry filing schedules."""

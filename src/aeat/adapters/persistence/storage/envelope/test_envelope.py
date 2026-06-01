@@ -18,6 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
+
 class _DemoPayloadV1(BaseModel):
     model_config = _STRICT_FROZEN
 

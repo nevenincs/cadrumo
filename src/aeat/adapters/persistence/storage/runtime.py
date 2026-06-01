@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now as _utc_now
+from ....core.time import now as _utc_now
 
 from ....core.config import (
     Settings,

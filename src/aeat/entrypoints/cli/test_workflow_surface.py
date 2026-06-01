@@ -11,12 +11,12 @@ import pytest
 from click.testing import Result
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
-from aeat.application.diagnostics import build_cli_version_report
-from aeat.core.config import SecretStoreBackend, load_settings, override_settings
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.domain.transactions import TransactionCatalogueRepository
-from aeat.tests.cli_runner import invoke_cached_cli
+from ...adapters.persistence.storage.sql import dispose_engine
+from ...application.diagnostics import build_cli_version_report
+from ...core.config import SecretStoreBackend, load_settings, override_settings
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...domain.transactions import TransactionCatalogueRepository
+from ...tests.cli_runner import invoke_cached_cli
 
 from . import _import_failure_surface, _startup_import_error_text
 
@@ -115,9 +115,9 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from aeat.application.user_profile._orchestration import profile_create_storage_span
-    from aeat.application.user_profile._testing import register_minimal_profile
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from ...application.user_profile._orchestration import profile_create_storage_span
+    from ...application.user_profile._testing import register_minimal_profile
+    from ...application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
     values = {
@@ -144,10 +144,10 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 ) -> None:
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
-    from aeat.application.filing import load_default_filing_profile
-    from aeat.application.user_profile import UserProfileLifecycleRepository
-    from aeat.application.user_profile._orchestration import fact_value
-    from aeat.application.workflow import workflow_state_repository
+    from ...application.filing import load_default_filing_profile
+    from ...application.user_profile import UserProfileLifecycleRepository
+    from ...application.user_profile._orchestration import fact_value
+    from ...application.workflow import workflow_state_repository
 
     create_result = _invoke(
         [
@@ -187,10 +187,10 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     )
     assert declare_result.exit_code == 0, declare_result.output
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.application.user_profile._orchestration import set_active_field
-    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
-    from aeat.domain.user_profile import UserProfileFact
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...application.user_profile._orchestration import set_active_field
+    from ...application.workflow._profile_bucket_scan import read_profile_bucket
+    from ...domain.user_profile import UserProfileFact
 
     # Profile identity is an immutable UUIDv4 minted at creation; the
     # ``operator`` string is only the operator-facing display label.
@@ -617,7 +617,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "<bucket-id>"
     assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
     _assert_secure_database_payload(tmp_path, canary, transaction_ref)
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         catalogue = TransactionCatalogueRepository(bucket_id="default").load()
@@ -769,9 +769,9 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     encrypted_user_cli: Path,
 ) -> None:
     """Profile creation must persist ``iva.regime`` for the deadline engine."""
-    from aeat.application.user_profile._projections import projection_for_taxpayer
-    from aeat.application.workflow import workflow_state_repository
-    from aeat.domain.deadlines import IVARegime
+    from ...application.user_profile._projections import projection_for_taxpayer
+    from ...application.workflow import workflow_state_repository
+    from ...domain.deadlines import IVARegime
 
     created = _invoke(
         [
@@ -790,7 +790,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     )
     assert created.exit_code == 0, created.output
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
@@ -804,8 +804,8 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     encrypted_user_cli: Path,
 ) -> None:
     """Boolean profile flags must survive creation and reach the engine."""
-    from aeat.application.user_profile._projections import projection_for_taxpayer
-    from aeat.application.workflow import workflow_state_repository
+    from ...application.user_profile._projections import projection_for_taxpayer
+    from ...application.workflow import workflow_state_repository
 
     created = _invoke(
         [
@@ -831,7 +831,7 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     facts = {row["path"]: row["value"] for row in show_payload["facts"]}
     assert facts["iva.does_intracomunitario"] == "true"
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
 
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()

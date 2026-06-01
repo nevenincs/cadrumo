@@ -19,12 +19,12 @@ from typing import Literal
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.logging import get_logger
 from ...core.identity import TransactionId
+from ...core.logging import get_logger
+from ..iva import InvoiceKind
 from ..transactions import (
     TransactionCatalogue,
 )
-from ..iva import InvoiceKind
 from ._errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,

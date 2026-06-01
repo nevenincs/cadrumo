@@ -24,17 +24,17 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
-from aeat.application.filing import (
+from ..browser import Profile, opened_browser_page, shared_playwright_runtime
+from .....application.filing import (
     ModeloDraftStatus,
     ModeloOperatorProfile,
     build_draft,
     build_runtime_schema_provider,
     export_draft,
 )
-from aeat.core.config import Settings
-from aeat.core.resources import bundled_path, resources
-from aeat.domain.calculations.registry import (
+from .....core.config import Settings
+from .....core.resources import bundled_path, resources
+from .....domain.calculations.registry import (
     InputKind,
     RegistryValidationError,
     calculate_registry_snapshot,
@@ -42,8 +42,8 @@ from aeat.domain.calculations.registry import (
     relation_source_requirements,
     resolve_export_layout,
 )
-from aeat.tests import FIXTURES_DIR
-from aeat.tests.secure_sql import isolated_runtime_profile
+from .....tests import FIXTURES_DIR
+from .....tests.secure_sql import isolated_runtime_profile
 
 from ._declarations import (
     Declaracion,
@@ -1681,7 +1681,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
 # ---------------------------------------------------------------------------
 
 
-def _whitespace_nif_session() -> "AeatSession":
+def _whitespace_nif_session() -> AeatSession:
     """Build a minimal AeatSession with an all-whitespace NIF.
 
     AeatSession.identity_nif has min_length=1, so a single space satisfies
@@ -1690,12 +1690,12 @@ def _whitespace_nif_session() -> "AeatSession":
     """
     from datetime import timedelta
 
-    from aeat.adapters.outbound.aeat.auth._authenticator import (
+    from ..auth._authenticator import (
         AeatSession,
         CertificateSessionDetail,
         HandshakeResult,
     )
-    from aeat.adapters.outbound.aeat.auth._providers import AuthProviderKind
+    from ..auth._providers import AuthProviderKind
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(
@@ -1724,11 +1724,11 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
     translated_message when AeatSession.identity_nif is whitespace-only."""
     import asyncio
 
-    from aeat.adapters.outbound.aeat.sede._declarations import (
+    from ._declarations import (
         Declaracion,
         capture_filed_declaration_observation,
     )
-    from aeat.adapters.outbound.aeat.sede._errors import SedeNavigationError
+    from ._errors import SedeNavigationError
 
     session = _whitespace_nif_session()
     declaration = Declaracion(
@@ -1754,7 +1754,7 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
 
 def test_capture_filed_declaration_empty_nif_locale_key_resolves_to_real_copy() -> None:
     """S102-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
-    from aeat.core.i18n import tr
+    from .....core.i18n import tr
 
     resolved = tr("adapters.sede.errors.empty_identity_nif")
     assert "adapters.sede.errors.empty_identity_nif" not in resolved

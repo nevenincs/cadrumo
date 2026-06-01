@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.persistence.storage.errors import EncryptionError
-from aeat.adapters.persistence.storage.master_key._dek_wrap import wrap_dek
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
+from ..errors import EncryptionError
+from ._dek_wrap import wrap_dek
+from .....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

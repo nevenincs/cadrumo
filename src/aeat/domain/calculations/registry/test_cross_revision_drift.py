@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import load_modelo_directory, load_registry_tree
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector

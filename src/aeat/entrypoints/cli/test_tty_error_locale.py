@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.i18n import tr
+from ...core.i18n import tr
 
 from ._tty import NonTtyRefusedError
 

@@ -8,13 +8,13 @@ from collections import deque
 
 import pytest
 
-from aeat.application.wizard._errors import (
+from ._errors import (
     WizardScriptOverflowError,
     WizardScriptUnderflowError,
 )
-from aeat.application.wizard._models import WizardQuestion, WizardWidget
-from aeat.application.wizard._prompter import Prompter, ScriptedPrompter
-from aeat.core.i18n import Translatable as tr
+from ._models import WizardQuestion, WizardWidget
+from ._prompter import Prompter, ScriptedPrompter
+from ...core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -84,7 +84,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     from prompt_toolkit.input import create_pipe_input
     from prompt_toolkit.output import DummyOutput
 
-    from aeat.application.wizard._prompter import (
+    from ._prompter import (
         QuestionaryPrompter,
         WizardUnsupportedConsoleError,
     )
@@ -101,7 +101,7 @@ def test_questionary_prompter_translates_no_console_error() -> None:
         def write_raw(self, data: str) -> None:  # pragma: no cover - first call raises
             raise OSError("No console screen buffer attached")
 
-    from aeat.core.errors._registry import resolve_error_message
+    from ...core.errors._registry import resolve_error_message
 
     with create_pipe_input() as pipe_input:
         prompter = QuestionaryPrompter(input=pipe_input, output=_RaisingOutput())
@@ -122,7 +122,7 @@ def test_emit_progress_routes_through_logger_not_stdout(
     """emit_progress must use the structured logger; nothing must reach stdout."""
     import logging
 
-    from aeat.application.wizard._prompter import QuestionaryPrompter
+    from ._prompter import QuestionaryPrompter
 
     prompter = QuestionaryPrompter()
 
@@ -142,7 +142,7 @@ def test_emit_progress_log_record_carries_text(caplog: pytest.LogCaptureFixture)
     """The log record emitted by emit_progress must carry the progress text."""
     import logging
 
-    from aeat.application.wizard._prompter import QuestionaryPrompter
+    from ._prompter import QuestionaryPrompter
 
     prompter = QuestionaryPrompter()
 

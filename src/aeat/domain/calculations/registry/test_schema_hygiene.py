@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
-from aeat.core.resources import bundled_path
+from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 
 from . import load_registry_tree
 

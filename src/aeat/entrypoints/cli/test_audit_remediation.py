@@ -11,8 +11,8 @@ import click
 import pytest
 from click.testing import Result
 
-from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ...tests.cli_runner import aeat_click_command, invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

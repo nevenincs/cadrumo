@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import os
 import pathlib
-import re
 
 import pytest
 
@@ -44,7 +43,7 @@ def _marker_present_near(lines: list[str], lineno: int) -> bool:
 
 def test_s672_borrador100_entry_removed() -> None:
     """borrador_100.py:276 must not be in the ratchet allowlist (marker added)."""
-    from aeat.test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
+    from .test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
 
     assert ("application/live/_borrador_100.py", 276) not in _KNOWN_VIOLATING_LINES, (
         "S672: borrador_100.py:276 still in allowlist; remove after adding OVERRIDE-COVARIANT-RETURN marker"
@@ -53,7 +52,7 @@ def test_s672_borrador100_entry_removed() -> None:
 
 def test_s672_censo_entry_removed() -> None:
     """censo.py:337 must not be in the ratchet allowlist (marker added)."""
-    from aeat.test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
+    from .test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
 
     assert ("application/live/_censo.py", 337) not in _KNOWN_VIOLATING_LINES, (
         "S672: censo.py:337 still in allowlist; remove after adding OVERRIDE-COVARIANT-RETURN marker"
@@ -62,7 +61,7 @@ def test_s672_censo_entry_removed() -> None:
 
 def test_s672_conftest_entry_removed() -> None:
     """conftest.py:15 type: ignore must be gone and entry removed from allowlist."""
-    from aeat.test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
+    from .test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
 
     assert ("domain/calculations/registry/conftest.py", 15) not in _KNOWN_VIOLATING_LINES, (
         "S672: conftest.py:15 still in allowlist; remove after erasing the type: ignore"
@@ -77,7 +76,7 @@ def test_s672_conftest_entry_removed() -> None:
 
 def test_s673_modelo_entry_removed() -> None:
     """_modelo.py:1575 must not be in the ratchet allowlist (definition annotated)."""
-    from aeat.test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
+    from .test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
 
     assert ("entrypoints/cli/_modelo.py", 1575) not in _KNOWN_VIOLATING_LINES, (
         "S673: _modelo.py:1575 still in allowlist; remove after annotating definition param"
@@ -86,7 +85,7 @@ def test_s673_modelo_entry_removed() -> None:
 
 def test_allowlist_size_is_7() -> None:
     """Allowlist must be exactly 7 after S672 (3 removed) and S673 (1 removed)."""
-    from aeat.test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
+    from .test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES
 
     size = len(_KNOWN_VIOLATING_LINES)
     assert size == 7, (
@@ -178,7 +177,7 @@ def test_s674_app_live_marker() -> None:
 
 def test_ratchet_passes() -> None:
     """The main ratchet test must report zero new violations."""
-    from aeat.test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES, _collect_violations
+    from .test_type_ignore_rationale_inventory import _KNOWN_VIOLATING_LINES, _collect_violations
 
     current = frozenset(_collect_violations())
     new_violations = current - _KNOWN_VIOLATING_LINES

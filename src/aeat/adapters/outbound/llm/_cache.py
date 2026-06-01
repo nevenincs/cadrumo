@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.config import PROJECT_ROOT
 from ....core.logging import get_logger

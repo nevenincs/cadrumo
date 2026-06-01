@@ -16,7 +16,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,

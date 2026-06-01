@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 from ....domain.submission._models import (
     ModeloPresentado,

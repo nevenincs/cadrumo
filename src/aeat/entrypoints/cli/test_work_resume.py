@@ -9,18 +9,18 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.workflow import (
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.workflow import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
     save_run,
 )
-from aeat.domain.deadlines import ModeloDeadline, ObligationStatus
-from aeat.entrypoints.cli._modelo import work_app
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...domain.deadlines import ModeloDeadline, ObligationStatus
+from ._modelo import work_app
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -174,7 +174,7 @@ def test_resume_emits_no_bucket_event(cli_runner: CliRunner) -> None:
     runner and asserts that the real BucketEventHistoryRepository (backed by
     the isolated SQLite engine) has zero entries after the command completes.
     """
-    from aeat.domain.buckets import BucketEventHistoryRepository
+    from ...domain.buckets import BucketEventHistoryRepository
 
     run_id = "d" * 16
     save_run(_aborted_run(run_id, reason=WorkflowAbortReason.SITE_UNAVAILABLE))

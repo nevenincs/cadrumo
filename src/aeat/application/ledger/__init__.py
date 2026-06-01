@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ._actions import (
     add_classification_rule,
     apply_classification_rules,
@@ -41,7 +42,6 @@ from ._id_resolution import (
     compute_display_id_width,
     resolve_transaction_id,
 )
-from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
     ApplyRulesAppliedRow,

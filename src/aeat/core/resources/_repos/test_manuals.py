@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources._repos.manuals import ManualKey, ManualRepository
+from .manuals import ManualKey, ManualRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -55,7 +55,7 @@ def test_manual_repository_get_raises_for_unextracted_manual() -> None:
     error hierarchy lets the caller catch via either the domain-
     specific class or the resource-level base.
     """
-    from aeat.domain.manuals._errors import ManualNotFoundError
+    from ....domain.manuals._errors import ManualNotFoundError
 
     repo = ManualRepository()
     key = ManualKey(manual_id="iva", year=2025, part="single")

@@ -24,18 +24,18 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import override_settings
-from aeat.core.errors import ErrorCategory, get_error_exit_code
-from aeat.entrypoints.cli import _modelo as modelo_cli
-from aeat.entrypoints.cli._modelo_payloads import (
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._persistence import workflow_state_repository
+from ...core.config import override_settings
+from ...core.errors import ErrorCategory, get_error_exit_code
+from . import _modelo as modelo_cli
+from ._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,
 )
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

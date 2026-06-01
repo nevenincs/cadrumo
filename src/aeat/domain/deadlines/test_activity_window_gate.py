@@ -15,7 +15,7 @@ from datetime import date
 
 import pytest
 
-from aeat.domain.deadlines._engine import _window_outside_activity_period
+from ._engine import _window_outside_activity_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

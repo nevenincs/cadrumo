@@ -39,9 +39,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.domain.justificante import Justificante
-from aeat.tests import FIXTURES_DIR as _FIXTURES_ROOT
-from aeat.tests._justificante_parse_cache import parse_committed_justificante_fixture
+from ....domain.justificante import Justificante
+from ....tests import FIXTURES_DIR as _FIXTURES_ROOT
+from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

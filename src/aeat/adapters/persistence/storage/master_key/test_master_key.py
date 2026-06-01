@@ -641,9 +641,8 @@ class TestSecurityHardening:
     def test_passphrase_whitespace_only_rejected(self) -> None:
         from ._master_key import _default_passphrase_callback
 
-        with override_settings(aeat_secret_passphrase="\r\n"):
-            with pytest.raises(SecretStoreError):
-                _default_passphrase_callback()
+        with override_settings(aeat_secret_passphrase="\r\n"), pytest.raises(SecretStoreError):
+            _default_passphrase_callback()
 
     def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
         """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""

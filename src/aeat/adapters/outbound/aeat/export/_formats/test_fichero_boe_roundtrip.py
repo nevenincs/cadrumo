@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.external_constants import LATIN_1_ENCODING
+from ......core.external_constants import LATIN_1_ENCODING
 
 from .._errors import AeatExportFormatError
 from ._deserialise import deserialise
@@ -405,7 +405,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
     SHA — making the SHA a *consequence* of structural correctness, not
     the sole check.
     """
-    from aeat.application.filing import (
+    from ......application.filing import (
         ModeloDraftStatus,
         ModeloOperatorProfile,
         build_draft,
@@ -586,7 +586,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     (offset, length, sign flag, record type, DID00 literal) breaks the
     per-offset assertion that names its DR row, before the SHA changes.
     """
-    from aeat.application.filing import (
+    from ......application.filing import (
         ModeloDraftStatus,
         ModeloOperatorProfile,
         build_draft,

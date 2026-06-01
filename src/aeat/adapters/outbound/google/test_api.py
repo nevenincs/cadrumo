@@ -14,7 +14,6 @@ from typing import Any
 import pytest
 
 from ....adapters.outbound.storage._errors import (
-    OutboundStorageError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,

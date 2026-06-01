@@ -22,11 +22,10 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, Field
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import Settings as _Settings
 from ..errors import StorageValidationError
 from ._bucket_session import BucketSession
-
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 DEFAULT_IDLE_LOCK_MINUTES = _Settings().aeat_bucket_default_idle_lock_minutes
 

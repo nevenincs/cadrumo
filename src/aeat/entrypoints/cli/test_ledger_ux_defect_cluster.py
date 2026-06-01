@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.domain.categories import SpendingCategory
-from aeat.entrypoints.cli import app
+from ...domain.categories import SpendingCategory
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

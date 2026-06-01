@@ -6,9 +6,9 @@ from ._models import STRICT_FROZEN_CONFIG
 from ._period import StandardPeriodCode
 
 __all__: list[str] = [
+    "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
     "StandardPeriodCode",
-    "STRICT_FROZEN_CONFIG",
 ]
 
 

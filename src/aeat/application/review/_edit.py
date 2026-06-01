@@ -40,11 +40,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import coerce_decimal
 from ._errors import EditParseError
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-
 
 _CASILLA_EDIT_RE = re.compile(r"^casilla\.(?P<casilla_id>\d{2,5})$")
 """Match ``casilla.NN`` keys for declaration edits (2-5 digit ids)."""

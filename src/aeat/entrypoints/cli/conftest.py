@@ -6,7 +6,7 @@ import typer
 import typer.main
 from click.testing import CliRunner, Result
 
-from aeat.core.i18n import OUTPUT_LANGUAGE_ENV_VAR
+from ...core.i18n import OUTPUT_LANGUAGE_ENV_VAR
 
 
 class _TyperAwareCliRunner(CliRunner):

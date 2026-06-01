@@ -9,15 +9,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
-from aeat.adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.application.live import (
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from . import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -27,7 +27,7 @@ from aeat.application.live import (
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

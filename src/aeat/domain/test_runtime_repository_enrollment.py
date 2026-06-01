@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.domain.invoices import (
+from .invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
@@ -16,8 +16,8 @@ from aeat.domain.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from aeat.domain.iva import InvoiceKind
-from aeat.domain.transactions import (
+from .iva import InvoiceKind
+from .transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -26,7 +26,7 @@ from aeat.domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ..tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

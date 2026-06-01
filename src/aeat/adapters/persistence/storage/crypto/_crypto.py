@@ -25,9 +25,8 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from pydantic import BaseModel, Field
 
-from ..errors import DecryptionError, EncryptionError, KeyDerivationError
-
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..errors import DecryptionError, EncryptionError, KeyDerivationError
 
 NONCE_SIZE: int = 12
 """AES-256-GCM nonce size in bytes (per NIST SP 800-38D)."""

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources._errors import ResourceNotFoundError
-from aeat.core.resources._repos import (
+from .._errors import ResourceNotFoundError
+from . import (
     CategoryProfileRepository,
     HolidayCalendarRepository,
     IvaCatalogueRepository,

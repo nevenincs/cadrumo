@@ -18,9 +18,9 @@ from typing import Union, get_args, get_origin
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.core.config import PROJECT_ROOT, CertificateBackend, Settings
-from aeat.core.external_constants import load_external_constants
-from aeat.tests.env_scope import isolated_aeat_env as _isolated_aeat_env
+from ..core.config import PROJECT_ROOT, CertificateBackend, Settings
+from ..core.external_constants import load_external_constants
+from .env_scope import isolated_aeat_env as _isolated_aeat_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -86,7 +86,7 @@ class TestAuthProviderEnum:
     """#285 — ``AEAT_AUTH_PROVIDER`` coerces to the settings enum strictly."""
 
     def test_env_value_coerces_to_enum(self) -> None:
-        from aeat.core.config import AuthProviderKindSetting
+        from ..core.config import AuthProviderKindSetting
 
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")

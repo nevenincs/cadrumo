@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final
 
-from ....core.external_constants import BOE_ENCODING_CHOICES, LATIN_1_ENCODING
+from ....core.external_constants import LATIN_1_ENCODING
 
 # Python codec underscore-alias for the same ISO-8859-1 codec.  Separate
 # constant so the alias is grep-discoverable alongside the canonical

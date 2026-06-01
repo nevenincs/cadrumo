@@ -12,20 +12,28 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.tests.fixtures.pdf_corpus.l3_synthetic._generators._generic_quarterly_generator import (
+from ._generic_quarterly_generator import (
     QuarterlyGenParams,
+)
+from ._generic_quarterly_generator import (
     generate as generate_quarterly,
 )
-from aeat.tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_100_generator import (
+from .modelo_100_generator import (
     Modelo100GenParams,
+)
+from .modelo_100_generator import (
     generate as generate_modelo_100,
 )
-from aeat.tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_130_generator import (
+from .modelo_130_generator import (
     Modelo130GenParams,
+)
+from .modelo_130_generator import (
     generate as generate_modelo_130,
 )
-from aeat.tests.fixtures.pdf_corpus.l3_synthetic._generators.modelo_303_generator import (
+from .modelo_303_generator import (
     Modelo303GenParams,
+)
+from .modelo_303_generator import (
     generate as generate_modelo_303,
 )
 

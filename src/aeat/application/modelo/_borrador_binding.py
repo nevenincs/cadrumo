@@ -21,9 +21,10 @@ from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity import BucketId
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
-from ...core.identity import BucketId
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -38,7 +39,6 @@ from ..live import (
     SnapshotLifecycleState,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 class Modelo100BorradorBindingError(ModeloError):

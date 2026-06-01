@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.wizard._catalogue import SETUP_FLOW, WIZARD_FLOWS
-from aeat.application.wizard._compiler import compile_profile_keys
-from aeat.application.wizard._models import WizardQuestion, iter_conditions
-from aeat.application.wizard._widgets import validate_widget_answer
-from aeat.domain.profile import PROFILE_KEYS
+from ._catalogue import SETUP_FLOW, WIZARD_FLOWS
+from ._compiler import compile_profile_keys
+from ._models import WizardQuestion, iter_conditions
+from ._widgets import validate_widget_answer
+from ...domain.profile import PROFILE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

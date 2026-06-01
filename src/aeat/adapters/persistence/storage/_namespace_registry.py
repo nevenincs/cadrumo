@@ -11,10 +11,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.classification import SensitivityClass
 from .errors import NamespaceRegistryError
-
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"

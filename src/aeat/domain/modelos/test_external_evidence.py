@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from aeat.domain.modelos._filing_record import (
+from ._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
 )

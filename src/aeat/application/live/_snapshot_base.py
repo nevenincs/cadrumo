@@ -41,7 +41,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError

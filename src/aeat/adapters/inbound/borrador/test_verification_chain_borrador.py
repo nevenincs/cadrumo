@@ -66,12 +66,12 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ....core.resources import resources
+from ....domain.calculations.registry import (
     RegistryValidationError,
     calculate_registry_snapshot,
 )
-from aeat.tests import FIXTURES_DIR
+from ....tests import FIXTURES_DIR
 
 from . import ArtefactKind, BorradorParseError, parse_borrador
 

@@ -38,8 +38,8 @@ from types import ModuleType
 
 import pytest
 
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import ValidatedRegistryAuthority
+from ......core.resources import resources
+from ......domain.calculations.registry import ValidatedRegistryAuthority
 
 from . import RecordFieldSpec, validate_record_specs
 

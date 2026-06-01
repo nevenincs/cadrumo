@@ -11,14 +11,14 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from aeat.adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
-from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.domain.justificante._repository import JustificanteRepository
-from aeat.domain.justificante._schema import Justificante
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...adapters.persistence.storage.errors import ClassificationError
+from ._repository import JustificanteRepository
+from ._schema import Justificante
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

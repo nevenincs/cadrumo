@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo import (
+from . import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
@@ -29,37 +29,37 @@ from aeat.application.modelo import (
     get_work_unit,
     mark_revision_verificado_completo,
 )
-from aeat.domain.buckets import (
+from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventType,
 )
-from aeat.domain.modelos._calculation_repository import (
+from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
 )
-from aeat.domain.modelos._calculation_revision import (
+from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from aeat.domain.modelos._filing_record import (
+from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from aeat.domain.modelos._filing_repository import (
+from ...domain.modelos._filing_repository import (
     ModeloRecordCatalogueRepository,
     upsert_filing_record,
 )
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.modelos._verification_repository import (
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
-from aeat.domain.modelos._work_unit import WorkUnit
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...domain.modelos._work_unit import WorkUnit
+from ...tests.secure_sql import isolated_runtime_profile
 
 from .test_file_flow import _file_revision
 

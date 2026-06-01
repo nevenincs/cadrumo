@@ -23,11 +23,11 @@ from typing import Any
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede._errors import BrowserAdapterTypeError
-from aeat.adapters.outbound.aeat.sede._groi_check import collect_groi_observations
-from aeat.adapters.outbound.aeat.sede._nif_iva_check import collect_nif_iva_check_observations
-from aeat.adapters.outbound.aeat.sede._renta_web_open import _open_renta_web_open_session
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
+from ._errors import BrowserAdapterTypeError
+from ._groi_check import collect_groi_observations
+from ._nif_iva_check import collect_nif_iva_check_observations
+from ._renta_web_open import _open_renta_web_open_session
+from .....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

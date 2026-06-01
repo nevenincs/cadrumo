@@ -20,7 +20,7 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository

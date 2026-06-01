@@ -30,12 +30,12 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from ...core.parsing._dates import _parse_iso8601_date
-from ...core.parsing._utils import _parse_bool
-from ...core.logging import get_logger
-
 from pydantic import BaseModel, Field, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.logging import get_logger
+from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing._utils import _parse_bool
 from ...domain.calculations.registry import (
     DataBindingDefinition,
     RegistrySnapshot,
@@ -46,14 +46,13 @@ from ...domain.calculations.registry import (
 from ...domain.modelos._errors import ModeloError
 from ...domain.profile import marriage_full_year, marriage_month_start
 from ...domain.user_profile import (
-    UserProfileFactValue,
     ProfileNotFoundError,
     ProfileSchemaDefinition,
+    UserProfileFactValue,
     load_user_profile_schema,
     profile_binding_selectors,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation."""

@@ -155,7 +155,7 @@ def test_no_dead_project_root_imports() -> None:
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 
-    from aeat.core.resources import as_path, bundled_path, packaged_data, resources
+    from . import as_path, bundled_path, packaged_data, resources
 
     assert packaged_data is not None
     assert bundled_path is not None

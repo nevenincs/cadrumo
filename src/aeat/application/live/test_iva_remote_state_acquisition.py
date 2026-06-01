@@ -10,12 +10,12 @@ from pathlib import Path
 import pytest
 from playwright._impl._errors import TargetClosedError
 
-from aeat.adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
-from aeat.adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
-from aeat.adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
-from aeat.adapters.persistence.storage.errors import StorageValidationError
-from aeat.application.auth import AuthenticatedAeatSessionResult, AuthProviderKind
-from aeat.tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
+from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
+from ...adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
+from ...adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
+from ...tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
 
 from . import (
     IvaCompensationHistoryCaptureReport,

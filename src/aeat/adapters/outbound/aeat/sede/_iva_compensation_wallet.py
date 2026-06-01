@@ -18,7 +18,7 @@ from urllib.parse import quote, urlsplit
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.config import Settings
 from .....core.i18n import tr

@@ -24,18 +24,18 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo._actions import (
+from ._actions import (
     CasillaProvenanceMissingError,
     _amendment_observations,
     _build_typed_observations,
 )
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ...core.resources import resources
+from ...domain.calculations.registry import (
     CasillaObservation,
     RegistryCalculationResult,
     RegistrySnapshot,
 )
-from aeat.domain.modelos._calculation_revision import (
+from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,

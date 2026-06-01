@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     )
     from ...core.config import Settings
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
@@ -26,7 +27,6 @@ from ._catalogue import (
     list_auth_providers,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class AuthProviderKind(StrEnum):
     """Closed enumeration of supported AEAT authentication providers.

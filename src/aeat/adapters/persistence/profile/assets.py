@@ -10,16 +10,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.errors import AeatError
 from ....core.logging import get_logger
+from ....domain.profile._errors import AssetRecordError
 from ....domain.profile.assets import (
     AmortizacionLedger,
     AssetRecord,
     AssetsLedgerDocument,
 )
-from ....domain.profile._errors import AssetRecordError
 from ..storage import SensitivityClass
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository

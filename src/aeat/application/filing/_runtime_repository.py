@@ -43,7 +43,7 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
 
     Returns a :class:`SecureObjectRepository` scoped to ``bucket_id``.
     """
-    from ...adapters.persistence.storage.runtime_repository import (  # noqa: PLC0415
+    from ...adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_bucket,
     )
 

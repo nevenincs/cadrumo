@@ -13,6 +13,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...domain.transactions import (
@@ -26,7 +27,6 @@ from ...domain.transactions import (
 )
 from ..aggregation import IvaLedgerAggregationIssueReason, Period, iva_ledger_missing_fact_reasons
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _CLASSIFIED_TAX_STATES = frozenset(
     {
         BusinessClassification.BUSINESS,

@@ -18,11 +18,12 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ....core._tax_domain import TaxDomain
-from ....core.aggregation import AggregationSourceKind, PeriodKind, RowSetGroupingKind
+from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from ....core.decimal import coerce_decimal
 from ....core.identity._documents import IdentityError
 from ....core.identity._tax_id import validate_spanish_tax_id
+from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError
 from ._ids import (
@@ -51,7 +52,6 @@ from ._ids import (
     WorkbookParityRefId,
 )
 from ._record_spec import ENCODING_ALIAS_MAP
-from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 
 
 def _coerce_decimal(value: object) -> object:

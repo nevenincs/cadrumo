@@ -10,8 +10,7 @@ from __future__ import annotations
 import ast
 import importlib
 import pathlib
-from collections.abc import Mapping
-from typing import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 
@@ -81,9 +80,7 @@ def _cast_call_linenos(tree: ast.AST) -> Iterator[int]:
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        if isinstance(func, ast.Name) and func.id == "cast":
-            yield node.lineno
-        elif (
+        if (isinstance(func, ast.Name) and func.id == "cast") or (
             isinstance(func, ast.Attribute)
             and func.attr == "cast"
             and isinstance(func.value, ast.Name)

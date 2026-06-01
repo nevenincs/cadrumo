@@ -30,16 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.domain.deadlines import TaxpayerProfile
-from aeat.domain.deadlines._models import (
-    EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
-    IVARegime,
-    LegalEntityForm,
-)
-
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
     _INCOMPLETE_LEGAL_REFS,
     _INCOMPLETE_UNDECLARED_REASON,
@@ -51,6 +42,14 @@ from aeat.domain.calculations.registry.applicability import (
     derive_modelo_applicability,
     derive_tax_route,
     taxpayer_model_is_declared,
+)
+from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines._models import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    LegalEntityForm,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -862,8 +861,8 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     law-only slug would fail loudly here.
     """
 
-    from aeat.core.resources import bundled_path
-    from aeat.domain.calculations.registry import ValidatedRegistryAuthority
+    from ...core.resources import bundled_path
+    from ...domain.calculations.registry import ValidatedRegistryAuthority
 
     authority = ValidatedRegistryAuthority.load(
         bundled_path("registry", "aeat"), source_root=bundled_path()

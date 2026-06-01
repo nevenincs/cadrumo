@@ -36,7 +36,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId

@@ -476,7 +476,6 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
     immutable bucket UUID via the manifest scan.
     """
     from ....domain.user_profile import ProfileNotFoundError
-
     from .._config_payloads import RepairProfileResult
 
     pointer = _resolve_profile_by_label(label)
@@ -617,7 +616,6 @@ def repair_integrity_objects(
 ) -> None:
     """Wrap build_repair_integrity_report and render through _emit."""
     from ....application.repair_integrity import build_repair_integrity_report
-
     from .._config_payloads import RepairIntegrityObjectsResult
 
     # Cold-root guard: integrity is bootstrap-exempt; on a root with no
@@ -671,7 +669,6 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
     when the operator explicitly asks for it here.
     """
     from ....application.diagnostics import build_registry_integrity_report
-
     from .._config_payloads import RepairIntegrityRegistryResult
 
     report = build_registry_integrity_report()
@@ -2008,7 +2005,6 @@ def auth_clear(
 def auth_diagnostics_list(ctx: typer.Context) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     from ....application.auth import list_auth_diagnostics
-
     from .._config_payloads import AuthDiagnosticsListResult
 
     report = list_auth_diagnostics()
@@ -2174,7 +2170,6 @@ apoderado_app.add_typer(scopes_app, name="scopes")
 def apoderado_scopes_list(ctx: typer.Context) -> None:
     """List all available representative scopes in the vocabulary."""
     from ....application.auth._apoderado import ApoderadoService
-
     from .._config_payloads import ApoderadoScopesListResult
 
     svc = ApoderadoService()

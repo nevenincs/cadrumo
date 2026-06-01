@@ -51,8 +51,9 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterable, Iterator
-from dataclasses import dataclass, field as dataclass_field
+from collections.abc import Iterator
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from pathlib import Path
 
 __all__ = (

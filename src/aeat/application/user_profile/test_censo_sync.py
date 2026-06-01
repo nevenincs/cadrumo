@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.application.live._censo import CensoSnapshotService, SnapshotLifecycleState
-from aeat.application.user_profile import (
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ..live._censo import CensoSnapshotService, SnapshotLifecycleState
+from . import (
     CENSO_SOURCE_TAG,
     CensoApplyConflictError,
     CensoComparisonStatus,
@@ -22,8 +22,8 @@ from aeat.application.user_profile import (
     CensoSyncService,
     UserProfileLifecycleRepository,
 )
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -184,8 +184,8 @@ def test_apply_seeds_home_office_usage_ratios_from_censo(
 
     from decimal import Decimal
 
-    from aeat.domain.categories import SpendingCategory
-    from aeat.domain.usage_ratios import load_usage_ratios
+    from ...domain.categories import SpendingCategory
+    from ...domain.usage_ratios import load_usage_ratios
 
     profiles = UserProfileLifecycleRepository(bucket_id="b1", objects=secure_store)
     profiles.save(

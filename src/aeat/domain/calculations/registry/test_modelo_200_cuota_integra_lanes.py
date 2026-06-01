@@ -28,13 +28,13 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
-from aeat.domain.calculations.registry.applicability import (
+from ....core.resources import bundled_path
+from . import build_snapshot, calculate_registry_snapshot, load_registry_tree
+from .applicability import (
     Modelo202Modality,
     derive_modelo_202_modality,
 )
-from aeat.domain.deadlines import (
+from ...deadlines import (
     EntityType,
     IVARegime,
     LegalEntityForm,
@@ -448,7 +448,7 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
     after the Task #183 fix: operators see a missing-binding error
     instead of a borrador with 00599 = 0.
     """
-    from aeat.domain.calculations.registry import RegistryValidationError
+    from . import RegistryValidationError
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
         calculate_registry_snapshot(

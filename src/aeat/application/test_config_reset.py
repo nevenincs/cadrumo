@@ -15,9 +15,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def _isolated_workflow(tmp_path: Path) -> Iterator[None]:
     """Isolate workflow state behind a real active profile custody span."""
 
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-    from aeat.application.user_profile._orchestration import profile_create_storage_span
-    from aeat.tests.secure_sql import isolated_profile_storage_root
+    from ..adapters.persistence.storage.sql import dispose_engine
+    from .user_profile._orchestration import profile_create_storage_span
+    from ..tests.secure_sql import isolated_profile_storage_root
 
     dispose_engine()
     with (
@@ -31,7 +31,7 @@ def _isolated_workflow(tmp_path: Path) -> Iterator[None]:
 
 
 def _profile_facts(overrides: Mapping[str, object] | None = None):
-    from aeat.domain.user_profile import UserProfileFact
+    from ..domain.user_profile import UserProfileFact
 
     values: dict[str, object] = {
         "identity.tax_id": "00000000T",

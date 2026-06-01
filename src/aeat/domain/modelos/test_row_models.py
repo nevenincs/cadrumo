@@ -510,7 +510,7 @@ class TestModelo347ContraparteRow:
         equals itself. A change in threshold would be a legal change requiring
         this test to be updated with the new authoritative value.
         """
-        assert M347_THRESHOLD_EUR == Decimal("3005.06")
+        assert Decimal("3005.06") == M347_THRESHOLD_EUR
 
     def test_two_rows_distinguish_by_quarterly_importe(self) -> None:
         """Anti-tautology: two rows with different Q1 importes are distinct."""

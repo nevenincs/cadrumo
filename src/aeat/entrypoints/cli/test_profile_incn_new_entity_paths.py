@@ -28,8 +28,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.entrypoints.cli import app as root_app
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from . import app as root_app
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -134,12 +134,12 @@ def _load_active_taxpayer_profile():
     the storage runtime.
     """
 
-    from aeat.application.user_profile._orchestration import profile_storage_session
-    from aeat.application.user_profile._projections import record_to_path_values
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.core._bucket_pointer_io import read_pointer
-    from aeat.core.config import load_settings
-    from aeat.domain.deadlines._profiles import taxpayer_profile_from_mapping
+    from ...application.user_profile._orchestration import profile_storage_session
+    from ...application.user_profile._projections import record_to_path_values
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...core._bucket_pointer_io import read_pointer
+    from ...core.config import load_settings
+    from ...domain.deadlines._profiles import taxpayer_profile_from_mapping
 
     pointer = read_pointer(load_settings().aeat_local_storage_root)
     assert pointer is not None, "config profile create did not mint an active bucket pointer"

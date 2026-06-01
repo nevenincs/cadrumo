@@ -22,5 +22,5 @@ import pytest
 def _register_wizard_catalogue() -> None:
     """Ensure the wizard `SETUP_FLOW` catalogue is registered for the session."""
 
-    import aeat.application.wizard._catalogue  # noqa: F401  registration side effect
-    import aeat.application.wizard._persistence  # noqa: F401  registration side effect
+    from ...application.wizard import _catalogue
+    from ...application.wizard import _persistence  # noqa: F401  registration side effect

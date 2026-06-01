@@ -34,6 +34,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
+from ._errors import ManualNotFoundError, ManualParseError
 from ._schema import (
     Chapter,
     Manual,
@@ -45,7 +46,6 @@ from ._schema import (
     Section,
     SectionRef,
 )
-from ._errors import ManualNotFoundError, ManualParseError
 
 _logger = get_logger(__name__)
 

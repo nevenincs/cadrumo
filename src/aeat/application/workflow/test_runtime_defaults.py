@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.errors import StorageValidationError
-from aeat.adapters.persistence.storage.sql import dispose_engine
-from aeat.application.workflow._persistence import WorkflowRunRepository, workflow_state_repository
-from aeat.core.config import override_settings
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ...adapters.persistence.storage.sql import dispose_engine
+from ._persistence import WorkflowRunRepository, workflow_state_repository
+from ...core.config import override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

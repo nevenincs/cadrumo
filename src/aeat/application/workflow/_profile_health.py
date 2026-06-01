@@ -42,6 +42,7 @@ ProfileSource = Literal["none", "env_override", "pointer"]
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
+
 class ActiveProfileHealth(BaseModel):
     """Redacted active-profile health snapshot."""
 

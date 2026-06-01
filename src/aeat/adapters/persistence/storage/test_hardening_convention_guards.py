@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.errors import SecureStorageError
-from aeat.core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
-from aeat.core.paths import PROJECT_ROOT
-from aeat.locales.manager import LocaleManager
+from .errors import SecureStorageError
+from ....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
+from ....core.paths import PROJECT_ROOT
+from ....locales.manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

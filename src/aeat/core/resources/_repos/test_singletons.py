@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources._repos import (
+from . import (
     ApoderamientosRepository,
     IvaRateTableRepository,
     LegalParameterRepository,
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def test_apoderamientos_singleton_loads_real_catalogue() -> None:
-    from aeat.domain.auth.apoderamientos._catalogue import ApoderamientosCatalogue
+    from ....domain.auth.apoderamientos._catalogue import ApoderamientosCatalogue
 
     repo = ApoderamientosRepository()
 
@@ -38,7 +38,7 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
 
 def test_user_profile_singleton_loads_real_schema() -> None:
-    from aeat.domain.user_profile._schema import ProfileSchemaDefinition
+    from ....domain.user_profile._schema import ProfileSchemaDefinition
 
     repo = UserProfileSchemaRepository()
 
@@ -62,7 +62,7 @@ def test_user_profile_singleton_loads_real_schema() -> None:
 
 
 def test_topics_singleton_loads_real_catalogue() -> None:
-    from aeat.application.topics import TopicCatalogue
+    from ....application.topics import TopicCatalogue
 
     repo = TopicCatalogueRepository()
 
@@ -96,7 +96,7 @@ def test_iva_rate_table_singleton_loads_real_mapping() -> None:
 
 
 def test_legal_parameters_singleton_loads_real_mapping() -> None:
-    from aeat.domain.calculations.registry._schema import LegalParameter
+    from ....domain.calculations.registry._schema import LegalParameter
 
     repo = LegalParameterRepository()
 

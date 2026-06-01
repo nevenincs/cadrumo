@@ -22,17 +22,17 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.aggregation import (
+from . import (
     AggregationPeriodError,
     AggregationValidationError,
-    ProrrataAggregation,
     IvaOperation,
     IvaOperationKind,
+    ProrrataAggregation,
     aggregate_definitiva_prorrata,
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
 )
-from aeat.domain.iva import ProrrataKind, ProrrataRegime
+from ...domain.iva import ProrrataKind, ProrrataRegime
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

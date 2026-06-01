@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from aeat.domain.deadlines import TaxpayerProfile
-from aeat.domain.deadlines._models import (
+from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines._models import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,

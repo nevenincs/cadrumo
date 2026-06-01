@@ -24,14 +24,14 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import ProfileAlreadyRegisteredError
-from aeat.application.wizard._catalogue import SETUP_FLOW
-from aeat.application.wizard._commands import _run_full_flow
-from aeat.core._bucket_pointer_io import read_pointer
-from aeat.core.config import SecretStoreBackend, load_settings, override_settings
-from aeat.domain.user_profile import new_profile_id
-from aeat.tests.secure_sql import dev_test_database_password
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ..user_profile._orchestration import ProfileAlreadyRegisteredError
+from ._catalogue import SETUP_FLOW
+from ._commands import _run_full_flow
+from ...core._bucket_pointer_io import read_pointer
+from ...core.config import SecretStoreBackend, load_settings, override_settings
+from ...domain.user_profile import new_profile_id
+from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -86,7 +86,7 @@ def test_first_run_create_succeeds_and_points_at_the_new_profile(_backend: Path)
     first_id = pointer.bucket_id
 
     # The pointer resolves to a real, registered profile bucket.
-    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(first_id) is not None
 
@@ -118,6 +118,6 @@ def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path)
 
     # The surviving pointer still resolves to a registered, readable
     # profile — no `missing_profile_record` torn state.
-    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket_by_id
+    from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
 
     assert read_profile_bucket_by_id(surviving_id) is not None

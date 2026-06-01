@@ -11,7 +11,6 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
-
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -22,8 +21,8 @@ from ..categories import (
     StatutoryCapPeriod,
     family_for,
 )
-from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from ._errors import RentaValidationError
+from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 
 LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 

@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -108,8 +108,8 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
         # Profile IDs are redacted at the CLI boundary; verify UUID
         # round-trip by reading the encrypted manifest directly through
         # the persistence layer.
-        from aeat.application.user_profile._orchestration import profile_storage_session
-        from aeat.application.user_profile._profile_repository import ProfileRepository
+        from ...application.user_profile._orchestration import profile_storage_session
+        from ...application.user_profile._profile_repository import ProfileRepository
 
         with profile_storage_session(exported_id):
             aggregate = ProfileRepository().load(exported_id)
@@ -223,8 +223,8 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         # ``config_profile_import``'s D5 two-tier collision guard), so
         # the imported bucket's id does not equal ``mutated_id``; that
         # path is asserted via the display-name + list-output surfaces.
-        from aeat.application.user_profile._orchestration import profile_storage_session
-        from aeat.application.user_profile._profile_repository import ProfileRepository
+        from ...application.user_profile._orchestration import profile_storage_session
+        from ...application.user_profile._profile_repository import ProfileRepository
 
         with profile_storage_session(exported_id):
             original_aggregate = ProfileRepository().load(exported_id)

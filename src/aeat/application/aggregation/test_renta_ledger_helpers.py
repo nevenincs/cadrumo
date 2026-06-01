@@ -22,8 +22,7 @@ from decimal import Decimal
 import pytest
 
 from ...domain.renta import RentaExpenseDirection
-from ...domain.transactions import BusinessClassification
-from ...domain.transactions import TransactionDirection
+from ...domain.transactions import BusinessClassification, TransactionDirection
 from ._errors import AggregationPeriodError
 from ._models import Period
 from ._renta_ledger import (

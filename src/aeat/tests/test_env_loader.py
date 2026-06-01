@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests._env_loader import load_env_file, parse_env_text
+from ._env_loader import load_env_file, parse_env_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

@@ -24,6 +24,7 @@ CENSO_MODELO_SERVICE_OWNER = "aeat.domain.calculations.registry"
 CENSO_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
 CENSO_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 _LOGGER = get_logger(__name__)
 
 class CensoModeloRole(StrEnum):

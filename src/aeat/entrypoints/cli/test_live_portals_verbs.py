@@ -7,10 +7,10 @@ import re
 import pytest
 from typer.testing import CliRunner
 
-from aeat.core.errors import resolve_error_message
-from aeat.core.i18n import tr
-from aeat.domain.portals import PORTAL_REGISTRY, UnknownPortalError
-from aeat.entrypoints.cli._app_live import portals_app
+from ...core.errors import resolve_error_message
+from ...core.i18n import tr
+from ...domain.portals import PORTAL_REGISTRY, UnknownPortalError
+from ._app_live import portals_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

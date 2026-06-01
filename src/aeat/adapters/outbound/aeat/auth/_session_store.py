@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.external_constants import UTF_8_ENCODING
 from ....persistence.storage import SensitivityClass

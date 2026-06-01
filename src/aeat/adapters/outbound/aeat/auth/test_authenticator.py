@@ -425,7 +425,7 @@ def _settings_factory():
     bundle path). Tests pass the bundle ``Path`` as the single
     positional argument; extra Settings overrides go through ``**``.
     """
-    from aeat.tests.settings_scope import settings_factory as _scoped_factory
+    from .....tests.settings_scope import settings_factory as _scoped_factory
 
     with _scoped_factory() as scoped:
 

@@ -7,7 +7,7 @@ import hashlib
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.domain.modelos._ids import VerificationReportId
+from ._ids import VerificationReportId
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

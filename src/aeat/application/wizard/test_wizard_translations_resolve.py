@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.wizard._translations import (
+from ._translations import (
     audit_cli_translations,
     audit_wizard_translations,
     cli_keys_referenced_in_source,

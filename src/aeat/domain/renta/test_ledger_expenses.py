@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
 from ..categories import (
-    resolve_category_profiles,
     CategoryCitation,
     CategoryCitationSource,
     CategoryProfile,
@@ -19,6 +18,7 @@ from ..categories import (
     SpendingCategory,
     SpendingCategoryFamily,
     parse_http_url,
+    resolve_category_profiles,
 )
 from . import (
     LEDGER_RENTA_EXPENSE_SOURCE,

@@ -34,7 +34,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 
-from aeat.core.config import Settings, _settings_override, load_settings
+from ..core.config import Settings, _settings_override, load_settings
 
 __all__ = [
     "SettingsFactory",

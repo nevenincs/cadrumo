@@ -30,8 +30,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests import FIXTURES_DIR
-from aeat.tests._justificante_parse_cache import parse_committed_justificante_fixture
+from ....tests import FIXTURES_DIR
+from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
 
 from ....domain.justificante import Justificante
 

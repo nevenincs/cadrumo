@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
+
 class SensitivityClass(StrEnum):
     """Closed catalogue of sensitivity classes for persisted state.
 
