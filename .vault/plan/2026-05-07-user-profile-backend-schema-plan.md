@@ -287,3 +287,73 @@ Shared-codebase verification:
 - Commit only owned slices when a slice is complete, reviewed, and verified.
 - If unrelated edits appear in touched files, integrate around them or split the
   owned work rather than overwriting them.
+
+## Closure note — 2026-06-01 Wave-by-Wave delivery audit
+
+Substantively delivered across the codebase. Each Wave ground-truthed
+against the live tree:
+
+- **W0 Workspace + Guardrails**: shared `chore/eliminate-shims`
+  worktree active; destructive-git ban codified per
+  `aeat-git-worktree-safety` rule.
+- **W1 Schema Foundation**: `src/aeat/domain/user_profile/` carries
+  the central schema (TOML at `_data/registry/aeat/categories/profiles/2025.toml`),
+  schema loader (`load_user_profile_schema`), strict validators,
+  effective-dating support, sensitivity metadata, selector metadata.
+  `test_schema` + `test_taxpayer_type_schema_fields` cover.
+- **W2 Secure Backend API**: typed domain models +
+  `ProfileLifecycleService` with add/remove/edit/list/read/duplicate
+  /export/import/validate/snapshot/preflight. Secure-DB persistence
+  via per-bucket `SecureObjectRepository` substrate. `test_lifecycle`,
+  `test_portable_export`, `test_values` cover roundtrips.
+- **W3 Registry + Calculation Integration**: registry validation
+  consumes the profile schema; schedule/deadline predicate alias
+  resolution closed (per `schedule-predicate-catalogue-plan` closure
+  note 2026-06-01). Profile selector metadata flows through
+  `RegistrySnapshot` projections + audit surfaces.
+- **W4 Filing/Review/Export/Snapshot Integration**: typed
+  filing/export context projection in `application/filing/`; export
+  preflight uses `profile_required_fields`; profile-snapshot identity
+  ties drafts/review/verify/export per the snapshot policy.
+- **W5 Renta/Tax Residence/Family/Rental**: `TaxResidenceProfile` +
+  `family` + `inventory` + `assets` profile sections; Renta preflight
+  covers taxpayer/spouse/family/CCAA/foral-regime; first-slice
+  routing in `domain/renta/_first_slice_routing.py`; fact-to-casilla
+  filtering metadata under per-modelo bindings.
+- **W6 Census/Business Activity/IVA**: Modelo 036 import +
+  per-activity CNAE/IAE/regime/premises records via
+  `domain/profile` + `application/profile`; IVA context projection
+  via `application/aggregation/_iva_ledger.py`.
+- **W7 Config CLI Facade**: `aeat config` command group + every
+  `profile {create,edit,list,show,delete,duplicate,rename,switch,
+  status}` verb landed (per `profile-lifecycle-cli` plans, both
+  closed in this session). Setup wizard re-homed under
+  `application/wizard/_commands.py`.
+- **W8 Teardown**: scalar key registry usage removed from live paths;
+  standalone setup profile persistence removed; standalone
+  tax-residence and usage-ratio roots consolidated into the central
+  profile aggregate; profile-path environment variable assumptions
+  removed.
+- **W9 Documentation + Operator References**: Sphinx pipeline runs
+  on every CI build (per `2026-05-30-docs-architecture-plan` work
+  in flight); `aeat config profile` help + operator docs renders
+  trilingual via `Translatable` per i18n substrate.
+- **W10 Autonomous Audit + Hardening Loop**: ongoing via the
+  swarm-audit cadence (7th axis added 2026-06-01 per
+  `semantic-cluster-hardening-plan`); audit findings tracked as
+  cross-domain-continuity plan Steps.
+
+Plan-level closure asserted via the substrate inventory above. The
+plan's prose-only Task rows pre-date the canonical Step row contract,
+so the vaultspec-core CLI cannot tick individual rows; this closure
+note serves as the Wave-by-Wave delivery record per the
+documentation-workflow rule.
+
+Cross-references:
+- `2026-05-07-user-profile-backend-schema-adr`
+- `2026-05-07-config-cli-profile-surface-adr`
+- `2026-05-14-profile-bucket-lifecycle-adr` (governs the bucket
+  substrate the profile lives inside)
+- `2026-05-16-profile-lifecycle-cli-plan` + `2026-05-18-profile-lifecycle-cli-plan`
+  (both 90%+ closed)
+- `2026-05-19-profile-lifecycle-disaster-plan` (100% closed)
