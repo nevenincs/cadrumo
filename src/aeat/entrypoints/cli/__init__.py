@@ -166,6 +166,19 @@ def _root(
         _activate_profile_override(ctx, profile)
     from ...application.user_profile import _language_resolver as _language_resolver
 
+    # Register the profile-setup wizard catalogue (SETUP_FLOW / WIZARD_FLOWS)
+    # and the project-answers projection through the same side-effect-import
+    # contract as the language resolver above: importing each module runs its
+    # body, which calls ``register_wizard_catalogue`` / ``register_project_
+    # answers``. Without them, any dispatch that reaches the wizard catalogue
+    # or the project-answers projection (e.g. ``app modelo work create``)
+    # fails with "Wizard catalogue has not been registered" /
+    # "project_answers has not been registered". Kept after the ``--version``
+    # / ``--help`` fast-path exits so those surfaces stay free of the
+    # application-layer import.
+    from ...application.wizard import _catalogue as _catalogue
+    from ...application.wizard import _persistence as _persistence
+
     _activate_active_bucket_session(ctx)
     if ctx.invoked_subcommand is None:
         # The landing surface needs the workflow / overview application
