@@ -1,4 +1,9 @@
-"""Canonical application-layer source resolution contracts."""
+"""Canonical application-layer source resolution contracts.
+
+:class:`CalculationSourceContext` carries the :class:`ModeloRevision` that
+the source mesh resolvers consult when projecting binding slots onto
+available data sources.
+"""
 
 from __future__ import annotations
 

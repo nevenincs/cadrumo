@@ -2,7 +2,9 @@
 
 Wraps :func:`register_active_profile` with a curated set of required
 schema-validated placeholder facts so unit tests can register a profile
-in one call without reciting six placeholder values every time.
+in one call without reciting six placeholder values every time. An
+explicit :class:`SecureObjectRepository` may be injected to bind the
+helper to an in-process ephemeral store.
 
 This is a TEST helper and lives in the canonical package because it
 composes only canonical surfaces.

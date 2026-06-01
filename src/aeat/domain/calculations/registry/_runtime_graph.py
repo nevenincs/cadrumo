@@ -1,4 +1,9 @@
-"""Runtime graph helpers for validated registry formulas."""
+"""Runtime graph helpers for validated registry formulas.
+
+Walks formula expressions declared on a :class:`ModeloRevision` to extract
+casilla, binding, parameter, relation, and date-binding references, and
+produces topologically sorted evaluation orders for the formula engine.
+"""
 
 from __future__ import annotations
 

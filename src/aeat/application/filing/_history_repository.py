@@ -2,8 +2,8 @@
 
 Filing history contains submitted modelos, periods, timestamps, and AEAT
 status evidence. Records are stored as encrypted byte objects in the
-primary SQL backend at AUDIT sensitivity; no plaintext filing-history
-JSON or envelope file lands on disk.
+primary SQL backend at AUDIT sensitivity via a :class:`SecureObjectRepository`;
+no plaintext filing-history JSON or envelope file lands on disk.
 """
 
 from __future__ import annotations

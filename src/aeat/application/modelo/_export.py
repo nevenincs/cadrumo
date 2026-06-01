@@ -1,7 +1,7 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
-`export_modelo_revision` accepts a calculation revision id, builds and
-approves a :class:`aeat.domain.filing.ModeloDraft` from the revision's
+`export_modelo_revision` accepts a :class:`CalculationRevision` id, builds
+and approves a :class:`aeat.domain.filing.ModeloDraft` from the revision's
 captured inputs, then writes a fichero-BOE-formatted artefact to the
 operator-supplied output path via the existing
 :func:`aeat.application.filing.export_draft` helper. A

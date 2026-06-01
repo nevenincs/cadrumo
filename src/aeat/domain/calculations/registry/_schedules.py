@@ -1,4 +1,9 @@
-"""Filing schedule selection from registry profile predicates."""
+"""Filing schedule selection from registry profile predicates.
+
+Evaluates the profile conditions declared on filing schedules of a
+:class:`ModeloRevision` against a profile facts mapping and returns only
+the schedules whose predicates are satisfied.
+"""
 
 from __future__ import annotations
 

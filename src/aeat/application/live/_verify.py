@@ -1,7 +1,8 @@
 """Bucket-scoped verify service.
 
 Wraps the two read-only AEAT verify oracles into a bucket-scoped
-audit log:
+audit log. Verify observations are persisted through a
+:class:`SecureObjectRepository` scoped to the active profile bucket.
 
   * NIF-IVA (VIES) — intracomunitario counterparty validation
   * TGVI / GROI    — intra-community operator (registered Spanish NIF)

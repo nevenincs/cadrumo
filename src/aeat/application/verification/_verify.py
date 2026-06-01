@@ -1,4 +1,9 @@
-"""Registry-backed declaration verification."""
+"""Registry-backed declaration verification.
+
+Verifies a parsed declaracion against the engine output for the same inputs.
+The :class:`ValidatedRegistryAuthority` supplies the :class:`RegistrySnapshot`
+used to run the formula engine over operator-provided casilla values.
+"""
 
 from __future__ import annotations
 

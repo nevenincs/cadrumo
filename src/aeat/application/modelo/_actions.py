@@ -3,12 +3,16 @@
 Each action loads the catalogue, applies a single mutation in
 memory (or returns a read view), and writes the catalogue back.
 The catalogue is content-addressed by ``work_unit_id`` so
-deterministic deriveation lets ``create_work_unit`` be idempotent:
+deterministic derivation lets ``create_work_unit`` be idempotent:
 calling it twice with the same four-axis key returns the same
 record without producing a duplicate.
 
 The action signatures take an explicit ``bucket_id`` so the
 service layer is unit-testable without a workflow-state fixture.
+
+Actions obtain a :class:`RegistrySnapshot` for the target revision from a
+:class:`ValidatedRegistryAuthority`, then feed :class:`ModeloRevision` data
+into the formula engine to produce or amend a calculation revision.
 """
 
 from __future__ import annotations

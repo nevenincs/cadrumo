@@ -1,4 +1,8 @@
-"""Algorithm provider and binding validation helpers."""
+"""Algorithm provider and binding validation helpers.
+
+Validates algorithm provider and binding sections declared on a
+:class:`ModeloRevision` for legal and source reference closure.
+"""
 
 from __future__ import annotations
 

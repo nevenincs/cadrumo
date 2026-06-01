@@ -1,4 +1,8 @@
-"""Calculation-completeness manifest validation helpers."""
+"""Calculation-completeness manifest validation helpers.
+
+Checks that every casilla named in the completeness manifest of a
+:class:`ModeloRevision` is declared with legal and source grounding.
+"""
 
 from __future__ import annotations
 

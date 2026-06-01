@@ -8,7 +8,9 @@ and which one is the filed answer (``filed``). Without those
 pointers, multiple drafts under the same work unit have no canonical
 selection — every consumer (year-aggregation, amendment delta,
 forward-period carry-forward) needs to know which one is THE
-revision.
+revision. Formula provenance for every computed casilla is carried
+through :class:`CasillaObservation` entries in the typed observations
+envelope.
 
 Lifecycle states:
 

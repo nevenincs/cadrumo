@@ -1,4 +1,9 @@
-"""Previous-filing source validation helpers."""
+"""Previous-filing source validation helpers.
+
+Validates that every ``previous_filing`` binding declared on a
+:class:`ModeloDefinition` resolves to a known source modelo and
+that its declared outputs exist in the matching source revisions.
+"""
 
 from __future__ import annotations
 

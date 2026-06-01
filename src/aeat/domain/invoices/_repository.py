@@ -1,9 +1,9 @@
 """Governed-persistence repository for the invoice catalogue.
 
 The repository is the only sanctioned read/write path for the invoice
-catalogue. It stores the catalogue as an encrypted byte object in the
-primary SQL backend at FINANCIAL sensitivity; no plaintext invoice row,
-JSON catalogue, or envelope file lands on disk.
+catalogue. It stores the catalogue as an encrypted byte object via
+:class:`SecureObjectRepository` at FINANCIAL sensitivity; no plaintext
+invoice row, JSON catalogue, or envelope file lands on disk.
 """
 
 from __future__ import annotations

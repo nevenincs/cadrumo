@@ -1,4 +1,13 @@
-"""Registry-backed AEAT legal calculation authority."""
+"""Registry-backed AEAT legal calculation authority.
+
+The public surface re-exports every canonical spine type so callers import from
+one location. Core structs include :class:`ModeloDefinition` (static modelo
+metadata), :class:`ModeloRevision` (one period-scoped revision of a modelo),
+:class:`RegistrySnapshot` (validated snapshot for a single filing context),
+:class:`ValidatedRegistryAuthority` (the production access point that loads,
+validates, and caches registry material), and :class:`CasillaObservation`
+(one typed casilla value carrying full legal and source provenance).
+"""
 
 # ruff: noqa: I001
 

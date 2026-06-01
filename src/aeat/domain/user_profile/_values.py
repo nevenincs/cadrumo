@@ -1,4 +1,9 @@
-"""Strict Pydantic value records for centralized user profiles."""
+"""Strict Pydantic value records for centralized user profiles.
+
+:class:`UserProfilePortableExport` bundles user profile facts with
+associated :class:`CalculationRevision` records for portable export
+and import across profile buckets.
+"""
 
 from __future__ import annotations
 

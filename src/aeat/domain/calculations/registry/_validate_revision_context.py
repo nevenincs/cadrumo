@@ -1,4 +1,9 @@
-"""Lookup context for per-revision validation."""
+"""Lookup context for per-revision validation.
+
+Builds the ``RevisionValidationContext`` lookup tables from a
+:class:`ModeloRevision`, aggregating id sets and by-id mappings used
+across every per-section validator.
+"""
 
 from __future__ import annotations
 

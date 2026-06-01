@@ -1,4 +1,8 @@
-"""Scenario tape parity harness for manual AEAT workbook checks."""
+"""Scenario tape parity harness for manual AEAT workbook checks.
+
+Loads, runs, and saves parity scenarios using a :class:`ValidatedRegistryAuthority`
+to obtain snapshots and evaluate formulas against official AEAT workbooks.
+"""
 
 from __future__ import annotations
 

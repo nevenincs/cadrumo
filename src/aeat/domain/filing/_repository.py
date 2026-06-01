@@ -1,8 +1,8 @@
 """Governed-persistence repository for filing drafts.
 
 Filing drafts carry exact casilla arithmetic and tax due values. They
-are stored as encrypted byte objects in the primary SQL backend at
-FINANCIAL sensitivity; no plaintext draft JSON or envelope file lands
+are stored as encrypted byte objects via :class:`SecureObjectRepository`
+at FINANCIAL sensitivity; no plaintext draft JSON or envelope file lands
 on disk.
 """
 

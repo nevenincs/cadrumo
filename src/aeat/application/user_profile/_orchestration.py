@@ -1,10 +1,10 @@
 """WorkflowState-aware orchestration over :class:`ProfileLifecycleService`.
 
-The lifecycle service handles secure-DB persistence and BucketEvent
-emission per profile. This module threads :class:`WorkflowState`
-pointers (``active_profile``) and the workflow-level
-:class:`WorkflowEvent` audit stream around those calls so CLI surfaces
-do not duplicate that wiring.
+The lifecycle service handles secure-DB persistence via a
+:class:`SecureObjectRepository` and BucketEvent emission per profile.
+This module threads :class:`WorkflowState` pointers (``active_profile``)
+and the workflow-level :class:`WorkflowEvent` audit stream around those
+calls so CLI surfaces do not duplicate that wiring.
 
 Profile identity is an immutable UUIDv4 minted at creation. The bucket
 directory, keystore directory, secure-object key, and active-profile

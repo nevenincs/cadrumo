@@ -1,15 +1,16 @@
 """M232 related-party row materialisation into positional casillas.
 
 M232 is an informative-only modelo (Art. 18 LIS) where taxpayers declare
-related-party transactions. Rows come from CLI input as Modelo232VinculadaRow
+related-party transactions. Rows come from CLI input as ``Modelo232VinculadaRow``
 objects and must be materialised into positional casillas on the form.
 
 The form has 5 row slots (vinculada 1-5) for related parties, each with
 5 fields (NIF, type_vinculacion, type_operacion, method, importe).
 Total positions 144-748 on page_01.
 
-Materialisation maps each row's fields to their registry casilla definitions
-and creates CasillaObservation objects with full legal/source provenance.
+Materialisation maps each row's fields to the registry casilla definitions
+declared on the :class:`ModeloRevision` and produces :class:`CasillaObservation`
+objects carrying full legal and source provenance from the registry.
 """
 
 from __future__ import annotations

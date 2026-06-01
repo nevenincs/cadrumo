@@ -1,4 +1,9 @@
-"""Relation source revision selector and period coverage helpers."""
+"""Relation source revision selector and period coverage helpers.
+
+Selects source :class:`ModeloRevision` instances for a relation and verifies
+that the source :class:`ModeloDefinition` covers every required filing year
+named by the relation.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,9 @@
-"""Encrypted SQL repository for verification reports."""
+"""Encrypted SQL repository for verification reports.
+
+Persists and loads verification reports via :class:`SecureObjectRepository`
+at FINANCIAL sensitivity. The catalogue is stored as a single encrypted
+BLOB per profile bucket.
+"""
 
 from __future__ import annotations
 

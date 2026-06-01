@@ -1,4 +1,10 @@
-"""Immutable snapshot creation for registry-backed calculations."""
+"""Immutable snapshot creation for registry-backed calculations.
+
+Validates a :class:`ModeloDefinition` and selects the matching
+:class:`ModeloRevision` for a filing context, then assembles the immutable
+:class:`RegistrySnapshot` that downstream consumers (formula engine, export
+resolver, coverage auditor) depend on.
+"""
 
 from __future__ import annotations
 

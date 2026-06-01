@@ -2,7 +2,9 @@
 
 Takes an :class:`TaxpayerProfile` and a year and produces a deterministic,
 typed :class:`Schedule`. Filing windows and applicability conditions are
-read from validated calculation registry data.
+read from validated calculation registry data supplied by
+:class:`ValidatedRegistryAuthority`. Each window is described by a
+:class:`ModeloRevision` paired with its deadline window definitions.
 """
 
 from __future__ import annotations

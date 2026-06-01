@@ -1,9 +1,9 @@
 """Governed-persistence repository for filing amendments.
 
 Filing amendments carry corrected casilla deltas and original
-submission references. They are stored as encrypted byte objects in the
-primary SQL backend at AUDIT sensitivity; no plaintext amendment JSON
-or envelope file lands on disk.
+submission references. They are stored as encrypted byte objects via
+:class:`SecureObjectRepository` at AUDIT sensitivity; no plaintext
+amendment JSON or envelope file lands on disk.
 """
 
 from __future__ import annotations

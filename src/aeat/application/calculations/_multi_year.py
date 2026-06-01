@@ -1,7 +1,8 @@
 """Multi-year prior-filing resolver.
 
 Annual modelos and multi-year regimes need access to prior filings'
-casilla outputs:
+casilla outputs. The resolver selects available observations through a
+:class:`RegistrySnapshot` that fixes the revision the caller is targeting.
 
 - Modelo 200 (IS) consults modelo 202 1P/2P/3P pago fraccionado
   filings of the SAME year and prior years' base imponible negativa

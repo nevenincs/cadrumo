@@ -4,7 +4,9 @@ Every boundary-crossing type in :mod:`aeat.application.workflow` is
 defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
 enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
-diagnostics emitted by workflow diagnostics.
+diagnostics emitted by workflow diagnostics. Some helpers accept an
+optional :class:`SecureObjectRepository` so callers can supply a custom
+storage backend without going through the runtime default.
 
 Import ordering note
 --------------------

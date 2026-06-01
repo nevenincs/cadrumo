@@ -7,9 +7,9 @@ casilla inputs and profile bindings, then surfaces the cuota
 differential so married couples can pick the lower-tax regime.
 
 This is a **pure, ephemeral** operation: no work unit is required
-and no revision is persisted.  The caller supplies all inputs
-explicitly; the registry formula engine evaluates both paths and
-returns a typed :class:`TaxationComparisonResult`.
+and no revision is persisted. The caller supplies all inputs
+explicitly via a :class:`RegistrySnapshot`; the registry formula engine
+evaluates both paths and returns a typed :class:`TaxationComparisonResult`.
 
 :func:`compare_taxation_for_work_unit` is the high-level entry point
 for CLI use: it resolves the registry snapshot and profile bindings

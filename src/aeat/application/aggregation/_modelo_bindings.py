@@ -1,4 +1,8 @@
-"""Modelo binding values derived from bucket-local ledger catalogues."""
+"""Modelo binding values derived from bucket-local ledger catalogues.
+
+Accepts a :class:`ModeloRevision` to drive ledger aggregation binding
+resolution across IVA, renta income, and renta expense source kinds.
+"""
 
 from __future__ import annotations
 

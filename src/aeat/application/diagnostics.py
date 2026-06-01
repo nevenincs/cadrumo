@@ -1,4 +1,8 @@
-"""Application-owned diagnostics and version reporting."""
+"""Application-owned diagnostics and version reporting.
+
+Registry diagnostics are produced by loading a :class:`ValidatedRegistryAuthority`
+from the configured registry root and inspecting the available modelos and revisions.
+"""
 
 from __future__ import annotations
 

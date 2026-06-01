@@ -1,4 +1,9 @@
-"""Core revision record-section validation helpers."""
+"""Core revision record-section validation helpers.
+
+Validates casilla, formula, parameter, binding, and extraction-profile
+sections declared on a :class:`ModeloRevision` for reference closure,
+legal grounding, and evidence-tier requirements.
+"""
 
 from __future__ import annotations
 

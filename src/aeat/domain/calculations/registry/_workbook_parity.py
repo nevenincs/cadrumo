@@ -1,4 +1,9 @@
-"""Official AEAT workbook parity discovery and verification backend."""
+"""Official AEAT workbook parity discovery and verification backend.
+
+Discovers, scans, and executes AEAT official workbooks against a
+:class:`RegistrySnapshot` to verify that registry formulas match the
+published AEAT calculation workbooks.
+"""
 
 from __future__ import annotations
 
