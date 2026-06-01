@@ -48,24 +48,15 @@ _WORKBOOK_KIND_MEMBERS: frozenset[str] = frozenset(
 )
 
 
-def _bare_string_literals_in_file(
-    path: Path,
-    target: str,
-    tree: ast.AST | None = None,
-) -> list[int]:
+def _bare_string_literals_in_file(path: Path, target: str) -> list[int]:
     """Return line numbers where ``target`` appears as a bare string constant.
 
     Walks the AST of ``path`` and reports every ``ast.Constant`` node whose
     value equals ``target``, skipping nodes that are docstrings (the first
     statement of a module / class / function body when they are an
     ``ast.Expr`` wrapping a ``Constant``).
-
-    When *tree* is supplied (test-loop path), reuse the cached AST. When
-    omitted, fall back to a per-call parse so the helper signature stays
-    single-path compatible.
     """
-    if tree is None:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     docstring_nodes: set[int] = _collect_docstring_ids(tree)
     hits: list[int] = []
     for node in ast.walk(tree):
@@ -90,18 +81,9 @@ def _collect_docstring_ids(tree: ast.AST) -> set[int]:
     return ids
 
 
-def _workbook_kind_enum_members(
-    path: Path,
-    tree: ast.AST | None = None,
-) -> frozenset[str]:
-    """Return the StrEnum member values declared for WorkbookKind in ``path``.
-
-    When *tree* is supplied (test-loop path), reuse the cached AST. When
-    omitted, fall back to a per-call parse so the helper signature stays
-    single-path compatible.
-    """
-    if tree is None:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _workbook_kind_enum_members(path: Path) -> frozenset[str]:
+    """Return the StrEnum member values declared for WorkbookKind in ``path``."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in ast.walk(tree):
         if not isinstance(node, ast.ClassDef) or node.name != "WorkbookKind":
             continue
@@ -117,23 +99,14 @@ def _workbook_kind_enum_members(
     return frozenset()
 
 
-def test_no_bare_varchar64_in_secure_objects(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_no_bare_varchar64_in_secure_objects() -> None:
     """All VARCHAR(64) references in secure_objects.py must use _VARCHAR_64.
 
     Exactly one occurrence is permitted: the constant's own module-level
     assignment (``_VARCHAR_64: Final[str] = "VARCHAR(64)"``).  Every other
     site must reference the constant, not repeat the bare literal.
-
-    Consumes the session-scoped AST cache when present; falls back to a
-    per-call parse otherwise.
     """
-    hits = _bare_string_literals_in_file(
-        _SECURE_OBJECTS_PATH,
-        "VARCHAR(64)",
-        source_tree_ast.get(_SECURE_OBJECTS_PATH),
-    )
+    hits = _bare_string_literals_in_file(_SECURE_OBJECTS_PATH, "VARCHAR(64)")
     assert len(hits) <= 1, (
         f"Bare 'VARCHAR(64)' literal found in {_SECURE_OBJECTS_PATH.name} at lines {hits}. "
         "Only the _VARCHAR_64 constant definition may carry the bare literal; "
@@ -141,24 +114,15 @@ def test_no_bare_varchar64_in_secure_objects(
     )
 
 
-def test_no_bare_libreoffice_engine_in_workbook_parity(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_no_bare_libreoffice_engine_in_workbook_parity() -> None:
     """All 'libreoffice-headless' references must use _ENGINE_LIBREOFFICE.
 
     The only allowed occurrence is the constant's own assignment; callsites
     (engine=, WorkbookRunnerEngine Literal) are excluded from the invariant
     by virtue of them being the canonical constant definition, not duplicate
     literal dispersal.  We assert zero hits *outside* the definition line.
-
-    Consumes the session-scoped AST cache when present; falls back to a
-    per-call parse otherwise.
     """
-    hits = _bare_string_literals_in_file(
-        _WORKBOOK_PARITY_PATH,
-        "libreoffice-headless",
-        source_tree_ast.get(_WORKBOOK_PARITY_PATH),
-    )
+    hits = _bare_string_literals_in_file(_WORKBOOK_PARITY_PATH, "libreoffice-headless")
     # Two occurrences are structural: the Literal type alias definition and
     # the _ENGINE_LIBREOFFICE assignment.  Both are on module-level definition
     # lines, not callsites.  We allow at most those two.
@@ -190,18 +154,9 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
     )
 
 
-def test_workbook_kind_enum_members_in_ast(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
-    """All six WorkbookKind values must appear as class-body assignments in source.
-
-    Consumes the session-scoped AST cache when present; falls back to a
-    per-call parse otherwise.
-    """
-    enrolled = _workbook_kind_enum_members(
-        _WORKBOOK_PARITY_PATH,
-        source_tree_ast.get(_WORKBOOK_PARITY_PATH),
-    )
+def test_workbook_kind_enum_members_in_ast() -> None:
+    """All six WorkbookKind values must appear as class-body assignments in source."""
+    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_PATH)
     missing = _WORKBOOK_KIND_MEMBERS - enrolled
     assert not missing, (
         f"WorkbookKind class body in {_WORKBOOK_PARITY_PATH.name} is missing "
