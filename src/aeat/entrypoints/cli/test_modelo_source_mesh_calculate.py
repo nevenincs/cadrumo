@@ -142,10 +142,18 @@ def _transaction(
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     from aeat.application.user_profile._orchestration import profile_storage_session
+    from aeat.application.workflow._models import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    bucket_id = str(work_unit["bucket_id"])
+    # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
+    # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
+    # segment on Windows (``<`` / ``>`` are reserved). Resolve the real
+    # bucket id from the active-profile pointer the freshly-created
+    # profile installed.
+    resolved = resolve_active_bucket_id()
+    assert resolved is not None, "profile create must install an active-profile pointer"
+    bucket_id = resolved
     sale = _transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,

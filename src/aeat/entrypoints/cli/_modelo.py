@@ -5190,6 +5190,21 @@ def modelo_project(
             enum_binding_values=m100_enum_bindings,
         )
     except RegistryValidationError as exc:
+        # Operator surface is intentionally terse (the localised
+        # `m100_calculation_error` carries no interpolation slot for the
+        # underlying registry detail). Engineers triaging a failing
+        # projection still need the registry's typed message and the
+        # inputs that drove it; log them here so the AEAT log file and
+        # pytest's --log-cli-level=ERROR capture surface the cause.
+        _log.exception(
+            "modelo.project: M100 calculation failed for year=%s ccaa=%s; inputs=%r bindings=%r enum_bindings=%r; registry_error=%s",
+            year,
+            ccaa,
+            m100_inputs,
+            m100_bindings,
+            m100_enum_bindings,
+            exc,
+        )
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.project.m100_calculation_error",
