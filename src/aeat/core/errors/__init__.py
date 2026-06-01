@@ -64,7 +64,11 @@ class SiteHealthStatusLike(Protocol):
 
     @property
     def evidence(self) -> SiteHealthEvidenceLike:
-        """Evidence block used to classify the detected state."""
+        """Evidence block used to classify the detected state.
+
+        Returns a :class:`SiteHealthEvidenceLike` carrying the URL,
+        HTTP status, and detected markers that drove classification.
+        """
         ...
 
     @property

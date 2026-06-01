@@ -1137,7 +1137,7 @@ def has_applicability_rule(modelo: str) -> bool:
     return modelo in _MODELO_APPLICABILITY_RULES
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
-    """Return the registry-owned seed modelo applicability rules.
+    """Return the registry-owned seed :class:`ModeloApplicabilityRule` instances.
 
     The returned tuple is ordered by modelo id for deterministic audits
     and tests. Callers receive rule objects, not the mutable module-level
@@ -1390,7 +1390,7 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
 )
 
 def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
-    """Derive the Modelo 202 pago-fraccionado modality for ``profile``.
+    """Derive the Modelo 202 pago-fraccionado modality as a :class:`Modelo202ModalityVerdict` for ``profile``.
 
     The verdict is driven by the LIS Art. 40.3 INCN threshold
     (6.000.000 EUR over the prior 12 months):

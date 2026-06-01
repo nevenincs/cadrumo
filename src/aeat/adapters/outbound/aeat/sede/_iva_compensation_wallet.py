@@ -88,7 +88,7 @@ async def fetch_iva_compensation_wallet(
     taxpayer_nif: str | None = None,
     settings: Settings | None = None,
 ) -> IvaCompensationWalletObservation:
-    """Fetch and parse AEAT's read-only IVA compensation wallet."""
+    """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
     _assert_read_http("GET", _PRE303_PRESENTATION_URL)
     _assert_read_http("GET", _WALLET_URL)
     settings = settings or Settings()
@@ -196,7 +196,7 @@ def parse_iva_compensation_wallet_html(
     captured_at: datetime,
     allow_empty_wallet_shell: bool = False,
 ) -> IvaCompensationWalletObservation:
-    """Parse wallet rows from a captured AEAT wallet HTML page."""
+    """Parse wallet rows from a captured AEAT wallet HTML page and return an :class:`IvaCompensationWalletObservation`."""
     validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
     soup = BeautifulSoup(html, "html.parser")
     rows: list[IvaCompensationWalletRow] = []

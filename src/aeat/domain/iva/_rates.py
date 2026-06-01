@@ -22,6 +22,9 @@ def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tupl
 
     Resolves the bundled rates path on every call so the
     `bundled_path` boundary stays the single resolution surface.
+
+    Returns:
+        Mapping from :class:`EUMemberState` to a tuple of :class:`IvaRateRecord` items.
     """
     target = path if path is not None else bundled_path("registry", "aeat", "iva", "rates.toml")
     resolved = target.resolve()

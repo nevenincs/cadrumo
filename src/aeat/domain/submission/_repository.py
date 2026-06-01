@@ -45,6 +45,9 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         rather than aborting the iteration. Diagnostic surfaces depend
         on listing all healthy submissions even when a single row is
         unreadable.
+
+        Returns:
+            Iterator over :class:`ModeloPresentado` records.
         """
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 

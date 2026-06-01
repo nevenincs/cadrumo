@@ -167,7 +167,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     activity_key: str = "default",
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
-    """Load persisted catalogues and aggregate first-slice Renta expenses."""
+    """Load persisted catalogues and aggregate first-slice Renta expenses into a :class:`RentaLedgerExpenseAggregation`."""
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -198,7 +198,11 @@ def aggregate_renta_ledger_expenses(
     activity_key: str = "default",
     modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
-    """Aggregate classified ledger transactions into Renta expense observations."""
+    """Aggregate classified ledger transactions into Renta expense observations.
+
+    Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
+    observations, exclusion issues, and binding-ready casilla totals.
+    """
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.year
     profiles = resources().category_profiles.get(resolved_profile_year)

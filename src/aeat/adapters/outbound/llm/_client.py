@@ -68,7 +68,7 @@ class LLMClient:
             request: Structured completion request.
 
         Returns:
-            The provider response enriched with cache and cost metadata.
+            A :class:`LLMResponse` enriched with cache and cost metadata.
 
         Raises:
             Exception: Re-raised after logging when the LLM provider adapter fails.

@@ -134,7 +134,11 @@ def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
 
 
 def load_modelo_file(path: Path) -> ModeloDefinition:
-    """Load one modelo TOML file into strict schema objects."""
+    """Load one modelo TOML file into strict schema objects.
+
+    Returns:
+        The compiled :class:`ModeloDefinition` from the TOML file.
+    """
     resolved = path.resolve()
     stat = resolved.stat()
     return _load_modelo_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
@@ -177,7 +181,7 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
-    """Load a modelo from a directory layout.
+    """Load a :class:`ModeloDefinition` from a directory layout.
 
     The directory must contain ``manifest.toml`` carrying the ``[modelo]``
     metadata table. Per-revision data lives in ``revisions/{id}.toml``
@@ -187,10 +191,10 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     Fragment directories declare exactly the directory revision id
     across one or more TOML files using the same table shape. All
     revision sources are merged into the single in-memory
-    ``ModeloDefinition`` that single-file mode produces.
+    :class:`ModeloDefinition` that single-file mode produces.
 
     Public API stays identical to ``load_modelo_file``: callers receive
-    the same ``ModeloDefinition`` regardless of on-disk layout.
+    the same :class:`ModeloDefinition` regardless of on-disk layout.
     """
     resolved = directory.resolve()
     if not resolved.is_dir():
@@ -208,7 +212,7 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
 
 
 def load_modelo_path(path: Path) -> ModeloDefinition:
-    """Load a modelo from either supported on-disk layout."""
+    """Load a :class:`ModeloDefinition` from either supported on-disk layout."""
     resolved = path.resolve()
     if resolved.is_file():
         return load_modelo_file(resolved)
@@ -218,7 +222,11 @@ def load_modelo_path(path: Path) -> ModeloDefinition:
 
 
 def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
-    """Load a modelo from a discovered source descriptor."""
+    """Load a modelo from a discovered source descriptor.
+
+    Returns:
+        The compiled :class:`ModeloDefinition` from the source.
+    """
     if source.layout == "single_file":
         return load_modelo_file(source.path)
     return load_modelo_directory(source.path)
@@ -531,7 +539,11 @@ def _reject_duplicate_appended_table_ids(
 
 
 def load_catalogue_file(path: Path) -> RegistryCatalogues:
-    """Load one shared legal/source catalogue TOML file."""
+    """Load one shared legal/source catalogue TOML file.
+
+    Returns:
+        The compiled :class:`RegistryCatalogues` from the TOML file.
+    """
     resolved = path.resolve()
     stat = resolved.stat()
     return _load_catalogue_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
@@ -640,6 +652,9 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
 
     A single modelo cannot exist in both layouts simultaneously; the
     loader raises ``RegistryLoadError`` if both forms are present.
+
+    Returns:
+        A tuple of all :class:`ModeloDefinition` objects and the merged :class:`RegistryCatalogues`.
     """
     resolved = root.resolve()
     fingerprints = _collect_registry_tree_fingerprints(resolved)
@@ -647,7 +662,7 @@ def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], Regist
 
 
 def discover_modelo_sources(modelos_dir: Path) -> tuple[ModeloSource, ...]:
-    """Discover modelo source layouts under a ``modelos/`` directory.
+    """Discover :class:`ModeloSource` layouts under a ``modelos/`` directory.
 
     This is the generic source-layout contract for the registry: callers
     can reason about single-file modelos, directory-mode modelos,

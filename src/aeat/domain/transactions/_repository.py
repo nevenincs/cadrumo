@@ -197,7 +197,7 @@ class TransactionCatalogueRepository:
         )
 
     def to_secure_object_write(self, catalogue: TransactionCatalogue) -> SecureObjectWrite:
-        """Return the secure-object upsert for ``catalogue`` without committing it."""
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
         from ...adapters.persistence.storage.envelope._envelope import Envelope
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 

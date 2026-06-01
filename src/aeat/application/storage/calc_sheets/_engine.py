@@ -782,6 +782,8 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     grouping occupies a contiguous column block; groupings stack
     vertically with a one-row gap between blocks. The pull adapter
     reads row data from `first_data_row` downwards.
+
+    Each element in the returned tuple is a :class:`SheetRowSet`.
     """
     cohorts: dict[str, list[DataBindingDefinition]] = {}
     cohort_legal: dict[str, set[str]] = {}

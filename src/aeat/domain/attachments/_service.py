@@ -120,7 +120,7 @@ def list_attachments(
             :class:`~aeat.domain.attachments._enums.AttachmentKind`.
 
     Returns:
-        Filtered tuple of attachment manifests in store iteration
+        Filtered tuple of :class:`Attachment` manifests in store iteration
         order.
     """
     out: list[Attachment] = []

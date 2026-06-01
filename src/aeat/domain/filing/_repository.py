@@ -49,7 +49,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         return tuple(self.iter_ids())
 
     def iter_drafts(self) -> Iterator[ModeloDraft]:
-        """Yield every persisted draft, in lexicographic id order."""
+        """Yield every persisted :class:`ModeloDraft`, in lexicographic id order."""
         return self.iter_records()
 
 

@@ -118,7 +118,7 @@ class ReconciliationCrossBucketRefusedError(AeatError):
     """
 
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
-    """Reconcile a modelo work unit against external evidence.
+    """Reconcile a modelo work unit against external evidence and return a :class:`ModeloReconciliationReport`.
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
     Composes the existing low-level reconciler at

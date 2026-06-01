@@ -72,7 +72,7 @@ def project_review_queue(
     state: ReviewState = ReviewState.PENDING,
     modelo: str | None = None,
 ) -> ReviewQueueReport:
-    """Return review rows using accepted source-kind vocabulary."""
+    """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary."""
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
     bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
@@ -94,7 +94,10 @@ def project_review_queue(
     return ReviewQueueReport(rows=rows)
 
 def project_review_item(item_id: str, *, settings: Settings | None = None) -> ReviewQueueRow:
-    """Return one review row by id."""
+    """Return one review row by id.
+
+    Returns a :class:`ReviewQueueRow` matching ``item_id``.
+    """
     report = project_review_queue(settings=settings, state=ReviewState.ALL)
     for row in report.rows:
         if row.item_id == item_id:

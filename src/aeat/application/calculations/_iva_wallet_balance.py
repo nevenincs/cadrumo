@@ -37,8 +37,10 @@ def build_iva_wallet_balance_report(
 
     ``next_expiry_year`` is ``source_filing_year + 4`` for the earliest
     ACTIVE lot that still carries a non-zero remaining balance (the lot
-    closest to its four-year expiry boundary).  ``None`` when no ACTIVE
+    closest to its four-year expiry boundary). ``None`` when no ACTIVE
     lots with remaining balance exist.
+
+    Returns an :class:`IvaWalletBalanceReport`.
     """
     # Include ACTIVE and EXPIRY_REVIEW_DUE lots (age <= 4) with remaining balance.
     # EXPIRED_REVIEW_REQUIRED lots (age > 4) are excluded — they have already passed
@@ -71,7 +73,11 @@ def build_iva_wallet_balance_report(
 
 
 def query_iva_wallet_balance(*, as_of_year: int) -> IvaWalletBalanceReport:
-    """Load all stored IVA compensation period states and return the balance report."""
+    """Load all stored IVA compensation period states and return the balance report.
+
+    Returns an :class:`IvaWalletBalanceReport` summarising the carry-forward
+    lots and the available compensation balance as of ``as_of_year``.
+    """
     repo = IvaCompensationHistoryRepository()
     states = repo.list_periods()
     carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year)

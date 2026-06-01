@@ -57,12 +57,16 @@ class ManualVerificationReport(BaseModel):
 
     @property
     def errors(self) -> tuple[ManualVerificationIssue, ...]:
-        """Return only the ``level == 'error'`` issues."""
+        """Return only the :class:`ManualVerificationIssue` items with ``level == 'error'``."""
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property
     def warnings(self) -> tuple[ManualVerificationIssue, ...]:
-        """Return only the ``level == 'warning'`` issues."""
+        """Return only the ``level == 'warning'`` issues.
+
+        Returns:
+            Tuple of :class:`ManualVerificationIssue` objects with warning-level severity.
+        """
         return tuple(issue for issue in self.issues if issue.level == "warning")
 
     @property

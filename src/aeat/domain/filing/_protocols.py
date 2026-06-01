@@ -129,11 +129,15 @@ class CasillaCollection(Protocol):
         ...
 
     def get(self, casilla_id: str) -> CasillaSchema | None:
-        """Return the casilla schema for ``casilla_id``, or ``None``."""
+        """Return the :class:`CasillaSchema` for ``casilla_id``, or ``None``."""
         ...
 
     def all(self) -> Sequence[CasillaSchema]:
-        """Return every casilla schema in the collection."""
+        """Return every casilla schema in the collection.
+
+        Returns:
+            Sequence of every :class:`CasillaSchema` in the collection.
+        """
         ...
 
 
@@ -142,7 +146,11 @@ class CasillaSchemaProvider(Protocol):
     """Resolves a casilla collection for a given modelo."""
 
     def get_collection(self, modelo: str) -> CasillaCollection:
-        """Return the casilla collection for ``modelo``."""
+        """Return the casilla collection for ``modelo``.
+
+        Returns:
+            The :class:`CasillaCollection` for the given modelo code.
+        """
         ...
 
 

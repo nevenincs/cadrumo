@@ -61,7 +61,7 @@ def save_with_deterministic_flags(pdf: Pdf) -> tuple[bytes, DeterminismFlags]:
     Returns:
         A 2-tuple of ``(output_bytes, flags_applied)``. The bytes
         are byte-stable across repeated invocations on equivalent
-        inputs; the flags record matches the canonical set.
+        inputs; the :class:`DeterminismFlags` record matches the canonical set.
     """
     buffer = io.BytesIO()
     pdf.save(

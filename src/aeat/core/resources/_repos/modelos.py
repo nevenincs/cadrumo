@@ -70,7 +70,12 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
             ) from exc
 
     def all(self) -> tuple[ModeloDefinition, ...]:
-        """Return every modelo definition in the bundled registry."""
+        """Return every modelo definition in the bundled registry.
+
+        Returns:
+            A tuple of every :class:`ModeloDefinition` known to the
+            backing authority.
+        """
         authority = self._resolve_authority()
         return tuple(authority.modelos)
 

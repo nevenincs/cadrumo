@@ -66,7 +66,7 @@ class InvoiceImportResult(BaseModel):
 
 
 def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple[Invoice, ...]:
-    """Parse JSON or CSV invoice payloads into validated invoice models."""
+    """Parse JSON or CSV invoice payloads into validated :class:`Invoice` models."""
     kind = _coerce_kind(default_kind)
     candidates = _decode_invoice_payload(raw)
     invoices: list[Invoice] = []
@@ -87,7 +87,11 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
 
 
 def merge_invoice_import(catalogue: InvoiceCatalogue, invoices: Sequence[Invoice]) -> InvoiceImportResult:
-    """Merge imported invoices into ``catalogue`` without duplicating IDs."""
+    """Merge imported invoices into ``catalogue`` without duplicating IDs.
+
+    Returns an :class:`InvoiceImportResult` with the updated catalogue
+    and counts of imported and skipped invoices.
+    """
     existing = dict(catalogue.invoices)
     imported = 0
     skipped = 0
@@ -112,7 +116,10 @@ def import_invoices_from_path(
     dry_run: bool = False,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceImportResult:
-    """Import invoices from ``path`` through the secure invoice repository."""
+    """Import invoices from ``path`` through the secure invoice repository.
+
+    Returns an :class:`InvoiceImportResult`.
+    """
     invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
     if dry_run:
         return InvoiceImportResult(rows=len(invoices), dry_run=True)

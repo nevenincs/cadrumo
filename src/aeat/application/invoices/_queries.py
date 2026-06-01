@@ -43,18 +43,22 @@ class InvoiceListRow(BaseModel):
 
 
 def list_invoice_rows(catalogue: InvoiceCatalogue, *, kind: InvoiceKind | None = None) -> tuple[InvoiceListRow, ...]:
-    """Return sorted invoice summary rows from a catalogue."""
+    """Return sorted :class:`InvoiceListRow` summary rows from a catalogue."""
     rows = (_row_from_invoice(invoice) for invoice in catalogue.values() if kind is None or invoice.kind is kind)
     return tuple(sorted(rows, key=lambda item: (item.issued_at, item.invoice_id)))
 
 
 def list_invoice_repository_rows(*, kind: InvoiceKind | None = None) -> tuple[InvoiceListRow, ...]:
-    """Load the invoice catalogue and return sorted summary rows."""
+    """Load the invoice catalogue and return sorted :class:`InvoiceListRow` summaries."""
     return list_invoice_rows(InvoiceCatalogueRepository().load(), kind=kind)
 
 
 def get_invoice_from_repository(invoice_id: str) -> Invoice | None:
-    """Load and return one invoice from the secure catalogue."""
+    """Load and return one invoice from the secure catalogue.
+
+    Returns an :class:`Invoice` when found, or ``None`` when the id
+    is not present in the catalogue.
+    """
     return find_invoice(InvoiceCatalogueRepository().load(), invoice_id)
 
 
@@ -63,7 +67,7 @@ def list_unmatched_invoice_rows(
     *,
     kind: InvoiceKind | None = None,
 ) -> tuple[InvoiceListRow, ...]:
-    """Return sorted invoice summary rows that are not linked to transactions."""
+    """Return sorted :class:`InvoiceListRow` summaries for invoices that are not linked to transactions."""
     rows = tuple(_row_from_invoice(invoice) for invoice in find_unmatched(catalogue, kind=kind))
     return tuple(sorted(rows, key=lambda item: (item.issued_at, item.invoice_id)))
 
@@ -72,12 +76,16 @@ def list_unmatched_invoice_repository_rows(
     *,
     kind: InvoiceKind | None = None,
 ) -> tuple[InvoiceListRow, ...]:
-    """Load the invoice catalogue and return unmatched summary rows."""
+    """Load the invoice catalogue and return unmatched summary rows.
+
+    Each element is an :class:`InvoiceListRow` sorted by issue date and
+    invoice id.
+    """
     return list_unmatched_invoice_rows(InvoiceCatalogueRepository().load(), kind=kind)
 
 
 def verify_invoice_repository_links(*, bucket_id: str) -> tuple[LinkInconsistency, ...]:
-    """Load both catalogues and return one-sided invoice/transaction links."""
+    """Load both catalogues and return one-sided invoice/transaction links as a tuple of :class:`LinkInconsistency`."""
     return verify_link_consistency(
         InvoiceCatalogueRepository().load(),
         TransactionCatalogueRepository(bucket_id=bucket_id).load(),

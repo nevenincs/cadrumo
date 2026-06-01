@@ -299,7 +299,10 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
 
 
 def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
-    """Tombstone ``profile_id`` inside an application-owned bucket session."""
+    """Tombstone ``profile_id`` inside an application-owned bucket session.
+
+    Returns the deleted :class:`UserProfileRecord`.
+    """
     with profile_storage_session(profile_id):
         aggregate = ProfileRepository().delete(profile_id)
     return aggregate.record
@@ -463,7 +466,7 @@ def set_active_field(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Upsert one fact on the active profile and append a WorkflowEvent."""
+    """Upsert one fact on the active profile, append a WorkflowEvent, and return the updated :class:`WorkflowState`."""
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.edit_field(
@@ -487,7 +490,10 @@ def set_active_fields(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Upsert several facts on the active profile in sequence."""
+    """Upsert several facts on the active profile in sequence.
+
+    Returns a :class:`WorkflowState`.
+    """
     updated = state
     for fact in facts:
         updated = set_active_field(updated, fact, secure_objects=secure_objects, schema=schema)

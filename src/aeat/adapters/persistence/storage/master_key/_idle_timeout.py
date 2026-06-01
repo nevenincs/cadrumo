@@ -55,7 +55,7 @@ def evaluate_idle(
             Strict positive integer; non-positive values raise.
 
     Returns:
-        An `IdleEvaluation` record carrying `expired` and the
+        An :class:`IdleEvaluation` record carrying `expired` and the
         floor-truncated `remaining_seconds` until the deadline (zero
         when expired).
 

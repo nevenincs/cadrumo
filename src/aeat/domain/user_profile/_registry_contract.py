@@ -70,12 +70,12 @@ class UserProfileRegistryContractReport(BaseModel):
 
     @property
     def errors(self) -> tuple[UserProfileRegistryContractIssue, ...]:
-        """Blocking contract failures."""
+        """Return blocking :class:`UserProfileRegistryContractIssue` failures."""
         return tuple(issue for issue in self.issues if issue.severity is UserProfileRegistryContractSeverity.ERROR)
 
     @property
     def warnings(self) -> tuple[UserProfileRegistryContractIssue, ...]:
-        """Non-blocking coverage gaps retained for rollout hardening."""
+        """Return non-blocking :class:`UserProfileRegistryContractIssue` coverage gaps."""
         return tuple(issue for issue in self.issues if issue.severity is UserProfileRegistryContractSeverity.WARNING)
 
     @property
@@ -84,7 +84,11 @@ class UserProfileRegistryContractReport(BaseModel):
         return not self.errors
 
 def build_user_profile_selector_index(schema: ProfileSchemaDefinition) -> UserProfileSelectorIndex:
-    """Build the profile selector namespaces declared by the TOML schema."""
+    """Build the profile selector namespaces declared by the TOML schema.
+
+    Returns:
+        A :class:`UserProfileSelectorIndex` with all declared selector namespaces.
+    """
     profile_selectors: set[str] = set(schema.field_paths)
     schedule_predicates: set[str] = set()
     export_headers: set[str] = set()
@@ -111,6 +115,9 @@ def validate_user_profile_registry_contract(
     gaps are warnings during the rollout because several committed layouts use
     non-profile operational headers that will move behind an export-context
     backend rather than a live taxpayer profile fact.
+
+    Returns:
+        A :class:`UserProfileRegistryContractReport` with all issues found.
     """
     index = build_user_profile_selector_index(schema)
     checked_modelos: list[str] = []

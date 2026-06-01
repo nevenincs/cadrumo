@@ -148,6 +148,9 @@ def aggregate_prorrata_inputs(
     prorrata pool — per LIVA art. 104 they are excluded from both
     numerator and denominator.
 
+    Returns a :class:`ProrrataAggregation` with the pooled inputs and
+    per-kind operation counts.
+
     Raises :class:`AggregationPeriodError` if ``year`` is outside the
     supported window (2000-2100).
     """
@@ -210,9 +213,9 @@ def aggregate_provisional_prorrata(
     result with the supplied ``period`` token so callers can persist
     one ``ProrrataResult`` per filing window.
 
-    The function returns the calculator result plus the underlying
-    aggregation so binding providers may surface counts and excluded
-    totals in their readiness output.
+    Returns a :class:`ProrrataResult` plus the underlying
+    :class:`ProrrataAggregation` so binding providers may surface counts
+    and excluded totals in their readiness output.
 
     Raises :class:`AggregationValidationError` when ``current_year`` is
     not strictly greater than ``prior_year``, or when ``period`` is not
@@ -251,6 +254,8 @@ def aggregate_definitiva_prorrata(
     and the Modelo 390 (casilla 33). The result is stamped with
     ``period=None`` and ``kind=DEFINITIVA``; the calculator's
     :class:`ProrrataResult` validator accepts that combination.
+
+    Returns a :class:`ProrrataResult` paired with a :class:`ProrrataAggregation`.
     """
     aggregation = aggregate_prorrata_inputs(current_year_operations, year=year)
     result = compute_prorrata_general(

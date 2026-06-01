@@ -101,7 +101,11 @@ class ParityTapeReplayReport(ParityTapeModel):
 
 
 def load_parity_scenario(path: Path) -> ParityScenario:
-    """Load one parity scenario from JSON."""
+    """Load one parity scenario from JSON.
+
+    Returns:
+        The validated :class:`ParityScenario` from the file.
+    """
     return ParityScenario.model_validate_json(path.read_text(encoding="utf-8"))
 
 
@@ -113,7 +117,7 @@ def save_parity_scenario(scenario: ParityScenario, path: Path) -> Path:
 
 
 def load_parity_tape(path: Path) -> ParityTape:
-    """Load one parity tape from JSON."""
+    """Load one :class:`ParityTape` from JSON."""
     return ParityTape.model_validate_json(path.read_text(encoding="utf-8"))
 
 
@@ -138,7 +142,7 @@ def run_parity_scenario(
     scenario_path: Path | None = None,
     executable: str | None = None,
 ) -> ParityTape:
-    """Execute one scenario against the registry and workbook parity backend."""
+    """Execute one scenario against the registry and return a :class:`ParityTape`."""
     workbook_path = _resolve_scenario_path(scenario.workbook_path, scenario_path=scenario_path)
     snapshot = _snapshot_for_scenario(scenario, registry_root=registry_root, source_root=source_root)
     workbook_root = _common_root(
@@ -177,7 +181,11 @@ def replay_parity_tape(
     scenario_path: Path | None = None,
     executable: str | None = None,
 ) -> ParityTapeReplayReport:
-    """Replay an archived tape against the current registry implementation."""
+    """Replay an archived tape against the current registry implementation.
+
+    Returns:
+        A :class:`ParityTapeReplayReport` comparing the archived tape to the current output.
+    """
     current = run_parity_scenario(
         tape.scenario,
         registry_root=registry_root,

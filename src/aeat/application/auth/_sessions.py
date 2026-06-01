@@ -165,7 +165,11 @@ def storage_state_paths(
     settings: Settings,
     kind: AuthProviderKind | None = None,
 ) -> StorageStatePaths:
-    """Return the logical storage-state identifier for ``kind``."""
+    """Return the logical storage-state identifier for ``kind``.
+
+    Returns a :class:`StorageStatePaths` carrying the resolved filesystem
+    path for the provider's session-state file.
+    """
     from ..workflow._models import require_active_bucket_id
 
     resolved = kind or AuthProviderKind.CERTIFICATE
@@ -175,7 +179,7 @@ def storage_state_paths(
 
 
 def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> PersistedAuthSession | None:
-    """Load persisted AEAT session metadata for ``kind`` or the active provider."""
+    """Load persisted AEAT session metadata for ``kind`` or the active provider and return a :class:`PersistedAuthSession`."""
     if kind is None and settings.aeat_auth_provider is not None:
         kind = AuthProviderKind(settings.aeat_auth_provider.value)
     if kind is not None:
@@ -212,7 +216,7 @@ async def require_verified_aeat_session(
     kind: AuthProviderKind | None = None,
     target_url: str | None = None,
 ) -> AeatSession:
-    """Return a verified active AEAT session without exposing provider mechanics."""
+    """Return a verified active :class:`AeatSession` without exposing provider mechanics."""
     provider_kind = _resolve_provider_kind(settings, kind)
     expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)
     persisted = load_persisted_session(settings, kind)
@@ -279,6 +283,9 @@ async def ensure_authenticated_aeat_session(
     4. probe persisted state again to avoid races;
     5. optionally delete persisted session state for ``fresh``;
     6. authenticate and verify through the selected provider.
+
+    Returns an :class:`AuthenticatedAeatSessionResult` carrying the live
+    session and the lock-reset status when one was requested.
     """
     provider_kind = _resolve_provider_kind(settings, kind)
     expected_identity = _assert_active_profile_identity_matches_provider(settings, provider_kind)

@@ -126,7 +126,7 @@ _G313_LABELS: Final[dict[str, str]] = {
 }
 
 def parse_g313_html(html: str) -> CensoFactSet:
-    """Parse a G313 (Mis Datos Censales) result page into a CensoFactSet.
+    """Parse a G313 (Mis Datos Censales) result page into a :class:`CensoFactSet`.
 
     The parser is deliberately label-driven rather than DOM-structural:
     AEAT re-shapes the surrounding ZK markup periodically without

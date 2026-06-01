@@ -7,7 +7,11 @@ from ._models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLand
 
 
 def build_help_document(surface: HelpSurface | str) -> HelpDocument:
-    """Return the curated help document for ``surface``."""
+    """Return the curated help document for ``surface``.
+
+    Returns a :class:`HelpDocument` with sections and entries for the
+    requested surface.
+    """
     resolved = HelpSurface(surface)
     if resolved is HelpSurface.ROOT:
         return _root_help()
@@ -17,7 +21,7 @@ def build_help_document(surface: HelpSurface | str) -> HelpDocument:
 
 
 def build_root_landing_report(active_profile: str | None) -> RootLandingReport:
-    """Return the bare-invocation landing report for the current profile state."""
+    """Return the :class:`RootLandingReport` for the current profile state."""
     if active_profile:
         return RootLandingReport(
             active_profile=active_profile,

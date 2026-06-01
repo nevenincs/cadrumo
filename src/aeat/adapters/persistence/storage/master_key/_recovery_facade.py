@@ -86,9 +86,9 @@ def _blob_from_envelope(envelope: RecoveryRecord) -> EncryptedBlob:
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext + tag)
 
 def mint_recovery_envelope(*, dek: bytes, created_at: datetime) -> MintedRecovery:
-    """Mint a fresh recovery envelope wrapping `dek`.
+    """Mint a fresh :class:`MintedRecovery` envelope wrapping ``dek``.
 
-    Returns a `MintedRecovery` carrying the typed `RecoveryRecord` and
+    Returns a :class:`MintedRecovery` carrying the typed ``RecoveryRecord`` and
     the 24-word mnemonic the operator must record. The mnemonic is the
     only handle on the recovery KEK; this function does NOT persist it.
     """
@@ -155,7 +155,7 @@ def open_session_from_recovery(
     idle_minutes: int,
     opened_at: datetime,
 ) -> BucketSession:
-    """Compose mnemonic-unwrap with `BucketSession.open`.
+    """Compose mnemonic-unwrap with `BucketSession.open` and return a :class:`BucketSession`.
 
     The caller supplies the freshly-derived passphrase KEK (the
     operator's new passphrase, run through Argon2id under a fresh salt);

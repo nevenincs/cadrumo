@@ -231,7 +231,7 @@ def calculate_art_7p_exemption(
     qualifying_days: int,
     facts: MaritimeWorkerFacts,
 ) -> CasillaObservation:
-    """Calculate the Art. 7.p) exempt amount and return a typed CasillaObservation.
+    """Calculate the Art. 7.p) exempt amount and return a :class:`CasillaObservation`.
 
     Formula (Ley 35/2006 Art. 7.p) BOE-A-2006-20764):
         exempt_amount = min(annual_salary / 365 * qualifying_days, 60_100)
@@ -247,7 +247,7 @@ def calculate_art_7p_exemption(
             raises RentaValidationError otherwise.
 
     Returns:
-        CasillaObservation for the renta exenta casilla with the exempt
+        :class:`CasillaObservation` for the renta exenta casilla with the exempt
         amount and full legal provenance.
 
     Raises:
@@ -302,7 +302,7 @@ def calculate_rebeca_exemption(
             raises RentaValidationError otherwise.
 
     Returns:
-        CasillaObservation for the renta exenta casilla with the exempt
+        :class:`CasillaObservation` for the renta exenta casilla with the exempt
         amount and full legal provenance.
 
     Raises:

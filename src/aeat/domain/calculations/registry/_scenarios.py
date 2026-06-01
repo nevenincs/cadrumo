@@ -103,7 +103,11 @@ def run_registry_calculation_scenario(
     registry_root: Path,
     source_root: Path,
 ) -> RegistryScenarioRunReport:
-    """Execute ``scenario`` against the registry calculator and compare outputs."""
+    """Execute ``scenario`` against the registry calculator and compare outputs.
+
+    Returns:
+        A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
+    """
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     try:
         authority.modelo(scenario.modelo)

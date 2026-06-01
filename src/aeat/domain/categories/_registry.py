@@ -30,7 +30,11 @@ from ._spending_category import SpendingCategory
 
 
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Load one year-keyed spending-category profile TOML file."""
+    """Load one year-keyed spending-category profile TOML file.
+
+    Returns:
+        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile` for the file's year.
+    """
     resolved = path.resolve()
     try:
         stat = resolved.stat()
@@ -79,6 +83,9 @@ def load_category_profile_registry(
     Resolves the bundled categories root on every call when no
     override is supplied; the ``bundled_path`` boundary is the
     single resolution surface.
+
+    Returns:
+        Mapping from year to a per-year mapping from :class:`SpendingCategory` to :class:`CategoryProfile`.
     """
     target = root if root is not None else bundled_path("registry", "aeat", "categories", "profiles")
     resolved = target.resolve()
@@ -107,7 +114,11 @@ def _load_category_profile_registry_cached(
 
 
 def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryProfile]:
-    """Return the exact category profile registry for ``year``."""
+    """Return the exact category profile registry for ``year``.
+
+    Returns:
+        Mapping from :class:`SpendingCategory` to :class:`CategoryProfile` for ``year``.
+    """
     profiles = load_category_profile_registry().get(year)
     if profiles is None:
         raise CategoryValidationError(f"no category profile registry registered for year={year}")

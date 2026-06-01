@@ -99,7 +99,11 @@ class EvidenceBundleService:
         filing_record_id: str | None = None,
         notes: str = "",
     ) -> EvidenceBundle:
-        """Build a new bundle from a mapping of (object_type, object_id) -> raw bytes."""
+        """Build a new bundle from a mapping of (object_type, object_id) -> raw bytes.
+
+        Returns the persisted :class:`EvidenceBundle` with all record refs
+        and provenance metadata populated.
+        """
         from ...domain.buckets._event import BucketEventObjectType
 
         records = tuple(
@@ -156,7 +160,7 @@ class EvidenceBundleService:
         bundle_id: str,
         record_payloads: Mapping[tuple[str, str], bytes] | None = None,
     ) -> EvidenceBundleVerificationReport:
-        """Re-verify a bundle by recomputing record digests from supplied payloads.
+        """Re-verify a bundle and return an :class:`EvidenceBundleVerificationReport`.
 
         The caller supplies the current bucket-scoped object payloads. Each
         record reference is recomputed and compared to the manifest's
@@ -316,6 +320,8 @@ class EvidenceBundleService:
         intent: ``check`` is operator diagnostics, ``replay`` is the
         forensic verb invoked when reproducing a historical filing for
         audit handoff.
+
+        Returns an :class:`EvidenceBundleVerificationReport`.
         """
         return self.check(bucket_id=bucket_id, bundle_id=bundle_id, record_payloads=record_payloads)
 

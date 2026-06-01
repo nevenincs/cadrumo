@@ -71,7 +71,7 @@ class LocalAdapter(_ProviderAdapter):
             request: Normalized provider request.
 
         Returns:
-            Normalized completion containing the trimmed assistant message
+            :class:`ProviderCompletion` containing the trimmed assistant message
             and reported token counts.
 
         Raises:

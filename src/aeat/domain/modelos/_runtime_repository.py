@@ -33,7 +33,11 @@ def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: ty
 
 
 def secure_objects_for_modelo_bucket(bucket_id: str) -> SecureObjectRepository:
-    """Return runtime-created secure-object storage for ``bucket_id``."""
+    """Return runtime-created secure-object storage for ``bucket_id``.
+
+    Returns:
+        A :class:`SecureObjectRepository` scoped to the given modelo bucket.
+    """
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     return secure_object_repository_for_bucket(bucket_id)

@@ -60,7 +60,7 @@ class FiledDeclaracionObservationStore:
         artefact: FiledDeclaracionArtefact,
         body: bytes,
     ) -> FiledDeclaracionArtefact:
-        """Persist one captured artefact and return metadata with its storage reference."""
+        """Persist one captured artefact and return a :class:`FiledDeclaracionArtefact` with its storage reference."""
         if not artefact.storage_ref and not body:
             raise SedeValidationError("cannot persist an empty filed-declaration artefact")
         if body and len(body) != artefact.byte_count:
@@ -121,7 +121,7 @@ class FiledDeclaracionObservationStore:
         return _logical_path(_OBSERVATION_NAMESPACE, object_key)
 
     def load_observation(self, path: Path) -> FiledDeclaracionObservation:
-        """Load and decrypt a normalized filed-declaration observation."""
+        """Load and decrypt a :class:`FiledDeclaracionObservation` from the encrypted store."""
         object_key = Path(path).name
         with self._crypto_scope():
             record = self._repository.load(
@@ -171,7 +171,7 @@ class FiledDeclaracionObservationStore:
         return _logical_path(_IVA_WALLET_OBSERVATION_NAMESPACE, object_key)
 
     def load_iva_wallet_observation(self, path: Path) -> IvaCompensationWalletObservation:
-        """Load and decrypt an IVA wallet observation."""
+        """Load and decrypt an :class:`IvaCompensationWalletObservation` from ``path``."""
         object_key = Path(path).name
         with self._crypto_scope():
             record = self._repository.load(
@@ -196,7 +196,7 @@ class FiledDeclaracionObservationStore:
         return envelope.payload
 
     def list_iva_wallet_observations(self) -> tuple[IvaCompensationWalletObservation, ...]:
-        """Return stored IVA wallet observations from the active encrypted backend."""
+        """Return :class:`IvaCompensationWalletObservation` records from the active encrypted backend."""
         observations: list[IvaCompensationWalletObservation] = []
         with self._crypto_scope():
             records = self._repository.list_records(

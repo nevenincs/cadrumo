@@ -95,7 +95,7 @@ class VerifyBrowserContextLike(Protocol):
     """Subset of Playwright's ``BrowserContext`` API used by :func:`verify_csv`."""
 
     async def new_page(self) -> VerifyBrowserPageLike:
-        """Open a new page within this browser context."""
+        """Open a new :class:`VerifyBrowserPageLike` within this browser context."""
         ...
 
     async def close(self) -> None:

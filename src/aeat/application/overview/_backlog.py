@@ -93,6 +93,9 @@ def build_overview_backlog(
     ``adjusted_closes_on`` precedes ``as_of`` AND its ``user_state``
     is ``LATE``. Filed obligations are excluded by the state mapping;
     the engine surfaces them as ``FILED`` rather than ``OVERDUE``.
+
+    Returns an :class:`OverviewBacklog` with the backlog items and the
+    calendar range used for the computation.
     """
     resolved_as_of = as_of or date.today()
     resolved_from = from_date or (resolved_as_of - timedelta(days=_DEFAULT_LOOKBACK_DAYS))

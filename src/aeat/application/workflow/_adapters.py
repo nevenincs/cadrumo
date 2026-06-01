@@ -68,7 +68,7 @@ class DeadlineEngineAdapter:
         *,
         today: date | None = None,
     ) -> Schedule:
-        """Delegate to :meth:`DeadlineEngine.compute`."""
+        """Delegate to :meth:`DeadlineEngine.compute` and return a :class:`Schedule`."""
         return self._engine.compute(profile, year, today=today)
 
 
@@ -93,7 +93,7 @@ class ModeloDraftBuilderAdapter:
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Delegate to :func:`build_draft`.
+        """Delegate to :func:`build_draft` and return a :class:`RegistryModeloDraftProtocol`.
 
         :class:`TaxpayerProfile` and :class:`aeat.application.filing.ModeloProfile`
         are structurally compatible (both expose ``tax_id``) but

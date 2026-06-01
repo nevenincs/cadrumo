@@ -354,7 +354,7 @@ def rotate_master_key(
 
 
 def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlanEntry, ...]:
-    """Return the canonical rotation plan against ``settings``.
+    """Return the canonical rotation plan as a tuple of :class:`RotationPlanEntry` records.
 
     Enumerates every repository's directory + HKDF
     context. Operators with custom directories / additional consumers

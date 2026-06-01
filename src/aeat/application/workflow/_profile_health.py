@@ -93,7 +93,7 @@ _MANIFEST_HEALTH_EXCEPTIONS = (
 )
 
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
-    """Return a redacted, non-secret health projection for the active profile."""
+    """Return a redacted, non-secret :class:`ActiveProfileHealth` projection for the active profile."""
     settings = load_settings()
     override = (settings.aeat_active_profile or "").strip()
     pointer = None if override else read_pointer(settings.aeat_local_storage_root)
@@ -215,7 +215,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     )
 
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
-    """Clear a degraded pointer-file active profile when explicitly confirmed."""
+    """Clear a degraded pointer-file active profile when explicitly confirmed and return an :class:`ActiveProfileRepairResult`."""
     before = _assess_with_best_effort_session()
     should_clear = before.repairable_by_clearing_pointer and before.status in {
         "dangling_pointer",
@@ -236,7 +236,11 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
     )
 
 def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileManifestStatusRepairResult:
-    """Backfill a legacy active-bucket manifest status from the encrypted record."""
+    """Backfill a legacy active-bucket manifest status from the encrypted record.
+
+    Returns an :class:`ActiveProfileManifestStatusRepairResult` indicating
+    whether a repair was performed and the before/after health states.
+    """
     before = _assess_with_best_effort_session()
     if before.status != "manifest_unreadable" or before.active_profile is None:
         return ActiveProfileManifestStatusRepairResult(

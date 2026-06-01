@@ -317,7 +317,11 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> ModeloLedgerBindingAggregation:
-    """Resolve ledger-backed registry bindings from the active bucket."""
+    """Resolve ledger-backed registry bindings from the active bucket.
+
+    Returns a :class:`ModeloLedgerBindingAggregation` containing all
+    resolved binding values and per-source issue lists.
+    """
     binding_values: dict[str, Decimal] = {}
     source_transaction_ids: set[str] = set()
     iva_issues: tuple[IvaLedgerAggregationIssue, ...] = ()

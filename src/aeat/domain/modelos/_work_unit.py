@@ -279,7 +279,7 @@ class WorkUnitCatalogue(BaseModel):
 
     @classmethod
     def from_work_units(cls, units: Mapping[str, WorkUnit] | tuple[WorkUnit, ...]) -> WorkUnitCatalogue:
-        """Build a catalogue from an iterable / mapping of work units."""
+        """Build a :class:`WorkUnitCatalogue` from an iterable / mapping of work units."""
         if isinstance(units, tuple):
             mapping: dict[str, WorkUnit] = {}
             for unit in units:
@@ -306,11 +306,15 @@ class WorkUnitCatalogue(BaseModel):
         return False
 
     def get(self, work_unit_id: str) -> WorkUnit | None:
-        """Return the work unit for ``work_unit_id`` or ``None`` if absent."""
+        """Return the work unit for ``work_unit_id`` or ``None`` if absent.
+
+        Returns:
+            The :class:`WorkUnit` for the given id, or ``None`` when not found.
+        """
         return self.work_units.get(work_unit_id)
 
     def values(self) -> ValuesView[WorkUnit]:
-        """Return a view of every work unit in the catalogue."""
+        """Return a view of every :class:`WorkUnit` in the catalogue."""
         return self.work_units.values()
 
 

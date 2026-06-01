@@ -38,8 +38,10 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
 
     The concrete adapter is imported here (not at module scope) so that
     application/filing/_runtime_repository does not carry a module-scope
-    import from the adapters layer.  The import-time edge is eliminated;
+    import from the adapters layer. The import-time edge is eliminated;
     the runtime dependency remains transparent.
+
+    Returns a :class:`SecureObjectRepository` scoped to ``bucket_id``.
     """
     from ...adapters.persistence.storage.runtime_repository import (  # noqa: PLC0415
         secure_object_repository_for_bucket,

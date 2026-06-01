@@ -332,7 +332,7 @@ OperatorSurfaceErrorCodes: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT
 
 
 def build_operator_surface_contract() -> OperatorSurfaceContract:
-    """Build the immutable operator surface contract.
+    """Build the immutable :class:`OperatorSurfaceContract`.
 
     Returns the canonical declaration of the modelo lifecycle steps,
     operator-facing CLI surfaces, and orthogonal verb axes the rest
@@ -369,12 +369,16 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
 
 @lru_cache(maxsize=1)
 def get_operator_surface_contract() -> OperatorSurfaceContract:
-    """Return the cached backend-owned operator surface contract."""
+    """Return the cached backend-owned operator surface contract.
+
+    Returns the :class:`OperatorSurfaceContract` describing the accepted
+    root surfaces, retired surfaces, and registered feature flags.
+    """
     return build_operator_surface_contract()
 
 
 def require_accepted_root(name: str) -> RootSurface:
-    """Return an accepted root or raise a registered application error."""
+    """Return the :class:`RootSurface` for an accepted root, or raise a registered application error."""
     normalized = name.strip().lower()
     for root in get_operator_surface_contract().roots:
         if root.name.value == normalized:
@@ -393,7 +397,11 @@ def require_accepted_root(name: str) -> RootSurface:
 
 
 def retired_surface_suggestion(name: str) -> RetiredOperatorSurface | None:
-    """Return the retired-surface contract for ``name`` when one exists."""
+    """Return the retired-surface contract for ``name`` when one exists.
+
+    Returns a :class:`RetiredOperatorSurface` when ``name`` matches a
+    registered retired surface, or ``None`` when it does not.
+    """
     normalized = name.strip().lower()
     for surface in get_operator_surface_contract().retired_surfaces:
         if surface.name == normalized:
@@ -402,7 +410,10 @@ def retired_surface_suggestion(name: str) -> RetiredOperatorSurface | None:
 
 
 def resolve_source_kind_alias(value: str) -> SourceKind:
-    """Resolve canonical source kinds and parser-only aliases."""
+    """Resolve canonical source kinds and parser-only aliases.
+
+    Returns a :class:`SourceKind`.
+    """
     normalized = value.strip().lower()
     for source_kind in SOURCE_KINDS:
         if source_kind.value == normalized:

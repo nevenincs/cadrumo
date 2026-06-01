@@ -438,6 +438,10 @@ def build_alias_inventory(root: Path = AEAT_ROOT) -> AliasInventory:
     ``constraints_by_owner`` so the bare-string field detector can
     decide promotion compatibility from the alias's actual
     ``StringConstraints`` / ``Field`` metadata.
+
+    Returns:
+        An :class:`AliasInventory` mapping owner prefixes to alias names,
+        with per-owner constraint shapes extracted from the declarations.
     """
     by_owner: dict[str, str] = {}
     alias_modules: set[str] = set()
@@ -506,7 +510,11 @@ def _iter_import_from(tree: ast.Module) -> Iterator[ast.ImportFrom]:
 
 
 def find_sibling_domain_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
-    """Detect ``domain.<a>`` importing from ``domain.<b>._ids`` for ``a != b``."""
+    """Detect ``domain.<a>`` importing from ``domain.<b>._ids`` for ``a != b``.
+
+    Returns:
+        A list of :class:`Finding` records for each sibling-domain id import.
+    """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         dotted = _module_dotted_path(path, root)
@@ -559,6 +567,9 @@ def find_private_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
     private re-aliases that the ``_ids.py`` module uses to construct
     them. The public alias names are the cross-layer contract; the
     private constants are an implementation detail.
+
+    Returns:
+        A list of :class:`Finding` records for each private-name import.
     """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
@@ -606,7 +617,11 @@ def _iter_module_assignments(tree: ast.Module) -> Iterator[tuple[str, int]]:
 
 
 def find_misplaced_hex_length_constants(root: Path = AEAT_ROOT) -> list[Finding]:
-    """Detect ``_HEX_*_LENGTH`` constants declared outside an ``_ids.py``."""
+    """Detect ``_HEX_*_LENGTH`` constants declared outside an ``_ids.py``.
+
+    Returns:
+        A list of :class:`Finding` records for each misplaced constant.
+    """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
         if path.name == "_ids.py":
@@ -709,6 +724,9 @@ def find_bare_str_typed_id_fields(
     The classification follows the substitutability pre-filter from the
     swarm-audit-cadence rule and consults ``inventory.constraints_by_owner``
     directly; there is no protect list.
+
+    Returns:
+        A list of :class:`Finding` records, one per flagged field.
     """
     if inventory is None:
         inventory = build_alias_inventory(root)
@@ -780,6 +798,9 @@ def find_sibling_domain_enum_imports(root: Path = AEAT_ROOT) -> list[Finding]:
     Only named subpackages (those whose name starts with a letter) are
     considered sibling domains.  Root-level ``domain/_enums.py`` is not a
     sibling subpackage and imports from it are not flagged by this clause.
+
+    Returns:
+        A list of :class:`Finding` records for each sibling-domain enum import.
     """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
@@ -828,6 +849,9 @@ def find_sibling_domain_constant_imports(root: Path = AEAT_ROOT) -> list[Finding
 
     Only named subpackages (those whose name starts with a letter) are
     considered sibling domains.
+
+    Returns:
+        A list of :class:`Finding` records for each sibling-domain constant import.
     """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
@@ -876,6 +900,9 @@ def find_sibling_domain_protocol_imports(root: Path = AEAT_ROOT) -> list[Finding
 
     Only named subpackages (those whose name starts with a letter) are
     considered sibling domains.
+
+    Returns:
+        A list of :class:`Finding` records for each sibling-domain protocol import.
     """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
@@ -953,6 +980,9 @@ def find_private_name_cross_package_imports(root: Path = AEAT_ROOT) -> list[Find
     ``__all__``, etc.) are excluded because they are a Python convention and
     not private API. Relative imports are within-package by definition and are
     excluded. Imports from modules on the ADR protect list are excluded.
+
+    Returns:
+        A list of :class:`Finding` records for each violating import.
     """
     findings: list[Finding] = []
     for path in iter_aeat_modules(root):
@@ -1037,6 +1067,9 @@ def find_same_name_constant_multi_declarations(
     Only module-level assignments whose right-hand side is a simple literal
     (int, float, str, bytes, bool, or unary-negated number) are considered.
     Test modules and protect-list modules are excluded.
+
+    Returns:
+        A list of :class:`Finding` records, one per duplicated constant site.
     """
     _MISSING = object()
     # name -> list of (dotted_module, literal_value, path, lineno)
@@ -1153,6 +1186,10 @@ def build_kind_status_state_alias_inventory(root: Path = AEAT_ROOT) -> AliasInve
     considered.  Enum classes and non-string type aliases sharing the
     ``Kind``/``Status``/``State`` naming suffix are excluded so the
     inventory does not generate false-positive clause-10 violations.
+
+    Returns:
+        An :class:`AliasInventory` mapping owner prefixes to kind, status,
+        and state alias names.
     """
     by_owner: dict[str, str] = {}
     alias_modules: set[str] = set()
@@ -1202,6 +1239,9 @@ def find_bare_str_kind_status_state_fields(
     ``_kind``, ``_status``, or ``_state``. If a typed alias for that
     owner exists in the inventory and the annotation is bare ``str`` (or
     ``str | None``), the field is flagged.
+
+    Returns:
+        A list of :class:`Finding` records, one per flagged field.
     """
     if inventory is None:
         inventory = build_kind_status_state_alias_inventory(root)

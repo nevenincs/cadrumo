@@ -152,7 +152,10 @@ class ForeignAssetsAggregation(BaseModel):
 
 
 def declarable_asset_classes_720(aggregation: ForeignAssetsAggregation) -> frozenset[ForeignAssetClass]:
-    """Return asset classes whose full valuation exceeds the 720 declaration floor."""
+    """Return asset classes whose full valuation exceeds the 720 declaration floor.
+
+    Returns a frozenset of :class:`ForeignAssetClass` members.
+    """
     totals: dict[ForeignAssetClass, Decimal] = {}
     for rollup in aggregation.rollups:
         totals[rollup.asset_class] = totals.get(rollup.asset_class, Decimal("0")) + rollup.total_valuation_eur
@@ -171,9 +174,10 @@ def aggregate_foreign_assets_720(
 ) -> ForeignAssetsAggregation:
     """Aggregate Modelo 720 observations into per-class rollups.
 
-    Pure function: identical observation input + period yields
-    identical output. Rollups are sorted by asset_class.value so two
-    equal aggregations serialise to identical bytes.
+    Returns a :class:`ForeignAssetsAggregation` grouping observations
+    by asset class. Pure function: identical observation input + period
+    yields identical output. Rollups are sorted by asset_class.value so
+    two equal aggregations serialise to identical bytes.
 
     No threshold gate is applied here; callers use
     :func:`declarable_class` to filter rollups before binding to

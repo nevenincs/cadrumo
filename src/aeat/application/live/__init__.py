@@ -527,7 +527,7 @@ def select_declarations_for_capture(
 
 
 def filed_data_listing_row(declaration: _Declaracion) -> FiledDataListingRow:
-    """Map one AEAT declaration-register row into the application report shape."""
+    """Map one AEAT declaration-register row into a :class:`FiledDataListingRow`."""
     return FiledDataListingRow(
         modelo=declaration.modelo,
         year=declaration.ejercicio,
@@ -549,7 +549,11 @@ async def list_filed_data(
     year_from: int,
     year_to: int,
 ) -> FiledDataListingReport:
-    """List filed declaration rows through the active AEAT session without downloading artefacts."""
+    """List filed declaration rows through the active AEAT session without downloading artefacts.
+
+    Returns a :class:`FiledDataListingReport` with the discovered
+    declaration rows for the requested modelo and year range.
+    """
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -590,7 +594,11 @@ async def capture_filed_data(
     expediente_id: str | None = None,
     limit: int | None = None,
 ) -> FiledDataCaptureReport:
-    """Capture filed-declaration artefacts through the active AEAT session."""
+    """Capture filed-declaration artefacts through the active AEAT session.
+
+    Returns a :class:`FiledDataCaptureReport` summarising the captured
+    artefacts and any acquisition errors.
+    """
     session, _settings = await _active_verified_session()
     store = _FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
@@ -655,7 +663,7 @@ async def capture_source_filed_data(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
-    """Capture filed observations required by a target filing's registry dependencies."""
+    """Capture filed observations required by a target filing's registry dependencies and return a :class:`SourceFiledDataCaptureReport`."""
     from ...core.resources import resources as _resources
 
     session, settings = await _active_verified_session()
@@ -766,7 +774,7 @@ def list_iva_compensation_history(
     decision_repository: _IvaWalletDecisionRepository | None = None,
     as_of_year: int | None = None,
 ) -> IvaCompensationHistoryReport:
-    """List profile-local IVA compensation history derived from filed Modelo 303 observations."""
+    """List profile-local IVA compensation history and return an :class:`IvaCompensationHistoryReport`."""
     repo = repository if repository is not None else _IvaCompensationHistoryRepository()
     decision_repo = decision_repository if decision_repository is not None else _IvaWalletDecisionRepository()
     states = repo.list_periods()
@@ -793,7 +801,11 @@ def load_iva_remote_state(
     repository: _IvaCompensationHistoryRepository | None = None,
     decision_repository: _IvaWalletDecisionRepository | None = None,
 ) -> IvaRemoteStateStoredEvidenceReport:
-    """Reload stored remote IVA evidence from the active profile without contacting AEAT."""
+    """Reload stored remote IVA evidence from the active profile without contacting AEAT.
+
+    Returns an :class:`IvaRemoteStateStoredEvidenceReport` with the
+    stored compensation history and reconciliation decisions.
+    """
     history = list_iva_compensation_history(
         repository=repository,
         decision_repository=decision_repository,
@@ -821,7 +833,7 @@ async def capture_iva_compensation_history(
     year_to: int,
     output_root: Path,
 ) -> IvaCompensationHistoryCaptureReport:
-    """Capture filed Modelo 303s across years and verify secure history reload."""
+    """Capture filed Modelo 303s across years and return an :class:`IvaCompensationHistoryCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
             message="from-year must be less than or equal to to-year",
@@ -1187,6 +1199,8 @@ def persist_and_reconcile_iva_compensation_wallet(
     The reload is intentional: downstream reconciliation must use evidence that
     actually survived the encrypted storage boundary, not only the in-memory
     result returned by the browser driver.
+
+    Returns an :class:`IvaWalletCaptureReport`.
     """
     store = _FiledDeclaracionObservationStore(output_root)
     path = store.persist_iva_wallet_observation(observation)
@@ -1310,6 +1324,8 @@ async def capture_iva_compensation_wallet(
     `AEAT_LIVE_TESTS_ENABLED=1` and will acquire or reuse the configured
     AEAT session, including Cl@ve Móvil approval when the auth provider
     requires it.
+
+    Returns an :class:`IvaWalletCaptureReport`.
     """
     session, settings = await _active_verified_session(
         operation="live-iva-wallet-read",
@@ -1355,7 +1371,11 @@ async def capture_iva_remote_state(
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
-    """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation."""
+    """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation.
+
+    Returns an :class:`IvaRemoteStateAcquisitionReport` with the acquired
+    state, compensation history, and any acquisition issues.
+    """
     active_bucket_id = _resolve_active_bucket_id()
     storage_span = _profile_storage_session(active_bucket_id) if active_bucket_id else nullcontext()
     with storage_span:
@@ -1530,7 +1550,7 @@ def build_iva_remote_state_acquisition_report(
     filed_history_error: BaseException | None = None,
     wallet_error: BaseException | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
-    """Build the redacted combined acquisition report from surface results."""
+    """Build the redacted combined :class:`IvaRemoteStateAcquisitionReport` from surface results."""
     auth = _auth_outcome(auth_result=auth_result, error=auth_error)
     outcomes = (
         _surface_outcome(
@@ -1566,7 +1586,11 @@ def persist_iva_remote_state_acquisition_report(
     captured_at: datetime | None = None,
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest:
-    """Persist a redacted encrypted manifest for a live IVA acquisition report."""
+    """Persist a redacted encrypted manifest for a live IVA acquisition report.
+
+    Returns the persisted :class:`IvaRemoteStateAcquisitionManifest` with
+    the acquisition id and redacted summary fields.
+    """
     resolved_captured_at = captured_at if captured_at is not None else now()
     manifest = _iva_remote_state_acquisition_manifest(report, captured_at=resolved_captured_at)
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
@@ -1579,7 +1603,7 @@ def load_iva_remote_state_acquisition_manifest(
     *,
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest | None:
-    """Load one encrypted live IVA acquisition manifest by id."""
+    """Load one encrypted live IVA acquisition manifest by id and return an :class:`IvaRemoteStateAcquisitionManifest`."""
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return repo.load(acquisition_id)
 
@@ -1588,7 +1612,10 @@ def list_iva_remote_state_acquisition_manifests(
     *,
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> tuple[IvaRemoteStateAcquisitionManifest, ...]:
-    """List encrypted live IVA acquisition manifests for the active profile."""
+    """List encrypted live IVA acquisition manifests for the active profile.
+
+    Returns a tuple of :class:`IvaRemoteStateAcquisitionManifest` records.
+    """
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return tuple(sorted(repo.iter_records(), key=lambda item: item.captured_at, reverse=True))
 

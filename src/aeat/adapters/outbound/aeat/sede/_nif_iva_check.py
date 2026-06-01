@@ -273,7 +273,7 @@ async def collect_nif_iva_check_observations(
     timeout_ms: int = DEFAULT_NIF_IVA_TIMEOUT_MS,
     browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
 ) -> NifIvaCheckResult:
-    """Open the NIF-IVA form, query each declared NIF, scrape the verdicts.
+    """Open the NIF-IVA form, query each declared NIF, scrape verdicts into a :class:`NifIvaCheckResult`.
 
     The function navigates the AEAT sede gestiones entry, follows
     through to the form servlet (which the entry's session cookies

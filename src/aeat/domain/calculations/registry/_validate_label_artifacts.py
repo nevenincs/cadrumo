@@ -34,7 +34,7 @@ class LabelArtifactFinding:
 
 
 def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tuple[LabelArtifactFinding, ...]:
-    """Return advisory findings for obvious unresolved label extraction artifacts."""
+    """Return :class:`LabelArtifactFinding` items for obvious unresolved label extraction artifacts."""
     findings: list[LabelArtifactFinding] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():

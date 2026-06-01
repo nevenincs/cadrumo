@@ -91,7 +91,7 @@ class _ProviderAdapter(ABC):
             request: Normalized request payload.
 
         Returns:
-            Normalized completion response.
+            Normalized :class:`ProviderCompletion` response.
         """
 
 

@@ -241,6 +241,8 @@ def aggregate_retenciones_111(
     Pure function: identical observation input + period yields identical
     output. Rollups are sorted by (perceptor_nif, scheme.value) so two
     equal aggregations serialise to identical bytes.
+
+    Returns a :class:`RetencionesAggregation`.
     """
     return _aggregate_for_modelo(observations, modelo="111", period=period)
 
@@ -253,6 +255,9 @@ def aggregate_retenciones_115(
     """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
     Only ``URBAN_RENTAL`` scheme observations are in scope.
+
+    Returns a :class:`RetencionesAggregation` with per-perceptor rollups
+    and grand totals for Modelo 115.
     """
     return _aggregate_for_modelo(observations, modelo="115", period=period)
 
@@ -262,8 +267,9 @@ def aggregate_retenciones_123(
     *,
     period: str,
 ) -> RetencionesAggregation:
-    """Aggregate Modelo 123 (retenciones sobre rendimientos del capital mobiliario: intereses, dividendos, otros).
+    """Aggregate Modelo 123 retenciones into a :class:`RetencionesAggregation`.
 
+    Covers rendimientos del capital mobiliario: intereses, dividendos, y otros.
     In-scope schemes: CAPITAL_INTEREST, CAPITAL_DIVIDEND, CAPITAL_OTHER.
     """
     return _aggregate_for_modelo(observations, modelo="123", period=period)
@@ -281,6 +287,8 @@ def aggregate_retenciones_180(
     caller supplies. Callers should pass an annual period string
     (e.g. ``"2025"``) and feed in the union of the year's 115
     observations.
+
+    Returns a :class:`RetencionesAggregation`.
     """
     return _aggregate_for_modelo(observations, modelo="180", period=period)
 
@@ -294,6 +302,9 @@ def aggregate_retenciones_190(
 
     Shares the 111 scheme catalogue (WORK_INCOME + ECONOMIC_ACTIVITY +
     PROFESSIONAL + PRIZE) widened over the annual period.
+
+    Returns a :class:`RetencionesAggregation` with per-perceptor rollups
+    and grand totals for the annual summary.
     """
     return _aggregate_for_modelo(observations, modelo="190", period=period)
 
@@ -303,8 +314,9 @@ def aggregate_retenciones_193(
     *,
     period: str,
 ) -> RetencionesAggregation:
-    """Aggregate Modelo 193 (resumen anual de retenciones sobre capital mobiliario).
+    """Aggregate Modelo 193 retenciones into a :class:`RetencionesAggregation`.
 
+    Resumen anual de retenciones sobre capital mobiliario.
     Shares the 123 scheme catalogue.
     """
     return _aggregate_for_modelo(observations, modelo="193", period=period)

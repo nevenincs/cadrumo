@@ -133,7 +133,12 @@ def parse_declaracion_bytes(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> DeclaracionObservation:
-    """Parse declaración PDF bytes without writing them to a plaintext temp file."""
+    """Parse declaración PDF bytes without writing them to a plaintext temp file.
+
+    Returns:
+        A :class:`DeclaracionObservation` populated with the extracted casillas,
+        warnings, and provenance metadata.
+    """
     pages = extract_pages_text_from_bytes(pdf_bytes, source_label=source_label)
     digest = sha256(pdf_bytes).hexdigest()
     return _parse_declaracion_pages(

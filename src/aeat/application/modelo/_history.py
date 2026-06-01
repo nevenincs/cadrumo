@@ -73,7 +73,7 @@ def assemble_work_unit_history(
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> WorkUnitHistory:
-    """Return every bucket event scoped to ``work_unit_id``.
+    """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
     Events are merged from four object-scoped streams and ordered by
     ``occurred_at`` ascending. The work unit itself is loaded to:

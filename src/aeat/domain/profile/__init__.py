@@ -136,7 +136,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
 
 
 def parse_tax_region(raw: str) -> CCAA:
-    """Parse a CLI/user tax-region token into the closed ``CCAA`` enum."""
+    """Parse a CLI/user tax-region token into the closed :class:`CCAA` enum."""
     normalized = _normalize_region_token(raw)
     if normalized in _FORAL_ALIASES:
         raise ForalRegimeError(raw)

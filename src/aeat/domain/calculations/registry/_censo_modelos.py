@@ -151,7 +151,11 @@ class CensoModeloFoundationResult(BaseModel):
     @computed_field
     @property
     def log_fields(self) -> CensoModeloFoundationLogFields:
-        """Return stable logging fields for this foundation decision."""
+        """Return stable logging fields for this foundation decision.
+
+        Returns:
+            A :class:`CensoModeloFoundationLogFields` record with all structured log fields.
+        """
         decision: Literal["active_work_unit_allowed", "historical_metadata_only"]
         decision = "active_work_unit_allowed" if self.active_work_unit_allowed else "historical_metadata_only"
         return CensoModeloFoundationLogFields(
@@ -197,11 +201,19 @@ class CensoModeloFoundationResult(BaseModel):
             raise RegistryValidationError("modelo 037 result must be inactive and superseded by 036")
 
 def censo_modelo_ownership_map() -> tuple[CensoModeloOwnership, ...]:
-    """Return the registry-owned censo modelo ownership map."""
+    """Return the registry-owned censo modelo ownership map.
+
+    Returns:
+        Tuple of :class:`CensoModeloOwnership` records, one per censo modelo.
+    """
     return (censo_modelo_ownership(_ACTIVE_CENSO_MODELO), censo_modelo_ownership(_HISTORICAL_CENSO_MODELO))
 
 def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
-    """Build the immutable backend-owned censo modelo foundation contract."""
+    """Build the immutable backend-owned censo modelo foundation contract.
+
+    Returns:
+        The validated :class:`CensoModeloFoundationContract` for the active registry.
+    """
     active_ownership = censo_modelo_ownership(_ACTIVE_CENSO_MODELO)
     contract = CensoModeloFoundationContract(
         event_kinds=tuple(CensoModeloEventKind(kind) for kind in active_ownership.event_kinds),
@@ -221,11 +233,11 @@ def build_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
 
 @lru_cache(maxsize=1)
 def get_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
-    """Return the cached backend-owned censo modelo foundation contract."""
+    """Return the cached backend-owned :class:`CensoModeloFoundationContract`."""
     return build_censo_modelo_foundation_contract()
 
 def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
-    """Return the censo ownership record for an exact string modelo code."""
+    """Return the :class:`CensoModeloOwnership` record for an exact string modelo code."""
     if not isinstance(modelo, str):
         raise RegistryValidationError("censo modelo code must be a string")
     authority = resources().modelos.authority
@@ -301,7 +313,7 @@ def is_active_censo_modelo(modelo: str) -> bool:
     return censo_modelo_ownership(modelo).active_work_unit_allowed
 
 def resolve_censo_modelo_foundation(command: CensoModeloFoundationCommand) -> CensoModeloFoundationResult:
-    """Resolve one censo modelo foundation command through the registry owner."""
+    """Resolve one censo modelo foundation command and return a :class:`CensoModeloFoundationResult`."""
     ownership = censo_modelo_ownership(command.modelo)
     event_kinds = tuple(CensoModeloEventKind(kind) for kind in ownership.event_kinds)
     result = CensoModeloFoundationResult(
@@ -321,7 +333,12 @@ def resolve_censo_modelo_work_unit_foundation(
     modelo: str,
     period: str,
 ) -> CensoModeloFoundationResult | None:
-    """Resolve a work-unit period through the censo foundation when it applies."""
+    """Resolve a work-unit period through the censo foundation when it applies.
+
+    Returns:
+        A :class:`CensoModeloFoundationResult` when the modelo is a censo modelo,
+        or ``None`` when the modelo is not registered as a censo modelo.
+    """
     ownership = _find_censo_modelo_ownership(modelo)
     if ownership is None:
         return None

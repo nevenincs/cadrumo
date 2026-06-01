@@ -87,7 +87,7 @@ def inspect_auth_acquisition_lock(
     *,
     now: datetime | None = None,
 ) -> AuthAcquisitionLockStatus:
-    """Return the current acquisition-lock health without mutating it."""
+    """Return the :class:`AuthAcquisitionLockStatus` describing the current acquisition-lock health without mutating it."""
     path = auth_acquisition_lock_path(settings, kind)
     reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     if not path.exists():
@@ -127,7 +127,11 @@ def clear_auth_acquisition_lock(
     *,
     reason: str = "operator-reset",
 ) -> AuthAcquisitionLockStatus:
-    """Remove the acquisition lock and return the pre-reset status."""
+    """Remove the acquisition lock and return the pre-reset status.
+
+    Returns an :class:`AuthAcquisitionLockStatus` reflecting the state
+    observed immediately before the file was removed.
+    """
     status = inspect_auth_acquisition_lock(settings, kind)
     if status.state is not AuthAcquisitionLockState.ABSENT:
         _remove_lock_file(status.path)
@@ -149,6 +153,8 @@ def acquire_auth_acquisition_lock(
     operation: str = "auth-login",
 ) -> Iterator[AuthAcquisitionLockRecord]:
     """Acquire a crash-recoverable auth lock or raise a typed conflict.
+
+    Yields an :class:`AuthAcquisitionLockRecord` while the lock is held.
 
     Stale/corrupt locks are removed automatically before a second
     atomic-create attempt. A live lock is never waited on or retried:

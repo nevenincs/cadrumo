@@ -42,7 +42,11 @@ class BucketEventHistoryRepository:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the secure-object backend used by this catalogue."""
+        """Return the secure-object backend used by this catalogue.
+
+        Returns:
+            The :class:`SecureObjectRepository` backing this repository.
+        """
         return self._objects
 
     def exists(self) -> bool:
@@ -82,7 +86,7 @@ class BucketEventHistoryRepository:
         self._objects.save_many((self.to_secure_object_write(catalogue),))
 
     def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
-        """Return the secure-object upsert for ``catalogue`` without committing it."""
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 
@@ -103,7 +107,7 @@ class BucketEventHistoryRepository:
 
 
 def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEvent) -> BucketEventHistoryCatalogue:
-    """Return a new catalogue with ``event`` inserted.
+    """Return a new :class:`BucketEventHistoryCatalogue` with ``event`` inserted.
 
     Content-addressed: a re-emission with identical content collapses
     to the same ``event_id`` and the existing entry is left in place.

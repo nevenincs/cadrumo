@@ -35,7 +35,7 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
         ...
 
     def load(self) -> WorkUnitCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent."""
+        """Return the persisted :class:`WorkUnitCatalogue` or an empty catalogue if absent."""
         ...
 
     def save(self, catalogue: WorkUnitCatalogue) -> None:
@@ -63,7 +63,11 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         ...
 
     def load(self) -> CalculationRevisionCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent."""
+        """Return the persisted catalogue or an empty catalogue if absent.
+
+        Returns:
+            The :class:`CalculationRevisionCatalogue` loaded from storage.
+        """
         ...
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
@@ -91,7 +95,7 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
         ...
 
     def load(self) -> ModeloRecordCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent."""
+        """Return the persisted :class:`ModeloRecordCatalogue` or an empty catalogue if absent."""
         ...
 
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
@@ -119,7 +123,11 @@ class VerificationReportCatalogueRepositoryProtocol(Protocol):
         ...
 
     def load(self) -> VerificationReportCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent."""
+        """Return the persisted catalogue or an empty catalogue if absent.
+
+        Returns:
+            The :class:`VerificationReportCatalogue` loaded from storage.
+        """
         ...
 
     def save(self, catalogue: VerificationReportCatalogue) -> None:

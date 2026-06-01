@@ -60,7 +60,7 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
             bucket.
 
     Returns:
-        A frozen `WrappedDek` record carrying nonce, ciphertext, and
+        A frozen :class:`WrappedDek` record carrying nonce, ciphertext, and
         tag.
 
     Raises:

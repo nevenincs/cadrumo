@@ -20,7 +20,7 @@ def select_revision(
     on: date | None = None,
     revision_id: str | None = None,
 ) -> ModeloRevision:
-    """Select exactly one revision for a filing period."""
+    """Select exactly one :class:`ModeloRevision` for a filing period."""
     candidates = []
     for revision in modelo.revisions.values():
         if revision_id is not None and revision.id != revision_id:

@@ -120,7 +120,7 @@ def parse_edit_clause(raw: str) -> EditClause:
 
 
 def parse_edit_clauses(raw: Iterable[str]) -> tuple[EditClause, ...]:
-    """Parse a sequence of ``--set`` strings, preserving input order."""
+    """Parse a sequence of ``--set`` strings into :class:`EditClause` records, preserving input order."""
     return tuple(parse_edit_clause(item) for item in raw)
 
 
@@ -330,7 +330,11 @@ class LedgerEditSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerEditSpec:
-        """Parse ``--set`` arguments into a typed ledger spec."""
+        """Parse ``--set`` arguments into a typed ledger spec.
+
+        Returns a :class:`LedgerEditSpec` with fields populated from the
+        parsed ``key=value`` clause strings.
+        """
         clauses = parse_edit_clauses(raw)
         valid = {member.value for member in LedgerEditKey}
         _ensure_known_keys(clauses, scope="ledger", allowed=valid)
@@ -410,7 +414,7 @@ class InvoiceEditSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> InvoiceEditSpec:
-        """Parse ``--set`` arguments into a typed invoice spec."""
+        """Parse ``--set`` arguments into a typed :class:`InvoiceEditSpec`."""
         clauses = parse_edit_clauses(raw)
         valid = {member.value for member in InvoiceEditKey}
         _ensure_known_keys(clauses, scope="invoice", allowed=valid)
@@ -504,7 +508,7 @@ class DeclaracionEditSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> DeclaracionEditSpec:
-        """Parse ``--set`` arguments into a typed declaration spec."""
+        """Parse ``--set`` arguments into a typed :class:`DeclaracionEditSpec`."""
         clauses = parse_edit_clauses(raw)
         _ensure_unique_keys(clauses, scope="declaration")
         casilla_edits: dict[str, Decimal] = {}

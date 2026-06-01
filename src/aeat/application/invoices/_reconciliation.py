@@ -65,8 +65,9 @@ def reconcile_invoice_catalogues(
             catalogues before returning.
 
     Returns:
-        A typed result containing suggestions, mutated catalogues when
-        applied, and every skipped suggestion with its backend reason.
+        An :class:`InvoiceReconciliationResult` containing suggestions,
+        mutated catalogues when applied, and every skipped suggestion with
+        its backend reason.
     """
     suggestions = suggest_reconciliations(invoices, transactions)
     if not apply or not suggestions:
@@ -122,7 +123,7 @@ def reconcile_invoice_repositories(
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceReconciliationResult:
-    """Reconcile persisted invoice and transaction catalogues.
+    """Reconcile persisted invoice and transaction catalogues and return an :class:`InvoiceReconciliationResult`.
 
     This is the CLI-facing backend workflow. It owns catalogue loading,
     optional mutation, and persistence so entrypoints can remain a thin

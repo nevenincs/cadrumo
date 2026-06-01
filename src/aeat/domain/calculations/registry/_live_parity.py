@@ -245,6 +245,9 @@ class LiveParityCatalogue:
         does not include the requested context. Production lookups never
         return test-environment-only oracles; test-environment lookups never
         return production-only oracles.
+
+        Returns:
+            The :class:`LiveParityOracle` registered under ``oracle_id``.
         """
         try:
             oracle = self._oracles[oracle_id]
@@ -266,7 +269,11 @@ class LiveParityCatalogue:
         return oracle
 
     def environment_of(self, oracle_id: str) -> OracleEnvironment:
-        """Return the declared environment of a registered oracle."""
+        """Return the declared environment of a registered oracle.
+
+        Returns:
+            The :class:`OracleEnvironment` declared for ``oracle_id``.
+        """
         try:
             return self._environments[oracle_id]
         except KeyError as exc:
@@ -295,6 +302,9 @@ def build_planned_operations(
     A thin wrapper that lets callers obtain the plan without invoking the
     verification flow, useful for static-analysis tests that assert no
     oracle declares a forbidden operation under any policy.
+
+    Returns:
+        Tuple of :class:`RemoteOperation` steps planned by the oracle.
     """
     operations = oracle.planned_operations(payload, expected=expected)
     if not isinstance(operations, tuple):
@@ -309,7 +319,7 @@ def pre_flight_oracle_operations(
     *,
     expected: Mapping[str, object],
 ) -> tuple[RemoteOperation, ...]:
-    """Pre-flight every planned operation through the remote-state guard.
+    """Pre-flight every planned :class:`RemoteOperation` through the remote-state guard.
 
     Returns the validated operation tuple if every operation is allowed.
     Raises :class:`RegistryValidationError` on the first refused operation;
@@ -334,10 +344,10 @@ def evaluate_planned_operations(
     *,
     expected: Mapping[str, object],
 ) -> ParityResult | tuple[RemoteOperation, ...]:
-    """Evaluate planned operations against the policy without raising.
+    """Evaluate planned :class:`RemoteOperation` items against the policy without raising.
 
     Returns either a ``blocked``-verdict :class:`ParityResult` (when any
-    planned operation is rejected) or the validated operation tuple itself.
+    planned operation is rejected) or the validated :class:`RemoteOperation` tuple itself.
     Callers that prefer an exception-free interface use this; tests and
     dry-runs use it to inspect blocked verdicts.
     """
@@ -457,6 +467,9 @@ def resolve_cross_reference_oracle(
     the binding is not applicable to the profile. Callers that don't
     thread profile facts (legacy adapters, the audit) keep the old
     catalogue-only resolution path by omitting both arguments.
+
+    Returns:
+        The :class:`LiveParityOracle` bound to the cross-reference.
     """
     if oracle_id is None:
         raise RegistryValidationError(f"cross-reference {cross_reference_id!r} has no oracle binding to resolve")
@@ -539,7 +552,7 @@ class CrossReferenceApplicabilityDeclaracion(_ParityModel):
 def collect_applicability_declarations(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[CrossReferenceApplicabilityDeclaracion, ...]:
-    """Surface every cross-reference that declares applicability predicates.
+    """Return :class:`CrossReferenceApplicabilityDeclaracion` items for every cross-reference with predicates.
 
     Pure registry-data introspection: never reads profile facts, never
     invokes the evaluator. Cross-references with no predicates are

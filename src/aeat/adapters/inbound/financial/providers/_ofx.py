@@ -83,7 +83,11 @@ class OfxProvider(FinancialProvider):
     provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that the OFX file can be parsed and carries at least one transaction."""
+        """Validate that the OFX file can be parsed and carries at least one transaction.
+
+        Returns:
+            A :class:`ProviderValidation` with the validation outcome.
+        """
         try:
             accounts = self._load_accounts(path)
         except InvalidFinancialSourceError as exc:
@@ -107,7 +111,7 @@ class OfxProvider(FinancialProvider):
         )
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from every OFX account statement."""
+        """Yield strict :class:`RawTransaction` records from every OFX account statement."""
         _logger.debug("ofx_provider ingest: loading %s", path.name)
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)

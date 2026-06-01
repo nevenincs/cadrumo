@@ -49,10 +49,11 @@ def strip_javascript(pdf: Pdf) -> tuple[ScrubbedSurface, ScrubbedSurface, Scrubb
         pdf: An open PDF whose JavaScript surfaces should be wiped.
 
     Returns:
-        A 3-tuple of ``(javascript, open_action, additional_actions)``
-        counters. ``javascript`` covers the ``Root.Names.JavaScript``
-        name tree; ``open_action`` covers ``Root.OpenAction``;
-        ``additional_actions`` covers ``Root.AA`` plus per-page ``AA``.
+        A 3-tuple of :class:`ScrubbedSurface` counters
+        ``(javascript, open_action, additional_actions)``. ``javascript``
+        covers the ``Root.Names.JavaScript`` name tree; ``open_action``
+        covers ``Root.OpenAction``; ``additional_actions`` covers ``Root.AA``
+        plus per-page ``AA``.
     """
     js_count = 0
     names = pdf.Root.get("/Names")
@@ -141,14 +142,11 @@ def strip_acroform(
             value) entries on every field while preserving the form.
 
     Returns:
-        A 2-tuple ``(counter, warnings)``. The counter records the
-        number of fields whose values were cleared (or 1 when the
-        form was dropped wholesale). The warnings tuple includes
-        ``unknown_surface_present`` when a hierarchical form
-        (``/Kids`` chains) is detected — the inherited values
-        require a recursive walk this version does not implement,
-        and the operator should review or pass
-        ``drop_entirely=True``.
+        A 2-tuple ``(counter, warnings)``. The counter is a :class:`ScrubbedSurface`
+        recording the number of fields whose values were cleared (or 1 when the
+        form was dropped wholesale). The warnings tuple contains
+        :class:`SanitizationWarning` entries, including ``unknown_surface_present``
+        when a hierarchical form (``/Kids`` chains) is detected.
     """
     acroform = pdf.Root.get("/AcroForm")
     if acroform is None:

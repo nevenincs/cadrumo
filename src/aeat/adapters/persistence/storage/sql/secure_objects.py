@@ -279,7 +279,7 @@ class SecureObjectRepository:
 
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
-        """Return the namespace registry bound to this repository, if any."""
+        """Return the :class:`StorageHierarchyRegistry` bound to this repository, if any."""
         return self._namespace_registry
 
     def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
@@ -427,7 +427,7 @@ class SecureObjectRepository:
             return row_id is not None
 
     def iter_all_records_raw(self, *, batch_size: int = 256) -> Iterator[SecureObjectRawRow]:
-        """Yield every stored row as `SecureObjectRawRow` without decryption.
+        """Yield every stored row as a :class:`SecureObjectRawRow` without decryption.
 
         Walks every row in `secure_objects` ordered by `(namespace, object_key)`
         without attempting to decrypt the payload. The query bypasses
@@ -535,8 +535,8 @@ class SecureObjectRepository:
         recovered (for example, restored from a recovery key backup).
 
         Returns:
-            A :class:`SecureObjectIntegrityReport`-shaped summary
-            describing how many rows were quarantined per namespace.
+            A tuple of :class:`SecureObjectNamespaceIntegrity` records describing
+            how many rows were quarantined per namespace.
         """
         self._ensure_quarantine_table()
         with session_scope(self._engine) as session:
@@ -626,7 +626,7 @@ class SecureObjectRepository:
         return tuple(per_namespace)
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        """Count decryptable vs undecryptable rows in ``namespace``.
+        """Count decryptable vs undecryptable rows in ``namespace`` and return a :class:`SecureObjectNamespaceIntegrity`.
 
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key
@@ -661,7 +661,7 @@ class SecureObjectRepository:
         )
 
     def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
-        """Yield row-level decryptability metadata for one namespace.
+        """Yield :class:`SecureObjectDecryptabilityRow` metadata for one namespace.
 
         This is the row-level companion to :meth:`probe_namespace_integrity`.
         It decrypts only to validate the AEAD tag, never returns plaintext, and
@@ -747,7 +747,7 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> Iterator[SecureObjectRecord]:
-        """Yield every object under ``namespace`` or fail on unreadable rows.
+        """Yield every :class:`SecureObjectRecord` under ``namespace`` or fail on unreadable rows.
 
         The default listing path is fail-closed: it first walks the
         namespace through :meth:`iter_records_with_failures`, and if any
@@ -932,7 +932,7 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> SecureObjectRecord | None:
-        """Load and decrypt one object, returning ``None`` when absent."""
+        """Load and decrypt one :class:`SecureObjectRecord`, returning ``None`` when absent."""
         self._check_session_freshness()
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
@@ -1300,7 +1300,7 @@ class SecureObjectRepository:
         return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
 
     def peek_metadata(self, namespace: str, object_key: str) -> SecureObjectMetadata | None:
-        """Return row-level metadata for one object without decrypting it.
+        """Return :class:`SecureObjectMetadata` for one object without decrypting it.
 
         Returns ``None`` when no row matches. Never decrypts the payload
         column; callers use this to fingerprint an envelope they intend

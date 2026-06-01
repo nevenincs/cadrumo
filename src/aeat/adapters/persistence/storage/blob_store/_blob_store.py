@@ -319,7 +319,7 @@ class EncryptedBlobStore:
         )
 
     def iter_manifests(self) -> Iterator[BlobManifest]:
-        """Yield the manifest of every blob currently persisted.
+        """Yield the :class:`BlobManifest` of every blob currently persisted.
 
         The walk is shallow: only the canonical
         ``blobs/<hex[:2]>/<hex>.manifest.json`` files are visited.

@@ -102,7 +102,7 @@ class OpenAIAdapter(_ProviderAdapter):
             request: Normalized provider request.
 
         Returns:
-            Normalized completion with the first choice's trimmed text and
+            A :class:`ProviderCompletion` with the first choice's trimmed text and
             reported token counts.
 
         Raises:

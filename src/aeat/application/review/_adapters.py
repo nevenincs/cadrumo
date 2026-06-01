@@ -101,6 +101,8 @@ def transactions_low_confidence(
     accepted at confidence 0.4 — both warrant attention. Transactions
     with ``None`` confidence are excluded because they have no claim
     to filter against.
+
+    Each element in the returned tuple is a :class:`TransactionReviewItem`.
     """
     if catalogue is None:
         catalogue = _load_transactions(settings, bucket_id=bucket_id)

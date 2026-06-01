@@ -316,7 +316,8 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
         settings: Optional :class:`aeat.core.config.Settings` override.
 
     Yields:
-        ``(run_id, trace)`` pairs in newest-first order.
+        ``(run_id, trace)`` pairs in newest-first order, where each
+        trace is a :class:`RunTrace` loaded from the run directory.
     """
     base = runs_dir(settings)
     pairs: list[tuple[str, RunTrace]] = []

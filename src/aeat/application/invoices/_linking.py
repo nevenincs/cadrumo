@@ -45,7 +45,7 @@ def link_invoice_transaction_catalogues(
     invoice_id: str,
     transaction_id: str,
 ) -> InvoiceTransactionLinkResult:
-    """Return catalogues where the invoice and transaction cite each other."""
+    """Return an :class:`InvoiceTransactionLinkResult` with catalogues where the invoice and transaction cite each other."""
     canonical_transaction_id = _canonical_transaction_id(transactions, transaction_id)
     updated_invoices = link_transaction(invoices, invoice_id, canonical_transaction_id)
     updated_transactions = link_invoice(transactions, canonical_transaction_id, invoice_id)
@@ -69,7 +69,11 @@ def link_invoice_transaction_repositories(
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceTransactionLinkResult:
-    """Persist a bidirectional invoice link through the backend repositories."""
+    """Persist a bidirectional invoice link through the backend repositories.
+
+    Returns an :class:`InvoiceTransactionLinkResult` with the updated
+    invoice and transaction catalogues after the link is written.
+    """
     invoices_repo = invoice_repository or InvoiceCatalogueRepository()
     transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = link_invoice_transaction_catalogues(

@@ -99,7 +99,7 @@ def resolve_modelo_100_borrador_bindings(
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None = None,
 ) -> Modelo100BorradorBindingResult:
-    """Resolve eligible borrador values for one Modelo 100 calculation.
+    """Resolve eligible borrador values into a :class:`Modelo100BorradorBindingResult` for one Modelo 100 calculation.
 
     The function is deliberately inert when no snapshot is supplied:
     borrador values are never consumed implicitly. When a snapshot is

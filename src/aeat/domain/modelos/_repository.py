@@ -121,7 +121,7 @@ class WorkUnitCatalogueRepository:
 
 
 def upsert_work_unit(catalogue: WorkUnitCatalogue, unit: WorkUnit) -> WorkUnitCatalogue:
-    """Return a new catalogue with ``unit`` inserted or replaced.
+    """Return a new :class:`WorkUnitCatalogue` with ``unit`` inserted or replaced.
 
     The input catalogue is not mutated. The returned catalogue
     carries the same work units as the input plus ``unit`` at its
@@ -138,6 +138,9 @@ def remove_work_unit(catalogue: WorkUnitCatalogue, work_unit_id: str) -> WorkUni
 
     Removing an absent id is a no-op that returns a value-equal
     catalogue. The original is not mutated.
+
+    Returns:
+        A :class:`WorkUnitCatalogue` without the given work unit.
     """
     if work_unit_id not in catalogue.work_units:
         return catalogue

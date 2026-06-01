@@ -233,7 +233,7 @@ class AeatSection(_Frozen):
 
     @cached_property
     def pre303(self) -> AeatPre303Surface:
-        """Return the strict-validated Pre303 / IVA-wallet surface.
+        """Return the strict-validated :class:`AeatPre303Surface` (Pre303 / IVA-wallet surface).
 
         Validation is deferred to first access so a malformed or absent
         ``[aeat.pre303]`` block cannot break registry parsing for the

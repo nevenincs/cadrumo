@@ -91,6 +91,9 @@ def resolve_per_modelo_registry_binding_values(
     aggregation. Other modelos return an empty resolution unless their
     revision declares canonical counterpart binding sources, in which case
     refusing is safer than pretending a provider exists.
+
+    Returns a :class:`PerModeloRegistryBindingResolution` with resolved
+    binding values, row values, and casilla values.
     """
     result = aggregate_per_modelo(command)
     counterpart_sources = _counterpart_binding_sources(revision)
