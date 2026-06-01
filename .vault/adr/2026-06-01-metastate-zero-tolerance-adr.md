@@ -5,6 +5,7 @@ tags:
 date: '2026-06-01'
 related:
   - "[[2026-05-31-coverage-canonicalisation-audit]]"
+  - "[[2026-06-01-metastate-zero-tolerance-research]]"
 ---
 
 # `metastate-zero-tolerance` adr: no migration-progress state in production code | (**status:** `accepted`)
