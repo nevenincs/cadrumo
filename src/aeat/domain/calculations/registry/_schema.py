@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ....core._tax_domain import TaxDomain
 from ....core.aggregation import AggregationSourceKind, PeriodKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from ....core.decimal import coerce_decimal
@@ -2476,7 +2477,7 @@ class ModeloDefinition(RegistryModel):
     id: ModeloId
     title: str
     official_name: str
-    tax_domain: str
+    tax_domain: Annotated[TaxDomain, BeforeValidator(lambda v: TaxDomain(v) if isinstance(v, str) else v)]
     cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
     jurisdiction: Literal["ES-AEAT"]
     calculation_class: CalculationClass = "filing"

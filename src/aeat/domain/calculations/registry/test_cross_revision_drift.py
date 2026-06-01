@@ -87,7 +87,7 @@ def _modelo(
         "id": modelo_id,
         "title": f"Modelo {modelo_id}",
         "official_name": f"Modelo {modelo_id}",
-        "tax_domain": "test",
+        "tax_domain": "iva",
         "cadence": "annual",
         "jurisdiction": "ES-AEAT",
         "legal_refs": ("ley-58-2003:art-29",),
@@ -111,7 +111,7 @@ def _write_continuity_modelo_directory(
 id = "999"
 title = "Continuity test"
 official_name = "Continuity test"
-tax_domain = "test"
+tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 legal_refs = ["ley-58-2003:art-29"]
