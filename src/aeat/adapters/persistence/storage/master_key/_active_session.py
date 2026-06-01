@@ -114,6 +114,31 @@ def has_active_bucket_session() -> bool:
     return _active_session.get() is not None
 
 
+def _close_active_session_at_exit() -> None:
+    """Best-effort close of the active session on interpreter shutdown.
+
+    Registered as an :func:`atexit.register` hook below. If a session is
+    still bound when the interpreter exits (an interrupted CLI run, a
+    crashed test, a long-lived REPL) this hook zeroises the key
+    buffers in place so the memory footprint at shutdown does not leak
+    cleartext key material.
+    """
+    session = _active_session.get()
+    if session is None:
+        return
+    try:
+        session.close()
+    except Exception:
+        # Interpreter shutdown is a degraded environment; never raise
+        # from an atexit hook.
+        return
+
+
+import atexit as _atexit
+
+_atexit.register(_close_active_session_at_exit)
+
+
 __all__ = [
     "NoActiveBucketSessionError",
     "activate_session",
