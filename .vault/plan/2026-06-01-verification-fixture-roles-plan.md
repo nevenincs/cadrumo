@@ -101,27 +101,27 @@ Add explicit provenance (real_corpus|synthetic_generated) and role (parser_ancho
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Stamp provenance=synthetic_generated and role=formula_verification into the synthetic fixture sidecar writer _write_sidecar; `src/aeat/tests/fixtures/justificantes/_generate.py`.
-- [ ] `P01.S02` - Stamp provenance=real_corpus and role=parser_anchor in the real sanitiser manifest writer so sanitised real specimens self-declare their provenance; `src/aeat/adapters/inbound/sanitizer/_records.py`.
+- [x] `P01.S01` - Stamp provenance=synthetic_generated and role=formula_verification into the synthetic fixture sidecar writer _write_sidecar; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [x] `P01.S02` - Real-fixture provenance is set at fixture-authoring time (the P02 backfill stamps committed real sidecars; `future real specimens are stamped when added) — the production PDF sanitiser is intentionally NOT modified, since a test-fixture role on a production frozen model violates the architecture-boundaries rule; the convention is captured by the codified rule; `src/aeat/adapters/inbound/sanitizer/_records.py`.
 
 ### Phase `P02` - backfill committed sidecars
 
 Backfill provenance/role into every committed fixture sidecar: real_corpus/parser_anchor for the real specimens (M100, M111, M190, M390/2021), synthetic_generated/formula_verification for the rest.
 
-- [ ] `P02.S06` - Backfill provenance/role into every committed fixture sidecar under the justificantes tree: real_corpus/parser_anchor for the real specimens (M100, M111, M190, M390/2021), synthetic_generated/formula_verification for the rest; regenerate synthetic sidecars via the generator and hand-stamp the real ones; `src/aeat/tests/fixtures/justificantes`.
+- [x] `P02.S06` - Backfill provenance/role into every committed fixture sidecar under the justificantes tree: real_corpus/parser_anchor for the real specimens (M100, M111, M190, M390/2021), synthetic_generated/formula_verification for the rest; `regenerate synthetic sidecars via the generator and hand-stamp the real ones; `src/aeat/tests/fixtures/justificantes`.
 
 ### Phase `P03` - gate rewrite
 
 Make the verification-source gate per-fixture: read each sidecar's declared provenance and cross-check it against the physical /Producer evidence; delete the _REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS allowlist.
 
-- [ ] `P03.S03` - Rewrite the verification-source gate to read each fixture's sidecar provenance and assert it agrees with the physical /Producer (synthetic must carry the signature, real must not); `delete _REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS; `src/aeat/domain/calculations/registry/test_verification_source_fixture_metadata.py`.
+- [x] `P03.S03` - Rewrite the verification-source gate to read each fixture's sidecar provenance and assert it agrees with the physical /Producer (synthetic must carry the signature, real must not); `delete _REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS; `src/aeat/domain/calculations/registry/test_verification_source_fixture_metadata.py`.
 
 ### Phase `P04` - verify and codify
 
 Prove the M390 mixed pool passes allowlist-free with both the verification-source gate and the corpus-roundtrip test green, then promote the fixture-provenance-declared-in-sidecar rule.
 
-- [ ] `P04.S04` - Run the gate battery green allowlist-free: verification-source gate + corpus-sidecar roundtrip; `confirm the M390 mixed pool (real 2021 + synthetic 2022/2023) passes both; `src/aeat/domain/calculations/registry/test_verification_source_fixture_metadata.py`.
-- [ ] `P04.S05` - Codify the fixture-provenance-declared-in-sidecar rule via vaultspec-core spec rules add (provenance declared in sidecar; `gates read sidecar + cross-check physical evidence; no hardcoded per-fixture exception allowlists); `.vaultspec/rules/rules/project/fixture-provenance-declared-in-sidecar.md`.
+- [x] `P04.S04` - Run the gate battery green allowlist-free: verification-source gate + corpus-sidecar roundtrip; `confirm the M390 mixed pool (real 2021 + synthetic 2022/2023) passes both; `src/aeat/domain/calculations/registry/test_verification_source_fixture_metadata.py`.
+- [x] `P04.S05` - Codify the fixture-provenance-declared-in-sidecar rule via vaultspec-core spec rules add (provenance declared in sidecar; `gates read sidecar + cross-check physical evidence; no hardcoded per-fixture exception allowlists); `.vaultspec/rules/rules/project/fixture-provenance-declared-in-sidecar.md`.
 
 ## Description
 
