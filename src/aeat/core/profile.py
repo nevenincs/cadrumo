@@ -201,6 +201,17 @@ class SetupAnswers(BaseModel):
     taxation_type: Any = ""
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
+    @field_validator("output_language", mode="before")
+    @classmethod
+    def _coerce_output_language(cls, value: object) -> OutputLanguage:
+        if isinstance(value, OutputLanguage):
+            return value
+        if isinstance(value, str):
+            return OutputLanguage(value)
+        raise ProfileAnswerTypeError(
+            translated_message="core.profile.errors.output_language_type",
+        )
+
     # ── taxpayer type (three-axis taxpayer model) ────────────────────────
     entity_type: Any = ""
     legal_entity_form: Any = ""
