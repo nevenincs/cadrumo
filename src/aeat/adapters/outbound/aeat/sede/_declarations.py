@@ -71,7 +71,7 @@ from .....domain.calculations.registry import (
     resolve_previous_filing_binding_values,
     resolve_relation_values_from_observations,
 )
-from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
+from ....inbound.declaracion import DeclaracionParseError, parse_declaracion, parse_declaracion_bytes
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import normalize_response_text
@@ -1457,15 +1457,42 @@ def _observed_casillas_from_declaration_pdf(
     declaration: Declaracion,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
+    # bbox_anchored extraction profiles require word-position data that
+    # pdfplumber can only retrieve from a real file path. When the
+    # selected modelo's declaracion_pdf profile uses bbox anchors, route
+    # the bytes through a temporary file so the parser can load word
+    # positions; otherwise the bytes-only path is sufficient.
+    needs_word_positions = any(
+        any(target.match_strategy == "bbox_anchored" for target in profile.target_casillas)
+        for profile in snapshot.extraction_profiles.values()
+        if profile.surface == "declaracion_pdf"
+    )
     try:
-        filing = parse_declaracion_bytes(
-            body,
-            source_label=f"secure declaration PDF {declaration.expediente_id}",
-            modelo_override=declaration.modelo,
-            año_override=declaration.ejercicio,
-            period_override=declaration.period,
-            registry_snapshot=snapshot,
-        )
+        if needs_word_positions:
+            import tempfile
+
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                tmp.write(body)
+                tmp_path = Path(tmp.name)
+            try:
+                filing = parse_declaracion(
+                    tmp_path,
+                    modelo_override=declaration.modelo,
+                    año_override=declaration.ejercicio,
+                    period_override=declaration.period,
+                    registry_snapshot=snapshot,
+                )
+            finally:
+                tmp_path.unlink(missing_ok=True)
+        else:
+            filing = parse_declaracion_bytes(
+                body,
+                source_label=f"secure declaration PDF {declaration.expediente_id}",
+                modelo_override=declaration.modelo,
+                año_override=declaration.ejercicio,
+                period_override=declaration.period,
+                registry_snapshot=snapshot,
+            )
     except DeclaracionParseError as exc:
         raise SedeParseError(
             f"declaration PDF for {declaration.expediente_id!r} did not yield registry casilla observations"
