@@ -32,6 +32,7 @@ from pydantic import ValidationError
 
 from ._calc_sheets_pull import (
     BindingEdit,
+    MetadataMatchState,
     OperatorEdit,
     PullMetadata,
     PullResult,
@@ -122,7 +123,7 @@ def _populated_pull_result() -> PullResult:
             registry_sha="0123456789abcdef" * 4,  # 64-char SHA shape
             exported_at="2025-04-15T10:30:00+00:00",
         ),
-        metadata_match="matches",
+        metadata_match=MetadataMatchState.MATCHES,
         cells_read=42,
     )
 
