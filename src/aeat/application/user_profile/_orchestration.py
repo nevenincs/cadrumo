@@ -588,6 +588,9 @@ def rename_profile(
     This function is a thin coordinator: the cross-store label write —
     record AND manifest — lives solely in :meth:`ProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
+
+    Returns the updated :class:`UserProfileRecord` after the label change
+    is persisted.
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     aggregate = repository.rename(profile_id, new_label=new_label)
