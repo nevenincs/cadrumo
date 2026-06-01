@@ -640,6 +640,7 @@ cli:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
         group_help: Libros de existencias por actividad, movimientos y valoración
+        iva_rate_help: Tipo de IVA en porcentaje
         list_help: Lista los libros de existencias del bucket activo
         movement_add_help: Añade un movimiento de compra, venta o ajuste al libro
         movement_date_help: Fecha del movimiento (AAAA-MM-DD)
@@ -655,7 +656,6 @@ cli:
         valuation_method_help: Método de valoración (fifo o pmp)
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
         year_help: Ejercicio fiscal
-        iva_rate_help: 'Tipo de IVA en porcentaje'
       payable_invoice:
         add_help: Registra una nueva factura pagable
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
@@ -1574,7 +1574,7 @@ cli:
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
       help: Initialize a new active profile and config bucket.
-      iva_regime_help: 'IVA regime (general, simplificado, exento, etc.)'
+      iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
@@ -2616,6 +2616,7 @@ cli:
 core:
   profile:
     errors:
+      output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
@@ -2957,6 +2958,15 @@ errors:
       o es inconsistente.
     error_financial_invoices_invoice_link: No se pudo enlazar la factura con la transacción.
     error_financial_invoices_invoice_not_found: No se encontró la factura solicitada.
+    error_financial_iva: Se produjo un error en el cálculo del IVA.
+    error_financial_iva_catalogue: El catálogo de IVA no se pudo cargar, resolver
+      o validar.
+    error_financial_iva_category_not_found: No se encontró la categoría de IVA solicitada
+      en el catálogo.
+    error_financial_iva_classification: No se pudo clasificar el IVA de forma determinista.
+    error_financial_iva_rate_not_found: No se encontró un tipo de IVA para el estado
+      miembro y el tipo solicitados.
+    error_financial_iva_rate_overlap: Dos tipos de IVA comparten una ventana de vigencia.
     error_financial_provider: Se produjo un error al importar el documento financiero.
     error_financial_provider_config: Una subclase de proveedor financiero tiene declaraciones
       de atributos de corpus inválidas o faltantes.
@@ -2968,6 +2978,12 @@ errors:
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
     error_invoice_validation: Un registro de factura no superó la validación.
+    error_iva_prorrata: Se produjo un error en el cálculo de la prorrata del IVA.
+    error_iva_prorrata_input: Los datos de entrada de la prorrata del IVA infringen
+      sus invariantes.
+    error_iva_prorrata_sector: Los datos de separación sectorial de la prorrata del
+      IVA son inconsistentes.
+    error_iva_validation: Un valor del IVA no es válido.
     error_justificante: Se produjo un error relacionado con el justificante.
     error_justificante_csv_not_found: El PDF no contiene un Código Seguro de Verificación.
     error_llm: Se produjo un error en el modelo de lenguaje.
@@ -3081,16 +3097,6 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
-    error_financial_iva_rate_not_found: 'No se encontró un tipo de IVA para el estado miembro y el tipo solicitados.'
-    error_financial_iva_rate_overlap: 'Dos tipos de IVA comparten una ventana de vigencia.'
-    error_financial_iva: 'Se produjo un error en el cálculo del IVA.'
-    error_financial_iva_catalogue: 'El catálogo de IVA no se pudo cargar, resolver o validar.'
-    error_financial_iva_category_not_found: 'No se encontró la categoría de IVA solicitada en el catálogo.'
-    error_financial_iva_classification: 'No se pudo clasificar el IVA de forma determinista.'
-    error_iva_prorrata: 'Se produjo un error en el cálculo de la prorrata del IVA.'
-    error_iva_prorrata_input: 'Los datos de entrada de la prorrata del IVA infringen sus invariantes.'
-    error_iva_prorrata_sector: 'Los datos de separación sectorial de la prorrata del IVA son inconsistentes.'
-    error_iva_validation: 'Un valor del IVA no es válido.'
   fail:
     censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -3151,8 +3157,8 @@ errors:
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
-    fail_sede_censo_parse: Un valor de la página del censo de la Sede de la AEAT
-      no se pudo interpretar.
+    fail_sede_censo_parse: Un valor de la página del censo de la Sede de la AEAT no
+      se pudo interpretar.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
       de la AEAT falló o el archivo no es válido.
     fail_sede_parse: No se pudo interpretar la página capturada de la Sede de la AEAT.
@@ -3349,8 +3355,8 @@ errors:
       perfil.
     censo_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
       sobre una unidad dependiente. Resuelve primero el estado pendiente.
-    censo_field_validation: El censo de la AEAT devolvió un valor que el esquema
-      no admite. Revisa el campo indicado con tu asesor.
+    censo_field_validation: El censo de la AEAT devolvió un valor que el esquema no
+      admite. Revisa el campo indicado con tu asesor.
     censo_not_available: La AEAT no devolvió ningún censo legible. Es posible que
       no estés dado de alta en el IAE o que tu certificado no esté registrado a tu
       NIF.
@@ -3360,9 +3366,9 @@ errors:
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
       no admite más operaciones.
-    modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo
-      después de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve
-      a generarlo con el censo actual.'
+    modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
+      de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
+      con el censo actual.'
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
       del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
     modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea

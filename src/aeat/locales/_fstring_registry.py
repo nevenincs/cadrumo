@@ -127,7 +127,12 @@ def get_registered_keys() -> set[str]:
 
 
 def get_registrations() -> tuple[FStringKeyRegistration, ...]:
-    """Return the current registration tuple for inspection and testing."""
+    """Return the current registration tuple for inspection and testing.
+
+    Returns:
+        A tuple of every :class:`FStringKeyRegistration` built at import
+        time by :func:`_build_registrations`.
+    """
     return _build_registrations()
 
 
