@@ -9,7 +9,6 @@ related:
 
 # cross-domain-continuity Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 ## S212 — Euskera (eu) locale support (commit 61e29af2a)
 

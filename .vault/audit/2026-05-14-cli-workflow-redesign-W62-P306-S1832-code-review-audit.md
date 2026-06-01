@@ -12,8 +12,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
 # `cli-workflow-redesign` Code Review
 

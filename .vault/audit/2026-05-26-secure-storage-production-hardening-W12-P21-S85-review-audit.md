@@ -8,17 +8,10 @@ related:
   - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S85]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-production-hardening` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 S85-000 | NO FINDINGS | Secure-storage runtime rollout review found no actionable defects
 

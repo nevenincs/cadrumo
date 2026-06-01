@@ -11,7 +11,6 @@ related:
 
 # `cli-workflow-redesign` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 W01-P004-001 | INFO | Implementation ready for mandatory review
 The W01.P004 implementation added application and CLI real-behavior verification for the accepted apex roots. The new tests cover backend root-contract rejection, persisted auth bucket events, rejected alias refusal, and an end-to-end accepted-root journey through config init, config auth, ledger import, overview status, and review queue projection. Focused verification passed with the 73-test slice recorded in the W01.P004 exec record.

@@ -10,9 +10,7 @@ related:
 
 # `live-sync-backend` Code Review (Implementation Audit)
 
-<!-- Persistent log of audit findings appended below. -->
 
-<!-- Use: {TOPIC}-### | {LEVEL} | {Summary} \n {DESCRIPTION} format-->
 
 Decision: **PASS** — no CRITICAL or HIGH findings. Static checks: `ruff check` passes; `ruff format --check` passes.
 

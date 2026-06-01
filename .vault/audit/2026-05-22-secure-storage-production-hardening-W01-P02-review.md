@@ -11,7 +11,6 @@ related:
 
 # `secure-storage-production-hardening` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 W01P02-001 | HIGH | Missing bucket DEK can silently degrade to legacy key schedule
 

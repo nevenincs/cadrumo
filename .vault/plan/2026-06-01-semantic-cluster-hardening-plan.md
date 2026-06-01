@@ -10,72 +10,12 @@ related:
   - '[[2026-05-31-core-authority-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
 
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution-log artefact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
 
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorising documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
 
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
 
-<!-- VAULT PLAN CLI:
-     The `vault plan` CLI (vaultspec-core) is the canonical surface
-     for structural manipulation of this plan document. Writers and
-     executors MUST use `vault plan step add/insert/move/remove/
-     check/uncheck/toggle/edit`, `vault plan phase add/move/remove/
-     edit`, `vault plan wave add/move/remove/edit`, `vault plan epic
-     intent`, and `vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. See the
-     CLI ADR (2026-05-06-plan-hardening-adr) for the full
-     subcommand surface. -->
+
 
 # `semantic-cluster-hardening` `campaign` plan
 
@@ -154,7 +94,7 @@ Authors the blank exception-restructure ADR, deletes the unused DomainError unde
 
 Author the exception-restructure ADR and delete the unused DomainError under a safeguarded commit sequence.
 
-- [ ] `W04.P07.S16` - Author the exception-restructure ADR content; `.vault/adr/2026-05-09-exception-restructure-adr.md`.
+- [x] `W04.P07.S16` - Author the exception-restructure ADR content; `.vault/adr/2026-05-09-exception-restructure-adr.md`.
 - [ ] `W04.P07.S17` - Commit surrounding exception work as the safeguard checkpoint before deletion; `src/aeat/domain`.
 - [ ] `W04.P07.S18` - Delete the unused DomainError in its own clearly-messaged commit; `src/aeat/domain/_errors.py`.
 

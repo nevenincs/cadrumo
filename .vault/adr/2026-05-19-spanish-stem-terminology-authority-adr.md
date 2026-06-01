@@ -9,7 +9,6 @@ related:
   - "[[2026-05-19-code-duplication-sweep-adr]]"
 ---
 
-<!-- LINK RULES: wiki-links only in related field above. -->
 
 # spanish-stem-terminology-authority adr: Spanish Stem Terminology Authority for Tax-Domain Identifiers | (**status:** accepted)
 

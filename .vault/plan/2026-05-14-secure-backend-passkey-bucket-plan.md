@@ -61,11 +61,6 @@ integration suite (P10), then the user-facing documentation (P11).
 
 ## Steps
 
-<!-- Each Step row is followed by a "Step detail" block that captures
-     File targets, New surface, Existing code removed, Tests, and
-     Acceptance per the authorising brief. The row grammar follows
-     the plan-hardening CLI contract; the detail blocks supplement
-     it with the per-step contract this plan mandates. -->
 
 ### Phase `P01` - foundation pydantic v2 record set
 

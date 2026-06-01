@@ -10,11 +10,6 @@ related:
   - "[[2026-05-21-taxpayer-type-applicability-plan]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cross-domain-continuity` audit: `round-6 cross-domain continuity audit + systemic drift catalog`
 

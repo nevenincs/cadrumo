@@ -9,18 +9,10 @@ related:
   - '[[2026-05-06-calculation-truth-registry-exec]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `calculation-truth-registry` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 RENTA-SCENARIO-001 | LOW | Scenario runner must bind declared revision
 The initial scenario runner accepted a `revision` field but selected the registry

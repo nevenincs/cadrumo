@@ -8,8 +8,6 @@ related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
 # `aeat-vies-auth-tier` research: empirical findings on which AEAT auth tier unlocks which VIES surface
 

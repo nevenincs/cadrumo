@@ -1,15 +1,8 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/audit/ location)
-# Feature tag (replace codebase-solidification with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#audit'
   - '#codebase-solidification'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-06-01'
-# Related documents as quoted wiki-links
 related:
   - "[[2026-05-28-codebase-solidification-plan]]"
 ---

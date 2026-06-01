@@ -8,8 +8,6 @@ related:
   - '[[2026-05-05-calculation-truth-registry-phase2-step14-exec]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
 # `calculation-truth-registry` Code Review
 

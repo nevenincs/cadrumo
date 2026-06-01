@@ -11,7 +11,6 @@ related:
 
 # `cross-domain-continuity` Code Review
 
-<!-- Commit 4c239ed18 — #159 M714 Patrimonio Path-B refusal stub -->
 
 ## Status: PASS
 
@@ -76,4 +75,3 @@ No findings. The `_guard_stub_modelo` docstring is updated to include M714. Loca
 
 ---
 
-<!-- LOCALE-001 NOTE: ca.yml and hu.yml entries were added directly (not via scaffold CLI) — this matches the #161 pattern where the key is guard-only and does not appear in the scaffold baseline. Locale audit confirms missing=0; no structural hand-edits detected. -->

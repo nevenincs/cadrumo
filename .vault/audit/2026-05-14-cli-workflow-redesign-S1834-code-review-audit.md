@@ -10,20 +10,11 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline `code`: `src/module.py`. -->
 
 # `cli-workflow-redesign` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
-<!-- Use: {TOPIC}-### | {LEVEL} | {Summary} \n {DESCRIPTION} format-->
 
 S1834-001 | MEDIUM | Citation article misses bypass registry structured error logging
 `show_registry_citation` only wraps `find_reference` in the structured warning block, then calls `find_articulo` outside that block. A missing or invalid `--articulo` therefore raises `NormativeNotFoundError` without the S1834 registry service log fields such as `registry_service`, `registry_normative_id`, and `registry_articulo`, even though a missing normative id does emit them. This leaves one operator-facing citation lookup failure path outside the central registry logging contract.

@@ -1,16 +1,8 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/audit/ location)
-# Feature tag (replace selector-binding-drift-swarm with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#audit'
   - '#selector-binding-drift-swarm'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-16'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-research]]")
 related: []
 ---
 

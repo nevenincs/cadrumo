@@ -10,11 +10,6 @@ related:
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `dt-12-rescate-plan-pensiones` adr: DT 12a rescate plan pensiones capital reduccion | (**status:** `accepted`)
 

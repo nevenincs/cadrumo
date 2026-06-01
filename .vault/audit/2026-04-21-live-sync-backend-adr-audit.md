@@ -9,9 +9,7 @@ related:
 
 # `live-sync-backend` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
-<!-- Use: {TOPIC}-### | {LEVEL} | {Summary} \n {DESCRIPTION} format-->
 
 ADR-001 | LOW | Caching strategy detail
 The ADR mentions utilizing `StatusCache` for both features. `StatusCache` is JSON-backed and revalidates via Pydantic models. We need to ensure that parsing PDFs (if used) doesn't try to JSON-serialize binary data.

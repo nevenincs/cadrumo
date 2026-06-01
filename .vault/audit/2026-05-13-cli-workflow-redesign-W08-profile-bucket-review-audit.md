@@ -12,7 +12,6 @@ related:
 
 # `cli-workflow-redesign` `W08 profile bucket` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 W08-PROFILE-BUCKET-001 | RESOLVED | `WorkflowState.profiles` now stores strict profile bucket pointers only.
 

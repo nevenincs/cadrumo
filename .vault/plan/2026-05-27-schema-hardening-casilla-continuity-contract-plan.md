@@ -11,17 +11,7 @@ related:
   - '[[2026-05-20-registry-casilla-identity-research]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - The related: field carries the AUTHORISING documents (ADR, research,
-       reference, prior plan) for every Step in this plan. Steps inherit this
-       chain; per-row reference footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `schema-hardening` `casilla-continuity-contract` plan
 

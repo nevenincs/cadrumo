@@ -10,14 +10,7 @@ related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
   - "[[2026-05-06-live-parity-oracle-backend-research]]"
 ---
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `oracle-surface-compatibility` adr: `Reject oracle bindings whose surface_kind is incompatible with the cross-reference surface` | (**status:** `accepted`)
 

@@ -1,30 +1,15 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/exec/ location)
-# Feature tag (replace user-profile-backend-schema with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#exec'
   - '#user-profile-backend-schema'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-07'
-# Related documents as quoted wiki-links - MUST link to parent PLAN
-# (e.g., "[[2026-02-04-feature-plan]]")
 related:
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-07-user-profile-schema-research]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `user-profile-backend-schema` `Wave 1 Schema Foundation Step` `Wave 1 Schema Foundation Step`
 

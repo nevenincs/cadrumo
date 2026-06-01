@@ -9,14 +9,7 @@ related:
   - '[[2026-05-04-live-filing-data-capture-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code only. -->
 
 # `calculation-truth-registry` `Wave 2` `Modelo 111 registry foundation`
 

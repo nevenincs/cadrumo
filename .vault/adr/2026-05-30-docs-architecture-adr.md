@@ -1,16 +1,8 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/adr/ location)
-# Feature tag (replace docs-architecture with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#adr'
   - '#docs-architecture'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-05-30'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-research]]")
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-04-12-docs-rewrite-adr]]"
@@ -18,14 +10,7 @@ related:
   - "[[2026-04-25-json-output-contract-adr]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `docs-architecture` adr: `documentation surface taxonomy and conventions` | (**status:** `accepted`)
 

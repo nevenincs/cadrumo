@@ -11,7 +11,6 @@ related:
 
 # `cli-workflow-redesign` `W01.P003 shim cleanup` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 W01-P003-SHIM-001 | MEDIUM | S0013 still overclaims deletion while retired CLI shim modules remain in the source tree.
 

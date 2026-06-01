@@ -8,17 +8,10 @@ related:
   - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S87]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-storage-production-hardening` Code Review
 
-<!-- Persistent log of audit findings appended below. -->
 
 S87-001 | HIGH | S87 does not gate each migrated repository family
 `W12.P21.S87` requires focused real-behavior tests for each migrated repository family, but `src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py` only exercises workflow state, AEAT auth session storage, attachments, transaction catalogues, and profile assets. The W12.P21 migration rows also cover bucket events, invoice, filing, submission, justificante, modelo, ledger, filing history, modelo reconciliation, calculation observation, usage-ratio, calc-sheet, AEAT observation, Google OAuth/session, LLM cache/usage, legacy profile adapters, outbound adapter repositories, and related runtime-default families. Those omitted families currently have no S87-level proof for active profile routing, route mismatch refusal, missing-session refusal, or isolated test profile writes, so the step cannot substantiate the plan's "each migrated repository family" acceptance claim. The reviewed tests are real-behavior and pass in isolation, and I found no forbidden mocks, patches, skips, deprecated `AEAT_DATABASE_URL` or `Settings(aeat_database_url=...)`, suppressive ignores, or hidden non-centralized environment wrangling in the reviewed file.

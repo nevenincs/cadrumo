@@ -13,11 +13,6 @@ related:
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `iva-classification-enrichment` adr: IVA category + counterparty enrichment on Transaction | (**status:** `accepted`)
 
