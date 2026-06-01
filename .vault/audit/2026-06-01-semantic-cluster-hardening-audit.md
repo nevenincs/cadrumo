@@ -294,3 +294,55 @@ signal, not a failure. -->
   accept `--dry-run` and emit a usable preview before applying.
 
 -->
+
+## W5 closure - global overlap-freedom proof + honesty-review dispositions
+
+The campaign-close honesty review (fresh-context adversarial pass) and a
+broad RAG semantic re-sweep (now that the venv torch is restored) drove the
+campaign to closure. Results:
+
+### Honesty-review residuals (surfaced + actioned)
+
+- **F11 module-path residual (FIXED)**: 13 sites still imported `now` via the
+  PRIVATE module path `core.time._clock` (a traversal the name-only
+  enforcement gate misses). Routed all 13 to the public `aeat.core.time`
+  surface.
+- **F6 dead constants (FIXED)**: removed unreferenced
+  `DEFAULT_VIEWPORT_WIDTH/HEIGHT` in `_renta_web_open.py`.
+- **W3/W4 profile errors-naming residual (FIXED)**: `domain/profile/errors.py`
+  (asset/inventory/amortizacion ledger errors) was missed by the
+  errors.py->_errors.py normalisation because the package already had a
+  separate `_errors.py`. Merged the seven ledger classes into `_errors.py`,
+  repointed five consumers, and updated their ErrorCode-registry qualnames
+  (`profile.errors.*` -> `profile._errors.*`) so the import-time registry
+  validation passes.
+
+### Verified-divergent (correctly NOT actioned)
+
+- **F5 `_documents._compute_nif_check_letter`**: a second NIF-table copy in
+  `core/identity/_documents.py`. Deduping to `_tax_id.nif_check_letter` would
+  create a circular import (`_tax_id` imports `IdentityError` from
+  `_documents`); the duplication is justified cycle-avoidance.
+- **F7 `local.py` dispatch**: divergent from `check_http_error` (no model
+  context, no 5xx escalation, local-specific message).
+- **F2 bare-loads sites** (`apoderamientos/_catalogue`, `application/topics`,
+  `core/external_constants`): `tomllib.loads(read_text)` / package-resource
+  loads without the open+reraise contract `read_toml` provides.
+- **`canonical_decimal_string`** (`domain/_identifiers.py`): a fixed-point
+  Decimal formatter for hashing. Near-identical to
+  `format_decimal(normalize=True)` but BYTE-DIVERGENT on the `-0` edge case;
+  since it feeds fingerprints, exact output must be preserved - not
+  substitutable.
+
+### Global proof
+
+The RAG semantic re-sweep across the major functional-concept space
+(encrypt/HKDF, retry/backoff, ratio, dedup-fingerprint, JSON-serialize,
+error-to-exit-code, IBAN, Decimal-format, currency, date-validate) returned
+each concept resolving to a SINGLE canonical site (or a co-located same-package
+family), with only the `canonical_decimal_string` flag above - which
+verification confirmed divergent. Combined with rg residual-proofs (every
+consolidated cluster's old pattern returns zero hits), the codebase
+satisfiably demonstrates no residual actionable semantic overlaps or code
+duplications. Remaining same-token naming (IVA/VAT, Renta/Rental) is
+sanctioned domain vocabulary, not code duplication.
