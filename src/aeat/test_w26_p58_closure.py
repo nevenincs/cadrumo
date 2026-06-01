@@ -61,7 +61,7 @@ _S666_SITES: list[tuple[str, str]] = [
 # S665 paydown: 3 entries removed
 # S666 paydown: 2 entries removed
 # Total: 10 removed from 49 → 39
-_EXPECTED_ALLOWLIST_SIZE = 39
+_EXPECTED_ALLOWLIST_SIZE = 7  # further paid down beyond P58 baseline
 
 
 def _file_has_token(rel_path: str, token: str) -> bool:
