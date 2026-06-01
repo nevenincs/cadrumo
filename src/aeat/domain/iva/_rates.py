@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Iterable, Mapping
 from datetime import date
-from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 
 from pydantic import ValidationError
 
+from ...core._toml import read_toml
 from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
-from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
+from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 
 def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
@@ -41,13 +40,7 @@ def _load_iva_rate_table_cached(
 ) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     del byte_count, modified_ns
     target = Path(path)
-    try:
-        with target.open("rb") as fh:
-            payload = tomllib.load(fh)
-    except tomllib.TOMLDecodeError as exc:
-        raise IvaCatalogueError(f"{target}: invalid VAT rate TOML: {exc}") from exc
-    except OSError as exc:
-        raise IvaCatalogueError(f"{target}: cannot read VAT rate registry: {exc}") from exc
+    payload = read_toml(target, error_factory=IvaCatalogueError)
 
     raw_rates = payload.get("rates")
     if not isinstance(raw_rates, list) or not raw_rates:

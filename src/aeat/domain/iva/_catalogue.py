@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping, Sequence
 from datetime import date
 from functools import lru_cache
@@ -11,7 +10,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core._toml import to_str_keyed_dict
+from ...core._toml import read_toml, to_str_keyed_dict
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
@@ -33,13 +32,7 @@ def load_iva_catalogue(path: Path) -> IvaCatalogue:
 def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> IvaCatalogue:
     del byte_count, modified_ns
     target = Path(path)
-    try:
-        with target.open("rb") as fh:
-            payload = tomllib.load(fh)
-    except tomllib.TOMLDecodeError as exc:
-        raise IvaCatalogueError(f"{target}: invalid VAT catalogue TOML: {exc}") from exc
-    except OSError as exc:
-        raise IvaCatalogueError(f"{target}: cannot read VAT catalogue: {exc}") from exc
+    payload = read_toml(target, error_factory=IvaCatalogueError)
 
     raw_regulations = payload.get("regulations")
     if not isinstance(raw_regulations, list) or not raw_regulations:
