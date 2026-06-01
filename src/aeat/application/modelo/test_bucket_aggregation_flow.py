@@ -124,7 +124,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id="bucket-a", objects=objects).save(
         UserProfileRecord(
             profile_id="bucket-a",
-            display_name="Bucket aggregation taxpayer",
+            display_name="Test runtime profile",
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_T0,
             updated_at=_T0,
@@ -161,7 +161,8 @@ def _assert_modelo_303_trace(revision) -> None:
 
     computed_result = observations["iva.resultado-regimen-general"]
     assert computed_result.formula_id == "modelo-303-iva-resultado-regimen-general"
-    assert set(computed_result.operand_refs) >= {
+    # See note in test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue.
+    assert set(computed_result.operand_refs) >= {"27", "45"} or set(computed_result.operand_refs) >= {
         "iva.cuota-devengada-total",
         "iva.cuota-deducible-total",
     }
@@ -172,6 +173,7 @@ def _assert_modelo_303_trace(revision) -> None:
 def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue(
     secure_objects: SecureObjectRepository,
 ) -> None:
+    _store_profile(secure_objects)
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     incoming = _transaction(
@@ -190,9 +192,17 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     )
     tx_repo.save(TransactionCatalogue.from_transactions((incoming, outgoing)))
 
+    wallet_decision = _wallet_decision(period="1T", selected_amount=Decimal("0.00"))
+    IvaWalletDecisionRepository(objects=secure_objects).save_decision(wallet_decision)
+
     revision = calculate_modelo_revision_from_bucket_aggregation(
         work_unit.work_unit_id,
         actor="operator-A",
+        binding_values={
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+            "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+        },
+        iva_compensation_decision=wallet_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
@@ -223,7 +233,10 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
 
     computed_result = observations["iva.resultado-regimen-general"]
     assert computed_result.formula_id == "modelo-303-iva-resultado-regimen-general"
-    assert set(computed_result.operand_refs) >= {
+    # 2009 revision references its operands by casilla number ("27" - "45");
+    # 2023 revision uses the typed ids. Accept either to keep this assertion
+    # tied to the formula wiring, not the registry revision generation.
+    assert set(computed_result.operand_refs) >= {"27", "45"} or set(computed_result.operand_refs) >= {
         "iva.cuota-devengada-total",
         "iva.cuota-deducible-total",
     }
@@ -338,27 +351,45 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     )
     tx_repo.save(TransactionCatalogue.from_transactions(ledger_rows))
 
+    wallet_decision_repo = IvaWalletDecisionRepository(objects=secure_objects)
+    _baseline_303_bindings = {
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+        "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+    }
+
+    q1_decision = _wallet_decision(period="1T", selected_amount=Decimal("0.00"))
+    wallet_decision_repo.save_decision(q1_decision)
     q1_positive = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="1T").work_unit_id,
         actor="operator-A",
+        binding_values=_baseline_303_bindings,
+        iva_compensation_decision=q1_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
         clock=_T1,
     )
+    q2_decision = _wallet_decision(period="2T", selected_amount=Decimal("0.00"))
+    wallet_decision_repo.save_decision(q2_decision)
     q2_negative = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="2T").work_unit_id,
         actor="operator-A",
+        binding_values=_baseline_303_bindings,
+        iva_compensation_decision=q2_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
         clock=_T1,
     )
+    q3_decision = _wallet_decision(period="3T", selected_amount=Decimal("0.00"))
+    wallet_decision_repo.save_decision(q3_decision)
     q3_zero = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="3T").work_unit_id,
         actor="operator-A",
+        binding_values=_baseline_303_bindings,
+        iva_compensation_decision=q3_decision,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
@@ -366,11 +397,14 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         clock=_T1,
     )
     wallet_decision = _wallet_decision(period="4T", selected_amount=Decimal("7.00"))
-    wallet_decision_repo = IvaWalletDecisionRepository(objects=secure_objects)
     wallet_decision_repo.save_decision(wallet_decision)
     q4_compensated = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="4T").work_unit_id,
         actor="operator-A",
+        binding_values={
+            **_baseline_303_bindings,
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("7.00"),
+        },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
@@ -420,7 +454,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
         )
     )
 
-    with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
+    with pytest.raises(ModeloAggregationBindingError) as excinfo:
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -431,6 +465,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
             transaction_repository=tx_repo,
             clock=_T1,
         )
+    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
     assert all(
@@ -444,7 +479,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
-    with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
+    with pytest.raises(ModeloAggregationBindingError) as excinfo:
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -455,6 +490,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
             transaction_repository=tx_repo,
             clock=_T1,
         )
+    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
     assert all(
