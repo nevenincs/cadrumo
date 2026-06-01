@@ -9,22 +9,25 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from aeat.core.time import now
 
 from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
-from ..calculations.registry import (
-    DeadlineWindowDefinition,
-    ModeloRevision,
-    ProfilePredicateDefinition,
-    RegistryError,
-    ValidatedRegistryAuthority,
-    applicable_filing_schedules,
-    evaluate_profile_conditions,
-)
+
+# Type-only registry references. Runtime callers below import the
+# concrete symbols lazily inside the helpers that use them so importing
+# this module does not trigger the ~870ms ValidatedRegistryAuthority
+# parse — load it only when a deadline computation actually runs.
+if TYPE_CHECKING:
+    from ..calculations.registry import (
+        DeadlineWindowDefinition,
+        ModeloRevision,
+        ProfilePredicateDefinition,
+    )
+
 from ._errors import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
@@ -133,6 +136,8 @@ class DeadlineEngine:
             return
         self._source_root = source_root if source_root is not None else bundled_path()
         root = registry_root if registry_root is not None else bundled_path("registry", "aeat")
+        from ..calculations.registry import RegistryError, ValidatedRegistryAuthority
+
         try:
             self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
         except RegistryError as exc:
@@ -213,6 +218,8 @@ class DeadlineEngine:
         ≥1 day late, a registry-backed recovery payload (None when
         the recovery registry has no entry for the modelo).
         """
+        from ..calculations.registry import applicable_filing_schedules
+
         registry_period = _window_registry_period(window)
         if revision.filing_schedules and not applicable_filing_schedules(
             revision,
@@ -289,6 +296,8 @@ class DeadlineEngine:
         )
 
     def _deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+        from ..calculations.registry import RegistryError
+
         try:
             return self._registry.deadline_windows(year)
         except RegistryError as exc:
@@ -299,6 +308,8 @@ class DeadlineEngine:
 
     @staticmethod
     def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
+        from ..calculations.registry import applicable_filing_schedules
+
         if not revision.filing_schedules:
             return True
         return bool(applicable_filing_schedules(revision, profile, period=_window_registry_period(window)))
@@ -310,6 +321,8 @@ class DeadlineEngine:
         *,
         mode: str,
     ) -> str | None:
+        from ..calculations.registry import RegistryError, evaluate_profile_conditions
+
         if not conditions:
             return "Aplica segun la ventana registral del modelo."
         try:
