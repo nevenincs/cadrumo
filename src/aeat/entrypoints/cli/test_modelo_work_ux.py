@@ -22,7 +22,8 @@ pin the modelo-work findings reported by the persona fleet:
 
 from __future__ import annotations
 
-import json
+from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
+
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -44,23 +45,6 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _payload(output: str) -> dict:
-    """Return the payload from a CLI JSON line, unwrapping the SchemaEnvelope.
-
-    Post-P09.S43 every migrated ``modelo.work.*`` command emits the
-    bare payload wrapped in
-    ``{"schema_version": ..., "command": ..., "result": ..., "warnings": []}``.
-    Tests in this file all hit migrated commands, so the helper
-    transparently unwraps to the ``result`` mapping. Bare-payload
-    commands (not migrated) pass through unchanged: the envelope-vs-bare
-    detection keys on the ``schema_version`` marker which only the
-    envelope shape carries.
-    """
-
-    raw = json.loads(output)
-    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
-        return raw["result"]
-    return raw
 
 
 def _create_profile() -> None:

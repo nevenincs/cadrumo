@@ -15,7 +15,8 @@ Coverage:
 
 from __future__ import annotations
 
-import json
+from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
+
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -33,11 +34,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _PROFILE_ID = "casilla-norm-test-profile"
 
 
-def _payload(output: str) -> dict:
-    raw = json.loads(output)
-    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
-        return raw["result"]
-    return raw
 
 
 @pytest.fixture
