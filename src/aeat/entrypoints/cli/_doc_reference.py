@@ -46,7 +46,7 @@ import textwrap
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from aeat.core.external_constants import UTF_8_ENCODING
+from ...core.external_constants import UTF_8_ENCODING
 
 if TYPE_CHECKING:
     import click
@@ -84,10 +84,11 @@ def _force_lazy_imports(app: object) -> None:
     """
     import typer
 
-    from aeat.entrypoints.cli._command_suggestions import _LAZY_REGISTRY
+    from ._command_suggestions import _LAZY_REGISTRY
 
     seen: set[int] = set()
-    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+    # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
     pending: list[typer.Typer] = [app]  # type: ignore[valid-type]
     while pending:
         node = pending.pop()
@@ -102,7 +103,8 @@ def _force_lazy_imports(app: object) -> None:
                 pending.append(group.typer_instance)
 
 
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[name-defined]
     """Walk the tree and raise if any subtree is an import-failure fallback.
 
@@ -165,9 +167,11 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
 # ---------------------------------------------------------------------------
 
 
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _collect_commands(
     root: click.Command,  # type: ignore[name-defined]
+    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click return-type annotation same as above
 ) -> dict[tuple[str, ...], click.Command]:  # type: ignore[name-defined]
     """Recursively collect every reachable command node keyed by its path tuple.
 
@@ -198,7 +202,8 @@ def _collect_commands(
     return result
 
 
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _collect_leaf_paths(
     root: click.Command,  # type: ignore[name-defined]
 ) -> list[tuple[str, ...]]:
@@ -264,7 +269,8 @@ def _rst_field_list(items: list[tuple[str, str]]) -> str:
     return "\n".join(lines) + "\n" if lines else ""
 
 
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[name-defined]
     """Render a RST definition-list for command parameters.
 
@@ -291,9 +297,11 @@ def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[n
     return "\n".join(sections) if sections else ""
 
 
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_command_section(
     path: tuple[str, ...],
+    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click param annotation same as above
     cmd: click.Command,  # type: ignore[name-defined]
     schema_registry: dict[str, object],
 ) -> str:
@@ -347,12 +355,15 @@ def _render_command_section(
 # ---------------------------------------------------------------------------
 
 
-# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+# TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+# Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_family_page(
     family_name: str,
     leaf_paths: list[tuple[str, ...]],
     schema_registry: dict[str, object],
-    all_commands: dict[tuple[str, ...], click.Command],  # type: ignore[name-defined]  # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose Command/Parameter at this annotation site under TYPE_CHECKING import guard.
+    # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
+    # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
+    all_commands: dict[tuple[str, ...], click.Command],  # type: ignore[name-defined]
 ) -> str:
     """Render a full RST page for one top-level command family.
 
@@ -530,7 +541,11 @@ def _render_index_page(
     )
     for key in envelope_keys:
         schema_cls = schema_registry[key]
-        schema_name = f"{schema_cls.__module__}.{schema_cls.__name__}"  # type: ignore[union-attr]
+        schema_name = (
+            f"{schema_cls.__module__}.{schema_cls.__name__}"
+            if isinstance(schema_cls, type)
+            else repr(schema_cls)
+        )
         parts.append(f"* ``{key}`` → ``{schema_name}``\n")
     parts.append("\n")
 
@@ -570,24 +585,20 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     Returns:
         A mapping from relative path (e.g. ``"cli/index.rst"``) to rendered
         RST content, mirroring what was written to disk.
-
-    Raises:
-        RuntimeError: When any CLI subtree is the import-failure fallback
-            (a missing optional dependency).
     """
     import click
     from typer.main import get_command as _typer_get_command
 
-    from aeat.application.operator_surface import (
+    from ...application.operator_surface import (
         ACCEPTED_ROOTS,
         RETIRED_OPERATOR_SURFACES,
     )
-    from aeat.core.json_contract import SCHEMA_REGISTRY
+    from ...core.json_contract import SCHEMA_REGISTRY
 
     # Import every payload module so their @register_schema decorators populate
     # SCHEMA_REGISTRY.  The CLI loads these lazily at dispatch time; the generator
     # must trigger them explicitly before inspecting the registry.
-    from aeat.entrypoints.cli import (  # noqa: F401
+    from . import (  # noqa: F401
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -599,7 +610,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         _root_payloads,
         app,
     )
-    from aeat.entrypoints.cli._config import (  # noqa: F401
+    from ._config import (  # noqa: F401
         _google_payloads,
         _profile_census_payloads,
     )
@@ -726,6 +737,10 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     Returns:
         A sorted list of normalised registry-key strings for every live leaf
         command (e.g. ``["config.auth.clear", "ledger.add", ...]``).
+
+    Raises:
+        RuntimeError: When the subprocess exits with a non-zero code,
+            indicating that the CLI tree could not be materialised.
     """
     env = dict(os.environ)
     env["AEAT_OUTPUT_LANGUAGE"] = "en"

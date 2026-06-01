@@ -25,6 +25,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from datetime import date
+from typing import Literal, cast
 
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing._dates import _parse_iso8601_date
@@ -204,7 +205,8 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     return DescendantInfo(
         birth_date=birth_date,
         adoption_date=adoption_date,
-        discapacidad_grado=discapacidad_grado,  # type: ignore[arg-type]
+        # CAST-RATIONALE-DISCAPACIDAD-LITERAL: val validated against (0, 33, 65) above; int|None cannot be narrowed to Literal[0,33,65]|None by mypy without cast
+        discapacidad_grado=cast("Literal[0, 33, 65] | None", discapacidad_grado),
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,

@@ -516,7 +516,7 @@ def _find_bbox_casilla_hits(
             if box_re.fullmatch(w["text"])
             and (anchor_spec.anchor_x_min is None or w["x0"] >= anchor_spec.anchor_x_min)
             and (anchor_spec.anchor_x_max is None or w["x0"] <= anchor_spec.anchor_x_max)
-            and (col_x_min is None or col_x_min <= w["x0"] <= col_x_max)  # type: ignore[operator]
+            and (col_x_min is None or col_x_max is None or col_x_min <= w["x0"] <= col_x_max)
         ]
 
         for anchor_word in anchor_words:
