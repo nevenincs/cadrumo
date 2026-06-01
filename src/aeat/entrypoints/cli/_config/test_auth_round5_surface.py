@@ -182,7 +182,13 @@ def test_login_refuses_when_certificate_path_unset(
         with pytest.raises(AuthLoginPreconditionError) as exc_info:
             asyncio.run(login_operator_auth("certificate"))
 
-    message = str(exc_info.value)
+    # The exception is operator-facing via ``translated_message`` only —
+    # the raise site passes no positional ``message``, so ``str(exc)`` is
+    # empty by construction. Render the i18n key through ``tr`` to get
+    # the user-prose surface this round-5 finding promises.
+    from aeat.core.i18n import tr
+
+    message = tr(exc_info.value.translated_message)
     assert "AEAT_CERTIFICATE_PATH" not in message
     assert "CertificateBundle" not in message
     assert "configure" in message.lower() or "certificat" in message.lower()
