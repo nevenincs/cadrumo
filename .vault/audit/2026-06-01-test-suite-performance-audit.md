@@ -40,22 +40,28 @@ this structural triage. No source edits were made.
 
 ## Suite-wide stats (empirical)
 
-Source: `Y:\tmp\durations.txt` (whole-suite `--durations=200`).
+Source: `Y:\tmp\durations.txt` measurement attempt.
 
+**Status:** Fresh measurement run attempted on 2026-06-01. Prior incomplete
+capture terminated at 33% progress (481 lines, timestamp at 2026-05-31T*).
+Retry with `uv run --no-sync pytest --no-header --tb=no -p no:warnings --durations=200 --durations-min=0.5 -q` on 2026-06-01 12:41-12:42 exited silently without collecting any tests. Likely cause: pytest collection hang or unresolved dependency. **Empirical tables deferred to follow-up run.**
+
+Known stats:
 - Total collected items: ~12,700 (deselected: live_read without
   `AEAT_LIVE_TESTS_ENABLED`, plus `docs` marker excluded by default).
 - Total wallclock (sequential, single worker): 50-73 minutes observed.
 - Mean per-test wallclock: ~0.25-0.35 s.
-- p50/p95/p99: pending durations.txt parse — populated when the
-  in-flight measurement run completes.
+- p50/p95/p99: pending successful durations.txt capture.
 - Share of wallclock inside the slowest 50 tests: pending.
 - Share of wallclock inside the slowest 10 files: pending.
 
-The empirical top-N tables (slowest 20 tests, slowest 20 files) are
-appended at the foot of this document once `durations.txt` parses.
-The structural triage below already accounts for the cost surfaces
-that dominate; refining those clusters with exact savings estimates
-is a once-the-numbers-land follow-up, not a structural blocker.
+The empirical top-N tables (slowest 20 tests, slowest 20 files) will be
+appended at the foot of this document once a complete `durations.txt` is
+captured. The structural triage below already accounts for the cost
+surfaces that dominate; refining those clusters with exact savings
+estimates is a once-the-numbers-land follow-up, not a structural blocker.
+All recommendations in this audit (Steps A-G) are structurally sound and
+do not depend on the exact per-test durations.
 
 ## Cost-cluster triage (structural)
 
