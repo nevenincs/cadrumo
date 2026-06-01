@@ -15,10 +15,11 @@ Composition order:
 
 1. Resolve the active profile via `_profile_binding.resolve_active_profile`.
 2. Read settings via `load_settings()`.
-3. Dispatch on `ProviderKind`:
-   - `LOCAL_FILESYSTEM` → `LocalFileSystemProvider(root=settings.aeat_local_storage_root / profile)`
-   - `GOOGLE_DRIVE` → loads `oauth-client` + `oauth-token` for profile, builds `Credentials`,
-     instantiates `GoogleDriveProvider(credentials=..., root_folder_id=settings.aeat_google_drive_root_folder_id)`.
+3. Dispatch on `ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
+   ``LocalFileSystemProvider`` rooted at ``aeat_local_storage_root / profile``;
+   ``GOOGLE_DRIVE`` loads the per-profile ``oauth-client`` and ``oauth-token``,
+   builds ``Credentials``, and instantiates a ``GoogleDriveProvider`` keyed on
+   ``aeat_google_drive_root_folder_id``.
 4. Refuse unknown kinds with `OutboundStorageValidationError`.
 """
 

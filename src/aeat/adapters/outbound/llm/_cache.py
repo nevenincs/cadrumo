@@ -112,14 +112,14 @@ class LLMCache:
         persistence (the CACHE-class default policy has an empty
         rule set because most caches are public reference data;
         the LLM cache carries identity-bearing inputs and therefore
-            adopts the DIAGNOSTIC rule set, mirroring the run-trace sink's
-            discipline). The redacted payload is stored as an encrypted SQL
-            secure object rather than a materialized JSON file. The redaction
-            is idempotent — re-reads of an already-redacted entry stay correct
-            because the cache carries the redacted text only. Storage imports
-            are deferred inside this method body so the LLM package's import
-            chain does not pull Alembic plugin discovery into CLI commands that
-            never touch the cache.
+        adopts the DIAGNOSTIC rule set, mirroring the run-trace sink's
+        discipline). The redacted payload is stored as an encrypted SQL
+        secure object rather than a materialized JSON file. The redaction
+        is idempotent — re-reads of an already-redacted entry stay correct
+        because the cache carries the redacted text only. Storage imports
+        are deferred inside this method body so the LLM package's import
+        chain does not pull Alembic plugin discovery into CLI commands that
+        never touch the cache.
 
         Args:
             request: Structured completion request.

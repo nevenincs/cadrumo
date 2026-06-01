@@ -105,7 +105,7 @@ def reconcile(
         :attr:`ReconciliationStatus.COINCIDE`,
         :attr:`ReconciliationStatus.DIVERGENTE`, or
         :attr:`ReconciliationStatus.NOT_YET_FOUND`, accompanied by
-            per-field mismatches and a multilingual narrative summary.
+        per-field mismatches and a multilingual narrative summary.
     """
     subview = _require_registry_reconciliation_surface(draft, schema_provider=schema_provider)
     reconciled_at = now or _now()
