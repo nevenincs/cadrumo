@@ -78,34 +78,34 @@ Build the programmatic gates that make every documentation surface conformant: t
 
 Wrap a real nitpicky warnings-as-errors sphinx build as a hermetic, fast-lane-excluded test.
 
-- [ ] `W02.P05.S16` - add the nitpicky build-gate test building to tmp_path with offline intersphinx; `src/aeat/tests/test_docs_build.py`.
-- [ ] `W02.P05.S17` - mark the build-gate test for the docs-check lane outside the fast unit gate; `src/aeat/tests/test_docs_build.py`.
-- [ ] `W02.P05.S18` - confirm the build-gate test fails on an injected broken cross-reference; `src/aeat/tests/test_docs_build.py`.
+- [x] `W02.P05.S16` - add the nitpicky build-gate test building to tmp_path with offline intersphinx; `src/aeat/tests/test_docs_build.py`.
+- [x] `W02.P05.S17` - mark the build-gate test for the docs-check lane outside the fast unit gate; `src/aeat/tests/test_docs_build.py`.
+- [x] `W02.P05.S18` - confirm the build-gate test fails on an injected broken cross-reference; `src/aeat/tests/test_docs_build.py`.
 
 ### Phase `W02.P06` - module to stub correspondence
 
 Pin the generated API surface to the module tree so a rename or new module fails the gate.
 
-- [ ] `W02.P06.S19` - add the module-to-stub set-correspondence test excluding test, tests, data, and private modules; `src/aeat/tests/test_docs_api_stubs.py`.
-- [ ] `W02.P06.S20` - confirm the correspondence test fails on a missing or orphan stub; `src/aeat/tests/test_docs_api_stubs.py`.
+- [x] `W02.P06.S19` - add the module-to-stub set-correspondence test excluding test, tests, data, and private modules; `src/aeat/tests/test_docs_api_stubs.py`.
+- [x] `W02.P06.S20` - confirm the correspondence test fails on a missing or orphan stub; `src/aeat/tests/test_docs_api_stubs.py`.
 
 ### Phase `W02.P07` - cli reference generator
 
 Generate the CLI reference from the materialized command tree, committed and drift-tested, English pinned before first import.
 
-- [ ] `W02.P07.S21` - add the cli reference generator walking the materialized click tree with language pinned to en; `src/aeat/entrypoints/cli/_doc_reference.py`.
-- [ ] `W02.P07.S22` - generate and commit the cli reference pages under the docs cli subtree; `docs/cli/index.rst`.
+- [x] `W02.P07.S21` - add the cli reference generator walking the materialized click tree with language pinned to en; `src/aeat/entrypoints/cli/_doc_reference.py`.
+- [x] `W02.P07.S22` - generate and commit the cli reference pages under the docs cli subtree; `docs/cli/index.rst`.
 - [ ] `W02.P07.S23` - add the committed-versus-regenerated drift test on the docs-check lane; `src/aeat/entrypoints/cli/test_doc_reference_drift.py`.
-- [ ] `W02.P07.S24` - assert the generator detects and rejects any import-failure fallback subtree; `src/aeat/entrypoints/cli/_doc_reference.py`.
+- [x] `W02.P07.S24` - assert the generator detects and rejects any import-failure fallback subtree; `src/aeat/entrypoints/cli/_doc_reference.py`.
 
 ### Phase `W02.P08` - docs versus tree conformance
 
 Assert the reference matches the live tree, the schema registry, and the accepted-surface contract, honest about partial migration.
 
-- [ ] `W02.P08.S25` - add the docs-versus-tree completeness test walking the live tree for non-retired commands; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
-- [ ] `W02.P08.S26` - add the schema-registry-versus-tree assertions honest about partial envelope migration; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
-- [ ] `W02.P08.S27` - assert retired surfaces appear only as redirect suggestions or as permanently removed; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
-- [ ] `W02.P08.S28` - confirm the conformance test fails on an undocumented live command; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
+- [x] `W02.P08.S25` - add the docs-versus-tree completeness test walking the live tree for non-retired commands; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
+- [x] `W02.P08.S26` - add the schema-registry-versus-tree assertions honest about partial envelope migration; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
+- [x] `W02.P08.S27` - assert retired surfaces appear only as redirect suggestions or as permanently removed; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
+- [x] `W02.P08.S28` - confirm the conformance test fails on an undocumented live command; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
 
 ## Wave `W03` - full-tree docstring and link remediation
 
