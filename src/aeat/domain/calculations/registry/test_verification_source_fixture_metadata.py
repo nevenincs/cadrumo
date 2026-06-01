@@ -35,6 +35,7 @@ Edge-case honesty:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pdfplumber
@@ -54,21 +55,29 @@ _FIXTURE_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "ju
 
 _SYNTHETIC_PRODUCER_SIGNATURE = "aeat-test-fixture-generator"
 
-# Real parser-corpus anchors deliberately retained inside an otherwise-synthetic
-# fixture pool. These specimens serve a different role from the synthetic
-# formula-verification fixtures: they are sanitised real AEAT PDFs kept as
-# real-layout parser-fidelity anchors (exercised by TestCorpusSidecarRoundtrip),
-# not formula-verification evidence. The modelo's verification_source tag
-# describes its synthetic verification specimens; these real anchors are exempt
-# from the synthetic-producer requirement. Each entry is a deliberate, audited
-# real-PDF retention — not a mis-tagged synthetic fixture.
-#   M390 2021-0A: real multi-page English-layout AEAT specimen; the 2022/2023
-#   specimens are synthetic formula-consistent fixtures.
-_REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("390", "2021-0A.pdf"),
-    }
-)
+_RECOGNISED_PROVENANCE = frozenset({"real_corpus", "synthetic_generated"})
+_TAG_TO_PROVENANCE = {
+    "real_aeat_corpus_pdf": "real_corpus",
+    "synthetic_from_aeat_published_text": "synthetic_generated",
+}
+
+
+def _sidecar_provenance(pdf_path: Path) -> str | None:
+    """Return the fixture sidecar's declared ``provenance``, or None if absent.
+
+    Every fixture under a modelo subdirectory ships a ``.json`` sidecar that
+    self-declares its provenance (``real_corpus`` | ``synthetic_generated``).
+    The gate trusts this declaration but cross-checks it against the physical
+    ``/Producer`` evidence, so a mis-stamped sidecar cannot pass. This replaces
+    the per-fixture real-anchor allowlist: a real parser-corpus anchor kept in
+    an otherwise-synthetic pool (e.g. M390 2021-0A) simply declares
+    ``real_corpus`` in its own sidecar.
+    """
+    sidecar = pdf_path.with_suffix(".json")
+    if not sidecar.is_file():
+        return None
+    value = json.loads(sidecar.read_text(encoding="utf-8")).get("provenance")
+    return str(value) if value is not None else None
 
 
 def _producer_field(pdf_path: Path) -> str | None:
@@ -141,13 +150,17 @@ def test_verification_source_matches_fixture_producer(
     profile_id: str,
     verification_source: str,
 ) -> None:
-    """Fixture /Producer field must agree with the declared verification_source tag.
+    """Each fixture's sidecar provenance must agree with its physical /Producer.
 
-    For ``real_aeat_corpus_pdf``: every fixture PDF must NOT have
-    ``aeat-test-fixture-generator`` in its ``/Producer`` field.
-
-    For ``synthetic_from_aeat_published_text``: every fixture PDF MUST have
-    ``aeat-test-fixture-generator`` as its ``/Producer`` field.
+    The honesty check is per-fixture and sidecar-driven: every gated fixture
+    self-declares ``provenance`` (``real_corpus`` | ``synthetic_generated``) in
+    its ``.json`` sidecar, cross-checked against the ``/Producer`` DocInfo
+    evidence — ``synthetic_generated`` must carry the
+    ``aeat-test-fixture-generator`` signature, ``real_corpus`` must not. A real
+    parser-corpus anchor kept in an otherwise-synthetic pool needs no allowlist;
+    it simply declares ``real_corpus`` in its own sidecar. The per-modelo
+    ``verification_source`` tag must still be backed by at least one fixture of
+    the matching provenance, so the tag cannot be a lie.
     """
     fixture_pdfs = _all_fixture_pdfs(modelo_id)
     assert fixture_pdfs, (
@@ -157,32 +170,47 @@ def test_verification_source_matches_fixture_producer(
     )
 
     mismatches: list[str] = []
+    seen_provenances: set[str] = set()
     for pdf_path in fixture_pdfs:
         producer = _producer_field(pdf_path)
-        producer_lower = (producer or "").lower()
-        is_synthetic = _SYNTHETIC_PRODUCER_SIGNATURE in producer_lower
+        is_synthetic = _SYNTHETIC_PRODUCER_SIGNATURE in (producer or "").lower()
+        provenance = _sidecar_provenance(pdf_path)
 
-        if verification_source == "real_aeat_corpus_pdf" and is_synthetic:
+        if provenance is None:
             mismatches.append(
-                f"{pdf_path.name}: claims real_aeat_corpus_pdf but "
-                f"/Producer={producer!r} contains the synthetic generator signature"
+                f"{pdf_path.name}: sidecar declares no provenance; every gated "
+                "fixture must self-declare real_corpus or synthetic_generated"
             )
-        elif (
-            verification_source == "synthetic_from_aeat_published_text"
-            and not is_synthetic
-            and (modelo_id, pdf_path.name) not in _REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS
-        ):
+            continue
+        seen_provenances.add(provenance)
+        if provenance not in _RECOGNISED_PROVENANCE:
             mismatches.append(
-                f"{pdf_path.name}: claims synthetic_from_aeat_published_text but "
-                f"/Producer={producer!r} does not contain the synthetic generator signature; "
-                f"re-generate via _generate.py or correct the verification_source tag"
+                f"{pdf_path.name}: sidecar provenance {provenance!r} is not a "
+                "recognised value (real_corpus | synthetic_generated)"
             )
+        elif provenance == "synthetic_generated" and not is_synthetic:
+            mismatches.append(
+                f"{pdf_path.name}: sidecar declares synthetic_generated but "
+                f"/Producer={producer!r} lacks the {_SYNTHETIC_PRODUCER_SIGNATURE!r} signature"
+            )
+        elif provenance == "real_corpus" and is_synthetic:
+            mismatches.append(
+                f"{pdf_path.name}: sidecar declares real_corpus but "
+                f"/Producer={producer!r} carries the synthetic generator signature"
+            )
+
+    expected = _TAG_TO_PROVENANCE[verification_source]
+    if expected not in seen_provenances:
+        mismatches.append(
+            f"profile tag {verification_source!r} expects at least one "
+            f"{expected!r} fixture, but none of {sorted(seen_provenances)} match"
+        )
 
     if mismatches:
         joined = "\n  ".join(mismatches)
         pytest.fail(
-            f"M{modelo_id} profile {profile_id!r} verification_source tag "
-            f"{verification_source!r} contradicted by fixture metadata:\n  {joined}"
+            f"M{modelo_id} profile {profile_id!r} fixture provenance contradicts "
+            f"physical /Producer evidence or the {verification_source!r} tag:\n  {joined}"
         )
 
 
