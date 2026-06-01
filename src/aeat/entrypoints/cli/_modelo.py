@@ -57,7 +57,6 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core import StandardPeriodCode
 from ...core.errors import AeatError, resolve_error_message
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
