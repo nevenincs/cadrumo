@@ -54,6 +54,22 @@ _FIXTURE_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "ju
 
 _SYNTHETIC_PRODUCER_SIGNATURE = "aeat-test-fixture-generator"
 
+# Real parser-corpus anchors deliberately retained inside an otherwise-synthetic
+# fixture pool. These specimens serve a different role from the synthetic
+# formula-verification fixtures: they are sanitised real AEAT PDFs kept as
+# real-layout parser-fidelity anchors (exercised by TestCorpusSidecarRoundtrip),
+# not formula-verification evidence. The modelo's verification_source tag
+# describes its synthetic verification specimens; these real anchors are exempt
+# from the synthetic-producer requirement. Each entry is a deliberate, audited
+# real-PDF retention — not a mis-tagged synthetic fixture.
+#   M390 2021-0A: real multi-page English-layout AEAT specimen; the 2022/2023
+#   specimens are synthetic formula-consistent fixtures.
+_REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("390", "2021-0A.pdf"),
+    }
+)
+
 
 def _producer_field(pdf_path: Path) -> str | None:
     """Return the /Producer DocInfo value for a PDF, or None if absent."""
@@ -151,7 +167,11 @@ def test_verification_source_matches_fixture_producer(
                 f"{pdf_path.name}: claims real_aeat_corpus_pdf but "
                 f"/Producer={producer!r} contains the synthetic generator signature"
             )
-        elif verification_source == "synthetic_from_aeat_published_text" and not is_synthetic:
+        elif (
+            verification_source == "synthetic_from_aeat_published_text"
+            and not is_synthetic
+            and (modelo_id, pdf_path.name) not in _REAL_CORPUS_ANCHORS_IN_SYNTHETIC_POOLS
+        ):
             mismatches.append(
                 f"{pdf_path.name}: claims synthetic_from_aeat_published_text but "
                 f"/Producer={producer!r} does not contain the synthetic generator signature; "
