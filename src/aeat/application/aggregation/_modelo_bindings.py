@@ -16,6 +16,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepository
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
@@ -193,7 +194,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
         self,
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-        invoice_repository: InvoiceCatalogueRepository | None = None,
+        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     ) -> None:
         self._transaction_repository = transaction_repository
         self._invoice_repository = invoice_repository
@@ -307,7 +308,7 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     filing_year: int,
     period: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> ModeloLedgerBindingAggregation:
     """Resolve ledger-backed registry bindings from the active bucket."""
     binding_values: dict[str, Decimal] = {}
