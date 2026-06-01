@@ -16,7 +16,7 @@ from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import file_stat_fingerprint
 from ._schema import NormativeCatalogue, NormativeReference
-from .errors import NormativeNotFoundError, NormativeParseError
+from ._errors import NormativeNotFoundError, NormativeParseError
 
 _logger = get_logger(__name__)
 

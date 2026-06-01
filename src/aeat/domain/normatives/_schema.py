@@ -27,7 +27,7 @@ from pydantic import (
 )
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from .errors import NormativeValidationError
+from ._errors import NormativeValidationError
 
 
 class NormativeKind(StrEnum):

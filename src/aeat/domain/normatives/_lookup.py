@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ._schema import Articulo, NormativeCatalogue, NormativeReference
-from .errors import NormativeNotFoundError
+from ._errors import NormativeNotFoundError
 
 
 def find_reference(catalogue: NormativeCatalogue, ref_id: str) -> NormativeReference:
