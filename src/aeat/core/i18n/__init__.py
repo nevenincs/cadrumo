@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..external_constants import OutputLanguage
 from ._render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
@@ -14,6 +15,7 @@ from ._translatable import Translatable
 __all__ = [
     "OUTPUT_LANGUAGE_ENV_VAR",
     "SUPPORTED_OUTPUT_LANGUAGES",
+    "OutputLanguage",
     "Translatable",
     "output_language",
     "register_profile_language_resolver",
