@@ -58,6 +58,7 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...core.errors import AeatError, resolve_error_message
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import InputKind, RegistryQueryService
@@ -3036,11 +3037,10 @@ def work_calculate(
             ),
         ),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -3330,7 +3330,7 @@ def work_compare_taxation(
         str,
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         help=tr(
@@ -3655,11 +3655,10 @@ def work_verify(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -3720,11 +3719,10 @@ def work_file(
         str | None,
         typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -5958,11 +5956,10 @@ def work_preview_maritime_exemption(
             ),
         ),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
