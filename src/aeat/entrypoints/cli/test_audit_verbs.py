@@ -51,19 +51,24 @@ def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
             dispose_engine()
 
 
+_WORK_UNIT_ID = "a" * 64
+_REVISION_ID = "b" * 64
+_FILING_ID = "c" * 64
+
+
 def _seed_bundle() -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
     bundle = EvidenceBundleService().build(
         bucket_id=bucket_id,
-        work_unit_id="wu-001",
+        work_unit_id=_WORK_UNIT_ID,
         record_payloads={
-            ("calculation_revision", "rev-1"): b"casilla-01=1000.00\ncasilla-02=210.00\n",
-            ("filing_record", "filing-1"): b"justificante: CSV12345\n",
+            ("calculation_revision", _REVISION_ID): b"casilla-01=1000.00\ncasilla-02=210.00\n",
+            ("filing_record", _FILING_ID): b"justificante: CSV12345\n",
         },
-        calculation_revision_id="rev-1",
-        filing_record_id="filing-1",
+        calculation_revision_id=_REVISION_ID,
+        filing_record_id=_FILING_ID,
     )
     return bundle.bundle_id
 
@@ -73,7 +78,7 @@ def test_audit_show_renders_bundle_manifest(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(app, ["app", "modelo", "audit", "show", bundle_id])
     assert result.exit_code == 0, result.output
     assert f"bundle_id\t{bundle_id}" in result.output
-    assert "work_unit_id\twu-001" in result.output
+    assert f"work_unit_id\t{_WORK_UNIT_ID}" in result.output
     assert "manifest_version\t" in result.output
     assert "records\t2" in result.output
 

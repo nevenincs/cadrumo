@@ -74,7 +74,7 @@ def _create_303_work_unit() -> str:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2025", "--period", "1T",
-            "--revision", "2009-y-siguientes",
+            "--revision", "2023-y-siguientes",
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -249,7 +249,7 @@ def test_work_create_accepts_census_period_tokens(token: str) -> None:
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "036", "--year", "2024", "--period", token,
+            "--modelo", "036", "--year", "2025", "--period", token,
             "--revision", "2025-02-03-y-siguientes",
         ]
     )  # fmt: skip
@@ -274,7 +274,7 @@ def test_work_create_still_rejects_an_undeclared_census_token() -> None:
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
-            "--modelo", "036", "--year", "2024", "--period", "bogus",
+            "--modelo", "036", "--year", "2025", "--period", "bogus",
             "--revision", "2025-02-03-y-siguientes",
         ]
     )  # fmt: skip
@@ -293,7 +293,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2024", "--period", "1T",
-            "--revision", "2009-y-siguientes",
+            "--revision", "2023-y-siguientes",
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
