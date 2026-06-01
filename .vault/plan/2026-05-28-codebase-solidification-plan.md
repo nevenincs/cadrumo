@@ -1183,3 +1183,15 @@ Mechanical: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on each of 3 site
 
 - [x] `W28.P62.S679` - A1: add BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD marker on RuntimeError raises at _doc_reference.py:129, 717, 778 (subprocess invocation failures surfaced as RuntimeError for operator diagnostics; `not an operator-facing AeatError contract); 3 markers; `src/aeat/entrypoints/cli/_doc_reference.py`.
 - [x] `W28.P62.S680` - aggregate test asserting BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD token appears within 3 lines preceding each of the 3 RuntimeError raises in _doc_reference.py + all standing inventory ratchets remain green; `src/aeat/test_w28_p62_closure.py`.
+
+## Wave `W29` - typed-constants enrollment + CLI hint discipline
+
+Two genuinely-untyped axes surfaced in 2026-06-01 survey: standard period codes (1T..4T,1P..3P,0A,01..12) and output language (es/en/ca/hu). Promote each to a canonical StrEnum in core/; sweep consumers per atomic-relocation-coordination ADR. Then audit CLI typed-arg surfaces so every closed-enum Typer arg surfaces the accepted-value set via click.Choice on parse failure (no late registry-only error).
+
+### Phase `W29.P63` - enum enrollment + CLI hint sweep
+
+Three Steps: (S1) StandardPeriodCode enum in core/_period.py + sweep ~80 sites; (S2) OutputLanguage enum in core/external_constants.py + sweep ~200 sites; (S3) CLI typed-arg hint audit ensuring click.Choice on every closed-enum surface.
+
+- [ ] `W29.P63.S801` - Introduce `StandardPeriodCode(StrEnum)` covering `{1T,2T,3T,4T,1P,2P,3P,0A,01..12}` at canonical home `src/aeat/core/_period.py`. Refactor `PeriodCode = Annotated[str, BeforeValidator(_validate_period_code)]` in `src/aeat/domain/calculations/registry/_schema.py` to validate via `StandardPeriodCode | EXT_PATTERN | AD_HOC_PATTERN | EVENT_PATTERN`. Sweep ~80 consumer sites in one atomic commit per atomic-relocation-coordination ADR. Tag `relocation:StandardPeriodCode`.
+- [ ] `W29.P63.S802` - Introduce `OutputLanguage(StrEnum)` with members `ES/EN/CA/HU` at canonical home `src/aeat/core/external_constants.py`. Rebase `SUPPORTED_OUTPUT_LANGUAGES = frozenset(OutputLanguage)` and `DEFAULT_OUTPUT_LANGUAGE = OutputLanguage.ES`. Sweep ~200 consumer sites (skip locale yml + normative-corpus json — data, not control flow). One atomic commit. Tag `relocation:OutputLanguage`.
+- [ ] `W29.P63.S803` - CLI typed-arg hint audit. For every Typer command argument whose value is a closed enum (StrEnum / Literal-with-finite-set), confirm the Typer parameter declares the enum as its type so click renders `Choice([...])` and surfaces the accepted-value set on parse failure. Late registry-level errors for combinatorial axes (e.g. `period '1T' is not declared on modelo '202' revision '2025-y-siguientes'. Available periods: 1P, 2P, 3P`) are acceptable but must always list the accepted set. Author the audit as `.vault/audit/2026-06-01-cli-typed-arg-hint-audit.md` enumerating every CLI arg with its current type binding + drift findings + remediation Steps.
