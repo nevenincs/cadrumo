@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.external_constants import UTF_8_ENCODING
+
 _SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/aeat/`` source tree (the directory hosting this conftest)."""
 
@@ -50,7 +52,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
         if "_data" in path.parts:
             continue
         try:
-            source = path.read_text(encoding="utf-8", errors="replace")
+            source = path.read_text(encoding=UTF_8_ENCODING, errors="replace")
         except OSError:
             continue
         try:
