@@ -540,7 +540,7 @@ class SecureObjectRepository:
         """
         self._ensure_quarantine_table()
         with session_scope(self._engine) as session:
-            quarantined_at = now().isoformat()
+            quarantined_at = _utc_now().isoformat()
             namespaces = (
                 session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
                 .scalars()
