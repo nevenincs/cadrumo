@@ -304,7 +304,8 @@ class BucketEventHistoryCatalogue(BaseModel):
     def values(self) -> ValuesView[BucketEvent]:
         return self.events.values()
 
-    def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS: pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware base class. Successor epic required.
+    def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
         return iter(self.events.values())
 
     def __len__(self) -> int:
