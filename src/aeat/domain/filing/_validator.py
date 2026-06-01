@@ -9,10 +9,9 @@ behaviour is the caller's responsibility via
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
-from datetime import UTC, datetime
 from decimal import Decimal
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...core.time import now
