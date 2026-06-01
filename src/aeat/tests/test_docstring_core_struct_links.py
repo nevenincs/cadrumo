@@ -43,6 +43,26 @@ CORE_STRUCTS: dict[str, str] = {
     "OutputSchema": "aeat.core.json_contract",
     "SchemaEnvelope": "aeat.core.json_contract",
     "SecureObjectRepository": "aeat.adapters.persistence.storage.sql.secure_objects",
+    # Security + classification
+    "SensitivityClass": "aeat.core.classification",
+    "Envelope": "aeat.adapters.persistence.storage.envelope._envelope",
+    "MasterKeyProvider": "aeat.adapters.persistence.storage.master_key._master_key",
+    # Portal registry
+    "Portal": "aeat.domain.portals._codes",
+    "PortalMetadata": "aeat.domain.portals._metadata",
+    "PortalCategory": "aeat.domain.portals._categories",
+    # Financial-input aggregates and their repositories
+    "TransactionCatalogue": "aeat.domain.transactions._models",
+    "TransactionCatalogueRepository": "aeat.domain.transactions._repository",
+    "InvoiceCatalogue": "aeat.domain.invoices._models",
+    "InvoiceCatalogueRepository": "aeat.domain.invoices._repository",
+    "BucketEventHistoryRepository": "aeat.domain.buckets._event_repository",
+    # Profile, deadlines, and filing records
+    "TaxpayerProfile": "aeat.domain.deadlines._models",
+    "Schedule": "aeat.domain.deadlines._models",
+    "UserProfileRecord": "aeat.domain.user_profile._values",
+    "ModeloDraft": "aeat.domain.filing._schema",
+    "ModeloRecord": "aeat.domain.modelos._filing_record",
 }
 
 _SRC_ROOT = Path(__file__).resolve().parents[2]  # .../src
@@ -111,10 +131,13 @@ def test_core_struct_anchors_are_unambiguous() -> None:
     """Every declared anchor resolves to exactly one class at its canonical module."""
     problems: list[str] = []
     for name, dotted in CORE_STRUCTS.items():
-        rel = Path(*dotted.split(".")).with_suffix(".py")
-        path = _SRC_ROOT / rel
+        base = _SRC_ROOT / Path(*dotted.split("."))
+        # A canonical home is either a module file or a package __init__.
+        path = base.with_suffix(".py")
         if not path.is_file():
-            problems.append(f"{name}: declared module {dotted} has no file at {rel}")
+            path = base / "__init__.py"
+        if not path.is_file():
+            problems.append(f"{name}: declared module {dotted} has no file")
             continue
         defs = re.findall(rf"^class {re.escape(name)}\b", path.read_text(encoding="utf-8"), re.MULTILINE)
         if len(defs) != 1:
