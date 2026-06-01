@@ -11,11 +11,10 @@ Classification rules:
   is documented in ``_DOCUMENTED_BOUNDARY_MOCKS``.
 - **Drift**: any mock import not in the documented set.
 
-Current inventory (S207 enumeration):
-  Zero ``unittest.mock`` or ``pytest_mock`` imports were found under
-  ``src/aeat/``.  The codebase uses ``monkeypatch.setattr`` with inline
-  callables for the handful of boundary-injection sites rather than the mock
-  library.
+Current inventory (W22.P54.S652 update):
+  Zero ``unittest.mock`` or ``pytest_mock`` imports found under
+  ``src/aeat/``.  The codebase uses constructor injection with inline
+  callables for boundary-injection sites rather than the mock library.
 
 The test asserts that no undocumented mock imports appear.  When a legitimate
 boundary mock is added, an entry MUST be added to ``_DOCUMENTED_BOUNDARY_MOCKS``
@@ -42,18 +41,7 @@ _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 # Documented boundary-mock sites.
 # Format: (repo-relative path, module imported).
 # Each entry requires a one-line justification comment here AND in the source.
-_DOCUMENTED_BOUNDARY_MOCKS: frozenset[tuple[str, str]] = frozenset(
-    {
-        # The narrowed-except handler tests inject side-effects into the
-        # certificate health-check probe to prove that an unexpected
-        # exception type is converted to AuthValidationError, while a
-        # documented CertificateError flows through cleanly. The real
-        # health-check probe requires a valid PKCS#12 file we deliberately
-        # exclude from unit tests; patch.object on the bound method is the
-        # narrowest boundary stub that proves the narrowed handler.
-        ("src/aeat/test_except_clause_narrowing.py", "unittest.mock"),
-    }
-)
+_DOCUMENTED_BOUNDARY_MOCKS: frozenset[tuple[str, str]] = frozenset()
 
 # Import module names that constitute a mock library usage.
 _MOCK_MODULE_PREFIXES = ("unittest.mock", "pytest_mock")

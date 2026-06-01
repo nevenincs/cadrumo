@@ -4,4 +4,3 @@ aeat.domain.period module
 .. automodule:: aeat.domain.period
    :members:
    :show-inheritance:
-   :undoc-members:

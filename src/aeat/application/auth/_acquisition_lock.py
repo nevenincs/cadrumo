@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from aeat.core.time import _now
+
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
@@ -154,7 +156,7 @@ def acquire_auth_acquisition_lock(
     """
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
-    now = datetime.now(UTC)
+    now = _now()
     from ..workflow._models import require_active_bucket_id
 
     record = AuthAcquisitionLockRecord(
@@ -177,7 +179,7 @@ def acquire_auth_acquisition_lock(
                 _remove_lock_file(path)
                 continue
             raise AuthAcquisitionLockedError(
-                tr("application.auth.acquisition_lock.errors.lock_held"),
+                translated_message="application.auth.acquisition_lock.errors.lock_held",
                 context=_status_context(status),
                 suggestion=tr("application.auth.acquisition_lock.errors.lock_held_suggestion"),
             ) from None
@@ -193,7 +195,7 @@ def acquire_auth_acquisition_lock(
     if not acquired:
         status = inspect_auth_acquisition_lock(settings, kind)
         raise AuthAcquisitionLockedError(
-            tr("application.auth.acquisition_lock.errors.acquire_failed"),
+            translated_message="application.auth.acquisition_lock.errors.acquire_failed",
             context=_status_context(status),
         )
 

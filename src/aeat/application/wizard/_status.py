@@ -13,7 +13,6 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from aeat.core.profile import SetupAnswers
 
-from ...core.i18n import tr
 from ...domain.deadlines._models import (
     IVARegime,
     ModeloEnrollment,
@@ -160,7 +159,7 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
     record = state.active_profile_record()
     if record is None:
         raise WizardStatusError(
-            tr("application.wizard.status.errors.no_active_profile"),
+            translated_message="application.wizard.status.errors.no_active_profile",
             context={"workflow_state": "no_active_profile"},
         )
     values: dict[str, str] = dict(record_to_path_values(record))
@@ -168,17 +167,17 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
         typed = project_answers(SETUP_FLOW, values)
     except ValidationError as exc:
         raise WizardStatusError(
-            tr("application.wizard.status.errors.projection_failed"),
+            translated_message="application.wizard.status.errors.projection_failed",
             context={"active_profile": resolve_active_bucket_id(), "errors": exc.error_count()},
         ) from exc
     if not isinstance(typed, SetupAnswers):
         raise WizardStatusError(
-            tr("application.wizard.status.errors.unexpected_projection_type"),
+            translated_message="application.wizard.status.errors.unexpected_projection_type",
             context={"flow_id": SETUP_FLOW.id, "projection_type": type(typed).__name__},
         )
     if not typed.tax_id:
         raise WizardStatusError(
-            tr("application.wizard.status.errors.missing_tax_id"),
+            translated_message="application.wizard.status.errors.missing_tax_id",
             context={"active_profile": resolve_active_bucket_id()},
         )
     return TaxpayerProfile(

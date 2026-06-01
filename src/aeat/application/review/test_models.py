@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,14 +9,15 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...domain.invoices import (
     Invoice,
-    InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
+from ...domain.iva import InvoiceKind
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,

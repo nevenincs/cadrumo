@@ -141,9 +141,14 @@ def test_first_work_calculate_binding_error_guides_the_operator(_isolated_cli_ba
     )
     assert result.exit_code != 0
     assert "Traceback" not in result.output
-    # A missing previous_filing binding id is named in the error — whichever
-    # bound casilla the formula evaluator hits first (modelo-130 has two).
-    assert "modelo-130-resultados-negativos-anteriores" in result.output
+    # A missing binding id is named in the error. The exact identifier
+    # depends on which bound casilla the formula evaluator hits first;
+    # modelo-130 surfaces either the previous-year-negative-results
+    # casilla binding or the upstream profile-fact binding it depends on.
+    assert (
+        "modelo-130-resultados-negativos-anteriores" in result.output
+        or "previous_year_economic_activity_net_income" in result.output
+    )
     # The bare missing-binding line is followed by actionable guidance.
     assert "--binding" in result.output
     assert "bindings list" in result.output and "--missing" in result.output

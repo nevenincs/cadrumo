@@ -20,7 +20,6 @@ from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core.i18n import tr
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
 from ...core.identity import BucketId
@@ -63,7 +62,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
         blank_enum_keys = sorted(key for key in self.caller_enum_binding_values if not key.strip())
         if blank_decimal_keys or blank_enum_keys:
             raise Modelo100BorradorBindingError(
-                tr("application.modelo.borrador_binding.errors.caller_binding_keys_blank")
+                translated_message="application.modelo.borrador_binding.errors.caller_binding_keys_blank",
             )
         return self
 
@@ -82,14 +81,14 @@ class Modelo100BorradorBindingResult(BaseModel):
         if self.borrador_snapshot_id is None:
             if self.binding_values or self.enum_binding_values or self.bindings_sourced_from_borrador:
                 raise Modelo100BorradorBindingError(
-                    tr("application.modelo.borrador_binding.errors.snapshot_id_required")
+                    translated_message="application.modelo.borrador_binding.errors.snapshot_id_required",
                 )
             return self
         sourced = set(self.bindings_sourced_from_borrador)
         resolved = set(self.binding_values) | set(self.enum_binding_values)
         if sourced != resolved:
             raise Modelo100BorradorBindingError(
-                tr("application.modelo.borrador_binding.errors.source_trace_mismatch")
+                translated_message="application.modelo.borrador_binding.errors.source_trace_mismatch",
             )
         return self
 
@@ -133,7 +132,7 @@ def resolve_modelo_100_borrador_bindings(
     )
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise Modelo100BorradorBindingError(
-            tr("application.modelo.borrador_binding.errors.snapshot_not_active"),
+            translated_message="application.modelo.borrador_binding.errors.snapshot_not_active",
             suggestion="aeat app live borrador 100 list",
         )
 

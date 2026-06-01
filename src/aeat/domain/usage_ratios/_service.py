@@ -8,17 +8,16 @@ on disk.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from aeat.core.time import _now
+
 from ...core.logging import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import Envelope, SensitivityClass
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 from ..categories import (
@@ -134,7 +133,7 @@ def save_usage_ratios(
 
     envelope = Envelope[UsageRatioProfile](
         schema_version=_USAGE_RATIO_VERSION,
-        written_at=datetime.now(UTC),
+        written_at=_now(),
         classification=SensitivityClass.FINANCIAL,
         payload=profile,
     )

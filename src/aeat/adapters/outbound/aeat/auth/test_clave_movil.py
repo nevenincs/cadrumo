@@ -306,9 +306,17 @@ class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
 
 
 def _settings_for(tmp_path: Path, **env: str) -> Settings:
-    env_overrides = {
+    # Explicit baseline so that operator-local ``env/.env`` entries
+    # (AEAT_CLAVE_MOVIL_DNI_NIE, AEAT_CLAVE_MOVIL_NIE_SOPORTE,
+    # AEAT_CLAVE_PREFER_NON_QR, etc.) do not silently mutate test
+    # expectations; the per-test env-overrides explicitly opt in.
+    env_overrides: dict[str, str | None] = {
         "aeat_token_dir": str(tmp_path),
         "aeat_local_storage_root": str(tmp_path / "storage"),
+        "aeat_clave_prefer_non_qr": "false",
+        "aeat_clave_movil_dni_nie": None,
+        "aeat_clave_movil_dni_fecha": None,
+        "aeat_clave_movil_nie_soporte": None,
     }
     for key, value in env.items():
         env_overrides[key.lower()] = value
@@ -420,7 +428,6 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            monkeypatch,
             AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
         )
         provider = ClaveMovilAuthProvider(settings)
@@ -462,7 +469,6 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            monkeypatch,
             AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
             AEAT_CLAVE_MOVIL_DNI_FECHA="2030-01-01",
             AEAT_CLAVE_PREFER_NON_QR="true",
@@ -490,7 +496,6 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            monkeypatch,
             AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
             AEAT_CLAVE_MOVIL_NIE_SOPORTE="E00000000",
             AEAT_CLAVE_PREFER_NON_QR="true",
@@ -518,7 +523,6 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            monkeypatch,
             AEAT_CLAVE_MOVIL_DNI_NIE="Y0000000Z",
             AEAT_CLAVE_PREFER_NON_QR="true",
         )
@@ -538,7 +542,6 @@ class TestAuthenticateFresh:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            monkeypatch,
             AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
             AEAT_CLAVE_PREFER_NON_QR="true",
         )
@@ -933,7 +936,6 @@ class TestResume:
     ) -> None:
         settings = _settings_for(
             tmp_path,
-            monkeypatch,
             AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z",
         )
         provider = ClaveMovilAuthProvider(settings)

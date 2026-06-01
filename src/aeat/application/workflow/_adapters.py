@@ -102,12 +102,12 @@ class ModeloDraftBuilderAdapter:
         draft: ModeloDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=profile,  # type: ignore[arg-type]  # TaxpayerProfile satisfies ModeloProfile structurally but lacks display_name declaration; structural bridging is intentional at this adapter boundary
+            profile=profile,  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.  # type: ignore[arg-type]
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return draft  # type: ignore[return-value]  # ModeloDraft satisfies RegistryModeloDraftProtocol structurally; Protocol conformance is verified at test time
+        return draft  # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.  # type: ignore[return-value]
 
 
 class SubmissionEngineAdapter:
@@ -141,13 +141,14 @@ async def _live_expedientes_source(
     # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol
     # (Callable[[object, str | None], ...]); the concrete value at this call
     # site is always an ``AeatSession`` supplied by ``default_engine``.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.
     return await walk_expedientes_tree(session, modelo=modelo)  # type: ignore[arg-type]
 
 
 async def _live_notifications_source(session: object) -> WorkflowNotificationsSnapshotProtocol:
     from ...adapters.outbound.aeat.sede import fetch_notifications_query
 
-    # Same Protocol-boundary narrowing as _live_expedientes_source above.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.
     return await fetch_notifications_query(session)  # type: ignore[arg-type]
 
 

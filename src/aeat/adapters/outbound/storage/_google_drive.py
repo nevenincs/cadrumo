@@ -29,8 +29,10 @@ import hashlib
 import io
 import json
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
+
+from aeat.core.time import _now
 
 from ....core.config import Settings as _Settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
@@ -658,9 +660,9 @@ def _metadata_from_drive_entry(
         byte_length = 0
     modified = entry.get("modifiedTime", "")
     try:
-        written_at = datetime.fromisoformat(str(modified).replace("Z", "+00:00")) if modified else datetime.now(UTC)
+        written_at = datetime.fromisoformat(str(modified).replace("Z", "+00:00")) if modified else _now()
     except ValueError:
-        written_at = datetime.now(UTC)
+        written_at = _now()
 
     app_properties = entry.get("appProperties") or {}
     content_hash = str(app_properties.get("content_hash", "") or "")

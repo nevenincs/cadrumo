@@ -144,8 +144,8 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="Q1",
-        revision_id="aeat-303-2026",
+        period="1T",
+        revision_id="2023-y-siguientes",
     )
 
     report = build_overview_status_report()
@@ -159,13 +159,13 @@ def test_overview_status_distinguishes_drafts_from_work_units() -> None:
     silently folded into the other."""
 
     bucket_id = _register_active_profile()
-    for period in ("Q1", "Q2"):
+    for period in ("1T", "2T"):
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
             period=period,
-            revision_id="aeat-303-2026",
+            revision_id="2023-y-siguientes",
         )
 
     projection = build_operator_state_projection()
@@ -182,20 +182,20 @@ def test_work_units_counter_excludes_discarded_units() -> None:
     operator is never shown a misleading total."""
 
     bucket_id = _register_active_profile()
-    for period in ("Q1", "Q2", "Q3"):
+    for period in ("1T", "2T", "3T"):
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
             period=period,
-            revision_id="aeat-303-2026",
+            revision_id="2023-y-siguientes",
         )
     discarded = create_work_unit(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="Q4",
-        revision_id="aeat-303-2026",
+        period="4T",
+        revision_id="2023-y-siguientes",
     )
     discard_work_unit(discarded.work_unit_id, actor="operator", reason="superseded")
 
@@ -222,22 +222,22 @@ def test_surfaces_agree_on_one_projection() -> None:
     disagreement."""
 
     bucket_id = _register_active_profile()
-    for period in ("Q1", "Q2"):
+    for period in ("1T", "2T"):
         create_work_unit(
             bucket_id=bucket_id,
             modelo="303",
             filing_year=2026,
             period=period,
-            revision_id="aeat-303-2026",
+            revision_id="2023-y-siguientes",
         )
 
     projection = build_operator_state_projection(
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id="aeat-303-2026",
+                revision_id="2023-y-siguientes",
                 filing_year=2026,
-                period="Q1",
+                period="1T",
             ),
         ),
         probe_live_backend=True,
@@ -317,8 +317,8 @@ def test_projection_is_pure_read() -> None:
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
-        period="Q1",
-        revision_id="aeat-303-2026",
+        period="1T",
+        revision_id="2023-y-siguientes",
     )
 
     first = build_operator_state_projection()

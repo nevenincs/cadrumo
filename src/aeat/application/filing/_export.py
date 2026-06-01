@@ -26,12 +26,14 @@ from __future__ import annotations
 import hashlib
 import re
 from collections.abc import Iterable
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
+
+from aeat.core.time import _now
 
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file
@@ -56,7 +58,6 @@ from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
 _logger = get_logger(__name__)
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-
 
 _SHA256_HEX_LENGTH = 64
 """Length of a hex-encoded SHA-256 digest used by export receipts."""
@@ -247,7 +248,7 @@ def export_draft(
         output_path=output_path,
         byte_size=len(payload),
         file_sha256=digest,
-        exported_at=datetime.now(tz=UTC),
+        exported_at=_now(),
         narrative="filing.export.written",
         casilla_provenance=casilla_provenance,
     )
@@ -271,7 +272,7 @@ def verify_export(
             file_path=file_path,
             verdict=DeclaracionVerifyVerdict.MISSING,
             file_sha256=digest,
-            verified_at=datetime.now(tz=UTC),
+            verified_at=_now(),
             narrative="filing.export.missing_registry_layout",
         )
     if not file_path.exists():
@@ -279,7 +280,7 @@ def verify_export(
             draft_id=draft.draft_id,
             file_path=file_path,
             verdict=DeclaracionVerifyVerdict.MISSING,
-            verified_at=datetime.now(tz=UTC),
+            verified_at=_now(),
             narrative="filing.export.missing_file",
         )
     payload = file_path.read_bytes()
@@ -293,7 +294,7 @@ def verify_export(
             file_path=file_path,
             verdict=DeclaracionVerifyVerdict.MISSING,
             file_sha256=digest,
-            verified_at=datetime.now(tz=UTC),
+            verified_at=_now(),
             narrative="filing.export.malformed_file",
         )
     # Draft casillas the export parser never re-read: the wire layout
@@ -314,7 +315,7 @@ def verify_export(
         casilla_provenance=_provenance_for_casillas(draft, checked),
         mismatched_casilla_provenance=_provenance_for_casillas(draft, mismatched),
         file_sha256=digest,
-        verified_at=datetime.now(tz=UTC),
+        verified_at=_now(),
         narrative="filing.export.verified",
     )
 

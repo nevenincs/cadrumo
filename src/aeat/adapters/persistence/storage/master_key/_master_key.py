@@ -55,6 +55,8 @@ from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 from cryptography.exceptions import InvalidTag
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from aeat.core.time import _now
+
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
     from types import TracebackType
@@ -1007,7 +1009,6 @@ class EphemeralMasterKeyProvider:
             from ._errors import MasterKeyReentrantError
 
             raise MasterKeyReentrantError(type(self).__name__)
-        from datetime import UTC, datetime
 
         from ._active_session import activate_session
         from ._bucket_session import BucketSession
@@ -1017,7 +1018,7 @@ class EphemeralMasterKeyProvider:
             kek=self._key,
             dek=self._key,
             idle_minutes=60,
-            opened_at=datetime.now(UTC),
+            opened_at=_now(),
             unsecured_backend=False,
         )
         activation = activate_session(session)
@@ -1310,8 +1311,6 @@ def _provider_enter(
     ``provider._session`` and ``provider._activation_cm`` so the
     matching ``_provider_exit`` can tear them down.
     """
-    from datetime import UTC, datetime
-
     from .....core.config import load_settings
     from ..bucket._errors import NoActiveBucketError
     from ._active_session import activate_session
@@ -1351,7 +1350,7 @@ def _provider_enter(
         kek=key_bytes,
         dek=dek_bytes,
         idle_minutes=idle_minutes,
-        opened_at=datetime.now(UTC),
+        opened_at=_now(),
         unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
     )
     activation = activate_session(session)

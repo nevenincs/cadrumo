@@ -73,8 +73,9 @@ def test_explain_refuses_unknown_modelo() -> None:
 def test_explain_refuses_blank_modelo() -> None:
     """A blank modelo identifier is refused at the service boundary."""
 
-    with pytest.raises(OverviewExplainError, match=r"no puede estar en blanco"):
+    with pytest.raises(OverviewExplainError) as excinfo:
         build_overview_explain(_autonomo_profile(), modelo="  ", year=2026)
+    assert excinfo.value.translated_message == "application.overview.explain.errors.modelo_blank"
 
 
 def test_explain_profile_facts_surface_taxpayer_model_axes() -> None:

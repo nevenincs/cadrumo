@@ -273,13 +273,8 @@ class TestAuthenticatorDescribeNarrowing:
 
     def test_unexpected_exception_raises_auth_validation_error(self, tmp_path) -> None:
         """An unexpected exception from the certificate health check raises AuthValidationError."""
-        import contextlib
-        from unittest.mock import patch
-
         from aeat.adapters.outbound.aeat.auth._errors import AuthValidationError
         from aeat.adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
-
-        # Build minimal settings pointing at non-existent cert
         from aeat.core.config import Settings
         from pydantic import SecretStr
 
@@ -290,22 +285,22 @@ class TestAuthenticatorDescribeNarrowing:
             aeat_certificate_path=cert_path,
             aeat_certificate_password_secret=SecretStr("test"),
         )
-        auth = AeatAuthenticator(settings)
 
-        # Patch the health check to raise an unexpected type
         class _Unexpected(Exception):
             pass
 
-        with patch.object(auth, "_certificate_health_check", side_effect=_Unexpected("boom")):
-            with pytest.raises(AuthValidationError) as exc_info:
-                auth.describe()
+        def _raise_unexpected(_path, **_kwargs):  # type: ignore[no-untyped-def]
+            raise _Unexpected("boom")
+
+        auth = AeatAuthenticator(settings, certificate_health_check=_raise_unexpected)
+
+        with pytest.raises(AuthValidationError) as exc_info:
+            auth.describe()
 
         assert "Unexpected error" in str(exc_info.value)
 
     def test_certificate_error_returns_unavailable_description(self, tmp_path) -> None:
         """CertificateError (expected) returns available=False description, not re-raises."""
-        from unittest.mock import patch
-
         from aeat.adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
         from aeat.adapters.outbound.aeat.auth.certificate import CertificateError
         from aeat.core.config import Settings
@@ -318,10 +313,12 @@ class TestAuthenticatorDescribeNarrowing:
             aeat_certificate_path=cert_path,
             aeat_certificate_password_secret=SecretStr("test"),
         )
-        auth = AeatAuthenticator(settings)
 
-        with patch.object(auth, "_certificate_health_check", side_effect=CertificateError("expired")):
-            desc = auth.describe()
+        def _raise_certificate_error(_path, **_kwargs):  # type: ignore[no-untyped-def]
+            raise CertificateError("expired")
+
+        auth = AeatAuthenticator(settings, certificate_health_check=_raise_certificate_error)
+        desc = auth.describe()
 
         assert desc.available is False
         assert "CertificateError" in (desc.health_summary or "")

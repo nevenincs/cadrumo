@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -23,10 +23,12 @@ from aeat.application.modelo import (
 from aeat.core.errors import ErrorCategory, get_registered_error_code
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.domain.calculations.registry import RegistrySnapshot
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import derive_calculation_revision_id
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
+from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -114,10 +116,15 @@ def _command(
 
 
 def _non_borrador_decimal_binding_values() -> dict[str, Decimal]:
+    """Zero-fill caller decimal bindings while leaving the profile-sourced
+    date/enum/profile bindings unset so :func:`resolve_profile_sourced_bindings`
+    can populate them from the seeded :class:`UserProfileRecord`."""
+    snapshot = _modelo_100_registry_snapshot()
+    exclusions = {_DECIMAL_BINDING, _ENUM_BINDING}
     return {
         str(binding.id): Decimal("0")
-        for binding in _modelo_100_registry_snapshot().revision.bindings
-        if str(binding.id) not in {_DECIMAL_BINDING, _ENUM_BINDING}
+        for binding in snapshot.revision.bindings
+        if str(binding.id) not in exclusions and binding.source != "profile"
     }
 
 
@@ -127,6 +134,32 @@ def _non_borrador_enum_binding_values() -> dict[str, str]:
 
 def _zero_relation_values() -> dict[str, Decimal]:
     return {str(relation.id): Decimal("0") for relation in _modelo_100_registry_snapshot().revision.relations}
+
+
+def _seed_profile_with_birth_date(objects) -> None:
+    """Persist a minimal UserProfileRecord so the M100 2025 profile-sourced
+    bindings (age_at_year_end birth-date plus declaration-type) resolve from
+    the bucket profile during calculate."""
+    record = UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        # Must agree with the bucket manifest label set by isolated_runtime_profile.
+        display_name="Test runtime profile",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            # Seed derived marriage facts directly (unmarried -> all zero) so the
+            # formula-consumed bindings resolve without a renta_taxpayer.marriage_date.
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        ),
+        created_at=datetime(2026, 4, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 4, 1, tzinfo=UTC),
+    )
+    UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(record)
 
 
 def test_borrador_binding_command_rejects_unknown_fields() -> None:
@@ -144,18 +177,20 @@ def test_borrador_binding_command_rejects_unknown_fields() -> None:
 
 
 def test_borrador_binding_command_rejects_blank_caller_binding_keys() -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="claves de binding"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         _command(borrador_snapshot_id="snap-1", caller_binding_values={" ": Decimal("1")})
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.caller_binding_keys_blank"
 
 
 def test_borrador_binding_result_requires_trace_to_match_values() -> None:
-    with pytest.raises(Modelo100BorradorBindingError, match="traza de origen"):
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         Modelo100BorradorBindingResult(
             borrador_snapshot_id="snap-1",
             binding_values={_DECIMAL_BINDING: Decimal("1")},
             enum_binding_values={},
             bindings_sourced_from_borrador=(),
         )
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.source_trace_mismatch"
 
 
 def test_borrador_resolution_is_inert_without_named_snapshot(snapshot_repository) -> None:
@@ -248,6 +283,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
     )
+    _seed_profile_with_birth_date(objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",
@@ -319,7 +355,10 @@ def test_borrador_binding_error_has_stable_service_error_code() -> None:
 def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
     service_repositories,
 ) -> None:
-    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, _ = service_repositories
+    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
+        service_repositories
+    )
+    _seed_profile_with_birth_date(objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",
@@ -460,7 +499,7 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(snaps
         superseded_by_snapshot_id="borrador-100-2025-newer",
     )
 
-    with pytest.raises(Modelo100BorradorBindingError, match="aeat app live borrador 100 list") as exc_info:
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),
@@ -478,7 +517,7 @@ def test_borrador_resolution_rejects_discarded_snapshot_with_list_pointer(snapsh
         discarded_by="operator",
     )
 
-    with pytest.raises(Modelo100BorradorBindingError, match="aeat app live borrador 100 list") as exc_info:
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(borrador_snapshot_id=snapshot_id),
             registry_snapshot=_modelo_100_registry_snapshot(),

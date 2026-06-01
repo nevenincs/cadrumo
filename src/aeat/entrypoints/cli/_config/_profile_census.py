@@ -16,16 +16,18 @@ from __future__ import annotations
 
 import typer
 
+from aeat.core.time import _now
+
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
 from ....domain.profile._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._profile_census_payloads import (
+    CensusApplyResult,
+    CensusCompareResult,
     CensusRefreshResult,
     CensusShowResult,
-    CensusCompareResult,
-    CensusApplyResult,
 )
 
 
@@ -53,7 +55,6 @@ def _build_service(bucket_id: str):
 
 
 def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_id: str) -> None:
-    from datetime import UTC, datetime
 
     from ....domain.buckets import (
         BucketEvent,
@@ -63,7 +64,7 @@ def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_
         derive_bucket_event_id,
     )
 
-    occurred_at = datetime.now(UTC)
+    occurred_at = _now()
     payload = {"profile_id": profile_id, "snapshot_id": snapshot_id}
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,

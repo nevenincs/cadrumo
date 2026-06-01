@@ -4,7 +4,6 @@ aeat.locales package
 .. automodule:: aeat.locales
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Submodules
 ----------

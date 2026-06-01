@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from aeat.core.time import _now
+
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.errors import InventoryLedgerError
@@ -215,14 +217,13 @@ class InventoryLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
-        from datetime import UTC, datetime
 
         self._objects.save(
             namespace=_INVENTORY_NAMESPACE,
             object_key=self._object_key,
             classification=_INVENTORY_SENSITIVITY,
             schema_version=_SECURE_OBJECT_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             payload=document.model_dump_json().encode("utf-8"),
         )
 

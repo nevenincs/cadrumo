@@ -15,7 +15,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...tests.secure_sql import isolated_runtime_profile
-from ._enums import InvoiceKind, IvaRate, PaymentStatus
+from ..iva import InvoiceKind
+from ._enums import IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
 from ._repository import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
 

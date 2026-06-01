@@ -26,9 +26,8 @@ from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
 from ...domain.user_profile import (
-    UserProfileFactValue,
     UserProfileFact,
-    UserProfilePortableExport,
+    UserProfileFactValue,
     UserProfileRecord,
     UserProfileStatus,
 )
@@ -361,12 +360,8 @@ __all__ = [
     "RegisterProfileCommand",
     "RemoveProfileCommand",
     "RenameProfileCommand",
-    "UserProfileFact",
     "UserProfileLifecycleRepository",
-    "UserProfilePortableExport",
-    "UserProfileRecord",
     "UserProfileSnapshotRepository",
-    "UserProfileStatus",
     "facts_to_values",
     "projection_for_taxpayer",
     "record_to_values",

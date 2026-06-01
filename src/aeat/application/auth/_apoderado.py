@@ -20,10 +20,12 @@ this boundary; the service has no verb that would write to AEAT.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -33,12 +35,12 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.identity import BucketId
 from ...domain.auth.apoderamientos import (
     ApoderamientosCatalogue,
     load_default_catalogue,
     parse_scope_tokens,
 )
-from ...core.identity import BucketId
 
 
 class ApoderadoConfigurationNotSetError(AeatError):
@@ -158,7 +160,7 @@ class ApoderadoService:
             represented_nif=represented_nif,
             granted_scopes=granted,
             catalogue_version=self._catalogue.catalogue_version,
-            configured_at=datetime.now(tz=UTC),
+            configured_at=_now(),
             notes=notes,
         )
         self._repository_for(config.bucket_id).save(config)

@@ -64,6 +64,10 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+    # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
+    "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+    "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+    "renta-2024-profile-descendientes-menores-3": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
     "renta-2024-profile-marriage-full-year": Decimal("0"),
     "renta-2024-profile-marriage-month-start": Decimal("0"),

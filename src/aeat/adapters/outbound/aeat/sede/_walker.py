@@ -20,21 +20,23 @@ from __future__ import annotations
 import hashlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from aeat.core.time import _now
+
 from .....core.config import Settings, load_settings
+from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
-from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from ._browser_constants import (
     PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
+)
+from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from ._declarations import DEFAULT_NAVIGATION_TIMEOUT_MS
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -271,7 +273,7 @@ async def capture_justificante(
             ref=ref,
             pdf_bytes=body,
             pdf_sha256=sha256,
-            captured_at=datetime.now(UTC),
+            captured_at=_now(),
         )
 
 

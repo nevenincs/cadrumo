@@ -264,12 +264,11 @@ def raise_on_errors(report: ManualVerificationReport) -> None:
     if not report.ok:
         messages = "; ".join(issue.message for issue in report.errors)
         raise ManualReviewRequiredError(
-            tr(
-                "cli.registry.manuals.verify_failed",
-                default="verification failed for %{manual_id}/%{year}/%{part}: %{messages}",
-                manual_id=report.manual_id.value,
-                year=report.year,
-                part=report.part.value,
-                messages=messages,
-            )
+            translated_message="cli.registry.manuals.verify_failed",
+            context={
+                "manual_id": report.manual_id.value,
+                "year": report.year,
+                "part": report.part.value,
+                "messages": messages,
+            },
         )

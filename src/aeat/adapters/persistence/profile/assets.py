@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from aeat.core.time import _now
+
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.assets import (
@@ -164,14 +166,13 @@ class AssetsLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, document: AssetsLedgerDocument) -> None:
-        from datetime import UTC, datetime
 
         self._objects.save(
             namespace=_ASSETS_NAMESPACE,
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_SECURE_OBJECT_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             payload=document.model_dump_json().encode("utf-8"),
         )
 
@@ -236,14 +237,13 @@ class AmortizacionLedgerRepository:
         return self.load()
 
     def _save_unlocked(self, ledger: AmortizacionLedger) -> None:
-        from datetime import UTC, datetime
 
         self._objects.save(
             namespace=_AMORTIZACION_NAMESPACE,
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_SECURE_OBJECT_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             payload=ledger.model_dump_json().encode("utf-8"),
         )
 

@@ -19,12 +19,13 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
+from aeat.core.time import _now
 
 from ....core.logging import get_logger
 from ....domain.attachments._errors import (
@@ -46,7 +47,6 @@ from .sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _STREAM_CHUNK_SIZE = 1024 * 1024
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _ATTACHMENT_BLOB_VERSION = ATTACHMENT_BLOB_STORAGE_NAMESPACE.schema_version
@@ -114,7 +114,7 @@ class AttachmentStore(BaseModel):
             # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
             classification=_ATTACHMENT_BLOB_SENSITIVITY,
             schema_version=_ATTACHMENT_BLOB_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             payload=data,
         )
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
@@ -143,7 +143,7 @@ class AttachmentStore(BaseModel):
             # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
             classification=_ATTACHMENT_BLOB_SENSITIVITY,
             schema_version=_ATTACHMENT_BLOB_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             payload=b"".join(chunks),
         )
         _LOGGER.debug("stored attachment object %s (%d bytes)", digest, bytes_size)
@@ -179,7 +179,7 @@ class AttachmentStore(BaseModel):
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
             payload=attachment,
         )

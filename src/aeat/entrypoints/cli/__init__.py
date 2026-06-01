@@ -140,10 +140,10 @@ def _root(
         if detail:
             typer.echo(render_cli_version_text(report))
         else:
-            # S539-DEFERRED: The short `aeat --version` line is machine-format
-            # semver (e.g. "aeat 1.2.3") consumed by CI tooling and package
-            # managers. AEAT policy treats semver output as machine-format, not
-            # operator text, so tr() wrapping is explicitly deferred here.
+            # The short `aeat --version` line is machine-format semver
+            # (e.g. "aeat 1.2.3") consumed by CI tooling and package
+            # managers. AEAT policy treats semver output as machine-format,
+            # not operator text, so tr() wrapping is intentionally omitted.
             typer.echo(f"{report.package_name} {report.package_version}")
         raise typer.Exit()
     if help_:
@@ -204,10 +204,16 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
     requested = profile.strip()
     if not requested:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile))
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": profile},
+        )
     pointer = read_profile_bucket(requested) or read_profile_bucket_by_id(requested)
     if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=requested))
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.unknown_profile",
+            context={"name": requested},
+        )
     ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
 
 
@@ -434,4 +440,4 @@ def main() -> None:
     app(prog_name="aeat")
 
 
-__all__ = ["AppRootResult", "RootStatusResult", "app", "main", "tr"]
+__all__ = ["AppRootResult", "RootStatusResult", "app", "main"]

@@ -5,10 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from aeat.core.time import _now
 
 from .....core.external_constants import UTF_8_ENCODING
 from ....persistence.storage import SensitivityClass
@@ -45,7 +47,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     payload = PersistedBrowserSession(
         storage_state=storage_state,
         metadata=metadata,
-        written_at=datetime.now(UTC),
+        written_at=_now(),
     )
     _repository().save(
         namespace=_SESSION_NAMESPACE,

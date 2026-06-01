@@ -80,7 +80,7 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
-    from ...domain.calculations.registry._schema import ModeloRevision
+    from ...domain.calculations.registry._schema import ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
         ModeloRecordPayload,
@@ -440,6 +440,8 @@ def describe_modelo(
         tax_domain=report.tax_domain,
         cadence=report.cadence,
         revision=report.revision,
+        filing_year=report.filing_year,
+        period=report.period,
         revision_ids=list(report.revision_ids),
         periods=list(report.periods),
         casilla_count=report.casilla_count,
@@ -889,11 +891,11 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
             k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
         }
         if row_type == "miembro":
-            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo184MemberRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
         elif row_type == "vinculada":
-            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO232-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo232VinculadaRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
         elif row_type == "operador":
-            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]
+            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO349-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo349OperadorRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
             # NIF format check is advisory at parse time — invalid format raises BadParameter.
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
@@ -912,7 +914,7 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
                 )
             return row_m349
         else:
-            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]
+            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO347-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo347ContraparteRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
@@ -1265,7 +1267,7 @@ def formulas(
         revision=report.revision,
         filing_year=report.filing_year,
         period=report.period,
-        formula_count=report.formula_count,
+        formula_count=len(report.rows),
         rows=tuple(
             FormulaPayload(
                 formula_id=row.formula_id,
@@ -1559,7 +1561,7 @@ def _validate_filing_year(year: int) -> None:
         )
 
 
-def _revision_covers_year(revision_id: str, year: int, definition: object) -> bool:
+def _revision_covers_year(revision_id: str, year: int, definition: ModeloDefinition) -> bool:
     """Return True when the revision's period_selector applies to *year*.
 
     Revisions declare their year scope through ``PeriodSelector``:
@@ -1570,7 +1572,7 @@ def _revision_covers_year(revision_id: str, year: int, definition: object) -> bo
     A revision with no year constraints (``year_from`` is None and
     ``years`` is empty) is treated as applicable to every year.
     """
-    rev = definition.revisions.get(revision_id)  # type: ignore[union-attr]
+    rev = definition.revisions.get(revision_id)
     if rev is None:
         return False
     selector = rev.period_selector
@@ -2770,7 +2772,16 @@ def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     # `int(...)` is total; casilla.number falls back to "0" on a missing token
     # so the same canonicalisation runs against every catalogued casilla.
     key_numeric = int(key)
-    matches = [c for c in revision.casillas if int(c.number or "0") == key_numeric]
+
+    def _as_int(value: str | None) -> int | None:
+        if not value:
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    matches = [c for c in revision.casillas if _as_int(c.number) == key_numeric]
     if len(matches) == 1:
         return str(matches[0].id)
 
@@ -3109,9 +3120,12 @@ def work_calculate(
                 )
             )
         try:
-            dt12_gross = Decimal(rescate_plan_pensiones_capital)  # type: ignore[arg-type]
-            dt12_pre_2007 = Decimal(rescate_plan_pensiones_aportaciones_pre_2007)  # type: ignore[arg-type]
-            dt12_totales = Decimal(rescate_plan_pensiones_aportaciones_totales)  # type: ignore[arg-type]
+            assert rescate_plan_pensiones_capital is not None
+            assert rescate_plan_pensiones_aportaciones_pre_2007 is not None
+            assert rescate_plan_pensiones_aportaciones_totales is not None
+            dt12_gross = Decimal(rescate_plan_pensiones_capital)
+            dt12_pre_2007 = Decimal(rescate_plan_pensiones_aportaciones_pre_2007)
+            dt12_totales = Decimal(rescate_plan_pensiones_aportaciones_totales)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(
                 tr(
@@ -3147,9 +3161,12 @@ def work_calculate(
                 )
             )
         try:
-            sal_bn = Decimal(sal_beneficio_neto)  # type: ignore[arg-type]
-            sal_rd = Decimal(sal_reserva_dotada)  # type: ignore[arg-type]
-            sal_cs = Decimal(sal_capital_social)  # type: ignore[arg-type]
+            assert sal_beneficio_neto is not None
+            assert sal_reserva_dotada is not None
+            assert sal_capital_social is not None
+            sal_bn = Decimal(sal_beneficio_neto)
+            sal_rd = Decimal(sal_reserva_dotada)
+            sal_cs = Decimal(sal_capital_social)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(
                 tr(
@@ -5777,9 +5794,9 @@ def _maritime_facts_from_active_profile():
 
     return MaritimeWorkerFacts(
         worker_class=_enum("maritime_worker.worker_class"),
-        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]
-        waters_type=_enum("maritime_worker.waters_type"),  # type: ignore[arg-type]
-        vessel_registry=_enum("maritime_worker.vessel_registry"),  # type: ignore[arg-type]
+        vessel_flag=_enum("maritime_worker.vessel_flag"),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: _enum returns str|None from raw profile fact; Literal field type is validated by MaritimeWorkerFacts dataclass at construction  # type: ignore[arg-type]
+        waters_type=_enum("maritime_worker.waters_type"),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
+        vessel_registry=_enum("maritime_worker.vessel_registry"),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
         tuna_fleet=_bool("maritime_worker.tuna_fleet"),
         pending_eu_clearance=_bool("maritime_worker.pending_eu_clearance"),
         retmar_registered=_bool("maritime_worker.retmar_registered"),

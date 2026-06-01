@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -129,6 +130,12 @@ intersphinx_mapping = {
     "typer": ("https://typer.tiangolo.com/", None),
 }
 intersphinx_disabled_reftypes = ["std:doc"]
+
+# Offline-hermetic gate: the docs-check build sets AEAT_DOCS_OFFLINE to skip
+# intersphinx inventory fetches. External references are already covered by
+# nitpick_ignore_regex, so the nitpicky gate stays deterministic and network-free.
+if os.environ.get("AEAT_DOCS_OFFLINE"):
+    intersphinx_mapping = {}
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"

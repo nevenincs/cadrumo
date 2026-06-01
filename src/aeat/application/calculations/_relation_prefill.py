@@ -27,9 +27,11 @@ on the operator's preferences and the local store's coverage.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Final
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
@@ -115,7 +117,7 @@ def resolve_relations_from_local_store(
     the operator can fill by hand.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
-    when = captured_at if captured_at is not None else datetime.now(UTC)
+    when = captured_at if captured_at is not None else _now()
     observations = _gather_observations_for_snapshot(snapshot, repository=repo)
     requirements_by_relation = {
         relation_id: requirement

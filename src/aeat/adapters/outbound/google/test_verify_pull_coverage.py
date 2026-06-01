@@ -24,6 +24,7 @@ from ....application.storage.calc_sheets._records import (
     TabName,
 )
 from ._calc_sheets_pull import (
+    MetadataMatchState,
     PullCoverageDiscrepancy,
     PullMetadata,
     PullResult,
@@ -109,7 +110,7 @@ def _populated_pull(
             for grouping in groupings
         ),
         metadata=pull_meta,
-        metadata_match="matches",
+        metadata_match=MetadataMatchState.MATCHES,
         cells_read=1,
     )
 

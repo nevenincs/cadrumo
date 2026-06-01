@@ -211,6 +211,7 @@ class GoogleSyncCalcPullResult(OutputSchema):
     fields (``legal_refs``, ``source_refs``) on every computed entry.
     """
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
     operation: str = "config.google.sync.calc.pull"

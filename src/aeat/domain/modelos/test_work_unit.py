@@ -364,8 +364,10 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
 
 
 def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
-    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
+    with pytest.raises(WorkUnitNotFoundError) as excinfo:
         get_work_unit("missing", repository=repo)
+    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert excinfo.value.context["work_unit_id"] == "missing"
 
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: WorkUnitCatalogueRepository) -> None:
@@ -388,8 +390,10 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: Work
 
 
 def test_rename_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
-    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
+    with pytest.raises(WorkUnitNotFoundError) as excinfo:
         rename_work_unit("missing", "ignored", actor="test-operator", repository=repo)
+    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert excinfo.value.context["work_unit_id"] == "missing"
 
 
 # ---------------------------------------------------------------------------
@@ -436,8 +440,10 @@ def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueReposit
 
 
 def test_discard_work_unit_raises_on_missing_id(repo: WorkUnitCatalogueRepository) -> None:
-    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
+    with pytest.raises(WorkUnitNotFoundError) as excinfo:
         discard_work_unit("missing", actor="operator-A", repository=repo)
+    assert excinfo.value.translated_message == "application.modelo.errors.work_unit_not_found"
+    assert excinfo.value.context["work_unit_id"] == "missing"
 
 
 def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogueRepository) -> None:

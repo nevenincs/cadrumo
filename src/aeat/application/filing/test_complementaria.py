@@ -7,13 +7,15 @@ from decimal import Decimal
 
 import pytest
 
-from ...domain.filing import ModeloValue, ModeloValueKind
-from ...domain.submission import ModeloDraftStatus
-from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
-from . import (
+from ...domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,
     ModeloDraft,
+    ModeloValue,
+    ModeloValueKind,
+)
+from ...domain.submission import ModeloDraftStatus, ModeloPresentado, SubmissionAttempt, SubmissionStatus
+from . import (
     build_complementaria,
     build_draft,
     build_runtime_schema_provider,

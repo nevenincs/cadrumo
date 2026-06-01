@@ -8,7 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...domain.invoices import InvoiceCatalogue, InvoiceKind
+from ...domain.invoices import InvoiceCatalogue
+from ...domain.iva import InvoiceKind
 from . import merge_invoice_import, parse_invoice_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

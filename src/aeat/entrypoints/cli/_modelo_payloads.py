@@ -199,6 +199,7 @@ class WorkCreateResult(OutputSchema):
     discarded_at: str | None = None
     discarded_by: str | None = None
     discard_reason: str | None = None
+    causante_ccaa: str | None = None
 
 
 @register_schema("modelo.work.list")
@@ -226,6 +227,7 @@ class WorkStatusResult(OutputSchema):
     discarded_at: str | None = None
     discarded_by: str | None = None
     discard_reason: str | None = None
+    causante_ccaa: str | None = None
 
 
 @register_schema("modelo.work.rename")
@@ -244,6 +246,7 @@ class WorkRenameResult(OutputSchema):
     discarded_at: str | None = None
     discarded_by: str | None = None
     discard_reason: str | None = None
+    causante_ccaa: str | None = None
 
 
 @register_schema("modelo.work.discard")
@@ -262,6 +265,7 @@ class WorkDiscardResult(OutputSchema):
     discarded_at: str | None = None
     discarded_by: str | None = None
     discard_reason: str | None = None
+    causante_ccaa: str | None = None
 
 
 @register_schema("modelo.work.calculate")
@@ -642,6 +646,8 @@ class ModeloDescribeResult(OutputSchema):
     tax_domain: str
     cadence: str
     revision: str
+    filing_year: int | None = None
+    period: str | None = None
     revision_ids: list[str]
     periods: list[str]
     casilla_count: int

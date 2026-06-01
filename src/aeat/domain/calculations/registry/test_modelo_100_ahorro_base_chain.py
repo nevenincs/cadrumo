@@ -57,9 +57,30 @@ _BINDINGS_2024: dict[str, Decimal] = {
     # declaration_type = 1 (individual) → 0461 computed = 0
     "renta-2024-profile-declaration-type": Decimal("1"),
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+    # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero default for
+    # scenarios that do not exercise the maternidad-guarderia chain.
+    "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+    "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+    "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+    # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
+    "renta-2024-profile-marriage-full-year": Decimal("0"),
+    "renta-2024-profile-marriage-month-start": Decimal("0"),
+    "renta-2024-profile-marriage-month-end": Decimal("0"),
 }
 
 _ENUM_BINDINGS_2024 = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+
+# RD 439/2007 Art. 110 pagos-fraccionados relations; zero in scenarios that
+# do not exercise M130/M131 cross-model integration.
+_RELATION_VALUES_2024: dict[str, Decimal] = {
+    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+}
 
 
 @pytest.fixture
@@ -81,6 +102,7 @@ def _run_2024(snapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
         date_context=_DATE_2024,
         enum_binding_values=_ENUM_BINDINGS_2024,
         binding_values=_BINDINGS_2024,
+        relation_values=_RELATION_VALUES_2024,
         # Supply a representative birth date so that any age_at_year_end
         # formula in the mínimo personal chain can resolve.  The exact
         # birth date does not affect the capital-mobiliario / base-ahorro
@@ -207,6 +229,13 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot) -> None:
     _bindings_2025: dict[str, Decimal] = {
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        # declaration_type = 1 (individual) → 0461 computed = 0
+        "renta-2025-profile-declaration-type": Decimal("1"),
+        "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+        # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
+        "renta-2025-profile-marriage-full-year": Decimal("0"),
+        "renta-2025-profile-marriage-month-start": Decimal("0"),
+        "renta-2025-profile-marriage-month-end": Decimal("0"),
     }
     # 2025 revision requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.

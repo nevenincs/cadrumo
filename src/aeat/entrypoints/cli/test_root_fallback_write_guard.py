@@ -147,7 +147,7 @@ def _run_aeat(storage_root: Path, args: tuple[str, ...]) -> subprocess.Completed
         errors="replace",
         capture_output=True,
         check=False,
-        timeout=30.0,
+        timeout=120.0,
     )
 
 
@@ -161,7 +161,7 @@ def _run_aeat_explicit_database(storage_root: Path, args: tuple[str, ...]) -> su
         errors="replace",
         capture_output=True,
         check=False,
-        timeout=30.0,
+        timeout=120.0,
     )
 
 

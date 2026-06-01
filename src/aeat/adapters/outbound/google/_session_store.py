@@ -18,7 +18,7 @@ Each function is keyed on the resolved AEAT profile name (per
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from aeat.core.time import _now
 
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -40,7 +40,7 @@ def save_client(profile: str, client: OAuthClient) -> None:
         object_key=profile,
         classification=SensitivityClass.SECRET,
         schema_version=_RECORD_VERSION,
-        written_at=datetime.now(UTC),
+        written_at=_now(),
         payload=client.model_dump_json().encode(UTF_8_ENCODING),
     )
 
@@ -65,7 +65,7 @@ def save_token(profile: str, token: OAuthToken) -> None:
         object_key=profile,
         classification=SensitivityClass.SECRET,
         schema_version=_RECORD_VERSION,
-        written_at=datetime.now(UTC),
+        written_at=_now(),
         payload=token.model_dump_json().encode(UTF_8_ENCODING),
     )
 
@@ -90,7 +90,7 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
         object_key=profile,
         classification=SensitivityClass.FINANCIAL,
         schema_version=_RECORD_VERSION,
-        written_at=datetime.now(UTC),
+        written_at=_now(),
         payload=metadata.model_dump_json().encode(UTF_8_ENCODING),
     )
 
@@ -115,7 +115,7 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
         object_key=profile,
         classification=SensitivityClass.FINANCIAL,
         schema_version=_RECORD_VERSION,
-        written_at=datetime.now(UTC),
+        written_at=_now(),
         payload=config.model_dump_json().encode(UTF_8_ENCODING),
     )
 

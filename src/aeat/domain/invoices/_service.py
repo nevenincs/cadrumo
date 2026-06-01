@@ -22,7 +22,7 @@ from ...core.identity import TransactionId
 from ..transactions import (
     TransactionCatalogue,
 )
-from ._enums import InvoiceKind
+from ..iva import InvoiceKind
 from ._errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,

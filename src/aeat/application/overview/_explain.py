@@ -19,17 +19,18 @@ on so the operator can audit them. Local-only: never contacts AEAT.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
-from ...core.i18n import tr
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
-from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
+from aeat.core.time import _now
 from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
+
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
+from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
 from ._errors import OverviewExplainError
 
 _ProfileFactValue = str | bool | int
@@ -44,6 +45,7 @@ remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 
 class OverviewExplain(BaseModel):
     """Outcome of ``build_overview_explain``.
@@ -199,7 +201,9 @@ def build_overview_explain(
             for a reason other than a missing deadline-window dataset.
     """
     if not modelo.strip():
-        raise OverviewExplainError(tr("application.overview.explain.errors.modelo_blank"))
+        raise OverviewExplainError(
+            translated_message="application.overview.explain.errors.modelo_blank",
+        )
     resolved_year = year or date.today().year
 
     applicability = derive_modelo_applicability(profile, modelo)
@@ -233,7 +237,7 @@ def build_overview_explain(
         legal_refs=applicability.legal_refs,
         scheduling_rationale=scheduling_rationale,
         profile_facts=_extract_profile_facts(profile),
-        generated_at=datetime.now(UTC),
+        generated_at=_now(),
     )
 
 def _scheduling_rationale(

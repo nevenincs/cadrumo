@@ -245,9 +245,7 @@ def _resolve_string_constant(
 def _extract_constraint_shape_from_call(
     call: ast.Call, literals: dict[str, str]
 ) -> ConstraintShape:
-    """Extract a :class:`ConstraintShape` from a ``StringConstraints(...)`` or
-    ``Field(...)`` call.
-    """
+    """Extract a constraint shape from a ``StringConstraints`` or ``Field`` call."""
     min_length: int | None = None
     max_length: int | None = None
     pattern: str | None = None
@@ -1026,8 +1024,8 @@ def _literal_constant_value(node: ast.expr) -> object:
     if isinstance(node, ast.Constant):
         return node.value
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
-        if isinstance(node.operand, ast.Constant):
-            return -node.operand.value  # type: ignore[operator]
+        if isinstance(node.operand, ast.Constant) and isinstance(node.operand.value, (int, float)):
+            return -node.operand.value
     return _MISSING
 
 

@@ -7,7 +7,7 @@ import json
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, NotRequired, TypedDict
+from typing import Any, NotRequired, TypedDict, cast
 
 from pydantic import BaseModel, ConfigDict
 
@@ -123,13 +123,13 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     if raw_stripped.startswith("[") or raw_stripped.startswith("{"):
         decoded = json.loads(raw)
         if isinstance(decoded, Mapping):
-            return (InvoiceRowPayload(**{k: v for k, v in decoded.items()}),)  # type: ignore[misc]
+            return (cast(InvoiceRowPayload, dict(decoded)),)  # CAST-RATIONALE-WIRE-PAYLOAD-JSON-OBJECT: json.loads returns Mapping[str, Any]; cast to TypedDict at the decode boundary before downstream coercion
         if isinstance(decoded, list) and all(isinstance(item, Mapping) for item in decoded):
-            return tuple(InvoiceRowPayload(**{k: v for k, v in item.items()}) for item in decoded)  # type: ignore[misc]
+            return tuple(cast(InvoiceRowPayload, dict(item)) for item in decoded)  # CAST-RATIONALE-WIRE-PAYLOAD-JSON-ARRAY: same JSON-array decode boundary; each item is cast to TypedDict before coercion
         raise InvoiceValidationError("invoice JSON payload must be an object or a list of objects")
 
     reader = csv.DictReader(raw.splitlines())
-    return tuple(InvoiceRowPayload(**dict(row)) for row in reader)  # type: ignore[misc]
+    return tuple(cast(InvoiceRowPayload, dict(row)) for row in reader)  # CAST-RATIONALE-WIRE-PAYLOAD-CSV-ROW: csv.DictReader yields dict[str, str]; cast to TypedDict at the CSV decode boundary before downstream coercion
 
 
 def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:  # ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: parse-stage slot assembled from CSV/JSON decode before Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field names but dict mutation is required for the line-synthesis back-fill.

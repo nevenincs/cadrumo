@@ -35,13 +35,15 @@ from __future__ import annotations
 import hashlib
 import random
 import re
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from aeat.core._models import STRICT_FROZEN_CONFIG
+from aeat.core.time import _now
+
 from ._errors import PdfModeloImportError
 from ._utils import sha256_file
 
@@ -247,7 +249,7 @@ def compute_sidecar(
         original_sha256=sha256_file(original_path),
         scrubbed_sha256=sha256_file(scrubbed_path),
         scrub_version=SCRUB_VERSION,
-        scrubbed_at=datetime.now(tz=UTC),
+        scrubbed_at=_now(),
         fields_touched=fields_touched,
         consent_revocable_until=consent_revocable_until,
         original_filename=original_path.name,

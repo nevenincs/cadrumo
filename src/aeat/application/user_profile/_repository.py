@@ -18,9 +18,10 @@ unique within a bucket per ``new_profile_snapshot_id``.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import UTC, datetime
 
 from pydantic import ValidationError
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
@@ -162,7 +163,7 @@ class UserProfileLifecycleRepository:
     def save(self, record: UserProfileRecord) -> None:
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=_USER_PROFILE_VALUE_SENSITIVITY,
             payload=record,
         )
@@ -256,7 +257,7 @@ class UserProfileSnapshotRepository:
     def save(self, snapshot: UserProfileSnapshot) -> None:
         envelope = Envelope[UserProfileSnapshot](
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=_USER_PROFILE_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )

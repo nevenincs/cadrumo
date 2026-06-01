@@ -31,7 +31,8 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import UTC, datetime
+
+from aeat.core.time import _now
 
 from ..bucket._errors import BucketLockedError
 from ..errors import SecretStoreError
@@ -101,7 +102,7 @@ def get_active_master_key() -> bytes:
             "to unlock a profile before invoking commands that decrypt "
             "stored records.",
         )
-    if session.is_expired(datetime.now(UTC)):
+    if session.is_expired(_now()):
         bucket_id = session.bucket_id
         session.close()
         raise BucketLockedError(bucket_id=bucket_id)

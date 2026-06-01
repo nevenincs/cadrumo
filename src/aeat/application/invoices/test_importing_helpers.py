@@ -31,7 +31,7 @@ from typing import cast
 
 import pytest
 
-from ...domain.invoices import InvoiceKind
+from ...domain.iva import InvoiceKind
 from ._importing import (
     _IVA_RATE_ALIASES,
     _coerce_kind,

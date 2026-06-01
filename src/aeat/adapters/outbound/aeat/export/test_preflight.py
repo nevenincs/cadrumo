@@ -10,11 +10,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....core.errors import BaseSeverity
-from .....domain.submission import SubmissionPreflightError
-from . import (
+from .....domain.submission import (
     ModeloDraftStatus,
     ModeloFinding,
     Preflight,
+    SubmissionPreflightError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]

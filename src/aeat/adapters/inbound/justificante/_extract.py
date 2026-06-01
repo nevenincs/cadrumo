@@ -17,11 +17,13 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
+
+from aeat.core.time import _now
 
 from ....core.logging import get_logger
 from ....domain.justificante._errors import JustificanteCsvNotFoundError, JustificanteParseError
@@ -319,7 +321,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     total_ingresar, total_devolver = _extract_totals(normalised)
     verification_url = _extract_verification_url(text, pdf_path)
     sha256 = sha256_file(pdf_path)
-    parsed_at = datetime.now(tz=UTC)
+    parsed_at = _now()
     try:
         record = Justificante(
             csv=csv_value,

@@ -4,7 +4,6 @@ aeat.domain.iva package
 .. automodule:: aeat.domain.iva
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Submodules
 ----------

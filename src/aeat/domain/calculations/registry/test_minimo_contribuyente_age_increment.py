@@ -91,9 +91,17 @@ def _calc_2024(birth_date: date) -> Mapping[str, Decimal]:
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
             # declaration_type = 1 (individual) -> 0461 computed = 0
             "renta-2024-profile-declaration-type": Decimal("1"),
             "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+            # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
+            "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-2024-profile-descendientes-menores-3": Decimal("0"),
             "renta-2024-profile-marriage-full-year": Decimal("0"),
             "renta-2024-profile-marriage-month-start": Decimal("0"),
             "renta-2024-profile-marriage-month-end": Decimal("0"),

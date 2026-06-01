@@ -34,6 +34,8 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
+
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
@@ -151,7 +153,7 @@ def aggregate_renta_income_ledger_from_repositories(
     *,
     bucket_id: str,
     period: Period | str,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate cumulative M130 income."""
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)

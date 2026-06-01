@@ -368,7 +368,12 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
     result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
     assert "profile_id\toperator" in result.output
-    assert "identity.tax_id\t00000000T" in result.output
+    # NIF is identity-class data; centralized output redaction (ADR
+    # 2026-05-28-centralized-output-redaction) rewrites it to a
+    # sha256 fingerprint before it reaches stdout. Assert the
+    # redaction shape; assert the raw value does NOT leak.
+    assert "identity.tax_id\tsha256:" in result.output
+    assert "00000000T" not in result.output
 
 
 def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: CliRunner) -> None:
@@ -377,7 +382,11 @@ def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: 
     result = cli_runner.invoke(profile_app, ["show", "spouse"])
     assert result.exit_code == 0, result.output
     assert "profile_id\tspouse" in result.output
-    assert "identity.tax_id\t00000000T" in result.output
+    # Per centralized-output-redaction ADR: NIF redacted to sha256
+    # fingerprint at the rendering boundary; raw value must not leak.
+    assert "identity.tax_id\tsha256:" in result.output
+    assert "00000000T" not in result.output
+    assert "00000001R" not in result.output
     assert "iva.regime\tGENERAL" in result.output
     assert "tax_residence.ccaa\tmadrid" in result.output
 
@@ -492,19 +501,20 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
 
 
 def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> None:
-    import re
-
     _seed("operator")
     result = cli_runner.invoke(
         profile_app,
         ["duplicate", "operator", "operator-spouse", "--display-name", "Spouse"],
     )
     assert result.exit_code == 0, result.output
-    # The duplicate lands under a freshly minted UUID identity and the
-    # supplied --display-name as its operator label.
-    uuid_re = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-    match = re.search(r"target_profile_id\t(\S+)", result.output)
-    assert match and re.fullmatch(uuid_re, match.group(1)), result.output
+    # The duplicate lands under a freshly minted profile id; per the
+    # centralized-output-redaction ADR (2026-05-28), raw profile ids are
+    # rewritten to a `<profile-id>` placeholder at the rendering
+    # boundary before reaching stdout. Assert the placeholder shape; the
+    # invariant the test guards is that a NEW record was created (the
+    # registry pointer below) and labelled with the supplied
+    # --display-name.
+    assert "target_profile_id\t<profile-id>" in result.output
     assert "display_name\tSpouse" in result.output
     from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
     assert read_profile_bucket("Spouse") is not None
@@ -801,7 +811,15 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"
     assert "readiness\tready" in show_result.output, show_result.output
     assert "missing_profile_record" not in show_result.output, show_result.output
-    assert f"profile_id\t{uuid_before}" in show_result.output
+    # Per centralized-output-redaction ADR: raw profile id is rewritten
+    # to a `<profile-id>` placeholder at the rendering boundary. The
+    # identity-stability invariant is verified above via the direct
+    # lifecycle-service read (`record.profile_id == uuid_before`); the
+    # stdout assertion only needs to confirm the show path reached the
+    # renamed label's record (display_name + readiness above already do).
+    assert "profile_id\t<profile-id>" in show_result.output
+    assert "display_name\tbob" in show_result.output
+    assert uuid_before not in show_result.output  # raw UUID must NOT leak
 
 
 def test_profile_rename_refuses_a_label_taken_by_another_live_profile(

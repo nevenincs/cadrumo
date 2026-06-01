@@ -14,7 +14,6 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from aeat.adapters.outbound.aeat.auth import _session_store
-from aeat.core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from aeat.adapters.outbound.aeat.sede import ExpedienteNotFoundError
 from aeat.adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
 from aeat.adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact
@@ -57,6 +56,7 @@ from aeat.application.repair_integrity import (
 from aeat.application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
 from aeat.application.workflow._persistence import WorkflowRunRepository, WorkflowStateRepository
 from aeat.core.config import override_settings
+from aeat.core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from aeat.domain.attachments import AttachmentNotFoundError
 from aeat.domain.buckets import (
     BucketEvent,
@@ -75,7 +75,6 @@ from aeat.domain.filing import (
     ModeloComplementaria,
     ModeloDraft,
     ModeloDraftRepository,
-    ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
     make_amendment_id,
@@ -84,11 +83,11 @@ from aeat.domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
-    InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
+from aeat.domain.iva import InvoiceKind
 from aeat.domain.justificante import Justificante
 from aeat.domain.justificante._repository import JustificanteRepository
 from aeat.domain.modelos import ModeloCode
@@ -117,6 +116,7 @@ from aeat.domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnit
 from aeat.domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from aeat.domain.profile.inventory import InventoryLedger, ValuationMethod
 from aeat.domain.submission import (
+    ModeloDraftStatus,
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionRepository,

@@ -35,7 +35,6 @@ from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from aeat.core._models import STRICT_FROZEN_CONFIG
 
-from .....core.access_gate import AeatLiveReadNotEnabledError
 from .....core.config import CertificateBackend
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
@@ -727,7 +726,6 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
 
 
 __all__ = [
-    "AeatLiveReadNotEnabledError",
     "AeatLoginAssertionError",
     "AeatSessionExpiredError",
     "CertificateBackend",

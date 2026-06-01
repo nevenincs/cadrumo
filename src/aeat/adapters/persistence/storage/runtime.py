@@ -9,12 +9,14 @@ top of this contract in later plan steps.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
+
+from aeat.core.time import _now
 
 from ....core.config import (
     Settings,
@@ -31,6 +33,7 @@ if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 
 class StorageRuntimeReadinessCode(StrEnum):
@@ -127,7 +130,7 @@ class StorageRuntime(BaseModel):
                 "storage runtime is not ready for profile-bound storage: no active bucket session.",
                 message_key="errors.storage.runtime.no_active_session",
             )
-        now = datetime.now(UTC)
+        now = _now()
         if active.sealed:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session is sealed.",
@@ -190,7 +193,7 @@ def inspect_storage_runtime(
     """Return the current profile-bound secure-storage runtime state."""
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
-    checked_at = now or datetime.now(UTC)
+    checked_at = now or _now()
     active = _active_session.get()
     session = None
     issues: list[StorageRuntimeReadinessIssue] = []

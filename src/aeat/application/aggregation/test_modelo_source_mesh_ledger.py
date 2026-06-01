@@ -23,14 +23,14 @@ from ...domain.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ...domain.invoices import (
-    InvoiceKind as CatalogueInvoiceKind,
-)
 from ...domain.iva import (
     EUMemberState,
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
+)
+from ...domain.iva import (
+    InvoiceKind as CatalogueInvoiceKind,
 )
 from ...domain.iva import (
     InvoiceKind as IvaInvoiceKind,

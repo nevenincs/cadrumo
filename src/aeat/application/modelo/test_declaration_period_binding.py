@@ -20,22 +20,44 @@ from pathlib import Path
 
 import pytest
 
+from aeat.application.calculations._iva_wallet_reconciliation import (
+    IvaCompensationReconciliationDecision,
+)
+from aeat.application.calculations._observations_repository import IvaWalletDecisionRepository
 from aeat.application.modelo import calculate_modelo_revision, create_work_unit
+from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
+from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
 from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
+_TAXPAYER_NIF = "12345678Z"
 
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator") as runtime:
+        _seed_taxpayer_profile(runtime.repository)
         yield
+
+
+def _seed_taxpayer_profile(objects) -> None:
+    """Seed the bucket profile with the taxpayer NIF so the IVA wallet
+    reconciliation gate added to ``calculate_modelo_revision`` resolves
+    the work-unit taxpayer identity."""
+    record = UserProfileRecord(
+        profile_id="operator",
+        display_name="Test runtime profile",
+        facts=(UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    UserProfileLifecycleRepository(bucket_id="operator", objects=objects).save(record)
 
 
 def _repositories():
@@ -53,7 +75,29 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+        "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
     }
+
+
+def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaCompensationReconciliationDecision:
+    """Return a zero-amount IVA compensation decision so the new
+    ``modelo-303-compensacion-pendiente-anteriores`` binding clears the
+    wallet-reconciliation gate added by peer registry work without
+    fabricating prior-period compensation that AEAT did not record."""
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif=_TAXPAYER_NIF,
+        target_year=filing_year,
+        target_period=period,
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("0"),
+        wallet_amount=Decimal("0"),
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason="test fixture: zero prior compensation per AEAT wallet match",
+        decided_at=_CLOCK,
+    )
 
 
 def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path: Path):
@@ -69,11 +113,18 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
             repository=work_repo,
             clock=_CLOCK,
         )
+        # Persist a zero-amount wallet-reconciliation decision so the new
+        # ``modelo-303-compensacion-pendiente-anteriores`` binding clears the
+        # gate added by peer registry work without fabricating prior-period
+        # compensation that AEAT did not record.
+        decision = _iva_compensation_zero_decision(filing_year=filing_year, period=period)
+        IvaWalletDecisionRepository().save_decision(decision)
         return calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs={},
             binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=decision,
             filing_period_date=period_date,
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,

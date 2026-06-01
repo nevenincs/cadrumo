@@ -1827,8 +1827,7 @@ cli:
       venv_stale: L'entorn virtual esta desactualitzat.
     version:
       no_revisions: No hi ha revisions del registre disponibles.
-      registry_summary: '%{package} %{version}: %{modelos} models, %{casillas} caselles,
-        %{formulas} formules, %{revisions} revisions.'
+      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles, %{formulas} fórmules, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registre no disponible (%{error}).'
   ledger:
     add:

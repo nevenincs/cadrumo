@@ -151,10 +151,9 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         exactly the parameterised subtype; Pydantic registers it as a model class
         whose ``payload`` field is constrained to ``payload_cls``.
         """
-        # ``__class_getitem__`` on a pydantic generic model produces a
-        # concrete parameterised class. The type: ignore is the only escape
-        # hatch from the unparameterised return annotation of __class_getitem__;
-        # the runtime object IS type[Envelope[PayloadT]].
+        # CAST-RATIONALE-GENERIC-CLASSGETITEM: __class_getitem__ on a pydantic generic model
+        # returns type[Envelope[PayloadT]] at runtime; the stub annotates it as type[Self]
+        # which mypy cannot unify with the parameterised alias returned here.
         return cls.__class_getitem__(payload_cls)  # type: ignore[return-value]
 
 @runtime_checkable

@@ -7,13 +7,15 @@ import hashlib
 import io
 import json
 from collections.abc import Callable, Iterable, Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from pydantic import ValidationError
+
+from aeat.core.time import _now
 
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ProviderValidation
@@ -40,7 +42,8 @@ from ...domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.iva import InvoiceKind
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
@@ -69,6 +72,7 @@ from ...domain.transactions import (
     derive_split_group_id,
     derive_transaction_id,
 )
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
@@ -147,6 +151,7 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "direction",
     "counterparty",
     "description",
+    "source_jurisdiction",
     "business_classification",
     "business_pct",
     "category_id",
@@ -174,7 +179,7 @@ _REMOVAL_BLOCKING_REVISION_STATES = frozenset(
 def create_manual_transaction(
     command: ManualLedgerTransactionCommand,
     *,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
@@ -220,7 +225,7 @@ def attach_manual_transaction_evidence(
     purchase_invoice_evidence_id: str | None = None,
     attachment_ids: tuple[str, ...] = (),
     source_command: str = "aeat app ledger attach",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
@@ -375,7 +380,7 @@ def import_ledger_transactions(
     bucket_id: str,
     raw_transactions: Iterable[RawTransaction],
     direction_resolver: Callable[[RawTransaction], object],
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     actor: str = "operator",
     source_command: str = "aeat app ledger import",
@@ -456,7 +461,7 @@ def import_ledger_transactions(
 def import_ledger_source(
     command: LedgerSourceImportCommand,
     *,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file."""
@@ -572,7 +577,7 @@ def archive_manual_transaction(
     actor: str,
     reason: str = "",
     source_command: str = "aeat app ledger archive",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -602,7 +607,7 @@ def stash_manual_transaction(
     actor: str,
     reason: str = "",
     source_command: str = "aeat app ledger stash",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -633,7 +638,7 @@ def remove_manual_transaction(
     reason: str = "",
     dry_run: bool = False,
     source_command: str = "aeat app ledger remove",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
@@ -739,7 +744,7 @@ def reset_ledger_catalogue(
     reason: str = "",
     dry_run: bool = False,
     source_command: str = "aeat app ledger reset",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
@@ -868,7 +873,7 @@ def reset_ledger_catalogue(
 def export_ledger_transactions(
     command: LedgerExportCommand,
     *,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerExportResult:
@@ -937,7 +942,7 @@ def get_manual_transaction(
     *,
     bucket_id: str,
     transaction_id: str,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> ManualLedgerTransactionResult:
     """Return one transaction from a bucket-scoped catalogue."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -948,7 +953,7 @@ def get_manual_transaction(
 def list_manual_transactions(
     *,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Return every transaction in a bucket, sorted by effective date and id."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -965,7 +970,7 @@ def list_manual_transactions(
 def query_ledger_review_rows(
     query: LedgerReviewQuery,
     *,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> LedgerReviewQueryResult:
     """Return review rows for bucket-local ledger transactions."""
@@ -1168,7 +1173,7 @@ def summarize_manual_transactions(
     *,
     bucket_id: str,
     period: str | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> LedgerStatusReport:
     """Return a read-only status summary for one bucket's ledger transactions."""
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -1215,7 +1220,7 @@ def update_manual_transaction(
     *,
     transaction_id: str,
     command: ManualLedgerTransactionCommand,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
@@ -1335,7 +1340,7 @@ def update_manual_transaction_fields(
     source_command: str,
     classified_by_override: str | None = None,
     reaffirm: bool = False,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
@@ -1395,7 +1400,7 @@ def split_transaction(
     actor: str,
     source_command: str = "aeat app ledger split",
     reason: str = "",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -1404,6 +1409,7 @@ def split_transaction(
     """Redistribute one parent transaction into N child transactions.
 
     Pre-conditions:
+
     - Parent must be in ACTIVE lifecycle state.
     - Parent must not be referenced by a finalized modelo calculation.
     - At least two children must be supplied.
@@ -1411,6 +1417,7 @@ def split_transaction(
     - Every child amount carries the same sign as the parent amount.
 
     Effect:
+
     - Parent transitions ACTIVE -> SPLIT and gains
       ``split_lineage`` with role=PARENT and the child ids as siblings.
     - Each child is persisted as ACTIVE with
@@ -1704,7 +1711,7 @@ def merge_transactions(
     actor: str,
     source_command: str = "aeat app ledger merge",
     reason: str = "",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -1713,6 +1720,7 @@ def merge_transactions(
     """Re-merge a complete cohort of split children into a fresh transaction.
 
     Pre-conditions:
+
     - At least two child ids supplied.
     - All children exist in the catalogue.
     - All children share the same ``split_group_id``.
@@ -1724,6 +1732,7 @@ def merge_transactions(
       modelo calculation.
 
     Effect:
+
     - Children transition ACTIVE -> ARCHIVED with a lifecycle lineage
       entry recording the merge.
     - Parent transitions SPLIT -> ARCHIVED with its lifecycle lineage
@@ -2246,7 +2255,8 @@ def _required_patched[T](
     value = getattr(patch, field)
     if value is None:
         raise TransactionValidationError(f"manual ledger patch {field} must not be null")
-    return value  # type: ignore[no-any-return]  # bounded by caller's T via fallback
+    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED: getattr returns Any but the caller binds the result to a generic T via the fallback parameter.
+    return value  # type: ignore[no-any-return]
 
 
 def _optional_patched[T](
@@ -2261,7 +2271,8 @@ def _optional_patched[T](
     """
     if field not in patch_fields:
         return fallback
-    return getattr(patch, field)  # type: ignore[no-any-return]  # bounded by caller's T via fallback
+    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED: getattr returns Any but the caller binds the result to a generic T via the fallback parameter.
+    return getattr(patch, field)  # type: ignore[no-any-return]
 
 
 def _command_from_patch(
@@ -3165,7 +3176,7 @@ def _decimal_to_string(value: Decimal) -> str:
 
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
-    timestamp = value or datetime.now(UTC)
+    timestamp = value or _now()
     return _coerce_utc_aware(timestamp)
 
 
@@ -3384,7 +3395,7 @@ def bulk_classify_from_csv(
     csv_text: str,
     actor: str,
     source_command: str = "aeat app ledger classify",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> BulkClassifyResult:
     """Apply batch classifications from a CSV string.
@@ -3530,7 +3541,7 @@ def apply_classification_rules(
     reaffirm: bool = False,
     actor: str,
     source_command: str = "aeat app ledger rule apply",
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     rule_repository: object | None = None,
 ) -> ApplyRulesResult:

@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+
+from aeat.core.time import _now
 
 from ...core.logging import get_logger
 from ._errors import BucketsError
 from ._event import BucketEvent, BucketEventHistoryCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import Envelope, SensitivityClass
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
@@ -84,7 +82,7 @@ class BucketEventHistoryRepository:
 
         envelope = Envelope[BucketEventHistoryCatalogue](
             schema_version=_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )

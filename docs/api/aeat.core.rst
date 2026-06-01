@@ -4,7 +4,6 @@ aeat.core package
 .. automodule:: aeat.core
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

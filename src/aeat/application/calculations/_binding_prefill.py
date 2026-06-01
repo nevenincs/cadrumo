@@ -24,20 +24,22 @@ detect stale prefills.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
+from aeat.core.time import _now
+
 from ...core.resources import resources
-from ...domain.calculations.registry._ids import BindingId
 from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
+from ...domain.calculations.registry._ids import BindingId
 from ...domain.calculations.registry._schema import RegistrySnapshot
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
@@ -272,7 +274,7 @@ def resolve_bindings_from_local_store(
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
-    when = captured_at if captured_at is not None else datetime.now(UTC)
+    when = captured_at if captured_at is not None else _now()
     observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_repo)
 
     if not observations:
@@ -358,7 +360,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         source_modelo, source_year, source_periods = _requirements_by_binding(snapshot)[
             _MODELO_303_IVA_COMPENSATION_BINDING_ID
         ]
-        resolved_at = captured_at if captured_at is not None else datetime.now(UTC)
+        resolved_at = captured_at if captured_at is not None else _now()
         prefilled = PrefilledBinding(
             binding_id=_MODELO_303_IVA_COMPENSATION_BINDING_ID,
             value=Decimal(amount),

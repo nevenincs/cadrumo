@@ -1,6 +1,6 @@
 """Verification chain: M100 borrador surface → parser → calculation engine.
 
-M100 borrador-surface verification chain (W11.P66).
+M100 borrador-surface verification chain.
 
 Unlike the declaracion_pdf surface (CORPUS-LIMITED: all amounts sanitised to
 1.001.000,00), the borrador surface uses synthetic fixtures whose casilla
@@ -46,7 +46,7 @@ Corpus fixtures use:
     Base liquidable: 30 000,00 EUR (0505)
     Retenciones:     0 (simplest verifiable scenario; no prior-period bindings)
 
-Comprehensive M100 borrador verdict (W11.P66, 2026-05-30):
+Comprehensive M100 borrador verdict:
 
 | Year | 0545 (cuota integra estatal) | 0546 (cuota integra autonomica) | Verdict  |
 |------|-----------------------------|---------------------------------|----------|

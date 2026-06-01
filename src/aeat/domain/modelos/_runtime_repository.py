@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core._bucket_pointer_io import resolve_active_bucket_id
-from ...core.i18n import tr
 from ._errors import ModeloError
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -18,10 +17,14 @@ def resolve_modelo_repository_bucket_id(bucket_id: str | None, *, error_type: ty
         trimmed = bucket_id.strip()
         if trimmed:
             return trimmed
-        raise error_type(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise error_type(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     active = resolve_active_bucket_id()
     if active is None:
-        raise error_type(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise error_type(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     return active
 
 

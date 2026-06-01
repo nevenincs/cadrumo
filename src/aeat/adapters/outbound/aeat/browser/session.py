@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +15,8 @@ from playwright.async_api import (
     ProxySettings,
     Response,
 )
+
+from aeat.core.time import _now
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -433,7 +434,7 @@ class BrowserSession:
                 html_fragment="",
                 detected_markers=(f"failure-mode:{failure_mode.value}", f"transport-error:{exc_type_name}"),
             ),
-            observed_at=datetime.now(tz=UTC),
+            observed_at=_now(),
         )
 
     async def _close_after_context_failure(self) -> None:

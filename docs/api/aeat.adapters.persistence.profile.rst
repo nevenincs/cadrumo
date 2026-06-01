@@ -4,7 +4,6 @@ aeat.adapters.persistence.profile package
 .. automodule:: aeat.adapters.persistence.profile
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Submodules
 ----------

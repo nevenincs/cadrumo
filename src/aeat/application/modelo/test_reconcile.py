@@ -158,7 +158,7 @@ def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> Non
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="Q1")
 
-    with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError, match=r"justificante"):
+    with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError) as excinfo:
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=work_unit_id,
@@ -166,6 +166,10 @@ def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> Non
                 source_path=MODELO_130_FIXTURE,
             ),
         )
+    assert (
+        excinfo.value.translated_message
+        == "application.modelo.errors.reconcile_declaration_unsupported"
+    )
 
 
 def test_modelo_reconcile_refuses_unknown_work_unit() -> None:

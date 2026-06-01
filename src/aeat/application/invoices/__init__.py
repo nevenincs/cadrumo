@@ -21,8 +21,6 @@ Key exports:
 from __future__ import annotations
 
 from ...domain.invoices._service import (
-    LinkInconsistency,
-    ReconciliationSuggestion,
     find_invoice,
     find_unmatched,
     link_transaction,
@@ -77,9 +75,7 @@ __all__ = [
     "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
     "InvoiceTransactionLinkResult",
-    "LinkInconsistency",
     "ReconciliationSkippedSuggestion",
-    "ReconciliationSuggestion",
     "apply_manual_invoice_match",
     "find_invoice",
     "find_unmatched",

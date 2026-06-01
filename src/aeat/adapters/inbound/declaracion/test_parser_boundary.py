@@ -921,7 +921,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     - Chunk 1 (9 casillas): cuota-chain closure — 0545/0546/0505/0585/0586/0587/0595/0610/0670.
     - Chunk 2 (4 casillas): apartado-summary bases — 0235/0432/0500/0510.
     - Chunk 3 (6 casillas): actividades-económicas ED detail — 0180/0218/0223/0224/0226/0231.
-    - Chunk 4 (1 casilla): W10.P50 leaf extension — 0171 (ingresos de explotación).
+    - Chunk 4 (1 casilla): ED leaf input — 0171 (ingresos de explotación).
 
     Ground truth is derived from reading the printed declaracion PDF text directly.
     The sanitised corpus replaces real monetary values with 1.000,00 synthetic values.
@@ -955,7 +955,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
 
     # All 20 covered casillas must be present: 9 cuota-chain closure casillas (first chunk),
     # 4 apartado-summary casillas (second chunk), 6 actividades-económicas ED detail (third chunk),
-    # 1 leaf input from W10.P50 (fourth chunk).
+    # 1 ED leaf input (fourth chunk).
     # 0435 (base imponible general) is deferred: the IRPF form prints the line twice
     # (body section + base liquidable section), both identical, so the parser rejects it as
     # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
@@ -982,7 +982,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
         "0224",  # rendimiento neto
         "0226",  # rendimiento neto reducido
         "0231",  # suma de rendimientos netos reducidos (pre-0235 subtotal)
-        # Fourth chunk (W10.P50): leaf input for the ED formula chain
+        # Fourth chunk: ED leaf input for the formula chain
         "0171",  # ingresos de explotación (leaf input for 0180 = sum(0171..0179))
     }
 
@@ -1013,7 +1013,7 @@ def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
 
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-1T.pdf"
 
-    with pytest.raises(DeclaracionParseError, match=r"coverage="):
+    with pytest.raises(DeclaracionParseError) as excinfo:
         parse_declaracion(
             pdf_path,
             modelo_override="130",
@@ -1021,19 +1021,33 @@ def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
             period_override="1T",
             registry_snapshot=strict_snap,
         )
+    assert (
+        excinfo.value.translated_message
+        == "adapters.inbound.declaracion.errors.extraction_failed"
+    )
+    assert excinfo.value.context is not None
+    details = excinfo.value.context.get("details", "")
+    assert isinstance(details, str) and "coverage" in details
 
 
 def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_path: Path) -> None:
     pdf_path = tmp_path / "modelo-999.pdf"
     _write_declaration_pdf(pdf_path, modelo="999", ejercicio="2025", values={"01": Decimal("1.00")})
 
-    with pytest.raises(DeclaracionParseError, match="is not present in the calculation registry"):
+    with pytest.raises(DeclaracionParseError) as excinfo:
         parse_declaracion(
             pdf_path,
             modelo_override="999",
             año_override=2025,
             period_override="1T",
         )
+    assert (
+        excinfo.value.translated_message
+        == "adapters.inbound.declaracion.errors.registry_snapshot_required"
+    )
+    assert excinfo.value.context is not None
+    assert excinfo.value.context.get("modelo") == "999"
+    assert "is not present in the calculation registry" in excinfo.value.context.get("error", "")
 
 
 def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
@@ -1818,9 +1832,12 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
     adjacent value word to the right.
 
     Ground truth is derived by probing the committed synthetic fixture PDF with
-    pdfplumber (see _find_bbox_casilla_hits in _parser.py).  The fixture was
-    generated with aeat.tests.fixtures.justificantes._generate and carries
-    exercicio=2026, periodo=1T, NIF=Y0000001S.
+    pdfplumber (see _find_bbox_casilla_hits in _parser.py).  The fixture file
+    is named 2024-1T.pdf (filename pinned by the round-trip corpus test) but
+    the printed ejercicio is irrelevant here: this test forces the 2026
+    revision selection via the full override triple (modelo + año + revision),
+    which bypasses text-based template detection.  The 2026 revision is the
+    only one that ships a bbox_anchored extraction profile for M131.
 
     Expected values (all 15 casillas must be extracted):
     - 01: 5.000,00 (rendimientos netos)
@@ -1849,6 +1866,7 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
         _MODELO_131_SYNTHETIC_FIXTURE,
         modelo_override="131",
         **{"año_override": 2026},
+        template_revision_override="2026",
         period_override="1T",
     )
 

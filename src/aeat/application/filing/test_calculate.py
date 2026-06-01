@@ -12,9 +12,9 @@ from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...domain.filing import (
     ModeloDraft,
-    ModeloDraftStatus,
     ModeloValidationFinding,
 )
+from ...domain.submission import ModeloDraftStatus
 from . import (
     DeclaracionCalculateNextAction,
     summarise_calculation,

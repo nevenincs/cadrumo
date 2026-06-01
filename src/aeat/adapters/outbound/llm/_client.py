@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
 
 from pydantic import SecretStr
+
+from aeat.core.time import _now
 
 from ....core.config import Settings
 from ....core.logging import get_logger
@@ -117,7 +118,7 @@ class LLMClient:
                 output_tokens=completion.output_tokens,
             ),
             cache_hit=False,
-            created_at=datetime.now(UTC),
+            created_at=_now(),
             request_id=request_id,
         )
         self.cache.write(request, response)

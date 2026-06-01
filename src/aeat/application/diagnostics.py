@@ -4,20 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from aeat import __version__
+from aeat.core.time import _now
 
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
-from ._errors import DiagnosticModelError
 from ..core.logging import default_log_file_path, get_logger
 from ..core.resources import bundled_path
+from ._errors import DiagnosticModelError
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
@@ -303,6 +304,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
                 provider_context = get_master_key_provider()
+                # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
                 provider_context.__enter__()  # type: ignore[attr-defined]
             state = workflow_state_repository().load()
             checks.append(
@@ -350,6 +352,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         checks.append(_secure_objects_integrity_check(secure_objects))
     finally:
         if provider_context is not None:
+            # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
             provider_context.__exit__(None, None, None)  # type: ignore[attr-defined]
 
     checks.append(_registry_cross_domain_integrity_check(root))
@@ -440,7 +443,7 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
             html_fragment="",
             detected_markers=("healthy",),
         ),
-        observed_at=datetime.now(tz=UTC),
+        observed_at=_now(),
     )
 
 def render_config_repair_text(report: ConfigRepairReport) -> str:
@@ -631,8 +634,6 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     A failure routes the operator to a structured diagnostic rather
     than a runtime KeyError mid-calculation.
     """
-    from datetime import date
-
     from ..domain.calculations.registry import ValidatedRegistryAuthority
     from ..domain.calculations.registry._errors import RegistryValidationError
 

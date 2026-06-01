@@ -173,8 +173,10 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
         UserProfileFact(path="identity.tax_id", value="00000000T") if fact.path == "identity.tax_id" else fact
         for fact in _SECOND_FACTS
     )
-    with pytest.raises(ProfileAlreadyRegisteredError, match=r"00000000T|Original"):
+    with pytest.raises(ProfileAlreadyRegisteredError) as excinfo:
         _create(repository, label="Duplicate", facts=duplicate_facts)
+    assert excinfo.value.translated_message == "application.user_profile.errors.duplicate_tax_id"
+    assert excinfo.value.context == {"tax_id": "00000000T", "profile": "Original"}
 
     # The refusal fired before any store write: no half-live profile.
     assert read_profile_bucket("Duplicate", root=_backend) is None
@@ -241,8 +243,10 @@ def test_create_still_refuses_duplicate_nif_against_readable_profiles(_backend: 
         UserProfileFact(path="identity.tax_id", value="00000000T") if fact.path == "identity.tax_id" else fact
         for fact in _SECOND_FACTS
     )
-    with pytest.raises(ProfileAlreadyRegisteredError, match=r"00000000T|Readable Holder"):
+    with pytest.raises(ProfileAlreadyRegisteredError) as excinfo:
         _create(repository, label="Duplicate", facts=duplicate_facts)
+    assert excinfo.value.translated_message == "application.user_profile.errors.duplicate_tax_id"
+    assert excinfo.value.context == {"tax_id": "00000000T", "profile": "Readable Holder"}
 
     # No half-live profile for the refused duplicate.
     assert read_profile_bucket("Duplicate", root=_backend) is None
@@ -484,7 +488,11 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
 
     with pytest.raises(ProfileNotFoundError) as excinfo:
         _select(repository, created.profile_id)
-    assert created.profile_id in str(excinfo.value)
+    assert (
+        excinfo.value.translated_message
+        == "application.user_profile.errors.profile_tombstoned_not_selectable"
+    )
+    assert excinfo.value.context == {"profile": created.profile_id}
 
 
 def test_deleted_profile_name_is_reusable(_backend: Path) -> None:

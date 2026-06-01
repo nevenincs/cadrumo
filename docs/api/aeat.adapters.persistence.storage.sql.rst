@@ -4,7 +4,6 @@ aeat.adapters.persistence.storage.sql package
 .. automodule:: aeat.adapters.persistence.storage.sql
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Submodules
 ----------

@@ -8,7 +8,7 @@ from re import compile
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from playwright.async_api import Locator, Page, ViewportSize
+    from playwright.async_api import BrowserContext, Locator, Page, ViewportSize
 
 from .....core.config import Settings, load_settings
 from .....core.errors import SiteHealthError
@@ -23,7 +23,7 @@ from .....domain.calculations.registry import (
     parse_renta_web_open_live_payload,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..browser import BrowserError, default_browser_session_factory
+from ..browser import BrowserError, BrowserSession, default_browser_session_factory
 from ._adapter_utils import registry_failure_message
 from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE
 from ._browser_stage import build_playwright_stage_runner
@@ -155,7 +155,9 @@ async def collect_renta_web_open_observation(
         await browser_session.close()
 
 
-async def _open_renta_web_open_session(browser_session, *, live_payload):  # type: ignore[no-untyped-def]
+async def _open_renta_web_open_session(
+    browser_session: BrowserSession, *, live_payload: RentaWebOpenLivePayload
+) -> tuple[Page, BrowserContext]:
     """Create a Playwright context, install safety nets, and navigate to the open simulator app.
 
     Returns ``(page, context)``. SAFETY-CRITICAL: installs the
@@ -191,7 +193,7 @@ async def _open_renta_web_open_session(browser_session, *, live_payload):  # typ
     return page, context
 
 
-async def _drive_open_simulator_identification(page, *, live_payload) -> None:  # type: ignore[no-untyped-def]
+async def _drive_open_simulator_identification(page: Page, *, live_payload: RentaWebOpenLivePayload) -> None:
     """Drive the "Nueva declaración" -> identification profile -> "Aceptar" -> summary wait flow."""
     new_declaration = page.locator(".z-window-modal button").filter(has_text="Nueva declaración")
     await _click_expected(
@@ -215,11 +217,11 @@ async def _drive_open_simulator_identification(page, *, live_payload) -> None:  
     )
 
 
-async def _scrape_renta_web_open_values(  # type: ignore[no-untyped-def]
-    page,
+async def _scrape_renta_web_open_values(
+    page: Page,
     *,
-    live_payload,
-    expected,
+    live_payload: RentaWebOpenLivePayload,
+    expected: Mapping[str, object],
 ) -> dict[str, str]:
     """Scrape summary-label values + extra casilla form values into one dict.
 

@@ -39,16 +39,10 @@ def secure_object_repository_for_bucket(
 def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
     """Return a bucket-attached repository for the selected active profile."""
     from ....core._bucket_pointer_io import resolve_active_bucket_id
-    from ....core.i18n import tr
 
-    source = load_settings()
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         raise StorageValidationError(
-            tr(
-                "application.workflow.errors.no_active_profile_bucket",
-                locale=source.aeat_output_language,
-            ),
             translated_message="errors.storage.runtime.not_ready",
         )
     return secure_object_repository_for_bucket(bucket_id)
@@ -90,29 +84,18 @@ def secure_object_repository_for_cold_bootstrap_state(
     fail closed at the storage runtime boundary.
     """
     from ....core._bucket_pointer_io import resolve_active_bucket_id
-    from ....core.i18n import tr
 
     source = settings or load_settings()
     route = classify_storage_route(source)
     if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
         raise StorageValidationError(
-            tr(
-                "errors.storage.runtime.cold_bootstrap_explicit_database_refused",
-                default="Cold-bootstrap storage cannot bypass an explicit database route.",
-                locale=source.aeat_output_language,
-            ),
-            translated_message="errors.storage.runtime.not_ready",
+            translated_message="errors.storage.runtime.cold_bootstrap_explicit_database_refused",
         )
     if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE or (
         settings is None and resolve_active_bucket_id() is not None
     ):
         raise StorageValidationError(
-            tr(
-                "errors.storage.runtime.cold_bootstrap_active_profile_refused",
-                default="Cold-bootstrap storage is only available before an active profile bucket is selected.",
-                locale=source.aeat_output_language,
-            ),
-            translated_message="errors.storage.runtime.not_ready",
+            translated_message="errors.storage.runtime.cold_bootstrap_active_profile_refused",
         )
     from .sql.engine import get_engine
 

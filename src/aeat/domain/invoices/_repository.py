@@ -8,8 +8,9 @@ JSON catalogue, or envelope file lands on disk.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+
+from aeat.core.time import _now
 
 from ...core.logging import get_logger
 from ._errors import InvoicePersistenceError
@@ -38,11 +39,12 @@ def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
     if trimmed:
         return trimmed
     from ...core._bucket_pointer_io import resolve_active_bucket_id
-    from ...core.i18n import tr
 
     active = resolve_active_bucket_id()
     if active is None:
-        raise InvoicePersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+        raise InvoicePersistenceError(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+        )
     return active
 
 
@@ -52,9 +54,9 @@ class InvoiceCatalogueRepository:
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if bucket_id is not None and not self._bucket_id:
-            from ...core.i18n import tr
-
-            raise InvoicePersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+            raise InvoicePersistenceError(
+                translated_message="application.workflow.errors.no_active_profile_bucket",
+            )
         if objects is not None:
             self._objects = objects
             return
@@ -131,7 +133,7 @@ class InvoiceCatalogueRepository:
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
@@ -152,7 +154,7 @@ class InvoiceCatalogueRepository:
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )

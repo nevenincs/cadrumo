@@ -23,7 +23,6 @@ _REQUIRED_SYMBOLS = [
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilConfigurationError",
     "select_provider",
-    "CertificateBackend",
     "LoadedCertificate",
     "load_certificate",
     "verify_handshake",

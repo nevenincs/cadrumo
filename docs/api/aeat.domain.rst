@@ -4,7 +4,6 @@ aeat.domain package
 .. automodule:: aeat.domain
    :members:
    :show-inheritance:
-   :undoc-members:
 
 Subpackages
 -----------

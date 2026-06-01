@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
+
+from aeat.core.time import _now
 
 from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
@@ -127,7 +128,7 @@ class Modelo100ObservedV2025Extractor:
             extraction_coverage=coverage,
             source_pdf_path=pdf_path.resolve(),
             source_pdf_sha256=_sha256_file(pdf_path),
-            parsed_at=datetime.now(tz=UTC),
+            parsed_at=_now(),
             csv=csv_value,
             warnings=tuple(warnings),
         )

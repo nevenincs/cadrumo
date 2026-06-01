@@ -14,12 +14,11 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
-    InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
-from ...domain.iva import IvaCategory
+from ...domain.iva import InvoiceKind, IvaCategory
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..aggregation import CalculationSourceContext
 from . import InvoiceCatalogueSourceResolver

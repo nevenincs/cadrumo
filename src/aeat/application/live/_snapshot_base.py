@@ -33,11 +33,13 @@ import hashlib
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
+
+from aeat.core.time import _now
 
 from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -471,7 +473,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             )
         envelope = self._envelope_cls()(
             schema_version=self._namespace_definition.schema_version,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=self._namespace_definition.sensitivity,
             payload=snapshot,
         )
@@ -506,6 +508,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return envelope.payload
 
     def _envelope_cls(self) -> type[Envelope[TPayload]]:
+        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-RUNTIME-GENERIC-SPECIALIZATION: Envelope[self._payload_model] uses an instance attribute as a generic parameter; mypy cannot statically verify runtime-evaluated specialization. Successor epic required.
         return Envelope[self._payload_model]  # type: ignore[valid-type]
 
 

@@ -10,13 +10,14 @@ from pathlib import Path
 import pytest
 
 from aeat.application.invoices import link_invoice_transaction_repositories
-from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
+from aeat.domain.invoices._enums import IvaRate, PaymentStatus
 from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
 from aeat.domain.invoices._repository import InvoiceCatalogueRepository
 from aeat.domain.invoices._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from aeat.domain.iva import InvoiceKind
 from aeat.domain.transactions import (
     RawProvenance,
     RawTransaction,

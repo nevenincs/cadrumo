@@ -12,11 +12,11 @@ from aeat.domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
-    InvoiceKind,
     InvoiceLine,
     IvaRate,
     PaymentStatus,
 )
+from aeat.domain.iva import InvoiceKind
 from aeat.domain.transactions import (
     RawProvenance,
     RawTransaction,

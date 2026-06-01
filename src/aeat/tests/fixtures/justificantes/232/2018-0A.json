@@ -1,8 +1,8 @@
 {
-  "source_sha256": "a23b7b06d0e34af5f55d5e33fd33912975de7b1a3ee4240436fc51656d642783",
-  "output_sha256": "a23b7b06d0e34af5f55d5e33fd33912975de7b1a3ee4240436fc51656d642783",
-  "source_size_bytes": 2000,
-  "output_size_bytes": 2000,
+  "source_sha256": "f751ed778d98fbaf21e2b0c40fdbd24a0543476cb5fa0efdf6bf65a43602f1ad",
+  "output_sha256": "f751ed778d98fbaf21e2b0c40fdbd24a0543476cb5fa0efdf6bf65a43602f1ad",
+  "source_size_bytes": 2029,
+  "output_size_bytes": 2029,
   "sanitizer_version": "0.1.0-synthetic",
   "determinism_flags": {
     "deterministic_id": true,

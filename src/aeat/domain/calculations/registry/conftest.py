@@ -12,7 +12,7 @@ from ._schema import RegistrySnapshot
 
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
-    return resources().modelos.authority  # type: ignore[return-value]
+    return resources().modelos.authority
 
 
 @pytest.fixture

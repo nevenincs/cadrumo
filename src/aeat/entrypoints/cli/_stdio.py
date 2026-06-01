@@ -24,6 +24,7 @@ which is strictly worse than leaving the stream as-is.
 from __future__ import annotations
 
 import contextlib
+# LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK: stdlib logging used for debug-level platform diagnostic on Windows ctypes failure; core logging is unavailable at stream-bootstrap time.
 import logging
 import os
 import shutil
@@ -139,6 +140,7 @@ def _set_windows_console_utf8() -> None:
     try:
         import ctypes
 
+        # TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES: ctypes.windll is Windows-only and absent from cross-platform stubs.
         k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         k32.SetConsoleOutputCP(65001)
         k32.SetConsoleCP(65001)

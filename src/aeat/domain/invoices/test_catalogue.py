@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ._enums import InvoiceKind, IvaRate, PaymentStatus
+from ..iva import InvoiceKind
+from ._enums import IvaRate, PaymentStatus
 from ._errors import (
     InvoiceCatalogueError,
     InvoiceLinkError,

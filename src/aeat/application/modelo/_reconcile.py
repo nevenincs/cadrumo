@@ -22,13 +22,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from aeat.core.time import _now
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
-from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...domain.modelos._ids import WorkUnitId
 from ._actions import WorkUnitNotFoundError
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ModeloReconciliationSourceKind(StrEnum):
     """Closed set of external-evidence kinds the operator can supply."""
@@ -139,10 +140,9 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     """
     if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
-            tr("application.modelo.errors.reconcile_declaration_unsupported"),
+            translated_message="application.modelo.errors.reconcile_declaration_unsupported",
         )
 
-    from datetime import UTC, datetime
 
     from ...adapters.inbound.justificante import parse_justificante
     from ...domain.buckets import (
@@ -160,7 +160,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
         raise WorkUnitNotFoundError(
-            tr("application.modelo.errors.reconcile_no_active_bucket"),
+            translated_message="application.modelo.errors.reconcile_no_active_bucket",
         )
 
     catalogue = WorkUnitCatalogueRepository().load()
@@ -210,7 +210,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         f"reconciled modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'} "
         f"against work unit {command.work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
     )
-    reconciled_at = datetime.now(UTC)
+    reconciled_at = _now()
     report = ModeloReconciliationReport(
         work_unit_id=command.work_unit_id,
         bucket_id=work_unit.bucket_id,

@@ -28,11 +28,13 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Final, Literal
 
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+
+from aeat.core.time import _now
 
 from .....core.config import Settings
 from .....core.i18n import tr
@@ -157,7 +159,7 @@ def parse_notifications_query(html: str, *, source_url: str) -> NotificationsSna
     rows = _parse_rows(html, source_url=source_url, is_summary=False)
     return NotificationsSnapshot(
         rows=tuple(rows),
-        captured_at=datetime.now(tz=UTC),
+        captured_at=_now(),
         source_url=AnyHttpUrl(source_url),
     )
 
@@ -179,7 +181,7 @@ def parse_notifications_summary(html: str, *, source_url: str) -> NotificationsS
     rows = _parse_rows(html, source_url=source_url, is_summary=True)
     return NotificationsSnapshot(
         rows=tuple(rows),
-        captured_at=datetime.now(tz=UTC),
+        captured_at=_now(),
         source_url=AnyHttpUrl(source_url),
     )
 

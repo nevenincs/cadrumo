@@ -213,7 +213,9 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
-    status_payload = json.loads(_json_output(status_result))
+    status_envelope = json.loads(_json_output(status_result))
+    assert status_envelope["command"] == "config.profile.status"
+    status_payload = status_envelope["result"]
     assert status_payload["active_profile"] == "operator"
     assert status_payload["profile_id"] == "<profile-id>"
     assert status_payload["iva_regime"] == "GENERAL"
@@ -240,7 +242,9 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         ]
     )
     assert calendar_result.exit_code == 0, calendar_result.output
-    calendar_payload = json.loads(_json_output(calendar_result))
+    calendar_envelope = json.loads(_json_output(calendar_result))
+    assert calendar_envelope["command"] == "overview.calendar"
+    calendar_payload = calendar_envelope["result"]
     assert "iva.regime" in calendar_payload["completeness"]["explicitly_set_keys"]
 
     with activate_master_key_provider(get_master_key_provider()):
@@ -425,11 +429,11 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     assert casillas.exit_code == 0, casillas.output
     assert bindings.exit_code == 0, bindings.output
     assert formulas.exit_code == 0, formulas.output
-    listed_payload = json.loads(_json_output(listed))
-    described_payload = json.loads(_json_output(described))
-    casilla_payload = json.loads(_json_output(casillas))
-    binding_payload = json.loads(_json_output(bindings))
-    formula_payload = json.loads(_json_output(formulas))
+    listed_payload = json.loads(_json_output(listed))["result"]
+    described_payload = json.loads(_json_output(described))["result"]
+    casilla_payload = json.loads(_json_output(casillas))["result"]
+    binding_payload = json.loads(_json_output(bindings))["result"]
+    formula_payload = json.loads(_json_output(formulas))["result"]
     assert "303" in {row["code"] for row in listed_payload["modelos"]}
     assert described_payload["code"] == "303"
     assert described_payload["period"] == "1T"
@@ -572,14 +576,18 @@ def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
     overview = _invoke(["--format", "json", "app", "overview", "status"])
 
     assert imported.exit_code == 0, imported.output
-    payload = json.loads(_json_output(imported))
+    envelope = json.loads(_json_output(imported))
+    assert envelope["command"] == "ledger.import"
+    payload = envelope["result"]
     assert payload["rows"] == 1
     assert payload["dry_run"] is True
     # The dry run previews the one row a real import would add, while
     # persisting nothing - the overview still shows zero transactions.
     assert payload["imported"] == 1
     assert overview.exit_code == 0, overview.output
-    assert json.loads(_json_output(overview))["transactions"] == 0
+    overview_envelope = json.loads(_json_output(overview))
+    assert overview_envelope["command"] == "overview.status"
+    assert overview_envelope["result"]["transactions"] == 0
 
 
 def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
@@ -601,7 +609,9 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26"])
 
     assert imported.exit_code == 0, imported.output
-    import_payload = json.loads(_json_output(imported))
+    import_envelope = json.loads(_json_output(imported))
+    assert import_envelope["command"] == "ledger.import"
+    import_payload = import_envelope["result"]
     assert import_payload["bucket_id"] == "<bucket-id>"
     assert len(import_payload["bucket_event_ids"]) == 1
     assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "<bucket-id>"
@@ -663,7 +673,9 @@ def test_ledger_import_verify_source_records_original_file_digest(isolated_user_
     )
 
     assert imported.exit_code == 0, imported.output
-    payload = json.loads(_json_output(imported))
+    envelope = json.loads(_json_output(imported))
+    assert envelope["command"] == "ledger.import"
+    payload = envelope["result"]
     assert payload["dry_run"] is True
     assert payload["validation"]["valid"] is True
     assert payload["source"]["requested"] is True
@@ -721,7 +733,9 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
 
     assert config_status.exit_code == 0, config_status.output
     assert overview.exit_code == 0, overview.output
-    config_payload = json.loads(_json_output(config_status))
+    config_envelope = json.loads(_json_output(config_status))
+    assert config_envelope["command"] == "config.profile.status"
+    config_payload = config_envelope["result"]
     # ``active_profile`` carries the operator-facing display label after
     # the UUID-identity cutover; ``profile_id`` carries the immutable
     # bucket identity that ``_seed_profile`` registered as ``default``.
@@ -729,7 +743,9 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
     assert config_payload["profile_id"] == "<profile-id>"
     assert config_payload["tax_id_present"] is True
     assert config_payload["activity_present"] is True
-    assert json.loads(_json_output(overview))["transactions"] == 0
+    overview_envelope = json.loads(_json_output(overview))
+    assert overview_envelope["command"] == "overview.status"
+    assert overview_envelope["result"]["transactions"] == 0
     assert "hashed_lookup.compute" not in config_status.output
     assert "hashed_lookup.compute" not in overview.output
 
@@ -809,7 +825,9 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
 
     show_result = _invoke(["--format", "json", "config", "profile", "show"])
     assert show_result.exit_code == 0, show_result.output
-    show_payload = json.loads(_json_output(show_result))
+    show_envelope = json.loads(_json_output(show_result))
+    assert show_envelope["command"] == "config.profile.show"
+    show_payload = show_envelope["result"]
     facts = {row["path"]: row["value"] for row in show_payload["facts"]}
     assert facts["iva.does_intracomunitario"] == "true"
 
