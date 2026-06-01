@@ -226,28 +226,83 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     assert explicit_root_by_id.returncode == 0, _combined_output(explicit_root_by_id)
     assert "display_name\talpha" in explicit_root_by_id.stdout
 
+    # Write-side precedence: configure-auth writes an
+    # ``AUTH_PROVIDER_CONFIGURED`` event into the resolved bucket's
+    # event history. The configure verb's stdout redacts the bucket id
+    # to a literal ``<profile-id>`` placeholder (security: bucket ids
+    # are sha256 fingerprints that must never reach stdout), so the
+    # stdout cannot distinguish alpha from beta. Read each bucket's
+    # event history via ``config bucket history`` to count writes per
+    # bucket; the bucket whose count increases by 1 is the one the
+    # configure verb resolved to.
+
+    def _auth_event_counts() -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for bucket_id in (alpha_id, beta_id):
+            result = _run_aeat(
+                tmp_path,
+                (
+                    "--profile",
+                    bucket_id,
+                    "config",
+                    "bucket",
+                    "history",
+                    bucket_id,
+                    "--event-type",
+                    "auth.provider.configured",
+                ),
+            )
+            assert result.returncode == 0, _combined_output(result)
+            counts[bucket_id] = sum(
+                1 for line in result.stdout.splitlines() if "\tauth.provider.configured\t" in line
+            )
+        return counts
+
+    before = _auth_event_counts()
+
+    # Pointer-default precedence: pointer points at beta (last create wins).
     pointer_write = _run_aeat(tmp_path, ("config", "auth", "configure", "--provider", "clave_movil"))
     assert pointer_write.returncode == 0, _combined_output(pointer_write)
-    assert f"active_profile\t{beta_id}" in pointer_write.stdout
     assert "No active profile" not in _combined_output(pointer_write)
+    after_pointer = _auth_event_counts()
+    assert after_pointer[beta_id] == before[beta_id] + 1, (
+        f"pointer default should resolve to beta; counts before={before}, after={after_pointer}"
+    )
+    assert after_pointer[alpha_id] == before[alpha_id], (
+        f"pointer default should not write to alpha; counts before={before}, after={after_pointer}"
+    )
 
+    # Env-override precedence: AEAT_ACTIVE_PROFILE wins over the pointer.
     env_write = _run_aeat(
         tmp_path,
         ("config", "auth", "configure", "--provider", "clave_movil"),
         extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
     )
     assert env_write.returncode == 0, _combined_output(env_write)
-    assert f"active_profile\t{alpha_id}" in env_write.stdout
     assert "No active profile" not in _combined_output(env_write)
+    after_env = _auth_event_counts()
+    assert after_env[alpha_id] == after_pointer[alpha_id] + 1, (
+        f"env override should resolve to alpha; counts before={after_pointer}, after={after_env}"
+    )
+    assert after_env[beta_id] == after_pointer[beta_id], (
+        f"env override should not write to beta; counts before={after_pointer}, after={after_env}"
+    )
 
+    # Explicit-flag precedence: --profile wins over env override.
     explicit_write = _run_aeat(
         tmp_path,
         ("--profile", "beta", "config", "auth", "configure", "--provider", "clave_movil"),
         extra_env={"AEAT_ACTIVE_PROFILE": alpha_id},
     )
     assert explicit_write.returncode == 0, _combined_output(explicit_write)
-    assert f"active_profile\t{beta_id}" in explicit_write.stdout
     assert "No active profile" not in _combined_output(explicit_write)
+    after_explicit = _auth_event_counts()
+    assert after_explicit[beta_id] == after_env[beta_id] + 1, (
+        f"--profile flag should resolve to beta; counts before={after_env}, after={after_explicit}"
+    )
+    assert after_explicit[alpha_id] == after_env[alpha_id], (
+        f"--profile flag should not write to alpha; counts before={after_env}, after={after_explicit}"
+    )
 
 
 def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
