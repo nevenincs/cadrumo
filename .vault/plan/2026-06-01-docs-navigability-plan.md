@@ -116,8 +116,8 @@ Extend navigability along the highest-signal collaborator edge: every documented
 
 Build the return-type gate, remediate via swarm, verify green.
 
-- [ ] `W02.P02.S04` - Build the return-type linking gate enumerating unlinked aeat-typed return annotations; `src/aeat/tests/test_docstring_return_type_links.py`.
-- [ ] `W02.P02.S05` - Remediate the return-type violations via a partitioned sonnet swarm, drive to 0; `src/aeat/application`.
+- [x] `W02.P02.S04` - Build the return-type linking gate enumerating unlinked aeat-typed return annotations; `src/aeat/tests/test_docstring_return_type_links.py`.
+- [x] `W02.P02.S05` - Remediate the return-type violations via a partitioned sonnet swarm, drive to 0; `src/aeat/application`.
 - [ ] `W02.P02.S06` - Verify the return-type gate, the stub correspondence, and the offline nitpicky build are green; `docs/conf.py`.
 
 ## Wave `W03` - parameter-type linking gate
