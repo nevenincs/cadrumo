@@ -73,7 +73,7 @@ def test_s668_app_live_wire_payload_marker_present(lineno: int) -> None:
 # S669 Sub-A: _modelo.py — 4 kv_pairs splat sites
 # ---------------------------------------------------------------------------
 
-_S669A_LINES = [908, 910, 912, 931]
+_S669A_LINES = [902, 904, 906, 925]
 
 
 @pytest.mark.parametrize("lineno", _S669A_LINES)
