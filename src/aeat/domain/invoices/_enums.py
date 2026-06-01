@@ -18,7 +18,7 @@ from decimal import Decimal
 from enum import StrEnum
 
 from ..iva import EUMemberState, IvaRateKind, lookup_rate
-from ..iva.errors import IvaRateNotFoundError
+from ..iva._errors import IvaRateNotFoundError
 
 
 class IvaRate(StrEnum):

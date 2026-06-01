@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
-from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
+from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 
 
 def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:

@@ -15,7 +15,7 @@ from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, IvaRegulation
-from .errors import IvaCatalogueError
+from ._errors import IvaCatalogueError
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:

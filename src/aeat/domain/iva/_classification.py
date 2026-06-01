@@ -59,7 +59,7 @@ from ._schema import (
     IvaRateKind,
     _IvaStrictFrozen,
 )
-from .errors import IvaRateNotFoundError, IvaValidationError
+from ._errors import IvaRateNotFoundError, IvaValidationError
 
 _logger = get_logger(__name__)
 

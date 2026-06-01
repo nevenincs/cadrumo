@@ -7,7 +7,7 @@ from datetime import date
 from ._catalogue import resolve_catalogue
 from ._rates import load_iva_rate_table
 from ._schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateRecord, IvaRateKind
-from .errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
+from ._errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
 
 
 def lookup_rate(

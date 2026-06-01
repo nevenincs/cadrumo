@@ -41,7 +41,7 @@ from aeat.domain.iva._prorrata import (
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
-from aeat.domain.iva.errors import ProrrataInputError, ProrrataSectorError
+from aeat.domain.iva._errors import ProrrataInputError, ProrrataSectorError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

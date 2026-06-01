@@ -31,7 +31,7 @@ from pydantic import (
 )
 
 from ...core.i18n import Translatable as tr
-from .errors import IvaValidationError
+from ._errors import IvaValidationError
 
 
 class IvaCategory(StrEnum):
