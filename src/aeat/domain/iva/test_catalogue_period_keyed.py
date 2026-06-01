@@ -1,4 +1,4 @@
-"""Period-keyed VAT catalogue registry tests."""
+"""Period-keyed IVA catalogue registry tests."""
 
 from __future__ import annotations
 
@@ -36,5 +36,5 @@ def test_resolve_catalogue_requires_exact_year() -> None:
 def test_load_iva_catalogue_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
     missing = tmp_path / "missing-iva-catalogue.toml"
 
-    with pytest.raises(IvaCatalogueError, match=r"cannot stat VAT catalogue"):
+    with pytest.raises(IvaCatalogueError, match=r"cannot stat IVA catalogue"):
         load_iva_catalogue(missing)

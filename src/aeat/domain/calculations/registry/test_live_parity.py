@@ -165,7 +165,7 @@ def test_catalogue_register_and_lookup_round_trip() -> None:
     catalogue = LiveParityCatalogue()
     oracle = _CannedOracle(
         oracle_id="aeat-public-vies",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/PRET/check"),),
         verdict=ParityResult(
             oracle_id="aeat-public-vies",
@@ -230,7 +230,7 @@ def test_catalogue_production_oracle_not_visible_to_test_environment_lookup() ->
     catalogue = LiveParityCatalogue()
     oracle = _CannedOracle(
         oracle_id="aeat-vies-public",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(),
         verdict=ParityResult(
             oracle_id="aeat-vies-public",
@@ -249,7 +249,7 @@ def test_catalogue_both_environment_oracle_visible_to_either_lookup() -> None:
     catalogue = LiveParityCatalogue()
     oracle = _CannedOracle(
         oracle_id="aeat-static-doc",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(),
         verdict=ParityResult(
             oracle_id="aeat-static-doc",
@@ -268,7 +268,7 @@ def test_catalogue_ids_filter_by_environment() -> None:
     catalogue = LiveParityCatalogue()
     prod_oracle = _CannedOracle(
         oracle_id="prod",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(),
         verdict=ParityResult(oracle_id="prod", cross_reference_id="c", verdict="match", narrative="x"),
     )
@@ -280,7 +280,7 @@ def test_catalogue_ids_filter_by_environment() -> None:
     )
     both_oracle = _CannedOracle(
         oracle_id="both",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(),
         verdict=ParityResult(oracle_id="both", cross_reference_id="c", verdict="match", narrative="x"),
     )
@@ -321,7 +321,7 @@ def test_oracle_environment_default_round_trips_through_catalogue_register() -> 
     catalogue = LiveParityCatalogue()
     oracle = _CannedOracle(
         oracle_id="env-roundtrip",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(),
         verdict=ParityResult(oracle_id="env-roundtrip", cross_reference_id="c", verdict="match", narrative="x"),
     )
@@ -355,7 +355,7 @@ def test_oracle_environment_both_round_trips_through_catalogue() -> None:
     catalogue = LiveParityCatalogue()
     oracle = _CannedOracle(
         oracle_id="env-both-rt",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(),
         verdict=ParityResult(oracle_id="env-both-rt", cross_reference_id="c", verdict="match", narrative="x"),
     )
@@ -370,7 +370,7 @@ def test_oracle_environment_both_round_trips_through_catalogue() -> None:
 def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
     oracle = _CannedOracle(
         oracle_id="vies",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(_read_only_get("https://www6.agenciatributaria.gob.es/wlpl/check?nif=DE111"),),
         verdict=ParityResult(oracle_id="vies", cross_reference_id="test-policy", verdict="match", narrative="ok"),
     )
@@ -400,7 +400,7 @@ def test_pre_flight_blocks_oracle_with_post_operation() -> None:
 def test_pre_flight_blocks_oracle_targeting_non_aeat_host() -> None:
     oracle = _CannedOracle(
         oracle_id="phisher",
-        surface_kind="vat_id_check",
+        surface_kind="iva_id_check",
         operations=(_read_only_get("https://example.com/check"),),
         verdict=ParityResult(oracle_id="phisher", cross_reference_id="test-policy", verdict="match", narrative="x"),
     )

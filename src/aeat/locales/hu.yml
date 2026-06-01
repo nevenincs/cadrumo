@@ -572,7 +572,7 @@ cli:
         add_help: Új behajtatható számla regisztrálása.
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
-        eu_vat_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
+        eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
           műveletekhez.
         group_help: Vevők által tartozó számlák.
         invoice_date_help: Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).
@@ -631,7 +631,7 @@ cli:
         add_help: Új fizetendő számla regisztrálása.
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
-        eu_vat_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
+        eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
           műveletekhez.
         group_help: Szállítóknak fizetendő számlák.
         invoice_date_help: Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).

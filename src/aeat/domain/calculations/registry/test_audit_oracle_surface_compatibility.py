@@ -34,8 +34,8 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 # inside ``_COMPATIBLE_SURFACE_PAIRS``; the audit must accept all of
 # them. Each adapter is a real production oracle — no stub layer.
 _COMPATIBLE_BEHAVIOURAL_CASES: tuple[tuple[str, str, str], ...] = (
-    (ORACLE_ID, "public_read_surface", "vat_id_check"),
-    (GROI_ORACLE_ID, "authenticated_simulator", "vat_id_check"),
+    (ORACLE_ID, "public_read_surface", "iva_id_check"),
+    (GROI_ORACLE_ID, "authenticated_simulator", "iva_id_check"),
     ("modelo-100-renta-web-open", "open_simulator", "open_simulator"),
 )
 
@@ -90,7 +90,7 @@ def test_static_official_documentation_surface_rejects_every_oracle() -> None:
     assert len(failures) == 1
     message = failures[0]
     assert "static_official_documentation" in message
-    assert "vat_id_check" in message
+    assert "iva_id_check" in message
     assert "not compatible" in message
 
 
@@ -147,10 +147,10 @@ def test_compatibility_allow_list_matches_documented_pairs() -> None:
             {
                 ("open_simulator", "open_simulator"),
                 ("integration_test_service", "integration_test_service"),
-                ("public_read_surface", "vat_id_check"),
+                ("public_read_surface", "iva_id_check"),
                 ("public_read_surface", "file_validator"),
                 ("authenticated_read_surface", "pre_filing_validator"),
-                ("authenticated_simulator", "vat_id_check"),
+                ("authenticated_simulator", "iva_id_check"),
             }
         )
         == _COMPATIBLE_SURFACE_PAIRS

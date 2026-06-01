@@ -1,7 +1,7 @@
 """Unified live-AEAT authenticator.
 
 This module is the single entry point every remote-read module
-(filing history, missing-filing detection, AEAT messages, VAT balance
+(filing history, missing-filing detection, AEAT messages, IVA balance
 tracking) depends on. It composes the certificate loader, the
 Playwright browser session, and the login-assertion flow into a narrow
 async surface.

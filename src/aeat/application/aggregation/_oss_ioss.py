@@ -15,7 +15,7 @@ bucket's ledger transactions, already tagged with the substrate
 classification axes (regime / destination MS / rate tier / direction /
 transaction kind).
 
-Per the OSS / IOSS regulation suite, the VAT amount on each line MUST
+Per the OSS / IOSS regulation suite, the IVA amount on each line MUST
 match the destination Member State's published rate for the chosen
 rate tier on the supply date. A persisted IVA amount that disagrees
 with the lookup is a data-quality blocker: the wrapper rejects it
@@ -87,7 +87,7 @@ class OssIossLedgerCandidate(BaseModel):
             :class:`aeat.domain.iva.TransactionKind` the line resolves
             to.
         base_amount: Taxable base in EUR. Must be non-negative.
-        iva_amount: VAT amount in EUR persisted on the ledger. Must
+        iva_amount: IVA amount in EUR persisted on the ledger. Must
             be non-negative.
     """
 

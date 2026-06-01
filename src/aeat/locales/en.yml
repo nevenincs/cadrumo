@@ -558,7 +558,7 @@ cli:
         add_help: Register a new collectible invoice
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
-        eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
+        eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices a customer owes you
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
@@ -614,7 +614,7 @@ cli:
         add_help: Register a new payable invoice
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
-        eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
+        eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices you owe a supplier
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)

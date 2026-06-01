@@ -2492,12 +2492,12 @@ def payable_invoice_add(
             default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
         ),
     ),
-    eu_vat_id: str | None = typer.Option(
+    eu_iva_id: str | None = typer.Option(
         None,
-        "--eu-vat-id",
+        "--eu-iva-id",
         help=tr(
-            "cli.app.ledger.payable_invoice.eu_vat_id_help",
-            default="Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations.",
+            "cli.app.ledger.payable_invoice.eu_iva_id_help",
+            default="Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations.",
         ),
     ),
     operation_type: str | None = typer.Option(
@@ -2515,13 +2515,13 @@ def payable_invoice_add(
     from ...application.ledger._business_operation_invoice import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
-        validate_eu_vat_id,
+        validate_eu_iva_id,
     )
 
-    validated_vat_id: str | None = None
-    if eu_vat_id is not None:
+    validated_iva_id: str | None = None
+    if eu_iva_id is not None:
         try:
-            validated_vat_id = validate_eu_vat_id(eu_vat_id)
+            validated_iva_id = validate_eu_iva_id(eu_iva_id)
         except BusinessOperationInvoiceInputError as exc:
             raise _bad(str(exc)) from exc
     parsed_operation_type: IntracomOperationType | None = None
@@ -2551,7 +2551,7 @@ def payable_invoice_add(
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
         country_code=country_code,
-        eu_vat_id=validated_vat_id,
+        eu_iva_id=validated_iva_id,
         operation_type=parsed_operation_type,
     )
     payload = _business_invoice_payload(result.record)
@@ -2739,12 +2739,12 @@ def collectible_invoice_add(
             default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
         ),
     ),
-    eu_vat_id: str | None = typer.Option(
+    eu_iva_id: str | None = typer.Option(
         None,
-        "--eu-vat-id",
+        "--eu-iva-id",
         help=tr(
-            "cli.app.ledger.collectible_invoice.eu_vat_id_help",
-            default="Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations.",
+            "cli.app.ledger.collectible_invoice.eu_iva_id_help",
+            default="Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations.",
         ),
     ),
     operation_type: str | None = typer.Option(
@@ -2762,13 +2762,13 @@ def collectible_invoice_add(
     from ...application.ledger._business_operation_invoice import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
-        validate_eu_vat_id,
+        validate_eu_iva_id,
     )
 
-    validated_vat_id: str | None = None
-    if eu_vat_id is not None:
+    validated_iva_id: str | None = None
+    if eu_iva_id is not None:
         try:
-            validated_vat_id = validate_eu_vat_id(eu_vat_id)
+            validated_iva_id = validate_eu_iva_id(eu_iva_id)
         except BusinessOperationInvoiceInputError as exc:
             raise _bad(str(exc)) from exc
     parsed_operation_type: IntracomOperationType | None = None
@@ -2798,7 +2798,7 @@ def collectible_invoice_add(
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
         country_code=country_code,
-        eu_vat_id=validated_vat_id,
+        eu_iva_id=validated_iva_id,
         operation_type=parsed_operation_type,
     )
     payload = _business_invoice_payload(result.record)
@@ -3107,7 +3107,7 @@ def inventory_movement_add(
         help=tr("cli.app.ledger.inventory.unit_cost_help", default="Unit cost (purchase movements)."),
     ),
     taxable_base: str | None = typer.Option(
-        None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for VAT).")
+        None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA).")
     ),
     iva_rate: str = typer.Option(
         "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent.")

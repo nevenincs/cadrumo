@@ -1,4 +1,4 @@
-"""Registry entry for the Pre303 pre-filled VAT helper service.
+"""Registry entry for the Pre303 pre-filled IVA helper service.
 
 Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
 exposed as :data:`ENTRY` and consumed by
@@ -30,4 +30,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_pre303_ayuda.label",
     purpose="entries.portal_pre303_ayuda.purpose",
 )
-"""Portal entry for the Pre303 pre-filled VAT helper (Modelo 303 borrador)."""
+"""Portal entry for the Pre303 pre-filled IVA helper (Modelo 303 borrador)."""

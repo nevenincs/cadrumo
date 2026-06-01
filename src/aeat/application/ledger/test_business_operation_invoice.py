@@ -17,7 +17,7 @@ from aeat.application.ledger._business_operation_invoice import (
     CollectibleInvoiceService,
     IntracomOperationType,
     PayableInvoiceService,
-    validate_eu_vat_id,
+    validate_eu_iva_id,
 )
 from aeat.core.config import Settings
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -365,78 +365,78 @@ class TestRoundTripPersistence:
 
 
 class TestEuVatIdValidator:
-    """INTRACOM-001 — per-member-state EU VAT-ID format validation."""
+    """INTRACOM-001 — per-member-state EU IVA-ID format validation."""
 
     def test_de_valid_nine_digits_accepted(self) -> None:
         # Anti-tautology spec: DE must have exactly 9 digits after "DE"
-        assert validate_eu_vat_id("DE345678901") == "DE345678901"
+        assert validate_eu_iva_id("DE345678901") == "DE345678901"
 
     def test_de_too_short_rejected(self) -> None:
         # Spec §6: DE12345 is too short (only 5 digits, needs 9)
         with pytest.raises(BusinessOperationInvoiceInputError, match="DE"):
-            validate_eu_vat_id("DE12345")
+            validate_eu_iva_id("DE12345")
 
     def test_de_non_digit_rejected(self) -> None:
         # Spec §6: DE34567890A contains a letter after DE — invalid for DE
         with pytest.raises(BusinessOperationInvoiceInputError, match="DE"):
-            validate_eu_vat_id("DE34567890A")
+            validate_eu_iva_id("DE34567890A")
 
     def test_fr_valid_alphanumeric_11_chars_accepted(self) -> None:
         # FR: 2 alphanumeric chars + 9 digits = 11 chars after prefix
-        assert validate_eu_vat_id("FR12345678901") == "FR12345678901"
+        assert validate_eu_iva_id("FR12345678901") == "FR12345678901"
 
     def test_fr_letter_prefix_chars_accepted(self) -> None:
-        assert validate_eu_vat_id("FRAB123456789") == "FRAB123456789"
+        assert validate_eu_iva_id("FRAB123456789") == "FRAB123456789"
 
     def test_it_eleven_digits_accepted(self) -> None:
-        assert validate_eu_vat_id("IT12345678901") == "IT12345678901"
+        assert validate_eu_iva_id("IT12345678901") == "IT12345678901"
 
     def test_it_wrong_length_rejected(self) -> None:
         with pytest.raises(BusinessOperationInvoiceInputError, match="IT"):
-            validate_eu_vat_id("IT1234567890")
+            validate_eu_iva_id("IT1234567890")
 
     def test_ie_eight_chars_accepted(self) -> None:
         # IE: 7 digits + 1 letter
-        assert validate_eu_vat_id("IE1234567A") == "IE1234567A"
+        assert validate_eu_iva_id("IE1234567A") == "IE1234567A"
 
     def test_ie_missing_letter_rejected(self) -> None:
         with pytest.raises(BusinessOperationInvoiceInputError, match="IE"):
-            validate_eu_vat_id("IE12345678")
+            validate_eu_iva_id("IE12345678")
 
     def test_nl_twelve_chars_pattern_accepted(self) -> None:
         # NL: 9 digits + B + 2 digits
-        assert validate_eu_vat_id("NL123456789B01") == "NL123456789B01"
+        assert validate_eu_iva_id("NL123456789B01") == "NL123456789B01"
 
     def test_nl_missing_b_separator_rejected(self) -> None:
         with pytest.raises(BusinessOperationInvoiceInputError, match="NL"):
-            validate_eu_vat_id("NL12345678901")
+            validate_eu_iva_id("NL12345678901")
 
     def test_es_valid_nif_format_accepted(self) -> None:
-        assert validate_eu_vat_id("ESB12345678") == "ESB12345678"
+        assert validate_eu_iva_id("ESB12345678") == "ESB12345678"
 
     def test_gr_el_prefix_accepted(self) -> None:
-        # Greece uses EL in VAT-IDs (not GR)
-        assert validate_eu_vat_id("EL123456789") == "EL123456789"
+        # Greece uses EL in IVA-IDs (not GR)
+        assert validate_eu_iva_id("EL123456789") == "EL123456789"
 
     def test_non_eu_prefix_rejected(self) -> None:
         with pytest.raises(BusinessOperationInvoiceInputError, match="GB"):
-            validate_eu_vat_id("GB123456789")
+            validate_eu_iva_id("GB123456789")
 
     def test_too_short_no_prefix_rejected(self) -> None:
         with pytest.raises(BusinessOperationInvoiceInputError):
-            validate_eu_vat_id("DE")
+            validate_eu_iva_id("DE")
 
     def test_whitespace_and_hyphens_stripped(self) -> None:
         # Normalisation: spaces and hyphens are stripped before matching
-        assert validate_eu_vat_id("DE 345 678 901") == "DE345678901"
+        assert validate_eu_iva_id("DE 345 678 901") == "DE345678901"
 
     def test_lowercase_input_normalised_to_upper(self) -> None:
-        assert validate_eu_vat_id("de345678901") == "DE345678901"
+        assert validate_eu_iva_id("de345678901") == "DE345678901"
 
     def test_anti_tautology_de_ten_digits_rejected(self) -> None:
         # Proves the DE pattern is not trivially permissive: 10 digits must fail
         with pytest.raises(BusinessOperationInvoiceInputError):
-            validate_eu_vat_id("DE3456789012")
+            validate_eu_iva_id("DE3456789012")
 
 
 class TestIntracomFieldsPersistence:
@@ -453,7 +453,7 @@ class TestIntracomFieldsPersistence:
             invoice_date="2025-03-15",
         )
         assert result.record.country_code is None
-        assert result.record.eu_vat_id is None
+        assert result.record.eu_iva_id is None
         assert result.record.operation_type is None
 
     def test_intracom_fields_persist_and_roundtrip(
@@ -466,7 +466,7 @@ class TestIntracomFieldsPersistence:
             invoice_number="INV-001",
             invoice_date="2025-03-15",
             country_code="DE",
-            eu_vat_id="DE345678901",
+            eu_iva_id="DE345678901",
             operation_type=IntracomOperationType.E,
         )
         fresh_svc = _make_payable_svc(isolated_settings, secure_objects)
@@ -474,7 +474,7 @@ class TestIntracomFieldsPersistence:
         assert len(records) == 1
         record = records[0]
         assert record.country_code == "DE"
-        assert record.eu_vat_id == "DE345678901"
+        assert record.eu_iva_id == "DE345678901"
         assert record.operation_type is IntracomOperationType.E
 
 
@@ -494,7 +494,7 @@ class TestIntracomFieldsPersistence:
         bucket_id = "bucket-legacy"
         kind = BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
         path = storage_path(isolated_settings.aeat_invoices_dir / kind.value, bucket_id)
-        # Write a record in the pre-intracom schema (no country_code / eu_vat_id / operation_type)
+        # Write a record in the pre-intracom schema (no country_code / eu_iva_id / operation_type)
         legacy = {
             "invoice_id": "abc123",
             "source_kind": "payable_invoice",
@@ -518,15 +518,15 @@ class TestIntracomFieldsPersistence:
         records = svc.list_all(bucket_id=bucket_id)
         assert len(records) == 1
         assert records[0].country_code is None
-        assert records[0].eu_vat_id is None
+        assert records[0].eu_iva_id is None
         assert records[0].operation_type is None
         assert records[0].invoice_number == "INV-LEGACY-001"
 
     def test_anti_tautology_intracom_fields_actually_differ(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository
     ) -> None:
-        # Proves the roundtrip test would fail if eu_vat_id were silently dropped:
-        # two records with different eu_vat_id must not be equal.
+        # Proves the roundtrip test would fail if eu_iva_id were silently dropped:
+        # two records with different eu_iva_id must not be equal.
         svc = _make_payable_svc(isolated_settings, secure_objects)
         r1 = svc.add(
             bucket_id="bucket-001",
@@ -534,7 +534,7 @@ class TestIntracomFieldsPersistence:
             invoice_number="INV-A",
             invoice_date="2025-03-15",
             country_code="DE",
-            eu_vat_id="DE345678901",
+            eu_iva_id="DE345678901",
             operation_type=IntracomOperationType.E,
         ).record
         r2 = svc.add(
@@ -543,5 +543,5 @@ class TestIntracomFieldsPersistence:
             invoice_number="INV-B",
             invoice_date="2025-03-15",
         ).record
-        assert r1.eu_vat_id != r2.eu_vat_id
+        assert r1.eu_iva_id != r2.eu_iva_id
         assert r1.operation_type != r2.operation_type

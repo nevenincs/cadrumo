@@ -88,7 +88,7 @@ def _populated_amendment() -> ModeloComplementaria:
             casilla_code="iva.devengado",
             old_value=Decimal("20000.00"),
             new_value=Decimal("20500.00"),
-            reason="invoice F-2025-027 was issued at the wrong VAT rate",
+            reason="invoice F-2025-027 was issued at the wrong IVA rate",
         ),
         CasillaChange(
             casilla_code="iva.resultado",

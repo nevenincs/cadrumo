@@ -1,4 +1,4 @@
-"""Period-versioned VAT rate lookup tests.
+"""Period-versioned IVA rate lookup tests.
 
 Confirms that :func:`aeat.domain.iva.lookup_rate` resolves the correct
 :class:`aeat.domain.iva.IvaRateRecord` record across the 2024 / 2025 ES window

@@ -131,7 +131,7 @@ def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> No
 def test_resolve_invoice_binding_values_aggregates_operator_count_distinct_per_clave_set() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-declarante-numero-operadores"),
+            _binding("iva-349-declarante-numero-operadores"),
             claves=("E", "M"),
             rectification_scope="exclude_rectifications",
         ),
@@ -145,7 +145,7 @@ def test_resolve_invoice_binding_values_aggregates_operator_count_distinct_per_c
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    assert resolved == {"vat-349-declarante-numero-operadores": Decimal("2")}
+    assert resolved == {"iva-349-declarante-numero-operadores": Decimal("2")}
 
 
 def test_resolve_invoice_binding_values_counts_one_record_per_operator_clave_pair() -> None:
@@ -156,7 +156,7 @@ def test_resolve_invoice_binding_values_counts_one_record_per_operator_clave_pai
     """
     revision = _revision(
         _with_selector(
-            _binding("vat-349-declarante-numero-operadores"),
+            _binding("iva-349-declarante-numero-operadores"),
             claves=("E", "S"),
             rectification_scope="exclude_rectifications",
         ),
@@ -171,13 +171,13 @@ def test_resolve_invoice_binding_values_counts_one_record_per_operator_clave_pai
     resolved = resolve_invoice_binding_values(revision, observations)
 
     # 3 Tipo 2 records: (DE1, E), (DE1, S), (FR1, E)
-    assert resolved == {"vat-349-declarante-numero-operadores": Decimal("3")}
+    assert resolved == {"iva-349-declarante-numero-operadores": Decimal("3")}
 
 
 def test_resolve_invoice_binding_values_sums_base_amounts_within_selector_scope() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-declarante-importe-operaciones"),
+            _binding("iva-349-declarante-importe-operaciones"),
             claves=("E", "M", "T"),
             rectification_scope="exclude_rectifications",
         ),
@@ -200,13 +200,13 @@ def test_resolve_invoice_binding_values_sums_base_amounts_within_selector_scope(
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    assert resolved == {"vat-349-declarante-importe-operaciones": Decimal("1500.75")}
+    assert resolved == {"iva-349-declarante-importe-operaciones": Decimal("1500.75")}
 
 
 def test_resolve_invoice_binding_values_computes_rectification_delta_sum() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-declarante-importe-rectificaciones"),
+            _binding("iva-349-declarante-importe-rectificaciones"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
@@ -237,11 +237,11 @@ def test_resolve_invoice_binding_values_computes_rectification_delta_sum() -> No
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    assert resolved == {"vat-349-declarante-importe-rectificaciones": Decimal("50")}
+    assert resolved == {"iva-349-declarante-importe-rectificaciones": Decimal("50")}
 
 
 def test_resolve_invoice_binding_values_rejects_unsupported_fact() -> None:
-    revision = _revision(_with_selector(_binding("vat-349-declarante-importe-operaciones"), fact="not_a_fact"))
+    revision = _revision(_with_selector(_binding("iva-349-declarante-importe-operaciones"), fact="not_a_fact"))
     # The typed _InvoiceSelector model's Literal fact validator rejects
     # the bogus value upstream; the resolver surfaces this as the typed
     # "malformed invoice selector" diagnostic rather than the older
@@ -251,7 +251,7 @@ def test_resolve_invoice_binding_values_rejects_unsupported_fact() -> None:
 
 
 def test_resolve_invoice_binding_values_rejects_op_mismatch_for_fact() -> None:
-    revision = _revision(_with_aggregation(_binding("vat-349-declarante-numero-operadores"), "sum"))
+    revision = _revision(_with_aggregation(_binding("iva-349-declarante-numero-operadores"), "sum"))
     with pytest.raises(
         RegistryValidationError, match=r"fact 'operator_count' requires aggregation op 'count_distinct'"
     ):
@@ -261,17 +261,17 @@ def test_resolve_invoice_binding_values_rejects_op_mismatch_for_fact() -> None:
 def test_invoice_binding_requirements_groups_bindings_by_clave_and_scope() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-declarante-numero-operadores"),
+            _binding("iva-349-declarante-numero-operadores"),
             claves=("E", "M"),
             rectification_scope="exclude_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-declarante-importe-operaciones"),
+            _binding("iva-349-declarante-importe-operaciones"),
             claves=("E", "M"),
             rectification_scope="exclude_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-declarante-importe-rectificaciones"),
+            _binding("iva-349-declarante-importe-rectificaciones"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
@@ -282,17 +282,17 @@ def test_invoice_binding_requirements_groups_bindings_by_clave_and_scope() -> No
     assert len(requirements) == 2
     by_scope = {req.rectification_scope: req for req in requirements}
     assert by_scope["exclude_rectifications"].binding_ids == (
-        "vat-349-declarante-importe-operaciones",
-        "vat-349-declarante-numero-operadores",
+        "iva-349-declarante-importe-operaciones",
+        "iva-349-declarante-numero-operadores",
     )
     assert by_scope["exclude_rectifications"].claves == ("E", "M")
-    assert by_scope["only_rectifications"].binding_ids == ("vat-349-declarante-importe-rectificaciones",)
+    assert by_scope["only_rectifications"].binding_ids == ("iva-349-declarante-importe-rectificaciones",)
     assert by_scope["only_rectifications"].claves == ("E",)
 
 
 def test_resolve_invoice_binding_values_ignores_non_invoice_bindings() -> None:
     invoice_binding = _with_selector(
-        _binding("vat-349-declarante-importe-operaciones"),
+        _binding("iva-349-declarante-importe-operaciones"),
         claves=("E",),
     )
     other_binding = _other_source_binding()
@@ -303,23 +303,23 @@ def test_resolve_invoice_binding_values_ignores_non_invoice_bindings() -> None:
         (_observation(party="DE1", country="DE", base="100", clave="E"),),
     )
 
-    assert resolved == {"vat-349-declarante-importe-operaciones": Decimal("100")}
+    assert resolved == {"iva-349-declarante-importe-operaciones": Decimal("100")}
 
 
 def test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_summing_bases() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-operador-row-codigo-pais"),
+            _binding("iva-349-operador-row-codigo-pais"),
             claves=("E", "S"),
             rectification_scope="exclude_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-operador-row-clave"),
+            _binding("iva-349-operador-row-clave"),
             claves=("E", "S"),
             rectification_scope="exclude_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-operador-row-base"),
+            _binding("iva-349-operador-row-base"),
             claves=("E", "S"),
             rectification_scope="exclude_rectifications",
         ),
@@ -334,39 +334,39 @@ def test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_summing
 
     # Groups sorted by (country_code, party_tax_id, clave): (DE, DE111, E), (FR, FR222, S)
     assert resolved == {
-        ("vat-349-operador-row-codigo-pais", 1): "DE",
-        ("vat-349-operador-row-clave", 1): "E",
-        ("vat-349-operador-row-base", 1): Decimal("1500.00"),
-        ("vat-349-operador-row-codigo-pais", 2): "FR",
-        ("vat-349-operador-row-clave", 2): "S",
-        ("vat-349-operador-row-base", 2): Decimal("200.00"),
+        ("iva-349-operador-row-codigo-pais", 1): "DE",
+        ("iva-349-operador-row-clave", 1): "E",
+        ("iva-349-operador-row-base", 1): Decimal("1500.00"),
+        ("iva-349-operador-row-codigo-pais", 2): "FR",
+        ("iva-349-operador-row-clave", 2): "S",
+        ("iva-349-operador-row-base", 2): Decimal("200.00"),
     }
 
 
 def test_resolve_invoice_binding_row_values_period_grouping_carries_rectification_metadata() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-rectificacion-row-codigo-pais"),
+            _binding("iva-349-rectificacion-row-codigo-pais"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-rectificacion-row-ejercicio"),
+            _binding("iva-349-rectificacion-row-ejercicio"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-rectificacion-row-periodo"),
+            _binding("iva-349-rectificacion-row-periodo"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-rectificacion-row-base-rectificada"),
+            _binding("iva-349-rectificacion-row-base-rectificada"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-rectificacion-row-base-anterior"),
+            _binding("iva-349-rectificacion-row-base-anterior"),
             claves=("E",),
             rectification_scope="only_rectifications",
         ),
@@ -398,28 +398,28 @@ def test_resolve_invoice_binding_row_values_period_grouping_carries_rectificatio
 
     # Sorted by (country_code, party_tax_id, clave, year, period): DE/2T first, IT/4T second.
     assert resolved == {
-        ("vat-349-rectificacion-row-codigo-pais", 1): "DE",
-        ("vat-349-rectificacion-row-ejercicio", 1): "2025",
-        ("vat-349-rectificacion-row-periodo", 1): "2T",
-        ("vat-349-rectificacion-row-base-rectificada", 1): Decimal("1100.00"),
-        ("vat-349-rectificacion-row-base-anterior", 1): Decimal("1000.00"),
-        ("vat-349-rectificacion-row-codigo-pais", 2): "IT",
-        ("vat-349-rectificacion-row-ejercicio", 2): "2025",
-        ("vat-349-rectificacion-row-periodo", 2): "4T",
-        ("vat-349-rectificacion-row-base-rectificada", 2): Decimal("200.00"),
-        ("vat-349-rectificacion-row-base-anterior", 2): Decimal("180.00"),
+        ("iva-349-rectificacion-row-codigo-pais", 1): "DE",
+        ("iva-349-rectificacion-row-ejercicio", 1): "2025",
+        ("iva-349-rectificacion-row-periodo", 1): "2T",
+        ("iva-349-rectificacion-row-base-rectificada", 1): Decimal("1100.00"),
+        ("iva-349-rectificacion-row-base-anterior", 1): Decimal("1000.00"),
+        ("iva-349-rectificacion-row-codigo-pais", 2): "IT",
+        ("iva-349-rectificacion-row-ejercicio", 2): "2025",
+        ("iva-349-rectificacion-row-periodo", 2): "4T",
+        ("iva-349-rectificacion-row-base-rectificada", 2): Decimal("200.00"),
+        ("iva-349-rectificacion-row-base-anterior", 2): Decimal("180.00"),
     }
 
 
 def test_resolve_invoice_binding_row_values_skips_scalar_bindings() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-declarante-importe-operaciones"),
+            _binding("iva-349-declarante-importe-operaciones"),
             claves=("E",),
             rectification_scope="exclude_rectifications",
         ),
         _with_selector(
-            _binding("vat-349-operador-row-clave"),
+            _binding("iva-349-operador-row-clave"),
             claves=("E",),
             rectification_scope="exclude_rectifications",
         ),
@@ -429,14 +429,14 @@ def test_resolve_invoice_binding_row_values_skips_scalar_bindings() -> None:
     rows = resolve_invoice_binding_row_values(revision, observations)
     scalars = resolve_invoice_binding_values(revision, observations)
 
-    assert rows == {("vat-349-operador-row-clave", 1): "E"}
-    assert scalars == {"vat-349-declarante-importe-operaciones": Decimal("100")}
+    assert rows == {("iva-349-operador-row-clave", 1): "E"}
+    assert scalars == {"iva-349-declarante-importe-operaciones": Decimal("100")}
 
 
 def test_row_binding_rejects_inconsistent_grouping_for_period_only_field() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-rectificacion-row-ejercicio"),
+            _binding("iva-349-rectificacion-row-ejercicio"),
             grouping="operator_clave",
             claves=("E",),
             rectification_scope="only_rectifications",
@@ -449,7 +449,7 @@ def test_row_binding_rejects_inconsistent_grouping_for_period_only_field() -> No
 def test_row_binding_requires_only_rectifications_for_period_field() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-rectificacion-row-ejercicio"),
+            _binding("iva-349-rectificacion-row-ejercicio"),
             claves=("E",),
             rectification_scope="exclude_rectifications",
         ),
@@ -461,7 +461,7 @@ def test_row_binding_requires_only_rectifications_for_period_field() -> None:
 def test_row_binding_period_grouping_requires_rectification_scope() -> None:
     revision = _revision(
         _with_selector(
-            _binding("vat-349-operador-row-base"),
+            _binding("iva-349-operador-row-base"),
             grouping="operator_clave_period",
             claves=("E",),
             rectification_scope="exclude_rectifications",

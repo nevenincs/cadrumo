@@ -1,4 +1,4 @@
-"""Read-only VAT rate registry."""
+"""Read-only IVA rate registry."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 
 def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
-    """Load VAT rates from the committed registry file.
+    """Load IVA rates from the committed registry file.
 
     Resolves the bundled rates path on every call so the
     `bundled_path` boundary stays the single resolution surface.
@@ -28,7 +28,7 @@ def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tupl
     try:
         stat = resolved.stat()
     except OSError as exc:
-        raise IvaCatalogueError(f"{resolved}: cannot stat VAT rate registry: {exc}") from exc
+        raise IvaCatalogueError(f"{resolved}: cannot stat IVA rate registry: {exc}") from exc
     return _load_iva_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
@@ -58,7 +58,7 @@ def _load_iva_rate_table_cached(
 
     missing = sorted(member_state.value for member_state in set(EUMemberState) - set(by_member_state))
     if missing:
-        raise IvaCatalogueError(f"{target}: VAT rate registry missing member states: {missing}")
+        raise IvaCatalogueError(f"{target}: IVA rate registry missing member states: {missing}")
 
     immutable: dict[EUMemberState, tuple[IvaRateRecord, ...]] = {}
     for member_state, rates in by_member_state.items():
@@ -70,7 +70,7 @@ def _load_iva_rate_table_cached(
 
 def _parse_rate(raw_rate: object) -> IvaRateRecord:
     if not isinstance(raw_rate, dict):
-        raise IvaValidationError(f"VAT rate entry must be a table, got: {type(raw_rate)!r}")
+        raise IvaValidationError(f"IVA rate entry must be a table, got: {type(raw_rate)!r}")
     data: dict[str, object] = {str(k): v for k, v in raw_rate.items()}
     try:
         member_state = EUMemberState(str(data.get("member_state")))
@@ -79,7 +79,7 @@ def _parse_rate(raw_rate: object) -> IvaRateRecord:
         if pct is None:
             raise ValueError(f"pct field could not be parsed: {data.get('pct')!r}")
     except (ArithmeticError, TypeError, ValueError) as exc:
-        raise IvaValidationError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
+        raise IvaValidationError(f"invalid IVA rate key or pct: {raw_rate!r}") from exc
     return IvaRateRecord.model_validate(
         {
             "member_state": member_state,
@@ -108,7 +108,7 @@ def _assert_no_overlap(
             previous_end = previous.effective_until or date.max
             if previous_end >= current.effective_from:
                 raise IvaRateOverlapError(
-                    f"VAT rate registry has overlapping windows for "
+                    f"IVA rate registry has overlapping windows for "
                     f"member_state={member_state.value!r} kind={kind.value!r}: "
                     f"{previous.effective_from}/{previous.effective_until} vs. "
                     f"{current.effective_from}/{current.effective_until}"

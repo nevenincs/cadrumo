@@ -1,4 +1,4 @@
-"""Read-only VAT regulation catalogue registry."""
+"""Read-only IVA regulation catalogue registry."""
 
 from __future__ import annotations
 
@@ -19,12 +19,12 @@ from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, 
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
-    """Load one VAT catalogue TOML file."""
+    """Load one IVA catalogue TOML file."""
     resolved = path.resolve()
     try:
         stat = resolved.stat()
     except OSError as exc:
-        raise IvaCatalogueError(f"{resolved}: cannot stat VAT catalogue: {exc}") from exc
+        raise IvaCatalogueError(f"{resolved}: cannot stat IVA catalogue: {exc}") from exc
     return _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
@@ -47,17 +47,17 @@ def _load_iva_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
         except (ValidationError, ValueError) as exc:
             raise IvaCatalogueError(f"{target}: invalid regulations[{index}]: {exc}") from exc
         if regulation.category in regulations:
-            raise IvaCatalogueError(f"{target}: duplicate VAT category {regulation.category.value!r}")
+            raise IvaCatalogueError(f"{target}: duplicate IVA category {regulation.category.value!r}")
         regulations[regulation.category] = regulation
 
     missing = sorted(category.value for category in set(IvaCategory) - set(regulations))
     if missing:
-        raise IvaCatalogueError(f"{target}: VAT catalogue missing categories: {missing}")
+        raise IvaCatalogueError(f"{target}: IVA catalogue missing categories: {missing}")
     return IvaCatalogue(regulations=regulations)
 
 
 def load_iva_catalogues(root: Path | None = None) -> Mapping[int, IvaCatalogue]:
-    """Load every year-keyed VAT catalogue under ``root``.
+    """Load every year-keyed IVA catalogue under ``root``.
 
     Resolves the bundled catalogues directory on every call when
     no override is supplied; the ``bundled_path`` boundary is the
@@ -82,18 +82,18 @@ def _load_iva_catalogues_cached(
         try:
             year = int(path.stem)
         except ValueError as exc:
-            raise IvaCatalogueError(f"{path}: VAT catalogue filename must be a year") from exc
+            raise IvaCatalogueError(f"{path}: IVA catalogue filename must be a year") from exc
         catalogues[year] = load_iva_catalogue(path)
     if not catalogues:
-        raise IvaCatalogueError(f"{root_path}: no VAT catalogue TOML files found")
+        raise IvaCatalogueError(f"{root_path}: no IVA catalogue TOML files found")
     return MappingProxyType(catalogues)
 
 
 def resolve_catalogue(*, on: date) -> IvaCatalogue:
-    """Return the exact VAT catalogue for ``on``."""
+    """Return the exact IVA catalogue for ``on``."""
     catalogue = load_iva_catalogues().get(on.year)
     if catalogue is None:
-        raise IvaCatalogueError(f"no VAT catalogue registered for year={on.year}")
+        raise IvaCatalogueError(f"no IVA catalogue registered for year={on.year}")
     return catalogue
 
 
@@ -117,7 +117,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
             "triggers_when": tr(str(data.get("triggers_when"))),
             "iva_treatment": tr(str(data.get("iva_treatment"))),
             "requires_reverse_charge": data.get("requires_reverse_charge"),
-            "requires_supplier_vat_id": data.get("requires_supplier_vat_id"),
+            "requires_supplier_iva_id": data.get("requires_supplier_iva_id"),
             "boe_references": tuple(boe_refs),
             "manual_references": tuple(manual_refs),
             "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),

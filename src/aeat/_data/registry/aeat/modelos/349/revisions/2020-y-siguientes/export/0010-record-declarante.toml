@@ -292,5 +292,5 @@ source_refs = ["aeat-dr-349-2020-current"]
 
 # Tipo 2 — Registro de operador intracomunitario (500 bytes)
 # One record emitted per (operator, clave) row from the invoice ledger via the
-# vat-349-operador-row-* bindings. Discriminated from rectificacion records by
+# iva-349-operador-row-* bindings. Discriminated from rectificacion records by
 # the rectification block (positions 147-178) being all blank.

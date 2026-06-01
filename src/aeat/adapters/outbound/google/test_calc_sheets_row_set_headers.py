@@ -61,7 +61,7 @@ def test_build_row_set_header_data_handles_multiple_row_sets() -> None:
         tab=TabName.DETALLE,
         header_row=1,
         first_data_row=2,
-        columns=(_column("vat-349-operador-row-nif", 1, "NIF de la contraparte"),),
+        columns=(_column("iva-349-operador-row-nif", 1, "NIF de la contraparte"),),
     )
     operator_clave_period_row_set = SheetRowSet(
         grouping="operator_clave_period",
@@ -69,8 +69,8 @@ def test_build_row_set_header_data_handles_multiple_row_sets() -> None:
         header_row=53,
         first_data_row=54,
         columns=(
-            _column("vat-349-rectificacion-row-nif", 1, "NIF", row=53),
-            _column("vat-349-rectificacion-row-ejercicio", 2, "Ejercicio rectificado", row=53),
+            _column("iva-349-rectificacion-row-nif", 1, "NIF", row=53),
+            _column("iva-349-rectificacion-row-ejercicio", 2, "Ejercicio rectificado", row=53),
         ),
     )
 

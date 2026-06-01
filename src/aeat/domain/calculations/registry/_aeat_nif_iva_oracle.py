@@ -1,9 +1,9 @@
 """AEAT NIF-IVA other-EU-countries verification oracle.
 
 AEAT publishes a public verification servlet under the
-agenciatributaria.gob.es domain that confirms the validity of an EU VAT
+agenciatributaria.gob.es domain that confirms the validity of an EU IVA
 identifier issued by another member state. The form accepts the country
-code + VAT number, relays the query to the European Commission's VIES
+code + IVA number, relays the query to the European Commission's VIES
 service, and renders the response. The form is anonymous (no clave-móvil
 session, no NIF-history written for the calling autonomo) and creates no
 AEAT-side state under the autonomo's account.
@@ -115,7 +115,7 @@ class AeatNifIvaReplayDriver:
 
 
 class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
-    """Read-only AEAT-mediated EU VAT-identifier validator.
+    """Read-only AEAT-mediated EU IVA-identifier validator.
 
     The adapter targets the public AEAT NIF-IVA verification page at
     sede.agenciatributaria.gob.es. The page proxies the query to the
@@ -135,7 +135,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
 
     @property
     def surface_kind(self) -> OracleSurfaceKind:
-        return "vat_id_check"
+        return "iva_id_check"
 
     def planned_operations(
         self,

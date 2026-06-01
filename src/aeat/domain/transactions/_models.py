@@ -228,7 +228,7 @@ def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
 
 _NON_NEGATIVE_DECIMAL_HINTS = {
     "taxable_base": (
-        "taxable_base must be non-negative; it is the VAT-exclusive base amount, "
+        "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
         "and the income/expense direction is taken from the transaction itself, "
         "not from the sign of this value"
     ),
@@ -692,7 +692,7 @@ class Transaction(BaseModel):
         invoice_id: Optional invoice foreign key.
         category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
             foreign key.
-        taxable_base: Optional VAT-exclusive base amount.
+        taxable_base: Optional IVA-exclusive base amount.
         iva_rate: Optional IVA rate expressed as a decimal fraction.
         iva_amount: Optional IVA amount on the row.
         irpf_category: Optional IRPF-specific category key.

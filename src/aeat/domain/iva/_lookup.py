@@ -1,4 +1,4 @@
-"""Lookup helpers for VAT registry data."""
+"""Lookup helpers for IVA registry data."""
 
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ def cite(
     self-identifying when written to a log line.
 
     Args:
-        category: The VAT category whose canonical citation is requested.
+        category: The IVA category whose canonical citation is requested.
         on: Effective date used to resolve the committed catalogue.
         catalogue: Optional catalogue override.
 
@@ -85,7 +85,7 @@ def cite(
 def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     regulation = catalogue.get(category)
     if regulation is None:
-        raise IvaCategoryNotFoundError(f"VAT category {category.value!r} not found in catalogue")
+        raise IvaCategoryNotFoundError(f"IVA category {category.value!r} not found in catalogue")
     citation = regulation.citations[0]
     source_label = _SOURCE_LABELS.get(citation.source.value, citation.source.value)
     return f"{source_label}, {citation.article}: {citation.quoted_text}"

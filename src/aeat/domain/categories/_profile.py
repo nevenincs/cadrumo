@@ -31,7 +31,7 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
     category: SpendingCategory
     display_label: tr
     proportionality: ProportionalityRule
-    vat_hint: IvaDeductibilityHint | None = None
+    iva_hint: IvaDeductibilityHint | None = None
 
     @model_validator(mode="after")
     def _validate_profile(self) -> CategoryProfile:

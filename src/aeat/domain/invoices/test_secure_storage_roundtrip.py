@@ -32,7 +32,7 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
             "invoice_number": invoice_number,
             "issued_at": date(2025, 3, 15),
             "counterparty_name": "Test Counterparty GmbH",
-            # German VAT id; bypasses the AEAT CIF checksum since the
+            # German IVA id; bypasses the AEAT CIF checksum since the
             # invoice domain accepts any non-Spanish counterparty.
             "counterparty_tax_id": "DE123456789",
             "counterparty_country": "DE",

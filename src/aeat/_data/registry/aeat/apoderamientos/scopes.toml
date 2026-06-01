@@ -25,7 +25,7 @@ modelo_codes = ["100", "714"]
 [[scopes]]
 code = "IVA"
 name_es = "IVA (modelo 303, 390)"
-name_en = "VAT periodic and annual returns"
+name_en = "IVA periodic and annual returns"
 modelo_codes = ["303", "390"]
 
 [[scopes]]

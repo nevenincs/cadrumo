@@ -559,17 +559,17 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
     # Operador and rectificacion records render via binding-row fields and the
     # parser distinguishes them via the rectification-block discriminator
     # (positions 147-178 must be blank for operador, non-blank for rectificacion).
-    assert by_record_binding[(op, "vat-349-operador-row-codigo-pais")] == "DE"
-    assert by_record_binding[(op, "vat-349-operador-row-nif")] == "123456789012345"
-    assert by_record_binding[(op, "vat-349-operador-row-clave")] == "E"
-    assert by_record_binding[(op, "vat-349-operador-row-base")] == Decimal("1500.50")
+    assert by_record_binding[(op, "iva-349-operador-row-codigo-pais")] == "DE"
+    assert by_record_binding[(op, "iva-349-operador-row-nif")] == "123456789012345"
+    assert by_record_binding[(op, "iva-349-operador-row-clave")] == "E"
+    assert by_record_binding[(op, "iva-349-operador-row-base")] == Decimal("1500.50")
 
-    assert by_record_binding[(rect, "vat-349-rectificacion-row-codigo-pais")] == "FR"
-    assert by_record_binding[(rect, "vat-349-rectificacion-row-clave")] == "A"
-    assert by_record_binding[(rect, "vat-349-rectificacion-row-ejercicio")] == Decimal("2024")
-    assert by_record_binding[(rect, "vat-349-rectificacion-row-periodo")] == "1T"
-    assert by_record_binding[(rect, "vat-349-rectificacion-row-base-rectificada")] == Decimal("100.00")
-    assert by_record_binding[(rect, "vat-349-rectificacion-row-base-anterior")] == Decimal("80.00")
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-codigo-pais")] == "FR"
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-clave")] == "A"
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-ejercicio")] == Decimal("2024")
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-periodo")] == "1T"
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-base-rectificada")] == Decimal("100.00")
+    assert by_record_binding[(rect, "iva-349-rectificacion-row-base-anterior")] == Decimal("80.00")
 
 
 def _fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:
@@ -591,22 +591,22 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") != "rows"
     }
     assert set(invoice_bindings) == {
-        "vat-349-declarante-numero-operadores",
-        "vat-349-declarante-importe-operaciones",
-        "vat-349-declarante-numero-rectificaciones",
-        "vat-349-declarante-importe-rectificaciones",
+        "iva-349-declarante-numero-operadores",
+        "iva-349-declarante-importe-operaciones",
+        "iva-349-declarante-numero-rectificaciones",
+        "iva-349-declarante-importe-rectificaciones",
     }
     expected_claves = ("E", "M", "H", "A", "T", "S", "I", "R", "D", "C")
     for binding_id in (
-        "vat-349-declarante-numero-operadores",
-        "vat-349-declarante-importe-operaciones",
+        "iva-349-declarante-numero-operadores",
+        "iva-349-declarante-importe-operaciones",
     ):
         binding = invoice_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "exclude_rectifications"
         assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_claves
     for binding_id in (
-        "vat-349-declarante-numero-rectificaciones",
-        "vat-349-declarante-importe-rectificaciones",
+        "iva-349-declarante-numero-rectificaciones",
+        "iva-349-declarante-importe-rectificaciones",
     ):
         binding = invoice_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "only_rectifications"
@@ -624,25 +624,25 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
     # share exclude_rectifications + the same clave set, so they all collapse
     # into one requirement cohort.
     expected_exclude = {
-        "vat-349-declarante-numero-operadores",
-        "vat-349-declarante-importe-operaciones",
-        "vat-349-operador-row-codigo-pais",
-        "vat-349-operador-row-nif",
-        "vat-349-operador-row-apellidos",
-        "vat-349-operador-row-clave",
-        "vat-349-operador-row-base",
+        "iva-349-declarante-numero-operadores",
+        "iva-349-declarante-importe-operaciones",
+        "iva-349-operador-row-codigo-pais",
+        "iva-349-operador-row-nif",
+        "iva-349-operador-row-apellidos",
+        "iva-349-operador-row-clave",
+        "iva-349-operador-row-base",
     }
     expected_only = {
-        "vat-349-declarante-numero-rectificaciones",
-        "vat-349-declarante-importe-rectificaciones",
-        "vat-349-rectificacion-row-codigo-pais",
-        "vat-349-rectificacion-row-nif",
-        "vat-349-rectificacion-row-apellidos",
-        "vat-349-rectificacion-row-clave",
-        "vat-349-rectificacion-row-ejercicio",
-        "vat-349-rectificacion-row-periodo",
-        "vat-349-rectificacion-row-base-rectificada",
-        "vat-349-rectificacion-row-base-anterior",
+        "iva-349-declarante-numero-rectificaciones",
+        "iva-349-declarante-importe-rectificaciones",
+        "iva-349-rectificacion-row-codigo-pais",
+        "iva-349-rectificacion-row-nif",
+        "iva-349-rectificacion-row-apellidos",
+        "iva-349-rectificacion-row-clave",
+        "iva-349-rectificacion-row-ejercicio",
+        "iva-349-rectificacion-row-periodo",
+        "iva-349-rectificacion-row-base-rectificada",
+        "iva-349-rectificacion-row-base-anterior",
     }
     assert set(by_scope["exclude_rectifications"].binding_ids) == expected_exclude
     assert set(by_scope["only_rectifications"].binding_ids) == expected_only
@@ -688,10 +688,10 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
     # Assert the four expected binding keys are all present.
     expected_keys = {
-        "vat-349-declarante-numero-operadores",
-        "vat-349-declarante-importe-operaciones",
-        "vat-349-declarante-numero-rectificaciones",
-        "vat-349-declarante-importe-rectificaciones",
+        "iva-349-declarante-numero-operadores",
+        "iva-349-declarante-importe-operaciones",
+        "iva-349-declarante-numero-rectificaciones",
+        "iva-349-declarante-importe-rectificaciones",
     }
     assert expected_keys == set(resolved.keys()), "resolver must populate exactly the four declarant bindings"
 
@@ -699,17 +699,17 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     # observations — the resolver must sum distinct operators and their base amounts.
     expected_num_operators = Decimal(len({obs.party_tax_id for obs in non_rect_obs}))
     expected_importe_operaciones = sum((obs.base_amount for obs in non_rect_obs), Decimal("0"))
-    assert resolved["vat-349-declarante-numero-operadores"] == expected_num_operators
-    assert resolved["vat-349-declarante-importe-operaciones"] == expected_importe_operaciones
+    assert resolved["iva-349-declarante-numero-operadores"] == expected_num_operators
+    assert resolved["iva-349-declarante-importe-operaciones"] == expected_importe_operaciones
 
     # Rectification count is the number of rectification observations.
-    assert resolved["vat-349-declarante-numero-rectificaciones"] == Decimal("1")
+    assert resolved["iva-349-declarante-numero-rectificaciones"] == Decimal("1")
 
     # Rectification importe is the absolute delta between new and previous base,
     # derived from the rectification observation supplied to the resolver.
     assert rect_obs.rectified_base_previous is not None
     expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
-    assert resolved["vat-349-declarante-importe-rectificaciones"] == expected_rect_delta
+    assert resolved["iva-349-declarante-importe-rectificaciones"] == expected_rect_delta
 
 
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
@@ -725,10 +725,10 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
 
     casillas_by_id = {c.id: c for c in revision.casillas}
     expected_bindings = {
-        "decl.numero-operadores": "vat-349-declarante-numero-operadores",
-        "decl.importe-operaciones": "vat-349-declarante-importe-operaciones",
-        "decl.numero-rectificaciones": "vat-349-declarante-numero-rectificaciones",
-        "decl.importe-rectificaciones": "vat-349-declarante-importe-rectificaciones",
+        "decl.numero-operadores": "iva-349-declarante-numero-operadores",
+        "decl.importe-operaciones": "iva-349-declarante-importe-operaciones",
+        "decl.numero-rectificaciones": "iva-349-declarante-numero-rectificaciones",
+        "decl.importe-rectificaciones": "iva-349-declarante-importe-rectificaciones",
     }
     for casilla_id, expected_binding in expected_bindings.items():
         casilla = casillas_by_id[casilla_id]
@@ -746,21 +746,21 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") == "rows"
     }
     expected_operador_row_bindings = {
-        "vat-349-operador-row-codigo-pais",
-        "vat-349-operador-row-nif",
-        "vat-349-operador-row-apellidos",
-        "vat-349-operador-row-clave",
-        "vat-349-operador-row-base",
+        "iva-349-operador-row-codigo-pais",
+        "iva-349-operador-row-nif",
+        "iva-349-operador-row-apellidos",
+        "iva-349-operador-row-clave",
+        "iva-349-operador-row-base",
     }
     expected_rectificacion_row_bindings = {
-        "vat-349-rectificacion-row-codigo-pais",
-        "vat-349-rectificacion-row-nif",
-        "vat-349-rectificacion-row-apellidos",
-        "vat-349-rectificacion-row-clave",
-        "vat-349-rectificacion-row-ejercicio",
-        "vat-349-rectificacion-row-periodo",
-        "vat-349-rectificacion-row-base-rectificada",
-        "vat-349-rectificacion-row-base-anterior",
+        "iva-349-rectificacion-row-codigo-pais",
+        "iva-349-rectificacion-row-nif",
+        "iva-349-rectificacion-row-apellidos",
+        "iva-349-rectificacion-row-clave",
+        "iva-349-rectificacion-row-ejercicio",
+        "iva-349-rectificacion-row-periodo",
+        "iva-349-rectificacion-row-base-rectificada",
+        "iva-349-rectificacion-row-base-anterior",
     }
     assert set(row_bindings) == expected_operador_row_bindings | expected_rectificacion_row_bindings
 
@@ -809,25 +809,25 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
     rows = resolve_invoice_binding_row_values(revision, observations)
 
     # Two row groups: (DE, DE111, E) at row 1 and (FR, FR222, S) at row 2.
-    assert rows[("vat-349-operador-row-codigo-pais", 1)] == "DE"
-    assert rows[("vat-349-operador-row-nif", 1)] == "DE111"
-    assert rows[("vat-349-operador-row-apellidos", 1)] == "ALEMAN GMBH"
-    assert rows[("vat-349-operador-row-clave", 1)] == "E"
+    assert rows[("iva-349-operador-row-codigo-pais", 1)] == "DE"
+    assert rows[("iva-349-operador-row-nif", 1)] == "DE111"
+    assert rows[("iva-349-operador-row-apellidos", 1)] == "ALEMAN GMBH"
+    assert rows[("iva-349-operador-row-clave", 1)] == "E"
     # Both German observations must contribute to row 1's base.
     # Assertion pins the grouping contract by requiring the aggregate
     # to exceed the larger single-observation value.
-    row_1_base = rows[("vat-349-operador-row-base", 1)]
+    row_1_base = rows[("iva-349-operador-row-base", 1)]
     assert isinstance(row_1_base, Decimal)
     assert row_1_base > Decimal("1000.00"), (
         f"row 1 base = {row_1_base} not greater than max DE observation 1000.00 — "
         f"second German observation did not contribute to the group"
     )
-    assert rows[("vat-349-operador-row-codigo-pais", 2)] == "FR"
-    assert rows[("vat-349-operador-row-nif", 2)] == "FR222"
-    assert rows[("vat-349-operador-row-apellidos", 2)] == "FRANCE SARL"
-    assert rows[("vat-349-operador-row-clave", 2)] == "S"
+    assert rows[("iva-349-operador-row-codigo-pais", 2)] == "FR"
+    assert rows[("iva-349-operador-row-nif", 2)] == "FR222"
+    assert rows[("iva-349-operador-row-apellidos", 2)] == "FRANCE SARL"
+    assert rows[("iva-349-operador-row-clave", 2)] == "S"
     # Single-observation row: identity passthrough of the fixture value.
-    assert rows[("vat-349-operador-row-base", 2)] == Decimal("300.50")
+    assert rows[("iva-349-operador-row-base", 2)] == Decimal("300.50")
 
 
 def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clave_period() -> None:
@@ -866,17 +866,17 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
     rows = resolve_invoice_binding_row_values(revision, observations)
 
     # DE/DE111/E/2025/2T at row 1, IT/IT333/E/2025/4T at row 2.
-    assert rows[("vat-349-rectificacion-row-codigo-pais", 1)] == "DE"
-    assert rows[("vat-349-rectificacion-row-nif", 1)] == "DE111"
-    assert rows[("vat-349-rectificacion-row-apellidos", 1)] == "ALEMAN GMBH"
-    assert rows[("vat-349-rectificacion-row-clave", 1)] == "E"
-    assert rows[("vat-349-rectificacion-row-ejercicio", 1)] == "2025"
-    assert rows[("vat-349-rectificacion-row-periodo", 1)] == "2T"
-    assert rows[("vat-349-rectificacion-row-base-rectificada", 1)] == Decimal("1100.00")
-    assert rows[("vat-349-rectificacion-row-base-anterior", 1)] == Decimal("1000.00")
-    assert rows[("vat-349-rectificacion-row-codigo-pais", 2)] == "IT"
-    assert rows[("vat-349-rectificacion-row-base-rectificada", 2)] == Decimal("200.00")
-    assert rows[("vat-349-rectificacion-row-base-anterior", 2)] == Decimal("180.00")
+    assert rows[("iva-349-rectificacion-row-codigo-pais", 1)] == "DE"
+    assert rows[("iva-349-rectificacion-row-nif", 1)] == "DE111"
+    assert rows[("iva-349-rectificacion-row-apellidos", 1)] == "ALEMAN GMBH"
+    assert rows[("iva-349-rectificacion-row-clave", 1)] == "E"
+    assert rows[("iva-349-rectificacion-row-ejercicio", 1)] == "2025"
+    assert rows[("iva-349-rectificacion-row-periodo", 1)] == "2T"
+    assert rows[("iva-349-rectificacion-row-base-rectificada", 1)] == Decimal("1100.00")
+    assert rows[("iva-349-rectificacion-row-base-anterior", 1)] == Decimal("1000.00")
+    assert rows[("iva-349-rectificacion-row-codigo-pais", 2)] == "IT"
+    assert rows[("iva-349-rectificacion-row-base-rectificada", 2)] == Decimal("200.00")
+    assert rows[("iva-349-rectificacion-row-base-anterior", 2)] == Decimal("180.00")
 
 
 def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
@@ -931,15 +931,15 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
 
     # Operator and importe values must equal what the resolver computed from the
     # non-rectification observations.
-    assert casilla_values["decl.numero-operadores"] == binding_values["vat-349-declarante-numero-operadores"]
-    assert casilla_values["decl.importe-operaciones"] == binding_values["vat-349-declarante-importe-operaciones"]
+    assert casilla_values["decl.numero-operadores"] == binding_values["iva-349-declarante-numero-operadores"]
+    assert casilla_values["decl.importe-operaciones"] == binding_values["iva-349-declarante-importe-operaciones"]
 
     # Rectification casillas must pass through from binding to casilla unchanged.
     assert casilla_values["decl.numero-rectificaciones"] == (
-        binding_values["vat-349-declarante-numero-rectificaciones"]
+        binding_values["iva-349-declarante-numero-rectificaciones"]
     )
     assert casilla_values["decl.importe-rectificaciones"] == (
-        binding_values["vat-349-declarante-importe-rectificaciones"]
+        binding_values["iva-349-declarante-importe-rectificaciones"]
     )
 
     # Rectification delta must equal the absolute difference between new and previous base.

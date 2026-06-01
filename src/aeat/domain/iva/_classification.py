@@ -1,10 +1,10 @@
-"""Closed-table VAT classification (issuer / customer / kind / direction).
+"""Closed-table IVA classification (issuer / customer / kind / direction).
 
 Layered on top of the :mod:`aeat.domain.iva` substrate (the
 :class:`aeat.domain.iva.IvaCategory` enum, :class:`aeat.domain.iva.IvaRateRecord`
 records, and :func:`aeat.domain.iva.lookup_rate`), this module adds the
 classification axes needed to tag a transaction deterministically based on
-the parties' tax residency, the customer's VAT status, the transaction kind,
+the parties' tax residency, the customer's IVA status, the transaction kind,
 and the invoice direction.
 
 The resolver implementation is a closed first-match-wins decision table over
@@ -33,7 +33,7 @@ Examples:
     ...     issuer_residency=IvaTerritorialScope.ES_MAINLAND,
     ...     customer_residency=IvaTerritorialScope.EU_MEMBER,
     ...     customer_member_state=EUMemberState.DE,
-    ...     customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+    ...     customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
     ...     kind=TransactionKind.GOODS,
     ...     direction=InvoiceKind.ISSUED,
     ... )
@@ -119,22 +119,22 @@ class InvoiceKind(StrEnum):
 
 
 class CustomerTaxStatus(StrEnum):
-    """VAT-status classification of the customer.
+    """IVA-status classification of the customer.
 
     Classifier rules that depend on reverse-charge mechanics check
-    :attr:`B2B_VAT_REGISTERED`, which requires a valid NIF-IVA on record.
+    :attr:`B2B_IVA_REGISTERED`, which requires a valid NIF-IVA on record.
     :attr:`UNKNOWN` is a sentinel for transactions whose counterparty status
     has not been resolved upstream.
 
     Attributes:
-        B2B_VAT_REGISTERED: Business customer with a valid VAT-ID.
-        B2B_NOT_REGISTERED: Business customer without a VAT-ID.
+        B2B_IVA_REGISTERED: Business customer with a valid IVA-ID.
+        B2B_NOT_REGISTERED: Business customer without a IVA-ID.
         B2C_CONSUMER: Private individual.
         PUBLIC_ADMINISTRATION: Public-sector body.
         UNKNOWN: Counterparty status unresolved.
     """
 
-    B2B_VAT_REGISTERED = "b2b_vat_registered"
+    B2B_IVA_REGISTERED = "b2b_iva_registered"
     B2B_NOT_REGISTERED = "b2b_not_registered"
     B2C_CONSUMER = "b2c_consumer"
     PUBLIC_ADMINISTRATION = "public_administration"
@@ -212,7 +212,7 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
         transaction_date: When the supply takes place.
         issuer_residency: Issuer's tax residency.
         customer_residency: Customer's tax residency.
-        customer_tax_status: Customer's VAT status.
+        customer_tax_status: Customer's IVA status.
         kind: Kind of supply.
         direction: ``ISSUED`` or ``RECEIVED``.
         issuer_member_state: Issuer's :class:`aeat.domain.iva.EUMemberState`,
@@ -227,7 +227,7 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
     transaction_date: date = Field(description="When the supply takes place.")
     issuer_residency: IvaTerritorialScope = Field(description="Issuer's tax residency.")
     customer_residency: IvaTerritorialScope = Field(description="Customer's tax residency.")
-    customer_tax_status: CustomerTaxStatus = Field(description="Customer's VAT status.")
+    customer_tax_status: CustomerTaxStatus = Field(description="Customer's IVA status.")
     kind: TransactionKind = Field(description="Kind of supply.")
     direction: InvoiceKind = Field(description="ISSUED or RECEIVED.")
     issuer_member_state: EUMemberState | None = Field(
@@ -304,7 +304,7 @@ class IvaClassificationResult(_IvaStrictFrozen):
     documentation).
 
     Attributes:
-        category: Resolved VAT category.
+        category: Resolved IVA category.
         rate: Applicable :class:`aeat.domain.iva.IvaRateRecord`, when relevant.
         requires_reverse_charge: ``True`` when the rule triggers
             *inversión del sujeto pasivo*.
@@ -313,7 +313,7 @@ class IvaClassificationResult(_IvaStrictFrozen):
         notes: Free-form explanatory note.
     """
 
-    category: IvaCategory = Field(description="Resolved VAT category.")
+    category: IvaCategory = Field(description="Resolved IVA category.")
     rate: IvaRateRecord | None = Field(default=None, description="Applicable :class:`IvaRateRecord`, when relevant.")
     requires_reverse_charge: bool = Field(default=False, description="True ⇒ inversión del sujeto pasivo.")
     matched_rule_id: str = Field(description="Stable rule id (e.g. ``R10_intra_community_supply``).")
@@ -335,7 +335,7 @@ def _r01_construction_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
         and _is_es(criteria.customer_residency)
         and criteria.customer_tax_status
         in {
-            CustomerTaxStatus.B2B_VAT_REGISTERED,
+            CustomerTaxStatus.B2B_IVA_REGISTERED,
             CustomerTaxStatus.B2B_NOT_REGISTERED,
             CustomerTaxStatus.PUBLIC_ADMINISTRATION,
         }
@@ -350,7 +350,7 @@ def _r02_waste_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
         and _is_es(criteria.customer_residency)
         and criteria.customer_tax_status
         in {
-            CustomerTaxStatus.B2B_VAT_REGISTERED,
+            CustomerTaxStatus.B2B_IVA_REGISTERED,
             CustomerTaxStatus.B2B_NOT_REGISTERED,
             CustomerTaxStatus.PUBLIC_ADMINISTRATION,
         }
@@ -363,7 +363,7 @@ def _r03_electronics_rc(criteria: IvaInvoiceClassificationCriteria) -> bool:
     return (
         _is_es(criteria.issuer_residency)
         and _is_es(criteria.customer_residency)
-        and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
+        and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.ELECTRONICS_REVERSE_CHARGE
     )
 
@@ -397,7 +397,7 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
-        and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
+        and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -408,7 +408,7 @@ def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> boo
     return (
         criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
+        and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.RECEIVED
     )
@@ -419,7 +419,7 @@ def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) ->
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
-        and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
+        and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -430,7 +430,7 @@ def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> 
     return (
         criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
         and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_tax_status is CustomerTaxStatus.B2B_VAT_REGISTERED
+        and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.RECEIVED
     )

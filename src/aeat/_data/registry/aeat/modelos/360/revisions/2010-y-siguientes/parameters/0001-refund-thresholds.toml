@@ -1,4 +1,4 @@
-# VAT refund eligibility thresholds per Orden EHA/789/2010 art. 4:
+# IVA refund eligibility thresholds per Orden EHA/789/2010 art. 4:
 # refund requests below €400 per quarter (€50 per annual final-period
 # filing) are not accepted by the AEAT processing surface. Encoded
 # as two static parameters for downstream eligibility-gating.

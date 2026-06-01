@@ -20,9 +20,9 @@ The two surfaces serve different verification needs:
 - **GROI** (this adapter): "is this Spanish NIF registered as an
   intra-community operator in Spain?" — used to confirm Spanish
   counterparties on modelo 349 are ROI-registered.
-- **IXVI** (``_nif_iva_check``): "is this foreign EU VAT-ID valid
+- **IXVI** (``_nif_iva_check``): "is this foreign EU IVA-ID valid
   per VIES?" — used to confirm foreign EU counterparties on modelo
-  349 hold a valid VAT identifier.
+  349 hold a valid IVA identifier.
 
 The driver reaches the form servlet directly via authenticated
 BrowserSession (caller is responsible for loading the cl@ve-movil /

@@ -1,7 +1,7 @@
 [[profiles]]
 category = "cuotas_colegiales"
 display_label = "categories.registry.cuotas_colegiales"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -17,7 +17,7 @@ quote = "categories.registry.cuotas_colegiales.citations.0.quote"
 [[profiles]]
 category = "cuotas_autonomos_ss"
 display_label = "categories.registry.cuotas_reta"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -40,7 +40,7 @@ quote = "categories.registry.cuotas_autonomos_ss.citations.1.quote"
 [[profiles]]
 category = "mutualidad_alternativa"
 display_label = "categories.registry.mutualidad_alternativa"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "statutory_cap"
@@ -65,7 +65,7 @@ quote = "categories.registry.mutualidad_alternativa.citations.1.quote"
 [[profiles]]
 category = "arrendamiento_local"
 display_label = "categories.registry.arrendamiento_local"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -88,7 +88,7 @@ quote = "categories.registry.arrendamiento_local.citations.1.quote"
 [[profiles]]
 category = "arrendamiento_vivienda_afecto"
 display_label = "categories.registry.arrendamiento_vivienda_afecta"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -112,7 +112,7 @@ quote = "categories.registry.arrendamiento_vivienda_afecto.citations.1.quote"
 [[profiles]]
 category = "ibi_local_afecto"
 display_label = "categories.registry.ibi_local_afecto"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -135,7 +135,7 @@ quote = "categories.registry.ibi_local_afecto.citations.1.quote"
 [[profiles]]
 category = "suministros_home_office_luz"
 display_label = "categories.registry.home_office_luz"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -160,7 +160,7 @@ quote = "categories.registry.suministros_home_office_luz.citations.1.quote"
 [[profiles]]
 category = "suministros_home_office_agua"
 display_label = "categories.registry.home_office_agua"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -185,7 +185,7 @@ quote = "categories.registry.suministros_home_office_agua.citations.1.quote"
 [[profiles]]
 category = "suministros_home_office_gas"
 display_label = "categories.registry.home_office_gas"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -210,7 +210,7 @@ quote = "categories.registry.suministros_home_office_gas.citations.1.quote"
 [[profiles]]
 category = "suministros_home_office_internet"
 display_label = "categories.registry.home_office_internet"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -235,7 +235,7 @@ quote = "categories.registry.suministros_home_office_internet.citations.1.quote"
 [[profiles]]
 category = "telefonia_movil"
 display_label = "categories.registry.telefonia_movil"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_personal"
@@ -258,7 +258,7 @@ quote = "categories.registry.telefonia_movil.citations.1.quote"
 [[profiles]]
 category = "telefonia_fija"
 display_label = "categories.registry.telefonia_fija"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -282,7 +282,7 @@ quote = "categories.registry.telefonia_fija.citations.1.quote"
 [[profiles]]
 category = "material_oficina"
 display_label = "categories.registry.material_oficina"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -305,7 +305,7 @@ quote = "categories.registry.material_oficina.citations.1.quote"
 [[profiles]]
 category = "software_suscripcion"
 display_label = "categories.registry.software_suscripcion"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -328,7 +328,7 @@ quote = "categories.registry.software_suscripcion.citations.1.quote"
 [[profiles]]
 category = "hardware_amortizable"
 display_label = "categories.registry.hardware_amortizable"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -351,7 +351,7 @@ quote = "categories.registry.hardware_amortizable.citations.1.quote"
 [[profiles]]
 category = "mobiliario_amortizable"
 display_label = "categories.registry.mobiliario_amortizable"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -374,7 +374,7 @@ quote = "categories.registry.mobiliario_amortizable.citations.1.quote"
 [[profiles]]
 category = "reparaciones_conservacion"
 display_label = "categories.registry.reparaciones_conservacion"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -397,7 +397,7 @@ quote = "categories.registry.reparaciones_conservacion.citations.1.quote"
 [[profiles]]
 category = "vehiculo_combustible"
 display_label = "categories.registry.vehiculo_combustible"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_personal"
@@ -420,7 +420,7 @@ quote = "categories.registry.vehiculo_combustible.citations.1.quote"
 [[profiles]]
 category = "vehiculo_mantenimiento"
 display_label = "categories.registry.vehiculo_mantenimiento"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_personal"
@@ -443,7 +443,7 @@ quote = "categories.registry.vehiculo_mantenimiento.citations.1.quote"
 [[profiles]]
 category = "vehiculo_seguro"
 display_label = "categories.registry.vehiculo_seguro"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "usage_ratio_personal"
@@ -466,7 +466,7 @@ quote = "categories.registry.vehiculo_seguro.citations.1.quote"
 [[profiles]]
 category = "vehiculo_peaje"
 display_label = "categories.registry.vehiculo_peaje"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_personal"
@@ -489,7 +489,7 @@ quote = "categories.registry.vehiculo_peaje.citations.1.quote"
 [[profiles]]
 category = "vehiculo_parking"
 display_label = "categories.registry.vehiculo_parking"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "usage_ratio_personal"
@@ -512,7 +512,7 @@ quote = "categories.registry.vehiculo_parking.citations.1.quote"
 [[profiles]]
 category = "manutencion_dietas_nacional"
 display_label = "categories.registry.manutencion_nacional"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "statutory_cap"
@@ -545,7 +545,7 @@ quote = "categories.registry.manutencion_dietas_nacional.citations.1.quote"
 [[profiles]]
 category = "manutencion_dietas_extranjero"
 display_label = "categories.registry.manutencion_extranjero"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "statutory_cap"
@@ -578,7 +578,7 @@ quote = "categories.registry.manutencion_dietas_extranjero.citations.1.quote"
 [[profiles]]
 category = "asesoria_fiscal"
 display_label = "categories.registry.asesoria_fiscal"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -601,7 +601,7 @@ quote = "categories.registry.asesoria_fiscal.citations.1.quote"
 [[profiles]]
 category = "asesoria_juridica"
 display_label = "categories.registry.asesoria_juridica"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -624,7 +624,7 @@ quote = "categories.registry.asesoria_juridica.citations.1.quote"
 [[profiles]]
 category = "asesoria_contable"
 display_label = "categories.registry.asesoria_contable"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -647,7 +647,7 @@ quote = "categories.registry.asesoria_contable.citations.1.quote"
 [[profiles]]
 category = "publicidad_marketing"
 display_label = "categories.registry.publicidad_marketing"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -670,7 +670,7 @@ quote = "categories.registry.publicidad_marketing.citations.1.quote"
 [[profiles]]
 category = "formacion_profesional"
 display_label = "categories.registry.formacion_profesional"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -693,7 +693,7 @@ quote = "categories.registry.formacion_profesional.citations.1.quote"
 [[profiles]]
 category = "viajes_transporte"
 display_label = "categories.registry.viajes_transporte"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -716,7 +716,7 @@ quote = "categories.registry.viajes_transporte.citations.1.quote"
 [[profiles]]
 category = "viajes_alojamiento"
 display_label = "categories.registry.viajes_alojamiento"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -739,7 +739,7 @@ quote = "categories.registry.viajes_alojamiento.citations.1.quote"
 [[profiles]]
 category = "seguros_responsabilidad_civil"
 display_label = "categories.registry.seguros_rc"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -762,7 +762,7 @@ quote = "categories.registry.seguros_responsabilidad_civil.citations.1.quote"
 [[profiles]]
 category = "seguros_salud_autonomo"
 display_label = "categories.registry.seguros_salud"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "statutory_cap"
@@ -787,7 +787,7 @@ quote = "categories.registry.seguros_salud_autonomo.citations.1.quote"
 [[profiles]]
 category = "gastos_bancarios"
 display_label = "categories.registry.gastos_bancarios"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -810,7 +810,7 @@ quote = "categories.registry.gastos_bancarios.citations.1.quote"
 [[profiles]]
 category = "gastos_financieros"
 display_label = "categories.registry.gastos_financieros"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -833,7 +833,7 @@ quote = "categories.registry.gastos_financieros.citations.1.quote"
 [[profiles]]
 category = "suministros_cliente_directos"
 display_label = "categories.registry.suministros_cliente_directos"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -856,7 +856,7 @@ quote = "categories.registry.suministros_cliente_directos.citations.1.quote"
 [[profiles]]
 category = "subcontratacion"
 display_label = "categories.registry.subcontratacion"
-vat_hint = "general"
+iva_hint = "general"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -879,7 +879,7 @@ quote = "categories.registry.subcontratacion.citations.1.quote"
 [[profiles]]
 category = "tributos_fiscalmente_deducibles"
 display_label = "categories.registry.tributos_deducibles"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "full_deductible"
@@ -902,7 +902,7 @@ quote = "categories.registry.tributos_fiscalmente_deducibles.citations.1.quote"
 [[profiles]]
 category = "amortizacion_vivienda_afecto"
 display_label = "categories.registry.amortizacion_vivienda_afecto"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -925,7 +925,7 @@ quote = "categories.registry.amortizacion_vivienda_afecto.citations.1.quote"
 [[profiles]]
 category = "ibi_vivienda_afecto"
 display_label = "categories.registry.ibi_vivienda_afecto"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
@@ -948,7 +948,7 @@ quote = "categories.registry.ibi_vivienda_afecto.citations.1.quote"
 [[profiles]]
 category = "comunidad_vivienda_afecto"
 display_label = "categories.registry.comunidad_vivienda_afecto"
-vat_hint = "exempt_or_non_subject"
+iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
 kind = "usage_ratio_home_area"

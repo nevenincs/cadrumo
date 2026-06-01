@@ -9,7 +9,7 @@ wraps it as a ``LiveParityOracle``.
 
 The oracle is the SPANISH-counterparty sibling of
 ``_aeat_nif_iva_oracle`` (foreign-EU VIES proxy). Both share the
-``vat_id_check`` surface kind and pair with cross-references whose
+``iva_id_check`` surface kind and pair with cross-references whose
 surface is ``public_read_surface``; the registry's surface-kind
 compatibility table at ``_live_parity._COMPATIBLE_SURFACE_PAIRS``
 already declares that pair.
@@ -168,7 +168,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
 
     @property
     def surface_kind(self) -> OracleSurfaceKind:
-        return "vat_id_check"
+        return "iva_id_check"
 
     def planned_operations(
         self,

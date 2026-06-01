@@ -2,8 +2,8 @@
 
 Tests are grounded in three external authorities:
 
-* The BOE-published Spanish VAT rate registry
-  (``registry/aeat/vat/rates.toml``), itself anchored to Ley 37/1992
+* The BOE-published Spanish IVA rate registry
+  (``registry/aeat/iva/rates.toml``), itself anchored to Ley 37/1992
   and Council Directive 2006/112/EC. The rates the tests assert
   against (DE general 19 %, FR general 20 %) come from the registry,
   not from the test author.
@@ -148,7 +148,7 @@ def test_candidate_rejects_negative_amounts() -> None:
 
 
 def test_validation_accepts_candidate_matching_destination_de_general_rate() -> None:
-    """DE general rate is 19 % per ``registry/aeat/vat/rates.toml``
+    """DE general rate is 19 % per ``registry/aeat/iva/rates.toml``
     (anchored to the German UStG and Council Directive 2006/112/EC).
     Base 100 EUR with IVA 19 EUR satisfies the destination-MS rate."""
 
@@ -422,7 +422,7 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
     """OSS / IOSS has no operator-facing CLI verb. Consumption is
     via ``aeat app modelo calculate``. The CLI tree must not
     register an ``oss``, ``ioss``, ``aeat oss``, ``aeat ioss``,
-    ``app vat oss``, or ``app vat ioss`` command."""
+    ``app iva oss``, or ``app iva ioss`` command."""
 
     cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
     forbidden_command_names = (

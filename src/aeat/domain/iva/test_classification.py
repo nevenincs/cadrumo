@@ -35,7 +35,7 @@ def _criteria(**overrides: object) -> IvaInvoiceClassificationCriteria:
         "transaction_date": date(2025, 6, 15),
         "issuer_residency": IvaTerritorialScope.ES_MAINLAND,
         "customer_residency": IvaTerritorialScope.ES_MAINLAND,
-        "customer_tax_status": CustomerTaxStatus.B2B_VAT_REGISTERED,
+        "customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
         "kind": TransactionKind.GOODS,
         "direction": InvoiceKind.ISSUED,
         "rate_tier": IvaRateKind.GENERAL,
@@ -61,7 +61,7 @@ def test_r03_electronics_reverse_charge() -> None:
     result = classify_iva(
         _criteria(
             kind=TransactionKind.ELECTRONICS_REVERSE_CHARGE,
-            customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
         )
     )
     assert result.category is IvaCategory.DOMESTIC_REVERSE_CHARGE
@@ -238,7 +238,7 @@ def test_r99_fallthrough_returns_unknown() -> None:
     assert result.matched_rule_id == "R99_fallthrough"
 
 
-def test_classify_vat_is_deterministic() -> None:
+def test_classify_iva_is_deterministic() -> None:
     """Same criteria ⇒ same rule + same category across N invocations."""
     criteria = _criteria()
     first = classify_iva(criteria)
@@ -255,7 +255,7 @@ def test_eu_member_residency_requires_member_state() -> None:
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.EU_MEMBER,
             customer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.RECEIVED,
             issuer_member_state=None,
@@ -269,7 +269,7 @@ def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.ES_MAINLAND,
             customer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
             kind=TransactionKind.GOODS,
             direction=InvoiceKind.ISSUED,
             rate_tier=None,
@@ -283,7 +283,7 @@ def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
         transaction_date=date(2025, 6, 15),
         issuer_residency=IvaTerritorialScope.ES_MAINLAND,
         customer_residency=IvaTerritorialScope.ES_MAINLAND,
-        customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+        customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
         kind=TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
         direction=InvoiceKind.ISSUED,
         rate_tier=None,
@@ -315,7 +315,7 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
         issuer_residency=IvaTerritorialScope.ES_MAINLAND,
         customer_residency=IvaTerritorialScope.EU_MEMBER,
         customer_member_state=EUMemberState.DE,
-        customer_tax_status=CustomerTaxStatus.B2B_VAT_REGISTERED,
+        customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
         kind=TransactionKind.GOODS,
         direction=InvoiceKind.ISSUED,
         rate_tier=None,

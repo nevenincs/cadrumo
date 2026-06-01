@@ -1,10 +1,10 @@
 """Read-only AEAT NIF-IVA / VIES proxy browser driver.
 
 Drives the public AEAT-hosted form servlet that proxies non-Spanish EU
-VAT-identifier validity queries to the European Commission's VIES
+IVA-identifier validity queries to the European Commission's VIES
 service. The driver navigates from the sede gestiones page (which
 issues the session cookies the form servlet requires) to the form
-servlet itself, fills the country-code + VAT-number form per declared
+servlet itself, fills the country-code + IVA-number form per declared
 NIF, scrapes the rendered validity verdict, and returns one
 observation per declared NIF.
 
@@ -134,13 +134,13 @@ _COUNTRY_SELECTORS: tuple[str, ...] = (
     'input[id*="country" i]',
     "input.z-combobox-input",
 )
-_VAT_NUMBER_SELECTORS: tuple[str, ...] = (
+_IVA_NUMBER_SELECTORS: tuple[str, ...] = (
     'input[name*="nif" i]',
     'input[id*="nif" i]',
     'input[name*="iva" i]',
     'input[id*="iva" i]',
-    'input[name*="vat" i]',
-    'input[id*="vat" i]',
+    'input[name*="iva" i]',
+    'input[id*="iva" i]',
     'input[type="text"]',
 )
 _SUBMIT_SELECTORS: tuple[str, ...] = (
@@ -325,7 +325,7 @@ async def collect_nif_iva_check_observations(
         )
 
         # AEAT redirects unauthenticated requests to the centralized 4033 auth-gate path.
-        # The standard country/VAT selectors won't be present on that page; if
+        # The standard country/IVA selectors won't be present on that page; if
         # we proceed they'll time out and surface as a misleading shape-change
         # error. Detect the redirect explicitly and surface auth-gate context.
         if is_aeat_auth_gate_redirect(page.url):
@@ -383,7 +383,7 @@ async def collect_nif_iva_check_observations(
 
 
 async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
-    """Wait for the country and VAT-number controls to become interactive."""
+    """Wait for the country and IVA-number controls to become interactive."""
     _assert_query_browser_action("open-nif-iva-form")
     await _locate(
         page,
@@ -394,9 +394,9 @@ async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
     )
     await _locate(
         page,
-        _VAT_NUMBER_SELECTORS,
-        stage="open-nif-iva-form:vat-number",
-        description="NIF-IVA VAT-number control",
+        _IVA_NUMBER_SELECTORS,
+        stage="open-nif-iva-form:iva-number",
+        description="NIF-IVA IVA-number control",
         timeout_ms=timeout_ms,
     )
 
@@ -409,9 +409,9 @@ async def _check_single_nif(
 ) -> Literal["valid", "invalid", "unknown"]:
     """Submit one NIF query and scrape the rendered verdict."""
     _assert_query_browser_action(f"check-nif-{nif}")
-    country_code, vat_number = _split_vies_nif(nif)
+    country_code, iva_number = _split_vies_nif(nif)
     await _select_country_code(page, country_code, timeout_ms=timeout_ms)
-    await _fill_vat_number(page, vat_number, timeout_ms=timeout_ms)
+    await _fill_iva_number(page, iva_number, timeout_ms=timeout_ms)
     await _click_query_button(page, timeout_ms=timeout_ms)
     await _playwright_stage(
         page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
@@ -505,19 +505,19 @@ async def _select_country_code(page: Page, country_code: str, *, timeout_ms: int
     )
 
 
-async def _fill_vat_number(page: Page, vat_number: str, *, timeout_ms: int) -> None:
+async def _fill_iva_number(page: Page, iva_number: str, *, timeout_ms: int) -> None:
     locator = await _locate(
         page,
-        _VAT_NUMBER_SELECTORS,
-        stage="check-nif:vat-number",
-        description="NIF-IVA VAT-number control",
+        _IVA_NUMBER_SELECTORS,
+        stage="check-nif:iva-number",
+        description="NIF-IVA IVA-number control",
         timeout_ms=timeout_ms,
     )
     await _fill_expected(
         locator,
-        vat_number,
-        stage="check-nif:vat-number",
-        description="NIF-IVA VAT-number control",
+        iva_number,
+        stage="check-nif:iva-number",
+        description="NIF-IVA IVA-number control",
         timeout_ms=timeout_ms,
     )
 
@@ -557,10 +557,10 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
     normalized_nif = nif.strip().upper().replace(" ", "").replace("-", "")
     if len(normalized_nif) < 3 or not normalized_nif[:2].isalpha():
         raise RegistryValidationError(f"NIF-IVA value {nif!r} must start with a two-letter EU country code")
-    vat_number = normalized_nif[2:]
-    if not vat_number:
-        raise RegistryValidationError(f"NIF-IVA value {nif!r} must include a VAT number after the country code")
-    return normalized_nif[:2], vat_number
+    iva_number = normalized_nif[2:]
+    if not iva_number:
+        raise RegistryValidationError(f"NIF-IVA value {nif!r} must include a IVA number after the country code")
+    return normalized_nif[:2], iva_number
 
 
 __all__ = [

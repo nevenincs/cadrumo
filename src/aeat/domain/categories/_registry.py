@@ -122,14 +122,14 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
     raw_rule = data.get("proportionality")
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")
-    raw_vat_hint = data.get("vat_hint")
+    raw_iva_hint = data.get("iva_hint")
     return CategoryProfile.model_validate(
         {
             "category": category,
             "display_label": tr(str(data.get("display_label"))),
             "proportionality": _parse_rule(raw_rule),
-            "vat_hint": (
-                IvaDeductibilityHint(str(raw_vat_hint)) if raw_vat_hint is not None else None
+            "iva_hint": (
+                IvaDeductibilityHint(str(raw_iva_hint)) if raw_iva_hint is not None else None
             ),
         }
     )

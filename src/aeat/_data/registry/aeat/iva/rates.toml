@@ -231,14 +231,14 @@ member_state = "pl"
 kind = "general"
 pct = "23"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; Ustawa VAT"
+reference = "Directive 2006/112/EC; Ustawa IVA"
 
 [[rates]]
 member_state = "pl"
 kind = "reduced"
 pct = "8"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; Ustawa VAT"
+reference = "Directive 2006/112/EC; Ustawa IVA"
 
 [[rates]]
 member_state = "se"
@@ -357,7 +357,7 @@ member_state = "bg"
 kind = "general"
 pct = "20"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; VAT Act BG"
+reference = "Directive 2006/112/EC; IVA Act BG"
 
 [[rates]]
 member_state = "hr"
@@ -378,14 +378,14 @@ member_state = "cy"
 kind = "general"
 pct = "19"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; Cyprus VAT Law"
+reference = "Directive 2006/112/EC; Cyprus IVA Law"
 
 [[rates]]
 member_state = "cy"
 kind = "reduced"
 pct = "9"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; Cyprus VAT Law"
+reference = "Directive 2006/112/EC; Cyprus IVA Law"
 
 [[rates]]
 member_state = "ee"
@@ -427,14 +427,14 @@ member_state = "mt"
 kind = "general"
 pct = "18"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; VAT Act Malta"
+reference = "Directive 2006/112/EC; IVA Act Malta"
 
 [[rates]]
 member_state = "mt"
 kind = "reduced"
 pct = "7"
 effective_from = 2025-01-01
-reference = "Directive 2006/112/EC; VAT Act Malta"
+reference = "Directive 2006/112/EC; IVA Act Malta"
 
 [[rates]]
 member_state = "ro"
