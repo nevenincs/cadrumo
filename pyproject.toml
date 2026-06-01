@@ -160,8 +160,8 @@ dev = [
   "time-machine>=2.16.0",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/aeat/.
-  "vaultspec-core>=0.1.18",
-  "vaultspec-rag>=0.2.8",
+  "vaultspec-core>=0.1.20",
+  "vaultspec-rag>=0.2.10",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
   "sphinx>=8.1,<10",  # upper bound keeps -W / nitpicky flag semantics stable
@@ -230,9 +230,10 @@ convention = "google"
 "src/aeat/**/conftest.py" = ["D"]
 # Sphinx build configuration is tooling, not the documented package API.
 "docs/conf.py" = ["D"]
-# `tools/` holds contributor-only one-shot analysis scripts; print() is
-# the canonical surface for these CLIs.
+# `tools/` and `scripts/` hold contributor-only one-shot scripts and
+# generators; print() is the canonical CLI output surface for these.
 "tools/**/*.py" = ["T20"]
+"scripts/**/*.py" = ["T20"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests. Test modules also commonly use assert and print.
 "src/aeat/adapters/outbound/aeat/auth/test_*.py" = [
@@ -438,7 +439,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'unit' --strict-markers"
+addopts = "-v --tb=short -m 'unit and not docs' --strict-markers"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
