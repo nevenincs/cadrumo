@@ -139,7 +139,7 @@ def _store_operator_profile() -> None:
     UserProfileLifecycleRepository(bucket_id="operator").save(
         UserProfileRecord(
             profile_id="operator",
-            display_name="Operator",
+            display_name="Test runtime profile",
             facts=(UserProfileFact(path="identity.tax_id", value=_TAXPAYER_NIF),),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
