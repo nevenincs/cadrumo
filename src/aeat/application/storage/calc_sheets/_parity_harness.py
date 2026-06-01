@@ -51,14 +51,14 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field
 
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.config import Settings as _Settings
 from ....core.decimal import coerce_decimal
+from ....domain.calculations.registry import CasillaId, RevisionId
 from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._ids import CasillaId, RevisionId
-from ....domain.calculations.registry._schema import CasillaDefinition, InputKind
-from ....domain.calculations.registry._schema import RegistrySnapshot
+from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ._engine import build_export_plan
 from ._errors import CalcSheetsParityError
 from ._layout import plan_layout
@@ -70,7 +70,6 @@ from ._records import (
     SheetExportPlan,
 )
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _SHEETS_RECALC_DELAY_SECONDS = _Settings().aeat_calc_sheets_recalc_delay_s
 
 class CasillaParity(BaseModel):

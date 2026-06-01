@@ -21,13 +21,13 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.logging import get_logger
-from ...domain.calculations.registry._ids import CasillaId
+from ...domain.calculations.registry import CasillaId
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _log = get_logger(__name__)
 
 class ResultSummaryRow(BaseModel):

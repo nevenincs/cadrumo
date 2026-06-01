@@ -40,7 +40,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....domain.calculations.registry._ids import (
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
     ParameterId,
@@ -62,7 +63,6 @@ from ._records import (
     _column_index_to_letters,
 )
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class _CasillaRow(BaseModel):
     model_config = _STRICT_FROZEN
