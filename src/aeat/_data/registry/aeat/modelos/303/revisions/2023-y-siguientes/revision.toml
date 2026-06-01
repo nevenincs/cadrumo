@@ -162,12 +162,12 @@ op = "copy"
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-profile-state-attribution-ratio"
 source = "profile"
-legal_refs = ["ley-37-1992:art-115", "ley-12-2002:art-29", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-115", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]
-source_ref = "aeat-dr-303-2025"
-required_text = ["Porcentaje atribuible Administración del Estado"]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añadido"]
 
 [revisions.2023-y-siguientes.bindings.selector]
 profile_key = "tax_residence.state_attribution_ratio"
@@ -919,10 +919,46 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "109"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "110"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "27"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "45"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "58"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "64"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "65"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "66"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "68"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "69"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "70"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "71"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "76"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "77"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "78"
@@ -935,6 +971,12 @@ number = "compensacion-disponible-fin-periodo"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "compensacion-generada-periodo"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autoconsumo.promotor.base"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "iva.autoconsumo.promotor.cuota"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "iva.autorepercutido.intracomunitaria"
