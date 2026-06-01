@@ -8,6 +8,7 @@ from datetime import date
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
@@ -26,7 +27,7 @@ class InvoiceCatalogueSourceResolver:
     resolver_id = "invoice_catalogue"
     owned_sources = _OWNED_SOURCES
 
-    def __init__(self, *, invoice_repository: InvoiceCatalogueRepository | None = None) -> None:
+    def __init__(self, *, invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None) -> None:
         self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:

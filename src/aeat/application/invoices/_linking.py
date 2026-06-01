@@ -10,6 +10,7 @@ from ...domain.invoices import (
     InvoiceCatalogueRepository,
     InvoiceLinkError,
 )
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices._service import link_transaction
 from ...domain.transactions import (
     TransactionCatalogue,
@@ -59,7 +60,7 @@ def link_invoice_transaction_repositories(
     bucket_id: str,
     invoice_id: str,
     transaction_id: str,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceTransactionLinkResult:
     """Persist a bidirectional invoice link through the backend repositories."""
