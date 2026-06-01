@@ -648,8 +648,8 @@ cli:
         valuation_group_help: Calcula i previsualitza la valoració d'existències
         valuation_method_help: Mètode de valoració (fifo o pmp)
         valuation_preview_help: Previsualitza existències finals i cost de vendes
-        vat_rate_help: Tipus d'IVA en percentatge
         year_help: Exercici fiscal
+        iva_rate_help: 'Tipus d''IVA en percentatge'
       payable_invoice:
         add_help: Registra una nova factura pagable
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
@@ -2924,10 +2924,6 @@ errors:
       al catàleg.
     error_financial_vat_classification: No s'ha pogut classificar l'IVA de manera
       determinista.
-    error_financial_vat_rate_not_found: No s'ha trobat cap tipus d'IVA per a l'estat
-      membre i el tipus sol·licitats.
-    error_financial_vat_rate_overlap: Dos tipus d'IVA comparteixen una finestra de
-      vigència.
     error_fixture_provisioning: No s'han pogut preparar les dades de prova.
     error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
       dessincronitzades. Revisa tots dos catàlegs manualment.
@@ -3050,6 +3046,8 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    error_financial_iva_rate_not_found: 'No s''ha trobat cap tipus d''IVA per a l''estat membre i el tipus sol·licitats.'
+    error_financial_iva_rate_overlap: 'Dos tipus d''IVA comparteixen una finestra de vigència.'
   fail:
     census_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
