@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now
+from aeat.core.time import now as _utc_now
 
 from ....core.config import (
     Settings,
@@ -130,7 +130,7 @@ class StorageRuntime(BaseModel):
                 "storage runtime is not ready for profile-bound storage: no active bucket session.",
                 message_key="errors.storage.runtime.no_active_session",
             )
-        now = now()
+        now = _utc_now()
         if active.sealed:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session is sealed.",
@@ -193,7 +193,7 @@ def inspect_storage_runtime(
     """Return the current profile-bound secure-storage runtime state."""
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
-    checked_at = now or now()
+    checked_at = now or _utc_now()
     active = _active_session.get()
     session = None
     issues: list[StorageRuntimeReadinessIssue] = []
