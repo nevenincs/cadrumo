@@ -121,6 +121,8 @@ def _draw(c: canvas.Canvas, fixture: _Fixture) -> None:
     c.drawString(20 * mm, y, f"Numero de justificante: {fixture.presentation_id}")
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 10 * mm
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {fixture.csv}")
     y -= 10 * mm
@@ -236,6 +238,8 @@ def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -357,6 +361,8 @@ def _draw_modelo_180(c: canvas.Canvas, fixture: _Modelo180Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
@@ -457,6 +463,8 @@ def _draw_modelo_369(c: canvas.Canvas, fixture: _Modelo369Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -577,6 +585,8 @@ def _draw_modelo_193(c: canvas.Canvas, fixture: _Modelo193Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -706,6 +716,8 @@ def _draw_modelo_115(c: canvas.Canvas, fixture: _Modelo115Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
@@ -813,6 +825,8 @@ def _draw_modelo_720(c: canvas.Canvas, fixture: _Modelo720Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
@@ -913,6 +927,8 @@ def _draw_modelo_036(c: canvas.Canvas, fixture: _Modelo036Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -1018,6 +1034,8 @@ def _draw_modelo_232(c: canvas.Canvas, fixture: _Modelo232Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -1169,6 +1187,8 @@ def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
@@ -1257,6 +1277,8 @@ def _draw_modelo_347(c: canvas.Canvas, fixture: _Modelo347Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
@@ -1343,6 +1365,8 @@ def _draw_modelo_184(c: canvas.Canvas, fixture: _Modelo184Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -1489,6 +1513,8 @@ def _draw_modelo_131(c: canvas.Canvas, fixture: _Modelo131Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
 
@@ -1563,6 +1589,8 @@ def _draw_modelo_840(c: canvas.Canvas, fixture: _Modelo840Fixture) -> None:
     c.drawString(20 * mm, y, f"Codigo Seguro de Verificacion: {csv_val}")
     y -= 6 * mm
     c.drawString(20 * mm, y, "Fecha y hora de presentacion: 2024-01-01 10:00:00")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
     y -= 6 * mm
     c.drawString(20 * mm, y, "https://sede.agenciatributaria.gob.es")
 
@@ -2076,6 +2104,8 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(
         20 * mm,
         y,
@@ -2369,6 +2399,8 @@ def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) 
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(
         20 * mm,
         y,
@@ -2607,6 +2639,8 @@ def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) 
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Fecha y hora de presentacion: {fixture.presented_at}")
     y -= 6 * mm
+    c.drawString(20 * mm, y, "Fecha de alta de la actividad: 01-01-1900")
+    y -= 6 * mm
     c.drawString(
         20 * mm,
         y,
@@ -2702,6 +2736,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "130", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_369_FIXTURES:
         target = out_dir / fixture.filename
@@ -2911,6 +2946,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "303", fixture.ejercicio, fixture.tax_id)
 
     for fixture in _MODELO_390_CORPUS_FIXTURES:
         target = out_dir / fixture.filename
@@ -2925,6 +2961,7 @@ def main() -> None:
         c.showPage()
         c.save()
         print(f"wrote {target}")
+        _write_sidecar(target, "390", fixture.ejercicio, fixture.tax_id)
 
 
 if __name__ == "__main__":
