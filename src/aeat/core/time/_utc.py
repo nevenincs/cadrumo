@@ -41,7 +41,7 @@ def validate_utc_aware(value: datetime) -> datetime:
     """Return *value* unchanged if it is a UTC-aware datetime.
 
     Raises :class:`aeat.core.errors.CoreValidationError` when *value*
-    is naive (no :attr:`tzinfo`) or when its UTC offset is not zero
+    is naive (no ``tzinfo``) or when its UTC offset is not zero
     (i.e. not UTC).
 
     Args:
