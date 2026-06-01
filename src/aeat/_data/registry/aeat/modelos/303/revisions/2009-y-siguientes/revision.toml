@@ -573,6 +573,12 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 number = "110"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "27"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+number = "45"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 number = "69"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
