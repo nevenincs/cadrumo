@@ -195,6 +195,37 @@ def _inject_derived_family_facts(
 
     fact_index[menores_key] = Decimal(count_menores)
 
+def _inject_derived_state_attribution_facts(
+    fact_index: dict[str, UserProfileFactValue],
+) -> None:
+    """Inject the M303 state-attribution ratio derived from jurisdiction_scope.
+
+    The IVA model attributes the periodic result to the State (territorio
+    común) vs the foral administrations as a percentage in casilla 65. The
+    profile records the operator's jurisdiction as the typed enum
+    ``tax_residence.jurisdiction_scope`` with values ``common_regime`` (the
+    full State attribution applies) or ``foral_unsupported`` (the foral
+    branch is not supported; the calc downstream emits zero, blocking the
+    filing). Project the enum onto the Decimal-channel synthetic key
+    ``tax_residence.state_attribution_ratio`` so the registry binding
+    consumes it through the existing Decimal-channel resolver without a
+    new enum→Decimal transform op.
+
+    Idempotent: if the synthetic key is already present (explicit profile
+    fact written by an older tooling version) it is not overwritten.
+    """
+    synthetic_key = "tax_residence.state_attribution_ratio"
+    if synthetic_key in fact_index:
+        return
+    scope = fact_index.get("tax_residence.jurisdiction_scope")
+    if scope == "common_regime":
+        fact_index[synthetic_key] = Decimal("100")
+    elif scope == "foral_unsupported":
+        fact_index[synthetic_key] = Decimal("0")
+    # No scope on the profile yet: leave the synthetic key absent so the
+    # engine's missing-binding refusal surfaces the gap operator-side
+    # rather than silently defaulting.
+
 def _decimal_value(binding_id: str, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
     # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
@@ -286,6 +317,7 @@ def resolve_profile_sourced_bindings(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
     decimal_values: dict[str, Decimal] = {}
