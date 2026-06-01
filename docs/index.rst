@@ -21,6 +21,12 @@ live under :mod:`aeat.adapters`, use cases live under
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contributing
+
+   authoring-guide
+
+.. toctree::
+   :maxdepth: 2
    :caption: CLI Reference
 
    cli/index

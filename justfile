@@ -102,13 +102,14 @@ lint-imports:
 docs:
     uv run --no-sync sphinx-build -b html docs docs/_build/html
 
-# Documentation conformance gate: a nitpicky, warnings-as-errors Sphinx
-# build (every unresolved cross-reference fails the build) plus doc8 RST
-# formatting. The build-gate, module-to-stub, and CLI conformance tests
-# run in this lane once they exist.
+# Documentation conformance gate: the docs-marked tests (nitpicky
+# warnings-as-errors Sphinx build, module-to-stub correspondence, and CLI
+# reference drift/conformance), doc8 reStructuredText formatting, and
+# interrogate docstring coverage.
 docs-check:
     uv run --no-sync pytest -m docs
     uv run --no-sync doc8 docs
+    uv run --no-sync interrogate -c pyproject.toml src/aeat
 
 # Run the LibreOffice workbook-parity tests. Excluded from the default unit
 # lane (adds 60-90s wallclock per soffice subprocess call). Requires
