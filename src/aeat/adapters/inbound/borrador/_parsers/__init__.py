@@ -1,8 +1,8 @@
 """PDF backend implementations for the borrador parser.
 
-Re-exports :func:`extract_pages_text` from the active backend
+Re-exports ``extract_pages_text`` from the active backend
 implementation. Today the only backend is the pdfplumber-based
-:mod:`._pdfplumber_backend`.
+``_pdfplumber_backend``.
 """
 
 from __future__ import annotations

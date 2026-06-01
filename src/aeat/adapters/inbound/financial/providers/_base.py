@@ -449,7 +449,7 @@ def parse_amount_value(
 
     Args:
         value: Raw cell value; accepted as :class:`Decimal`,
-            :class:`int`, :class:`float` (re-parsed via :func:`str`),
+            :class:`int`, :class:`float` (re-parsed via ``str``),
             or text.
         decimal_separator: Optional explicit decimal separator. When
             omitted, the parser infers it from the rightmost

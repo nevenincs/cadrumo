@@ -2,7 +2,7 @@
 
 Single authoritative source for the extension sets that route
 :func:`_detection.provider_for_extension` and
-:func:`_detection._ordered_candidates`, and for the
+``_detection._ordered_candidates``, and for the
 :attr:`~_base.FinancialProvider.supported_extensions` declarations on
 each concrete provider class.
 

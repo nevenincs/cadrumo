@@ -1,6 +1,27 @@
-aeat.adapters.persistence.storage.master\_key package
-=====================================================
+aeat.adapters.persistence.storage.master_key package
+====================================================
 
 .. automodule:: aeat.adapters.persistence.storage.master_key
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aeat.adapters.persistence.storage.master_key._active_session
+   aeat.adapters.persistence.storage.master_key._bucket_session
+   aeat.adapters.persistence.storage.master_key._dek_wrap
+   aeat.adapters.persistence.storage.master_key._errors
+   aeat.adapters.persistence.storage.master_key._idle_timeout
+   aeat.adapters.persistence.storage.master_key._kdf
+   aeat.adapters.persistence.storage.master_key._kdf_params
+   aeat.adapters.persistence.storage.master_key._master_key
+   aeat.adapters.persistence.storage.master_key._recovery
+   aeat.adapters.persistence.storage.master_key._recovery_facade
+   aeat.adapters.persistence.storage.master_key._recovery_record
+   aeat.adapters.persistence.storage.master_key._zeroise

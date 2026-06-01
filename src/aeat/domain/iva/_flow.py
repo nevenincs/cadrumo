@@ -59,13 +59,13 @@ régimen general" line.
 Every :class:`IvaFlowDirection` member contributes to one or both
 cornerstones:
 
-================  ==========  ==========
-Flow direction     Devengada   Deducible
-================  ==========  ==========
-REPERCUTIDO        ✓           ─
-SOPORTADO          ─           ✓
-INVERSION_SUJETO_PASIVO    ✓           ✓
-================  ==========  ==========
+=======================  =========  =========
+Flow direction           Devengada  Deducible
+=======================  =========  =========
+REPERCUTIDO              ✓          ─
+SOPORTADO                ─          ✓
+INVERSION_SUJETO_PASIVO  ✓          ✓
+=======================  =========  =========
 
 INVERSION_SUJETO_PASIVO is the only flow that contributes to BOTH sides on
 the SAME operation: the recipient self-assesses an output entry

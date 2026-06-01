@@ -4,6 +4,8 @@ aeat.adapters.persistence.profile package
 .. automodule:: aeat.adapters.persistence.profile
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Submodules
 ----------

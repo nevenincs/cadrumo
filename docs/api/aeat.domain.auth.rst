@@ -4,6 +4,8 @@ aeat.domain.auth package
 .. automodule:: aeat.domain.auth
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -75,10 +75,20 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Renta profile taxpayer",
+        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+            # M100 2025 added age_at_year_end date binding + declaration-type
+            # and derived marriage facts. Seed minimum values so M100 calculate
+            # resolves the profile-sourced bindings.
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -120,7 +130,7 @@ def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
     """A profile without the CCAA fact contributes nothing for that binding."""
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="No-CCAA taxpayer",
+        display_name="Test runtime profile",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -170,7 +180,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
     snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
     record = UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Numeric profile taxpayer",
+        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.37")),
@@ -215,15 +225,19 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
 
 
 def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[str, Decimal]:
-    """Supply every non-CCAA binding through the Decimal channel as zero.
+    """Supply every non-CCAA, non-profile binding through the Decimal channel as zero.
 
-    The CCAA binding is deliberately omitted: the calculation under
-    test must source it from the user profile, not from caller input.
+    The CCAA binding is deliberately omitted: the calculation under test
+    must source it from the user profile, not from caller input. Other
+    ``source="profile"`` bindings (M100 2025 added an age_at_year_end
+    date binding plus declaration-type) are likewise excluded so the
+    profile resolver populates them from the seeded
+    :class:`UserProfileRecord`.
     """
     return {
         str(binding.id): Decimal("0")
         for binding in snapshot.revision.bindings
-        if str(binding.id) != _CCAA_BINDING
+        if str(binding.id) != _CCAA_BINDING and binding.source != "profile"
     }
 
 
@@ -311,7 +325,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
 def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
     return UserProfileRecord(
         profile_id=_BUCKET_ID,
-        display_name="Bool profile taxpayer",
+        display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="entity.new_entity_override", value=value),
@@ -383,7 +397,7 @@ class TestBoolTypedProfileBinding:
         snapshot = _modelo_100_snapshot()
         bool_profile = UserProfileRecord(
             profile_id=_BUCKET_ID,
-            display_name="Bool-as-enum taxpayer",
+            display_name="Test runtime profile",
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="tax_residence.ccaa", value=True),

@@ -34,8 +34,10 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -143,7 +145,7 @@ class ModeloExportResult(BaseModel):
         format: Wire format string (currently always ``"fichero-boe"``).
         exported_at: UTC timestamp of the write.
         actor: Operator identifier captured into the event.
-    bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
+        bucket_event_id: Id of the ``MODELO_EXPORTED`` event appended
             to the catalogue.
         casilla_provenance: Regulatory grounding for casillas covered
             by the exported fichero-BOE layout.
@@ -169,7 +171,7 @@ class ModeloExportResult(BaseModel):
 def _load_revision_for_export(
     calculation_revision_id: str,
     *,
-    repo: CalculationRevisionCatalogueRepository,
+    repo: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> CalculationRevision:
     revisions = repo.load()
     revision = revisions.get(calculation_revision_id)
@@ -341,8 +343,8 @@ def export_modelo_revision(
     *,
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     clock: datetime | None = None,
 ) -> ModeloExportResult:

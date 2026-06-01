@@ -4,6 +4,8 @@ aeat.adapters package
 .. automodule:: aeat.adapters
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------

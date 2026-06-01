@@ -26,14 +26,12 @@ def _parse_bool(raw: str | None) -> bool | None:
             both map to the ``None`` sentinel.
 
     Returns:
-        ``True``  — token is a recognised affirmative form.
-        ``False`` — token is a recognised negative form.
-        ``None``  — token is absent (``None`` or empty string) or
-                    unrecognised; the caller decides the fallback.
-
-    The ``None`` return for unrecognised tokens lets each call-site
-    choose its own sentinel or raise a typed error rather than silently
-    coercing garbage to ``False``.
+        ``True`` when the token is a recognised affirmative form,
+        ``False`` when it is a recognised negative form, and ``None``
+        when the token is absent (``None`` or empty string) or
+        unrecognised. The ``None`` return for unrecognised tokens lets
+        each call-site choose its own sentinel or raise a typed error
+        rather than silently coercing garbage to ``False``.
     """
     if raw is None or raw == "":
         return None

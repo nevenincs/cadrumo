@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices._errors import InvoiceValidationError
 from ...domain.iva import InvoiceKind
 
@@ -104,7 +105,7 @@ def import_invoices_from_path(
     *,
     kind: InvoiceKind | str,
     dry_run: bool = False,
-    repository: InvoiceCatalogueRepository | None = None,
+    repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceImportResult:
     """Import invoices from ``path`` through the secure invoice repository."""
     invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
@@ -132,7 +133,8 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     return tuple(cast(InvoiceRowPayload, dict(row)) for row in reader)  # CAST-RATIONALE-WIRE-PAYLOAD-CSV-ROW: csv.DictReader yields dict[str, str]; cast to TypedDict at the CSV decode boundary before downstream coercion
 
 
-def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:  # ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: parse-stage slot assembled from CSV/JSON decode before Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field names but dict mutation is required for the line-synthesis back-fill.
+# ANY-RETURN-RATIONALE-INVOICE-PARSE-STAGING: parse-stage slot assembled from CSV/JSON decode before Invoice.model_validate; typed InvoiceRowPayload TypedDict governs field names but dict mutation is required for the line-synthesis back-fill.
+def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return
     base = coerce_decimal(payload["base_total"])

@@ -85,7 +85,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
         revision_id=revision_id,
     )
 
-    with pytest.raises(ModeloAggregationBindingError, match="source bindings"):
+    with pytest.raises(ModeloAggregationBindingError) as excinfo:
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
@@ -96,6 +96,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
             invoice_repository=invoice_repo,
             clock=_T1,
         )
+    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
 
     assert cr_repo.load().revisions == {}
 

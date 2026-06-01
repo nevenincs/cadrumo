@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
+from collections.abc import Mapping
 from typing import Iterator
 
 import pytest
@@ -118,30 +119,53 @@ def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:
             yield exc.lineno, f"raise {class_name}(tr(...))"
 
 
-def _collect_violations() -> list[str]:
+def _collect_violations(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST] | None = None,
+) -> list[str]:
     """Walk every production module under ``src/aeat/`` and collect violations.
 
     The invariant is applied unconditionally: every non-test module that
     raises an :class:`AeatError` subclass must use the
     ``translated_message=`` keyword rather than passing ``tr(...)`` as
     the positional ``message`` argument.
+
+    When *source_tree_ast* is supplied (test path), consume the cached
+    parsed AST per file. When omitted, fall back to walk-and-parse so
+    the helper's no-arg signature stays compatible with importlib
+    callers.
     """
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    if source_tree_ast is None:
+        for path in sorted(_SRC_ROOT.rglob("*.py")):
+            if path.name.startswith("test_"):
+                continue
+            rel = path.relative_to(_SRC_ROOT.parent.parent)
+            source = path.read_text(encoding="utf-8", errors="replace")
+            try:
+                tree = ast.parse(source, filename=str(path))
+            except SyntaxError:
+                continue
+            for lineno, description in _raise_positional_tr_violations(tree):
+                violations.append(f"{rel}:{lineno} — {description}")
+        return violations
+
+    for path in sorted(source_tree_ast):
         if path.name.startswith("test_"):
             continue
-        rel = path.relative_to(_SRC_ROOT.parent.parent)
-        source = path.read_text(encoding="utf-8", errors="replace")
         try:
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
+            path.relative_to(_SRC_ROOT)
+        except ValueError:
             continue
+        rel = path.relative_to(_SRC_ROOT.parent.parent)
+        tree = source_tree_ast[path]
         for lineno, description in _raise_positional_tr_violations(tree):
             violations.append(f"{rel}:{lineno} — {description}")
     return violations
 
 
-def test_no_aeat_error_raise_with_positional_tr() -> None:
+def test_no_aeat_error_raise_with_positional_tr(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+) -> None:
     """Every production module must have zero raise-with-positional-tr() violations.
 
     The invariant applies unconditionally to every non-test module under
@@ -158,8 +182,11 @@ def test_no_aeat_error_raise_with_positional_tr() -> None:
     NOT::
 
         raise SomeError(tr("key"))   # WRONG — eager resolution
+
+    Consumes the session-scoped AST cache so the per-file parse cost is
+    amortised across the full ratchet suite.
     """
-    violations = _collect_violations()
+    violations = _collect_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(

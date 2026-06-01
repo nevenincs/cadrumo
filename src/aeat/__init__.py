@@ -1,6 +1,6 @@
 """Top-level package for the AEAT (Agencia Estatal de Administración Tributaria) toolkit.
 
-Exposes the :data:`__version__` of the distribution. Subpackages provide the
+Exposes the ``__version__`` of the distribution. Subpackages provide the
 layered architecture: :mod:`aeat.adapters` (inbound / outbound integrations),
 :mod:`aeat.application` (use-cases), :mod:`aeat.domain` (pure rules),
 :mod:`aeat.entrypoints` (CLI / scripts), and :mod:`aeat.core`

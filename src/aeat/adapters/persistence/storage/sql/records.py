@@ -11,7 +11,7 @@ the project pydantic mandate.
 Note:
     str string fields (``name``, ``label``) are plain :class:`str`
     today. Once the shared multilingual primitive lands, these fields will be
-    migrated to the :class:`~aeat.core.i18n.str` shape.
+    migrated to the :class:`~aeat.core.i18n.Translatable` shape.
 """
 
 from __future__ import annotations

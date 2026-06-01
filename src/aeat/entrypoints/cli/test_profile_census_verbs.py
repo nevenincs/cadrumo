@@ -115,10 +115,16 @@ def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(profile_app, ["census", "show"])
 
     assert result.exit_code != 0
-    # The CLI error boundary re-raises AeatError under test rather than
-    # rendering it to output; assert the refusal carries the message
-    # (the boundary renders this same text to stderr in real use).
-    assert "no census snapshot" in str(result.exception).lower()
+    # The CLI error boundary decoration is process-global memoised by
+    # callback identity (see ``command_error_boundary`` in ``_errors``).
+    # When the root ``aeat`` app has been imported by an earlier test,
+    # ``profile_app`` callbacks are wrapped and the refusal renders to
+    # stderr (mixed into ``result.output``).  When this test runs alone
+    # the verb raises ``CliRefusedBoundaryError`` directly and the
+    # message is on ``result.exception``.  Accept both surfaces so the
+    # assertion is order-independent.
+    haystack = (result.output + " " + str(result.exception or "")).lower()
+    assert "no census snapshot" in haystack
 
 
 def test_show_emits_active_snapshot(cli_runner: CliRunner) -> None:
@@ -227,7 +233,11 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
     result = invoke_cached_cli(["--format", "json", "config", "profile", "census", "compare"])
     assert result.exit_code == 0, result.output
 
-    payload = json.loads(result.output)
+    raw = json.loads(result.output)
+    # Every CLI verb now emits the centralised {schema_version, command,
+    # result, warnings} envelope; the operator-visible payload lives
+    # under ``result``.
+    payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]
     statuses = {row["path"]: row["status"] for row in payload["rows"]}
     assert statuses["census.establecimiento_type"] == "census_only"
@@ -249,7 +259,8 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
     result = invoke_cached_cli(["--format", "json", "config", "profile", "census", "apply"])
     assert result.exit_code == 0, result.output
 
-    payload = json.loads(result.output)
+    raw = json.loads(result.output)
+    payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]
     assert "census.establecimiento_type" in payload["written_paths"]
     assert "vivienda_office.office_m2" in payload["written_paths"]

@@ -14,7 +14,6 @@ from ...application.user_profile._orchestration import profile_create_storage_sp
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import Settings, override_settings
-from ...core.i18n import tr
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.filing import ModeloDraft, ModeloDraftRepository
 from ...domain.submission import ModeloDraftStatus
@@ -159,12 +158,10 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
 
     with (
         override_settings(aeat_local_storage_root=tmp_path / "no-active", aeat_active_profile=None),
-        pytest.raises(
-            AuthConfigureNoActiveBucketError,
-            match=r"aeat config profile create NAME",
-        ),
+        pytest.raises(AuthConfigureNoActiveBucketError) as excinfo,
     ):
         configure_operator_auth("certificate")
+    assert excinfo.value.translated_message == "application.auth.operator.errors.no_active_bucket"
 
     catalogue = BucketEventHistoryRepository().load()
     typed_auth_events = [
@@ -588,7 +585,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
         # the profile language (persona-fleet finding G3); assert it equals
         # the localised string for the canonical key rather than a
         # hard-coded English fragment.
-        assert str(raised.value) == tr("application.auth.sessions.errors.clave_identity_profile_mismatch")
+        assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_profile_mismatch"
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

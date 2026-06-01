@@ -4,6 +4,8 @@ aeat.application package
 .. automodule:: aeat.application
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------
@@ -25,7 +27,6 @@ Subpackages
    aeat.application.operator_surface
    aeat.application.overview
    aeat.application.portals
-   aeat.application.profile
    aeat.application.registry
    aeat.application.review
    aeat.application.setup
@@ -43,6 +44,10 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.application._errors
+   aeat.application._storage_paths
    aeat.application.config_reset
    aeat.application.diagnostics
    aeat.application.repair_integrity
+   aeat.application.state_projection
+   aeat.application.storage_write_policy

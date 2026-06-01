@@ -4,6 +4,8 @@ aeat.adapters.inbound package
 .. automodule:: aeat.adapters.inbound
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------

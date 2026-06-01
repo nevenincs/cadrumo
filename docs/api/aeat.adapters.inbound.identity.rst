@@ -4,3 +4,5 @@ aeat.adapters.inbound.identity package
 .. automodule:: aeat.adapters.inbound.identity
    :members:
    :show-inheritance:
+   :ignore-module-all:
+

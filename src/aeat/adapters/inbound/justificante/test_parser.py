@@ -216,26 +216,46 @@ class TestJustificanteErrorRehome:
         assert issubclass(JustificanteError, AeatError)
 
 
+@pytest.fixture(scope="module")
+def non_justificante_pdf_bytes() -> bytes:
+    """Synthesize once-per-module the trivial PDF that lacks a CSV label.
+
+    The Canvas build pays a ReportLab Canvas-construction cost (~30-80ms
+    on a process where font registration is already cached, ~200ms on
+    cold start). Hoisting the build to module scope keeps the cost
+    one-shot for this test module even if more tests are added later
+    that need the same payload.
+    """
+    from io import BytesIO
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    c.drawString(100, 700, "AGENCIA TRIBUTARIA")
+    c.drawString(100, 680, "Modelo: 130")
+    c.drawString(100, 660, "Ejercicio: 2026")
+    c.drawString(100, 640, "Periodo: 1T")
+    c.drawString(100, 620, "NIF: 00000000T")
+    c.drawString(100, 600, "Numero de justificante: 1302026")
+    c.drawString(100, 580, "Fecha y hora de presentacion: 2026-04-10 11:00:00")
+    c.drawString(100, 560, "https://sede.agenciatributaria.gob.es/ayuda")
+    c.showPage()
+    c.save()
+    return buffer.getvalue()
+
+
 class TestCsvDetection:
     """A PDF without a CSV must raise the dedicated error subclass."""
 
-    def test_non_justificante_pdf_raises(self, tmp_path: Path) -> None:
-        # Build a trivial PDF that contains no CSV label.
-        from reportlab.lib.pagesizes import A4
-        from reportlab.pdfgen import canvas
-
+    def test_non_justificante_pdf_raises(
+        self,
+        tmp_path: Path,
+        non_justificante_pdf_bytes: bytes,
+    ) -> None:
         target = tmp_path / "not_a_justificante.pdf"
-        c = canvas.Canvas(str(target), pagesize=A4)
-        c.drawString(100, 700, "AGENCIA TRIBUTARIA")
-        c.drawString(100, 680, "Modelo: 130")
-        c.drawString(100, 660, "Ejercicio: 2026")
-        c.drawString(100, 640, "Periodo: 1T")
-        c.drawString(100, 620, "NIF: 00000000T")
-        c.drawString(100, 600, "Numero de justificante: 1302026")
-        c.drawString(100, 580, "Fecha y hora de presentacion: 2026-04-10 11:00:00")
-        c.drawString(100, 560, "https://sede.agenciatributaria.gob.es/ayuda")
-        c.showPage()
-        c.save()
+        target.write_bytes(non_justificante_pdf_bytes)
         with pytest.raises(JustificanteCsvNotFoundError):
             parse_justificante(target)
 

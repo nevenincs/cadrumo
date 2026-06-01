@@ -24,6 +24,7 @@ with a one-line justification.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -61,13 +62,23 @@ def _discover_test_modules() -> list[Path]:
     return sorted(collected)
 
 
-def _mock_imports(path: Path) -> list[tuple[int, str]]:
-    """Return ``(lineno, module)`` for every mock-library import in *path*."""
-    source = path.read_text(encoding="utf-8")
-    try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError:
-        return []
+def _mock_imports(
+    path: Path,
+    tree: ast.AST | None = None,
+) -> list[tuple[int, str]]:
+    """Return ``(lineno, module)`` for every mock-library import in *path*.
+
+    When *tree* is supplied (test-loop path), reuse the cached AST. When
+    omitted (single-file callers such as
+    ``test_documented_boundary_mocks_still_present``), fall back to a
+    per-call parse so the helper signature stays single-path compatible.
+    """
+    if tree is None:
+        source = path.read_text(encoding="utf-8")
+        try:
+            tree = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            return []
 
     hits: list[tuple[int, str]] = []
     for node in ast.walk(tree):
@@ -85,14 +96,21 @@ def _mock_imports(path: Path) -> list[tuple[int, str]]:
     return hits
 
 
-def test_mock_imports_are_documented() -> None:
-    """Every mock-library import must be in the documented boundary-mock inventory."""
+def test_mock_imports_are_documented(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    """Every mock-library import must be in the documented boundary-mock inventory.
+
+    Consumes the session-scoped AST cache; falls back to per-file parse
+    for modules absent from the cache (e.g. unparseable files).
+    """
     modules = _discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
         relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
-        for lineno, mock_module in _mock_imports(module_path):
+        tree = source_tree_ast.get(module_path)
+        for lineno, mock_module in _mock_imports(module_path, tree):
             key = (relative, mock_module)
             if key in _DOCUMENTED_BOUNDARY_MOCKS:
                 _logger.debug(

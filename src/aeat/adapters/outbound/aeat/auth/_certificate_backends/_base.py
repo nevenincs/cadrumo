@@ -3,7 +3,7 @@
 Defines :class:`_CertBackend`, the interface every concrete backend
 under :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends`
 must implement. Backends are dispatched by
-:func:`aeat.adapters.outbound.aeat.auth.certificate._select_backend`.
+``aeat.adapters.outbound.aeat.auth.certificate._select_backend``.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class _CertBackend(ABC):
     """Contract every cert backend must satisfy.
 
     Backends are dispatched by
-    :func:`aeat.adapters.outbound.aeat.auth.certificate._select_backend` and consumed by
+    ``aeat.adapters.outbound.aeat.auth.certificate._select_backend`` and consumed by
     :func:`aeat.adapters.outbound.aeat.auth.certificate.preload_into_browser_context` and
     :func:`aeat.adapters.outbound.aeat.auth.certificate.verify_handshake`.
     """

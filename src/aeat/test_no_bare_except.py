@@ -19,6 +19,7 @@ for the S50 stream-reconfigure tests landed there.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -26,19 +27,19 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
-def _bare_except_locations(src_root: Path) -> list[tuple[str, int, str]]:
-    """Return (file, lineno, shape) for every bare-except in test files."""
+def _bare_except_locations(source_tree_ast: Mapping[Path, ast.AST]) -> list[tuple[str, int, str]]:
+    """Return (file, lineno, shape) for every bare-except in test files.
+
+    Consumes the session-scoped ``source_tree_ast`` cache from
+    ``src/aeat/tests/conftest.py``; filters in-test to test-surface files
+    (``test_*.py``) only.
+    """
 
     findings: list[tuple[str, int, str]] = []
-    for path in sorted(src_root.rglob("test_*.py")):
-        try:
-            source = path.read_text(encoding="utf-8")
-        except OSError:
+    for path in sorted(source_tree_ast):
+        if not path.name.startswith("test_"):
             continue
-        try:
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
-            continue
+        tree = source_tree_ast[path]
         for node in ast.walk(tree):
             if not isinstance(node, ast.Try):
                 continue
@@ -57,16 +58,19 @@ def _bare_except_locations(src_root: Path) -> list[tuple[str, int, str]]:
     return findings
 
 
-def test_no_bare_except_in_test_surface() -> None:
+def test_no_bare_except_in_test_surface(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Zero bare-except or ``except Exception: pass`` shapes in test files.
 
     Every test file under ``src/aeat/`` is parsed with the standard AST
     module; no subprocess, no mock, no skip.  Failures name the exact
     file and line number so the author can replace the bare handler with
     a specific exception assertion.
+
+    Consumes the session-scoped ``source_tree_ast`` cache so the AST
+    parse cost is amortised across the full ratchet suite rather than
+    paid per-test.
     """
-    src_root = Path(__file__).parent
-    findings = _bare_except_locations(src_root)
+    findings = _bare_except_locations(source_tree_ast)
 
     if findings:
         lines = "\n".join(f"  {path}:{lineno}  [{shape}]" for path, lineno, shape in findings)

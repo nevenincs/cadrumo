@@ -4,6 +4,8 @@ aeat.locales package
 .. automodule:: aeat.locales
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Submodules
 ----------
@@ -11,5 +13,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.locales.__main__
+   aeat.locales._ast_scanner
+   aeat.locales._fstring_registry
    aeat.locales.cli
    aeat.locales.manager

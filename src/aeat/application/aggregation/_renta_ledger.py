@@ -14,6 +14,7 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -154,7 +155,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     bucket_id: str,
     period: Period | str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",

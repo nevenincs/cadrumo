@@ -218,7 +218,7 @@ class EnvelopeVersionError(PersistenceError):
     """Raised when an on-disk envelope is older or newer than the consumer expects.
 
     Older envelopes may be migrated forward via
-    :func:`migrate_envelope`; newer envelopes are not safely
+    ``migrate_envelope``; newer envelopes are not safely
     consumable by older code and refuse to load.
     """
 

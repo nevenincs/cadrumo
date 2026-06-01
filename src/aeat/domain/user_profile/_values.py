@@ -27,11 +27,11 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _ProfileId = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=96, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$"),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=96, pattern=r"^[A-Za-z0-9][A-Za-z_0-9.-]*$"),
 ]
 _SnapshotId = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]*$"),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z_0-9.:-]*$"),
 ]
 _FieldPath = Annotated[
     str,
@@ -270,10 +270,11 @@ class UserProfilePortableExport(BaseModel):
     attempting to parse ``profile``. Increment it when the serialised shape
     changes in a backward-incompatible way.
 
-    Version 1: facts-only bundle (``profile`` only). Remains importable.
-    Version 2: full bundle — adds ``work_units``, ``ledger_transactions``,
-        ``calculation_revisions``, and ``filing_records``. All four default
-        to empty tuples so v1 facts-only bundles remain importable.
+    Version 1 is the facts-only bundle (``profile`` only) and remains
+    importable. Version 2 is the full bundle — it adds ``work_units``,
+    ``ledger_transactions``, ``calculation_revisions``, and
+    ``filing_records``, all defaulting to empty tuples so v1 facts-only
+    bundles remain importable.
 
     Encrypted-material blobs are NOT included (ADR D2: strip encrypted
     material; re-encrypt under recipient bucket DEK on import).

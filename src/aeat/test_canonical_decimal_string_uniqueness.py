@@ -14,6 +14,7 @@ from __future__ import annotations
 import ast
 import pathlib
 import sys
+from collections.abc import Mapping
 
 import pytest
 
@@ -27,13 +28,33 @@ _SRC_ROOT = pathlib.Path(__file__).parent
 # ---------------------------------------------------------------------------
 
 
-def _collect_function_defs(source_root: pathlib.Path) -> dict[str, list[pathlib.Path]]:
-    """Return a mapping from function name to list of files that define it."""
+def _collect_function_defs(
+    source_root: pathlib.Path,
+    source_tree_ast: Mapping[pathlib.Path, ast.AST] | None = None,
+) -> dict[str, list[pathlib.Path]]:
+    """Return a mapping from function name to list of files that define it.
+
+    When *source_tree_ast* is supplied (test path), consume the cached
+    parsed AST per file scoped to *source_root*. When omitted, fall back
+    to walk-and-parse so the helper's signature stays compatible with
+    importlib callers.
+    """
     defs: dict[str, list[pathlib.Path]] = {}
-    for py_file in source_root.rglob("*.py"):
+    if source_tree_ast is None:
+        for py_file in source_root.rglob("*.py"):
+            try:
+                tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            except SyntaxError:
+                continue
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    defs.setdefault(node.name, []).append(py_file)
+        return defs
+
+    for py_file, tree in source_tree_ast.items():
         try:
-            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
-        except SyntaxError:
+            py_file.relative_to(source_root)
+        except ValueError:
             continue
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -46,9 +67,15 @@ def _collect_function_defs(source_root: pathlib.Path) -> dict[str, list[pathlib.
 # ---------------------------------------------------------------------------
 
 
-def test_canonical_decimal_string_has_exactly_one_definition_site() -> None:
-    """AST walk across src/aeat/ must find exactly one def site."""
-    all_defs = _collect_function_defs(_SRC_ROOT)
+def test_canonical_decimal_string_has_exactly_one_definition_site(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+) -> None:
+    """AST walk across src/aeat/ must find exactly one def site.
+
+    Consumes the session-scoped AST cache so the per-file parse cost is
+    amortised across the full ratchet suite.
+    """
+    all_defs = _collect_function_defs(_SRC_ROOT, source_tree_ast)
     sites = all_defs.get("canonical_decimal_string", [])
     relative_sites = [p.relative_to(_SRC_ROOT) for p in sites]
     assert len(sites) == 1, (

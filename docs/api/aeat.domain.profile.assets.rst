@@ -4,3 +4,5 @@ aeat.domain.profile.assets package
 .. automodule:: aeat.domain.profile.assets
    :members:
    :show-inheritance:
+   :ignore-module-all:
+

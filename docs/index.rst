@@ -12,8 +12,24 @@ live under :mod:`aeat.adapters`, use cases live under
 :mod:`aeat.application`, and CLI / MCP entrypoints live under
 :mod:`aeat.entrypoints`.
 
-.. Getting Started and Architecture narrative pages are added separately;
-   this toctree references only pages that currently exist.
+.. toctree::
+   :maxdepth: 2
+   :caption: Guides
+
+   getting-started
+   architecture
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributing
+
+   authoring-guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: CLI Reference
+
+   cli/index
 
 .. toctree::
    :maxdepth: 3
