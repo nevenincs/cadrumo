@@ -13,7 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT

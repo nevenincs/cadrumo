@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from aeat import __version__
-from aeat.core.time import now
+from .. import __version__
+from ..core.time import now
 
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError

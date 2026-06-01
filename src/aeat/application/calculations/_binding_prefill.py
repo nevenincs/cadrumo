@@ -34,7 +34,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.resources import resources
 from ...domain.calculations.registry import BindingId

@@ -47,8 +47,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
 
-from aeat.domain.calculations.registry import CasillaId
-from aeat.domain.calculations.registry._bindings import CasillaObservation
+from ..calculations.registry import CasillaId
+from ..calculations.registry._bindings import CasillaObservation
 
 from ._errors import RentaError, RentaValidationError
 
