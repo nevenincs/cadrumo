@@ -31,7 +31,7 @@ def test_modelo_036_validator_accepts_committed_definition() -> None:
 
 def test_modelo_036_metadata_matches_orden_eha_1274_2007_and_hac_1526_2024() -> None:
     modelo, _ = _load_modelo_036()
-    assert modelo.tax_domain == "census"
+    assert modelo.tax_domain == "censo"
     assert modelo.cadence == "ad_hoc"
     assert modelo.jurisdiction == "ES-AEAT"
     assert "orden-eha-1274-2007:art-1" in modelo.legal_refs

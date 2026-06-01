@@ -33,8 +33,7 @@ from decimal import Decimal
 import pytest
 
 from aeat.core.resources import bundled_path
-from aeat.domain.invoices import IvaRate
-from aeat.domain.invoices import iva_rate_percentage
+from aeat.domain.invoices import IvaRate, iva_rate_percentage
 from aeat.domain.iva import (
     EUMemberState,
     IvaCatalogueError,
@@ -235,7 +234,7 @@ def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_iva_rate_slot_to_vat_rate_kind_mapping_is_total_and_consistent() -> None:
+def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> None:
     """Every IvaRate slot (except NOT_SUBJECT, which is out of scope of
     IVA) must map to a IvaRateKind tier. The mapping is the bridge
     between the invoice-domain rate slots and the substrate's rate

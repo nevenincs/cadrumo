@@ -205,7 +205,7 @@ def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_upperc
     assert invoice.counterparty_eu_member_state is EUMemberState.FR
 
 
-def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
+def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
     """Invoice.iva_category is now strongly-typed IvaCategory | None
     instead of free-form str | None. Pydantic coerces string inputs
     (the historical persistence shape) into IvaCategory members and
@@ -264,8 +264,8 @@ def test_invoice_iva_category_rejects_unknown_string() -> None:
         )
 
 
-def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> None:
-    """iva_rate_percentage must derive its values from registry/aeat/vat/rates.toml.
+def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> None:
+    """iva_rate_percentage must derive its values from registry/aeat/iva/rates.toml.
 
     The helper carries no hardcoded ``RATE_21 -> 0.21`` literal; every
     numeric slot is resolved against :func:`aeat.domain.iva.lookup_rate`
@@ -397,11 +397,11 @@ def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
 
 
-def test_invoice_validates_vat_prefix_for_non_es_country() -> None:
-    """Non-ES counterparties must carry a VAT number with the country prefix."""
+def test_invoice_validates_iva_prefix_for_non_es_country() -> None:
+    """Non-ES counterparties must carry a IVA number with the country prefix."""
     invoice = _valid_invoice(counterparty_country="DE", counterparty_tax_id="DE123456789")
     assert invoice.counterparty_tax_id == "DE123456789"
-    with pytest.raises(ValidationError, match=r"VAT number must start with the counterparty country ISO-2 prefix"):
+    with pytest.raises(ValidationError, match=r"IVA number must start with the counterparty country ISO-2 prefix"):
         _valid_invoice(counterparty_country="DE", counterparty_tax_id="123456789")
 
 

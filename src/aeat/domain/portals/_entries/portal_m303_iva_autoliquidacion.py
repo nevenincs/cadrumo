@@ -1,4 +1,4 @@
-"""Registry entry for Modelo 303 — periodic VAT self-assessment.
+"""Registry entry for Modelo 303 — periodic IVA self-assessment.
 
 Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
 exposed as :data:`ENTRY` and consumed by
@@ -8,7 +8,7 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -16,7 +16,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M303_IVA_AUTOLIQUIDACION,
     path="/Sede/procedimientoini/G414.shtml",
-    subdomain=Subdomain.SEDE,
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -29,4 +29,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m303_iva_autoliquidacion.label",
     purpose="entries.portal_m303_iva_autoliquidacion.purpose",
 )
-"""Portal entry for Modelo 303 (periodic VAT self-assessment)."""
+"""Portal entry for Modelo 303 (periodic IVA self-assessment)."""

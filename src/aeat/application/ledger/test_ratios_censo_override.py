@@ -1,9 +1,9 @@
-"""Real-behavior tests for the census-override warning helper.
+"""Real-behavior tests for the censo-override warning helper.
 
 Locks the contract that
-:func:`aeat.application.ledger._ratios.census_override_warning` returns
+:func:`aeat.application.ledger._ratios.censo_override_warning` returns
 a typed warning when an operator's per-category override for a
-HOME_OFFICE category deviates from the legally-binding census-derived
+HOME_OFFICE category deviates from the legally-binding censo-derived
 value, and stays silent for non-HOME_OFFICE categories.
 """
 
@@ -16,8 +16,8 @@ import pytest
 from ...domain.categories import SpendingCategory
 from ._ratios import (
     RatiosCensoOverrideWarning,
-    census_business_pct_for,
-    census_override_warning,
+    censo_business_pct_for,
+    censo_override_warning,
 )
 
 
@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_no_warning_for_non_home_office_category() -> None:
-    result = census_override_warning(
+    result = censo_override_warning(
         category=SpendingCategory.TELEFONIA_MOVIL,
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
@@ -35,7 +35,7 @@ def test_no_warning_for_non_home_office_category() -> None:
 
 
 def test_warning_emitted_when_home_office_override_diverges() -> None:
-    result = census_override_warning(
+    result = censo_override_warning(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         override_ratio=Decimal("0.50"),
         raw_afectacion_ratio=Decimal("0.20"),
@@ -53,7 +53,7 @@ def test_no_warning_when_suministros_override_matches_30pct_of_raw() -> None:
 
     raw = Decimal("0.20")
 
-    result = census_override_warning(
+    result = censo_override_warning(
         category=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         override_ratio=Decimal("0.060"),
         raw_afectacion_ratio=raw,
@@ -68,7 +68,7 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
 
     raw = Decimal("0.20")
 
-    result = census_override_warning(
+    result = censo_override_warning(
         category=SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
         override_ratio=raw,
         raw_afectacion_ratio=raw,
@@ -77,9 +77,9 @@ def test_no_warning_when_ownership_override_matches_raw_afectacion() -> None:
     assert result is None
 
 
-def test_business_pct_is_none_when_census_unset() -> None:
+def test_business_pct_is_none_when_censo_unset() -> None:
     assert (
-        census_business_pct_for(
+        censo_business_pct_for(
             SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
             None,
         )
@@ -89,7 +89,7 @@ def test_business_pct_is_none_when_census_unset() -> None:
 
 def test_business_pct_is_none_for_non_home_office_category() -> None:
     assert (
-        census_business_pct_for(
+        censo_business_pct_for(
             SpendingCategory.TELEFONIA_MOVIL,
             Decimal("0.20"),
         )
@@ -102,7 +102,7 @@ def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor() -> None
 
     raw = Decimal("0.20")
 
-    suministros = census_business_pct_for(
+    suministros = censo_business_pct_for(
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         raw,
     )
@@ -115,7 +115,7 @@ def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
 
     raw = Decimal("0.20")
 
-    ownership = census_business_pct_for(
+    ownership = censo_business_pct_for(
         SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
         raw,
     )
@@ -123,12 +123,12 @@ def test_business_pct_for_ownership_uses_raw_afectacion() -> None:
     assert ownership == raw
 
 
-def test_warning_carries_census_derived_ratio() -> None:
-    result = census_override_warning(
+def test_warning_carries_censo_derived_ratio() -> None:
+    result = censo_override_warning(
         category=SpendingCategory.IBI_VIVIENDA_AFECTO,
         override_ratio=Decimal("0.40"),
         raw_afectacion_ratio=Decimal("0.20"),
     )
 
     assert result is not None
-    assert result.census_derived_ratio == Decimal("0.20")
+    assert result.censo_derived_ratio == Decimal("0.20")

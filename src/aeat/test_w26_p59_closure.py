@@ -73,7 +73,7 @@ def test_s668_app_live_wire_payload_marker_present(lineno: int) -> None:
 # S669 Sub-A: _modelo.py — 4 kv_pairs splat sites
 # ---------------------------------------------------------------------------
 
-_S669A_LINES = [894, 896, 898, 917]
+_S669A_LINES = [895, 897, 899, 918]
 
 
 @pytest.mark.parametrize("lineno", _S669A_LINES)
@@ -203,8 +203,15 @@ def test_s670_descendant_facts_cast_applied() -> None:
 # Allowlist size ratchet: exactly 11 entries remain
 # ---------------------------------------------------------------------------
 
-def test_allowlist_size_is_11() -> None:
-    """After W26.P59, _KNOWN_VIOLATING_LINES must contain exactly 11 entries."""
+def test_allowlist_size_is_7() -> None:
+    """``_KNOWN_VIOLATING_LINES`` must contain exactly 7 entries.
+
+    W26.P59 paid down 28 of 39 entries (leaving 11). Subsequent paydowns
+    (S672 removed 3, S673 removed 1) brought the allowlist to its current
+    size of 7. The inventory module's own header comment is the source of
+    truth for the running tally; this closure assertion ratchets the
+    allowlist size so any unintended re-introduction surfaces immediately.
+    """
     # Import the inventory module to read the live frozenset
     import importlib
     import sys
@@ -215,8 +222,9 @@ def test_allowlist_size_is_11() -> None:
         del sys.modules[mod_name]
     mod = importlib.import_module(mod_name)
     size = len(mod._KNOWN_VIOLATING_LINES)  # type: ignore[attr-defined]
-    assert size == 11, (
-        f"Expected 11 entries in _KNOWN_VIOLATING_LINES after W26.P59 paydown, found {size}"
+    assert size == 7, (
+        f"Expected 7 entries in _KNOWN_VIOLATING_LINES (post W26.P59 + S672 + S673 paydown), "
+        f"found {size}"
     )
 
 

@@ -93,7 +93,7 @@ id = "modelo-349-op-codigo-pais"
 offset = 76
 length = 2
 kind = "binding"
-binding = "vat-349-operador-row-codigo-pais"
+binding = "iva-349-operador-row-codigo-pais"
 data_type = "text"
 required = true
 padding = "right_space"
@@ -107,7 +107,7 @@ id = "modelo-349-op-nif-comunitario"
 offset = 78
 length = 15
 kind = "binding"
-binding = "vat-349-operador-row-nif"
+binding = "iva-349-operador-row-nif"
 data_type = "text"
 required = true
 padding = "right_space"
@@ -121,7 +121,7 @@ id = "modelo-349-op-apellidos"
 offset = 93
 length = 40
 kind = "binding"
-binding = "vat-349-operador-row-apellidos"
+binding = "iva-349-operador-row-apellidos"
 data_type = "text"
 required = true
 padding = "right_space"
@@ -135,7 +135,7 @@ id = "modelo-349-op-clave"
 offset = 133
 length = 1
 kind = "binding"
-binding = "vat-349-operador-row-clave"
+binding = "iva-349-operador-row-clave"
 data_type = "text"
 required = true
 padding = "none"
@@ -149,7 +149,7 @@ id = "modelo-349-op-base"
 offset = 134
 length = 13
 kind = "binding"
-binding = "vat-349-operador-row-base"
+binding = "iva-349-operador-row-base"
 data_type = "money"
 required = true
 padding = "left_zero"
@@ -212,5 +212,5 @@ source_refs = ["aeat-dr-349-2020-current"]
 
 # Tipo 2 — Registro de rectificaciones (500 bytes)
 # One record emitted per (operator, clave, ejercicio, periodo) row via the
-# vat-349-rectificacion-row-* bindings. Discriminated from operador records by
+# iva-349-rectificacion-row-* bindings. Discriminated from operador records by
 # the rectification block (positions 147-178) being non-blank.

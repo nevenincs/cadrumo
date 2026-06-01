@@ -31,7 +31,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from aeat.core.external_constants import BOE_ENCODING_CHOICES as _BOE_ENCODING_CHOICES
-from aeat.domain.fincas._rounding import round_to_cents as _round_to_cents
+from aeat.core.money import round_to_cents as _round_to_cents
 
 from .._errors import AeatExportFormatError
 

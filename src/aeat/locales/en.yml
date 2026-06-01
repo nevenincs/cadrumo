@@ -105,21 +105,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
-    refresh:
-      errors:
-        google_auth_not_importable: The google-auth library is not importable; Google
-          OAuth refresh cannot proceed.
-        reauth_required: The Google OAuth credential is marked as requiring reauthentication;
-          the automatic refresh path is closed.
-        refresh_failed: Google OAuth refresh failed.
-        refresh_refused: Google OAuth refused the refresh request; the refresh token
-          is no longer valid.
-        token_endpoint_unreachable: The Google OAuth token endpoint is unreachable.
-      suggestions:
-        check_network: Check network connectivity to Google OAuth endpoints and retry.
-      testing_project_cap_warning: The Google OAuth refresh token is approaching the
-        7-day Testing-project cap (about {hours_remaining}h remaining); re-run `aeat
-        config google login` to extend the credential lifetime.
   inbound:
     declaracion:
       errors:
@@ -573,7 +558,7 @@ cli:
         add_help: Register a new collectible invoice
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
-        eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
+        eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices a customer owes you
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
@@ -623,13 +608,13 @@ cli:
         valuation_group_help: Calculate and preview inventory valuation
         valuation_method_help: Valuation method (fifo or pmp)
         valuation_preview_help: Preview closing stock and cost of sales
-        vat_rate_help: IVA rate as a percentage
         year_help: Tax year
+        iva_rate_help: 'IVA rate as a percentage'
       payable_invoice:
         add_help: Register a new payable invoice
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
-        eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
+        eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices you owe a supplier
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
@@ -812,7 +797,7 @@ cli:
         missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for census
+        period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
         preview_help: Preview bindings with temporary overrides without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
@@ -856,7 +841,7 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_error: 'Registry error: %{message}'
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
-          1T-4T quarters, 01-12 months; for census modelos (036) use alta, modificacion,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
           or baja.'
         period_token_invalid: '--period ''%{period}'' is not a valid period token
           for modelo %{modelo}. Valid tokens: %{tokens}.'
@@ -989,10 +974,7 @@ cli:
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
         app_help: Manage the lifecycle of modelo work units
-        autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
-          (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
-          converted to the rental estate. The assistant automatically applies 21%
-          (Art. 90 LISIVA) to compute the VAT charge. Applicable to Modelo 303 only.'
+        autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties converted to the rental estate. The assistant automatically applies 21% (Art. 90 LISIVA) to compute the IVA charge. Applicable to Modelo 303 only.'
         autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be
           a decimal amount; received: {value}'
         borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
@@ -1137,7 +1119,7 @@ cli:
           app modelo bindings list --missing` to see the bindings the calculation
           needs.
         period_help: 'Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months;
-          for census modelos (036) use alta, modificacion, or baja.'
+          for censo modelos (036) use alta, modificacion, or baja.'
         period_token_invalid: '--period ''%{token}'' is not a valid period token for
           modelo %{modelo}. --year and --period are composed separately: pass --year
           %{year} for the filing year and one of the declared period tokens for --period.
@@ -1297,12 +1279,12 @@ cli:
         configure_help: Set active apoderado configuration
         help: Manage apoderado configuration
         scope:
-          censo: Census declarations (registration, modification, deregistration)
+          censo: Censo declarations (registration, modification, deregistration)
             (modelo 036)
           exped: Files and procedures
           generalnt: General tax procedures
           inform: Informative declarations (modelo 347, 349, 720)
-          iva: VAT periodic and annual returns (modelo 303, 390)
+          iva: 'IVA periodic and annual returns (modelo 303, 390)'
           notific: Notifications and communications
           pagosf: Quarterly self-employed instalments (modelo 130, 131)
           rent: Income tax and wealth declaration (modelo 100, 714)
@@ -1481,7 +1463,7 @@ cli:
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
       help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      iva_regime_help: 'IVA regime (general, simplificado, exento, etc.)'
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
@@ -1496,12 +1478,12 @@ cli:
       help: List every registered profile and mark the active one
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
-      census:
-        apply_help: Overwrite the profile with census values reported by AEAT
-        compare_help: Compare AEAT census and this profile field by field
-        help: Sync AEAT 036 census data with this profile
-        refresh_help: Download the latest census from AEAT and save a snapshot
-        show_help: Show the latest census AEAT reported for this profile
+      censo:
+        apply_help: Overwrite the profile with censo values reported by AEAT
+        compare_help: Compare AEAT censo and this profile field by field
+        help: Sync AEAT 036 censo data with this profile
+        refresh_help: Download the latest censo from AEAT and save a snapshot
+        show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
       create_help: Initialize a new active profile and config bucket.
       delete_active_cleared: The deleted profile was the active one; the active-profile
@@ -1672,8 +1654,8 @@ cli:
         ambiguous_profile: 'Ambiguous profile name: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'No active profile selected.'
-        profile_empty: '--profile must not be blank.'
+        no_active_profile: No active profile selected.
+        profile_empty: --profile must not be blank.
         unknown_profile: 'Unknown profile: %{profile}.'
         unknown_profile_key: 'Unknown profile key: %{key}.'
       get_help: Read one profile key stored value.
@@ -1737,7 +1719,8 @@ cli:
       venv_stale: Virtual environment is stale.
     version:
       no_revisions: No registry revisions available.
-      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas, %{formulas} formulas, %{revisions} revisions.'
+      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
+        %{formulas} formulas, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registry unavailable (%{error}).'
   ledger:
     add:
@@ -1774,7 +1757,7 @@ cli:
       source_jurisdiction_required_irnr: Non-resident IRNR profiles must declare --source-jurisdiction
         explicitly (TRLIRNR RDLeg 5/2004 Art. 2 / Art. 10). Use a two-letter ISO 3166-1
         alpha-2 country code; only ES rows enter the IRNR base.
-      taxable_base_help: VAT-exclusive base amount
+      taxable_base_help: 'IVA-exclusive base amount'
       usage_ratio_help: Usage-ratio id for proportional business use
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
@@ -1784,9 +1767,9 @@ cli:
         needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
-      prorrata_reference_help: IVA prorrata reference for VAT workflows
+      prorrata_reference_help: 'IVA prorrata reference for IVA workflows'
       usage_ratio_help: Usage-ratio id for proportional business use
-    app_help: Management of accounting ledgers and VAT records
+    app_help: 'Management of accounting ledgers and IVA records'
     archive:
       actor_help: Operator name recorded on the bucket event
       help: Archive one ledger transaction in the active profile bucket
@@ -2051,7 +2034,7 @@ cli:
       iva_amount_help: New IVA amount
       iva_rate_help: New IVA rate as a decimal fraction
       notes_help: New operator notes
-      taxable_base_help: New VAT-exclusive base amount
+      taxable_base_help: 'New IVA-exclusive base amount'
       value_date_help: New value date (YYYY-MM-DD)
     view:
       help: View one ledger transaction in the active profile bucket
@@ -2128,7 +2111,7 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
-        profile_census: Sync AEAT census facts for the active profile.
+        profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
         profile_list: List profile facts.
@@ -2513,15 +2496,15 @@ entries:
     label: Set Up Direct Debit for Payments
     purpose: Direct-debit setup for self-assessments and tax payments.
   portal_m036_censal:
-    label: Form 036 — Census Declaration
-    purpose: Registration, amendment and deregistration in the census of businesses
+    label: Form 036 — Censo Declaration
+    purpose: Registration, amendment and deregistration in the censo of businesses
       and professionals.
   portal_m037_censal_simplificada:
-    label: Form 037 — Simplified Census Declaration (retired)
+    label: Form 037 — Simplified Censo Declaration (retired)
     notes:
       '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
-      '1': Use Form 036 for any subsequent census procedure.
-    purpose: Simplified census declaration for sole traders, abolished in 2025.
+      '1': Use Form 036 for any subsequent censo procedure.
+    purpose: Simplified censo declaration for sole traders, abolished in 2025.
   portal_m100_renta:
     label: Form 100 — Personal Income Tax Return
     purpose: Annual personal income tax (IRPF) return.
@@ -2562,8 +2545,8 @@ entries:
     label: Form 232 — Related-Party Transactions
     purpose: Informational return of transactions with related persons or entities.
   portal_m303_iva_autoliquidacion:
-    label: Form 303 — VAT Self-Assessment
-    purpose: Periodic value added tax (VAT) self-assessment.
+    label: 'Form 303 — IVA Self-Assessment'
+    purpose: 'Periodic IVA self-assessment.'
   portal_m347_operaciones_terceros:
     label: Form 347 — Transactions with Third Parties
     purpose: Annual informational return of transactions with third parties above
@@ -2572,11 +2555,11 @@ entries:
     label: Form 349 — Intra-Community Transactions
     purpose: Recapitulative statement of intra-Community supplies of goods and services.
   portal_m369_oss_ioss:
-    label: Form 369 — VAT One-Stop Shop (OSS/IOSS)
-    purpose: VAT self-assessment under the OSS and IOSS one-stop-shop schemes.
+    label: 'Form 369 — IVA One-Stop Shop (OSS/IOSS)'
+    purpose: 'IVA self-assessment under the OSS and IOSS one-stop-shop schemes.'
   portal_m390_resumen_iva:
-    label: Form 390 — Annual VAT Summary
-    purpose: Annual summary return for value added tax.
+    label: 'Form 390 — Annual IVA Summary'
+    purpose: 'Annual summary return for IVA.'
   portal_m720_bienes_extranjero:
     label: Form 720 — Assets and Rights Held Abroad
     purpose: Informational return of assets and rights located abroad.
@@ -2587,8 +2570,8 @@ entries:
     label: My Personal Area
     purpose: Authenticated taxpayer personal area in the Electronic Office.
   portal_mis_datos_censales:
-    label: My Census Data
-    purpose: Review of the taxpayer's registered census data.
+    label: My Censo Data
+    purpose: Review of the taxpayer's registered censo data.
   portal_mis_documentos_pendientes_firma:
     label: Documents Awaiting Signature
     purpose: Signature portfolio with documents awaiting electronic signature.
@@ -2726,12 +2709,12 @@ errors:
     unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
-    no_snapshot_captured: No census snapshot has been captured for profile {profile_id}.
+    no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
-      census.
-    sede_g313_no_census: AEAT sede G313 returned no readable census for profile {profile_id};
+      censo.
+    sede_g313_no_censo: AEAT sede G313 returned no readable censo for profile {profile_id};
       confirm your certificate or Cl@ve is registered against this NIF.
-    sede_no_census: AEAT's sede returned no readable census for profile {profile_id}.
+    sede_no_censo: AEAT's sede returned no readable censo for profile {profile_id}.
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -2740,6 +2723,7 @@ errors:
     error_aeat_core_not_found: The requested resource or record was not found.
     error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
+    error_apidocs: errors.error.error_apidocs
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
       returning AEAT evidence.
@@ -2774,7 +2758,6 @@ errors:
       but no fallback was configured.'
     error_declaracion_template_not_detected: The declaration PDF's template revision
       could not be auto-detected.
-    error_domain: A domain logic error occurred.
     error_domain_submission: A submission-domain error occurred.
     error_domain_submission_preflight: The draft could not pass the local submission
       preflight.
@@ -2806,15 +2789,6 @@ errors:
       missing or carries an invalid corpus attribute.
     error_financial_transactions_transaction: A transaction-catalogue error occurred.
     error_financial_usage_ratios_usage_ratio: A usage-ratio error occurred.
-    error_financial_vat: A VAT calculation error occurred.
-    error_financial_vat_catalogue: The VAT catalogue could not be loaded, resolved
-      or validated.
-    error_financial_vat_category_not_found: The requested VAT category was not found
-      in the catalogue.
-    error_financial_vat_classification: The VAT could not be classified deterministically.
-    error_financial_vat_rate_not_found: No VAT rate was found for the requested member
-      state and kind.
-    error_financial_vat_rate_overlap: Two VAT rates share an effective-date window.
     error_fixture_provisioning: The test fixtures could not be provisioned.
     error_invoice_link_inconsistency: The link left the invoice and transaction catalogues
       out of sync. Reconcile both catalogues manually.
@@ -2912,17 +2886,22 @@ errors:
     error_transaction_validation: A transaction field value is not valid.
     error_usage_ratios_validation: A usage-ratio profile violates its domain invariants.
     error_user_profile: A user-profile error occurred.
-    error_vat_prorrata: An error occurred in the IVA prorrata calculation.
-    error_vat_prorrata_input: The IVA prorrata inputs violate their invariants.
-    error_vat_prorrata_sector: The sectoral-separation inputs for the IVA prorrata
-      are inconsistent.
-    error_vat_validation: A VAT field value is not valid.
     error_wizard: A wizard error occurred.
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    error_financial_iva_rate_not_found: 'No IVA rate was found for the requested member state and kind.'
+    error_financial_iva_rate_overlap: 'Two IVA rates share an effective-date window.'
+    error_financial_iva: 'A IVA calculation error occurred.'
+    error_financial_iva_catalogue: 'The IVA catalogue could not be loaded, resolved or validated.'
+    error_financial_iva_category_not_found: 'The requested IVA category was not found in the catalogue.'
+    error_financial_iva_classification: 'The IVA could not be classified deterministically.'
+    error_iva_prorrata: 'An error occurred in the IVA prorrata calculation.'
+    error_iva_prorrata_input: 'The IVA prorrata inputs violate their invariants.'
+    error_iva_prorrata_sector: 'The sectoral-separation inputs for the IVA prorrata are inconsistent.'
+    error_iva_validation: 'A IVA field value is not valid.'
   fail:
-    census_sync: The Modelo 036 census sync failed.
+    censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
     declaration_parse: The filed declaration export could not be parsed for reconciliation.
     exchange_rate_provider: The exchange-rate provider did not respond.
@@ -2978,7 +2957,7 @@ errors:
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
     fail_secure_storage: A secure-storage error occurred.
-    fail_sede_census_parse: A value on the AEAT Sede census page could not be parsed.
+    fail_sede_censo_parse: A value on the AEAT Sede censo page could not be parsed.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
     fail_sede_parse: The captured AEAT Sede page could not be parsed.
@@ -3161,11 +3140,11 @@ errors:
       authentication session.
     bootstrap_already_complete: A profile already exists; first-run setup runs only
       once. Use `aeat config profile switch NAME` to change profile.
-    census_apply_conflict: The census cannot be applied because there is in-flight
+    censo_apply_conflict: The censo cannot be applied because there is in-flight
       work on a dependent unit. Resolve the pending state first.
-    census_field_validation: The AEAT census returned a value the schema cannot accept.
+    censo_field_validation: The AEAT censo returned a value the schema cannot accept.
       Review the field named with your adviser.
-    census_not_available: The AEAT returned no readable census. You may not be registered
+    censo_not_available: The AEAT returned no readable censo. You may not be registered
       for IAE, or your certificate may not be registered against your NIF.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
@@ -3173,9 +3152,9 @@ errors:
       be requested without a prior registration.
     modelo_036_terminal_state: The Modelo 036 record is already deregistered and accepts
       no further operations.
-    modelo_census_stale: 'The operation is refused because you applied a new census
+    modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
-      it against the current census.'
+      it against the current censo.'
     modelo_export_cross_bucket: The addressed revision belongs to a bucket other than
       the active profile's. Export only operates within the active profile bucket.
     modelo_export_no_active_bucket: Export requires an active profile. Create or select
@@ -3258,9 +3237,9 @@ errors:
       source document.
     refused_financial_provider_validation: A field in the financial document (date
       or amount) failed validation.
-    refused_financial_usage_ratios_census_mismatch: A saved home-office usage ratio
-      disagrees with the census, which is the binding legal source. Align it with
-      the census value.
+    refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
+      disagrees with the censo, which is the binding legal source. Align it with
+      the censo value.
     refused_google_profile_unbound: No active profile is bound. Select a profile or
       use --profile.
     refused_google_unsecured_mode: Google cannot be authorized in unsecured-storage
@@ -3288,7 +3267,7 @@ errors:
       identifier provided.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
-    refused_live_censo_snapshot_not_found: No Modelo 036 census snapshot exists with
+    refused_live_censo_snapshot_not_found: No Modelo 036 censo snapshot exists with
       the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
       the identifier provided.
@@ -3565,9 +3544,7 @@ topic:
       (130 vs 131).
     title: IRPF regime
   iva-regime:
-    body: VAT regime applicable to the taxpayer. General, simplified, recargo de equivalencia,
-      exempt, REAGP, or REBU. Determines the quarterly modelo 303 and the annual summary
-      390.
+    body: 'IVA regime applicable to the taxpayer. General, simplified, recargo de equivalencia, exempt, REAGP, or REBU. Determines the quarterly modelo 303 and the annual summary 390.'
     title: IVA regime
   modelos:
     body: Catalogue of AEAT tax forms (303, 130, 100, 347, 349, 111, 115, 184, etc.).
@@ -3594,8 +3571,7 @@ topic:
       basis Ley 58/2003 art-27.
     title: Late-filing surcharge
   regimens:
-    body: Set of tax regimes applicable to an autonomo. The two main axes are VAT
-      (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).
+    body: 'Set of tax regimes applicable to an autonomo. The two main axes are IVA (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).'
     title: Tax regimes
   sii-verifactu:
     body: Electronic invoice transmission systems to AEAT. SII (Suministro Inmediato
@@ -3703,7 +3679,7 @@ wizard:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
       activity-start-date:
-        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional;
+        help: Censo registration / start-of-activity date (YYYY-MM-DD). Optional;
           when set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
@@ -3854,23 +3830,17 @@ wizard:
         help: Files IRPF under objective estimation
     intro: 'Guided tax profile setup
 
-
-      This prepares the local profile the app uses for ledger work and tax-form checks.
-
-      Expect %{section_total} sections. Only %{required_total} answers are required
-      to start; the rest can be left blank when you do not know them yet.
-
-      Have your NIF/NIE/CIF, a short activity description, VAT/IRPF regime details,
-      tax residence, and family details if they apply.
-
-      After saving, check progress with `aeat config profile status`.'
+This prepares the local profile the app uses for ledger work and tax-form checks.
+Expect %{section_total} sections. Only %{required_total} answers are required to start; the rest can be left blank when you do not know them yet.
+Have your NIF/NIE/CIF, a short activity description, IVA/IRPF regime details, tax residence, and family details if they apply.
+After saving, check progress with `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         prompt: Enrolled in OSS
       iva-redeme-enrolled:
-        prompt: Registered in REDEME (monthly VAT refund register)
+        prompt: 'Registered in REDEME (monthly IVA refund register)'
       iva-regime:
         prompt: IVA regime
       iva-roi-enrolled:

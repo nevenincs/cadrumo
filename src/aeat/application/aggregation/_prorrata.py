@@ -57,7 +57,7 @@ class IvaOperationKind(StrEnum):
     """Routing of a single IVA operation into the prorrata pools.
 
     * ``GRANTS_DEDUCTION`` — the operation grants the right to deduct
-      input VAT. Sales bearing IVA at any rate (general, reduced, super-
+      input IVA. Sales bearing IVA at any rate (general, reduced, super-
       reduced, zero), intra-EU supplies of goods to taxable persons,
       services to EU B2B counterparties, and exports outside the EU all
       fall here. The base amount lands in
@@ -95,7 +95,7 @@ class IvaOperation(BaseModel):
     Source records (collectible invoices, ledger transactions, or
     explicit AEAT pre-fill amounts) are reduced to this record before
     aggregation. Each record carries its own classification source
-    (a free-form short tag such as ``"vat-classify:R10-ic-supply"`` or
+    (a free-form short tag such as ``"iva-classify:R10-ic-supply"`` or
     ``"liva-art-20-rental"``) so the aggregation's source trace stays
     legible in the calculation revision.
     """

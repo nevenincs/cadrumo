@@ -35,14 +35,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
-from .....core.time._utc import _validate_utc_aware
+from .....core.time._utc import validate_utc_aware
 from .._namespace_registry import SECRET_RECORD_SCHEMA_VERSION
 from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
 from ..crypto._crypto import KEY_SIZE, derive_key
@@ -103,7 +103,7 @@ class SecretRecord(BaseModel):
         if value is None:
             return None
         try:
-            return _validate_utc_aware(value)
+            return validate_utc_aware(value)
         except CoreValidationError as exc:
             raise StorageValidationError(str(exc)) from exc
 
@@ -255,7 +255,7 @@ class SecretStore:
         """Wrap ``record`` in a versioned, classified envelope."""
         return Envelope[SecretRecord](
             schema_version=SECRET_RECORD_SCHEMA_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=record.classification,
             payload=record,
         )
@@ -454,7 +454,7 @@ class SecretStore:
                 value=new_value,
                 classification=existing.classification,
                 metadata=existing.metadata,
-                created_at=_now(),
+                created_at=now(),
                 expires_at=expires_at,
             )
             return self._put_locked(rotated, overwrite=True)

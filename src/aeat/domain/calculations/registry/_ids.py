@@ -10,6 +10,10 @@ from pydantic import Field
 _MODELO_RE = r"^\d{3}$"
 _REF_RE = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
 _CASILLA_RE = r"^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+# AEAT-canonical XML-dictionary field IDs (e.g. DPNIF_D, IDDeclarante)
+# are uppercase + underscore. Kept separate from _REF_RE so the
+# lowercase-only constraint on internal registry refs is preserved.
+_EXPORT_FIELD_RE = r"^[A-Za-z0-9][A-Za-z0-9._:_-]*$"
 
 type ModeloId = Annotated[str, Field(pattern=_MODELO_RE)]
 type RevisionId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
@@ -31,7 +35,7 @@ type ConstructId = Annotated[str, Field(min_length=1, max_length=128, pattern=_R
 type DependencyClassificationId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ExportLayoutId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type RecordId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
-type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=_EXPORT_FIELD_RE)]
 type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 

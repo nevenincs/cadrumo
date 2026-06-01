@@ -224,7 +224,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
     assert reference.reference.kind is ProrrataKind.PROVISIONAL
     assert reference.reference.regime is ProrrataRegime.GENERAL
     assert reference.base_amount == Decimal("200.00")
-    assert reference.input_vat_amount == Decimal("42.00")
+    assert reference.input_iva_amount == Decimal("42.00")
     assert result.observations[0].iva_amount == Decimal("42.00")
 
 
@@ -246,7 +246,7 @@ def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_re
     assert result.issues == ()
     assert result.prorrata_references[0].reference.sector_id == "sector-retail"
     assert result.prorrata_references[0].base_amount == Decimal("50.0000")
-    assert result.prorrata_references[0].input_vat_amount == Decimal("10.5000")
+    assert result.prorrata_references[0].input_iva_amount == Decimal("10.5000")
 
 
 def test_invalid_prorrata_reference_is_reported_without_dropping_iva_observation() -> None:
@@ -263,7 +263,7 @@ def test_invalid_prorrata_reference_is_reported_without_dropping_iva_observation
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE
 
 
-def test_prorrata_reference_on_output_vat_row_is_reported_but_output_observation_survives() -> None:
+def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation_survives() -> None:
     transaction = _transaction(
         "row-output-prorrata",
         amount=Decimal("121.00"),
@@ -400,7 +400,7 @@ def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> N
     ]
 
 
-def test_dated_vat_registry_gap_is_reported_as_unsupported_rate() -> None:
+def test_dated_iva_registry_gap_is_reported_as_unsupported_rate() -> None:
     transaction = _transaction(
         "row-pre-registry",
         booked_date=date(2023, 4, 5),
@@ -417,7 +417,7 @@ def test_dated_vat_registry_gap_is_reported_as_unsupported_rate() -> None:
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
 
 
-def test_zero_and_super_reduced_rates_project_to_canonical_vat_categories() -> None:
+def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> None:
     zero = _transaction("row-zero", taxable_base=Decimal("100.00"), iva_rate=Decimal("0"), iva_amount=Decimal("0"))
     super_reduced = _transaction(
         "row-super",

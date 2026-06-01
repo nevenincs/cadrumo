@@ -76,7 +76,7 @@ class AeatSedePaths(_Frozen):
     notifications_summary: str
     notifications_query: str
     certificate_selector: str
-    census_g313_launcher: str
+    censo_g313_launcher: str
     expediente_detail_template: str
     irpf_expediente_detail_year_prefix: str
     irpf_expediente_detail_year_suffix: str

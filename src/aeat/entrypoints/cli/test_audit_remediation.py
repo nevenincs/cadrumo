@@ -57,7 +57,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
     ``bindings list`` composes ``--year`` and ``--period`` separately,
     so its ``--period`` argument is a bare registry token (``0A``,
     ``1T``-``4T``, ``01``-``12``) — never a composed ``YYYY``-prefixed
-    string. The help text must show those bare tokens and the census
+    string. The help text must show those bare tokens and the censo
     tokens, the same guidance every modelo period surface gives.
     """
 
@@ -72,7 +72,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
         assert "0A" in flat, surface
         assert "1T-4T" in flat, surface
         assert "01-12" in flat, surface
-        # The census tokens are named (the connector word is locale-
+        # The censo tokens are named (the connector word is locale-
         # dependent, so each token is checked on its own).
         assert "alta" in flat and "modificacion" in flat and "baja" in flat, surface
         # The composed YYYY-prefixed forms are no longer advertised on
@@ -149,8 +149,8 @@ class TestOverviewCalendarRequiresProfileCreate:
 
         assert result.exit_code == 0, _combined_output(result)
         _assert_no_internal_leak(_combined_output(result))
-        payload = json.loads(result.output)
-        modelos = {entry["modelo"] for entry in payload["entries"]}
+        envelope = json.loads(result.output)
+        modelos = {entry["modelo"] for entry in envelope["result"]["entries"]}
         assert "303" in modelos
 
 
@@ -190,14 +190,14 @@ def test_typer_help_sources_are_direct_translations() -> None:
     for module in Path("src/aeat").rglob("*.py"):
         if module.name.startswith(("test_", "_test_")):
             continue
-        # The `aeat.diagnostics` package is an engineer-only internal
-        # tool exposed through its own `python -m aeat.diagnostics`
-        # entrypoint, not the operator-facing `aeat` CLI. Its help
-        # text is intentionally English-only and outside the operator
-        # localization contract this test enforces. The exclusion is
-        # anchored to exactly `src/aeat/diagnostics/` so an unrelated
-        # nested `diagnostics/` directory elsewhere is still scanned.
-        if module.parts[:3] == ("src", "aeat", "diagnostics"):
+        # The `aeat.diagnostics` and `aeat.apidocs` packages are
+        # engineer-only internal tools exposed through their own
+        # `python -m` entrypoints, not the operator-facing `aeat` CLI.
+        # Their help text is intentionally English-only and outside
+        # the operator localization contract this test enforces. The
+        # exclusion is anchored to the exact package directory so an
+        # unrelated nested directory elsewhere is still scanned.
+        if module.parts[:3] in {("src", "aeat", "diagnostics"), ("src", "aeat", "apidocs")}:
             continue
         tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
         failures.extend(_typer_help_violations(tree, module=module))

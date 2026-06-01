@@ -25,7 +25,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from .....core.time._utc import _validate_utc_aware
+from .....core.time._utc import validate_utc_aware
 from ._errors import BucketValidationError
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -154,13 +154,13 @@ class BucketManifest(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _validate_utc_aware(value)
+        return validate_utc_aware(value)
 
     @field_validator("last_unlocked_at")
     @classmethod
     def _check_last_unlocked_at(cls, value: datetime | None) -> datetime | None:
         if value is None:
             return None
-        return _validate_utc_aware(value)
+        return validate_utc_aware(value)
 
 __all__ = ["BucketKeySchedule", "BucketLifecycleStatus", "BucketManifest", "ManifestKdfParams"]

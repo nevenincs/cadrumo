@@ -2,7 +2,7 @@
 
 A registry binding with ``source = "profile"`` carries a value the
 operator already entered onto their user profile (tax-residence CCAA,
-census status, declaration type, ...). Without an explicit resolution
+censo status, declaration type, ...). Without an explicit resolution
 step the calculation engine never sees those facts: the operator would
 have to re-type, via ``--binding KEY=VALUE``, data the profile already
 holds, and a formula that consumes an unsupplied profile binding fails
@@ -296,12 +296,14 @@ def resolve_profile_sourced_bindings(
         if binding_id in caller_binding_ids:
             continue
         value = _resolve_one(binding, fact_index)
-        if value is None:
-            continue
         if binding_id in formula_date_consumed:
             # Date-channel bindings carry date-typed facts (e.g. birth_date)
             # consumed by the age_at_year_end op.  They must not be projected
-            # through the Decimal or enum channels.
+            # through the Decimal or enum channels.  A missing date fact is
+            # an unrecoverable input — no defensible zero-default for a
+            # date — so the engine surfaces it as a missing-binding refusal.
+            if value is None:
+                continue
             if not isinstance(value, date):
                 raise ProfileBindingResolutionError(
                     f"profile fact for date-channel binding {binding_id!r} must be a date, "
@@ -313,6 +315,11 @@ def resolve_profile_sourced_bindings(
             # enum dispatch keys are string category codes, not yes/no flags.
             # A bool here signals a mis-wired registry binding; refuse early
             # rather than letting the engine silently mismatch the dispatch table.
+            # A missing enum fact is unrecoverable — categorical dispatch has
+            # no defensible default — so the engine raises a missing-binding
+            # refusal downstream.
+            if value is None:
+                continue
             if isinstance(value, bool):
                 raise ProfileBindingResolutionError(
                     f"profile fact for enum-channel binding {binding_id!r} resolved to a boolean "
@@ -320,7 +327,19 @@ def resolve_profile_sourced_bindings(
                 )
             enum_values[binding_id] = str(value)
         else:
-            decimal_values[binding_id] = _decimal_value(binding_id, value)
+            # Decimal-channel profile-sourced bindings represent deduction
+            # levers, expense totals, and similar optional-amount facts. A
+            # missing profile fact means the operator did not claim the
+            # lever — semantically equivalent to a zero amount. Default to
+            # ``Decimal("0")`` so the engine sums in zero rather than refusing
+            # the calculation with ``binding ... has no supplied value``.
+            # The registry binding has no explicit ``default`` axis yet
+            # (see ``DataBindingDefinition`` in ``_schema.py``); this
+            # resolver-side policy stands in until the registry adds one.
+            if value is None:
+                decimal_values[binding_id] = Decimal("0")
+            else:
+                decimal_values[binding_id] = _decimal_value(binding_id, value)
 
     sourced = tuple(sorted(set(decimal_values) | set(enum_values) | set(date_values)))
     return ProfileSourcedBindingResult(

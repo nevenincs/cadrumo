@@ -1,8 +1,8 @@
-"""Narrow exceptions for the 036 census-sync application service.
+"""Narrow exceptions for the 036 censo-sync application service.
 
-Every error here surfaces through the ``aeat config profile census``
+Every error here surfaces through the ``aeat config profile censo``
 verb tree as a typed refusal, covering authentication failures, schema
-violations, and apply-path conflicts that the census-sync service can
+violations, and apply-path conflicts that the censo-sync service can
 encounter against the AEAT Mis Datos Censales endpoint.
 """
 
@@ -12,16 +12,16 @@ from ...core.errors import AeatError
 
 
 class CensoSyncError(AeatError):
-    """Base for every 036 census-sync application failure."""
+    """Base for every 036 censo-sync application failure."""
 
 
 class CensoNotAvailableError(CensoSyncError):
-    """Raised when the sede G313 endpoint returns no parseable census.
+    """Raised when the sede G313 endpoint returns no parseable censo.
 
     Typical cause: the operator is not yet enrolled in IAE (no alta
     declared), or G313 authentication failed at the AEAT side (e.g.
     the certificate is valid but not registered against the operator's
-    NIF in AEAT's census). The CLI surfaces this with a recovery
+    NIF in AEAT's censo). The CLI surfaces this with a recovery
     hint pointing at ``aeat config profile init`` or
     ``aeat config auth configure``.
     """
@@ -46,7 +46,7 @@ class CensoApplyConflictError(CensoSyncError):
     apply path refuses cleanly so the operator can resolve the
     in-flight state first; partial cross-validation that leaves some
     dependents stamped and others unstamped would silently corrupt
-    the legal-source-of-truth invariant the census lifecycle enforces.
+    the legal-source-of-truth invariant the censo lifecycle enforces.
     """
 
 

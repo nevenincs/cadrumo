@@ -37,7 +37,7 @@ from . import (  # noqa: F401  (side-effect import)
     _review_payloads,
     _root_payloads,
 )
-from ._config import _google_payloads, _profile_census_payloads  # noqa: F401
+from ._config import _google_payloads, _profile_censo_payloads  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

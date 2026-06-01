@@ -416,11 +416,11 @@ def test_taxable_base_amount_populated_when_set() -> None:
     """RentaIncomeObservation carries taxable_base_amount when transaction has taxable_base.
 
     The taxable_base_sum fact path lets the registry resolver sum the
-    VAT-exclusive base imponible rather than gross_amount.  When a transaction
+    IVA-exclusive base imponible rather than gross_amount.  When a transaction
     carries taxable_base, the observation's taxable_base_amount must equal it.
     """
     # Professional invoice: 1000 EUR net + 210 EUR IVA = 1210 EUR gross.
-    # The IRPF base (taxable_base) is the VAT-exclusive 1000 EUR.
+    # The IRPF base (taxable_base) is the IVA-exclusive 1000 EUR.
     gross = Decimal("1210.00")
     taxable = Decimal("1000.00")
     tx = _actividad_transaction(

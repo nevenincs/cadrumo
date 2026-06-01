@@ -1,96 +1,94 @@
-# Getting started with aeat
+# Get started with aeat
 
-This guide takes you from a fresh checkout to a validated, exported modelo draft - a file you upload to the Agencia Estatal de Administración Tributaria (AEAT) yourself. It assumes you have Python 3.13 or newer and the [uv](https://docs.astral.sh/uv/) package manager installed.
+This guide walks you through your first filing with `aeat`. You'll install the tool and set up a profile. Then you'll build a draft of a modelo (a Spanish tax form), verify it, and export a file. You upload that file to the Agencia Estatal de Administración Tributaria (AEAT) yourself.
 
-By the end, you'll have created an operator profile, built a modelo work unit, calculated and verified a draft, and exported it to disk.
+## Before you begin
 
-## Install and verify
+You need:
 
-Install the project's dependencies:
+- Python 3.13 or newer
+- The [uv](https://docs.astral.sh/uv/) package manager
+
+Get the source and enter the directory:
+
+```bash
+git clone https://github.com/wgergely/aeat
+cd aeat
+```
+
+## Install aeat
+
+Install the tool, then confirm it runs:
 
 ```bash
 uv sync
-```
-
-Confirm the CLI is available and responds:
-
-```bash
 aeat --version
-aeat --help
 ```
 
-`aeat --version` prints a single line, such as `aeat 0.1.0`. `aeat --help` lists the two root command families, `config` and `app`. Each command and subcommand carries its own `--help`.
+The version command prints a single line, such as `aeat 0.1.0`. To list the available commands, run `aeat --help`.
 
-## Configure your profile
+## Create your profile
 
-`aeat` runs the tax workflow over an active operator profile. Create one:
+`aeat` keeps your tax identity and settings in a profile. Create your first one:
 
 ```bash
 aeat config profile create
 ```
 
-The command guides you through setup, including your tax identity and region. When it finishes, the profile is active. Confirm it and list any others:
+The command asks for your details, including your tax identity and region. When it finishes, your profile is active.
+
+## Build your first filing
+
+A filing moves through four steps: create, calculate, verify, and export. This example builds Modelo 130, the quarterly income-tax instalment, for the first quarter of 2024. The `1T` period code means the first quarter. Along the way, you'll copy two ids the tool prints: a work-unit id and a calculation-revision id.
+
+First, find the revision for the form. A revision is the rule version a modelo follows. List the revisions the modelo offers:
 
 ```bash
-aeat config profile list
+aeat app modelo describe --modelo 130
 ```
 
-To activate a different profile later, switch to it by label:
+The output lists the available revisions, each with an identifier such as `2009-y-siguientes`. Copy the identifier that covers your filing period, then use it wherever the next command shows `<revision>`.
 
-```bash
-aeat config profile switch <label>
-```
-
-Each profile is stored in its own bucket directory under the local storage root (by default, `var/storage/buckets/`), with an encrypted database for its records. The [architecture guide](architecture.md) explains what a profile holds.
-
-## Run your first workflow
-
-A modelo filing moves through four steps: create a work unit, calculate a draft, verify it, and export it.
-
-1. Create a work unit for the modelo, year, and period you're filing:
+1. Create the work unit, the draft that tracks one modelo for one period:
 
    ```bash
-   aeat app modelo work create --modelo 130 --year 2024 --period 1T --revision <revision-id>
+   aeat app modelo work create --modelo 130 --year 2024 --period 1T --revision <revision>
    ```
 
-   The command returns a work-unit id. Use `aeat app modelo list` to find the available modelos and `aeat app registry inspect` to find the registry revision for your filing.
+   The command prints a work-unit id. Copy it, then use it wherever the next steps show `<work-unit-id>`.
 
-2. Calculate the draft. This produces a calculation revision with the computed casilla figures:
+2. Calculate the figures. Calculating fills in the casillas, the numbered fields on the form:
 
    ```bash
    aeat app modelo work calculate <work-unit-id>
    ```
 
-   The command returns a calculation-revision id. Supply input figures with repeated `--casilla <number>=<value>` options where the modelo needs them.
+   The command prints a calculation-revision id. Copy it for the next step. If it reports missing figures, the note at the end of this guide explains how to supply them.
 
-3. Verify the draft against the regulatory schema:
+3. Verify the calculation against the tax rules:
 
    ```bash
    aeat app modelo work verify <calculation-revision-id>
    ```
 
-   A passing verification moves the revision to a verified-complete state and prints a structured report.
+   `aeat` prints a report and marks the calculation complete.
 
-4. Inspect what you've built at any point:
+4. Export the file:
 
    ```bash
-   aeat app modelo work list
-   aeat app modelo work status <work-unit-id>
+   aeat app modelo export <work-unit-id> --output ./modelo-130-2024-1T.xml
    ```
 
-## Find your exported artifacts
+   `aeat` writes the file to the path you give in `--output`, then prints its location, size, and a content hash.
 
-Export the verified revision to a local AEAT-compatible file:
+You now have an exported filing. To list your work units at any point, run `aeat app modelo work list`.
 
-```bash
-aeat app modelo export <work-unit-id> --output ./M130-2024-1T.xml
-```
+## Upload it yourself
 
-The file lands at the path you name in `--output`. The command prints the output path, the byte size, and the file's SHA-256 hash so you can confirm what it wrote. The export runs locally and never contacts AEAT.
-
-This is where `aeat` stops. Uploading the exported file to AEAT is a separate step you perform yourself, through the official channel. `aeat` has no command that files on your behalf.
+`aeat` stops at the exported file. Upload that file to AEAT yourself, through its electronic filing portal (the sede electrónica).
 
 ## Next steps
 
-- [Architecture](architecture.md) - the layering behind these commands and the registry authority flow.
-- CLI reference - the full command tree, generated from the commands themselves.
+The [architecture guide](architecture.md) explains how `aeat` is structured.
+
+> **A note on figures.** Some modelos need figures you enter by hand. If a calculation reports missing inputs, add them with repeated `--casilla <number>=<value>` options on the `work calculate` command.

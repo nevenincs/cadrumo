@@ -21,7 +21,7 @@ from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
-from ...core.time import _now as _utcnow
+from ...core.time import now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
     ObligationStatus,

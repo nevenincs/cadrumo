@@ -38,7 +38,6 @@ data (calendars are git-tracked, BOE-cited TOML).
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Iterable
 from datetime import date, timedelta
 from enum import StrEnum
@@ -48,6 +47,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
+from ...core._toml import read_toml
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 
@@ -217,13 +217,7 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
         raise DeadlineValidationError(
             f"holiday calendar for year {year} not registered (expected file: {path.name})"
         )
-    try:
-        with path.open("rb") as fp:
-            raw = tomllib.load(fp)
-    except OSError as exc:
-        raise DeadlineValidationError(f"{path}: cannot read holiday calendar: {exc}") from exc
-    except tomllib.TOMLDecodeError as exc:
-        raise DeadlineValidationError(f"{path}: invalid holiday calendar TOML: {exc}") from exc
+    raw = read_toml(path, error_factory=DeadlineValidationError)
 
     declared_year = raw.get("year")
     if declared_year != year:

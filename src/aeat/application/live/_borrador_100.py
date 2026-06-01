@@ -19,7 +19,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
@@ -229,7 +229,7 @@ class Borrador100SnapshotRepository:
             )
         envelope = Envelope[Borrador100Snapshot](
             schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )

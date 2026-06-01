@@ -36,7 +36,7 @@ class QuarantineNamespacePayload(OutputSchema):
 class WorkflowFingerprintPayload(OutputSchema):
     """Serialised workflow-state fingerprint nested in repair.reset_state."""
 
-    schema_version: str | None = None
+    schema_version: int | None = None
     written_at: str | None = None
     byte_length: int | None = None
     reason_class: str

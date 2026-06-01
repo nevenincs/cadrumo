@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from aeat import __version__
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
@@ -443,7 +443,7 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
             html_fragment="",
             detected_markers=("healthy",),
         ),
-        observed_at=_now(),
+        observed_at=now(),
     )
 
 def render_config_repair_text(report: ConfigRepairReport) -> str:

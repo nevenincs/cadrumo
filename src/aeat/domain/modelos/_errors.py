@@ -34,13 +34,13 @@ class Modelo036TerminalStateError(Modelo036LifecycleError):
 
 
 class CensoStaleRefusedError(ModeloError):
-    """Raised when an operation is refused because the census was updated after the target was produced.
+    """Raised when an operation is refused because the censo was updated after the target was produced.
 
     Applies to calculate, verify, file, build_draft, approve_draft, and export_draft.
     AEAT is the binding legal source of truth: any work unit, calculation revision,
-    filing draft, or filing record that referenced census facts now superseded by a
-    ``aeat config profile census apply`` must be refused until the operator re-runs
-    the governing calculation against the fresh census. The fix is operator-driven:
+    filing draft, or filing record that referenced censo facts now superseded by a
+    ``aeat config profile censo apply`` must be refused until the operator re-runs
+    the governing calculation against the fresh censo. The fix is operator-driven:
     re-run ``aeat app modelo work calculate`` (or the relevant verb) against the
     affected work unit.
     """

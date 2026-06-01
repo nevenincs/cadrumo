@@ -9,7 +9,7 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
@@ -366,7 +366,7 @@ def ledger_add(
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
     validated_category_id = _validate_category_id(category_id)
-    resolved_business_pct = _resolve_business_pct_with_census(
+    resolved_business_pct = _resolve_business_pct_with_censo(
         bucket_id=transaction_repository.bucket_id,
         active_profile=resolve_active_bucket_id(),
         category_id=validated_category_id,
@@ -1984,7 +1984,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
 
     ``active_profile_id`` is ``None`` when the workflow has a bucket
     selected but no active profile (e.g. mid-init); ratios mutations
-    are still allowed in that state but census-override warnings stay
+    are still allowed in that state but censo-override warnings stay
     silent because there is no profile to look up snapshots against.
     """
     from ...application.workflow._errors import NoActiveProfileError
@@ -2020,7 +2020,7 @@ def _emit_ratios_event(
         derive_bucket_event_id,
     )
 
-    occurred_at = _now()
+    occurred_at = now()
     payload = {
         "category": category,
         "prior": "" if prior is None else str(prior),
@@ -2098,23 +2098,23 @@ def _resolve_source_jurisdiction(
     return "ES"
 
 
-def _resolve_business_pct_with_census(
+def _resolve_business_pct_with_censo(
     *,
     bucket_id: str,
     active_profile: str | None,
     category_id: str | None,
     operator_supplied,
 ):
-    """Stamp the census-derived business_pct when the operator omits one.
+    """Stamp the censo-derived business_pct when the operator omits one.
 
     Operator-supplied values always win — the helper only fills the
     gap when ``business_pct`` is not given AND the transaction targets
-    a HOME_OFFICE category that the census actually governs. Returns
+    a HOME_OFFICE category that the censo actually governs. Returns
     the operator-supplied value unchanged on every other path, so non-
     HOME_OFFICE transactions and explicit-override flows are not
     perturbed.
     """
-    from ...application.ledger._ratios import census_business_pct_for
+    from ...application.ledger._ratios import censo_business_pct_for
     from ...application.user_profile import CensoSyncService
     from ...domain.categories import SpendingCategory
 
@@ -2130,18 +2130,18 @@ def _resolve_business_pct_with_census(
     raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
     if raw_afectacion is None:
         return operator_supplied
-    return census_business_pct_for(category_enum, raw_afectacion)
+    return censo_business_pct_for(category_enum, raw_afectacion)
 
 
-def _emit_ratios_census_override_warning(
+def _emit_ratios_censo_override_warning(
     *,
     bucket_id: str,
     warning,
 ) -> None:
-    """Append LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING to the bucket catalogue.
+    """Append LEDGER_RATIOS_CENSO_OVERRIDE_WARNING to the bucket catalogue.
 
     Fires when a HOME_OFFICE per-category override diverges from the
-    legally-binding census-derived value (LIRPF Art. 30.2 rule 5 for
+    legally-binding censo-derived value (LIRPF Art. 30.2 rule 5 for
     suministros; raw afectación for ownership). The set operation
     itself is not refused — the operator may legitimately model a
     planned change — but downstream auditors get a typed record of
@@ -2155,17 +2155,17 @@ def _emit_ratios_census_override_warning(
         derive_bucket_event_id,
     )
 
-    occurred_at = _now()
+    occurred_at = now()
     payload = {
         "category": warning.category.value,
         "override_ratio": str(warning.override_ratio),
-        "census_derived_ratio": str(warning.census_derived_ratio),
+        "censo_derived_ratio": str(warning.censo_derived_ratio),
         "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
     }
     actor = "operator"
     event_id = derive_bucket_event_id(
         bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING,
+        event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
         occurred_at=occurred_at,
         actor=actor,
         object_type=BucketEventObjectType.PROFILE,
@@ -2180,7 +2180,7 @@ def _emit_ratios_census_override_warning(
             BucketEvent(
                 event_id=event_id,
                 bucket_id=bucket_id,
-                event_type=BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING,
+                event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
                 occurred_at=occurred_at,
                 actor=actor,
                 object_type=BucketEventObjectType.PROFILE,
@@ -2214,7 +2214,7 @@ def ratios_list(ctx: typer.Context) -> None:
     from ...domain.usage_ratios import (
         CensoRatioMismatchError,
         load_usage_ratios,
-        load_usage_ratios_with_census_guard,
+        load_usage_ratios_with_censo_guard,
     )
 
     bucket_id, profile_id = _ratios_bucket_and_profile()
@@ -2223,27 +2223,27 @@ def ratios_list(ctx: typer.Context) -> None:
         raw_afectacion = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
             profile_id=profile_id,
         )
-    census_mismatch: str | None = None
+    censo_mismatch: str | None = None
     try:
-        profile = load_usage_ratios_with_census_guard(
+        profile = load_usage_ratios_with_censo_guard(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion,
         )
     except CensoRatioMismatchError as exc:
         # The operator should still see what's persisted; we surface the
         # divergence as a typed warning row but never hide the rows.
-        census_mismatch = str(exc)
+        censo_mismatch = str(exc)
         profile = load_usage_ratios(bucket_id=bucket_id)
     rows = [{"category": category.value, "ratio": str(ratio)} for category, ratio in profile.ratios.items()]
     payload = {
         "bucket_id": bucket_id,
         "rows": rows,
         "count": len(rows),
-        "census_mismatch": census_mismatch,
+        "censo_mismatch": censo_mismatch,
     }
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    if census_mismatch is not None:
-        lines.append(f"census_mismatch\t{census_mismatch}")
+    if censo_mismatch is not None:
+        lines.append(f"censo_mismatch\t{censo_mismatch}")
     lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
     from ._ledger_payloads import RatiosListResult
 
@@ -2267,7 +2267,7 @@ def ratios_set(
         ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")
     ),
 ) -> None:
-    from ...application.ledger._ratios import census_override_warning
+    from ...application.ledger._ratios import censo_override_warning
     from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
@@ -2289,7 +2289,7 @@ def ratios_set(
         sync_service = CensoSyncService(bucket_id=bucket_id)
         raw_afectacion = sync_service.bound_raw_afectacion_ratio(profile_id=profile_id)
         warning = (
-            census_override_warning(
+            censo_override_warning(
                 category=category_enum,
                 override_ratio=parsed,
                 raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
@@ -2298,7 +2298,7 @@ def ratios_set(
             else None
         )
         if warning is not None:
-            _emit_ratios_census_override_warning(bucket_id=bucket_id, warning=warning)
+            _emit_ratios_censo_override_warning(bucket_id=bucket_id, warning=warning)
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
     from ._ledger_payloads import RatiosSetResult
 
@@ -2492,12 +2492,12 @@ def payable_invoice_add(
             default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
         ),
     ),
-    eu_vat_id: str | None = typer.Option(
+    eu_iva_id: str | None = typer.Option(
         None,
-        "--eu-vat-id",
+        "--eu-iva-id",
         help=tr(
-            "cli.app.ledger.payable_invoice.eu_vat_id_help",
-            default="Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations.",
+            "cli.app.ledger.payable_invoice.eu_iva_id_help",
+            default="Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations.",
         ),
     ),
     operation_type: str | None = typer.Option(
@@ -2515,13 +2515,13 @@ def payable_invoice_add(
     from ...application.ledger._business_operation_invoice import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
-        validate_eu_vat_id,
+        validate_eu_iva_id,
     )
 
-    validated_vat_id: str | None = None
-    if eu_vat_id is not None:
+    validated_iva_id: str | None = None
+    if eu_iva_id is not None:
         try:
-            validated_vat_id = validate_eu_vat_id(eu_vat_id)
+            validated_iva_id = validate_eu_iva_id(eu_iva_id)
         except BusinessOperationInvoiceInputError as exc:
             raise _bad(str(exc)) from exc
     parsed_operation_type: IntracomOperationType | None = None
@@ -2551,7 +2551,7 @@ def payable_invoice_add(
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
         country_code=country_code,
-        eu_vat_id=validated_vat_id,
+        eu_iva_id=validated_iva_id,
         operation_type=parsed_operation_type,
     )
     payload = _business_invoice_payload(result.record)
@@ -2739,12 +2739,12 @@ def collectible_invoice_add(
             default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
         ),
     ),
-    eu_vat_id: str | None = typer.Option(
+    eu_iva_id: str | None = typer.Option(
         None,
-        "--eu-vat-id",
+        "--eu-iva-id",
         help=tr(
-            "cli.app.ledger.collectible_invoice.eu_vat_id_help",
-            default="Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations.",
+            "cli.app.ledger.collectible_invoice.eu_iva_id_help",
+            default="Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations.",
         ),
     ),
     operation_type: str | None = typer.Option(
@@ -2762,13 +2762,13 @@ def collectible_invoice_add(
     from ...application.ledger._business_operation_invoice import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
-        validate_eu_vat_id,
+        validate_eu_iva_id,
     )
 
-    validated_vat_id: str | None = None
-    if eu_vat_id is not None:
+    validated_iva_id: str | None = None
+    if eu_iva_id is not None:
         try:
-            validated_vat_id = validate_eu_vat_id(eu_vat_id)
+            validated_iva_id = validate_eu_iva_id(eu_iva_id)
         except BusinessOperationInvoiceInputError as exc:
             raise _bad(str(exc)) from exc
     parsed_operation_type: IntracomOperationType | None = None
@@ -2798,7 +2798,7 @@ def collectible_invoice_add(
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
         country_code=country_code,
-        eu_vat_id=validated_vat_id,
+        eu_iva_id=validated_iva_id,
         operation_type=parsed_operation_type,
     )
     payload = _business_invoice_payload(result.record)
@@ -3107,10 +3107,10 @@ def inventory_movement_add(
         help=tr("cli.app.ledger.inventory.unit_cost_help", default="Unit cost (purchase movements)."),
     ),
     taxable_base: str | None = typer.Option(
-        None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for VAT).")
+        None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA).")
     ),
-    vat_rate: str = typer.Option(
-        "21.00", "--vat-rate", help=tr("cli.app.ledger.inventory.vat_rate_help", default="VAT rate in percent.")
+    iva_rate: str = typer.Option(
+        "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent.")
     ),
 ) -> None:
     from ...application.inventory import InventoryMovementCommand
@@ -3135,7 +3135,7 @@ def inventory_movement_add(
         quantity=_parse_required_decimal(quantity, label="quantity"),
         unit_cost=_parse_decimal(unit_cost, label="unit-cost"),
         taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-        vat_rate=_parse_required_decimal(vat_rate, label="vat-rate"),
+        iva_rate=_parse_required_decimal(iva_rate, label="iva-rate"),
     )
     result = _inventory_service().movement_add(
         bucket_id=bucket_id,

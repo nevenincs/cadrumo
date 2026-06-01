@@ -5,7 +5,7 @@ The module exposes strict declaration parser records and the public
 values. Validated registry snapshots decide extraction coverage and
 filing usability.
 
-Public API:
+Public API::
 
     from aeat.adapters.inbound.declaracion import (
         DeclaracionObservation,

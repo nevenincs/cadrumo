@@ -17,7 +17,7 @@ from ._schema import (
     NormativeVerificationIssue,
     NormativeVerificationReport,
 )
-from .errors import NormativeError, NormativeParseError
+from ._errors import NormativeError, NormativeParseError
 
 _logger = get_logger(__name__)
 

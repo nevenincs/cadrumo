@@ -8,7 +8,7 @@ quarterly instalments.
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -16,7 +16,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M131_PAGO_FRACCIONADO_EO,
     path="/Sede/procedimientoini/G602.shtml",
-    subdomain=Subdomain.SEDE,
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,

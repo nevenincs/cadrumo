@@ -483,7 +483,7 @@ class RatiosListResult(OutputSchema):
     bucket_id: str
     rows: list[RatiosRowPayload]
     count: int
-    census_mismatch: str | None = None
+    censo_mismatch: str | None = None
 
 
 @register_schema("ledger.ratios.set")
@@ -557,7 +557,7 @@ class BusinessInvoiceRecordPayload(OutputSchema):
     total_amount: str
     notes: str = ""
     country_code: str | None = None
-    eu_vat_id: str | None = None
+    eu_iva_id: str | None = None
     operation_type: str | None = None
     created_at: str
     updated_at: str

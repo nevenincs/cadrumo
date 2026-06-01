@@ -1,4 +1,4 @@
-"""CLI surface tests for ``aeat config profile census {refresh,show,compare,apply}``.
+"""CLI surface tests for ``aeat config profile censo {refresh,show,compare,apply}``.
 
 Exercises the Typer surface end-to-end against a real seeded
 WorkflowState + the encrypted backend. Refresh is asserted to refuse
@@ -72,8 +72,8 @@ def _capture_snapshot() -> str:
         captured_at=datetime.now(UTC),
         source_url=_G313,
         censo_facts={
-            "census.establecimiento_type": "propio",
-            "census.elected_withholding_pct": "15",
+            "censo.establecimiento_type": "propio",
+            "censo.elected_withholding_pct": "15",
             "vivienda_office.total_m2": "120.00",
             "vivienda_office.office_m2": "24.00",
         },
@@ -81,8 +81,8 @@ def _capture_snapshot() -> str:
     return snapshot.snapshot_id
 
 
-def test_census_help_lists_four_verbs(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(profile_app, ["census", "--help"])
+def test_censo_help_lists_four_verbs(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(profile_app, ["censo", "--help"])
 
     assert result.exit_code == 0
     for verb in ("refresh", "show", "compare", "apply"):
@@ -104,7 +104,7 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     _seed_active_profile()
 
     with override_settings(aeat_live_tests_enabled=""):
-        result = cli_runner.invoke(profile_app, ["census", "refresh"])
+        result = cli_runner.invoke(profile_app, ["censo", "refresh"])
 
     assert result.exit_code != 0
 
@@ -112,7 +112,7 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
 def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
     _seed_active_profile()
 
-    result = cli_runner.invoke(profile_app, ["census", "show"])
+    result = cli_runner.invoke(profile_app, ["censo", "show"])
 
     assert result.exit_code != 0
     # The CLI error boundary decoration is process-global memoised by
@@ -124,14 +124,14 @@ def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
     # message is on ``result.exception``.  Accept both surfaces so the
     # assertion is order-independent.
     haystack = (result.output + " " + str(result.exception or "")).lower()
-    assert "no census snapshot" in haystack
+    assert "no censo snapshot" in haystack
 
 
 def test_show_emits_active_snapshot(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     snapshot_id = _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["census", "show"])
+    result = cli_runner.invoke(profile_app, ["censo", "show"])
 
     assert result.exit_code == 0
     assert snapshot_id in result.output
@@ -143,38 +143,38 @@ def test_compare_reports_per_field_status(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["census", "compare"])
+    result = cli_runner.invoke(profile_app, ["censo", "compare"])
 
     assert result.exit_code == 0
-    assert "census_only\tcensus.establecimiento_type" in result.output
-    assert "census_only\tvivienda_office.total_m2" in result.output
+    assert "censo_only\tcenso.establecimiento_type" in result.output
+    assert "censo_only\tvivienda_office.total_m2" in result.output
 
 
 def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["census", "apply"])
+    result = cli_runner.invoke(profile_app, ["censo", "apply"])
 
     assert result.exit_code == 0
-    assert "written\tcensus.establecimiento_type" in result.output
+    assert "written\tcenso.establecimiento_type" in result.output
     assert "written\tvivienda_office.office_m2" in result.output
 
 
 def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     _capture_snapshot()
-    cli_runner.invoke(profile_app, ["census", "apply"])
+    cli_runner.invoke(profile_app, ["censo", "apply"])
 
-    result = cli_runner.invoke(profile_app, ["census", "compare"])
+    result = cli_runner.invoke(profile_app, ["censo", "compare"])
 
     assert result.exit_code == 0
-    assert "matches\tcensus.establecimiento_type" in result.output
+    assert "matches\tcenso.establecimiento_type" in result.output
     assert "matches\tvivienda_office.total_m2" in result.output
 
 
-def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
-    """Apply MUST emit CENSUS_APPLIED so the stale-cascade walker
+def test_apply_emits_censo_applied_bucket_event(cli_runner: CliRunner) -> None:
+    """Apply MUST emit CENSO_APPLIED so the stale-cascade walker
     has a typed event to react to. The CLI test never reached the
     catalogue before this assertion landed — the emission was
     implemented but not witnessed end-to-end."""
@@ -186,7 +186,7 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     snapshot_id = _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["census", "apply"])
+    result = cli_runner.invoke(profile_app, ["censo", "apply"])
     assert result.exit_code == 0, result.output
 
     catalogue = BucketEventHistoryRepository().load()
@@ -195,11 +195,11 @@ def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.CENSUS_APPLIED
+        if event.event_type is BucketEventType.CENSO_APPLIED
         and event.object_id == active
     ]
     assert matching, (
-        f"CENSUS_APPLIED must fire after apply; "
+        f"CENSO_APPLIED must fire after apply; "
         f"saw {[e.event_type.value for e in catalogue.events.values()]}"
     )
     payload = matching[-1].payload
@@ -214,7 +214,7 @@ def test_rejected_subverb_returns_nonzero(cli_runner: CliRunner) -> None:
 
     _seed_active_profile()
 
-    result = cli_runner.invoke(profile_app, ["census", "diff"])
+    result = cli_runner.invoke(profile_app, ["censo", "diff"])
 
     assert result.exit_code != 0
 
@@ -230,7 +230,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
     _seed_active_profile()
     _capture_snapshot()
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "census", "compare"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "censo", "compare"])
     assert result.exit_code == 0, result.output
 
     raw = json.loads(result.output)
@@ -240,8 +240,8 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
     payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]
     statuses = {row["path"]: row["status"] for row in payload["rows"]}
-    assert statuses["census.establecimiento_type"] == "census_only"
-    assert statuses["vivienda_office.total_m2"] == "census_only"
+    assert statuses["censo.establecimiento_type"] == "censo_only"
+    assert statuses["vivienda_office.total_m2"] == "censo_only"
 
 
 def test_apply_emits_json_payload_with_written_paths() -> None:
@@ -256,11 +256,11 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
     _seed_active_profile()
     _capture_snapshot()
 
-    result = invoke_cached_cli(["--format", "json", "config", "profile", "census", "apply"])
+    result = invoke_cached_cli(["--format", "json", "config", "profile", "censo", "apply"])
     assert result.exit_code == 0, result.output
 
     raw = json.loads(result.output)
     payload = raw["result"] if isinstance(raw, dict) and "schema_version" in raw else raw
     assert payload["snapshot_id"]
-    assert "census.establecimiento_type" in payload["written_paths"]
+    assert "censo.establecimiento_type" in payload["written_paths"]
     assert "vivienda_office.office_m2" in payload["written_paths"]

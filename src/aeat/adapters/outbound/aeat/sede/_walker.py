@@ -22,7 +22,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.config import Settings, load_settings
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
@@ -273,7 +273,7 @@ async def capture_justificante(
             ref=ref,
             pdf_bytes=body,
             pdf_sha256=sha256,
-            captured_at=_now(),
+            captured_at=now(),
         )
 
 

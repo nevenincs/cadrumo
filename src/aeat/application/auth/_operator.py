@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings, unwrap_optional_secret
@@ -277,7 +277,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     active_bucket_id = next_state.active_profile_bucket_id()
     assert active_bucket_id is not None  # invariant: update_auth preserves the active profile
 
-    occurred_at = _now()
+    occurred_at = now()
     payload: dict[str, str] = {"provider_id": listing.id}
     if certificate_path is not None:
         payload["certificate_path"] = str(certificate_path)
@@ -700,7 +700,7 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
             expired=None,
             summary=tr("application.auth.operator.probe.no_session"),
         )
-    expired = session.is_expired(_now())
+    expired = session.is_expired(now())
     if expired:
         summary = tr("application.auth.operator.probe.session_expired")
     else:

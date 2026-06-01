@@ -1,6 +1,6 @@
 """Domain errors for the :mod:`aeat.domain.iva` subpackage.
 
-Every failure mode raised by the VAT substrate inherits from
+Every failure mode raised by the IVA substrate inherits from
 :class:`IvaError`, which in turn inherits from
 :class:`aeat.core.errors.AeatError`. Downstream callers catch the base class
 when they want to treat the substrate as an opaque unit, or the specific
@@ -29,11 +29,11 @@ class IvaRateNotFoundError(IvaError):
 
 
 class IvaCategoryNotFoundError(IvaError):
-    """Raised when a lookup against a resolved VAT catalogue misses."""
+    """Raised when a lookup against a resolved IVA catalogue misses."""
 
 
 class IvaCatalogueError(IvaError):
-    """Raised when a VAT catalogue cannot be loaded, resolved, or validated."""
+    """Raised when a IVA catalogue cannot be loaded, resolved, or validated."""
 
 
 class IvaRateOverlapError(IvaError):
@@ -60,7 +60,7 @@ class IvaClassificationError(IvaError):
 
 
 class IvaValidationError(IvaError, ValueError):
-    """Raised on invalid VAT field values. Inherits from ValueError for Pydantic."""
+    """Raised on invalid IVA field values. Inherits from ValueError for Pydantic."""
 
 
 class ProrrataError(IvaError):

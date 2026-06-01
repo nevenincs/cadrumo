@@ -12,6 +12,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ....core._tax_domain import TaxDomain
 from ....core.aggregation import AggregationSourceKind, PeriodKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from ....core.decimal import coerce_decimal
@@ -45,6 +46,7 @@ from ._ids import (
     WorkbookParityRefId,
 )
 from ._record_spec import ENCODING_ALIAS_MAP
+from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 
 
 def _coerce_decimal(value: object) -> object:
@@ -130,64 +132,6 @@ payloads where ``input_kind`` is stored as a plain string.
 """
 
 
-class CasillaFieldKind(StrEnum):
-    """Registry-authoritative classification of how an export field is populated.
-
-    Each member's string value matches the TOML literal used in registry
-    source files (``modelo/<n>/exports/*.toml``), so serialisation is
-    transparent across every persistence boundary.
-
-    Attributes:
-        LITERAL: Field emits a constant string declared in ``literal``.
-        CASILLA: Field derives its value from a named casilla.
-        BINDING: Field derives its value from a named binding.
-        COMPUTED: Field is synthesised at export time via ``computed_key``.
-        DRAFT: Field is drawn from a draft attribute via ``draft_attribute``.
-        FILLER: Field is a fixed-width pad with no semantic value.
-        HEADER: Field emits a record-type header value via ``header_key``.
-        CHECKSUM: Field carries a record-level checksum.
-    """
-
-    LITERAL = "literal"
-    CASILLA = "casilla"
-    BINDING = "binding"
-    COMPUTED = "computed"
-    DRAFT = "draft"
-    FILLER = "filler"
-    HEADER = "header"
-    CHECKSUM = "checksum"
-
-
-def _coerce_casilla_field_kind(value: object) -> object:
-    """Coerce a TOML string literal to the canonical CasillaFieldKind member.
-
-    Accepts a ``CasillaFieldKind`` instance directly (no-op) or a plain
-    string matching one of the declared member values.  Rejects non-string
-    and non-member inputs at the schema boundary.
-    """
-    if isinstance(value, CasillaFieldKind):
-        return value
-    if isinstance(value, str):
-        try:
-            return CasillaFieldKind(value)
-        except ValueError:
-            raise RegistryValidationError(
-                f"kind {value!r} is not a recognised CasillaFieldKind member; "
-                f"expected one of {[m.value for m in CasillaFieldKind]}"
-            ) from None
-    raise RegistryValidationError(
-        f"kind must be a string, got {type(value).__name__!r}"
-    )
-
-
-CasillaFieldKindValue = Annotated[CasillaFieldKind, BeforeValidator(_coerce_casilla_field_kind)]
-"""Annotated CasillaFieldKind that coerces TOML string literals to enum members.
-
-Use this as the field type on pydantic models that ingest TOML or JSON
-payloads where ``kind`` is stored as a plain string.
-"""
-
-
 def _coerce_modelo_year(value: object) -> object:
     """Coerce a fiscal-year input to an int within the registry-supported window.
 
@@ -221,7 +165,12 @@ field as ``ModeloYear``.
 """
 
 
-_PERIOD_CODE_RE = re.compile(r"^(?:[1-4]T|[1-4]P|0A|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$")
+from ....core._period import StandardPeriodCode
+
+_STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
+_EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
+_AD_HOC_PATTERN = r"^AD-HOC$"
+_EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
 
 
 def _validate_period_code(value: object) -> object:
@@ -229,10 +178,7 @@ def _validate_period_code(value: object) -> object:
 
     Accepted forms (from the fiscal-period inventory):
 
-    - ``1T``-``4T``: quarterly (canonical).
-    - ``1P``-``4P``: corporate-tax (IS) instalment periods (modelo 202).
-    - ``0A``: annual.
-    - ``01``-``12``: monthly.
+    - StandardPeriodCode: 1T-4T (quarterly), 1P-4P (instalment), 0A (annual), 01-12 (monthly).
     - ``EXT-1T``-``EXT-4T``: OSS extra-Union scheme quarters (modelo 369).
     - ``AD-HOC``: ad-hoc / event-driven (modelos 308, 309).
     - ``EVENT-N``: numbered event filings.
@@ -241,9 +187,11 @@ def _validate_period_code(value: object) -> object:
     """
     if not isinstance(value, str):
         raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
-    if not _PERIOD_CODE_RE.match(value):
-        raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
-    return value
+    if value in _STANDARD_PERIOD_CODES:
+        return value
+    if _EXT_PATTERN.match(value) or value == _AD_HOC_PATTERN or _EVENT_PATTERN.match(value):
+        return value
+    raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
 
 
 PeriodCode = Annotated[str, BeforeValidator(_validate_period_code)]
@@ -2472,7 +2420,7 @@ class ModeloDefinition(RegistryModel):
     id: ModeloId
     title: str
     official_name: str
-    tax_domain: str
+    tax_domain: Annotated[TaxDomain, BeforeValidator(lambda v: TaxDomain(v) if isinstance(v, str) else v)]
     cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
     jurisdiction: Literal["ES-AEAT"]
     calculation_class: CalculationClass = "filing"
@@ -2525,7 +2473,7 @@ class RegistrySnapshot(RegistryModel):
     #   - Sede outbound models (sede/_declarations.py, sede/_schema.py):
     #     max_length=8 — AEAT-side period codes from the sede HTML are
     #     always ≤ 8 chars (e.g. "1T", "0A"). M036 events never traverse
-    #     these models (census events do not flow through the
+    #     these models (censo events do not flow through the
     #     filed-declaration sede surface).
     #
     # Verified end-to-end: M036's "modificacion" period builds a

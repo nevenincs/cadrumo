@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.external_constants import UTF_8_ENCODING
 from ....persistence.storage import SensitivityClass
@@ -47,7 +47,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
     payload = PersistedBrowserSession(
         storage_state=storage_state,
         metadata=metadata,
-        written_at=_now(),
+        written_at=now(),
     )
     _repository().save(
         namespace=_SESSION_NAMESPACE,

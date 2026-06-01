@@ -33,7 +33,7 @@ _S660_SITES: list[tuple[str, str]] = [
     ("entrypoints/cli/_config_payloads.py", "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"),
     ("entrypoints/cli/_root_payloads.py", "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"),
     ("entrypoints/cli/_config/_google_payloads.py", "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"),
-    ("entrypoints/cli/_config/_profile_census_payloads.py", "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"),
+    ("entrypoints/cli/_config/_profile_censo_payloads.py", "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"),
     ("entrypoints/cli/_registry_payloads.py", "TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR"),
 ]
 

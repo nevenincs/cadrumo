@@ -1,6 +1,6 @@
 """Registry-backed loader for LIVA art. 161 recargo de equivalencia rates.
 
-Closes the recargo de equivalencia rate gap in the VAT substrate:
+Closes the recargo de equivalencia rate gap in the IVA substrate:
 the four LIVA art. 161 rate values (general 5.2 %, reduced 1.4 %,
 super-reduced 0.5 %, tobacco 1.75 %) live in
 ``registry/aeat/legal/iva-recargo-equivalencia.toml`` under
@@ -38,7 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.resources import bundled_path
 from ._schema import IvaRateKind
-from .errors import IvaCatalogueError, IvaValidationError
+from ._errors import IvaCatalogueError, IvaValidationError
 
 
 class LivaArt161RecargoRates(BaseModel):

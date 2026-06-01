@@ -1,17 +1,17 @@
 # Authoring and reviewing documentation
 
-This guide describes how documentation changes flow through review before they land. It applies to the three English documentation surfaces: the repository markdown (the README and the guides under `docs/`), the in-source docstrings, and the generated API and CLI references.
+This guide shows you how to make a documentation change and take it through review. A change might touch any of three English documentation surfaces. Two are hand-written: the repository markdown and the in-source docstrings. The third is the generated reference for the application programming interface (API) and the command-line interface (CLI).
 
-## The surfaces and how they stay true
+## Choose the right surface
 
-Documentation is generated or verified from the codebase, not maintained in isolation:
+Where you make a change depends on what you're changing:
 
-- **Repository markdown** is hand-written, but every technical claim is verified against the code before it lands (see the review pipeline below).
-- **Docstrings** are the single source for the API reference. Sphinx renders them through autodoc; you never copy a signature into prose by hand.
-- **The API reference** is scaffolded from the source modules by `aeat.apidocs`. A correspondence test fails if a module lacks a stub or a stub outlives its module.
-- **The CLI reference** is generated from the command tree by `aeat.entrypoints.cli` tooling. A drift test fails if the committed reference no longer matches the commands.
+- **Repository markdown** is hand-written. Edit the README or a guide under `docs/` directly.
+- **Docstrings** are the single source for the API reference. Edit the docstring in the source, and let Sphinx render it. Never copy a signature into prose by hand.
+- **The API reference** is generated from the source modules by `aeat.apidocs`. Don't edit the stubs; regenerate them.
+- **The CLI reference** is generated from the command tree. Don't edit it; regenerate it.
 
-Regenerate the generated surfaces rather than editing them:
+To regenerate the generated surfaces and check the result, run:
 
 ```bash
 python -m aeat.apidocs scaffold
@@ -19,22 +19,24 @@ just docs
 just docs-check
 ```
 
-## The review pipeline for narrative docs
+`just docs-check` fails on a broken cross-reference, a missing stub, or a command reference that no longer matches the commands.
 
-Narrative documentation - the README and the guides under `docs/` - moves through a staged pipeline with a distinct reviewer at each gate. Each stage completes before the next begins.
+## Take a narrative change through review
 
-1. **Wireframe.** Outline the document as titles and section intents, with a Diataxis type (tutorial, how-to, reference, or explanation) for each page.
-2. **Refinement.** A reviewer with no project context reads only the wireframe and confirms a newcomer would understand what each section delivers. Revise until no section fails that test.
-3. **Context gathering.** Researchers gather the facts, commands, paths, and source locations each section needs, working from the codebase.
-4. **Drafting.** Authors write each section from the gathered context and the prose-style rules, not from memory.
-5. **Technical review.** Reviewers verify every command, flag, path, and class name against the code. Corrections land before the next gate.
+A change to the README or a guide under `docs/` moves through a staged review. Each stage has a distinct reviewer, and each completes before the next begins:
+
+1. **Wireframe.** Outline the document as titles and section intents. Assign each page a Diataxis type: tutorial, how-to, reference, or explanation.
+2. **Refinement.** A reviewer with no project context reads only the wireframe and confirms a newcomer would understand what each section delivers. Revise until every section passes.
+3. **Context.** Researchers gather the facts, commands, paths, and source locations each section needs.
+4. **Drafting.** Authors write each section from the gathered context and the prose-style rules.
+5. **Technical review.** Reviewers verify every command, flag, path, and class name against the code.
 6. **Editorial review.** A reviewer with no project context checks the writing against the prose-style rules.
-7. **Approval.** The change lands once the technical and editorial gates pass.
+7. **Approval.** The change lands once the technical and editorial reviews pass.
 
-## Separation of concerns
+## Keep the roles separate
 
-Keep research, drafting, and review separate. A researcher gathers context and does not write the final prose. An author writes from that context and does not invent facts. An editor checks the writing without access to the codebase, so writing quality is judged on its own merit. This separation is what keeps the documentation both accurate and readable.
+Keep research, drafting, and review in separate hands. When you gather context, don't write the final prose. When you author, write from the gathered context, and don't invent facts. When you review for editorial quality, work from the document alone, without the codebase. The separation keeps each judgment honest.
 
-## What documentation must never contain
+## Don't encode process metadata
 
-Documentation paths, filenames, and content carry domain and topic names only. They never encode the documentation framework or the project-management process: no wave, phase, or step identifiers, no plan or decision-record identifiers, and no agent or campaign labels. A reader sees the product, not the process that built it.
+Documentation paths, filenames, and content carry domain and topic names only. Don't put the documentation framework or the project-management process into them. That rules out wave, phase, and step identifiers, plan and decision-record identifiers, and agent or campaign labels. A reader should see the product, not the process that built it.

@@ -196,7 +196,7 @@ class SetupAnswers(BaseModel):
     """Free-text actividad económica / epígrafe IAE description."""
     address_postcode: str = ""
     activity_start_date: str = ""
-    """Optional ISO-8601 census alta date for the economic activity."""
+    """Optional ISO-8601 censo alta date for the economic activity."""
     taxation_type: Any = ""
     output_language: str = "es"
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.logging import get_logger
 from ._errors import InvoicePersistenceError
@@ -133,7 +133,7 @@ class InvoiceCatalogueRepository:
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
@@ -154,7 +154,7 @@ class InvoiceCatalogueRepository:
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )

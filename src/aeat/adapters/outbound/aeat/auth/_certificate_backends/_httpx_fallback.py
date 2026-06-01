@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ......core.logging import get_logger
 from .._errors import AuthConfigurationError
@@ -71,7 +71,7 @@ class HttpxFallbackBackend(_CertBackend):
         """
         from ..certificate import HandshakeResult
 
-        attempted_at = _now()
+        attempted_at = now()
         started = time.perf_counter()
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         log.warning(

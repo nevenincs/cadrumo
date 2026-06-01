@@ -7,7 +7,7 @@ import json
 
 from pydantic import SecretStr
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ....core.config import Settings
 from ....core.logging import get_logger
@@ -118,7 +118,7 @@ class LLMClient:
                 output_tokens=completion.output_tokens,
             ),
             cache_hit=False,
-            created_at=_now(),
+            created_at=now(),
             request_id=request_id,
         )
         self.cache.write(request, response)

@@ -18,14 +18,14 @@ from pathlib import Path
 import httpx
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
 from ._loader import resolve_part_root
 from ._schema import FetchedManualPart, ManualId, ManualPart
-from .errors import ManifestError
+from ._errors import ManifestError
 
 _logger = get_logger(__name__)
 
@@ -238,7 +238,7 @@ def fetch_manual_part(
         relative_pdf_path=_PDF_FILENAME,
         sha256=sha256,
         content_length=length,
-        fetched_at=_now(),
+        fetched_at=now(),
         synthetic=False,
     )
     write_manifest(manifest_path, manifest)

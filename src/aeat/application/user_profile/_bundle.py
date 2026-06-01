@@ -9,13 +9,14 @@ ledger transactions, calculation revisions, and filing records via their
 respective repository save paths.
 
 ADR decisions honoured here:
+
   D2 — no encrypted-material blobs; decrypted domain-model payloads only.
   D3 — ``model_dump(mode="json")`` / ``model_validate()`` throughout; no
-       ``dict[str, Any]`` intermediate; ``exclude_none=True`` forbidden.
+  ``dict[str, Any]`` intermediate; ``exclude_none=True`` forbidden.
   D4 — version constant validated at import boundary; unsupported versions
-       raise ``CliRefusedBoundaryError``.
+  raise ``CliRefusedBoundaryError``.
   D5 — bundle ``profile_id`` is preserved; two-tier collision guard runs
-       before any write.
+  before any write.
 """
 
 from __future__ import annotations

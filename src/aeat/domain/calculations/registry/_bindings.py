@@ -512,7 +512,7 @@ class InvoiceObservation(BaseModel):
 
     The fields are scoped to the facts every IVA modelo needs to classify a
     transaction. ``intracommunity_clave`` follows the AEAT clave-de-operacion
-    enum (E, M, H, A, T, S, I, R, D, C). ``vat_regime`` is open-ended so
+    enum (E, M, H, A, T, S, I, R, D, C). ``iva_regime`` is open-ended so
     domestic-IVA modelos can carry their regime classification alongside.
     """
 
@@ -523,7 +523,7 @@ class InvoiceObservation(BaseModel):
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     base_amount: Decimal
-    vat_regime: str | None = Field(default=None, max_length=64)
+    iva_regime: str | None = Field(default=None, max_length=64)
     intracommunity_clave: str | None = Field(default=None, max_length=2)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
@@ -589,7 +589,7 @@ class InvoiceObservationRequirement(BaseModel):
     binding_ids: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
-    vat_regime: str | None = None
+    iva_regime: str | None = None
 
     @field_validator("binding_ids", "claves")
     @classmethod
@@ -607,7 +607,7 @@ class _InvoiceSelector(BaseModel):
     fact: _InvoiceFact
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
-    vat_regime: str | None = Field(default=None, max_length=64)
+    iva_regime: str | None = Field(default=None, max_length=64)
     row_field: _InvoiceRowField | None = None
     grouping: _InvoiceGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -644,7 +644,7 @@ def invoice_binding_requirements(
         if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
             continue
         selector = _validated_invoice_selector(binding)
-        key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.vat_regime)
+        key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.iva_regime)
         grouped.setdefault(key, set()).add(binding.id)
     requirements: list[InvoiceObservationRequirement] = []
     for (claves, scope, regime), binding_ids in sorted(
@@ -656,7 +656,7 @@ def invoice_binding_requirements(
                 binding_ids=tuple(sorted(binding_ids)),
                 claves=claves,
                 rectification_scope=scope,
-                vat_regime=regime,
+                iva_regime=regime,
             )
         )
     return tuple(requirements)
@@ -779,7 +779,7 @@ def resolve_invoice_binding_row_values(
     """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
-    # Group bindings by (grouping, rectification_scope, claves, vat_regime) so
+    # Group bindings by (grouping, rectification_scope, claves, iva_regime) so
     # that bindings sharing a row source share row indexes.
     cohorts: dict[
         tuple[_InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
@@ -796,7 +796,7 @@ def resolve_invoice_binding_row_values(
             selector.grouping,
             selector.rectification_scope,
             tuple(sorted(selector.claves)),
-            selector.vat_regime,
+            selector.iva_regime,
         )
         cohorts.setdefault(cohort_key, []).append((binding, selector))
     for cohort_key, members in cohorts.items():
@@ -967,7 +967,7 @@ def _filter_invoice_observations(
             continue
         if clave_filter and observation.intracommunity_clave not in clave_filter:
             continue
-        if selector.vat_regime is not None and observation.vat_regime != selector.vat_regime:
+        if selector.iva_regime is not None and observation.iva_regime != selector.iva_regime:
             continue
         yield observation
 
@@ -1039,7 +1039,7 @@ def _aggregate_invoice_binding(
 # ---------------------------------------------------------------------------
 # Ledger OSS / IOSS aggregation source bindings.
 #
-# These bindings aggregate ledger lines whose VAT classification matches a
+# These bindings aggregate ledger lines whose IVA classification matches a
 # regime + destination Member State + rate tier + invoice direction selector.
 # The classification axes come from :mod:`aeat.domain.iva`; the binding source
 # is the registry's ledger-driven aggregation kind for Modelo 369.
@@ -1066,14 +1066,14 @@ class OssIossLedgerObservation(BaseModel):
         regime: OSS / IOSS Esquema the line is filed under.
         destination_member_state: Member State of consumption (the
             destination MS for the supply, which determines the
-            applicable VAT rate per the OSS / IOSS rules).
+            applicable IVA rate per the OSS / IOSS rules).
         rate_kind: Substrate rate tier (general / reduced / etc.).
         invoice_direction: Whether the autónomo issued or received
             the invoice.
         transaction_kind: Substrate :class:`aeat.domain.iva.TransactionKind`
             the line resolves to.
         base_amount: Taxable base in EUR.
-        iva_amount: VAT amount in EUR (already applied at the
+        iva_amount: IVA amount in EUR (already applied at the
             destination MS rate per OSS / IOSS rules).
     """
 
@@ -1239,7 +1239,7 @@ class IvaLedgerObservation(BaseModel):
         flow_direction: Substrate :class:`IvaFlowDirection` (output /
             input / self-assessed reverse charge).
         base_amount: Taxable base in EUR.
-        iva_amount: VAT amount in EUR (cuota repercutida or soportada,
+        iva_amount: IVA amount in EUR (cuota repercutida or soportada,
             depending on flow direction).
     """
 
@@ -1255,7 +1255,7 @@ class IvaLedgerObservation(BaseModel):
     prorrata_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
     """Stable id of the linked :class:`ProrrataLedgerReference` row, when set.
 
-    Populated by the aggregator only on ``SOPORTADO`` (input VAT) flows
+    Populated by the aggregator only on ``SOPORTADO`` (input IVA) flows
     that carry a validated prorrata reference. Downstream Modelo 303 /
     390 binding selectors filter prorrata-linked observations without
     a manual join against the parallel ``prorrata_references`` tuple.
@@ -1521,7 +1521,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
       (``raw.amount`` or its business fraction) across the window — the
       ingresos íntegros path feeding casilla ``"01"``.
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
-      (the VAT-exclusive base imponible) — the rendimiento-neto path feeding
+      (the IVA-exclusive base imponible) — the rendimiento-neto path feeding
       casilla ``"03"``.  Observations whose ``taxable_base_amount`` is
       ``None`` contribute zero to this sum.
     """
@@ -1778,7 +1778,7 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
         country_code=observation.country_code,
         transaction_date=observation.transaction_date,
         base_amount=observation.base_amount,
-        vat_regime=None,
+        iva_regime=None,
         intracommunity_clave=observation.intracommunity_clave,
         is_rectification=observation.is_rectification,
         rectified_year=observation.rectified_year,

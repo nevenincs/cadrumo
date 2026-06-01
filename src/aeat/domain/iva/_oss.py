@@ -1,6 +1,6 @@
 """OSS / IOSS regime substrate for the Modelo 369 autoliquidation chain.
 
-Closes the regime taxonomy gap surfaced by the Modelo 369 VAT
+Closes the regime taxonomy gap surfaced by the Modelo 369 IVA
 centralization audit. Three closed enumerations (:class:`OssIossRegime`,
 :class:`IossFilerRole`, :class:`DeductionScope`), the regime ↔ filing
 periodicity mapping (:data:`REGIME_PERIODICITY`), and the
@@ -102,10 +102,10 @@ class DeductionScope(StrEnum):
             attempted inside the Modelo 369 declaration-liquidation. The
             three deduction articles (163 vicies, 163 tervicies, 163
             octovicies) all forbid this.
-        ESTABLECIDO_REGULAR_VAT_RETURN: The deduction is being attempted
-            in the operator's regular VAT return (typically Modelo 303),
+        ESTABLECIDO_REGULAR_IVA_RETURN: The deduction is being attempted
+            in the operator's regular IVA return (typically Modelo 303),
             available to operators that are establecidos in a Member
-            State for VAT purposes. Permitted by the three articles for
+            State for IVA purposes. Permitted by the three articles for
             establecido operators.
         NON_ESTABLECIDO_DIRECTIVE_PROCEDURE: The deduction is being
             attempted via the Eighth or Thirteenth Directive procedure
@@ -114,7 +114,7 @@ class DeductionScope(StrEnum):
     """
 
     WITHIN_MODELO_369_AUTOLIQUIDATION = "within_modelo_369_autoliquidation"
-    ESTABLECIDO_REGULAR_VAT_RETURN = "establecido_regular_vat_return"
+    ESTABLECIDO_REGULAR_IVA_RETURN = "establecido_regular_iva_return"
     NON_ESTABLECIDO_DIRECTIVE_PROCEDURE = "non_establecido_directive_procedure"
 
 
@@ -141,14 +141,14 @@ the IOSS regime irrespective of filer role.
 
 
 def regime_allows_deduction(regime: OssIossRegime, scope: DeductionScope) -> bool:
-    """Return whether ``regime`` allows VAT deduction against ``scope``.
+    """Return whether ``regime`` allows IVA deduction against ``scope``.
 
     Anchored to LIVA art. 163 vicies (Exterior), art. 163 tervicies
     (Unión), and art. 163 octovicies (IOSS). The three articles share
     the same operative structure: the sujeto pasivo "no podrá deducir
     en la declaración-liquidación... cantidad alguna por las cuotas
     soportadas" inside the Modelo 369 autoliquidation; recovery is
-    routed through the regular VAT return for establecidos and through
+    routed through the regular IVA return for establecidos and through
     the Eighth / Thirteenth Directive procedures for non-establecidos.
 
     Args:
@@ -160,7 +160,7 @@ def regime_allows_deduction(regime: OssIossRegime, scope: DeductionScope) -> boo
     Returns:
         ``False`` for :attr:`DeductionScope.WITHIN_MODELO_369_AUTOLIQUIDATION`
         for every regime; ``True`` for
-        :attr:`DeductionScope.ESTABLECIDO_REGULAR_VAT_RETURN` and
+        :attr:`DeductionScope.ESTABLECIDO_REGULAR_IVA_RETURN` and
         :attr:`DeductionScope.NON_ESTABLECIDO_DIRECTIVE_PROCEDURE` for
         every regime, since the three articles allow recovery via those
         procedures.

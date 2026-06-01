@@ -2,7 +2,7 @@
 
 Default Windows terminals expose stdout / stderr as cp1252; emoji
 flag characters, CJK ideographs, the U+2192 right arrow used by the
-review queue table, and the § sign used by some VAT-rate citations
+review queue table, and the § sign used by some IVA-rate citations
 all fall outside cp1252 and crash :func:`typer.echo` with
 ``UnicodeEncodeError``. Spanish accented characters (``á é í ó ú``,
 ``ñ``) survive the encoding boundary but Rich's legacy-Windows

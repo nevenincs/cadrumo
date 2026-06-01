@@ -1,7 +1,7 @@
-"""Real-behavior tests for census-derived home-office usage ratios.
+"""Real-behavior tests for censo-derived home-office usage ratios.
 
 Locks the contract that
-:func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_census`
+:func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_censo`
 turns the operator's vivienda afectación ratio into a
 :class:`UsageRatioProfile` carrying one entry per HOME_OFFICE_SUMINISTROS
 and HOME_OFFICE_OWNERSHIP category, with each entry equal to the raw
@@ -21,7 +21,7 @@ from ..categories import (
     categories_for_family,
 )
 from ._errors import UsageRatioValidationError
-from ._service import derive_home_office_ratios_from_census
+from ._service import derive_home_office_ratios_from_censo
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -39,7 +39,7 @@ _OWNERSHIP_STATUTORY_FACTOR = Decimal("1")
 
 
 def test_derivation_covers_every_home_office_category() -> None:
-    profile = derive_home_office_ratios_from_census(Decimal("0.20"), year=2025)
+    profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025)
 
     expected = set(categories_for_family(SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS)) | set(
         categories_for_family(SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP)
@@ -51,7 +51,7 @@ def test_suministros_apply_lirpf_art_30_2_rule_5_30pct_multiplier() -> None:
     """Each suministros category yields raw * 0.30 (LIRPF Art. 30.2 rule 5)."""
 
     raw = Decimal("0.25")
-    profile = derive_home_office_ratios_from_census(raw, year=2025)
+    profile = derive_home_office_ratios_from_censo(raw, year=2025)
 
     expected = raw * _SUMINISTROS_STATUTORY_FACTOR
     for category in categories_for_family(SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS):
@@ -64,7 +64,7 @@ def test_ownership_categories_apply_raw_afectacion_with_no_multiplier() -> None:
     """Titularidad costs deduct at the raw ratio (no statutory factor)."""
 
     raw = Decimal("0.25")
-    profile = derive_home_office_ratios_from_census(raw, year=2025)
+    profile = derive_home_office_ratios_from_censo(raw, year=2025)
 
     expected = raw * _OWNERSHIP_STATUTORY_FACTOR
     for category in categories_for_family(SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP):
@@ -77,22 +77,22 @@ def test_ownership_categories_apply_raw_afectacion_with_no_multiplier() -> None:
 def test_suministros_luz_concrete_value_at_20_percent_afectacion() -> None:
     """Anti-tautology pin: 20% afectación, suministros_luz must be exactly 0.06."""
 
-    profile = derive_home_office_ratios_from_census(Decimal("0.20"), year=2025)
+    profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025)
 
     assert profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.060")
 
 
 def test_zero_ratio_is_accepted() -> None:
-    profile = derive_home_office_ratios_from_census(Decimal("0"), year=2025)
+    profile = derive_home_office_ratios_from_censo(Decimal("0"), year=2025)
 
     assert all(value == Decimal("0") for value in profile.ratios.values())
 
 
 def test_ratio_above_one_is_rejected() -> None:
     with pytest.raises(UsageRatioValidationError):
-        derive_home_office_ratios_from_census(Decimal("1.01"), year=2025)
+        derive_home_office_ratios_from_censo(Decimal("1.01"), year=2025)
 
 
 def test_negative_ratio_is_rejected() -> None:
     with pytest.raises(UsageRatioValidationError):
-        derive_home_office_ratios_from_census(Decimal("-0.01"), year=2025)
+        derive_home_office_ratios_from_censo(Decimal("-0.01"), year=2025)

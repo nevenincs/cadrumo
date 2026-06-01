@@ -43,9 +43,9 @@ from ._bindings import (
     withholding_binding_requirements,
 )
 from ._censo_modelos import (
-    CENSUS_MODELO_ERROR_CODES,
-    CENSUS_MODELO_EVENT_KINDS,
-    CENSUS_MODELO_SERVICE_OWNER,
+    CENSO_MODELO_ERROR_CODES,
+    CENSO_MODELO_EVENT_KINDS,
+    CENSO_MODELO_SERVICE_OWNER,
     CensoModeloEventKind,
     CensoModeloFoundationCommand,
     CensoModeloFoundationContract,
@@ -303,9 +303,9 @@ from ._workbook_parity import (
 __all__ = [
     "AEAT_WRITE_FORBIDDEN_ACTIONS",
     "AEAT_WRITE_FORBIDDEN_VERB_TOKENS",
-    "CENSUS_MODELO_ERROR_CODES",
-    "CENSUS_MODELO_EVENT_KINDS",
-    "CENSUS_MODELO_SERVICE_OWNER",
+    "CENSO_MODELO_ERROR_CODES",
+    "CENSO_MODELO_EVENT_KINDS",
+    "CENSO_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "M210_CONVENIO_MISSING_SENTINEL",

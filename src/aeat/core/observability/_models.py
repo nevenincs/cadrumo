@@ -44,7 +44,7 @@ from enum import StrEnum
 from pydantic import BaseModel, model_validator
 
 from ..errors import CoreValidationError
-from ..time._utc import _validate_utc_aware
+from ..time._utc import validate_utc_aware
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -316,7 +316,7 @@ def _require_tz_aware(value: datetime) -> datetime:
     Returns:
         The same datetime, unmodified, when it is UTC-aware.
     """
-    return _validate_utc_aware(value)
+    return validate_utc_aware(value)
 
 class RunEvent(BaseModel):
     """A single observability event captured during a run.

@@ -269,7 +269,7 @@ def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         id="130",
         title="Test",
         official_name="Test",
-        tax_domain="test",
+        tax_domain="iva",
         cadence="annual",
         jurisdiction="ES-AEAT",
         output_sensitivity=SensitivityClass.FINANCIAL,

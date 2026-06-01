@@ -10,7 +10,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
@@ -261,7 +261,7 @@ def seed_iva_compensation_period(
             f"IVA compensation state for {filing_year}/{period} already exists "
             f"(status={existing.status!r}); seeding would overwrite it"
         )
-    when = seeded_at if seeded_at is not None else _now()
+    when = seeded_at if seeded_at is not None else now()
     state = IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
         filing_year=filing_year,

@@ -43,7 +43,7 @@ def _op(
     year: int,
     base_amount: str,
     kind: IvaOperationKind,
-    classification_source: str = "vat-classify:test",
+    classification_source: str = "iva-classify:test",
 ) -> IvaOperation:
     return IvaOperation(
         operation_id=operation_id,
@@ -274,7 +274,7 @@ def test_definitiva_orchestrator_skips_other_year_operations() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_vat_operation_rejects_negative_base_amount() -> None:
+def test_iva_operation_rejects_negative_base_amount() -> None:
     with pytest.raises(ValidationError, match=r"base_amount|greater than|negative"):
         IvaOperation(
             operation_id="op",
@@ -285,7 +285,7 @@ def test_vat_operation_rejects_negative_base_amount() -> None:
         )
 
 
-def test_vat_operation_is_frozen_and_forbids_extras() -> None:
+def test_iva_operation_is_frozen_and_forbids_extras() -> None:
     op = _op("op", year=2025, base_amount="100.00", kind=IvaOperationKind.GRANTS_DEDUCTION)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         setattr(op, "base_amount", Decimal("0"))  # noqa: B010 — exercise frozen-model __setattr__
@@ -303,7 +303,7 @@ def test_vat_operation_is_frozen_and_forbids_extras() -> None:
         )
 
 
-def test_vat_operation_rejects_empty_operation_id() -> None:
+def test_iva_operation_rejects_empty_operation_id() -> None:
     with pytest.raises(ValidationError, match=r"operation_id|at least 1 character"):
         IvaOperation(
             operation_id="",

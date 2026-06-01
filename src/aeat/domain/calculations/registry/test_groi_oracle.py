@@ -73,7 +73,7 @@ def test_oracle_satisfies_live_parity_oracle_protocol() -> None:
     oracle = GroiOracle()
     assert isinstance(oracle, LiveParityOracle)
     assert oracle.oracle_id == GROI_ORACLE_ID
-    assert oracle.surface_kind == "vat_id_check"
+    assert oracle.surface_kind == "iva_id_check"
 
 
 def test_oracle_url_stays_inside_aeat_host_pinning_suffix() -> None:

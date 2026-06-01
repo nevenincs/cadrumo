@@ -39,7 +39,7 @@ from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
-from .....core.time._utc import _validate_utc_aware
+from .....core.time._utc import validate_utc_aware
 from ..crypto._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..errors import (
     ClassificationError,
@@ -136,7 +136,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         try:
-            return _validate_utc_aware(value)
+            return validate_utc_aware(value)
         except CoreValidationError as exc:
             raise StorageValidationError(str(exc)) from exc
 
@@ -337,7 +337,7 @@ class CipherEnvelope(BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         try:
-            return _validate_utc_aware(value)
+            return validate_utc_aware(value)
         except CoreValidationError as exc:
             raise StorageValidationError(str(exc)) from exc
 

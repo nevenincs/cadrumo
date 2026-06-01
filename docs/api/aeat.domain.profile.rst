@@ -31,5 +31,4 @@ Submodules
    aeat.domain.profile._marriage_facts
    aeat.domain.profile._normalise
    aeat.domain.profile._renta_codes
-   aeat.domain.profile.errors
    aeat.domain.profile.family

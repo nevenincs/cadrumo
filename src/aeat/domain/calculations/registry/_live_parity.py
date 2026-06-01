@@ -12,7 +12,7 @@ Two-fold hardening underpins the design:
 2. Live conformance — drive a synthetic, registry-rendered payload
    through an AEAT-published verification surface that **must not** modify
    remote state (open simulators, file validators like TGVI online, VIES
-   VAT-ID checkers, pre-filing validators, AEAT integration test services).
+   IVA-ID checkers, pre-filing validators, AEAT integration test services).
    Every planned operation is pre-flighted against the cross-reference's
    :class:`RemoteStateGuardPolicy` before any HTTP or browser action runs;
    any policy-violating step is rejected before it leaves the process.
@@ -76,7 +76,7 @@ ParityVerdict = Literal["match", "mismatch", "unverifiable", "blocked"]
 OracleSurfaceKind = Literal[
     "file_validator",
     "open_simulator",
-    "vat_id_check",
+    "iva_id_check",
     "pre_filing_validator",
     "integration_test_service",
 ]
@@ -104,12 +104,12 @@ _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("open_simulator", "open_simulator"),
         ("integration_test_service", "integration_test_service"),
-        ("public_read_surface", "vat_id_check"),
+        ("public_read_surface", "iva_id_check"),
         ("public_read_surface", "file_validator"),
         ("authenticated_read_surface", "pre_filing_validator"),
-        # AEAT VAT-ID consult surfaces (GROI today, IXVI under cert auth) are
+        # AEAT IVA-ID consult surfaces (GROI today, IXVI under cert auth) are
         # callable verification surfaces gated on cl@ve-movil / certificate.
-        ("authenticated_simulator", "vat_id_check"),
+        ("authenticated_simulator", "iva_id_check"),
     }
 )
 
@@ -574,6 +574,7 @@ def collect_orphan_oracle_ids(
     """Return catalogue oracle ids that no cross-reference binds.
 
     A registered-but-unused oracle indicates one of:
+
     - the oracle was registered for a future binding still in flight,
     - a cross-reference's oracle_id was renamed without updating the
       catalogue,
@@ -601,13 +602,33 @@ class ReplayPayload(_ParityModel):
     response data) and an optional ``raw_evidence_locator`` that links
     back to the raw HTTP response artifact for audit trails.
 
+    Replay fixtures on disk are captured response artefacts and carry
+    additional documented metadata that pre-dates the tightened schema:
+
+    * ``scenario_id`` — fixture-author label that identifies the
+      operator scenario the payload was captured against;
+    * ``profile_overrides`` — per-fixture profile overrides used to
+      drive the registry comparison;
+    * ``expected`` — operator-facing labels paired with their
+      expected values (the human-readable AEAT mapping the fixture
+      author transcribed from the live response);
+    * ``expected_by_casilla`` — registry-casilla-keyed expected
+      values, used by the oracle's matcher;
+    * ``observed_by_casilla`` — registry-casilla-keyed observed
+      values, used by the oracle's matcher.
+
     ``model_config`` inherits ``strict=True, frozen=True, extra="forbid"``
-    from :class:`_ParityModel`, so unknown keys are rejected at validation
-    time and the field types are not coerced.
+    from :class:`_ParityModel`. The documented fields above are typed
+    explicitly; any other unknown key still raises at validation.
     """
 
     observed: Mapping[str, str]
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
+    scenario_id: str | None = Field(default=None, max_length=256)
+    profile_overrides: Mapping[str, str] = Field(default_factory=dict)
+    expected: Mapping[str, str] = Field(default_factory=dict)
+    expected_by_casilla: Mapping[str, str] = Field(default_factory=dict)
+    observed_by_casilla: Mapping[str, str] = Field(default_factory=dict)
 
 
 def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> ReplayPayload:

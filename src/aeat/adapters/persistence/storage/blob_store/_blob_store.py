@@ -41,7 +41,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE
@@ -232,7 +232,7 @@ class EncryptedBlobStore:
 
         envelope = Envelope[BlobManifest](
             schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=classification,
             payload=manifest,
         )
@@ -436,7 +436,7 @@ class EncryptedBlobStore:
             new_manifest = manifest.model_copy(update={"wrapped_dek": new_meta})
             new_envelope = Envelope[BlobManifest](
                 schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
-                written_at=_now(),
+                written_at=now(),
                 classification=manifest.classification,
                 payload=new_manifest,
             )

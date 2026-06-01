@@ -3,6 +3,13 @@
 from __future__ import annotations
 
 import os
+
+# Pin the CLI output language to English BEFORE any project module is imported.
+# CLI help strings are tr() values resolved at import time; the sphinx-click
+# build-time CLI reference renders them, so the language must be fixed for the
+# whole build process here, at the top of conf.py.
+os.environ["AEAT_OUTPUT_LANGUAGE"] = "en"
+
 import sys
 from pathlib import Path
 
@@ -523,7 +530,25 @@ def setup(app):
 
         diagnostics._ensure_models_rebuilt()
 
+    def _generate_cli_reference(app):
+        """Render the CLI reference fresh from the live command tree.
+
+        The ``docs/cli/`` pages are a build-time projection of the materialised
+        command tree and its English ``tr()`` help: they are regenerated on every
+        build and are gitignored, never committed, so they cannot drift from the
+        code. The output language is pinned to English at the top of this module
+        before any project import. Generating in ``builder-inited`` writes the
+        pages before Sphinx reads the source tree.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        from aeat.entrypoints.cli._doc_reference import generate_cli_reference
+
+        generate_cli_reference(Path(__file__).resolve().parent)
+
     app.connect("builder-inited", _resolve_deferred_models)
+    app.connect("builder-inited", _generate_cli_reference)
     # Priority 700 runs after intersphinx (which resolves external targets at the
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.

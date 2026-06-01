@@ -13,7 +13,7 @@ application services but consumed by adapters and persistence with no
 single application-layer owner.
 
 Surfaces that mint a snapshot id with a non-hex shape (notably the
-census snapshot, which derives its id from a JSON-canonical
+censo snapshot, which derives its id from a JSON-canonical
 ``derive_snapshot_id_from_json`` family) do not consume this alias;
 they are referential identities outside the content-addressed-hex
 family.

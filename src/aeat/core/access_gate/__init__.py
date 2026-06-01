@@ -5,7 +5,7 @@ read call-sites. Live AEAT writes are permanently forbidden, so the
 write-side helper always raises a typed refusal. The gate is consumed
 by the repair CLI for surfacing a "Live access gate" row and by every
 live-read module (filing history, missing-filing detection, AEAT
-messages, VAT balance tracking) that needs a typed precondition
+messages, IVA balance tracking) that needs a typed precondition
 rather than per-call-site ``if os.environ[...] != "1"`` boilerplate.
 
 The gate is always constructed inline from a

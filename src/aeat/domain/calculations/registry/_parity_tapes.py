@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -155,7 +155,7 @@ def run_parity_scenario(
         executable=executable,
     )
     return ParityTape(
-        created_at=_now(),
+        created_at=now(),
         scenario_path=scenario_path.resolve().as_posix() if scenario_path is not None else None,
         scenario=scenario,
         workbook=workbook,

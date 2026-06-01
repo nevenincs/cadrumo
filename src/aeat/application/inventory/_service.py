@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
-from ...core.time import _now as _now_utc
+from ...core.time import now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -59,7 +59,7 @@ class InventoryMovementCommand(BaseModel):
     quantity: Decimal
     unit_cost: Decimal | None = Field(default=None)
     taxable_base: Decimal | None = Field(default=None)
-    vat_rate: Decimal = Decimal("21.00")
+    iva_rate: Decimal = Decimal("21.00")
 
 
 class InventoryValuationPreview(BaseModel):
@@ -271,7 +271,7 @@ class InventoryService:
             quantity=movement.quantity,
             unit_cost=movement.unit_cost,
             taxable_base=movement.taxable_base,
-            vat_rate=movement.vat_rate,
+            iva_rate=movement.iva_rate,
         )
         updated = ledger.model_copy(
             update={"period_movements": (*ledger.period_movements, record)},

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from pydantic import ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ProviderValidation
@@ -26,7 +26,7 @@ from ...core.errors import AeatError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.hashing import sha256_file
 from ...core.i18n import tr
-from ...core.time._utc import _coerce_utc_aware
+from ...core.time._utc import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
@@ -3182,8 +3182,8 @@ def _decimal_to_string(value: Decimal) -> str:
 
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
-    timestamp = value or _now()
-    return _coerce_utc_aware(timestamp)
+    timestamp = value or now()
+    return coerce_utc_aware(timestamp)
 
 
 def _upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:

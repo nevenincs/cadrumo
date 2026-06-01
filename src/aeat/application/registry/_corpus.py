@@ -27,7 +27,7 @@ from ...domain.manuals import (
 from ...domain.manuals import (
     load_catalogue as load_manual_catalogue,
 )
-from ...domain.manuals.errors import ManualNotFoundError
+from ...domain.manuals._errors import ManualNotFoundError
 from ...domain.normatives import (
     NormativeReference,
     NormativeVerificationIssue,
@@ -42,7 +42,7 @@ from ...domain.normatives import (
 from ...domain.normatives import (
     verify_catalogue as verify_normative_catalogue,
 )
-from ...domain.normatives.errors import NormativeParseError
+from ...domain.normatives._errors import NormativeParseError
 from ..topics import Topic, TopicCatalogue, load_topic_catalogue
 from ._errors import RegistryApplicationInputError
 

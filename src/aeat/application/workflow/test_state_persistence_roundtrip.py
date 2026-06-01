@@ -58,7 +58,7 @@ def _populated_workflow_state() -> WorkflowState:
         invoice_reviews={
             "invoice-2024-001": InvoiceReviewRecord(
                 invoice_id="invoice-2024-001",
-                fields={"note": "follow up VAT split"},
+                fields={"note": "follow up IVA split"},
                 updated_at=now,
             ),
         },
@@ -122,7 +122,7 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
         assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
         loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
         assert isinstance(loaded_invoice, InvoiceReviewRecord)
-        assert loaded_invoice.fields == {"note": "follow up VAT split"}
+        assert loaded_invoice.fields == {"note": "follow up IVA split"}
         assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
         loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
         assert isinstance(loaded_ledger, LedgerReviewRecord)

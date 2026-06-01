@@ -84,6 +84,7 @@ class SituacionFamiliar(StrEnum):
 
     Determines whether conjunta (joint) taxation is available and which
     unidad familiar variant applies:
+
     - ``casado``: married; conjunta available (Art. 82.1.1°).
     - ``pareja_hecho_registrada``: registered civil partnership in an
       autonomic registry; conjunta available (Art. 82.1.2°).

@@ -256,7 +256,7 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
     """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
 
     Uses country-specific patterns where known; falls back to the generic
-    EU VAT format (2-letter prefix + 2-15 alphanumerics) for other countries.
+    EU IVA format (2-letter prefix + 2-15 alphanumerics) for other countries.
     The NIF string must already include the two-letter country prefix.
     """
     pattern = _M349_NIF_PATTERNS.get(pais.upper(), _M349_NIF_FALLBACK)

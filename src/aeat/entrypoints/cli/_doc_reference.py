@@ -613,7 +613,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     )
     from ._config import (  # noqa: F401
         _google_payloads,
-        _profile_census_payloads,
+        _profile_censo_payloads,
     )
 
     # Materialise every lazy subtree before the tree walk.

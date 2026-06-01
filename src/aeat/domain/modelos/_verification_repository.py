@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.logging import get_logger
 from ._errors import ModeloError
@@ -80,7 +80,7 @@ class VerificationReportCatalogueRepository:
 
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
-            written_at=_now(),
+            written_at=now(),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )

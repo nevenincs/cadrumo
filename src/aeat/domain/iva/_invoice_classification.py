@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
 
 
-_IVA_RATE_TO_VAT_KIND: dict[IvaRate, IvaRateKind] = {
+_IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
     IvaRate.RATE_0: IvaRateKind.ZERO,
     IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
     IvaRate.RATE_10: IvaRateKind.REDUCED,
@@ -196,7 +196,7 @@ def classify_invoice_line_for_iva(
         )
 
     category = _IVA_RATE_TO_DOMESTIC_CATEGORY[iva_rate]
-    rate_kind = _IVA_RATE_TO_VAT_KIND[iva_rate]
+    rate_kind = _IVA_RATE_TO_IVA_KIND[iva_rate]
     flow_direction = IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
     return IvaInvoiceClassification(
         category=category,
@@ -240,7 +240,7 @@ def invoice_line_to_iva_observation(
         iva_rate: IvaRate slot for the line. NOT_SUBJECT raises
             (substrate-NULL category needs explicit construction).
         base_amount: Taxable base in EUR.
-        iva_amount: VAT amount in EUR.
+        iva_amount: IVA amount in EUR.
 
     Returns:
         An :class:`IvaLedgerObservation` with the full classification

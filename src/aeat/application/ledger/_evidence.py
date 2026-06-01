@@ -29,7 +29,7 @@ from ...core.errors import AeatError
 from ...core.external_constants import PDF_EXTENSION, UTF_8_ENCODING
 from ...core.hashing import sha256_file as _sha256_file
 from ...core.identity import BucketId
-from ...core.time import _now
+from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -38,6 +38,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from .._storage_paths import storage_path
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
@@ -178,7 +179,7 @@ def _build_evidence_event(
 
 def _emit_evidence_event(
     *,
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryRepositoryProtocol,
     bucket_id: str,
     event_type: BucketEventType,
     evidence_id: str,
@@ -204,7 +205,7 @@ class PurchaseInvoiceEvidenceService:
     def __init__(
         self,
         settings: Settings | None = None,
-        bucket_event_repository: BucketEventHistoryRepository | None = None,
+        bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var and lands writes in the project default.
@@ -234,7 +235,7 @@ class PurchaseInvoiceEvidenceService:
             )
         media_kind = _resolve_media_kind(resolved)
         digest = _sha256_file(resolved)
-        now = _now()
+        now = _utc_now()
         record = PurchaseInvoiceEvidence(
             evidence_id=uuid.uuid4().hex[:16],
             bucket_id=bucket_id,
@@ -293,7 +294,7 @@ class PurchaseInvoiceEvidenceService:
             for key, value in patch.model_dump(exclude_unset=True).items():
                 if value is not None:
                     data[key] = value
-            now = _now()
+            now = _utc_now()
             data["updated_at"] = now
             updated = PurchaseInvoiceEvidence.model_validate(data)
             records[index] = updated
@@ -325,7 +326,7 @@ class PurchaseInvoiceEvidenceService:
             if record.evidence_id == evidence_id:
                 removed = records.pop(index)
                 _save(self._settings, bucket_id, records)
-                now = _now()
+                now = _utc_now()
                 event_id = _emit_evidence_event(
                     event_repository=self._event_repository,
                     bucket_id=bucket_id,

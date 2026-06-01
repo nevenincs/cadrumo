@@ -30,7 +30,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -39,7 +39,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObject
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
-from ...core.time import _now
+from ...core.time import now
 from ._errors import LiveApplicationInputError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
@@ -156,7 +156,7 @@ class VerifyObservationRepository:
             )
         envelope = Envelope[VerifyObservation](
             schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-            written_at=_now(),
+            written_at=now(),
             classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
             payload=observation,
         )
@@ -237,7 +237,7 @@ class VerifyService:
             matched_expectation=matched,
             checked_at=checked_at,
             raw_evidence_locator=raw_evidence_locator,
-            persisted_at=_now(),
+            persisted_at=now(),
         )
         repository = self._repository_for(bucket_id)
         existing = repository.load(observation_id)

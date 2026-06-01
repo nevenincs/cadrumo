@@ -52,6 +52,8 @@ from pathlib import Path
 
 import pytest
 
+import aeat.application.wizard._catalogue  # noqa: F401  # register wizard catalogue at import time
+import aeat.application.wizard._persistence  # noqa: F401  # register project_answers projector at import time
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
@@ -177,7 +179,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Projection Test Autónomo",
+        display_name="M130 projection regression test profile",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
@@ -194,6 +196,15 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
                 path="tax_residence.jurisdiction_scope", value="common_regime"
             ),
             UserProfileFact(path="provenance.source", value="manual_cli"),
+            # Declaration type (person vs entity) — required by binding validation
+            # in modelo-100 formulas.
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            # Birth date drives the M100 ``age_at_year_end`` operator used by
+            # the mínimo del contribuyente formula and any age-sensitive tramo.
+            # Use a deterministic 1980 value so the taxpayer is 44 in 2024
+            # (below the over-65 supplement threshold) — keeps the
+            # M130→M100 oracle stable across runs.
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
         ),
     )
     lifecycle = UserProfileLifecycleRepository(
@@ -331,11 +342,18 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # second authority constructor, which the resources() module gates.
     authority = resources().modelos.authority
     m100_snapshot = authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    # Casilla 0604 is computed in the 2024 revision (formula
+    # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
+    # relation channels). The oracle path supplies the same M130 total
+    # through the relation map that the project verb threads. The
+    # `renta-2024-profile-taxpayer-birth-date` date_binding is required
+    # by the ``age_at_year_end`` op used in mínimo del contribuyente; the
+    # seeded profile fact `renta_taxpayer.birth_date = 1980-01-01` is the
+    # source of truth, mirrored here on the oracle.
     oracle_result = calculate_registry_snapshot(
         m100_snapshot,
         inputs={
             "0171": _TOTAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
-            "0604": _TOTAL_PAGOS_FRACCIONADOS,
         },
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
         binding_values={
@@ -347,6 +365,13 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         },
         enum_binding_values={
             f"renta-{_FILING_YEAR}-profile-tax-residence-ccaa": _CCAA,
+        },
+        relation_values={
+            f"renta-{_FILING_YEAR}-rel-130-pagos-fraccionados": _TOTAL_PAGOS_FRACCIONADOS,
+            f"renta-{_FILING_YEAR}-rel-131-pagos-fraccionados": Decimal("0"),
+        },
+        date_binding_values={
+            f"renta-{_FILING_YEAR}-profile-taxpayer-birth-date": date(1980, 1, 1),
         },
     )
 
@@ -367,7 +392,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert projected_value == oracle_value, (
             f"M100 casilla {casilla_id}: project verb returned {projected_value}, "
             f"oracle (direct calculate_registry_snapshot) returned {oracle_value}. "
-            f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}, 0604={_TOTAL_PAGOS_FRACCIONADOS}, "
+            f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}; "
+            f"rel-130-pagos-fraccionados={_TOTAL_PAGOS_FRACCIONADOS}; "
             f"ccaa={_CCAA!r}."
         )
 

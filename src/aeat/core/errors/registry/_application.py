@@ -891,9 +891,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.application.user_profile._censo_errors.CensoSyncError",
         ErrorCode(
-            code="FAIL_CENSUS_SYNC",
+            code="FAIL_CENSO_SYNC",
             category=ErrorCategory.FAIL,
-            message_key="errors.fail.census_sync",
+            message_key="errors.fail.censo_sync",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -902,9 +902,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.application.user_profile._censo_errors.CensoNotAvailableError",
         ErrorCode(
-            code="REFUSED_CENSUS_NOT_AVAILABLE",
+            code="REFUSED_CENSO_NOT_AVAILABLE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.census_not_available",
+            message_key="errors.refused.censo_not_available",
             default_suggestion="aeat config auth configure",
             retryable=False,
             runbook_id=None,
@@ -913,9 +913,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.application.user_profile._censo_errors.CensoFieldValidationError",
         ErrorCode(
-            code="REFUSED_CENSUS_FIELD_VALIDATION",
+            code="REFUSED_CENSO_FIELD_VALIDATION",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.census_field_validation",
+            message_key="errors.refused.censo_field_validation",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -924,9 +924,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.application.user_profile._censo_errors.CensoApplyConflictError",
         ErrorCode(
-            code="REFUSED_CENSUS_APPLY_CONFLICT",
+            code="REFUSED_CENSO_APPLY_CONFLICT",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.census_apply_conflict",
+            message_key="errors.refused.censo_apply_conflict",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

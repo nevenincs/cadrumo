@@ -245,7 +245,7 @@ def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> D
     Args:
         rule: A :class:`ProportionalityRule` of a usage-ratio kind.
         chosen_ratio: The operator's stored usage ratio (typically
-            derived from census ``office_m2 / total_m2`` for HOME_AREA
+            derived from censo ``office_m2 / total_m2`` for HOME_AREA
             kinds, or a personal-use proportion for PERSONAL kinds).
 
     Returns:

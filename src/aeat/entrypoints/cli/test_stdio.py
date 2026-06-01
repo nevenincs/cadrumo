@@ -1,10 +1,10 @@
 """Regression tests for the CLI stdio UTF-8 guard.
 
 Closes #292 (typer cp1252 UnicodeEncodeError) and #389 (review queue
-+ vat rates list crashes on Windows cp1252). The guard runs at the
++ iva rates list crashes on Windows cp1252). The guard runs at the
 top of :mod:`aeat.entrypoints.cli` before any echo / log / Rich
 console runs, so unicode characters such as ``→`` (U+2192) used in
-the review queue table, ``§`` (U+00A7) used in some VAT-rate
+the review queue table, ``§`` (U+00A7) used in some IVA-rate
 citations, and the emoji / CJK fragments operators may type into
 ``--reason`` payloads survive the encoding boundary.
 

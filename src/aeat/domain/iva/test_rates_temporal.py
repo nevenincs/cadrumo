@@ -1,4 +1,4 @@
-"""Period-versioned VAT rate lookup tests.
+"""Period-versioned IVA rate lookup tests.
 
 Confirms that :func:`aeat.domain.iva.lookup_rate` resolves the correct
 :class:`aeat.domain.iva.IvaRateRecord` record across the 2024 / 2025 ES window
@@ -15,7 +15,7 @@ from itertools import pairwise
 import pytest
 
 from . import EUMemberState, IvaRateKind, load_iva_rate_table, lookup_rate
-from .errors import IvaRateNotFoundError, IvaRateOverlapError
+from ._errors import IvaRateNotFoundError, IvaRateOverlapError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

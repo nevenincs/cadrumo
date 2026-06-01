@@ -2510,9 +2510,9 @@ def _bucket_history_event_payload(event: BucketEvent) -> Mapping[str, object]:
     }
 
 
-from ._profile_census import register as _register_profile_census
+from ._profile_censo import register as _register_profile_censo
 
-_register_profile_census(profile_app)
+_register_profile_censo(profile_app)
 
 app.add_typer(profile_app, name="profile")
 auth_app.add_typer(apoderado_app, name="apoderado")

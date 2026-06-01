@@ -69,7 +69,7 @@ def test_regime_allows_deduction_is_false_within_modelo_369_for_every_regime() -
 
 def test_regime_allows_deduction_is_true_for_recovery_scopes() -> None:
     for regime in OssIossRegime:
-        assert regime_allows_deduction(regime, DeductionScope.ESTABLECIDO_REGULAR_VAT_RETURN) is True
+        assert regime_allows_deduction(regime, DeductionScope.ESTABLECIDO_REGULAR_IVA_RETURN) is True
         assert regime_allows_deduction(regime, DeductionScope.NON_ESTABLECIDO_DIRECTIVE_PROCEDURE) is True
 
 

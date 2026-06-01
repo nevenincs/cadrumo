@@ -2,7 +2,7 @@
 
 Every site that previously reimplemented UTC timezone validation inline
 (``if value.tzinfo is None or value.utcoffset() is None: raise ...``) must
-now delegate to :func:`aeat.core.time._utc._validate_utc_aware`.
+now delegate to :func:`aeat.core.time._utc.validate_utc_aware`.
 
 This test walks the production source tree with :mod:`ast` and asserts that
 no ``tzinfo is None`` comparisons appear outside the canonical UTC module
@@ -102,6 +102,6 @@ def test_no_inline_tzinfo_guards_in_production_code(
 
     assert not violations, (
         f"Found {len(violations)} production file(s) with inline ``tzinfo is None`` guards "
-        f"that must be migrated to _validate_utc_aware:\n"
+        f"that must be migrated to validate_utc_aware:\n"
         + "\n".join(f"  {v}" for v in sorted(violations))
     )

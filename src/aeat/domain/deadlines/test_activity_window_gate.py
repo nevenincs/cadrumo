@@ -1,6 +1,6 @@
-"""Tests for the census-driven activity-window gate on the deadline engine.
+"""Tests for the censo-driven activity-window gate on the deadline engine.
 
-Closes #502 (2/2): TaxpayerProfile census fields (activity_start_date /
+Closes #502 (2/2): TaxpayerProfile censo fields (activity_start_date /
 activity_end_date) now have a real deadline-rule consumer in
 :func:`aeat.domain.deadlines._engine._window_outside_activity_period`.
 The engine skips obligation windows that fall entirely before alta
@@ -66,10 +66,10 @@ def test_window_straddling_baja_is_retained() -> None:
     ) is False
 
 
-def test_no_census_dates_means_no_filtering() -> None:
-    """When the operator has not yet captured a census, both dates
+def test_no_censo_dates_means_no_filtering() -> None:
+    """When the operator has not yet captured a censo, both dates
     are None and the gate never fires — backwards-compatible with
-    every existing TaxpayerProfile that pre-dates the census schema fields."""
+    every existing TaxpayerProfile that pre-dates the censo schema fields."""
 
     assert _window_outside_activity_period(
         opens_on=date(2024, 4, 1),

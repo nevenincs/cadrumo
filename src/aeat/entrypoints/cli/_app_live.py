@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...application.live import (
     FiledDataListingRow,
@@ -1500,7 +1500,7 @@ def verify_nif_iva(
         surface=VerifySurface.NIF_IVA,
         nif=observation.nif,
         verdict=observation.verdict,
-        checked_at=_now(),
+        checked_at=now(),
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )
@@ -1552,7 +1552,7 @@ def verify_tgvi(
         surface=VerifySurface.TGVI,
         nif=observation.nif,
         verdict=observation.verdict,
-        checked_at=_now(),
+        checked_at=now(),
         expected=expected_verdict,
         raw_evidence_locator=observation.raw_evidence_locator,
     )

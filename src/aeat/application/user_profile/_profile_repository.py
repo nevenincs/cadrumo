@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
@@ -254,7 +254,7 @@ class ProfileRepository:
             self._refuse_duplicate_tax_id(facts)
 
         kdf_params = _default_kdf_params()
-        created_at = _now()
+        created_at = now()
         bucket_dek_path = keystore_path(self._root, resolved_id) / BUCKET_DEK_FILENAME
         key_schedule = (
             BucketKeySchedule.BUCKET_DEK_V1 if bucket_dek_path.is_file() else BucketKeySchedule.LEGACY_MASTER_KEY

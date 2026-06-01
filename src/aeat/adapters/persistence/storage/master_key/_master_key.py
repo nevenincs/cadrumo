@@ -55,7 +55,7 @@ from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 from cryptography.exceptions import InvalidTag
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager
@@ -1018,7 +1018,7 @@ class EphemeralMasterKeyProvider:
             kek=self._key,
             dek=self._key,
             idle_minutes=60,
-            opened_at=_now(),
+            opened_at=now(),
             unsecured_backend=False,
         )
         activation = activate_session(session)
@@ -1350,7 +1350,7 @@ def _provider_enter(
         kek=key_bytes,
         dek=dek_bytes,
         idle_minutes=idle_minutes,
-        opened_at=_now(),
+        opened_at=now(),
         unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
     )
     activation = activate_session(session)

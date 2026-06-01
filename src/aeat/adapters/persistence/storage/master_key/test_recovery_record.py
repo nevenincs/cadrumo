@@ -127,7 +127,7 @@ def test_rejects_unknown_keys() -> None:
         )
 
 
-# ── UTC helper migration: _validate_utc_aware semantics ─────────────────────
+# ── UTC helper migration: validate_utc_aware semantics ─────────────────────
 
 
 def test_created_at_naive_raises_validation_error() -> None:

@@ -8,11 +8,46 @@ Verifies that:
 
 from __future__ import annotations
 
+import ast
 import importlib
+import inspect
+import pathlib
+from collections.abc import Callable, Mapping
 
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+_SRC_ROOT = pathlib.Path(__file__).parent
+
+_AST_CACHE: Mapping[pathlib.Path, ast.AST] | None = None
+
+
+def _build_ast_cache() -> Mapping[pathlib.Path, ast.AST]:
+    """Mirror the conftest ``source_tree_ast`` fixture for imperative callers."""
+    global _AST_CACHE
+    if _AST_CACHE is not None:
+        return _AST_CACHE
+    cache: dict[pathlib.Path, ast.AST] = {}
+    for path in _SRC_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts or ".venv" in path.parts or "_data" in path.parts:
+            continue
+        try:
+            source = path.read_text(encoding="utf-8", errors="replace")
+            cache[path] = ast.parse(source, filename=str(path))
+        except (OSError, SyntaxError):
+            continue
+    _AST_CACHE = cache
+    return cache
+
+
+def _invoke_test_fn(fn: Callable[..., None]) -> None:
+    """Invoke a ratchet test function, supplying ``source_tree_ast`` when required."""
+    parameters = inspect.signature(fn).parameters
+    if "source_tree_ast" in parameters:
+        fn(_build_ast_cache())
+    else:
+        fn()
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +90,7 @@ def _run_all_test_fns(module_name: str) -> None:
     test_fns = [v for k, v in vars(mod).items() if k.startswith("test_") and callable(v)]
     assert test_fns, f"No test_ function found in {module_name}"
     for fn in test_fns:
-        fn()
+        _invoke_test_fn(fn)
 
 
 def test_prior_wave_utf8_enrollment_inventory() -> None:

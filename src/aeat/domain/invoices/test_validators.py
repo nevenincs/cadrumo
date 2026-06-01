@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ...core.identity import IdentityError, validate_spanish_tax_id
-from ._validators import validate_country_code, validate_vat_number
+from ._validators import validate_country_code, validate_iva_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -141,7 +141,7 @@ def test_validate_spanish_tax_id_strips_common_separators(value: str, expected: 
         ("ES 12345678Z", "12345678Z"),
     ],
 )
-def test_validate_spanish_tax_id_strips_es_vat_prefix(value: str, expected: str) -> None:
+def test_validate_spanish_tax_id_strips_es_iva_prefix(value: str, expected: str) -> None:
     """Spanish IDs carrying the intra-EU ES prefix must validate equivalently."""
     assert validate_spanish_tax_id(value) == expected
 
@@ -153,9 +153,9 @@ def test_validate_spanish_tax_id_strips_es_vat_prefix(value: str, expected: str)
         ("FR.12.345.678.901", "FR", "FR12345678901"),
     ],
 )
-def test_validate_vat_number_strips_dot_separators(value: str, country: str, expected: str) -> None:
-    """Non-ES VAT numbers frequently carry dot separators and must be normalised."""
-    assert validate_vat_number(value, country) == expected
+def test_validate_iva_number_strips_dot_separators(value: str, country: str, expected: str) -> None:
+    """Non-ES IVA numbers frequently carry dot separators and must be normalised."""
+    assert validate_iva_number(value, country) == expected
 
 
 @pytest.mark.parametrize(
@@ -166,9 +166,9 @@ def test_validate_vat_number_strips_dot_separators(value: str, country: str, exp
         (" de 123456789 ", "de", "DE123456789"),
     ],
 )
-def test_validate_vat_number_accepts_expected_prefixes(value: str, country: str, expected: str) -> None:
-    """Country-prefixed VAT bodies must pass the shape check."""
-    assert validate_vat_number(value, country) == expected
+def test_validate_iva_number_accepts_expected_prefixes(value: str, country: str, expected: str) -> None:
+    """Country-prefixed IVA bodies must pass the shape check."""
+    assert validate_iva_number(value, country) == expected
 
 
 @pytest.mark.parametrize(
@@ -181,16 +181,16 @@ def test_validate_vat_number_accepts_expected_prefixes(value: str, country: str,
         ("DE!!!456789", "DE"),
     ],
 )
-def test_validate_vat_number_rejects_bad_shapes(value: str, country: str) -> None:
+def test_validate_iva_number_rejects_bad_shapes(value: str, country: str) -> None:
     """Missing or mismatched prefix and out-of-range bodies are rejected.
 
-    Every VAT-number rejection message begins with ``VAT number``;
+    Every IVA-number rejection message begins with ``IVA number``;
     the prefix-mismatch and body-shape branches both share the
-    keyword so the match= pins rejection by the VAT shape gate
+    keyword so the match= pins rejection by the IVA shape gate
     rather than any unrelated InvoiceValidationError.
     """
-    with pytest.raises(ValueError, match=r"VAT number"):
-        validate_vat_number(value, country)
+    with pytest.raises(ValueError, match=r"IVA number"):
+        validate_iva_number(value, country)
 
 
 @pytest.mark.parametrize(

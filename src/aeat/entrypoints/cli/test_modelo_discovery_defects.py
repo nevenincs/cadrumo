@@ -12,7 +12,7 @@ fleet:
 * ``bindings list --year`` (no ``--period``) resolves the revision
   covering that filing year, not the latest revision.
 * ``modelo work create`` and the modelo introspection verbs accept the
-  census period tokens (``alta`` / ``modificacion`` / ``baja``) that
+  censo period tokens (``alta`` / ``modificacion`` / ``baja``) that
   Modelo 036 declares.
 * ``bindings list`` reports an ``input_channel`` discriminator so a
   ``typed_enum`` binding consumed as a Decimal operand is not
@@ -235,13 +235,13 @@ def test_bindings_list_year_resolves_the_year_covering_revision() -> None:
 
 
 # ---------------------------------------------------------------------------
-# D4 - census period tokens accepted by every modelo surface
+# D4 - censo period tokens accepted by every modelo surface
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
-def test_work_create_accepts_census_period_tokens(token: str) -> None:
-    """``modelo work create --modelo 036`` accepts every census period
+def test_work_create_accepts_censo_period_tokens(token: str) -> None:
+    """``modelo work create --modelo 036`` accepts every censo period
     token Modelo 036 declares as valid."""
 
     _create_profile()
@@ -258,8 +258,8 @@ def test_work_create_accepts_census_period_tokens(token: str) -> None:
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
-def test_describe_and_casillas_accept_census_period_tokens(token: str) -> None:
-    """``describe`` and ``casillas`` accept the census period tokens."""
+def test_describe_and_casillas_accept_censo_period_tokens(token: str) -> None:
+    """``describe`` and ``casillas`` accept the censo period tokens."""
 
     described = invoke_cached_cli(["app", "modelo", "describe", "036", "--period", token])
     assert described.exit_code == 0, described.output
@@ -267,8 +267,8 @@ def test_describe_and_casillas_accept_census_period_tokens(token: str) -> None:
     assert casillas.exit_code == 0, casillas.output
 
 
-def test_work_create_still_rejects_an_undeclared_census_token() -> None:
-    """An undeclared census token is still refused with a clear error."""
+def test_work_create_still_rejects_an_undeclared_censo_token() -> None:
+    """An undeclared censo token is still refused with a clear error."""
 
     _create_profile()
     result = invoke_cached_cli(
@@ -285,7 +285,7 @@ def test_work_create_still_rejects_an_undeclared_census_token() -> None:
 
 
 def test_work_create_still_accepts_quarterly_tokens() -> None:
-    """The census-token path does not regress quarterly period tokens."""
+    """The censo-token path does not regress quarterly period tokens."""
 
     _create_profile()
     result = invoke_cached_cli(

@@ -6,7 +6,7 @@ under :attr:`aeat.domain.portals.PortalCategory.CALENDAR_REFERENCE`.
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -14,7 +14,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CALENDARIO_CONTRIBUYENTE,
     path="/Sede/ayuda/manuales-videos-folletos/calendario-contribuyente.html",
-    subdomain=Subdomain.SEDE,
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.CALENDAR_REFERENCE,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,

@@ -8,7 +8,7 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -16,7 +16,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PRESENTAR_CONSULTAR_INDEX,
     path="/Sede/presentar-consultar-declaraciones-modelo.html",
-    subdomain=Subdomain.SEDE,
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.CALENDAR_REFERENCE,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,

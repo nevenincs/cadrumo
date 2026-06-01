@@ -23,7 +23,7 @@ from . import (
     SectionSource,
     generate_rule_id,
 )
-from .errors import ManualValidationError
+from ._errors import ManualValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

@@ -89,6 +89,13 @@ jobs:
         run: uv run pytest --junitxml=junit.xml
         # AEAT_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
+      - name: Documentation conformance
+        # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
+        # module-to-stub correspondence, and CLI reference drift/conformance)
+        # plus doc8 and interrogate. Excluded from the fast unit lane above
+        # because the nitpicky build is multi-minute; gated here on every push.
+        run: just docs-check
+
       - name: Audit dependencies for known CVEs
         # Scans the locked dependency graph against the PyPI Advisory
         # Database (PYSEC + GitHub Advisory) and fails the build on any

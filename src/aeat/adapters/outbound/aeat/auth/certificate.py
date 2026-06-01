@@ -38,7 +38,7 @@ from aeat.core._models import STRICT_FROZEN_CONFIG
 from .....core.config import CertificateBackend
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
-from .....core.time._utc import _coerce_utc_aware
+from .....core.time._utc import coerce_utc_aware
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
 
 if TYPE_CHECKING:
@@ -349,8 +349,8 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         raise CertificateLoadError(f"PKCS#12 bundle at {bundle.path} contains no end-entity certificate")
 
     x509_cert = parsed.cert.certificate
-    not_before = _coerce_utc_aware(x509_cert.not_valid_before_utc)
-    not_after = _coerce_utc_aware(x509_cert.not_valid_after_utc)
+    not_before = coerce_utc_aware(x509_cert.not_valid_before_utc)
+    not_after = coerce_utc_aware(x509_cert.not_valid_after_utc)
 
     friendly_name: str | None = bundle.friendly_name
     if friendly_name is None and parsed.cert.friendly_name is not None:
@@ -454,7 +454,7 @@ def evaluate_loaded_certificate_health(
         raise AuthValidationError(
             f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})"
         )
-    evaluated_at = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
+    evaluated_at = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     delta_seconds = (cert.not_after - evaluated_at).total_seconds()
     # Floor division keeps "one second before expiry" at 0 days → EXPIRED.
     days_until_expiry = int(delta_seconds // 86400)
@@ -542,9 +542,9 @@ def health(
         if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
             raise
         x509_cert = parsed.cert.certificate
-        not_before = _coerce_utc_aware(x509_cert.not_valid_before_utc)
-        not_after = _coerce_utc_aware(x509_cert.not_valid_after_utc)
-        evaluated_at = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
+        not_before = coerce_utc_aware(x509_cert.not_valid_before_utc)
+        not_after = coerce_utc_aware(x509_cert.not_valid_after_utc)
+        evaluated_at = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
         delta_seconds = (not_after - evaluated_at).total_seconds()
         days_until_expiry = int(delta_seconds // 86400)
         return CertificateHealth(

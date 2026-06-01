@@ -26,7 +26,7 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
 # instantiation. Default Windows terminals expose cp1252; emoji,
 # CJK, the U+2192 arrow used by the review queue, and the § sign
-# in some VAT citations all crash typer.echo on cp1252. See
+# in some IVA citations all crash typer.echo on cp1252. See
 # :mod:`._stdio` for the rationale.
 _configure_stdio_for_utf8()
 

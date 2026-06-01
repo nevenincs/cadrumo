@@ -2260,7 +2260,7 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
     Extraction verdict: VERIFIED — decl.ejercicio (Decimal) and decl.periodo
     (str) extracted.
 
-    Formula verdict: EXTRACTION-ONLY — M369 OSS EU VAT uses the
+    Formula verdict: EXTRACTION-ONLY — M369 OSS EU IVA uses the
     esquema-union revision which has no closure formulas in the registry.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "369" / "2024-1T.pdf"
@@ -2304,7 +2304,7 @@ def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
     period is "alta"; the previous misnamed fixture "2025-0A.pdf" used a
     time-code that did not match any revision period, causing NOT-CHAIN-READY.
 
-    Extraction verdict: EXTRACTION-ONLY -- M036 is a census registration form;
+    Extraction verdict: EXTRACTION-ONLY -- M036 is a censo registration form;
     the registry has no numeric closure formula over decl.event-kind.
     decl.vigencia-2025 is informational only and not extractable from the
     printed-form PDF (absent from target_casillas in the extraction profile).

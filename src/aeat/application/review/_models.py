@@ -23,7 +23,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.i18n import Translatable as tr
-from ...core.time._utc import _validate_utc_aware
+from ...core.time._utc import validate_utc_aware
 from ...domain.invoices import Invoice
 from ...domain.profile import normalise_key
 from ...domain.transactions import Transaction
@@ -63,7 +63,7 @@ class _ReviewItemBase(BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         """Reject naive timestamps so cross-source sorting is deterministic."""
-        return _validate_utc_aware(value)
+        return validate_utc_aware(value)
 
 
 class TransactionReviewItem(_ReviewItemBase):

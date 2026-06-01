@@ -45,7 +45,7 @@ from ._schema import (
     Section,
     SectionRef,
 )
-from .errors import ManualNotFoundError, ManualParseError
+from ._errors import ManualNotFoundError, ManualParseError
 
 _logger = get_logger(__name__)
 

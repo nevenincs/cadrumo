@@ -141,7 +141,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LIVE_CENSO_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_live_censo_snapshot_not_found",
-            default_suggestion="aeat config profile census refresh",
+            default_suggestion="aeat config profile censo refresh",
             retryable=False,
             runbook_id=None,
         ),
@@ -600,75 +600,75 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.usage_ratios._errors.CensoRatioMismatchError",
         ErrorCode(
-            code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSUS_MISMATCH",
+            code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_financial_usage_ratios_census_mismatch",
-            default_suggestion="aeat config profile census refresh && aeat config profile census apply",
+            message_key="errors.refused.refused_financial_usage_ratios_censo_mismatch",
+            default_suggestion="aeat config profile censo refresh && aeat config profile censo apply",
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaCatalogueError",
+        "aeat.domain.iva._errors.IvaCatalogueError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_CATALOGUE",
+            code="ERROR_FINANCIAL_IVA_CATALOGUE",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_catalogue",
+            message_key="errors.error.error_financial_iva_catalogue",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaCategoryNotFoundError",
+        "aeat.domain.iva._errors.IvaCategoryNotFoundError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND",
+            code="ERROR_FINANCIAL_IVA_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_category_not_found",
+            message_key="errors.error.error_financial_iva_category_not_found",
             default_suggestion="aeat app ledger review",
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaClassificationError",
+        "aeat.domain.iva._errors.IvaClassificationError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_CLASSIFICATION",
+            code="ERROR_FINANCIAL_IVA_CLASSIFICATION",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_classification",
+            message_key="errors.error.error_financial_iva_classification",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaError",
+        "aeat.domain.iva._errors.IvaError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT",
+            code="ERROR_FINANCIAL_IVA",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat",
+            message_key="errors.error.error_financial_iva",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaRateNotFoundError",
+        "aeat.domain.iva._errors.IvaRateNotFoundError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_RATE_NOT_FOUND",
+            code="ERROR_FINANCIAL_IVA_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_rate_not_found",
+            message_key="errors.error.error_financial_iva_rate_not_found",
             default_suggestion="aeat app ledger review",
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaRateOverlapError",
+        "aeat.domain.iva._errors.IvaRateOverlapError",
         ErrorCode(
-            code="ERROR_FINANCIAL_VAT_RATE_OVERLAP",
+            code="ERROR_FINANCIAL_IVA_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_rate_overlap",
+            message_key="errors.error.error_financial_iva_rate_overlap",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -719,7 +719,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManifestError",
+        "aeat.domain.manuals._errors.ManifestError",
         ErrorCode(
             code="INTEGRITY_MANUALS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -730,7 +730,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualError",
+        "aeat.domain.manuals._errors.ManualError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL",
             category=ErrorCategory.ERROR,
@@ -741,7 +741,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualNotFoundError",
+        "aeat.domain.manuals._errors.ManualNotFoundError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -752,7 +752,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualParseError",
+        "aeat.domain.manuals._errors.ManualParseError",
         ErrorCode(
             code="FAIL_MANUALS_MANUAL_PARSE",
             category=ErrorCategory.FAIL,
@@ -763,7 +763,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualReviewRequiredError",
+        "aeat.domain.manuals._errors.ManualReviewRequiredError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL_REVIEW_REQUIRED",
             category=ErrorCategory.ERROR,
@@ -774,7 +774,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.RuleExtractionError",
+        "aeat.domain.manuals._errors.RuleExtractionError",
         ErrorCode(
             code="ERROR_MANUALS_RULE_EXTRACTION",
             category=ErrorCategory.ERROR,
@@ -785,7 +785,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeError",
+        "aeat.domain.normatives._errors.NormativeError",
         ErrorCode(
             code="ERROR_NORMATIVES_NORMATIVE",
             category=ErrorCategory.ERROR,
@@ -796,7 +796,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeNotFoundError",
+        "aeat.domain.normatives._errors.NormativeNotFoundError",
         ErrorCode(
             code="ERROR_NORMATIVES_NORMATIVE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -807,7 +807,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeParseError",
+        "aeat.domain.normatives._errors.NormativeParseError",
         ErrorCode(
             code="FAIL_NORMATIVES_NORMATIVE_PARSE",
             category=ErrorCategory.FAIL,
@@ -1516,44 +1516,44 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaValidationError",
+        "aeat.domain.iva._errors.IvaValidationError",
         ErrorCode(
-            code="ERROR_VAT_VALIDATION",
+            code="ERROR_IVA_VALIDATION",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_validation",
+            message_key="errors.error.error_iva_validation",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.ProrrataError",
+        "aeat.domain.iva._errors.ProrrataError",
         ErrorCode(
-            code="ERROR_VAT_PRORRATA",
+            code="ERROR_IVA_PRORRATA",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_prorrata",
+            message_key="errors.error.error_iva_prorrata",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.ProrrataInputError",
+        "aeat.domain.iva._errors.ProrrataInputError",
         ErrorCode(
-            code="ERROR_VAT_PRORRATA_INPUT",
+            code="ERROR_IVA_PRORRATA_INPUT",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_prorrata_input",
+            message_key="errors.error.error_iva_prorrata_input",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.iva.errors.ProrrataSectorError",
+        "aeat.domain.iva._errors.ProrrataSectorError",
         ErrorCode(
-            code="ERROR_VAT_PRORRATA_SECTOR",
+            code="ERROR_IVA_PRORRATA_SECTOR",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_prorrata_sector",
+            message_key="errors.error.error_iva_prorrata_sector",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -1681,7 +1681,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeValidationError",
+        "aeat.domain.normatives._errors.NormativeValidationError",
         ErrorCode(
             code="ERROR_NORMATIVES_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1736,7 +1736,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualValidationError",
+        "aeat.domain.manuals._errors.ManualValidationError",
         ErrorCode(
             code="ERROR_MANUALS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1802,7 +1802,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AssetRecordError",
+        "aeat.domain.profile._errors.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",
             category=ErrorCategory.ERROR,
@@ -1813,7 +1813,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AssetValidationError",
+        "aeat.domain.profile._errors.AssetValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1824,7 +1824,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.AmortizacionLedgerError",
+        "aeat.domain.profile._errors.AmortizacionLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_AMORTIZATION_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1835,7 +1835,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.InventoryLedgerError",
+        "aeat.domain.profile._errors.InventoryLedgerError",
         ErrorCode(
             code="ERROR_PROFILE_INVENTORY_LEDGER",
             category=ErrorCategory.ERROR,
@@ -1846,7 +1846,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.InventoryValidationError",
+        "aeat.domain.profile._errors.InventoryValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_INVENTORY_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -1857,7 +1857,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.LIFOForbiddenError",
+        "aeat.domain.profile._errors.LIFOForbiddenError",
         ErrorCode(
             code="REFUSED_PROFILE_LIFO_FORBIDDEN",
             category=ErrorCategory.REFUSED,
@@ -1868,7 +1868,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.BasisCapExceededError",
+        "aeat.domain.profile._errors.BasisCapExceededError",
         ErrorCode(
             code="REFUSED_PROFILE_BASIS_CAP_EXCEEDED",
             category=ErrorCategory.REFUSED,
@@ -2178,9 +2178,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.modelos._errors.CensoStaleRefusedError",
         ErrorCode(
-            code="REFUSED_MODELO_CENSUS_STALE",
+            code="REFUSED_MODELO_CENSO_STALE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_census_stale",
+            message_key="errors.refused.modelo_censo_stale",
             default_suggestion="aeat app modelo work calculate",
             retryable=False,
             runbook_id=None,

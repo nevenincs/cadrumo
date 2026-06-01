@@ -19,7 +19,7 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -255,7 +255,7 @@ def _append_profile_activated_event(*, profile_id: str, active_profile: str | No
     if active_profile is None:
         return
 
-    occurred_at = _now()
+    occurred_at = now()
     payload = {"profile_id": profile_id, "active_profile": active_profile}
     actor = "operator"
     bucket_id = active_profile

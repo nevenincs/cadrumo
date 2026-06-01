@@ -1,4 +1,4 @@
-"""Sede G313 (Mis Datos Censales) read-only census adapter — data layer.
+"""Sede G313 (Mis Datos Censales) read-only censo adapter — data layer.
 
 Owns the strict pydantic envelope (:class:`CensoFactSet`) and the pure
 HTML parser (:func:`parse_g313_html`) that lift the AEAT G313 result
@@ -12,7 +12,7 @@ The fact-set covers every field on the G313 (Mis Datos Censales)
 projection:
 
 * fiscal address: cadastral reference + habitual-vivienda flag
-* census section: activity start / end dates, establecimiento type,
+* censo section: activity start / end dates, establecimiento type,
   elected withholding pct (LIRPF Art. 101.5 + RIRPF Art. 95.1/95.2)
 * vivienda_office: total / office m² (LIRPF Art. 30.2 rule 5)
 * activities: IAE epigraph
@@ -52,7 +52,7 @@ class CensoFactSet(BaseModel):
     """Typed projection of one G313 (Mis Datos Censales) page read.
 
     Every field is optional because G313 returns whatever subset of the
-    census the operator's NIF actually has registered. The
+    censo the operator's NIF actually has registered. The
     CensoSyncService layer above is responsible for refusing a partial
     capture that contradicts a required calculation; the adapter never
     fabricates a default to fill a hole.
@@ -71,11 +71,11 @@ class CensoFactSet(BaseModel):
     )
     activity_start_date: date | None = Field(
         default=None,
-        description="RGAT Art. 9 census activity start date.",
+        description="RGAT Art. 9 censo activity start date.",
     )
     activity_end_date: date | None = Field(
         default=None,
-        description="RGAT Art. 11 census activity end date (None while still active).",
+        description="RGAT Art. 11 censo activity end date (None while still active).",
     )
     establecimiento_type: str | None = Field(
         default=None,

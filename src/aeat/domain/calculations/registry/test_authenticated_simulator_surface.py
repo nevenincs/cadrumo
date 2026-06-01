@@ -132,10 +132,10 @@ def test_authenticated_simulator_inherits_canonical_aeat_write_forbidden_actions
         assert forbidden in decision.forbidden_actions
 
 
-def test_authenticated_simulator_vat_id_check_pair_is_in_compatibility_table() -> None:
-    """The new cross-reference category pairs with the vat_id_check oracle surface_kind."""
+def test_authenticated_simulator_iva_id_check_pair_is_in_compatibility_table() -> None:
+    """The new cross-reference category pairs with the iva_id_check oracle surface_kind."""
 
-    assert ("authenticated_simulator", "vat_id_check") in _COMPATIBLE_SURFACE_PAIRS
+    assert ("authenticated_simulator", "iva_id_check") in _COMPATIBLE_SURFACE_PAIRS
 
 
 def test_existing_surface_categories_still_validate() -> None:

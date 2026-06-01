@@ -226,7 +226,7 @@ class TestPreRegistrationObligationGate:
     def test_2026_registrant_has_no_2025_iva_obligations(self) -> None:
         """A profile registered in 2026 owes no 2025 quarterly return.
 
-        Computing the 2025 schedule for a taxpayer whose census alta
+        Computing the 2025 schedule for a taxpayer whose censo alta
         is 2026-03-01 must drop every Modelo 303 window — all four
         2025 quarters close before the alta date."""
 
@@ -235,7 +235,7 @@ class TestPreRegistrationObligationGate:
 
         assert all(o.modelo != "303" for o in schedule.obligations), (
             "2026 registrant was shown a 2025 IVA quarter that closed "
-            "before their census alta"
+            "before their censo alta"
         )
         assert all(o.closes_on >= date(2026, 3, 1) for o in schedule.obligations), (
             "an obligation window closing before the alta survived the gate"

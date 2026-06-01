@@ -151,15 +151,15 @@ class WorkUnit(BaseModel):
         discard_reason: Operator-supplied free-text reason for
             the discard. ``None`` when no reason was given (or
             when the unit is not discarded).
-        census_stamped_stale_at: Timezone-aware UTC timestamp the
-            stale-cascade walker set when ``aeat config profile census
-            apply`` superseded the census facts the work unit depended
-            on. ``None`` while the unit is still census-current.
-            Set/unset together with ``census_stale_reason``.
-        census_stale_reason: Operator-readable text recording why the
+        censo_stamped_stale_at: Timezone-aware UTC timestamp the
+            stale-cascade walker set when ``aeat config profile censo
+            apply`` superseded the censo facts the work unit depended
+            on. ``None`` while the unit is still censo-current.
+            Set/unset together with ``censo_stale_reason``.
+        censo_stale_reason: Operator-readable text recording why the
             unit was marked stale (typically the
             superseding snapshot id). ``None`` while not stale; both
-            this and ``census_stamped_stale_at`` set together when
+            this and ``censo_stamped_stale_at`` set together when
             stale, both ``None`` otherwise.
     """
 
@@ -181,8 +181,8 @@ class WorkUnit(BaseModel):
     current_calculation_revision_id: _OptionalHex64 = None
     filed_calculation_revision_id: _OptionalHex64 = None
     current_filing_record_id: _OptionalHex64 = None
-    census_stamped_stale_at: datetime | None = None
-    census_stale_reason: _StaleReason | None = None
+    censo_stamped_stale_at: datetime | None = None
+    censo_stale_reason: _StaleReason | None = None
     # ISD (Modelo 650/660) and ITPyAJD (Modelo 600/620) context axis:
     # CCAA of the causante (Ley 22/2009 Art. 32) or the bien-location CCAA.
     # None for modelos where jurisdiction follows the declarant's profile CCAA.
@@ -242,15 +242,15 @@ class WorkUnit(BaseModel):
                 raise ModeloValidationError(
                     f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
                 )
-        stamped = self.census_stamped_stale_at is not None
-        reasoned = self.census_stale_reason is not None
+        stamped = self.censo_stamped_stale_at is not None
+        reasoned = self.censo_stale_reason is not None
         if stamped != reasoned:
             raise ModeloValidationError(
-                "census_stamped_stale_at and census_stale_reason must be set or unset together",
+                "censo_stamped_stale_at and censo_stale_reason must be set or unset together",
             )
-        if stamped and self.census_stamped_stale_at is not None and self.census_stamped_stale_at < self.created_at:
+        if stamped and self.censo_stamped_stale_at is not None and self.censo_stamped_stale_at < self.created_at:
             raise ModeloValidationError(
-                f"census_stamped_stale_at {self.census_stamped_stale_at.isoformat()} "
+                f"censo_stamped_stale_at {self.censo_stamped_stale_at.isoformat()} "
                 f"precedes created_at {self.created_at.isoformat()}",
             )
         return self

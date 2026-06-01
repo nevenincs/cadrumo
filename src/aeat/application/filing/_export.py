@@ -33,7 +33,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file
@@ -248,7 +248,7 @@ def export_draft(
         output_path=output_path,
         byte_size=len(payload),
         file_sha256=digest,
-        exported_at=_now(),
+        exported_at=now(),
         narrative="filing.export.written",
         casilla_provenance=casilla_provenance,
     )
@@ -272,7 +272,7 @@ def verify_export(
             file_path=file_path,
             verdict=DeclaracionVerifyVerdict.MISSING,
             file_sha256=digest,
-            verified_at=_now(),
+            verified_at=now(),
             narrative="filing.export.missing_registry_layout",
         )
     if not file_path.exists():
@@ -280,7 +280,7 @@ def verify_export(
             draft_id=draft.draft_id,
             file_path=file_path,
             verdict=DeclaracionVerifyVerdict.MISSING,
-            verified_at=_now(),
+            verified_at=now(),
             narrative="filing.export.missing_file",
         )
     payload = file_path.read_bytes()
@@ -294,7 +294,7 @@ def verify_export(
             file_path=file_path,
             verdict=DeclaracionVerifyVerdict.MISSING,
             file_sha256=digest,
-            verified_at=_now(),
+            verified_at=now(),
             narrative="filing.export.malformed_file",
         )
     # Draft casillas the export parser never re-read: the wire layout
@@ -315,7 +315,7 @@ def verify_export(
         casilla_provenance=_provenance_for_casillas(draft, checked),
         mismatched_casilla_provenance=_provenance_for_casillas(draft, mismatched),
         file_sha256=digest,
-        verified_at=_now(),
+        verified_at=now(),
         narrative="filing.export.verified",
     )
 

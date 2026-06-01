@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.logging import get_logger
 from ._errors import AmortizationLedgerCapExceededError
 from ._models import FincaAmortizacionLedgerEntry, Finca, FincaRendimientoRecord
-from ._rounding import _round_to_cents
+from ...core.money import round_to_cents as _round_to_cents
 
 _logger = get_logger(__name__)
 

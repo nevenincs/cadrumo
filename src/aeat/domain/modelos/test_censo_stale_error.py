@@ -12,25 +12,25 @@ from aeat.domain.modelos._errors import CensoStaleRefusedError, ModeloError
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def test_census_stale_refused_is_a_modelo_error() -> None:
+def test_censo_stale_refused_is_a_modelo_error() -> None:
     assert issubclass(CensoStaleRefusedError, ModeloError)
     assert issubclass(CensoStaleRefusedError, AeatError)
 
 
-def test_census_stale_refused_carries_registered_error_code() -> None:
+def test_censo_stale_refused_carries_registered_error_code() -> None:
     code = get_registered_error_code(CensoStaleRefusedError)
 
-    assert code.code == "REFUSED_MODELO_CENSUS_STALE"
+    assert code.code == "REFUSED_MODELO_CENSO_STALE"
     assert code.category.value == "REFUSED"
     assert code.default_suggestion == "aeat app modelo work calculate"
 
 
-def test_census_stale_refused_carries_context_through_init() -> None:
+def test_censo_stale_refused_carries_context_through_init() -> None:
     error = CensoStaleRefusedError(
-        "work unit wu-1 was produced before the latest census apply",
-        context={"work_unit_id": "wu-1", "census_snapshot_id": "snap-xyz"},
+        "work unit wu-1 was produced before the latest censo apply",
+        context={"work_unit_id": "wu-1", "censo_snapshot_id": "snap-xyz"},
     )
 
     assert error.context is not None
     assert error.context["work_unit_id"] == "wu-1"
-    assert error.context["census_snapshot_id"] == "snap-xyz"
+    assert error.context["censo_snapshot_id"] == "snap-xyz"

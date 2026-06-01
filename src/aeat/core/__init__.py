@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from ._models import STRICT_FROZEN_CONFIG
+from ._period import StandardPeriodCode
 
 __all__: list[str] = [
     "AggregationSourceKind",
+    "StandardPeriodCode",
     "STRICT_FROZEN_CONFIG",
 ]
 

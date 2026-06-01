@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import inspect
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ..logging import get_logger
 from ._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
@@ -87,7 +87,7 @@ def record_event(
         step_id=step_id,
         kind=kind,
         payload=payload,
-        timestamp=_now(),
+        timestamp=now(),
         module=module or _caller_module(),
     )
     # INFO level keeps the record flowing through both the JSONL sink

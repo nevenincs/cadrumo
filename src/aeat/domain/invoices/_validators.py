@@ -1,6 +1,6 @@
 """Counterparty identity validators for invoice records.
 
-The EU-VAT prefix check and ISO-3166 alpha-2 country-code normaliser
+The EU-IVA prefix check and ISO-3166 alpha-2 country-code normaliser
 remain in this module because they are invoice-domain concerns.
 Each helper raises :class:`ValueError` on failure so pydantic
 surfaces the error as a validation error in the enclosing
@@ -26,10 +26,10 @@ __all__ = [
     "assert_eu_member_state_code",
     "is_eu_member_state_code",
     "validate_country_code",
-    "validate_vat_number",
+    "validate_iva_number",
 ]
 
-_VAT_BODY_RE = re.compile(r"^[a-zA-Z0-9]{4,20}$")
+_IVA_BODY_RE = re.compile(r"^[a-zA-Z0-9]{4,20}$")
 _ISO_2_RE = re.compile(r"^[A-Z]{2}$")
 
 
@@ -98,19 +98,19 @@ def assert_eu_member_state_code(value: str) -> str:
     return normalized
 
 
-def validate_vat_number(value: str, country: str) -> str:
-    """Validate a non-ES EU VAT number shape against its country prefix.
+def validate_iva_number(value: str, country: str) -> str:
+    """Validate a non-ES EU IVA number shape against its country prefix.
 
     Full per-country checksum validation is out of scope; the helper
     enforces only the leading ISO-2 country prefix plus a 4-20 character
     alphanumeric body.
 
     Args:
-        value: Raw VAT identifier to validate.
+        value: Raw IVA identifier to validate.
         country: ISO-3166 alpha-2 country code already validated.
 
     Returns:
-        The uppercased, whitespace-trimmed VAT identifier.
+        The uppercased, whitespace-trimmed IVA identifier.
 
     Raises:
         InvoiceValidationError: If the value is malformed or the prefix does not match
@@ -118,11 +118,11 @@ def validate_vat_number(value: str, country: str) -> str:
     """
     normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:
-        raise InvoiceValidationError("VAT number must not be blank")
+        raise InvoiceValidationError("IVA number must not be blank")
     country_upper = country.strip().upper()
     if not normalized.startswith(country_upper):
-        raise InvoiceValidationError("VAT number must start with the counterparty country ISO-2 prefix")
+        raise InvoiceValidationError("IVA number must start with the counterparty country ISO-2 prefix")
     body = normalized[len(country_upper) :]
-    if not _VAT_BODY_RE.match(body):
-        raise InvoiceValidationError("VAT number body must be 4-20 alphanumeric characters")
+    if not _IVA_BODY_RE.match(body):
+        raise InvoiceValidationError("IVA number body must be 4-20 alphanumeric characters")
     return normalized

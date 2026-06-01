@@ -26,7 +26,7 @@ from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
@@ -191,7 +191,7 @@ class SecureBoundRepository[T: BaseModel]:
         safe_repository_id(identifier, context="identifier")
         envelope = self._envelope_cls()(
             schema_version=self.schema_version,
-            written_at=_now(),
+            written_at=now(),
             classification=self.sensitivity,
             payload=payload,
         )

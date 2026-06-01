@@ -60,12 +60,10 @@ class Expediente(BaseModel):
         ejercicio: Tax year inferred from the expediente id's leading
             four digits. Captured against 2021 / 2022 / 2023 IRPF.
         category_path: Breadcrumb through the sede's tree, from
-            root to leaf. Example shape:
-            ``("Agencia Estatal de Administración Tributaria",
-               "Impuestos, tasas y prestaciones patrimoniales",
-               "Impuesto sobre la Renta de las Personas Físicas",
-               "Modelo 100- Modelo 102. IRPF. Declaración y
-                 documento de ingreso o devolución.")``.
+            root to leaf. Example: a four-element tuple from
+            "Agencia Estatal de Administración Tributaria" down to
+            "Modelo 100- Modelo 102. IRPF. Declaración y documento
+            de ingreso o devolución.".
         detail_url: Full URL of the expediente's detail page. Per-year
             endpoint for IRPF:
             ``/wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>``.

@@ -16,6 +16,7 @@ Submodules
    aeat.domain.iva._catalogue
    aeat.domain.iva._classification
    aeat.domain.iva._corpus
+   aeat.domain.iva._errors
    aeat.domain.iva._flow
    aeat.domain.iva._invoice_classification
    aeat.domain.iva._lookup
@@ -25,4 +26,3 @@ Submodules
    aeat.domain.iva._recargo_equivalencia
    aeat.domain.iva._schema
    aeat.domain.iva._verify
-   aeat.domain.iva.errors

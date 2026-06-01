@@ -114,8 +114,8 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     )
 
     assert resolution.owned_sources == ("collectible_invoice", "payable_invoice")
-    assert resolution.binding_values["vat-349-declarante-numero-operadores"] == Decimal("1")
-    assert resolution.binding_values["vat-349-declarante-importe-operaciones"] == Decimal("1000.00")
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
     assert resolution.source_transaction_ids == ("1" * 64,)
     assert {item.source_kind for item in resolution.provenance} == {"collectible_invoice"}
     assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{declarable.invoice_id}"}

@@ -1,4 +1,4 @@
-"""Catalogue entry for the retired *Modelo 037* simplified census declaration.
+"""Catalogue entry for the retired *Modelo 037* simplified censo declaration.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
 flagged ``active=False`` and superseded by
@@ -10,7 +10,7 @@ the entry is retained for historical lookup. URL stability is therefore
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -18,8 +18,8 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
     path="/Sede/procedimientoini/G324.shtml",
-    subdomain=Subdomain.SEDE,
-    category=PortalCategory.CENSUS,
+    subdomain=PortalHost.SEDE,
+    category=PortalCategory.CENSO,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.CLAVE_PIN,

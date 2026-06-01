@@ -23,7 +23,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ....core.logging import get_logger
 from ....domain.justificante._errors import JustificanteCsvNotFoundError, JustificanteParseError
@@ -321,7 +321,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     total_ingresar, total_devolver = _extract_totals(normalised)
     verification_url = _extract_verification_url(text, pdf_path)
     sha256 = sha256_file(pdf_path)
-    parsed_at = _now()
+    parsed_at = now()
     try:
         record = Justificante(
             csv=csv_value,

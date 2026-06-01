@@ -57,7 +57,7 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
             citations=(_citation(),),
             notes=tr("Perfil sin proyección a casillas."),
         ),
-        vat_hint=None,
+        iva_hint=None,
     )
     assert profile.category is SpendingCategory.MATERIAL_OFICINA
 

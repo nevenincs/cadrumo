@@ -113,22 +113,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
-    refresh:
-      errors:
-        google_auth_not_importable: La librería google-auth no se puede importar;
-          la renovación de OAuth Google no puede continuar.
-        reauth_required: La credencial OAuth de Google está marcada como pendiente
-          de reautenticación; la ruta de renovación automática está cerrada.
-        refresh_failed: La renovación de Google OAuth ha fallado.
-        refresh_refused: Google OAuth rechazó la solicitud de renovación; el refresh
-          token ya no es válido.
-        token_endpoint_unreachable: El endpoint de token de Google OAuth no es accesible.
-      suggestions:
-        check_network: Comprueba la conectividad de red con los endpoints OAuth de
-          Google y vuelve a intentarlo.
-      testing_project_cap_warning: El refresh token de Google OAuth se acerca al límite
-        de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve
-        a ejecutar `aeat config google login` para prolongar la vida útil de la credencial.
   inbound:
     declaracion:
       errors:
@@ -621,7 +605,7 @@ cli:
         add_help: Registra una nueva factura cobrable
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
-        eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
+        eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que un cliente te debe pagar
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
@@ -670,13 +654,13 @@ cli:
         valuation_group_help: Calcula y previsualiza la valoración de existencias
         valuation_method_help: Método de valoración (fifo o pmp)
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
-        vat_rate_help: Tipo de IVA en porcentaje
         year_help: Ejercicio fiscal
+        iva_rate_help: 'Tipo de IVA en porcentaje'
       payable_invoice:
         add_help: Registra una nueva factura pagable
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
-        eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
+        eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que debes pagar a un proveedor
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
@@ -1590,7 +1574,7 @@ cli:
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
       help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      iva_regime_help: 'IVA regime (general, simplificado, exento, etc.)'
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
@@ -1605,7 +1589,7 @@ cli:
       help: Listar todos los perfiles registrados y marcar el activo
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
-      census:
+      censo:
         apply_help: Sobrescribe el perfil con los valores censales comunicados por
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
@@ -1791,8 +1775,8 @@ cli:
         ambiguous_profile: 'Nombre de perfil ambiguo: %{profile}.'
         invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'No hay perfil activo seleccionado.'
-        profile_empty: '--profile no puede estar en blanco.'
+        no_active_profile: No hay perfil activo seleccionado.
+        profile_empty: --profile no puede estar en blanco.
         unknown_profile: 'Perfil desconocido: %{profile}.'
         unknown_profile_key: 'Clave de perfil desconocida: %{key}.'
       get_help: Lee el valor guardado de una clave de perfil.
@@ -2257,7 +2241,7 @@ cli:
         heading: Configuracion y diagnostico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
           persiste entre sesiones.
-        profile_census: Mostrar el estado del censo del perfil activo.
+        profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
         profile_list: Listar los perfiles de contribuyente disponibles.
@@ -2895,10 +2879,10 @@ errors:
       perfil {profile_id}.
     profile_not_found: El perfil {profile_id} no existe; créalo antes de aplicar el
       censo.
-    sede_g313_no_census: La sede de la AEAT (G313) no devolvió ningún censo legible
+    sede_g313_no_censo: La sede de la AEAT (G313) no devolvió ningún censo legible
       para el perfil {profile_id}; confirma que tu certificado o Cl@ve está registrado
       para este NIF.
-    sede_no_census: La sede de la AEAT no devolvió ningún censo legible para el perfil
+    sede_no_censo: La sede de la AEAT no devolvió ningún censo legible para el perfil
       {profile_id}.
   error:
     error_access_gate_submission: La política de control de acceso rechazó una operación
@@ -2910,6 +2894,7 @@ errors:
     error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
+    error_apidocs: errors.error.error_apidocs
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
     error_application_live_iva_surface_timeout: La superficie de lectura de IVA en
       vivo agotó el tiempo antes de devolver evidencia de la AEAT.
@@ -2945,7 +2930,6 @@ errors:
       pero no se configuró un sustituto.'
     error_declaracion_template_not_detected: No se pudo detectar automáticamente la
       versión de plantilla del PDF de la declaración.
-    error_domain: Se produjo un error en la lógica de negocio.
     error_domain_submission: Se produjo un error en el dominio de envío.
     error_domain_submission_preflight: El borrador no superó la comprobación previa
       de envío local.
@@ -2980,15 +2964,6 @@ errors:
       transacciones.
     error_financial_usage_ratios_usage_ratio: Se produjo un error en los porcentajes
       de uso.
-    error_financial_vat: Se produjo un error en el cálculo del IVA.
-    error_financial_vat_catalogue: El catálogo de IVA no se pudo cargar, resolver
-      o validar.
-    error_financial_vat_category_not_found: No se encontró la categoría de IVA solicitada
-      en el catálogo.
-    error_financial_vat_classification: No se pudo clasificar el IVA de forma determinista.
-    error_financial_vat_rate_not_found: No se encontró un tipo de IVA para el estado
-      miembro y el tipo solicitados.
-    error_financial_vat_rate_overlap: Dos tipos de IVA comparten una ventana de vigencia.
     error_fixture_provisioning: No se pudieron preparar los datos de prueba.
     error_invoice_link_inconsistency: El enlace entre catálogos dejó la factura y
       la transacción desincronizadas. Revisa ambos catálogos manualmente.
@@ -3100,20 +3075,24 @@ errors:
     error_usage_ratios_validation: Un perfil de porcentajes de uso infringe sus invariantes
       de dominio.
     error_user_profile: Se produjo un error en el perfil de usuario.
-    error_vat_prorrata: Se produjo un error en el cálculo de la prorrata del IVA.
-    error_vat_prorrata_input: Los datos de entrada de la prorrata del IVA infringen
-      sus invariantes.
-    error_vat_prorrata_sector: Los datos de separación sectorial de la prorrata del
-      IVA son inconsistentes.
-    error_vat_validation: Un valor del IVA no es válido.
     error_wizard: Se produjo un error en el asistente.
     error_wizard_compile: El catálogo del asistente está mal formado y no se pudo
       compilar.
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    error_financial_iva_rate_not_found: 'No se encontró un tipo de IVA para el estado miembro y el tipo solicitados.'
+    error_financial_iva_rate_overlap: 'Dos tipos de IVA comparten una ventana de vigencia.'
+    error_financial_iva: 'Se produjo un error en el cálculo del IVA.'
+    error_financial_iva_catalogue: 'El catálogo de IVA no se pudo cargar, resolver o validar.'
+    error_financial_iva_category_not_found: 'No se encontró la categoría de IVA solicitada en el catálogo.'
+    error_financial_iva_classification: 'No se pudo clasificar el IVA de forma determinista.'
+    error_iva_prorrata: 'Se produjo un error en el cálculo de la prorrata del IVA.'
+    error_iva_prorrata_input: 'Los datos de entrada de la prorrata del IVA infringen sus invariantes.'
+    error_iva_prorrata_sector: 'Los datos de separación sectorial de la prorrata del IVA son inconsistentes.'
+    error_iva_validation: 'Un valor del IVA no es válido.'
   fail:
-    census_sync: La sincronización del censo del Modelo 036 falló.
+    censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
     declaration_parse: No se pudo interpretar la exportación de la declaración presentada
       para la conciliación.
@@ -3172,7 +3151,7 @@ errors:
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
-    fail_sede_census_parse: Un valor de la página del censo de la Sede de la AEAT
+    fail_sede_censo_parse: Un valor de la página del censo de la Sede de la AEAT
       no se pudo interpretar.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
       de la AEAT falló o el archivo no es válido.
@@ -3368,11 +3347,11 @@ errors:
     bootstrap_already_complete: Ya existe un perfil; la configuración inicial solo
       se ejecuta una vez. Usa `aeat config profile switch NOMBRE` para cambiar de
       perfil.
-    census_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
+    censo_apply_conflict: No se puede aplicar el censo porque hay trabajo en curso
       sobre una unidad dependiente. Resuelve primero el estado pendiente.
-    census_field_validation: El censo de la AEAT devolvió un valor que el esquema
+    censo_field_validation: El censo de la AEAT devolvió un valor que el esquema
       no admite. Revisa el campo indicado con tu asesor.
-    census_not_available: La AEAT no devolvió ningún censo legible. Es posible que
+    censo_not_available: La AEAT no devolvió ningún censo legible. Es posible que
       no estés dado de alta en el IAE o que tu certificado no esté registrado a tu
       NIF.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
@@ -3381,7 +3360,7 @@ errors:
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
       no admite más operaciones.
-    modelo_census_stale: 'La operación se rechaza porque aplicaste un censo nuevo
+    modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo
       después de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve
       a generarlo con el censo actual.'
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
@@ -3474,7 +3453,7 @@ errors:
       este documento de origen.
     refused_financial_provider_validation: Un campo del documento financiero (fecha
       o importe) no superó la validación.
-    refused_financial_usage_ratios_census_mismatch: Un porcentaje de uso de oficina
+    refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona

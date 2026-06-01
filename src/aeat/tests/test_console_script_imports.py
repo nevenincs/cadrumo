@@ -1,10 +1,10 @@
 """Structural gate: ``python -c "import aeat"`` must always succeed.
 
 The 2026-05-19 disaster recovery (Ruling 7) traced the cold-start
-10-minute silent hang to a stale ``aeat.domain.vat`` import that
+10-minute silent hang to a stale ``aeat.domain.iva`` import that
 crashed every ``aeat`` console-script invocation after the registry
 validation completed. The crash was masked by a compatibility shim
-at ``aeat.domain.vat.__init__`` that re-exported from
+at ``aeat.domain.iva.__init__`` that re-exported from
 ``aeat.domain.iva``; the shim violated the project's no-shim mandate
 and was retired in the same commit as this gate landed.
 

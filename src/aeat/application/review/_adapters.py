@@ -180,7 +180,7 @@ def invoices_pending(
     *,
     catalogue: InvoiceCatalogue | None = None,
 ) -> tuple[InvoiceReviewItem, ...]:
-    """Return :class:`InvoiceReviewItem`s for unmatched / disputed / pending invoices."""
+    """Return :class:`InvoiceReviewItem` records for unmatched / disputed / pending invoices."""
     if catalogue is None:
         catalogue = _load_invoices(settings)
         if catalogue is None:
@@ -249,7 +249,7 @@ def drafts_pending(
     *,
     drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
-    """Return :class:`FindingReviewItem`s for findings + unready drafts.
+    """Return :class:`FindingReviewItem` records for findings + unready drafts.
 
     A draft whose ``profile_tax_id`` does not match the active
     profile's tax id is not the active profile's data and is skipped.

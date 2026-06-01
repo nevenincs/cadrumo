@@ -420,8 +420,8 @@ def test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent() -> None:
     assert offenders == [], "parallel per-modelo aggregation CLI surfaces survive:\n  " + "\n  ".join(offenders)
 
 
-def test_census_modelo_foundation_stays_backend_owned() -> None:
-    """CLI must not reimplement Modelo 036/037 census foundation routing."""
+def test_censo_modelo_foundation_stays_backend_owned() -> None:
+    """CLI must not reimplement Modelo 036/037 censo foundation routing."""
 
     forbidden_cli_tokens = (
         "CensoModeloFoundationCommand",
@@ -440,15 +440,15 @@ def test_census_modelo_foundation_stays_backend_owned() -> None:
         for token in forbidden_cli_tokens:
             if token in text:
                 offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
-    assert offenders == [], "census modelo foundation logic leaked into CLI:\n  " + "\n  ".join(offenders)
+    assert offenders == [], "censo modelo foundation logic leaked into CLI:\n  " + "\n  ".join(offenders)
 
 
-def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
-    """Removed census-foundation aliases and placeholder support must not return."""
+def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
+    """Removed censo-foundation aliases and placeholder support must not return."""
 
     # test_modelo.py is excluded: its evidence-kind normalization tests legitimately
     # use aeat-justificante-pdf / aeat-csv-register / replace("-", "_") as real
-    # input aliases under test — not census shim language.
+    # input aliases under test — not censo shim language.
     # scopes.toml is excluded: the CENSO apoderamiento scope legitimately carries
     # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
     scanned_files = (
@@ -459,8 +459,8 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
         PROJECT_ROOT / "src" / "aeat" / "locales" / "hu.yml",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_censo_modelos.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_queries.py",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_foundation.py",
-        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_registry_data.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_censo_modelo_foundation.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_censo_modelo_registry_data.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_queries.py",
         *_modelo_source_paths("036"),
     )
@@ -478,7 +478,7 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
         ".zfill(",
         ".lstrip(",
         'strip("0")',
-        "_CENSUS_MODELO_OWNERSHIP",
+        "_CENSO_MODELO_OWNERSHIP",
         "NotImplementedError",
         "not implemented",
         "fake active",
@@ -499,7 +499,7 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
                 continue
             if token in text:
                 offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
-    assert offenders == [], "removed census modelo shim/stub surfaces returned:\n  " + "\n  ".join(offenders)
+    assert offenders == [], "removed censo modelo shim/stub surfaces returned:\n  " + "\n  ".join(offenders)
 
 
 def test_legacy_application_aggregation_test_tree_stays_absent() -> None:

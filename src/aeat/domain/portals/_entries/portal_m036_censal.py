@@ -1,14 +1,14 @@
-"""Catalogue entry for the *Modelo 036* census-declaration procedure page.
+"""Catalogue entry for the *Modelo 036* censo-declaration procedure page.
 
 Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.CENSUS`. Covers registration,
-modification, and deregistration on the census of entrepreneurs,
+under :attr:`aeat.domain.portals.PortalCategory.CENSO`. Covers registration,
+modification, and deregistration on the censo of entrepreneurs,
 professionals, and withholders.
 """
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -16,8 +16,8 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M036_CENSAL,
     path="/Sede/procedimientoini/G322.shtml",
-    subdomain=Subdomain.SEDE,
-    category=PortalCategory.CENSUS,
+    subdomain=PortalHost.SEDE,
+    category=PortalCategory.CENSO,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.CLAVE_PIN,
@@ -29,4 +29,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m036_censal.label",
     purpose="entries.portal_m036_censal.purpose",
 )
-"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 census procedure page."""
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 censo procedure page."""

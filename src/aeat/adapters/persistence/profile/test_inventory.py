@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile.errors import InventoryLedgerError
+from ....domain.profile._errors import InventoryLedgerError
 from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .inventory import load_inventory, record_movement, save_inventory
@@ -72,8 +72,8 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
                 sku="LEAK-CANARY-SKU",
                 quantity=Decimal("1"),
                 taxable_base=Decimal("100.00"),
-                vat_rate=Decimal("21.00"),
-                vat_amount=Decimal("21.00"),
+                iva_rate=Decimal("21.00"),
+                iva_amount=Decimal("21.00"),
             ),
         ),
     )

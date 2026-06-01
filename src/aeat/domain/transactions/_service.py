@@ -9,14 +9,14 @@ ad-hoc.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import ValidationError
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
-from ...core.time._clock import _now
+from ...core.time import now as _utc_now
 from ._enums import BusinessClassification
 from ._errors import TransactionCatalogueError, TransactionNotFoundError
 from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue
@@ -105,7 +105,7 @@ def set_classification(
 
     """
     transaction = _require_transaction(catalogue, transaction_id)
-    now = _now()
+    now = _utc_now()
     normalised_reason = reason.strip()
     # Strip classified_by here so the idempotence signature below matches the
     # value the model will store (the field validator also strips, so a raw
@@ -204,7 +204,7 @@ def snapshot_classification_state(
     the transaction first entered the catalogue. This keeps the
     chain in chronological order. ``fallback_at`` is an optional final
     fallback for callers that want to cap the synthesised timestamp
-    (e.g. ``set_classification`` uses ``datetime.now(UTC)``).
+    (e.g. ``set_classification`` uses the canonical clock helper).
     """
     snapshot_at = transaction.classified_at or transaction.raw.provenance.ingested_at or fallback_at
     if snapshot_at is None:

@@ -13,14 +13,6 @@ from ...core.json_contract import (
     register_schema,
 )
 
-OutputRootSchema.__module__ = __name__
-OutputSchema.__module__ = __name__
-OutputSchemaError.__module__ = __name__
-SchemaEnvelope.__module__ = __name__
-emit_json_document.__module__ = __name__
-emit_json_success.__module__ = __name__
-register_schema.__module__ = __name__
-
 __all__ = [
     "SCHEMA_REGISTRY",
     "OutputRootSchema",

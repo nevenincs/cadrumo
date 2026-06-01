@@ -35,7 +35,7 @@ from ._repository import (
     FincaRepository,
     FincaRendimientoRepository,
 )
-from ._rounding import _round_to_cents
+from ...core.money import round_to_cents as _round_to_cents
 from ._tier_resolver import TierResolution, resolve_reduccion
 
 _log = get_logger(__name__)

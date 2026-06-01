@@ -7,7 +7,7 @@ self-assessment of withholdings on movable-capital income.
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -15,7 +15,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M123_RETENCIONES_CAPITAL,
     path="/Sede/procedimientoini/GH04.shtml",
-    subdomain=Subdomain.SEDE,
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,

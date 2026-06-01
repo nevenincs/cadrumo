@@ -20,7 +20,7 @@ from typing import Annotated, Literal
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ._ids import ManualId, ManualPart
-from .errors import ManualValidationError
+from ._errors import ManualValidationError
 
 _StableId = Annotated[
     str,

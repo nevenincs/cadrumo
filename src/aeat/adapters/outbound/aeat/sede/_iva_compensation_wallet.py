@@ -18,7 +18,7 @@ from urllib.parse import quote, urlsplit
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.config import Settings
 from .....core.i18n import tr
@@ -163,7 +163,7 @@ async def fetch_iva_compensation_wallet(
                     target_year=target_year,
                     target_period=target_period,
                     source_url=_WALLET_URL,
-                    captured_at=_now(),
+                    captured_at=now(),
                     allow_empty_wallet_shell=wallet_execute_submitted,
                 )
             except SedeParseError as exc:
@@ -484,9 +484,9 @@ async def _wait_for_wallet_execute_terminal_shape(
     expected_path: str,
     timeout_ms: int,
 ) -> str:
-    deadline = _now().timestamp() + timeout_ms / 1000
+    deadline = now().timestamp() + timeout_ms / 1000
     last_html = await content()
-    while _now().timestamp() < deadline:
+    while now().timestamp() < deadline:
         html = await content()
         last_html = html
         if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(BeautifulSoup(html, "html.parser")):

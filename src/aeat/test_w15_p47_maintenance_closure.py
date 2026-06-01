@@ -6,7 +6,7 @@ W14 inventory ratchets remain green.
 S614 — application/registry/_corpus.py:334 BROAD-EXCEPT-RATIONALE-CORPUS-LOOKUP-BOUNDARY marker.
 S615 — core/config.py:999 BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK marker.
 S616 — application/user_profile/_censo_sync.py: _HOME_OFFICE_DEDUCTION_YEAR Final constant
-       extracted; year=2025 bare literal eliminated at derive_home_office_ratios_from_census call.
+       extracted; year=2025 bare literal eliminated at derive_home_office_ratios_from_censo call.
 S617 — application/diagnostics.py: _REGISTRY_INTEGRITY_PROBE_YEAR + _REGISTRY_INTEGRITY_PROBE_DATE
        Final constants extracted; bare 2025/date(2025,12,31) literals migrated.
 S618 — application/filing/runtime.py: ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE marker on
@@ -90,16 +90,16 @@ def test_s616_home_office_deduction_year_constant_defined() -> None:
 
 
 def test_s616_home_office_deduction_year_bare_literal_absent() -> None:
-    """derive_home_office_ratios_from_census call must not use bare year=2025 literal."""
+    """derive_home_office_ratios_from_censo call must not use bare year=2025 literal."""
     src = _read("application/user_profile/_censo_sync.py")
     # The constant itself carries 2025 — that is the intended single source of truth.
     # The call-site must reference the constant, not the bare integer.
     call_lines = [
         ln for ln in src.splitlines()
-        if "derive_home_office_ratios_from_census" in ln and "year=" in ln
+        if "derive_home_office_ratios_from_censo" in ln and "year=" in ln
     ]
     assert call_lines, (
-        "application/user_profile/_censo_sync.py: derive_home_office_ratios_from_census call not found"
+        "application/user_profile/_censo_sync.py: derive_home_office_ratios_from_censo call not found"
     )
     for ln in call_lines:
         assert "year=2025" not in ln, (

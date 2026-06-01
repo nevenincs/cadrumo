@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ..errors import CoreValidationError as _CoreValidationError
 from ..logging import get_logger as _get_logger
-from ..time._utc import _validate_utc_aware
+from ..time._utc import validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
 _logger = _get_logger(__name__)
@@ -125,7 +125,7 @@ class CorpusManifest(BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         try:
-            return _validate_utc_aware(value)
+            return validate_utc_aware(value)
         except _CoreValidationError as exc:
             raise CorpusManifestError(str(exc)) from exc
 

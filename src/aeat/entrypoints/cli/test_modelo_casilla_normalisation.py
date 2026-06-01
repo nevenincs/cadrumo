@@ -21,6 +21,8 @@ from pathlib import Path
 
 import pytest
 
+import aeat.application.wizard._catalogue  # noqa: F401  # register wizard catalogue at import time
+import aeat.application.wizard._persistence  # noqa: F401  # register project_answers projector at import time
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
@@ -69,7 +71,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Normalisation Test Operator",
+        display_name="Casilla normalisation test profile",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Test Operator"),
@@ -93,7 +95,7 @@ def _create_303_work_unit() -> str:
             "--modelo", "303",
             "--year", "2025",
             "--period", "1T",
-            "--revision", "2009-y-siguientes",
+            "--revision", "2023-y-siguientes",
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output

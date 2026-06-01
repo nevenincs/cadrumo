@@ -16,7 +16,7 @@ from playwright.async_api import (
     Response,
 )
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -434,7 +434,7 @@ class BrowserSession:
                 html_fragment="",
                 detected_markers=(f"failure-mode:{failure_mode.value}", f"transport-error:{exc_type_name}"),
             ),
-            observed_at=_now(),
+            observed_at=now(),
         )
 
     async def _close_after_context_failure(self) -> None:

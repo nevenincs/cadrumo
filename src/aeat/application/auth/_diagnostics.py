@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -171,7 +171,7 @@ def record_auth_diagnostic_phone_state(
     if record is None:
         return None
     payload = _payload(record.payload)
-    reported_at = _now()
+    reported_at = now()
     updated = payload.model_copy(
         update={
             "operator_report": {

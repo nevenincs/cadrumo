@@ -1,4 +1,4 @@
-"""VAT catalogue access tests."""
+"""IVA catalogue access tests."""
 
 from __future__ import annotations
 

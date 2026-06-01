@@ -7,7 +7,7 @@ wire formats:
 
 * :func:`_parse_iso8601_date` — ``YYYY-MM-DD`` (ISO 8601).  Used wherever
   AEAT systems or profile storage serialises dates in the standard form
-  (e.g. deadline-profile census dates).
+  (e.g. deadline-profile censo dates).
 
 * :func:`_parse_ddmmyyyy_date` — ``DD-MM-YYYY`` or ``DD/MM/YYYY`` (day-first,
   separator is ``-`` or ``/``).  Used wherever the AEAT G313 (Mis Datos

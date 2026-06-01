@@ -108,8 +108,8 @@ def test_describe_rejects_bare_period_not_declared_by_modelo() -> None:
         service.describe_modelo("303", period="0A")
 
 
-def test_describe_accepts_census_event_period_token() -> None:
-    """``describe`` resolves a non-date census period token to a revision.
+def test_describe_accepts_censo_event_period_token() -> None:
+    """``describe`` resolves a non-date censo period token to a revision.
 
     Modelo 036 declares ``alta`` / ``modificacion`` / ``baja`` as its
     period tokens. None match the registry time-code pattern, so the
@@ -126,8 +126,8 @@ def test_describe_accepts_census_event_period_token() -> None:
     assert "alta" in described.periods
 
 
-def test_casillas_accepts_census_event_period_token() -> None:
-    """``casillas`` resolves the same census period tokens as ``describe``."""
+def test_casillas_accepts_censo_event_period_token() -> None:
+    """``casillas`` resolves the same censo period tokens as ``describe``."""
 
     service = _service()
 

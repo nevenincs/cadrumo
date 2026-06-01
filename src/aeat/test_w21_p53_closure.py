@@ -7,8 +7,11 @@ inventory ratchets remain green.
 
 from __future__ import annotations
 
+import ast
 import importlib
+import inspect
 import pathlib
+from collections.abc import Callable, Mapping
 
 import pytest
 
@@ -16,6 +19,35 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _SRC_ROOT = pathlib.Path(__file__).parent
 _ADAPTERS_GOOGLE = _SRC_ROOT / "adapters" / "outbound" / "google"
+
+_AST_CACHE: Mapping[pathlib.Path, ast.AST] | None = None
+
+
+def _build_ast_cache() -> Mapping[pathlib.Path, ast.AST]:
+    """Mirror the conftest ``source_tree_ast`` fixture for imperative callers."""
+    global _AST_CACHE
+    if _AST_CACHE is not None:
+        return _AST_CACHE
+    cache: dict[pathlib.Path, ast.AST] = {}
+    for path in _SRC_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts or ".venv" in path.parts or "_data" in path.parts:
+            continue
+        try:
+            source = path.read_text(encoding="utf-8", errors="replace")
+            cache[path] = ast.parse(source, filename=str(path))
+        except (OSError, SyntaxError):
+            continue
+    _AST_CACHE = cache
+    return cache
+
+
+def _invoke_test_fn(fn: Callable[..., None]) -> None:
+    """Invoke a ratchet test function, supplying ``source_tree_ast`` when required."""
+    parameters = inspect.signature(fn).parameters
+    if "source_tree_ast" in parameters:
+        fn(_build_ast_cache())
+    else:
+        fn()
 
 
 # ---------------------------------------------------------------------------
@@ -81,7 +113,7 @@ def test_s649_any_param_rationale_inventory_importable_and_passes() -> None:
         "Expected ratchet function not found in test_any_param_rationale_inventory"
     )
     # Run the ratchet directly — if it raises AssertionError the Step failed.
-    mod.test_no_new_any_param_without_rationale()
+    _invoke_test_fn(mod.test_no_new_any_param_without_rationale)
 
 
 # ---------------------------------------------------------------------------
@@ -116,7 +148,7 @@ def test_prior_wave_cast_rationale_inventory() -> None:
     ]
     assert test_fns, "No test_ function found in test_cast_rationale_inventory"
     for fn in test_fns:
-        fn()
+        _invoke_test_fn(fn)
 
 
 def test_prior_wave_latin1_encoding_constant_enrollment() -> None:
@@ -129,7 +161,7 @@ def test_prior_wave_latin1_encoding_constant_enrollment() -> None:
     ]
     assert test_fns, "No test_ function found in test_latin1_encoding_constant_enrollment"
     for fn in test_fns:
-        fn()
+        _invoke_test_fn(fn)
 
 
 def test_prior_wave_enum_constant_extraction_inventory() -> None:
@@ -142,7 +174,7 @@ def test_prior_wave_enum_constant_extraction_inventory() -> None:
     ]
     assert test_fns, "No test_ function found in test_enum_constant_extraction_inventory"
     for fn in test_fns:
-        fn()
+        _invoke_test_fn(fn)
 
 
 def test_prior_wave_mock_inventory() -> None:
@@ -155,7 +187,7 @@ def test_prior_wave_mock_inventory() -> None:
     ]
     assert test_fns, "No test_ function found in test_mock_inventory"
     for fn in test_fns:
-        fn()
+        _invoke_test_fn(fn)
 
 
 def test_prior_wave_no_skip_xfail() -> None:
@@ -168,4 +200,4 @@ def test_prior_wave_no_skip_xfail() -> None:
     ]
     assert test_fns, "No test_ function found in test_no_skip_xfail"
     for fn in test_fns:
-        fn()
+        _invoke_test_fn(fn)

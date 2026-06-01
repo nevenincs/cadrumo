@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ....core.errors import AeatError
 from ....core.logging import get_logger
@@ -18,7 +18,7 @@ from ....domain.profile.assets import (
     AssetRecord,
     AssetsLedgerDocument,
 )
-from ....domain.profile.errors import AssetRecordError
+from ....domain.profile._errors import AssetRecordError
 from ..storage import SensitivityClass
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
@@ -172,7 +172,7 @@ class AssetsLedgerRepository:
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_SECURE_OBJECT_VERSION,
-            written_at=_now(),
+            written_at=now(),
             payload=document.model_dump_json().encode("utf-8"),
         )
 
@@ -243,7 +243,7 @@ class AmortizacionLedgerRepository:
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_SECURE_OBJECT_VERSION,
-            written_at=_now(),
+            written_at=now(),
             payload=ledger.model_dump_json().encode("utf-8"),
         )
 

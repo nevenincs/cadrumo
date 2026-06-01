@@ -5,10 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from aeat.core.errors import AeatError
 from aeat.core.external_constants import UTF_8_ENCODING
 
 
-class ApiDocsError(Exception):
+class ApiDocsError(AeatError):
     """Raised on API documentation stub management errors."""
 
 

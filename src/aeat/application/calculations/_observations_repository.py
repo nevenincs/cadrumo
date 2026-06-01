@@ -28,7 +28,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -181,7 +181,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         captured_at: datetime | None = None,
     ) -> None:
         """Persist `observation` keyed by its (modelo, filing_year, period)."""
-        when = captured_at if captured_at is not None else _now()
+        when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
             observation=observation,
             captured_at=when,
@@ -236,7 +236,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
         super().save(payload)
         envelope = Envelope[_IvaWalletDecisionEnvelopePayload](
             schema_version=self.schema_version,
-            written_at=_now(),
+            written_at=now(),
             classification=self.sensitivity,
             payload=payload,
         )

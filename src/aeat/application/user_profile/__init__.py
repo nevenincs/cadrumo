@@ -41,7 +41,7 @@ if TYPE_CHECKING:
         CensoSyncError,
     )
     from ._censo_sync import (
-        CENSUS_SOURCE_TAG,
+        CENSO_SOURCE_TAG,
         CensoApplyResult,
         CensoComparisonStatus,
         CensoFactSource,
@@ -288,7 +288,7 @@ def __getattr__(name: str):
 
         return getattr(_censo_errors, name)
     if name in (
-        "CENSUS_SOURCE_TAG",
+        "CENSO_SOURCE_TAG",
         "CensoApplyResult",
         "CensoComparisonStatus",
         "CensoFactSource",
@@ -325,7 +325,7 @@ def __getattr__(name: str):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 __all__ = [
-    "CENSUS_SOURCE_TAG",
+    "CENSO_SOURCE_TAG",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
     "CensoApplyConflictError",

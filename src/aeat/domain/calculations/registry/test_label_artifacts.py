@@ -40,7 +40,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
         "id": "999",
         "title": "Test modelo",
         "official_name": "Test modelo",
-        "tax_domain": "test",
+        "tax_domain": "iva",
         "cadence": "annual",
         "jurisdiction": "ES-AEAT",
         "legal_refs": ("ley-58-2003:art-29",),

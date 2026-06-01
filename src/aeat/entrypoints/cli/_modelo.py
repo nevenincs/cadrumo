@@ -57,7 +57,7 @@ from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import BindingId, CasillaId
 from ...domain.calculations.registry._queries import parse_modelo_period
-from ...domain.fincas._rounding import _round_to_cents
+from ...core.money import round_to_cents as _round_to_cents
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (
@@ -2047,19 +2047,19 @@ def work_create(
     # Pre-calificación Art. 96.3 LIRPF: when the operator creates a Modelo 100
     # work unit and the profile declares multiple pagadores with secondary income
     # exceeding €1,500, surface the filing-obligation advisory so they know the
-    # income-threshold exemption does not apply.
+    # income-threshold exemption does not apply. Reads the active bucket's
+    # session directly — the root callback already opened it — instead of
+    # nesting a fresh profile_storage_session, which would re-derive a
+    # different DEK whenever the substrate binds key material out of band.
     if modelo == "100":
         from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
+        from ...application.user_profile._profile_repository import ProfileRepository
         from ...application.user_profile._projections import record_to_values
         from ...application.workflow._models import resolve_active_bucket_id
 
         _bucket = resolve_active_bucket_id()
         if _bucket is not None:
-            from ...application.user_profile._orchestration import profile_storage_session
-            from ...application.user_profile._profile_repository import ProfileRepository
-
-            with profile_storage_session(_bucket):
-                _rec = ProfileRepository().load(_bucket)
+            _rec = ProfileRepository().load(_bucket)
             _raw = record_to_values(_rec.record) if _rec is not None else None
             for _advisory_key in _build_filing_obligation_advisories(_raw):
                 lines.append(tr(_advisory_key))
@@ -5156,11 +5156,17 @@ def modelo_project(
     # propagates the projected net income through base liquidable general.
     # Casilla 0505 is computed (max(0, 0500 − 0527)); supplying it directly as an
     # input raises RegistryValidationError — hence the injection at the leaf casilla.
-    # Pagos fraccionados go to 0604 (manual-kind, actividades económicas).
+    # Pagos fraccionados land in casilla 0604, but 0604 is computed (formula
+    # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
+    # relation channels). Supply the M130 total via the relation map below;
+    # M131 has no quarterly aggregation here, so its relation is zero.
     m100_inputs: dict[str, Decimal] = {
         "0171": projected_rendimiento_neto,  # EDS ingresos explotación (projection leaf)
-        "0604": total_pagos_fraccionados,  # pagos fraccionados M130 (manual, actual paid)
         **extra_inputs,
+    }
+    m100_relations: dict[str, Decimal] = {
+        f"renta-{year}-rel-130-pagos-fraccionados": total_pagos_fraccionados,
+        f"renta-{year}-rel-131-pagos-fraccionados": Decimal("0"),
     }
 
     # Default retenciones bindings to zero; caller may override via --binding.
@@ -5188,8 +5194,25 @@ def modelo_project(
             date_context={"filing_period": date(year, 12, 31)},
             binding_values=m100_bindings,
             enum_binding_values=m100_enum_bindings,
+            relation_values=m100_relations,
         )
     except RegistryValidationError as exc:
+        # Operator surface is intentionally terse (the localised
+        # `m100_calculation_error` carries no interpolation slot for the
+        # underlying registry detail). Engineers triaging a failing
+        # projection still need the registry's typed message and the
+        # inputs that drove it; log them here so the AEAT log file and
+        # pytest's --log-cli-level=ERROR capture surface the cause.
+        _log.exception(
+            "modelo.project: M100 calculation failed for year=%s ccaa=%s; inputs=%r bindings=%r enum_bindings=%r relations=%r; registry_error=%s",
+            year,
+            ccaa,
+            m100_inputs,
+            m100_bindings,
+            m100_enum_bindings,
+            m100_relations,
+            exc,
+        )
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.project.m100_calculation_error",

@@ -8,7 +8,7 @@ over CLI / JSON without further mapping.
 
 - 8 AUTH entry points (Sede root, Mi área personal, Cl@ve + cert + DNIe
   gateways).
-- FILING / CENSUS procedures for curated Sede entries, including the inactive
+- FILING / CENSO procedures for curated Sede entries, including the inactive
   Modelo 037 simplificada history entry.
 - 2 BORRADOR entries (Renta Web borrador, Pre303 ayuda).
 - 4 CONSULTATION entries (Mis expedientes, Mis notificaciones, Mis datos
@@ -42,7 +42,7 @@ class Portal(StrEnum):
     PORTAL_CERT_VALIDATION_REST = "portal_cert_validation_rest"
     PORTAL_DNIE_SEDE_ENTRY = "portal_dnie_sede_entry"
 
-    # Filing / census
+    # Filing / censo
     PORTAL_M036_CENSAL = "portal_m036_censal"
     PORTAL_M037_CENSAL_SIMPLIFICADA = "portal_m037_censal_simplificada"
     PORTAL_M100_RENTA = "portal_m100_renta"

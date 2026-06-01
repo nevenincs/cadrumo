@@ -1,4 +1,4 @@
-"""VAT catalogue runtime tests."""
+"""IVA catalogue runtime tests."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
 
 
-def test_catalogue_covers_every_vat_category() -> None:
+def test_catalogue_covers_every_iva_category() -> None:
     assert set(_CATALOGUE.regulations.keys()) == set(IvaCategory)
     assert len(_CATALOGUE) == 17
 
@@ -36,7 +36,7 @@ def test_cite_domestic_general_mentions_ley_37_1992() -> None:
 
 
 def test_every_committed_regulation_has_citations() -> None:
-    assert len(_CATALOGUE) > 0, "VAT regulation catalogue must be non-empty for citation check to mean anything"
+    assert len(_CATALOGUE) > 0, "IVA regulation catalogue must be non-empty for citation check to mean anything"
     checked = 0
     for regulation in _CATALOGUE:
         assert regulation.citations, regulation.category.value

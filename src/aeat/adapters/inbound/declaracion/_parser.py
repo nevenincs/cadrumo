@@ -8,7 +8,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
@@ -207,7 +207,7 @@ def _parse_declaracion_pages(
         warnings=(),
         source_pdf_path=source_path,
         source_pdf_sha256=source_pdf_sha256,
-        parsed_at=_now(),
+        parsed_at=now(),
     )
 
 

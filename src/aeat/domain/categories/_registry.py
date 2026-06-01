@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from decimal import Decimal
 from functools import lru_cache
@@ -11,6 +10,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
+from ...core._toml import read_toml, to_str_keyed_dict
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
@@ -47,13 +47,7 @@ def _load_category_profile_file_cached(
 ) -> Mapping[SpendingCategory, CategoryProfile]:
     del byte_count, modified_ns
     target = Path(path)
-    try:
-        with target.open("rb") as fh:
-            payload: dict[str, object] = tomllib.load(fh)
-    except tomllib.TOMLDecodeError as exc:
-        raise CategoryValidationError(f"{target}: invalid category profile TOML: {exc}") from exc
-    except OSError as exc:
-        raise CategoryValidationError(f"{target}: cannot read category profile registry: {exc}") from exc
+    payload = read_toml(target, error_factory=CategoryValidationError)
 
     raw_profiles = payload.get("profiles")
     if not isinstance(raw_profiles, list) or not raw_profiles:
@@ -120,32 +114,22 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
     return profiles
 
 
-def _to_str_dict(raw: Mapping) -> dict[str, object]:
-    """Convert a Mapping with unknown key types to a str-keyed dict."""
-    result: dict[str, object] = {}
-    for k, v in raw.items():
-        if not isinstance(k, str):
-            raise CategoryValidationError("TOML table keys must be strings")
-        result[k] = v
-    return result
-
-
 def _parse_profile(raw_profile: object) -> CategoryProfile:
     if not isinstance(raw_profile, dict):
         raise CategoryValidationError("profile entry must be a table")
-    data = _to_str_dict(raw_profile)
+    data = to_str_keyed_dict(raw_profile, error_factory=CategoryValidationError)
     category = SpendingCategory(str(data.get("category")))
     raw_rule = data.get("proportionality")
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")
-    raw_vat_hint = data.get("vat_hint")
+    raw_iva_hint = data.get("iva_hint")
     return CategoryProfile.model_validate(
         {
             "category": category,
             "display_label": tr(str(data.get("display_label"))),
             "proportionality": _parse_rule(raw_rule),
-            "vat_hint": (
-                IvaDeductibilityHint(str(raw_vat_hint)) if raw_vat_hint is not None else None
+            "iva_hint": (
+                IvaDeductibilityHint(str(raw_iva_hint)) if raw_iva_hint is not None else None
             ),
         }
     )
@@ -154,7 +138,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
 def _parse_rule(raw_rule: object) -> ProportionalityRule:
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError("proportionality rule must be a table")
-    data = _to_str_dict(raw_rule)
+    data = to_str_keyed_dict(raw_rule, error_factory=CategoryValidationError)
     raw_variants = data.get("statutory_cap_variants", ())
     if not isinstance(raw_variants, list | tuple):
         raise CategoryValidationError("statutory_cap_variants must be a list")
@@ -180,7 +164,7 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
 def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
     if not isinstance(raw_variant, dict):
         raise CategoryValidationError("statutory_cap_variants entries must be tables")
-    data = _to_str_dict(raw_variant)
+    data = to_str_keyed_dict(raw_variant, error_factory=CategoryValidationError)
     return StatutoryCapVariant.model_validate(
         {
             "id": data.get("id"),
@@ -193,7 +177,7 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
 def _parse_citation(raw_citation: object) -> CategoryCitation:
     if not isinstance(raw_citation, dict):
         raise CategoryValidationError("citations entries must be tables")
-    data = _to_str_dict(raw_citation)
+    data = to_str_keyed_dict(raw_citation, error_factory=CategoryValidationError)
     url = data.get("url")
     if not isinstance(url, str):
         raise CategoryValidationError("citation url must be a string")
