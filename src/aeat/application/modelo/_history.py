@@ -25,11 +25,16 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...core.identity import BucketId
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._ids import WorkUnitId
-from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
+from ...domain.modelos._protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ._actions import WorkUnitNotFoundError
@@ -62,11 +67,11 @@ class WorkUnitHistory(BaseModel):
 def assemble_work_unit_history(
     work_unit_id: str,
     *,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
-    filing_repository: ModeloRecordCatalogueRepository | None = None,
-    verification_repository: VerificationReportCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> WorkUnitHistory:
     """Return every bucket event scoped to ``work_unit_id``.
 
