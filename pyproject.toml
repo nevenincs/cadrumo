@@ -456,6 +456,8 @@ markers = [
   "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk",
   "docs: documentation build and conformance gate; runs a real sphinx-build, excluded from the fast unit lane and run via just docs-check",
   "workbook_parity: LibreOffice subprocess parity tests; excluded from the default unit lane (adds 60-90s wallclock) and run via just test-workbook-parity",
+  "slow: empirical-duration outlier (~2 s+); deselectable via -m 'not slow' for faster local dev iterations; outlier capture owned by discovery1-2",
+  "inventory: structural inventory / fingerprint sweep tests that walk the full src tree; excluded from -k filtered runs that target a single surface",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────
@@ -508,6 +510,20 @@ skips = ["*/test_*.py", "*/_test_*.py", "**/conftest.py"]
 # methods, nested closures, and test fixtures that don't carry docstrings
 # by convention. Filter those at the config layer so the dashboard tracks
 # the public surface that genuinely warrants prose documentation.
+# ── doc8 (reStructuredText style for hand-authored docs) ─────────────────────
+# Scope doc8 to hand-written documentation. The gitignored build output and the
+# machine-generated API / CLI stub trees (long dotted module paths in headings)
+# are excluded so `just docs-check` stays green in any working tree, including
+# one that has already built the docs.
+[tool.doc8]
+ignore-path = [
+  "docs/_build",
+  "docs/_inventories",
+  "docs/api",
+  "docs/cli",
+]
+max-line-length = 100
+
 [tool.interrogate]
 ignore-init-method = true
 ignore-init-module = true
