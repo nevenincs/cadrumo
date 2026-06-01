@@ -6,6 +6,9 @@ import os
 import sys
 from pathlib import Path
 
+from docutils import nodes
+from docutils.parsers.rst import Directive
+
 # Make `aeat` importable for autodoc without installing the wheel.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -48,9 +51,22 @@ exclude_patterns = [
     "**/_test_*.py",
 ]
 
-# No blanket warning suppression: the docs-check gate builds nitpicky (-n)
-# with warnings-as-errors (-W), so unresolved cross-references must be fixed
-# or added to nitpick_ignore_regex below.
+# The docs-check gate builds nitpicky (-n) with warnings-as-errors (-W), so
+# unresolved cross-references must be fixed or added to nitpick_ignore_regex
+# below. Two categories are suppressed at the source because they are not
+# fixable broken references:
+#   * ``ref.python`` — the "more than one target found for cross-reference"
+#     ambiguity raised when a builtin type name (``bytes``, ``date``) collides
+#     with project fields of the same name. The genuine "target not found"
+#     nitpicks use distinct subtypes (``ref.class``/``ref.data``/...), so this
+#     does not mask any real missing reference.
+#   * the sphinx_autodoc_typehints extension's pydantic forward-reference and
+#     guarded-import notices (Field's JsonValue, the optional email_validator).
+suppress_warnings = [
+    "ref.python",
+    "sphinx_autodoc_typehints.forward_reference",
+    "sphinx_autodoc_typehints.guarded_import",
+]
 
 # ── Autodoc / Napoleon ──────────────────────────────────────────────────────
 napoleon_google_docstring = True
@@ -60,13 +76,24 @@ napoleon_include_private_with_doc = False
 napoleon_use_admonition_for_examples = False
 napoleon_use_admonition_for_notes = False
 napoleon_use_admonition_for_references = False
-napoleon_use_ivar = False
+# Emit Attributes: sections as ``:ivar:`` (instance variable entries) rather
+# than ``:py:attribute:`` entries.  This prevents autodoc member enumeration
+# from colliding with Napoleon's Attributes-section output for pydantic and
+# StrEnum classes, which would otherwise produce duplicate-object-description
+# warnings when the two mechanisms register the same qualified name twice.
+napoleon_use_ivar = True
 napoleon_use_param = True
 napoleon_use_rtype = True
 napoleon_attr_annotations = True
 
 autodoc_default_options = {
     "members": True,
+    # Keep undocumented members out of the rendered surface. Enabling them
+    # roughly triples the documented object count (every constant, alias, and
+    # helper), which makes the nitpicky gate build minutes-to-tens-of-minutes
+    # slower without improving the public API reference. Undocumented module
+    # constants and type aliases that are referenced by other docstrings are
+    # instead covered by nitpick_ignore_regex below.
     "undoc-members": False,
     "show-inheritance": True,
     "member-order": "bysource",
@@ -119,23 +146,42 @@ autodoc_mock_imports = [
 ]
 
 add_module_names = False
-python_use_unqualified_type_names = True
+# Keep cross-reference resolution exact (the default). Enabling unqualified type
+# names makes every annotation xref "refspecific" (a fuzzy suffix search), which
+# resolves a builtin like ``bytes`` against project fields that happen to be
+# named ``bytes`` and raises spurious "more than one target" ambiguities; the
+# autodoc_typehints_format="short" setting already shortens the displayed type.
+python_use_unqualified_type_names = False
 
 # ── Intersphinx ─────────────────────────────────────────────────────────────
+# Inventories vendored under docs/_inventories/ are read from disk, so the
+# nitpicky gate resolves stdlib/builtin and SQLAlchemy targets exactly (an exact
+# ``bytes`` builtin target short-circuits the fuzzy resolver that would otherwise
+# flag every project field named ``bytes`` as an ambiguous cross-reference)
+# without any network fetch. Inventories with no vendored copy (pydantic, httpx,
+# typer) resolve online when available and are covered by nitpick_ignore_regex
+# when the gate runs offline.
+_INVENTORIES = Path(__file__).resolve().parent / "_inventories"
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3", None),
+    "python": ("https://docs.python.org/3", str(_INVENTORIES / "python.inv")),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", str(_INVENTORIES / "sqlalchemy.inv")),
     "pydantic": ("https://docs.pydantic.dev/latest", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", None),
     "httpx": ("https://www.python-httpx.org/", None),
     "typer": ("https://typer.tiangolo.com/", None),
 }
 intersphinx_disabled_reftypes = ["std:doc"]
 
-# Offline-hermetic gate: the docs-check build sets AEAT_DOCS_OFFLINE to skip
-# intersphinx inventory fetches. External references are already covered by
-# nitpick_ignore_regex, so the nitpicky gate stays deterministic and network-free.
+# Offline-hermetic gate: the docs-check build sets AEAT_DOCS_OFFLINE to keep only
+# the vendored local inventories (read from disk) and drop the network-only
+# mappings, so the build resolves stdlib/SQLAlchemy targets deterministically
+# without any network access. The dropped third-party namespaces are covered by
+# nitpick_ignore_regex below.
 if os.environ.get("AEAT_DOCS_OFFLINE"):
-    intersphinx_mapping = {}
+    intersphinx_mapping = {
+        name: (uri, inv)
+        for name, (uri, inv) in intersphinx_mapping.items()
+        if inv and (_INVENTORIES / Path(inv).name).is_file()
+    }
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
@@ -167,31 +213,87 @@ nitpick_ignore_regex = [
         r"playwright_stealth|pikepdf|pdfplumber|ofxparse|openpyxl|reportlab|"
         r"argon2|keyring|anthropic)(\..*)?$",
     ),
-    # pydantic constrained-type metadata and regex pattern fragments leak into
-    # rendered annotations as bogus targets (min_length=1, strict=None,
-    # pattern=^...$, *$, {64}$). Any target containing a non-identifier
-    # character is not a real Python object reference.
-    (r"py:class", r".*[^A-Za-z0-9_.].*"),
+    # pydantic constrained-type aliases render as a whole
+    # ``typing.Annotated[str, StringConstraints(...)]`` expression target across
+    # py:class and py:obj references; any target containing a non-identifier
+    # character (brackets, parentheses, ``=``, regex fragments) is not a real
+    # Python object reference.
+    (r"py:.*", r".*[^A-Za-z0-9_.].*"),
     # pydantic / typing internals and constrained-type alias names that carry
     # no autodoc cross-reference target.
     (
         r"py:.*",
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
-        r"Strict[A-Za-z]*|[A-Za-z]*Constraints)$",
+        r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
+    ),
+    # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) are not
+    # documentable objects; they appear in generic signatures only. Listed
+    # explicitly so the pattern cannot mask a real CamelCase class.
+    (r"py:.*", r"^(T|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co)$"),
+    # SQLAlchemy column/type vocabulary referenced from the encrypted-column
+    # adapters; resolved online via the vendored sqlalchemy inventory under its
+    # fully-qualified name, but written short (or under SQLAlchemy's private
+    # ``_types`` path) in the inherited docstrings.
+    (
+        r"py:.*",
+        r"^(_types(\..*)?|TypeDecorator|UserDefinedType|ExternalType|Dialect|"
+        r"TypeEngine)$",
     ),
     # Typed-id NewType aliases (CasillaId, SourceRefId, ...) are documented at
     # their definition, not as standalone class targets.
     (r"py:.*", r".*\._ids\.[A-Za-z]\w*$"),
-    # References into private (underscore) modules, which are excluded from the
-    # documented API surface, have no cross-reference target.
+    # References into private (single-underscore) modules or to private classes
+    # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
+    # internals excluded from the documented cross-reference surface.
     (r"py:.*", r".*\._[a-z]\w*\.[A-Za-z_]\w*$"),
-    # External types resolved (when online) via intersphinx; ignored so the
-    # gate stays hermetic offline.
+    (r"py:.*", r".*\._[A-Z]\w*$"),
+    # Bare references to private (single-underscore) helpers — ``_now``,
+    # ``_coerce_utc_aware``, ``_BorradorParseError`` — written without a module
+    # path. Private members are not part of the documented surface, so a literal
+    # would be more correct, but the reference itself carries no public target.
+    (r"py:.*", r"^_[A-Za-z]\w*$"),
+    # Module-level ``ALL_CAPS`` constants (registry tables, key tuples) are data,
+    # not part of the class/function cross-reference surface; references to them
+    # by name (``PORTAL_REGISTRY``, ``IVA_RATE_TABLE``) have no autodoc target.
+    (r"py:.*", r"(^|.*\.)[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$"),
+    # Third-party namespaces with no vendored inventory (python.inv and
+    # sqlalchemy.inv are vendored under docs/_inventories/ and resolve stdlib,
+    # builtin, and SQLAlchemy targets exactly). pydantic / httpx / typer / click
+    # and the other rendering-tooling namespaces below resolve online when
+    # available; offline they have no inventory, so their fully-qualified targets
+    # are ignored here to keep the gate hermetic.
     (
         r"py:.*",
-        r"^(Path|Decimal|Session|TypeDecorator|PydanticUndefined|"
-        r"Ge|Le|Gt|Lt|Len|Interval|MultipleOf)$",
+        r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
+        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe)(\..*)?$",
     ),
+    # Bare sentinel / alias names that survive short-name rendering and carry no
+    # in-tree and no inventory target (Ellipsis from ``tuple[X, ...]``
+    # annotations, NoneType/EllipsisType, the short pydantic-constraint alias
+    # names, and the unqualified renders of common stdlib/SQLAlchemy types whose
+    # canonical fully-qualified target resolves via the vendored inventory but
+    # whose ``autodoc_typehints_format = "short"`` display form is a bare name).
+    (
+        r"py:.*",
+        r"^(Ellipsis|NoneType|EllipsisType|PydanticUndefined|TypeDecorator|"
+        r"Session|Ge|Le|Gt|Lt|Len|Interval|MultipleOf|BaseModel|Decimal|Path|"
+        r"Mapping|MutableMapping|Sequence|Iterable|Iterator|Mapped|StrEnum|"
+        r"datetime|date|time|timedelta|UUID|"
+        # Short pydantic public names referenced without a module path.
+        r"ValidationError|SecretStr|BaseSettings|AnyUrl|AnyHttpUrl|EmailStr|"
+        r"Field|TypeAliasType)$",
+    ),
+    # Bound-method references on external (stdlib / pydantic) types, written
+    # ``datetime.now`` / ``date.today``; the owning type resolves via inventory
+    # but the bare method name has no cross-reference target.
+    (
+        r"py:.*",
+        r"^(datetime|date|time|Decimal|Path|UUID|dict|list|set|str|bytes)\.[a-z]\w*$",
+    ),
+    # The CLI entrypoint subtree is intentionally excluded from the API stub set
+    # (its commands are documented in the generated CLI reference under
+    # docs/cli/), so module references into it have no autodoc target.
+    (r"py:.*", r"^aeat\.entrypoints\.cli(\..*)?$"),
 ]
 
 # ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
@@ -205,6 +307,138 @@ linkcheck_ignore = [
 linkcheck_timeout = 30
 
 
+_PY_SUFFIX_INDEX: dict[str, list[str]] = {}
+
+
+def _build_py_suffix_index(env):
+    """Index every documented Python object by its bare (final-segment) name.
+
+    Args:
+        env: The Sphinx build environment after the read phase.
+
+    Returns:
+        A mapping of bare object name to the list of fully-qualified names that
+        end in it (for example ``BorradorObservation`` ->
+        ``["aeat.adapters.inbound.borrador._schema.BorradorObservation"]``).
+    """
+    index: dict[str, list[str]] = {}
+    for fullname in env.get_domain("py").objects:
+        index.setdefault(fullname.rsplit(".", 1)[-1], []).append(fullname)
+    return index
+
+
+def _resolve_short_reference(app, env, node, contnode):
+    """Bridge a short cross-reference to its single canonical defining-module target.
+
+    Stubs document every symbol exactly once, at its defining ``__module__``
+    (``:ignore-module-all:``). Docstrings, however, reference re-exported public
+    API either by bare name (``:class:`Name```) or by the public package path it
+    is re-exported under (``:class:`aeat.domain.filing.ModeloDraft```), neither
+    of which autodoc can resolve to the qualified defining-module target. This
+    resolver keys on the reference's final segment: when that bare name maps to
+    exactly one documented object it returns a reference to it. Ambiguous names
+    (several definitions) and unknown names are left untouched so they still
+    surface as nitpicky warnings.
+
+    Args:
+        app: The Sphinx application.
+        env: The build environment.
+        node: The pending cross-reference node.
+        contnode: The node holding the reference's display text.
+
+    Returns:
+        A resolved reference node, or ``None`` to defer to other resolvers.
+    """
+    from sphinx.util.nodes import make_refnode
+
+    if node.get("refdomain") not in ("py", ""):
+        return None
+    target = node.get("reftarget", "")
+    parts = target.split(".") if target else []
+    short = parts[-1] if parts else ""
+    if not short or not short.isidentifier():
+        return None
+
+    if not _PY_SUFFIX_INDEX:
+        _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
+    candidates = _PY_SUFFIX_INDEX.get(short)
+    if not candidates:
+        return None
+
+    # A public re-export path (``aeat.domain.portals.PortalCategory.AUTH``) maps
+    # onto a defining-module path that carries an extra private segment
+    # (``...portals._registry.PortalCategory.AUTH``). Disambiguate by the longest
+    # trailing run of the reference that uniquely identifies one documented
+    # object: match objects whose qualified name ends in that run.
+    if len(candidates) > 1:
+        for depth in range(2, len(parts) + 1):
+            suffix = ".".join(parts[-depth:])
+            narrowed = [name for name in candidates if name == suffix or name.endswith("." + suffix)]
+            if len(narrowed) == 1:
+                candidates = narrowed
+                break
+            if narrowed:
+                candidates = narrowed
+        if len(candidates) != 1:
+            return None
+
+    fullname = candidates[0]
+    entry = env.get_domain("py").objects[fullname]
+    return make_refnode(app.builder, node.get("refdoc", env.docname), entry.docname, entry.node_id, contnode, fullname)
+
+
+def _paramref_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    """Render SQLAlchemy's ``:paramref:`` cross-references as plain literals.
+
+    SQLAlchemy documents its mapped-attribute and engine constructs with the
+    ``:paramref:`` role supplied by its own ``zzzeeksphinx`` Sphinx extension.
+    Autodoc pulls those inherited docstrings into the ORM module pages, so the
+    role appears in our build without the extension that defines it. Rendering
+    the trailing ``ClassName.param`` segment as inline literal text keeps the
+    inherited prose readable without erroring the nitpicky gate.
+
+    Args:
+        name: The role name as invoked.
+        rawtext: The entire role markup including the target.
+        text: The interpreted target (a dotted parameter reference).
+        lineno: The line number of the role in the source.
+        inliner: The docutils inliner driving the parse.
+        options: Role options (unused).
+        content: Role content (unused).
+
+    Returns:
+        A docutils node list and an (always empty) system-message list.
+    """
+    label = text.split(".")[-1].strip("`") or text
+    return [nodes.literal(rawtext, label)], []
+
+
+class _LegacyDirective(Directive):
+    """Render SQLAlchemy's ``.. legacy::`` admonition as a generic note.
+
+    SQLAlchemy's ``zzzeeksphinx`` extension defines a ``.. legacy::`` admonition
+    that surfaces through autodoc'd inherited docstrings. Without the extension
+    the directive is unknown and errors the gate; emitting an ``admonition``
+    node with the parsed body preserves the inherited guidance.
+    """
+
+    has_content = True
+    required_arguments = 0
+    optional_arguments = 0
+    final_argument_whitespace = True
+
+    def run(self):
+        """Build a generic ``Legacy`` admonition from the directive body.
+
+        Returns:
+            A single-element list holding the admonition node.
+        """
+        admonition = nodes.admonition()
+        admonition += nodes.title(text="Legacy")
+        self.state.nested_parse(self.content, self.content_offset, admonition)
+        return [admonition]
+
+
 def setup(app):
     """Resolve deferred pydantic forward references before autodoc runs.
 
@@ -213,6 +447,11 @@ def setup(app):
     imports those modules directly and would crash on a not-fully-defined
     model; the docs build is not the fast path, so the rebuild is triggered
     once the builder is initialised and mock imports are active.
+
+    The ``:paramref:`` role and ``.. legacy::`` directive belong to
+    SQLAlchemy's documentation toolchain; they reach our build only through
+    autodoc'd inherited docstrings, so tolerant shims are registered rather
+    than vendoring the upstream extension.
 
     Args:
         app: The Sphinx application instance.
@@ -232,4 +471,10 @@ def setup(app):
         diagnostics._ensure_models_rebuilt()
 
     app.connect("builder-inited", _resolve_deferred_models)
+    # Priority 700 runs after intersphinx (which resolves external targets at the
+    # default priority) so the short-name bridge only fires for genuinely
+    # unresolved in-tree references.
+    app.connect("missing-reference", _resolve_short_reference, priority=700)
+    app.add_role("paramref", _paramref_role)
+    app.add_directive("legacy", _LegacyDirective)
     return {"parallel_read_safe": True, "parallel_write_safe": True}
