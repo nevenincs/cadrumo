@@ -12,9 +12,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.logging import get_logger
-from .._errors import LLMConfigError, LLMProviderError
+from .._errors import LLMConfigError
 from .._models import LLMProvider
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
 
 _OPENAI_CHAT_URL = Settings().aeat_llm_openai_chat_completions_url
 
@@ -123,27 +123,7 @@ class OpenAIAdapter(_ProviderAdapter):
                     "temperature": request.temperature,
                 },
             )
-        if response.status_code == 429:
-            _logger.warning(
-                "openai: rate limit response status=%d model=%s",
-                response.status_code,
-                request.model,
-            )
-            raise_rate_limit("OpenAI rate limit exceeded.", response.headers.get("retry-after"))
-        if response.status_code >= 500:
-            _logger.error(
-                "openai: server error status=%d model=%s",
-                response.status_code,
-                request.model,
-            )
-            raise LLMProviderError(f"OpenAI API failure ({response.status_code}).")
-        if response.status_code >= 400:
-            _logger.warning(
-                "openai: client error status=%d model=%s",
-                response.status_code,
-                request.model,
-            )
-            raise LLMProviderError(f"OpenAI API failure ({response.status_code}).")
+        check_http_error(response, provider_name="OpenAI", model=request.model, logger=_logger)
         parsed = _OpenAIResponse.model_validate_json(response.text)
         text = parsed.choices[0].message.content or ""
         return ProviderCompletion(
