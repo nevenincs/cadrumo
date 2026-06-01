@@ -16,6 +16,12 @@ live under :mod:`aeat.adapters`, use cases live under
    this toctree references only pages that currently exist.
 
 .. toctree::
+   :maxdepth: 2
+   :caption: CLI Reference
+
+   cli/index
+
+.. toctree::
    :maxdepth: 3
    :caption: API Reference
 
