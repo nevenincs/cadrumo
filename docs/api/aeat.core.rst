@@ -20,6 +20,7 @@ Subpackages
    aeat.core.errors
    aeat.core.i18n
    aeat.core.identity
+   aeat.core.money
    aeat.core.observability
    aeat.core.parsing
    aeat.core.redaction
