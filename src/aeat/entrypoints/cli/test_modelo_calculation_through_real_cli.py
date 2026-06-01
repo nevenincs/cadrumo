@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pytest
 
+import aeat.application.wizard._catalogue  # noqa: F401  # register wizard catalogue at import time
+import aeat.application.wizard._persistence  # noqa: F401  # register project_answers projector at import time
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
@@ -234,6 +236,10 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
             "--binding", "modelo-200-2024-profile-new-entity-flag=0",
             "--binding", "modelo-200-2024-profile-incn-prior-12-months=500000",
+            # Estado-share porcentaje for IS cuota; 100 means full estado share
+            # (no foral/territorial adjustment) which is the common-regime case
+            # this oracle fixture covers.
+            "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
             "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",

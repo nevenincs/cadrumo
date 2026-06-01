@@ -2772,7 +2772,16 @@ def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     # `int(...)` is total; casilla.number falls back to "0" on a missing token
     # so the same canonicalisation runs against every catalogued casilla.
     key_numeric = int(key)
-    matches = [c for c in revision.casillas if int(c.number or "0") == key_numeric]
+
+    def _as_int(value: str | None) -> int | None:
+        if not value:
+            return None
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
+    matches = [c for c in revision.casillas if _as_int(c.number) == key_numeric]
     if len(matches) == 1:
         return str(matches[0].id)
 

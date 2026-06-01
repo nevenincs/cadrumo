@@ -14,6 +14,7 @@ expected stage — they do not assert calculated Decimal values.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
