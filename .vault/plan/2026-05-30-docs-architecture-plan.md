@@ -165,7 +165,7 @@ Bring the locales subpackage to green against ruff D, pydoclint, interrogate, an
 
 - [x] `W03.P15.S47` - bring every locales module to a true module docstring; `src/aeat/locales`.
 - [x] `W03.P15.S48` - bring every locales public symbol to a signature-matching google docstring; `src/aeat/locales`.
-- [ ] `W03.P15.S49` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for locales; `src/aeat/locales`.
+- [x] `W03.P15.S49` - confirm ruff D, pydoclint, interrogate, and the nitpicky build pass for locales; `src/aeat/locales`.
 
 ## Wave `W04` - user-doc rewrite via the documentation pipeline
 
@@ -190,8 +190,8 @@ Author the getting-started and architecture pages the toctree depends on, throug
 
 Re-establish the deleted bootstrap-presence conformance test against the current surfaces, discharging the docs-rewrite interim obligation.
 
-- [ ] `W04.P18.S55` - add the bootstrap-presence conformance test re-establishing the deleted pin; `src/aeat/tests/test_docs_bootstrap.py`.
-- [ ] `W04.P18.S56` - confirm the pin fails when a bootstrap document is removed; `src/aeat/tests/test_docs_bootstrap.py`.
+- [x] `W04.P18.S55` - add the bootstrap-presence conformance test re-establishing the deleted pin; `src/aeat/tests/test_docs_bootstrap.py`.
+- [x] `W04.P18.S56` - confirm the pin fails when a bootstrap document is removed; `src/aeat/tests/test_docs_bootstrap.py`.
 
 ## Wave `W05` - editorial workflow and rollout
 
@@ -208,8 +208,8 @@ Document the researcher-author-editor authoring workflow as a domain-named contr
 
 Wire docs-check into the standing gate set and make the docstring, correspondence, and CLI conformance tests blocking now the tree is green.
 
-- [ ] `W05.P20.S59` - wire docs-check into the standing gate set; `justfile`.
-- [ ] `W05.P20.S60` - make the docstring, correspondence, and cli conformance tests blocking in the unit gate; `pyproject.toml`.
+- [x] `W05.P20.S59` - wire docs-check into the standing gate set; `justfile`.
+- [x] `W05.P20.S60` - make the docstring, correspondence, and cli conformance tests blocking in the unit gate; `pyproject.toml`.
 - [ ] `W05.P20.S61` - confirm a full green run across lint, docs-check, and the suite; `justfile`.
 
 ### Phase `W05.P21` - epic closure honesty review
