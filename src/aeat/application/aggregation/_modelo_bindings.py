@@ -18,6 +18,7 @@ from ...domain.calculations.registry import (
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepository
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._errors import AggregationValidationError, t
 from ._iva_ledger import (
     IvaLedgerAggregationIssue,
@@ -125,7 +126,7 @@ class LedgerIvaAggregationSourceResolver:
     resolver_id = "ledger_iva_aggregation"
     owned_sources = ("ledger_iva_aggregation",)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -191,7 +192,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
     def __init__(
         self,
         *,
-        transaction_repository: TransactionCatalogueRepository | None = None,
+        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
         invoice_repository: InvoiceCatalogueRepository | None = None,
     ) -> None:
         self._transaction_repository = transaction_repository
@@ -249,7 +250,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
     resolver_id = "ledger_renta_income_aggregation"
     owned_sources = ("ledger_renta_income_aggregation",)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -305,7 +306,7 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     revision: ModeloRevision,
     filing_year: int,
     period: str,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
 ) -> ModeloLedgerBindingAggregation:
     """Resolve ledger-backed registry bindings from the active bucket."""

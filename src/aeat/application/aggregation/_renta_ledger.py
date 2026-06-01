@@ -34,6 +34,8 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
+
 from . import _shared_issue_reasons
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
@@ -151,7 +153,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
     period: Period | str,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
