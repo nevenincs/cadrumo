@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
 from aeat.core.i18n import OUTPUT_LANGUAGE_ENV_VAR
 
@@ -19,4 +20,16 @@ def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
 def _isolated_aeat_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Point `Settings.aeat_local_storage_root` at the test's `tmp_path`."""
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+
+
+@pytest.fixture
+def cli_runner() -> CliRunner:
+    """Return a fresh Click ``CliRunner`` for CLI invocation tests.
+
+    Shared by every CLI test module that exercises commands through
+    ``runner.invoke(...)``; previously redeclared in ~21 modules with
+    identical bodies. New tests should use this fixture directly
+    rather than redeclaring it.
+    """
+    return CliRunner()
 

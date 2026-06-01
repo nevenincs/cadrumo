@@ -29,10 +29,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
