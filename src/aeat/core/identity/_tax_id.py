@@ -16,9 +16,7 @@ member.
 
 from __future__ import annotations
 
-from ._documents import IdentityError
-
-_NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+from ._documents import _NIF_LETTERS, IdentityError
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
 # ``_CIF_LEADERS`` (20 characters) is a historical-tolerance superset of
 # ``aeat.core.identity._documents._CIF_KIND_LETTERS`` (17 characters).
