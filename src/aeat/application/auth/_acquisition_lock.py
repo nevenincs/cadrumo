@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import now
+from aeat.core.time import now as _utc_now
 
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
@@ -156,7 +156,7 @@ def acquire_auth_acquisition_lock(
     """
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
-    now = now()
+    now = _utc_now()
     from ..workflow._models import require_active_bucket_id
 
     record = AuthAcquisitionLockRecord(
