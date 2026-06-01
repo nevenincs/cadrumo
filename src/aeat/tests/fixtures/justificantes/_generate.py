@@ -2661,6 +2661,11 @@ def _write_sidecar(pdf_path: Path, modelo: str, ejercicio: str, tax_id: str) -> 
     pdf_bytes = pdf_path.read_bytes()
     pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
     sidecar_data = {
+        # Fixture-provenance declaration consumed by the verification-source
+        # gate: this writer only ever emits synthetic, generator-produced
+        # specimens (the PDF carries /Producer = "aeat-test-fixture-generator").
+        "provenance": "synthetic_generated",
+        "role": "formula_verification",
         "source_sha256": pdf_sha256,
         "output_sha256": pdf_sha256,
         "source_size_bytes": len(pdf_bytes),

@@ -1,4 +1,6 @@
 {
+  "provenance": "synthetic_generated",
+  "role": "formula_verification",
   "source_sha256": "4e933965cfb9b9da402c893a35394bd05e6fced2d357ec05da84503021b7b6b2",
   "output_sha256": "4e933965cfb9b9da402c893a35394bd05e6fced2d357ec05da84503021b7b6b2",
   "source_size_bytes": 2003,
