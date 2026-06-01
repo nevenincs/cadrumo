@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
-from aeat.domain.calculations.registry import CasillaFieldKind
+from aeat.domain.calculations._export_field_kind import CasillaFieldKind
 
 from ._schema import ProfileSchemaDefinition
 
