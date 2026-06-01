@@ -24,6 +24,7 @@ production test surface.  The test asserts this inventory stays at zero.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -94,15 +95,21 @@ def _is_tautological_assert(node: ast.AST) -> bool:
     return False
 
 
-def _tautological_sites(path: Path) -> list[tuple[int, str]]:
-    """Return ``(lineno, snippet)`` for every tautological assertion in *path*."""
-    source = path.read_text(encoding="utf-8")
-    try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError:
-        return []
+def _tautological_sites(
+    path: Path,
+    tree: ast.AST,
+) -> list[tuple[int, str]]:
+    """Return ``(lineno, snippet)`` for every tautological assertion in *path*.
 
-    lines = source.splitlines()
+    Accepts the cached ``ast.AST`` for *path* from the session fixture
+    rather than parsing the file again. Reads the file's raw text only
+    to render snippets for the violation message.
+    """
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        lines = []
+
     hits: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if _is_tautological_assert(node):
@@ -119,14 +126,31 @@ def _tautological_sites(path: Path) -> list[tuple[int, str]]:
     return hits
 
 
-def test_no_tautological_assertions() -> None:
-    """No production test module may contain structurally tautological assertions."""
+def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+    """No production test module may contain structurally tautological assertions.
+
+    Consumes the session-scoped ``source_tree_ast`` cache for the parsed
+    AST and uses :func:`_discover_test_modules` as the per-test filter
+    so the existing fixtures-dir exclusion stays intact. Modules absent
+    from the cache (e.g. files that failed to parse at fixture-build
+    time) fall back to a per-test ``ast.parse`` so the ratchet remains
+    truthful for malformed files.
+    """
     modules = _discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
         relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
-        for lineno, snippet in _tautological_sites(module_path):
+        tree = source_tree_ast.get(module_path)
+        if tree is None:
+            try:
+                tree = ast.parse(
+                    module_path.read_text(encoding="utf-8"),
+                    filename=str(module_path),
+                )
+            except (OSError, SyntaxError):
+                continue
+        for lineno, snippet in _tautological_sites(module_path, tree):
             violations.append(f"{relative}:{lineno}: {snippet}")
 
     assert not violations, (
