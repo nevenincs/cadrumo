@@ -19,11 +19,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Annotated
 
 from .errors import CoreValidationError
-from .external_constants import DEFAULT_CURRENCY
+from .external_constants import DEFAULT_CURRENCY, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
 
@@ -165,6 +166,24 @@ class JustificanteParserBackendSetting(StrEnum):
     """Settings-shape selector for the justificante PDF parsing backend."""
 
     PDFPLUMBER = "pdfplumber"
+
+
+def _coerce_output_language_setting(value: str) -> OutputLanguage | None:
+    """Coerce env-var output-language to OutputLanguage enum or None.
+
+    Accepts any string input. Returns the matching OutputLanguage member
+    OR None for invalid input, preserving the forgiving-fallback semantic
+    at the validator layer: operators with mistyped AEAT_OUTPUT_LANGUAGE
+    env vars normalise to None and fall through to the default at
+    resolution time, rather than raising ValidationError at settings load.
+    """
+    if not value:
+        return None
+    normalized = value.lower().strip()
+    try:
+        return OutputLanguage(normalized)
+    except ValueError:
+        return None
 
 
 class Settings(BaseSettings):
@@ -401,9 +420,9 @@ class Settings(BaseSettings):
     )
 
     # ── Multilingual i18n ───────────────────────────────────────────────────
-    aeat_output_language: str = Field(
-        default="es",
-        description="Target ISO 639-1 language code for user-facing content.",
+    aeat_output_language: Annotated[OutputLanguage | None, BeforeValidator(_coerce_output_language_setting)] = Field(
+        default=None,
+        description="Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default.",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
         default="es",
