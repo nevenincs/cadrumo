@@ -863,11 +863,6 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         from ...core.json_contract import emit_json_success
 
         verb = "created" if mode == "create" else "updated"
-        verb_label = (
-            tr("wizard.commands.status.created")
-            if mode == "create"
-            else tr("wizard.commands.status.updated")
-        )
         payload: dict[str, object] = {
             "profile_name": profile_name,
             "status": verb,
@@ -885,11 +880,16 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             )
             emit_json_success(command_path, payload)
         else:
-            _typer.echo(f"{tr('application.wizard.output_labels.profile')}\t{profile_name}")
-            _typer.echo(f"{tr('application.wizard.output_labels.status')}\t{verb_label}")
+            # Machine-parseable KV: lowercase snake_case keys + machine
+            # value tokens (status verb is "created"/"updated", not the
+            # localised display label). Scripted consumers parse on the
+            # key column; localising it would force every consumer to
+            # build a per-locale key table.
+            _typer.echo(f"profile\t{profile_name}")
+            _typer.echo(f"status\t{verb}")
             if mode == "create":
-                _typer.echo(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
-            _typer.echo(f"{tr('application.wizard.output_labels.next')}\t{tr('application.wizard.next_hint.modelo_work_create')}")
+                _typer.echo(f"active_profile\t{profile_name}")
+            _typer.echo(f"next\t{payload['next']}")
 
     # CAST-RATIONALE-WIZARD-COMMAND-INJECT: Typer resolves CLI parameters
     # from ``__signature__`` at decoration time; the cast to ``Any`` is the
