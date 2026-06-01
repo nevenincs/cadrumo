@@ -26,17 +26,17 @@ runs in the documentation CI lane.
 ## How
 
 - When a module imports a core-struct anchor (the spine is the `CORE_STRUCTS`
-  mapping in the gate, which is the authoritative list; it spans the registry
+  mapping in the gate, the authoritative list; it spans the registry
   authority and snapshots, the JSON contract envelopes, the secure storage
   primitives, the AEAT portal registry, the financial-input aggregates and their
   repositories, and the profile/deadline/filing records),
   add a `:class:` (or `:meth:`/`:obj:`) cross-link in the docstring where the
   struct is genuinely used (a return type, a parameter, the operation performed).
-  Write a true sentence describing the real relationship; do not fabricate.
+  Write a true sentence describing the real relationship. Do not fabricate.
 - Upgrade existing plain-backtick mentions (``ModeloRevision``) to roles
   (`:class:`ModeloRevision``). The anchors are documented public symbols, so a
-  bare `:class:`Name`` resolves through the build's missing-reference resolver;
-  do not add a dotted path.
+  bare `:class:`Name`` resolves through the build's missing-reference resolver.
+  Do not add a dotted path.
 - Extend the `CORE_STRUCTS` mapping in the gate to bring more of the spine under
   enforcement. Each entry is pinned to a single canonical class definition, so
   the set cannot silently rot.
@@ -53,5 +53,5 @@ runs in the documentation CI lane.
   per-domain discovery pass; the high in-degree tail (errors, config, secondary
   enums) was deliberately excluded.
 - Run the gate: `uv run --no-sync pytest -m docs src/aeat/tests/test_docstring_core_struct_links.py`.
-  It must stay green. Do not satisfy it by sprinkling unrelated roles; the link
-  must be semantically truthful and the `-n -W` build must still resolve it.
+  It MUST stay green. Do not satisfy it by sprinkling unrelated roles; the link
+  MUST be semantically truthful and the `-n -W` build MUST still resolve it.
