@@ -19,7 +19,7 @@ import json
 import os
 import typing
 from collections.abc import Iterator, Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 
 from ....core.external_constants import UTF_8_ENCODING
