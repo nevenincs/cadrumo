@@ -221,7 +221,12 @@ field as ``ModeloYear``.
 """
 
 
-_PERIOD_CODE_RE = re.compile(r"^(?:[1-4]T|[1-4]P|0A|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$")
+from ....core._period import StandardPeriodCode
+
+_STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
+_EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
+_AD_HOC_PATTERN = r"^AD-HOC$"
+_EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
 
 
 def _validate_period_code(value: object) -> object:
@@ -229,10 +234,7 @@ def _validate_period_code(value: object) -> object:
 
     Accepted forms (from the fiscal-period inventory):
 
-    - ``1T``-``4T``: quarterly (canonical).
-    - ``1P``-``4P``: corporate-tax (IS) instalment periods (modelo 202).
-    - ``0A``: annual.
-    - ``01``-``12``: monthly.
+    - StandardPeriodCode: 1T-4T (quarterly), 1P-4P (instalment), 0A (annual), 01-12 (monthly).
     - ``EXT-1T``-``EXT-4T``: OSS extra-Union scheme quarters (modelo 369).
     - ``AD-HOC``: ad-hoc / event-driven (modelos 308, 309).
     - ``EVENT-N``: numbered event filings.
@@ -241,9 +243,11 @@ def _validate_period_code(value: object) -> object:
     """
     if not isinstance(value, str):
         raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
-    if not _PERIOD_CODE_RE.match(value):
-        raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
-    return value
+    if value in _STANDARD_PERIOD_CODES:
+        return value
+    if _EXT_PATTERN.match(value) or value == _AD_HOC_PATTERN or _EVENT_PATTERN.match(value):
+        return value
+    raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
 
 
 PeriodCode = Annotated[str, BeforeValidator(_validate_period_code)]

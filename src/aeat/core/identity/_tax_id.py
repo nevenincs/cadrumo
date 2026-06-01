@@ -32,6 +32,17 @@ _CIF_LETTER_CONTROL_LEADERS = set("KPQRSNW")
 _CIF_CONTROL_LETTERS = "JABCDEFGHI"
 
 
+def nif_check_letter(number: int) -> str:
+    """Return the NIF/NIE checksum letter for ``number``.
+
+    Implements the AEAT control-letter table ``TRWAGMYFPDXBNJZSQVHLCKE``
+    indexed by ``number % 23``. This is the single source of the table;
+    callers generating or validating Spanish identifiers use it rather
+    than re-declaring the literal.
+    """
+    return _NIF_LETTERS[number % 23]
+
+
 def validate_spanish_tax_id(value: str) -> str:
     """Validate a Spanish NIF, NIE, or CIF and return its canonical form.
 
@@ -80,7 +91,7 @@ def _validate_nif(value: str) -> str:
     control = value[8]
     if not digits.isdigit() or not control.isalpha():
         raise IdentityError("NIF must be 8 digits followed by a checksum letter")
-    expected = _NIF_LETTERS[int(digits) % 23]
+    expected = nif_check_letter(int(digits))
     if control != expected:
         raise IdentityError("NIF checksum letter is invalid")
     return value
@@ -94,7 +105,7 @@ def _validate_nie(value: str) -> str:
     if not body.isdigit() or not control.isalpha():
         raise IdentityError("NIE must be a leading X/Y/Z plus 7 digits and a checksum letter")
     substituted = _NIE_LEADERS[leader] + body
-    expected = _NIF_LETTERS[int(substituted) % 23]
+    expected = nif_check_letter(int(substituted))
     if control != expected:
         raise IdentityError("NIE checksum letter is invalid")
     return value
@@ -132,4 +143,4 @@ def _validate_cif(value: str) -> str:
     return value
 
 
-__all__ = ["validate_spanish_tax_id"]
+__all__ = ["nif_check_letter", "validate_spanish_tax_id"]

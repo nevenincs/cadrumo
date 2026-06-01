@@ -35,7 +35,7 @@ from ._documents import (
 )
 from ._profile import ProfileId
 from ._snapshot import SnapshotId
-from ._tax_id import validate_spanish_tax_id
+from ._tax_id import nif_check_letter, validate_spanish_tax_id
 from ._transaction import TransactionId
 
 
@@ -67,6 +67,7 @@ __all__ = [
     "SnapshotId",
     "SubjectTaxId",
     "TransactionId",
+    "nif_check_letter",
     "validate_identity",
     "validate_spanish_tax_id",
 ]

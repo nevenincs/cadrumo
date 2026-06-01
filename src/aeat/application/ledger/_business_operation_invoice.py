@@ -41,6 +41,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...core.identity import BucketId
 from .._storage_paths import storage_path
 
@@ -248,7 +249,7 @@ _OBJECT_TYPE_MAP: dict[str, BucketEventObjectType] = {
 
 def _emit_invoice_event(
     *,
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryRepositoryProtocol,
     record: BusinessOperationInvoice,
     event_type: BucketEventType,
     occurred_at: datetime,
@@ -340,7 +341,7 @@ class _BusinessOperationInvoiceService:
     def __init__(
         self,
         settings: Settings | None = None,
-        bucket_event_repository: BucketEventHistoryRepository | None = None,
+        bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
         # `Settings()` bypasses the `override_settings` context-var, so a
         # test (or CLI run) that overrides `aeat_invoices_dir` would still

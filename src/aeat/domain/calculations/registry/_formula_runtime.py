@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....domain.fincas._rounding import _round_to_cents
+from ....core.money import round_to_cents as _round_to_cents
 from ._bindings import CasillaObservation, _PreviousModeloSelector
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._ids import FormulaId

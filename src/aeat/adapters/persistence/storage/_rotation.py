@@ -470,6 +470,7 @@ def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     """Return the canonical blob-store roots covered by master-key rotation.
 
     The substrate persists wrapped DEKs in:
+
     - The secret-store's blob store (``aeat_blob_store_dir``), wired up
       by :func:`get_secret_store` for opaque-bearer credentials, OAuth
       refresh tokens, and identity records.
