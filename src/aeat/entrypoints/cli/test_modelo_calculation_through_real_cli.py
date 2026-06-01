@@ -93,7 +93,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Oracle Test Operator",
+        display_name="Oracle calculation test profile",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Oracle Test Operator"),
@@ -149,7 +149,7 @@ def _seed_legal_entity_profile(
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Oracle IS Test Operator",
+        display_name="Oracle calculation test profile",
         status=UserProfileStatus.ACTIVE,
         facts=tuple(facts),
     )
