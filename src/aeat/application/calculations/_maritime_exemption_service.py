@@ -8,7 +8,7 @@ returns typed CasillaObservation rows alongside a flat casilla_values mapping.
 The flat mapping is for human readability; the typed observation list is the
 canonical contract per aeat-calculation-grounding.
 
-Calling conventions:
+Calling conventions::
 
   result = resolve_maritime_exemption(
       facts=MaritimeWorkerFacts(
@@ -22,7 +22,7 @@ Calling conventions:
   # result.observations: tuple of CasillaObservation with legal_refs
   # result.casilla_values: {casilla_id: Decimal} derived view
 
-Error handling:
+Error handling::
 
   MaritimeExemptionInactiveError  — DA 41 selector resolved True (inactive)
   ProfileCompletenessError      — RETMAR mandatory filing gate triggered
@@ -50,7 +50,7 @@ from ...domain.renta._maritime_exemption import (
     guard_da41_inactive,
     rebeca_eligible,
 )
-from ...domain.renta.errors import RentaValidationError
+from ...domain.renta._errors import RentaValidationError
 
 
 class MaritimeExemptionResult(BaseModel):

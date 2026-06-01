@@ -23,7 +23,7 @@ from ..categories import (
     family_for,
 )
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
-from .errors import RentaValidationError
+from ._errors import RentaValidationError
 
 LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 
