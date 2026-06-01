@@ -229,7 +229,7 @@ nitpick_ignore_regex = [
     # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) are not
     # documentable objects; they appear in generic signatures only. Listed
     # explicitly so the pattern cannot mask a real CamelCase class.
-    (r"py:.*", r"^(T|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co)$"),
+    (r"py:.*", r"^(T|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType)$"),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
     # fully-qualified name, but written short (or under SQLAlchemy's private
@@ -247,6 +247,14 @@ nitpick_ignore_regex = [
     # internals excluded from the documented cross-reference surface.
     (r"py:.*", r".*\._[a-z]\w*\.[A-Za-z_]\w*$"),
     (r"py:.*", r".*\._[A-Z]\w*$"),
+    # Private functions or methods referenced by a dotted path ending in the
+    # private name (``pkg.mod._default_policy_for``, ``Engine._drive``), and
+    # members reached through a private class (``mod._SensitivityClass.MEMBER``).
+    (r"py:.*", r".*\._[a-z]\w*$"),
+    (r"py:.*", r".*\._[A-Z]\w*\.[A-Za-z_]\w*$"),
+    # ``TypeAliasType`` re-imported from typing_extensions into a project module
+    # and referenced through that module's path; it is an external alias type.
+    (r"py:.*", r".*\.TypeAliasType$"),
     # Bare references to private (single-underscore) helpers — ``_now``,
     # ``_coerce_utc_aware``, ``_BorradorParseError`` — written without a module
     # path. Private members are not part of the documented surface, so a literal
@@ -265,7 +273,25 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
-        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe)(\..*)?$",
+        r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|"
+        r"prompt_toolkit|google|typing_extensions|asyncio|contextvars|"
+        r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
+    ),
+    # Test modules are excluded from the documented API surface (see
+    # ApiStubManager exclusions), so references into them have no stub target.
+    (r"py:.*", r".*\btest_[A-Za-z0-9_]*$"),
+    (r"py:.*", r"^aeat\.tests(\..*)?$"),
+    # Dunder and numeric-literal targets that leak out of docstrings as bogus
+    # cross-references (a ``:class:`1``` or ``:data:`__all__```), never real
+    # documentable objects.
+    (r"py:.*", r"^([0-9]+|__all__|__repr__|__init__|__init_subclass__)$"),
+    # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
+    # google) types written ``Owner.method`` or ``obj.method``; the owning type
+    # resolves via inventory but the short method target does not.
+    (
+        r"py:.*",
+        r"^(model_copy|process_bind_param|process_result_value|run_in_executor|"
+        r"from_service_account_file|create_pipe_input|normalise|reconfigure)$",
     ),
     # Bare sentinel / alias names that survive short-name rendering and carry no
     # in-tree and no inventory target (Ellipsis from ``tuple[X, ...]``
@@ -279,9 +305,13 @@ nitpick_ignore_regex = [
         r"Session|Ge|Le|Gt|Lt|Len|Interval|MultipleOf|BaseModel|Decimal|Path|"
         r"Mapping|MutableMapping|Sequence|Iterable|Iterator|Mapped|StrEnum|"
         r"datetime|date|time|timedelta|UUID|"
-        # Short pydantic public names referenced without a module path.
+        # Short pydantic / pydantic-settings / SQLAlchemy / stdlib public names
+        # referenced without a module path.
         r"ValidationError|SecretStr|BaseSettings|AnyUrl|AnyHttpUrl|EmailStr|"
-        r"Field|TypeAliasType)$",
+        r"Field|TypeAliasType|SkipValidation|PrivateAttr|PydanticBaseSettingsSource|"
+        r"CliSettingsSource|PathType|DotenvType|EnvPrefixTarget|Engine|sessionmaker|"
+        r"MappingProxyType|ContextVar|deque|InvalidOperation|APIRequestContext|"
+        r"MonkeyPatch|Credentials)$",
     ),
     # Bound-method references on external (stdlib / pydantic) types, written
     # ``datetime.now`` / ``date.today``; the owning type resolves via inventory
@@ -308,6 +338,24 @@ linkcheck_timeout = 30
 
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
+
+
+def _is_ordered_subsequence(needle: list[str], haystack: list[str]) -> bool:
+    """Return whether every item of *needle* appears in *haystack*, in order.
+
+    Used to match a public dotted reference path against a defining-module
+    qualified name that interleaves extra private segments.
+
+    Args:
+        needle: The reference's dotted components.
+        haystack: A candidate object's dotted components.
+
+    Returns:
+        ``True`` when *needle* is an ordered (not necessarily contiguous)
+        subsequence of *haystack*.
+    """
+    it = iter(haystack)
+    return all(part in it for part in needle)
 
 
 def _build_py_suffix_index(env):
@@ -365,22 +413,19 @@ def _resolve_short_reference(app, env, node, contnode):
     if not candidates:
         return None
 
-    # A public re-export path (``aeat.domain.portals.PortalCategory.AUTH``) maps
-    # onto a defining-module path that carries an extra private segment
-    # (``...portals._registry.PortalCategory.AUTH``). Disambiguate by the longest
-    # trailing run of the reference that uniquely identifies one documented
-    # object: match objects whose qualified name ends in that run.
-    if len(candidates) > 1:
-        for depth in range(2, len(parts) + 1):
-            suffix = ".".join(parts[-depth:])
-            narrowed = [name for name in candidates if name == suffix or name.endswith("." + suffix)]
-            if len(narrowed) == 1:
-                candidates = narrowed
-                break
-            if narrowed:
-                candidates = narrowed
-        if len(candidates) != 1:
-            return None
+    # A public re-export path (``aeat.domain.iva.verify_catalogue``) maps onto a
+    # defining-module path that carries extra private segments
+    # (``aeat.domain.iva._catalogue.verify_catalogue``). The public components
+    # still appear, in order, within the defining path, so disambiguate by
+    # keeping the candidates whose dotted components contain the reference's
+    # components as an ordered subsequence. This separates same-named symbols
+    # that live under different public packages (``iva`` vs ``normatives``).
+    if len(candidates) > 1 and len(parts) > 1:
+        subseq = [name for name in candidates if _is_ordered_subsequence(parts, name.split("."))]
+        if len(subseq) == 1:
+            candidates = subseq
+    if len(candidates) != 1:
+        return None
 
     fullname = candidates[0]
     entry = env.get_domain("py").objects[fullname]
