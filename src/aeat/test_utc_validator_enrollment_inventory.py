@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import ast
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -26,19 +27,29 @@ _CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "_utc.py"
 _QUICK_FILTER = re.compile(r"tzinfo\s+is\s+None")
 
 
-def _file_has_inline_tzinfo_guard(path: Path) -> bool:
-    """Return True iff ``path`` contains an inline ``tzinfo is None`` check."""
-    source = path.read_text(encoding="utf-8")
-    if not _QUICK_FILTER.search(source):
-        return False
-    # AST-walk to confirm it is a real ``tzinfo is None`` comparison node,
-    # not a comment or string literal.
-    try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError:
-        # Unparseable file — flag it for investigation rather than silently
-        # skipping, since a broken parse is itself a quality signal.
-        return True
+def _file_has_inline_tzinfo_guard(
+    path: Path,
+    tree: ast.AST | None = None,
+) -> bool:
+    """Return True iff ``path`` contains an inline ``tzinfo is None`` check.
+
+    When *tree* is supplied (test-loop path), reuse the cached AST and skip
+    the quick text-filter; the AST walk is authoritative. When omitted,
+    fall back to per-call parse so the helper signature stays single-path
+    compatible.
+    """
+    if tree is None:
+        source = path.read_text(encoding="utf-8")
+        if not _QUICK_FILTER.search(source):
+            return False
+        # AST-walk to confirm it is a real ``tzinfo is None`` comparison node,
+        # not a comment or string literal.
+        try:
+            tree = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            # Unparseable file — flag it for investigation rather than silently
+            # skipping, since a broken parse is itself a quality signal.
+            return True
     for node in ast.walk(tree):
         if not isinstance(node, ast.Compare):
             continue
@@ -63,13 +74,20 @@ def _file_has_inline_tzinfo_guard(path: Path) -> bool:
     return False
 
 
-def test_no_inline_tzinfo_guards_in_production_code() -> None:
-    """Assert zero ``tzinfo is None`` inline guards remain outside the UTC module."""
+def test_no_inline_tzinfo_guards_in_production_code(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    """Assert zero ``tzinfo is None`` inline guards remain outside the UTC module.
+
+    Consumes the session-scoped AST cache so the per-file parse cost is
+    amortised across the full ratchet suite.
+    """
     violations: list[str] = []
+    canonical_utc = _CANONICAL_UTC_MODULE.resolve()
 
     for py_file in _SRC_ROOT.rglob("*.py"):
         # Skip the canonical UTC module — it is the allowed home.
-        if py_file.resolve() == _CANONICAL_UTC_MODULE.resolve():
+        if py_file.resolve() == canonical_utc:
             continue
         # Skip test files — they may assert on the guard's absence or
         # construct deliberate naive datetimes to exercise the boundary.
@@ -78,7 +96,8 @@ def test_no_inline_tzinfo_guards_in_production_code() -> None:
         # Skip conftest files.
         if py_file.name == "conftest.py":
             continue
-        if _file_has_inline_tzinfo_guard(py_file):
+        tree = source_tree_ast.get(py_file)
+        if _file_has_inline_tzinfo_guard(py_file, tree):
             violations.append(str(py_file.relative_to(_SRC_ROOT.parent)))
 
     assert not violations, (
