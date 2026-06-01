@@ -29,7 +29,6 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_oauth_flow.py",
         "_profile_binding.py",
         "_records.py",
-        "_refresh.py",
         "_session_store.py",
         "test_api.py",  # S198: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",
