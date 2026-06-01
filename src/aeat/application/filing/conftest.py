@@ -24,7 +24,7 @@ from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 _BUCKET_ID = "filing-test"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="module", autouse=True)
 def _active_bucket_runtime(tmp_path_factory) -> Iterator[TestRuntimeProfile]:
     tmp_path = tmp_path_factory.mktemp("filing-runtime")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
