@@ -1,11 +1,11 @@
 """Encrypted SQL repository for the modelo work-unit catalogue.
 
-The work-unit catalogue persists at FINANCIAL sensitivity through
-the same :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
-backend the transaction and invoice catalogues use. The catalogue
-is serialised as a single envelope-wrapped JSON payload keyed by a
-stable namespace + object key; the underlying column is encrypted
-so no plaintext work-unit metadata lands on disk.
+The work-unit catalogue persists at :class:`SensitivityClass` FINANCIAL
+through the same :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+backend the transaction and invoice catalogues use. The catalogue is
+serialised as a single :class:`Envelope`-wrapped JSON payload keyed by
+a stable namespace + object key; the underlying column is encrypted so
+no plaintext work-unit metadata lands on disk.
 """
 
 from __future__ import annotations

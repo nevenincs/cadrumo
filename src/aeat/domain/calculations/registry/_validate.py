@@ -1,4 +1,8 @@
-"""Fail-fast validation for registry definitions."""
+"""Fail-fast validation for registry definitions.
+
+Validates :class:`ModeloDefinition` instances and their constituent
+:class:`ModeloRevision` records against the legal and source catalogues.
+"""
 
 from __future__ import annotations
 

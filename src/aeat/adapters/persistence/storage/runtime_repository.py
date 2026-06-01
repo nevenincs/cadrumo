@@ -1,4 +1,9 @@
-"""Runtime-owned secure-object repository factories."""
+"""Runtime-owned :class:`SecureObjectRepository` factories.
+
+Builds :class:`SecureObjectRepository` instances bound to the active profile's
+unlocked storage route, so callers obtain a repository without resolving the
+storage namespace or key material themselves.
+"""
 
 from __future__ import annotations
 

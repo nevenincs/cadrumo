@@ -1,9 +1,9 @@
-"""Registry entry for Modelo 232 — related-party transactions return.
+"""Registry entry for Modelo 232 - related-party transactions return.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M232_VINCULADAS`` under :class:`PortalCategory` ``FILING``,
 exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

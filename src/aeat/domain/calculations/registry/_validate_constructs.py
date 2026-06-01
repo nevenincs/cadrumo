@@ -1,4 +1,8 @@
-"""Construct closure and support-removal validation helpers."""
+"""Construct closure and support-removal validation helpers.
+
+Validates that every construct and support-removal decision declared on
+a :class:`ModeloRevision` has coherent member references and legal grounding.
+"""
 
 from __future__ import annotations
 

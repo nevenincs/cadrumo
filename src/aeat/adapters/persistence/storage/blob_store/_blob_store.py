@@ -2,10 +2,10 @@
 
 Blobs are persisted under a content-addressed layout rooted at
 :attr:`Settings.aeat_blob_store_dir`. Each blob carries a sidecar
-:class:`BlobManifest` envelope that pins the sensitivity classification,
-the wire-format SHA-256 (plaintext for CORPUS; ciphertext for every
-other class), the optional wrapped data-encryption key, the AEAD
-nonce, the original size, and the content type.
+:class:`BlobManifest` :class:`Envelope` that pins the sensitivity
+classification, the wire-format SHA-256 (plaintext for CORPUS; ciphertext for
+every other class), the optional wrapped data-encryption key, the AEAD nonce,
+the original size, and the content type.
 
 Two layouts are supported:
 
@@ -14,10 +14,11 @@ Two layouts are supported:
   the plaintext SHA-256. The manifest records ``encryption=None``.
 - **Ciphertext** (every other class): the substrate mints a 32-byte
   data-encryption key (DEK), encrypts the blob with AES-256-GCM keyed
-  by the DEK, wraps the DEK with the master key (also AES-256-GCM),
-  and writes the ciphertext under ``blobs/<hex[:2]>/<hex>.enc`` where
-  ``<hex>`` is the ciphertext SHA-256. The manifest records the
-  wrapped DEK plus the AEAD nonces; the master key never touches disk.
+  by the DEK, wraps the DEK using the :class:`MasterKeyProvider` (also
+  AES-256-GCM), and writes the ciphertext under
+  ``blobs/<hex[:2]>/<hex>.enc`` where ``<hex>`` is the ciphertext SHA-256.
+  The manifest records the wrapped DEK plus the AEAD nonces; the master
+  key never touches disk.
 
 The repository's public read API returns plaintext bytes; the
 sensitivity class drives whether decryption is performed under the

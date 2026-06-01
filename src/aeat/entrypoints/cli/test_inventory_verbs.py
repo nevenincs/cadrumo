@@ -34,10 +34,6 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
             dispose_engine()
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def test_inventory_list_starts_empty(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(inventory_app, ["list"])

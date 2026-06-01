@@ -12,7 +12,7 @@ Fixtures:
 - `modelo_130_missing_casilla.html` — Modelo 130 filing with casilla
   02 and 06 absent from the table; exercises the fetcher's
   missing-casilla fallback to `Decimal("0")`.
-- `modelo_303_happy.html` — canonical Modelo 303 quarterly VAT
+- `modelo_303_happy.html` — canonical Modelo 303 quarterly IVA
   return with the six tracked casillas populated and a receipt
   (`Total a ingresar`) label present.
 - `modelo_303_unknown_status.html` — Modelo 303 filing with a
@@ -20,7 +20,7 @@ Fixtures:
   the `RemoteFilingStatus.UNKNOWN` fallback and the warning log.
 - `modelo_303_complementaria.html` — Modelo 303 filing amending a
   prior expediente; exercises the `complementaria_of` linkage.
-- `modelo_390_happy.html` — canonical Modelo 390 annual VAT summary
+- `modelo_390_happy.html` — canonical Modelo 390 annual IVA summary
   with the five tracked casillas populated.
 
 Keep the fixtures minimal; the goal is unambiguous test input, not a

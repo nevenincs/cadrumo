@@ -1,4 +1,9 @@
-"""Formula expression and dependency graph validation helpers."""
+"""Formula expression and dependency graph validation helpers.
+
+Validates formula expressions and the DAG formed by formula targets
+declared on a :class:`ModeloRevision`, checking casilla and binding
+reference closure and detecting cycles.
+"""
 
 from __future__ import annotations
 

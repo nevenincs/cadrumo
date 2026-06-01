@@ -13,9 +13,10 @@ consumer adheres to. It pins:
 
 The :func:`save_envelope` and :func:`load_envelope` helpers atomically
 write and read the envelope JSON via the project's standard
-``tempfile.NamedTemporaryFile + os.replace`` pattern.
+``tempfile.NamedTemporaryFile + os.replace`` pattern. Encrypted envelopes
+derive their key from the active :class:`MasterKeyProvider` via HKDF-SHA256.
 
-Per-domain migrators are not implemented at the substrate level — the
+Per-domain migrators are not implemented at the substrate level - the
 :class:`EnvelopeMigrator` protocol is the extension point consumers
 register their own migrators against. The substrate simply refuses to
 load a payload whose ``schema_version`` exceeds the consumer's

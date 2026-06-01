@@ -1,8 +1,9 @@
 """Catalogue entry for the AEAT Sede DNI electrónico (DNIe) entry point.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.AUTH`. Reuses the shared
-certificate gateway for credential exchange.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_DNIE_SEDE_ENTRY`` under
+:class:`PortalCategory` ``AUTH``. Reuses the shared certificate
+gateway for credential exchange.
 """
 
 from __future__ import annotations

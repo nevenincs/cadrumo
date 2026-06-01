@@ -1,9 +1,9 @@
 """Registry entry for the taxpayer's censo-data consultation portal.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_MIS_DATOS_CENSALES`` under :class:`PortalCategory`
+``CONSULTATION``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

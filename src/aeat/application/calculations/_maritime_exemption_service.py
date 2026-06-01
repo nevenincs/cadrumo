@@ -3,7 +3,8 @@
 Bridges the domain-layer maritime exemption calculation functions with the
 application-layer observation pipeline. Accepts resolved MaritimeWorkerFacts
 and income inputs, routes to the appropriate domain calculation function, and
-returns typed CasillaObservation rows alongside a flat casilla_values mapping.
+returns typed :class:`CasillaObservation` rows alongside a flat casilla_values
+mapping.
 
 The flat mapping is for human readability; the typed observation list is the
 canonical contract per aeat-calculation-grounding.

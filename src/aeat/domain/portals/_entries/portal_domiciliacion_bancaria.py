@@ -1,9 +1,9 @@
 """Catalogue entry for the AEAT *Domiciliación bancaria* procedure page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.PAYMENT`. Used to set up,
-inspect, and revoke direct-debit instructions on the AEAT autoliquidación
-flow.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_DOMICILIACION_BANCARIA`` under
+:class:`PortalCategory` ``PAYMENT``. Used to set up, inspect, and
+revoke direct-debit instructions on the AEAT autoliquidación flow.
 """
 
 from __future__ import annotations

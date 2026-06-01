@@ -29,6 +29,7 @@ from ..application.wizard._widgets import validate_widget_answer
 from ..application.workflow._models import resolve_active_bucket_id
 from ..application.workflow._persistence import workflow_state_repository
 from ..core.i18n import tr
+from ..core.redaction import redact_for_cli_output
 from ..domain.profile import get_profile_key
 from ..domain.user_profile import ProfileNotFoundError, UserProfileFact
 
@@ -136,7 +137,7 @@ def register(app: typer.Typer) -> None:
             except ProfileNotFoundError as exc:
                 raise _bad_unknown_profile(pointer.label) from exc
         value = fact_value(record, canonical_key) or ""
-        typer.echo(f"{canonical_key}\t{value or tr('cli.diagnostics.profile.unset_placeholder')}")
+        typer.echo(redact_for_cli_output(f"{canonical_key}\t{value or tr('cli.diagnostics.profile.unset_placeholder')}"))
 
     @sub.command("set", help=tr("cli.diagnostics.profile.set_help"))
     def _set(
@@ -173,7 +174,7 @@ def register(app: typer.Typer) -> None:
             updated = repository.update(lambda current: set_active_field(current, fact))
             record = updated.active_profile_record()
         stored_value = fact_value(record, canonical_key) or ""
-        typer.echo(f"{canonical_key}\t{stored_value}")
+        typer.echo(redact_for_cli_output(f"{canonical_key}\t{stored_value}"))
 
     @sub.command("unset", help=tr("cli.diagnostics.profile.unset_help"))
     def _unset(
@@ -190,6 +191,6 @@ def register(app: typer.Typer) -> None:
         with profile_storage_session(pointer.bucket_id):
             repository = workflow_state_repository()
             repository.update(lambda current: set_active_field(current, fact))
-        typer.echo(f"{canonical_key}\t{tr('cli.diagnostics.profile.unset_placeholder')}")
+        typer.echo(redact_for_cli_output(f"{canonical_key}\t{tr('cli.diagnostics.profile.unset_placeholder')}"))
 
     app.add_typer(sub)

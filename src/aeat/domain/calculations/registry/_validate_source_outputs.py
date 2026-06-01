@@ -1,4 +1,8 @@
-"""Shared source-output helpers for cross-model validation."""
+"""Shared source-output helpers for cross-model validation.
+
+Returns the set of casilla and binding ids that constitute the observable
+outputs of a :class:`ModeloRevision`, used by cross-model relation validators.
+"""
 
 from __future__ import annotations
 

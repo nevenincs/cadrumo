@@ -8,9 +8,11 @@ re-derives state from a private subset of the stores.
 The :class:`OperatorStateProjection` is a typed, frozen pydantic model
 built by exactly one producer, :func:`build_operator_state_projection`.
 The producer loads the profile aggregate, the workspace catalogues
-(transactions, invoices, modelo drafts, modelo work units, calculation
-revisions), the auth state, the active-profile health, and the
-deadline obligations, and computes each readiness value exactly once.
+(transactions via :class:`TransactionCatalogueRepository`, invoices via
+:class:`InvoiceCatalogueRepository`, modelo drafts, modelo work units,
+calculation revisions), the auth state, the active-profile health, and the
+deadline obligations computed from :class:`Schedule`, and computes each
+readiness value exactly once.
 
 The projection is pure read: building it mutates no store.
 

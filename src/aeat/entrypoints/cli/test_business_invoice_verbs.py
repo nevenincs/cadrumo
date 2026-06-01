@@ -34,10 +34,6 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
             dispose_engine()
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def test_payable_invoice_add_and_list_round_trip(cli_runner: CliRunner) -> None:
     add_result = cli_runner.invoke(

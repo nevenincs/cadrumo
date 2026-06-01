@@ -1,7 +1,8 @@
 """Purchase invoice evidence records and the CRUD application service.
 
 ``aeat app ledger evidence {add|remove|update|view|list}`` operate over a
-:class:`PurchaseInvoiceEvidence` pydantic record.
+:class:`PurchaseInvoiceEvidence` pydantic record. Audit events are emitted
+to a :class:`BucketEventHistoryRepository` on every mutating verb.
 
 File-type scope is restricted to PDF and image inputs handled by the OCR
 path. Plaintext, email body, and Drive-URL evidence sources are out of

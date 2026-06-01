@@ -1,8 +1,9 @@
 """Catalogue entry for the AEAT Sede *Cl@ve* gateway page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.AUTH`. Anonymous landing
-page that redirects authenticated users to ``clave.gob.es``.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_CLAVE_SEDE_ENTRY`` under
+:class:`PortalCategory` ``AUTH``. Anonymous landing page that
+redirects authenticated users to ``clave.gob.es``.
 """
 
 from __future__ import annotations

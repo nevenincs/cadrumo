@@ -1,6 +1,9 @@
 """Orchestration layer for ledger imports with diagnostics.
 
-Emits structured diagnostics during ledger-import verification.
+:func:`import_ledger_with_diagnostics` accepts an existing
+:class:`TransactionCatalogue` and an iterable of raw rows. It emits
+structured diagnostics for duplicate and likely-duplicate detection
+during import verification.
 """
 
 from __future__ import annotations

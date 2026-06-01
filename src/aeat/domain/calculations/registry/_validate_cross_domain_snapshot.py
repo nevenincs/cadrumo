@@ -1,4 +1,9 @@
-"""Cross-domain snapshot referential-integrity hooks."""
+"""Cross-domain snapshot referential-integrity hooks.
+
+Defines the :class:`CrossDomainSnapshotCheck` protocol and the registry
+used to run peer-domain checks against a :class:`RegistrySnapshot` at
+snapshot-build time without importing peer domains directly.
+"""
 
 from __future__ import annotations
 

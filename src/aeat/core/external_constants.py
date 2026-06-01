@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import tomllib
 from decimal import Decimal
+from enum import StrEnum
 from functools import cached_property, lru_cache
 from importlib.resources import files
 from pathlib import Path
@@ -325,11 +326,26 @@ OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
 #: POSIX / Windows environment variable that Rich uses to determine console column width.
 COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
 
+class OutputLanguage(StrEnum):
+    """Closed enumeration of CLI / API output language BCP-47 tags.
+
+    The four members match the locale catalogues committed under
+    ``src/aeat/locales/``. Adding a new operator-facing language
+    requires landing the catalogue first and then extending this
+    enum so the loader-side gates remain in sync.
+    """
+
+    ES = "es"
+    EN = "en"
+    CA = "ca"
+    HU = "hu"
+
+
 #: BCP-47 language tag for the default CLI and API output language (Spanish).
-DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
+DEFAULT_OUTPUT_LANGUAGE: Final[OutputLanguage] = OutputLanguage.ES
 
 #: Ordered tuple of BCP-47 language tags supported by the CLI and API output layer.
-SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[str, ...]] = ("es", "en", "ca", "hu")
+SUPPORTED_OUTPUT_LANGUAGES: Final[tuple[OutputLanguage, ...]] = tuple(OutputLanguage)
 
 #: Modelo 347 declaration floor per counterparty per RD 1065/2007 art. 31.1.
 #: Counterparties whose annual operations total at most this amount are NOT declarable.

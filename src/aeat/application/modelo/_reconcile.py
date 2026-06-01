@@ -1,17 +1,15 @@
 """Modelo reconciliation: compare a work unit against external evidence.
 
-`modelo_reconcile` accepts a modelo work unit and one source of external
+``modelo_reconcile`` accepts a modelo work unit and one source of external
 evidence (either an AEAT justificante PDF or a filed-declaration PDF)
-and produces a :class:`ModeloReconciliationReport` recording whether
+and produces a ``ModeloReconciliationReport`` recording whether
 the work unit's most recent calculation matches the external evidence.
 
 The service is local-only: it never contacts AEAT and never invokes
 ``require_live_read``. It composes the existing low-level reconciler in
 :mod:`aeat.application.filing.reconciliation._reconcile` with a parser
-for the supplied source kind.
-
-The CLI verb ``aeat app modelo reconcile`` is a thin delegate over this
-service.
+for the supplied source kind. :class:`BucketEventHistoryRepository` receives
+a ``MODELO_RECONCILED`` event for each reconciliation run.
 """
 
 from __future__ import annotations

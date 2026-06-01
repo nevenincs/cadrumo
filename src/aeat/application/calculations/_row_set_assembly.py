@@ -5,7 +5,9 @@ The pull adapter captures Detalle-tab detail rows as a flat tuple of
 row-set's grouping key. To consume those rows in the local-store
 ingest path the codebase needs typed observations of the matching
 domain shape (``WithholdingObservation`` for modelo 190 / 193,
-``Modelo720RowObservation`` for modelo 720, etc.).
+``Modelo720RowObservation`` for modelo 720, etc.). Each assembler
+looks up binding selectors in the :class:`ModeloRevision` supplied
+through the snapshot argument.
 
 The assemblers in this module bridge the two: they walk a row-set's
 cells, group them by ``row_index``, look up each cell's binding in

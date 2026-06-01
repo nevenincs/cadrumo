@@ -1,7 +1,8 @@
 """Catalogue entry for the AEAT certificate-validation information page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.AUTH` describing the
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_CERT_VALIDATION_REST`` under
+:class:`PortalCategory` ``AUTH``, describing the
 ``/Sede/certificados.html`` page that lists admissible electronic
 certificates.
 """

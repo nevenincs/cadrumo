@@ -2,8 +2,8 @@
 
 Submitted filings capture uploaded payload bytes, AEAT responses, and
 identity-bearing filing context. They are stored as encrypted byte
-objects in the primary SQL backend at AUDIT sensitivity; no plaintext
-submission JSON or envelope file lands on disk.
+objects in the primary SQL backend at :class:`SensitivityClass` AUDIT;
+no plaintext submission JSON or envelope file lands on disk.
 """
 
 from __future__ import annotations

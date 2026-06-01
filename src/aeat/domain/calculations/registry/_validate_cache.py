@@ -1,4 +1,8 @@
-"""Validation failure cache storage for registry validators."""
+"""Validation failure cache storage for registry validators.
+
+Stores memoised validation results keyed by identity of
+:class:`ModeloDefinition` instances and catalogue mappings.
+"""
 
 from __future__ import annotations
 

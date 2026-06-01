@@ -1,4 +1,9 @@
-"""Application-link closure validation helpers."""
+"""Application-link closure validation helpers.
+
+Validates that every surface declared on a :class:`ModeloRevision` is
+backed by a matching application link, and that link combination rules
+are satisfied.
+"""
 
 from __future__ import annotations
 

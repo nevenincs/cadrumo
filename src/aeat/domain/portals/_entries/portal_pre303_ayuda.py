@@ -1,9 +1,9 @@
 """Registry entry for the Pre303 pre-filled IVA helper service.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_PRE303_AYUDA`` under :class:`PortalCategory` ``BORRADOR``,
 exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

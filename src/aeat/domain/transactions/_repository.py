@@ -2,9 +2,10 @@
 
 The repository is the only sanctioned read/write path for the
 transaction catalogue. It stores the catalogue as an encrypted byte
-object in the primary SQL backend at FINANCIAL sensitivity; no
-plaintext transaction row, JSON catalogue, or envelope file lands on
-disk.
+object via :class:`SecureObjectRepository` at
+:class:`SensitivityClass` ``FINANCIAL``, wrapping each payload in an
+:class:`Envelope` before serialisation; no plaintext transaction row,
+JSON catalogue, or envelope file lands on disk.
 """
 
 from __future__ import annotations

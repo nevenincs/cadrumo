@@ -17,10 +17,10 @@ Two-fold hardening underpins the design:
    :class:`RemoteStateGuardPolicy` before any HTTP or browser action runs;
    any policy-violating step is rejected before it leaves the process.
 
-Each modelo's registry TOML declares which oracle a cross-reference is
-bound to via ``oracle_id``; this module owns the runtime contract and the
-shared catalogue. Concrete oracle adapters live in sibling modules so the
-abstraction stays free of network code.
+Each :class:`ModeloDefinition`'s registry TOML declares which oracle a
+cross-reference is bound to via ``oracle_id``; this module owns the runtime
+contract and the shared catalogue. Concrete oracle adapters live in sibling
+modules so the abstraction stays free of network code.
 """
 
 from __future__ import annotations

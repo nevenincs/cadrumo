@@ -1,4 +1,9 @@
-"""Reference-checker accumulator for snapshot validation."""
+"""Reference-checker accumulator for snapshot validation.
+
+``IdReferenceChecker`` collects all typed-ID sets from a
+:class:`RegistrySnapshot` and accumulates dangling-reference diagnostics
+used by the per-section reference walkers.
+"""
 
 from __future__ import annotations
 

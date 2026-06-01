@@ -1,4 +1,9 @@
-"""Cross-model relation and previous-filing source validation helpers."""
+"""Cross-model relation and previous-filing source validation helpers.
+
+Validates cross-model relations declared on each :class:`ModeloRevision`
+against the source :class:`ModeloDefinition`, checking selector coverage,
+source-output existence, and period alignment.
+"""
 
 from __future__ import annotations
 

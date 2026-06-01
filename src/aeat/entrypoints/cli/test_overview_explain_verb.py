@@ -24,10 +24,6 @@ EXPECTED_OVERVIEW_VERBS: frozenset[str] = frozenset(
 )
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:

@@ -1,4 +1,9 @@
-"""Schema-driven validation service for user-profile lifecycle commands."""
+"""Schema-driven validation service for user-profile lifecycle commands.
+
+:class:`ProfileValidationService` validates a :class:`UserProfileRecord`
+against a loaded schema definition and returns structured
+:class:`ProfileValidationIssue` entries for every constraint violation.
+"""
 
 from __future__ import annotations
 

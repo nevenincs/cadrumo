@@ -3,8 +3,12 @@
 Each adapter loads pending items from one on-disk source and emits a
 tuple of typed :class:`ReviewItem` records. Adapters are pure and
 stateless; they tolerate missing source files by returning an empty
-tuple. Severity is derived per source via a first-match-wins
-predicate table.
+tuple. Severity is derived per source via a first-match-wins predicate table.
+
+The transaction adapter loads a :class:`TransactionCatalogue` via
+:class:`TransactionCatalogueRepository`; the invoice adapter loads an
+:class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository`. Draft
+findings are sourced from the :class:`ModeloDraft` store via the review imports.
 """
 
 from __future__ import annotations

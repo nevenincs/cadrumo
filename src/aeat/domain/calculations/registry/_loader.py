@@ -1,4 +1,10 @@
-"""Read-only TOML loader for AEAT registry definitions."""
+"""Read-only TOML loader for AEAT registry definitions.
+
+Compiles TOML authoring fragments into strict runtime objects. Each
+:class:`ModeloDefinition` is assembled from one TOML file or a directory
+manifest; each :class:`ModeloRevision` is compiled from a single revision
+file or a set of append fragments merged in deterministic order.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,8 @@
-"""Explicit read-only AEAT live observation CLI commands."""
+"""Explicit read-only AEAT live observation CLI commands.
+
+The ``portals`` sub-command accepts an optional ``--category`` argument
+whose valid values are drawn from :class:`PortalCategory`.
+"""
 
 from __future__ import annotations
 
@@ -115,10 +119,11 @@ def _live_iva_outcome_label(value: object) -> str:
 
 def _emit_live_auth_preflight(provider: str | None = None) -> None:
     from ...application.auth import build_live_auth_preflight_report
+    from ...core.redaction import redact_for_cli_output
 
     report = build_live_auth_preflight_report(provider)
     for line in _live_auth_preflight_lines(report):
-        typer.echo(line, err=True)
+        typer.echo(redact_for_cli_output(line), err=True)
 
 
 def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ...]:

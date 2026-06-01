@@ -34,10 +34,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def test_notifications_list_is_empty_on_fresh_bucket(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(notifications_app, ["list"])

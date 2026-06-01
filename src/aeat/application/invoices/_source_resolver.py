@@ -1,4 +1,9 @@
-"""Source-mesh resolver for the governed invoice catalogue."""
+"""Source-mesh resolver for the governed invoice catalogue.
+
+:class:`InvoiceCatalogueSourceResolver` loads the catalogue from the
+active bucket through :class:`InvoiceCatalogueRepository` and projects
+scalar invoice-source binding values for the calculation mesh.
+"""
 
 from __future__ import annotations
 

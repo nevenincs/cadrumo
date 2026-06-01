@@ -1,11 +1,11 @@
 """Catalogue entry for the retired *Modelo 037* simplified censo declaration.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-flagged ``active=False`` and superseded by
-:attr:`aeat.domain.portals.Portal.PORTAL_M036_CENSAL`. The procedure was
-suppressed by Orden HAC/1526/2024 (BOE-A-2025-410), effective 2025-02-03;
-the entry is retained for historical lookup. URL stability is therefore
-:attr:`aeat.domain.portals.UrlStability.RETIRED`.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M037_CENSAL_SIMPLIFICADA`` under
+:class:`PortalCategory` ``CENSO``, flagged ``active=False`` and
+superseded by ``PORTAL_M036_CENSAL``. The procedure was suppressed by
+Orden HAC/1526/2024 (BOE-A-2025-410), effective 2025-02-03; the entry
+is retained for historical lookup.
 """
 
 from __future__ import annotations

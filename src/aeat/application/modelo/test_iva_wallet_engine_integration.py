@@ -154,6 +154,12 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        # State attribution: common-regime taxpayers receive the full
+        # 100% State attribution. The engine consumes this through the
+        # M303 C65 binding (bound to the derived profile fact
+        # ``tax_residence.state_attribution_ratio``) after the dual-keying
+        # ADR's profile-binding pivot.
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
 
 
@@ -200,7 +206,6 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
-            casilla_inputs={"65": Decimal("100")},
             binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=loaded_decision,
             filing_period_date=date(2026, 6, 30),
@@ -313,8 +318,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
-            casilla_inputs={"65": Decimal("100")},
-            binding_values={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
             filing_period_date=date(2026, 6, 30),
@@ -420,8 +424,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
-            casilla_inputs={"65": Decimal("100")},
-            binding_values={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
             filing_period_date=date(2026, 3, 31),

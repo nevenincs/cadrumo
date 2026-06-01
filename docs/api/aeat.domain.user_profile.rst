@@ -15,6 +15,7 @@ Submodules
 
    aeat.domain.user_profile._errors
    aeat.domain.user_profile._loader
+   aeat.domain.user_profile._portable_export
    aeat.domain.user_profile._registry_contract
    aeat.domain.user_profile._schema
    aeat.domain.user_profile._values

@@ -1,11 +1,12 @@
 """StaticModeloRepository: thin façade over ValidatedRegistryAuthority.
 
 The modelos repository is the only one that backs onto an
-aggregate (`ValidatedRegistryAuthority`) rather than a direct
+aggregate (:class:`ValidatedRegistryAuthority`) rather than a direct
 loader. The authority owns the validator + snapshot caches that
 the test suite already relies on; the Repository preserves
 those caches by holding a reference to the authority instance
-and delegating ``get`` / ``all`` through it.
+and delegating ``get`` / ``all`` through it. Both return
+:class:`ModeloDefinition` records resolved from the authority.
 """
 
 from __future__ import annotations

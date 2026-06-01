@@ -1,7 +1,9 @@
 """Maritime worker IRPF exemption calculation engine.
 
 Implements the three legally distinct exemption pathways for trabajadores
-del mar and the associated profile completeness gate.
+del mar and the associated profile completeness gate. Each calculation
+function returns a :class:`CasillaObservation` carrying the exempt amount
+and its full legal provenance.
 
 Active exemption axes (2024/2025):
 

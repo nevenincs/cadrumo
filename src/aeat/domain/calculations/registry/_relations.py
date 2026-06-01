@@ -1,4 +1,10 @@
-"""Relation helpers for cross-model registry dependencies."""
+"""Relation helpers for cross-model registry dependencies.
+
+Resolves cross-modelo source requirements and materialises relation values
+for a :class:`ModeloRevision` filing. Relations declare which source filings
+and output casillas must be available before the target modelo can be
+calculated.
+"""
 
 from __future__ import annotations
 

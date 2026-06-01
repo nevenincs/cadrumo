@@ -1,4 +1,9 @@
-"""Typed registry for secure-storage namespace and hierarchy contracts."""
+"""Typed registry for secure-storage namespace and hierarchy contracts.
+
+Each :class:`SecureObjectNamespaceDefinition` carries a
+:class:`SensitivityClass` field that governs the at-rest encryption
+treatment applied by the substrate for every object in that namespace.
+"""
 
 from __future__ import annotations
 

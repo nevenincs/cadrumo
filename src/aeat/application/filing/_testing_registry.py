@@ -1,4 +1,11 @@
-"""Registry-backed draft builders for filing tests."""
+"""Registry-backed draft builders for filing tests.
+
+:func:`build_registry_filing_draft` constructs a :class:`ModeloDraft`
+through the production registry runtime. It calls
+:func:`aeat.application.filing.approve_draft` with an empty
+:class:`TransactionCatalogue` so the approval basis is deterministic
+in tests that have no ledger state.
+"""
 
 from __future__ import annotations
 

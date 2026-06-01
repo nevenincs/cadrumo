@@ -289,7 +289,7 @@ def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.core.config import override_settings
     from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from aeat.domain.user_profile import UserProfilePortableExport
+    from aeat.domain.user_profile._portable_export import UserProfilePortableExport
 
     bundle_path = tmp_path / "tautology-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)

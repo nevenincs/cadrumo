@@ -1,8 +1,8 @@
 """Catalogue entry for the *Modelo 100* IRPF annual return procedure page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING`. Accepts the IRPF-only
-:attr:`aeat.domain.portals.AuthMethod.REFERENCE_NUMBER` credential in
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M100_RENTA`` under :class:`PortalCategory`
+``FILING``. Accepts the IRPF-only ``REFERENCE_NUMBER`` credential in
 addition to the standard certificate / Cl@ve / DNIe set.
 """
 

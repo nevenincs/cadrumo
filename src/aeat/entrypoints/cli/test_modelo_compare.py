@@ -30,7 +30,8 @@ Authority for M130 casilla arithmetic:
 
 from __future__ import annotations
 
-import json
+from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
+
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
@@ -79,11 +80,6 @@ _TAUTOLOGY_CASILLA = "02"
 # ---------------------------------------------------------------------------
 
 
-def _payload(output: str) -> dict:
-    raw = json.loads(output)
-    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
-        return raw["result"]
-    return raw
 
 
 @pytest.fixture

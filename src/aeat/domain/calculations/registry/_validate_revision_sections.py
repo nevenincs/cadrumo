@@ -1,4 +1,9 @@
-"""Per-revision registry section validation dispatch."""
+"""Per-revision registry section validation dispatch.
+
+Orchestrates all per-section validators for a single :class:`ModeloRevision`
+within its :class:`ModeloDefinition`, collecting every failure into a flat
+list returned to the registry-level validator.
+"""
 
 from __future__ import annotations
 

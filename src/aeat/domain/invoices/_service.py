@@ -5,8 +5,10 @@ Exposes pure-function service operations over an
 (:func:`find_invoice`, :func:`find_unmatched`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
-(:func:`verify_link_consistency`). Persisted cross-catalogue workflows
-belong in :mod:`aeat.application.invoices`.
+(:func:`verify_link_consistency`). Operations that span both the invoice
+catalogue and the :class:`TransactionCatalogue` accept each as an
+independent argument. Persisted cross-catalogue workflows belong in
+:mod:`aeat.application.invoices`.
 """
 
 from __future__ import annotations

@@ -1,9 +1,10 @@
 """Catalogue entry for the AEAT certificate-selection WebLogic gateway.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.AUTH` covering the
-``/wlpl/BUCV-JDIT/SelectorCertificado`` certificate picker. URL stability
-is :attr:`aeat.domain.portals.UrlStability.VOLATILE_APP_PATH`.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_CERT_SELECTION`` under :class:`PortalCategory`
+``AUTH`` covering the ``/wlpl/BUCV-JDIT/SelectorCertificado``
+certificate picker. URL stability is
+:attr:`aeat.domain.portals.UrlStability.VOLATILE_APP_PATH`.
 """
 
 from __future__ import annotations

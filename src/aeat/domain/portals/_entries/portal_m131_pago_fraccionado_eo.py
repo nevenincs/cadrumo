@@ -1,9 +1,10 @@
 """Catalogue entry for the *Modelo 131* IRPF instalment payment procedure.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING`. Used by entrepreneurs on
-the IRPF *objective-assessment* (módulos) regime to settle on-account
-quarterly instalments.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M131_PAGO_FRACCIONADO_EO`` under
+:class:`PortalCategory` ``FILING``. Used by entrepreneurs on the IRPF
+objective-assessment (módulos) regime to settle on-account quarterly
+instalments.
 """
 
 from __future__ import annotations

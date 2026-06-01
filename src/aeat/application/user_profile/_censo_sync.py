@@ -1,7 +1,9 @@
 """Operator-facing 036 censo-sync service.
 
-`CensoSyncService` exposes the four-verb surface the CLI mounts under
-``aeat config profile censo {refresh, show, compare, apply}``. AEAT is
+:class:`CensoSyncService` exposes the four-verb surface the CLI mounts
+under ``aeat config profile censo {refresh, show, compare, apply}``.
+Persisted profile facts are stamped onto a :class:`UserProfileRecord`
+on ``apply``. AEAT is
 the binding legal source of truth for censo data; this service is the
 only path that captures censo facts into the secure store and stamps
 them onto the operator's profile.

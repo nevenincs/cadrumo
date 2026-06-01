@@ -3,7 +3,7 @@
 The :mod:`aeat.domain.filing` subpackage owns the immutable records
 that describe a filing draft (and its amendment), the cross-package
 Protocols upstream subpackages plug into, the cross-cutting
-:class:`ModeloValidator`, the ModeloDraft <-> Justificante
+:class:`ModeloValidator`, the :class:`ModeloDraft` -- Justificante
 reconciliation engine, and the governed-persistence repositories
 (FINANCIAL drafts and AUDIT amendments).
 

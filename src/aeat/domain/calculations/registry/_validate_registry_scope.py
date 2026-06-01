@@ -1,4 +1,8 @@
-"""Registry-wide validation gates."""
+"""Registry-wide validation gates.
+
+Applies corpus-wide invariants across all :class:`ModeloDefinition` instances,
+including duplicate-id checks, relation closure, and semantic-role consistency.
+"""
 
 from __future__ import annotations
 

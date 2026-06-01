@@ -1,8 +1,9 @@
 """Central user-profile schema contract.
 
 The package exposes the strict Pydantic records and loader for the
-schema-oriented user profile backend. The TOML file owns schema metadata;
-runtime values are stored by later application/persistence waves.
+schema-oriented user profile backend. The primary runtime record is
+:class:`UserProfileRecord`. The TOML file owns schema metadata;
+runtime values are stored by the persistence layer.
 """
 
 from __future__ import annotations
@@ -38,7 +39,6 @@ from ._schema import (
 from ._values import (
     UserProfileFactValue,
     UserProfileFact,
-    UserProfilePortableExport,
     UserProfileRecord,
     UserProfileSnapshot,
     UserProfileStatus,
@@ -62,7 +62,6 @@ __all__ = [
     "ProfileSnapshotPolicy",
     "StoredProfileDriftError",
     "UserProfileFact",
-    "UserProfilePortableExport",
     "UserProfileRecord",
     "UserProfileRegistryContractIssue",
     "UserProfileRegistryContractReport",

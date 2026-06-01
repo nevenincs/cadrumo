@@ -1,4 +1,8 @@
-"""Revision identity and completeness validation helpers."""
+"""Revision identity and completeness validation helpers.
+
+Checks for duplicate ids, cross-kind primary-id collisions, and
+empty-payload violations within a single :class:`ModeloRevision`.
+"""
 
 from __future__ import annotations
 

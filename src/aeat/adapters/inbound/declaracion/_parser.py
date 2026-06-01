@@ -1,4 +1,9 @@
-"""Public ``parse_declaracion`` entry point for declaración PDFs."""
+"""Public ``parse_declaracion`` entry point for declaración PDFs.
+
+Parsing is registry-grounded: casilla geometry and validation are resolved
+against a :class:`RegistrySnapshot`, which the parser loads on demand through
+:class:`ValidatedRegistryAuthority` when a caller does not supply one.
+"""
 
 from __future__ import annotations
 

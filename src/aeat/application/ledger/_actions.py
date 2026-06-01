@@ -1,4 +1,11 @@
-"""Application services for bucket-scoped manual ledger transactions."""
+"""Application services for bucket-scoped manual ledger transactions.
+
+Services operate over a :class:`TransactionCatalogueRepository` for ledger
+state, a :class:`BucketEventHistoryRepository` for durable audit events, and
+an optional :class:`InvoiceCatalogueRepository` for purchase-invoice evidence
+cascade on removal. The inner functions accept a :class:`TransactionCatalogue`
+or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
+"""
 
 from __future__ import annotations
 

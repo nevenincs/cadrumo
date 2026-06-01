@@ -1,4 +1,9 @@
-"""Local registry calculation scenario verification harness."""
+"""Local registry calculation scenario verification harness.
+
+Runs locally curated calculation scenarios against a
+:class:`ValidatedRegistryAuthority` snapshot and compares computed outputs to
+declared expected values, reporting any mismatches with full trace context.
+"""
 
 from __future__ import annotations
 

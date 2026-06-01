@@ -1,4 +1,9 @@
-"""Source mesh resolver for user-profile backed registry bindings."""
+"""Source mesh resolver for user-profile backed registry bindings.
+
+Accepts an optional :class:`RegistrySnapshot` at construction; when none
+is supplied the resolver fetches it lazily from the resident registry
+authority at resolution time.
+"""
 
 from __future__ import annotations
 

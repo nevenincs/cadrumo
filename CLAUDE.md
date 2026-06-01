@@ -18,6 +18,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-source-hygiene.md
 @.claude/rules/aeat-swarm-audit-cadence.md
 @.claude/rules/aeat-vaultspec-centralisation.md
+@.claude/rules/core-struct-docstring-links.md
 @.claude/rules/no-tautological-calculation-tests.md
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md

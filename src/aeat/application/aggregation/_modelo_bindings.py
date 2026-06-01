@@ -1,4 +1,11 @@
-"""Modelo binding values derived from bucket-local ledger catalogues."""
+"""Modelo binding values derived from bucket-local ledger catalogues.
+
+Accepts a :class:`ModeloRevision` to drive ledger aggregation binding
+resolution across IVA, renta income, and renta expense source kinds.
+Expense aggregation reads from both a :class:`TransactionCatalogueRepository`
+and an :class:`InvoiceCatalogueRepository`; the invoice repository supplies
+purchase-invoice evidence that the renta expense pipeline requires.
+"""
 
 from __future__ import annotations
 

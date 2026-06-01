@@ -44,7 +44,8 @@ Authority for M130 oracle inputs:
 
 from __future__ import annotations
 
-import json
+from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
+
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
@@ -146,11 +147,6 @@ _CCAA = "madrid"
 # ---------------------------------------------------------------------------
 
 
-def _payload(output: str) -> dict:
-    raw = json.loads(output)
-    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
-        return raw["result"]
-    return raw
 
 
 @pytest.fixture
@@ -356,12 +352,28 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             "0171": _TOTAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
         },
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
+        # Mirror the project verb's merged_bindings shape exactly. The verb
+        # composes ``verb_baseline_bindings`` (single-filer declaration-type,
+        # zero retenciones, zero minor-children-in-unit) with the
+        # profile-resolver projection of the seeded profile facts
+        # (marriage-* derived from no marriage_date = zeros,
+        # descendientes-menores-3 / guarderia / cotizaciones-ss-madre =
+        # explicit zero defaults). The oracle must supply the same keys so
+        # the comparison exercises an identical engine input set.
         binding_values={
             f"renta-{_FILING_YEAR}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             f"renta-{_FILING_YEAR}-modelo-111-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-115-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-123-retenciones-periodicas": Decimal("0"),
             f"renta-{_FILING_YEAR}-modelo-193-retenciones-anuales": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-declaration-type": Decimal("1"),
+            f"renta-{_FILING_YEAR}-profile-family-minor-children-in-unit": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-descendientes-menores-3": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-guarderia-gastos-reales": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-cotizaciones-ss-madre": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-marriage-full-year": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-marriage-month-start": Decimal("0"),
+            f"renta-{_FILING_YEAR}-profile-marriage-month-end": Decimal("0"),
         },
         enum_binding_values={
             f"renta-{_FILING_YEAR}-profile-tax-residence-ccaa": _CCAA,

@@ -1,8 +1,9 @@
 """Immutable invoice catalogue surface for the financial pipeline.
 
-Public surface — callers must import invoice models, errors, and service
-functions exclusively from ``aeat.domain.invoices`` and must not
-reach into the private underscore modules inside this package.
+Public surface for :class:`InvoiceCatalogue` and :class:`InvoiceCatalogueRepository`.
+Callers must import invoice models, errors, and service functions
+exclusively from ``aeat.domain.invoices`` and must not reach into the
+private underscore modules inside this package.
 """
 
 from __future__ import annotations

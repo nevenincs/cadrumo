@@ -1,4 +1,11 @@
-"""Application services for explicit read-only AEAT live workflows."""
+"""Application services for explicit read-only AEAT live workflows.
+
+Live capture services store observations as encrypted objects in a
+:class:`SecureObjectRepository` scoped to the active profile bucket.
+Parsed observations are typed as :class:`CasillaObservation` rows
+and routed through a :class:`ValidatedRegistryAuthority` to bind them
+to the correct revision.
+"""
 
 from __future__ import annotations
 

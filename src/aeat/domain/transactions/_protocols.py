@@ -1,6 +1,6 @@
 """Domain-level repository Protocol for the transaction catalogue.
 
-Application-layer code that persists or loads the transaction catalogue
+Application-layer code that persists or loads the :class:`TransactionCatalogue`
 depends on this Protocol, not on the concrete adapter-backed
 ``TransactionCatalogueRepository``. This keeps the domain layer free of
 adapter imports while still providing a typed port surface.

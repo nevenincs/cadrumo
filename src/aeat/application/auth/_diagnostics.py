@@ -1,4 +1,8 @@
-"""Operator-safe access to encrypted AEAT auth diagnostics."""
+"""Operator-safe access to encrypted AEAT auth diagnostics.
+
+Diagnostic records are encrypted and retrieved through a
+:class:`SecureObjectRepository` scoped to the active profile bucket.
+"""
 
 from __future__ import annotations
 

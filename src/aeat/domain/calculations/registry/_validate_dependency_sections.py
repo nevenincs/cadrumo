@@ -1,4 +1,8 @@
-"""Relation, dependency-classification, and filing-schedule validation helpers."""
+"""Relation, dependency-classification, and filing-schedule validation helpers.
+
+Validates relations, dependency classifications, and filing schedules
+declared on a :class:`ModeloRevision` for reference closure and legal grounding.
+"""
 
 from __future__ import annotations
 

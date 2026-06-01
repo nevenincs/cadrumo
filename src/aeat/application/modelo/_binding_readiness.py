@@ -10,7 +10,9 @@ ledger aggregations, prior-filing pulls, live observations — needs data
 the operator has not supplied yet and is therefore *missing*.
 
 This module owns the cross-domain step (registry snapshot + user
-profile) so the registry-query CLI stays a thin caller.
+profile) so the registry-query CLI stays a thin caller. The revision is
+fetched through a :class:`ValidatedRegistryAuthority` given the
+requested modelo, year, and period.
 """
 
 from __future__ import annotations

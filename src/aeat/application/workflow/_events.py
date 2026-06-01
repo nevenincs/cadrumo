@@ -4,7 +4,8 @@ Currently owns the ``workflow_state.reset`` emission path used by the
 ``aeat config repair reset-state`` recovery route. The fingerprint
 payload mirrors the row-level metadata of the discarded envelope plus
 the actor/source/timestamp captured by the boundary; the plaintext
-envelope content is never recorded.
+envelope content is never recorded. Events are appended to the
+:class:`BucketEventHistoryRepository` via :func:`emit_workflow_state_reset`.
 """
 
 from __future__ import annotations

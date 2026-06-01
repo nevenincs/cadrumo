@@ -106,10 +106,17 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(
         dispatch_formula.legal_refs
     )
-    dispatch_by_form = dispatch_formula.expression.args[2].dispatch_table
+    # The formula is a 3-level nested if_then_else: new-entity override
+    # (args[1]) -> ERD-threshold branch (args[2].args[1]) -> established-entity
+    # general rates (args[2].args[2]). The canonical "rate schedule by entity
+    # form" is the established-entity general branch; sal/sll (sociedades
+    # laborales) were added to every entity-form axis.
+    dispatch_by_form = dispatch_formula.expression.args[2].args[2].args[2].dispatch_table
     assert dispatch_by_form == {
         "sl": "is.modelo-200.tipo-gravamen-general",
         "sa": "is.modelo-200.tipo-gravamen-general",
+        "sal": "is.modelo-200.tipo-gravamen-general",
+        "sll": "is.modelo-200.tipo-gravamen-general",
         "sociedad_civil_mercantil": "is.modelo-200.tipo-gravamen-general",
         "other": "is.modelo-200.tipo-gravamen-general",
         "cooperativa": "is.modelo-200.tipo-gravamen-cooperative-protected",

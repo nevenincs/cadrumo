@@ -1,4 +1,8 @@
-"""Export layout, record, and field validation helpers."""
+"""Export layout, record, and field validation helpers.
+
+Validates export layouts, records, and fields declared on a
+:class:`ModeloRevision` for casilla and binding reference closure.
+"""
 
 from __future__ import annotations
 

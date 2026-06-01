@@ -1,3 +1,14 @@
+# Modelo 130 calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure --
+# every formula target, every casilla referenced inside a formula
+# expression, every formula/binding endpoint casilla, and every
+# verification-expectation operand. Cross-modelo binding source
+# casillas belong to foreign modelos and are excluded. Derived
+# off-load-path from the calculation surface; re-derived by the
+# drift re-verification test.
+
+
 [revisions."2019-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-130-2019-v12"
 legal_refs = ["ley-35-2006:art-99", "orden-eha-672-2007:art-1", "rd-439-2007:art-110", "rd-439-2007:art-95"]
@@ -6,12 +17,8 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 number = "01"
 
-# C02 (Gastos) was previously in the closure as an operand of the
-# C03 rendimiento-neto formula. A parallel campaign converted C03
-# from input_kind='computed' to input_kind='bound' (actividad-
-# economica cumulative-rendimiento-neto binding), so C02 no longer
-# enters the calculation closure as a formula operand. Removed from
-# the manifest to match the current closure surface.
+[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+number = "02"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 number = "03"

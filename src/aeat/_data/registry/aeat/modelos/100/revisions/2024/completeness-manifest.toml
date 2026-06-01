@@ -20,6 +20,9 @@ legal_refs = ["ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-103",
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".completeness_manifest.casillas]]
+number = "*10"
+
+[[revisions."2024".completeness_manifest.casillas]]
 number = "0003"
 
 [[revisions."2024".completeness_manifest.casillas]]
@@ -45,9 +48,6 @@ number = "0010"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0011"
-
-[[revisions."2024".completeness_manifest.casillas]]
-number = "0058"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0012"
@@ -170,6 +170,9 @@ number = "0056"
 number = "0057"
 
 [[revisions."2024".completeness_manifest.casillas]]
+number = "0058"
+
+[[revisions."2024".completeness_manifest.casillas]]
 number = "0060"
 
 [[revisions."2024".completeness_manifest.casillas]]
@@ -240,6 +243,9 @@ number = "0151"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0152"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0153"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0154"
@@ -408,6 +414,21 @@ number = "0235"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0236"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0245"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0246"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0247"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0248"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0249"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0259"
@@ -743,6 +764,9 @@ number = "0466"
 number = "0467"
 
 [[revisions."2024".completeness_manifest.casillas]]
+number = "0468"
+
+[[revisions."2024".completeness_manifest.casillas]]
 number = "0499"
 
 [[revisions."2024".completeness_manifest.casillas]]
@@ -983,6 +1007,9 @@ number = "0585"
 number = "0586"
 
 [[revisions."2024".completeness_manifest.casillas]]
+number = "0587"
+
+[[revisions."2024".completeness_manifest.casillas]]
 number = "0588"
 
 [[revisions."2024".completeness_manifest.casillas]]
@@ -990,6 +1017,102 @@ number = "0589"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0590"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0591"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0592"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0593"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0594"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0595"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0596"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0597"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0598"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0599"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0600"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0601"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0602"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0603"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0604"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0605"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0606"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0609"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0610"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0611"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0612"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0613"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0623"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0624"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0636"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0637"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0660"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0661"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0662"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0663"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0664"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0666"
+
+[[revisions."2024".completeness_manifest.casillas]]
+number = "0669"
 
 [[revisions."2024".completeness_manifest.casillas]]
 number = "0670"

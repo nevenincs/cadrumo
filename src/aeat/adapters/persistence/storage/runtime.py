@@ -3,8 +3,8 @@
 The runtime is the public diagnostic boundary for profile-bound secure
 storage. It reports whether the current process is attached to an active
 profile bucket and has an unlocked bucket session, without exposing key
-material or constructing repositories. Repository factories are layered on
-top of this contract in later plan steps.
+material or constructing repositories. The :class:`SecureObjectRepository`
+factories are layered on top of this readiness contract.
 """
 
 from __future__ import annotations

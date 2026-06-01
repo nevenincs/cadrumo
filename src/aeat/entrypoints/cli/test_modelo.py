@@ -7,7 +7,6 @@ error (malformed period, unknown modelo) must surface as a
 
 from __future__ import annotations
 
-import json
 
 import pytest
 import typer
@@ -15,23 +14,10 @@ import typer
 from aeat.application.modelo import WorkUnitNotFoundError
 from aeat.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from aeat.entrypoints.cli._modelo import _bad_parameter_from_error
+from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-
-def _payload(output: str) -> dict:
-    """Unwrap the SchemaEnvelope post-P09.S43 migration.
-
-    Migrated commands emit ``{"schema_version": ..., "command": ...,
-    "result": {...}, "warnings": []}``; the helper returns the inner
-    ``result`` mapping. Bare-payload responses pass through unchanged.
-    """
-
-    raw = json.loads(output)
-    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
-        return raw["result"]
-    return raw
 
 
 def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:

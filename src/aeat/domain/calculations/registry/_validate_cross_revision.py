@@ -1,4 +1,8 @@
-"""Cross-revision drift validation for registry casillas."""
+"""Cross-revision drift validation for registry casillas.
+
+Detects field-level divergence when the same casilla id appears in
+multiple :class:`ModeloRevision` records of the same :class:`ModeloDefinition`.
+"""
 
 from __future__ import annotations
 

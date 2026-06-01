@@ -1,4 +1,9 @@
-"""Application service for importing invoice records."""
+"""Application service for importing invoice records.
+
+:func:`import_invoices_from_path` loads the persisted :class:`InvoiceCatalogue`
+from the :class:`InvoiceCatalogueRepository`, merges the parsed invoices, and
+writes the updated catalogue back.
+"""
 
 from __future__ import annotations
 

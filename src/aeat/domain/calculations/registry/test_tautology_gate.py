@@ -396,10 +396,14 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         "src/aeat/adapters/inbound/declaracion/test_parser_boundary.py::test_parser_extracts_modelo_123_2024_corpus_round_trip",
         # The 1200.00 target is a fixture INPUT (prior-303 compensation
         # balance + wallet pending amount), threaded through the engine
-        # unchanged. The gate coincidentally matches 1000+200 (an
-        # unrelated repercutido cuota and a pendiente-posteriores
-        # value); no aggregation produces the 1200.
+        # unchanged. The gate coincidentally matches 1000+200; no
+        # aggregation produces the 1200.
         "src/aeat/application/modelo/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_history",
+        # The 550.00 target is the engine-computed iva.resultado for the
+        # captured wallet decision, threaded from prior-year history; the
+        # gate coincidentally matches 450+100 (a repercutido cuota and a
+        # pendiente value). No author hand-sum produces the 550.
+        "src/aeat/application/modelo/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history",
         # Both -20.000 (cuota del ejercicio 00599) and -30.000 (cuota
         # diferencial 00611) are AEAT-published oracle figures lifted
         # verbatim from the Manual práctico de Sociedades 2024 worked
@@ -409,6 +413,34 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # -20000 across two independent manual oracles — neither
         # assertion target is hand-summed by the test author.
         "src/aeat/domain/calculations/registry/test_modelo_200_registry.py::test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example",
+        # PDF parser extraction-fidelity test (sibling of the modelo_123
+        # case above): Modelo 303 targets are read from a committed
+        # declaration fixture generated from public record-design labels;
+        # assertions pin parser field extraction, not a calculation
+        # resolver. 8400+4800=13200 is coincidental fixture data.
+        "src/aeat/adapters/inbound/declaracion/test_parser_boundary.py::test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy",
+        # Relation-resolution engine aggregation-primitive contract: the
+        # resolver sums quarterly pagos-fraccionados observations into the
+        # cumulative relation value (4*450=1800; 100+200+300+400=1000).
+        # Synthetic resolver inputs, not author hand-sums of a registry
+        # formula; the sibling proportional-change proof shows it is a real
+        # sum (delta 600), not a copy.
+        "src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py::test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604",
+        # The anti-tautology proof itself: result_high - result_low == 600
+        # demonstrates the resolver sums (not copies) by raising the input
+        # 150/qtr * 4. The gate matches 300+100+100+100=600 on the literals;
+        # this assertion IS the anti-tautology guard.
+        "src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py::test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_change",
+        # Fixture sanity guard: asserts the 3-member share split sums to
+        # 100% (40+35+25) to validate the fixture is well-formed; it does
+        # not aggregate a registry calculation.
+        "src/aeat/domain/modelos/test_row_models.py::test_three_members_round_trip",
+        # Modelo347ContraparteRow.importe_total is a pydantic @property
+        # summing the four quarterly importe_Q* fields; these assert the
+        # Python model-property contract (like sum_deductible_amounts), not
+        # a registry formula.
+        "src/aeat/domain/modelos/test_row_models.py::test_valid_contraparte_row_round_trips",
+        "src/aeat/domain/modelos/test_row_models.py::test_importe_total_sums_quarters",
     }
 )
 """Functions whose hand-summed pattern is documented as legitimate.

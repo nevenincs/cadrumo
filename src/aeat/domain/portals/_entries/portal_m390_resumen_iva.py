@@ -1,7 +1,8 @@
-"""Registry entry for Modelo 390 — annual IVA summary.
+"""Registry entry for Modelo 390 - annual IVA summary.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M390_RESUMEN_IVA``, exposed as :data:`ENTRY` under the
+:class:`PortalCategory` member ``INFORMATIVA``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

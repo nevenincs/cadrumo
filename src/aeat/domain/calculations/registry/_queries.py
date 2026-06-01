@@ -1,4 +1,11 @@
-"""Typed read API for modelo registry introspection surfaces."""
+"""Typed read API for modelo registry introspection surfaces.
+
+``RegistryQueryService`` wraps a :class:`ValidatedRegistryAuthority` and exposes
+structured report objects for the CLI list, describe, casillas, formulas, and
+bindings commands. Queries narrow to a single :class:`ModeloDefinition` and
+then to one :class:`ModeloRevision` selected by filing year, period, and
+optional revision id.
+"""
 
 from __future__ import annotations
 

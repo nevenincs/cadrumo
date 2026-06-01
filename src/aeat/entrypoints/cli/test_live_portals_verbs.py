@@ -15,10 +15,6 @@ from aeat.entrypoints.cli._app_live import portals_app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def test_portals_list_emits_every_registered_entry(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(portals_app, ["list"])

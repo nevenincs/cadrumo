@@ -1,4 +1,11 @@
-"""Registry-backed formula runtime using typed operation graphs."""
+"""Registry-backed formula runtime using typed operation graphs.
+
+Evaluates formula expressions declared on a :class:`ModeloRevision` against
+casilla inputs and binding values drawn from a :class:`RegistrySnapshot`.
+The calculation entry point :func:`calculate_registry_snapshot` is the
+primary surface used by :class:`ValidatedRegistryAuthority`-backed callers
+to produce :class:`~._bindings.CasillaObservation` rows with full provenance.
+"""
 
 from __future__ import annotations
 

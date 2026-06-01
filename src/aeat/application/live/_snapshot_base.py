@@ -2,7 +2,9 @@
 
 This module factors the duplicated state-machine, supersession, and content-
 addressed-id derivation logic shared across the bucket-scoped live snapshot
-services (Borrador100, Censo, Expedientes, and Notifications).
+services (Borrador100, Censo, Expedientes, and Notifications). Each concrete
+service writes and reads snapshot payloads through a :class:`SecureObjectRepository`
+scoped to the active profile bucket.
 
 Design notes:
 

@@ -617,11 +617,11 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
             continue
         inputs[casilla_id] = value
 
-    # Box 65 (porcentaje atribuible Estado) is a manual operator-input casilla not
-    # extracted by the declaracion_pdf profile. For standard territory-común filers
-    # the value is 100 (100%). Supply it directly so the engine can compute box 66.
+    # Box 65 (porcentaje atribuible Estado) is now bound to the profile-
+    # derived ``tax_residence.state_attribution_ratio``. For standard
+    # territorio-común filers the ratio is 100. Supply it through the
+    # binding channel so the engine can compute box 66.
     # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
-    inputs["65"] = Decimal("100")
 
     # The previous_filing binding for compensacion-pendiente-anteriores is
     # required by the engine. Supply the extracted value from the corpus PDF
@@ -630,6 +630,7 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
     binding_values: dict[str, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": _comp,
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
 
     # filing_period: first day of the period's quarter.
@@ -727,14 +728,16 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
             continue
         inputs[casilla_id] = value
 
-    # Box 65 — % atribuible Estado; 100 for territorio común.
+    # Box 65 — % atribuible Estado; now bound to the profile-derived
+    # ``tax_residence.state_attribution_ratio``. For territorio común
+    # the ratio is 100; supply it through the binding channel.
     # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
-    inputs["65"] = Decimal("100")
 
     _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
     binding_values: dict[str, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": _comp,
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
 
     _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]

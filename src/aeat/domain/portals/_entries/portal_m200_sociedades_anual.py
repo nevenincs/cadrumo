@@ -1,9 +1,9 @@
-"""Registry entry for Modelo 200 — annual corporate-income-tax self-assessment.
+"""Registry entry for Modelo 200 - annual corporate-income-tax self-assessment.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M200_SOCIEDADES_ANUAL`` under :class:`PortalCategory`
+``FILING``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

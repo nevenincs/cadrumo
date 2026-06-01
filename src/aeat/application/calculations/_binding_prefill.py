@@ -19,6 +19,10 @@ authoritative value.
 Provenance metadata returned alongside lets the apply adapter stamp
 each binding's source filing identity so the pull adapter can
 detect stale prefills.
+
+The resolved values are returned as :class:`CasillaObservation` rows
+alongside a flat Decimal mapping. The caller selects the active revision
+through a :class:`RegistrySnapshot` obtained from the registry authority.
 """
 
 from __future__ import annotations

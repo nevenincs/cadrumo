@@ -40,6 +40,34 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
         raise error_factory(f"{path}: cannot read TOML: {exc}") from exc
 
 
+def parse_toml_text(text: str, *, error_factory: Callable[[str], Exception]) -> dict[str, object]:
+    """Parse an in-memory TOML string, re-raising decode failures via ``error_factory``.
+
+    The text-input sibling to :func:`read_toml` for callers that have
+    already loaded the bytes (e.g. through
+    :meth:`pathlib.Path.read_text`, secure-object payload decoding, or
+    in-memory test fixtures) and need consistent error wrapping
+    without the file-open layer.
+
+    Args:
+        text: TOML payload to decode.
+        error_factory: Callable that builds the domain-specific
+            exception from a message; invoked on
+            :class:`tomllib.TOMLDecodeError`.
+
+    Returns:
+        The parsed top-level TOML mapping.
+
+    Raises:
+        Exception: The exception built by ``error_factory`` when the
+            payload is not valid TOML.
+    """
+    try:
+        return dict(tomllib.loads(text))
+    except tomllib.TOMLDecodeError as exc:
+        raise error_factory(f"invalid TOML: {exc}") from exc
+
+
 def to_str_keyed_dict(
     raw: Mapping[object, object], *, error_factory: Callable[[str], Exception]
 ) -> dict[str, object]:

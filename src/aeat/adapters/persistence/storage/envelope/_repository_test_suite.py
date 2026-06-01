@@ -6,7 +6,8 @@ inventory and friends) each ship a near-identical block of pytest
 functions that exercise the same anti-tautology / anti-regression
 properties of the encrypted persistence boundary:
 
-* ``test_round_trip_preserves_payload`` - save -> load equality.
+* ``test_round_trip_preserves_payload`` - save -> load equality across
+  the :class:`Envelope` boundary.
 * ``test_save_is_idempotent`` - repeated save does not duplicate rows.
 * ``test_load_returns_none_when_absent``.
 * ``test_delete_removes`` / ``test_delete_removes_object``.

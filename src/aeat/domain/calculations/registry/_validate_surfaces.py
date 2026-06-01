@@ -1,4 +1,9 @@
-"""Registry surface validation helpers for links, parity, deadlines, and references."""
+"""Registry surface validation helpers for links, parity, deadlines, and references.
+
+Validates cross-reference, workbook-parity, verification-expectation,
+application-link, and deadline-window sections declared on a
+:class:`ModeloRevision` for reference closure and evidence-tier requirements.
+"""
 
 from __future__ import annotations
 

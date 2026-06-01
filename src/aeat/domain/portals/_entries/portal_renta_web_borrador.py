@@ -1,9 +1,9 @@
-"""Registry entry for Renta Web — IRPF pre-filled draft (borrador).
+"""Registry entry for Renta Web - IRPF pre-filled draft (borrador).
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_RENTA_WEB_BORRADOR`` under :class:`PortalCategory`
+``BORRADOR``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

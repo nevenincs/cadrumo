@@ -9,8 +9,8 @@ holds, and a formula that consumes an unsupplied profile binding fails
 with ``binding ... has no supplied value``.
 
 This module loads the bucket's :class:`UserProfileRecord`, walks every
-``source = "profile"`` binding the registry revision declares, and
-projects the matching profile fact into the correct engine channel.
+``source = "profile"`` binding the :class:`RegistrySnapshot` revision declares,
+and projects the matching profile fact into the correct engine channel.
 
 Channel selection is the load-bearing decision. The registry runtime
 resolves a binding leaf from one of two channels depending on *how a
@@ -195,6 +195,37 @@ def _inject_derived_family_facts(
 
     fact_index[menores_key] = Decimal(count_menores)
 
+def _inject_derived_state_attribution_facts(
+    fact_index: dict[str, UserProfileFactValue],
+) -> None:
+    """Inject the M303 state-attribution ratio derived from jurisdiction_scope.
+
+    The IVA model attributes the periodic result to the State (territorio
+    común) vs the foral administrations as a percentage in casilla 65. The
+    profile records the operator's jurisdiction as the typed enum
+    ``tax_residence.jurisdiction_scope`` with values ``common_regime`` (the
+    full State attribution applies) or ``foral_unsupported`` (the foral
+    branch is not supported; the calc downstream emits zero, blocking the
+    filing). Project the enum onto the Decimal-channel synthetic key
+    ``tax_residence.state_attribution_ratio`` so the registry binding
+    consumes it through the existing Decimal-channel resolver without a
+    new enum→Decimal transform op.
+
+    Idempotent: if the synthetic key is already present (explicit profile
+    fact written by an older tooling version) it is not overwritten.
+    """
+    synthetic_key = "tax_residence.state_attribution_ratio"
+    if synthetic_key in fact_index:
+        return
+    scope = fact_index.get("tax_residence.jurisdiction_scope")
+    if scope == "common_regime":
+        fact_index[synthetic_key] = Decimal("100")
+    elif scope == "foral_unsupported":
+        fact_index[synthetic_key] = Decimal("0")
+    # No scope on the profile yet: leave the synthetic key absent so the
+    # engine's missing-binding refusal surfaces the gap operator-side
+    # rather than silently defaulting.
+
 def _decimal_value(binding_id: str, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
     # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
@@ -286,6 +317,7 @@ def resolve_profile_sourced_bindings(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_state_attribution_facts(fact_index)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
     decimal_values: dict[str, Decimal] = {}
@@ -327,19 +359,22 @@ def resolve_profile_sourced_bindings(
                 )
             enum_values[binding_id] = str(value)
         else:
-            # Decimal-channel profile-sourced bindings represent deduction
-            # levers, expense totals, and similar optional-amount facts. A
-            # missing profile fact means the operator did not claim the
-            # lever — semantically equivalent to a zero amount. Default to
-            # ``Decimal("0")`` so the engine sums in zero rather than refusing
-            # the calculation with ``binding ... has no supplied value``.
-            # The registry binding has no explicit ``default`` axis yet
-            # (see ``DataBindingDefinition`` in ``_schema.py``); this
-            # resolver-side policy stands in until the registry adds one.
+            # The resolver projects profile facts into engine channels;
+            # it does not invent values the operator never supplied. A
+            # missing Decimal-channel fact is skipped so the engine
+            # surfaces the missing-binding refusal — unless the caller
+            # supplies an explicit baseline. Per-verb baselines (e.g.
+            # ``verb_baseline_bindings`` in ``modelo project``,
+            # work_calculate's analogous setup) own the "operator declared
+            # nothing" semantics for each call site, because the right
+            # default differs per verb (single-filer for projection vs.
+            # explicit operator entry for work_calculate). The classifier
+            # discovered 9 of 12 M100 profile bindings are core inputs
+            # whose zero-default corrupts the calculation, not optional
+            # levers — a blanket resolver-side zero is structurally wrong.
             if value is None:
-                decimal_values[binding_id] = Decimal("0")
-            else:
-                decimal_values[binding_id] = _decimal_value(binding_id, value)
+                continue
+            decimal_values[binding_id] = _decimal_value(binding_id, value)
 
     sourced = tuple(sorted(set(decimal_values) | set(enum_values) | set(date_values)))
     return ProfileSourcedBindingResult(

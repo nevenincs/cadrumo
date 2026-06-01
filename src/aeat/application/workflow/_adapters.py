@@ -6,7 +6,9 @@ in :mod:`aeat.application.workflow._protocols`. The
 :func:`default_engine` factory composes the adapters into a
 :class:`aeat.application.workflow.WorkflowEngine` and is the entry point
 production call sites (notably the CLI) use to obtain a fully-wired
-workflow engine.
+workflow engine. The deadline adapter wraps a :class:`Schedule`-producing engine; the
+filing adapter constructs a :class:`ModeloDraft` via ``build_draft``
+from the filing surface.
 
 The session and certificate-bundle slots remain ``None`` by default:
 :class:`aeat.application.workflow.WorkflowEngine` tolerates ``None`` for

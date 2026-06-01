@@ -12,7 +12,8 @@ Two namespaces are owned by this module:
 Both namespaces ride the active-bucket plumbing: every read and write
 resolves through a profile bucket so two operators never share profile
 storage. ``snapshot_id`` is deterministic in shape but globally
-unique within a bucket per ``new_profile_snapshot_id``.
+unique within a bucket per ``new_profile_snapshot_id``. Records are
+stored as :class:`Envelope` objects encrypted at rest.
 """
 
 from __future__ import annotations

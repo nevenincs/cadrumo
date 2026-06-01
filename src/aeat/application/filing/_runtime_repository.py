@@ -1,4 +1,9 @@
-"""Runtime-backed repository helpers for filing application persistence."""
+"""Runtime-backed repository helpers for filing application persistence.
+
+Constructs a :class:`SecureObjectRepository` scoped to the active filing
+bucket on demand; the import is deferred to avoid pulling the adapters
+layer into the application module graph at import time.
+"""
 
 from __future__ import annotations
 

@@ -4,12 +4,12 @@ Surfaces a unified timeline of every event the operator's work unit
 emitted across its lifecycle: creation, renames, calculations,
 verifications, filings, supersessions, amendments, and discards.
 
-The catalogue substrate is the bucket-scoped append-only
-:class:`BucketEventHistoryCatalogue`. Events scoped to a work unit
-land under three object types — WORK_UNIT, CALCULATION_REVISION,
-VERIFICATION_REPORT, and FILING_RECORD — so the assembler walks each
-related object id and merges the emitted streams in chronological
-order.
+The catalogue substrate is the bucket-scoped append-only event log
+loaded from :class:`BucketEventHistoryRepository`. Events scoped to a
+work unit land under three object types — WORK_UNIT,
+CALCULATION_REVISION, VERIFICATION_REPORT, and FILING_RECORD — so the
+assembler walks each related object id and merges the emitted streams
+in chronological order.
 
 The assembler is pure read: no mutation, no remote contact.
 """

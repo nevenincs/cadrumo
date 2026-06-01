@@ -694,9 +694,9 @@ def google_sync_push(
         help=tr("cli.config.google.sync.push_dry_run_help"),
     ),
 ) -> None:
-    """Mirror every SecureObjectRepository row's on-wire ciphertext to Drive.
+    """Mirror every :class:`SecureObjectRepository` row's on-wire ciphertext to Drive.
 
-    Walks `SecureObjectRepository.iter_all_records_raw()` ordered by
+    Walks :meth:`SecureObjectRepository.iter_all_records_raw` ordered by
     `(namespace, object_key)`. Each row's ciphertext payload uploads
     via `GoogleDriveProvider.put(...)` under the namespace's Drive
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
@@ -1250,7 +1250,9 @@ def _compute_pull_casillas(
 ) -> list[dict[str, object]]:
     """Compute casillas from the pulled edits, refusing stale workbook stamps.
 
-    When ``enabled`` is false (compute flag not passed), returns an
+    Evaluates the pulled edits against the immutable :class:`RegistrySnapshot`
+    via ``compute_from_pull``. When ``enabled`` is false (compute flag not
+    passed), returns an
     empty list. A pull whose ``metadata_match`` is anything other
     than ``"matches"`` raises :class:`CliRefusedBoundaryError` —
     computing against a stale workbook would silently apply edits

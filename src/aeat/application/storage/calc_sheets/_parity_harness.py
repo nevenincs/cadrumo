@@ -1,8 +1,10 @@
-"""Per-modelo backend↔spreadsheet parity harness.
+"""Per-modelo backend-spreadsheet parity harness.
 
 For any `(modelo, period, year)` plus a synthetic operator-input set,
 this harness drives the same calculation through three independent
-paths and surfaces a per-casilla parity verdict:
+paths and surfaces a per-casilla parity verdict. All three paths start
+from the same :class:`RegistrySnapshot` so revision drift between them
+is impossible.
 
 1. **AEAT live oracle** (when a scenario file is provided) — the
    authoritative reference. Pre-captured outputs from AEAT's own

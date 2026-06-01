@@ -57,10 +57,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-@pytest.fixture
-def cli_runner() -> CliRunner:
-    return CliRunner()
-
 
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
     report = LiveAuthPreflightReport(

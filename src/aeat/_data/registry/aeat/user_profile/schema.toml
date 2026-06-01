@@ -158,6 +158,14 @@ effective_dated = true
 description = "Common-regime or explicit unsupported foral state. Defaults to common_regime when no wizard answer is recorded."
 enum_values = ["common_regime", "foral_unsupported"]
 
+[[sections.fields]]
+key = "state_attribution_ratio"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Modelo 303 casilla 65 — porcentaje atribuible Administracion del Estado (Art. 29 Concierto Economico, Ley 12/2002). Resolver-side derived from jurisdiction_scope by _inject_derived_state_attribution_facts in src/aeat/application/modelo/_profile_binding.py: common_regime -> 100, foral_unsupported -> 0. Not operator-settable through the wizard; the field declaration exists here so the registry's profile-binding selector for modelo-303-profile-state-attribution-ratio resolves against a schema-declared key."
+
 [[sections]]
 key = "censo"
 title = "Censo and enrollment"

@@ -1,7 +1,10 @@
 """Bundled-export serialiser and deserialiser for :class:`UserProfilePortableExport`.
 
-S105 — serialiser: reads all four financial-history categories from the
+The serialiser reads all four financial-history categories from the
 active bucket's repositories and populates the v2 bundle fields.
+The :class:`TransactionCatalogue` is loaded via
+:class:`TransactionCatalogueRepository` and is one of the four payload
+categories included in each export bundle.
 
 S106 — deserialiser: validates ``bundle_schema_version`` against
 ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before parsing; imports work units,
@@ -26,7 +29,7 @@ from typing import TYPE_CHECKING
 from ...core.errors import AeatError
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile._portable_export import UserProfilePortableExport
 
 
 #: Versions the import path will accept.  Add new integers here when
@@ -55,7 +58,7 @@ def serialize_profile_bundle(*, bucket_id: str) -> UserProfilePortableExport:
     from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
     from ...domain.modelos._repository import WorkUnitCatalogueRepository
     from ...domain.transactions._repository import TransactionCatalogueRepository
-    from ...domain.user_profile import UserProfilePortableExport
+    from ...domain.user_profile._portable_export import UserProfilePortableExport
     from ._orchestration import build_lifecycle_service
 
     record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)

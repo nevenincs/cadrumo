@@ -1,4 +1,10 @@
-"""Registry-owned censo modelo foundation map."""
+"""Registry-owned censo modelo foundation map.
+
+Resolves lifecycle routing for Modelo 036 (active) and Modelo 037 (historical)
+censo registration forms. All routing decisions are derived from the
+:class:`ValidatedRegistryAuthority` so the registry TOML remains the single
+authority for event periods and ownership rules.
+"""
 
 from __future__ import annotations
 

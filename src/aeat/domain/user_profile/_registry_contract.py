@@ -1,4 +1,10 @@
-"""Cross-reference user-profile schema metadata against modelo registry use."""
+"""Cross-reference user-profile schema metadata against modelo registry use.
+
+Validates every :class:`ModeloDefinition` in the registry against the
+user-profile schema, checking that each :class:`ModeloRevision` binding
+selector, filing schedule predicate, and deadline applicability condition
+maps to a declared profile fact path.
+"""
 
 from __future__ import annotations
 

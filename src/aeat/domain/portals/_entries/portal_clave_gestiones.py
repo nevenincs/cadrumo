@@ -1,7 +1,9 @@
 """Catalogue entry for the AEAT *Cl@ve PIN gestiones* self-service page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.AUTH` for password
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_CLAVE_GESTIONES`` under the
+:class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.AUTH`, covering password
 registration, recovery, and renewal via Cl@ve permanente.
 """
 

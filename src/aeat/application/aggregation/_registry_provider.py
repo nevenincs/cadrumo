@@ -1,4 +1,8 @@
-"""Registry binding provider adapters for per-modelo aggregation."""
+"""Registry binding provider adapters for per-modelo aggregation.
+
+Uses a :class:`ModeloRevision` to resolve bound casilla inputs and
+counterpart binding values for the aggregation pipeline.
+"""
 
 from __future__ import annotations
 

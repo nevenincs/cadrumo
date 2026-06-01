@@ -2,12 +2,13 @@
 
 Layered on top of :class:`aeat.adapters.persistence.storage.blob_store.EncryptedBlobStore`
 and :func:`aeat.core.locks.exclusive_file_lock`, the store persists
-short-lived bearer state (``SESSION``) and long-lived authentication
-material (``SECRET``) under a stable string key. Each record is wrapped
-in an :class:`aeat.adapters.persistence.storage.envelope.Envelope` of
-:class:`SecretRecord`, encrypted via the blob store's per-record DEK +
-master-key-wrapped + AES-256-GCM payload layout, and indexed by an
-HMAC-SHA256 digest of the natural-key string so consumers can query
+short-lived bearer state (:class:`SensitivityClass` SESSION) and long-lived
+authentication material (:class:`SensitivityClass` SECRET) under a stable
+string key. Each record is wrapped in an
+:class:`aeat.adapters.persistence.storage.envelope.Envelope` of
+:class:`SecretRecord`, encrypted via the blob store's per-record DEK wrapped
+by the active :class:`MasterKeyProvider` using AES-256-GCM, and indexed by
+an HMAC-SHA256 digest of the natural-key string so consumers can query
 :meth:`SecretStore.get` without leaking the plaintext key.
 
 A JSON catalogue file at ``store_dir / "index.json"`` maps the hex
@@ -16,9 +17,9 @@ digest of each key to the underlying
 Every mutation acquires ``exclusive_file_lock(store_dir / "secrets.lock")``
 so parallel writers serialise rather than race.
 
-The retention contract is enforced at write time: ``SECRET``- and
-``SESSION``-class records MUST carry an ``expires_at`` field; the store
-raises :exc:`aeat.adapters.persistence.storage.errors.RetentionPolicyError`
+The retention contract is enforced at write time: SECRET- and SESSION-class
+records MUST carry an ``expires_at`` field; the store raises
+:exc:`aeat.adapters.persistence.storage.errors.RetentionPolicyError`
 when it is absent.
 """
 
