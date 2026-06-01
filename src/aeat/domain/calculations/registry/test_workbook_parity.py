@@ -33,7 +33,7 @@ from ._workbook_parity import (
     verify_workbook_backend,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model, pytest.mark.workbook_parity]
 
 
 def _write_formula_workbook(path: Path) -> None:
