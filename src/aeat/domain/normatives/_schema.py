@@ -6,7 +6,7 @@ frozen and strict wherever the loader idiom permits it, per the
 project-wide pydantic v2 mandate.
 
 Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
-:class:`aeat.core.i18n.str`; the authoritative ``es`` key is
+:class:`aeat.core.i18n.Translatable`; the authoritative ``es`` key is
 enforced at load time on every title and summary.
 """
 

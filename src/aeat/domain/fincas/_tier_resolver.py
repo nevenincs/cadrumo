@@ -65,7 +65,7 @@ de un 5 por ciento", not "en al menos un 5 por ciento")."""
 
 JOVEN_TENANT_AGE_MIN: int = 18
 JOVEN_TENANT_AGE_MAX: int = 35
-"""Tier 70-b-1 inclusive age range (BOE: "una edad comprendida entre
+"""Tier 70-b-1 inclusive age range (``BOE``: "una edad comprendida entre
 18 y 35 años")."""
 
 

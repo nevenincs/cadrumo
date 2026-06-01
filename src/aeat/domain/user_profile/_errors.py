@@ -75,7 +75,8 @@ class StoredProfileDriftError(UserProfileError):
 
     The CLI boundary catches this typed error and routes it to
     :exc:`~aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError`
-    (distinct from the input-time :exc:`CliValidationBoundaryError`) so
+    (distinct from the input-time
+    :exc:`~aeat.entrypoints.cli._errors.CliValidationBoundaryError`) so
     operators see a repair-oriented message rather than a generic refusal.
 
     Attributes:
