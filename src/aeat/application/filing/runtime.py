@@ -39,23 +39,26 @@ from pydantic import BaseModel, Field
 # cross-domain snapshot check required by Modelo 100 snapshots.
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     CasillaDefinition,
+    CasillaId,
     ExportLayoutDefinition,
     FormulaDefinition,
+    FormulaId,
+    LegalRefId,
     ModeloDefinition,
     ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
+    SourceRefId,
     ValidatedRegistryAuthority,
     expression_casilla_refs,
 )
-from ...domain.calculations.registry._ids import CasillaId, FormulaId, LegalRefId, SourceRefId
 from ...domain.filing import CasillaCollection, CasillaSchema
 from ...domain.filing._errors import ModeloBuilderError
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class TaxpayerProfileIdentity(Protocol):
     """Structural identity surface accepted by the filing profile projector."""

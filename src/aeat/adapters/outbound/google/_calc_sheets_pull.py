@@ -28,17 +28,16 @@ The pull adapter does NOT mutate any local state; it returns a
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Any, Final, Literal
 
 # google-api-python-client-stubs ships ``googleapiclient.discovery.Resource``
 # as the typed surface for service objects returned by ``build()``.
 # We import it under TYPE_CHECKING so the runtime dependency stays optional
 # (the ImportError path in ``_drive_service`` / ``_sheets_service`` guards the
 # live path) while the type-checker can narrow the ``Any`` service returns.
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource as _GoogleResource
@@ -49,17 +48,17 @@ _ValueRange = dict[str, Any]
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core.decimal import coerce_decimal
-from ....core.time._utc import coerce_utc_aware
 from ....application.storage.calc_sheets import collect_row_sets
 from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
+from ....core.decimal import coerce_decimal
+from ....core.time._utc import coerce_utc_aware
+from ....domain.calculations.registry import BindingId, CasillaId, RelationId, RevisionId
 from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId, RevisionId
 from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
@@ -226,7 +225,7 @@ class PullResult(BaseModel):
     cells_read: int = Field(ge=0)
 
 
-def _drive_service(credentials: object) -> "_GoogleResource":
+def _drive_service(credentials: object) -> _GoogleResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -238,7 +237,7 @@ def _drive_service(credentials: object) -> "_GoogleResource":
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _sheets_service(credentials: object) -> "_GoogleResource":
+def _sheets_service(credentials: object) -> _GoogleResource:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -250,7 +249,7 @@ def _sheets_service(credentials: object) -> "_GoogleResource":
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-def _verify_ownership(drive_service: "_GoogleResource", spreadsheet_id: str) -> None:
+def _verify_ownership(drive_service: _GoogleResource, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
         drive_service.files().get(
@@ -273,7 +272,7 @@ def _verify_ownership(drive_service: "_GoogleResource", spreadsheet_id: str) -> 
 
 
 def _read_developer_metadata(
-    sheets_service: "_GoogleResource",
+    sheets_service: _GoogleResource,
     spreadsheet_id: str,
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
@@ -455,7 +454,7 @@ def _operator_input_addresses(
 
 
 def _batch_get_values(
-    sheets: "_GoogleResource",
+    sheets: _GoogleResource,
     spreadsheet_id: str,
     ranges: list[str],
 ) -> list[_ValueRange]:
@@ -628,7 +627,7 @@ def _parse_relation_metadata(
 
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
-    sheets: "_GoogleResource",
+    sheets: _GoogleResource,
     spreadsheet_id: str,
 ) -> tuple[tuple[RowSetEdit, ...], int]:
     """Read each row-set's Detalle-tab data area into typed row edits.
@@ -665,7 +664,7 @@ def _row_set_block_range(row_set: Any) -> str:
 
 
 def _batch_get_values_for_row_sets(
-    sheets: "_GoogleResource",
+    sheets: _GoogleResource,
     spreadsheet_id: str,
     block_ranges: list[str],
 ) -> list[_ValueRange]:

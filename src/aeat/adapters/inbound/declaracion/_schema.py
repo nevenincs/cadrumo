@@ -16,11 +16,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....domain.calculations.registry._ids import CasillaId
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....domain.calculations.registry import CasillaId
 from ....domain.calculations.registry._schema import RegistrySnapshotRef
 from ..pdf._shared import ExtractedCasilla
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class TemplateRevision(BaseModel):
     """Detected or caller-resolved declaration template identity.

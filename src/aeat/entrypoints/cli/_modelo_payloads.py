@@ -15,7 +15,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...core.identity import BucketId
-from ...domain.calculations.registry._ids import (
+from ...domain.calculations.registry import (
     CasillaId,
     FormulaId,
     RevisionId,
