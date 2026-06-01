@@ -1,4 +1,8 @@
-"""Advisory label-artifact diagnostics for registry casillas."""
+"""Advisory label-artifact diagnostics for registry casillas.
+
+Scans casilla labels across every :class:`ModeloDefinition` to surface
+unresolved format-string placeholders left by the extraction pipeline.
+"""
 
 from __future__ import annotations
 

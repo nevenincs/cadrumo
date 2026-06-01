@@ -1,4 +1,9 @@
-"""Engine driver that compiles a `RegistrySnapshot` into a `SheetExportPlan`."""
+"""Engine driver that compiles a :class:`RegistrySnapshot` into a ``SheetExportPlan``.
+
+The engine walks every casilla, binding, and parameter declared in the
+:class:`ModeloRevision` embedded in the snapshot and maps each to a
+typed cell or range in the generated workbook plan.
+"""
 
 from __future__ import annotations
 

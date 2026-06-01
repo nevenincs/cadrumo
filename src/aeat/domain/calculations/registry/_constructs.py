@@ -1,4 +1,9 @@
-"""Construct resolution for registry revisions."""
+"""Construct resolution for registry revisions.
+
+Resolves named construct groups declared on a :class:`ModeloRevision` into
+typed ``ResolvedConstruct`` records that list every member (casilla, formula,
+binding, etc.) with its id and value.
+"""
 
 from __future__ import annotations
 

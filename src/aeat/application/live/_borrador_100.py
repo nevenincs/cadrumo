@@ -8,6 +8,9 @@ Borrador100 is the proof-of-concept consumer of the shared
 object-key layout, and method signatures are preserved exactly; only
 the inline state-machine, supersession, and content-id helpers have
 been routed through the shared base.
+
+Snapshot records are persisted through a :class:`SecureObjectRepository`
+at PERSONAL sensitivity under the borrador namespace.
 """
 
 from __future__ import annotations

@@ -1,4 +1,9 @@
-"""Resolved export layouts for registry-backed AEAT record designs."""
+"""Resolved export layouts for registry-backed AEAT record designs.
+
+Resolves export layouts declared on a :class:`ModeloRevision` and verifies
+them against a :class:`RegistrySnapshot`. The resolved layout is a
+``ResolvedExportLayout`` ready for fixed-width filing assembly.
+"""
 
 from __future__ import annotations
 

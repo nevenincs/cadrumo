@@ -2,7 +2,8 @@
 
 Sits between the engine and the local observation store. The engine
 asks "what's the resolved value of every relation this revision
-declares?" and this module answers by:
+declares?" and this module answers by consulting a :class:`RegistrySnapshot`
+to enumerate the declared relations:
 
 1. Reading the revision's relations to determine `(source_modelo,
    source_revision_selector, source_periods, source_output,

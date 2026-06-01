@@ -1,4 +1,9 @@
-"""Revision-level invariant validation helpers."""
+"""Revision-level invariant validation helpers.
+
+Validates temporal window overlap, informative-class invariants, bracket-table
+coverage, and reconciliation-total closure for a :class:`ModeloRevision`
+within its :class:`ModeloDefinition`.
+"""
 
 from __future__ import annotations
 

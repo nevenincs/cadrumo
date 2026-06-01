@@ -1,4 +1,4 @@
-"""Layout planner that maps every casilla, binding, and parameter of a ``ModeloRevision`` onto a Sheets cell address.
+"""Layout planner that maps every casilla, binding, and parameter of a :class:`ModeloRevision` onto a Sheets cell address.
 
 The mapping is a pure function of the revision (and an optional
 filing date for temporal bracket filtering). Two engine runs over

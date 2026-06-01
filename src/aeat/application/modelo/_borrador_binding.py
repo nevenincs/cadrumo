@@ -4,7 +4,8 @@ The CLI may parse a snapshot id, but the decision to consume values from
 a captured borrador belongs here: the application layer checks the
 work-unit axis, snapshot state, registry eligibility, and precedence
 against caller-supplied binding overrides before the calculation engine
-receives any values.
+receives any values. Eligibility is determined by inspecting the
+:class:`RegistrySnapshot` for the ``"borrador"`` capability declaration.
 
 Only modelos that declare the ``"borrador"`` capability in their registry
 manifest are eligible. Adding support for a new modelo requires only a

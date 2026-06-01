@@ -1,4 +1,10 @@
-"""Validated access point for registry-backed modelo definitions."""
+"""Validated access point for registry-backed modelo definitions.
+
+:class:`ValidatedRegistryAuthority` is the production boundary for all registry
+access. It loads TOML sources via the compiler in ``_loader``, compiles them
+into :class:`ModeloDefinition` and :class:`ModeloRevision` objects, and
+produces :class:`RegistrySnapshot` instances on demand for each filing context.
+"""
 
 from __future__ import annotations
 

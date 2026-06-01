@@ -1,4 +1,8 @@
-"""Encrypted SQL repository for the bucket-event-history catalogue."""
+"""Encrypted SQL repository for the bucket-event-history catalogue.
+
+Persistence is delegated to :class:`SecureObjectRepository`, which handles
+encrypted BLOB storage and key management for the active profile bucket.
+"""
 
 from __future__ import annotations
 

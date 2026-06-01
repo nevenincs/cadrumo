@@ -1,4 +1,9 @@
-"""Specialized snapshot-reference section walkers."""
+"""Specialized snapshot-reference section walkers.
+
+Per-section walkers that traverse the typed-ID fields of a
+:class:`ModeloRevision` and call into an ``IdReferenceChecker`` to
+accumulate dangling-reference diagnostics.
+"""
 
 from __future__ import annotations
 

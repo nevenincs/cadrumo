@@ -1,4 +1,11 @@
-"""Coverage ledger for registry authority and verification tiers."""
+"""Coverage ledger for registry authority and verification tiers.
+
+Audits every :class:`ModeloDefinition` and :class:`ModeloRevision` in the
+registry for the four mandatory evidence tiers (legal authority, official
+source guidance, executable parity, and layout authority). Each revision
+is examined through a :class:`RegistrySnapshot` so referential integrity is
+verified before coverage is assessed.
+"""
 
 from __future__ import annotations
 

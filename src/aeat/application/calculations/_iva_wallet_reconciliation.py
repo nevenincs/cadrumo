@@ -4,6 +4,9 @@ The live AEAT wallet is external state. Local Modelo 303 recurrence is
 internal reconstruction. This module is the boundary that turns those
 evidence sources, plus an explicit taxpayer override when present, into
 the effective binding decision consumed by Modelo 303 calculation.
+
+Binding resolution reads its active revision through a
+:class:`RegistrySnapshot` supplied via the source mesh context.
 """
 
 from __future__ import annotations

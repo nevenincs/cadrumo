@@ -1,4 +1,8 @@
-"""Repository-backed IVA observation projection from ledger catalogues."""
+"""Repository-backed IVA observation projection from ledger catalogues.
+
+Consumes a :class:`ModeloRevision` to resolve the IVA aggregation binding
+values declared for the target modelo period.
+"""
 
 from __future__ import annotations
 

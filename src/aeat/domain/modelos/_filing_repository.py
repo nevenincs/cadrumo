@@ -1,4 +1,9 @@
-"""Encrypted SQL repository for the filing-record catalogue."""
+"""Encrypted SQL repository for the filing-record catalogue.
+
+Persists and loads filing records via :class:`SecureObjectRepository`
+at FINANCIAL sensitivity. The catalogue is stored as a single encrypted
+BLOB per profile bucket.
+"""
 
 from __future__ import annotations
 

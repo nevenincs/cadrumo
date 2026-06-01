@@ -1,9 +1,9 @@
 """Load / save helpers for :class:`UsageRatioProfile`.
 
 Usage ratios carry business / personal split percentages. They are
-stored as encrypted byte objects in the primary SQL backend at
-FINANCIAL sensitivity; no plaintext profile JSON or envelope file lands
-on disk.
+stored as encrypted byte objects via :class:`SecureObjectRepository`
+at FINANCIAL sensitivity; no plaintext profile JSON or envelope file
+lands on disk.
 """
 
 from __future__ import annotations

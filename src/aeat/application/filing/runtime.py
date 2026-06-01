@@ -18,6 +18,10 @@ Key entry points:
 * :func:`load_default_filing_profile` — loads the active profile bucket
   and returns a runtime profile.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
+
+The schema provider consumes a :class:`RegistrySnapshot` built from a
+:class:`ModeloRevision` within a :class:`ModeloDefinition`, accessed through
+a :class:`ValidatedRegistryAuthority` loaded from the configured registry root.
 """
 
 from __future__ import annotations

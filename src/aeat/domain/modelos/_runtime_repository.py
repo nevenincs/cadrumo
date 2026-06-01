@@ -1,4 +1,8 @@
-"""Runtime-backed repository helpers for modelo persistence."""
+"""Runtime-backed repository helpers for modelo persistence.
+
+Provides factory helpers that return a :class:`SecureObjectRepository`
+bound to the active profile bucket for use by modelo repository classes.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,8 @@
-"""Temporal selection for registry-backed modelo revisions."""
+"""Temporal selection for registry-backed modelo revisions.
+
+Selects exactly one :class:`ModeloRevision` from a :class:`ModeloDefinition`
+given a filing year, period, and optional date constraint.
+"""
 
 from __future__ import annotations
 

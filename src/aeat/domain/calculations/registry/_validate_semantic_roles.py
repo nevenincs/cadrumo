@@ -1,4 +1,8 @@
-"""Semantic-role validation helpers for registry definitions."""
+"""Semantic-role validation helpers for registry definitions.
+
+Validates ``semantic_role`` consistency, cardinality, and required-role
+label patterns across all casillas in every :class:`ModeloDefinition`.
+"""
 
 from __future__ import annotations
 

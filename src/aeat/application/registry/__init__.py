@@ -1,4 +1,9 @@
-"""Application services for read-only registry workflows."""
+"""Application services for read-only registry workflows.
+
+Registry query and corpus validation services consume a
+:class:`ValidatedRegistryAuthority` as the single entry point for
+modelo definitions, revision snapshots, and deadline windows.
+"""
 
 from __future__ import annotations
 

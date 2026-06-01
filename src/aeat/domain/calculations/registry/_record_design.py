@@ -1,4 +1,9 @@
-"""Read-only extraction of official AEAT record-design rows."""
+"""Read-only extraction of official AEAT record-design rows.
+
+Parses official AEAT record-design workbooks (PDF or XLS/XLSX) and derives
+coverage casillas from a :class:`ModeloRevision` so that the extracted layout
+can be compared against the registry declarations.
+"""
 
 from __future__ import annotations
 

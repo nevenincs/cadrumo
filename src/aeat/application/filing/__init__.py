@@ -1,4 +1,9 @@
-"""Typed filing draft API guarded by registry-backed runtime providers."""
+"""Typed filing draft API guarded by registry-backed runtime providers.
+
+All draft creation, input validation, and calculation entry points consume
+a :class:`RegistrySnapshot` to resolve the active revision, its casilla
+schema, and its formula graph.
+"""
 
 from __future__ import annotations
 

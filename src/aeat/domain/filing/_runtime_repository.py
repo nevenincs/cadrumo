@@ -1,4 +1,8 @@
-"""Runtime-backed repository helpers for filing persistence."""
+"""Runtime-backed repository helpers for filing persistence.
+
+Provides factory helpers that return a :class:`SecureObjectRepository`
+bound to the active profile bucket for use by filing repository classes.
+"""
 
 from __future__ import annotations
 
