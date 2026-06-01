@@ -133,7 +133,7 @@ Add a closed core tax_domain StrEnum, hydrate it at the loader boundary, and re-
 
 Rename the mis-named portals Subdomain StrEnum to a portal-host concept with consumer updates.
 
-- [ ] `W05.P11.S28` - Rename the portals Subdomain StrEnum to a portal-host concept with consumer updates; `src/aeat/domain/portals/_categories.py`.
+- [x] `W05.P11.S28` - Rename the portals Subdomain StrEnum to a portal-host concept with consumer updates; `src/aeat/domain/portals/_categories.py`.
 
 ### Phase `W05.P12` - prior-lead re-confirmation
 

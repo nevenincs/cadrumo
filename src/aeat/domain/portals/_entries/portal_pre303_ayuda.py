@@ -9,7 +9,7 @@ exposed as :data:`ENTRY` and consumed by
 from __future__ import annotations
 
 from ....core.config import Settings
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -19,7 +19,7 @@ _PRE303 = Settings.external_constants().aeat.pre303
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PRE303_AYUDA,
     path=_PRE303.presentation_service_path,
-    subdomain=Subdomain.WWW1,
+    subdomain=PortalHost.WWW1,
     category=PortalCategory.BORRADOR,
     auth_methods=(
         AuthMethod.CERTIFICATE,

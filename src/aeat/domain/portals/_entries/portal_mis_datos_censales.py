@@ -9,7 +9,7 @@ exposed as :data:`ENTRY` and consumed by
 from __future__ import annotations
 
 from ....core.config import Settings
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -19,7 +19,7 @@ _SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MIS_DATOS_CENSALES,
     path=_SEDE_PATHS.census_g313_launcher,
-    subdomain=Subdomain.SEDE,
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.CONSULTATION,
     auth_methods=(
         AuthMethod.CERTIFICATE,

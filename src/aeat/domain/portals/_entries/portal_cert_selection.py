@@ -8,7 +8,7 @@ is :attr:`aeat.domain.portals.UrlStability.VOLATILE_APP_PATH`.
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -16,7 +16,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CERT_SELECTION,
     path="/wlpl/BUCV-JDIT/SelectorCertificado",
-    subdomain=Subdomain.WWW1,
+    subdomain=PortalHost.WWW1,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),
     url_stability=UrlStability.VOLATILE_APP_PATH,

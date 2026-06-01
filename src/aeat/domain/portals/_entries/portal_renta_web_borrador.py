@@ -8,7 +8,7 @@ exposed as :data:`ENTRY` and consumed by
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
 from ._common import build_entry
@@ -16,7 +16,7 @@ from ._common import build_entry
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_RENTA_WEB_BORRADOR,
     path="/wlpl/OVCT-CXEW/SesionHTML",
-    subdomain=Subdomain.WWW2,
+    subdomain=PortalHost.WWW2,
     category=PortalCategory.BORRADOR,
     auth_methods=(
         AuthMethod.CERTIFICATE,
