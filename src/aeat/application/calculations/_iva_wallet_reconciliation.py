@@ -29,6 +29,7 @@ from ._errors import IvaWalletReconciliationError
 
 if TYPE_CHECKING:
     from ._binding_prefill import BindingPrefillReport, LocalIvaCompensationRecurrence
+    from ._observations_repository import CalculationObservationRepository
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
@@ -193,7 +194,7 @@ def reconcile_modelo_303_iva_compensation(
     *,
     taxpayer_nif: str,
     wallet: IvaCompensationWalletObservation | None,
-    repository=None,  # type: ignore[no-untyped-def]
+    repository: "CalculationObservationRepository | None" = None,
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = _DEFAULT_MAX_WALLET_AGE_DAYS,

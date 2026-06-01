@@ -1024,8 +1024,8 @@ def _literal_constant_value(node: ast.expr) -> object:
     if isinstance(node, ast.Constant):
         return node.value
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
-        if isinstance(node.operand, ast.Constant):
-            return -node.operand.value  # type: ignore[operator]
+        if isinstance(node.operand, ast.Constant) and isinstance(node.operand.value, (int, float)):
+            return -node.operand.value
     return _MISSING
 
 
