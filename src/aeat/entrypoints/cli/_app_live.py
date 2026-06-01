@@ -1059,7 +1059,7 @@ def portals_list(
 
     result = PortalsListResult(
         count=len(rows),
-        rows=[PortalEntryPayload(**row) for row in rows],  # type: ignore[arg-type]
+        rows=[PortalEntryPayload(**row) for row in rows],  # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-ENTRY: _portal_row returns Mapping[str, object]; splat matches PortalEntryPayload fields exactly at this boundary  # type: ignore[arg-type]
     )
     lines = [f"count\t{len(rows)}"]
     for row in rows:
@@ -1085,7 +1085,7 @@ def portals_show(
     payload = _portal_row(metadata)
     from ._app_live_payloads import PortalsViewResult
 
-    result = PortalsViewResult(**payload)  # type: ignore[arg-type]
+    result = PortalsViewResult(**payload)  # CAST-RATIONALE-WIRE-PAYLOAD-PORTAL-VIEW: _portal_row returns Mapping[str, object]; splat matches PortalsViewResult fields exactly at this boundary  # type: ignore[arg-type]
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
     _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 
@@ -1173,7 +1173,7 @@ def expedientes_list(ctx: typer.Context) -> None:
     result = ExpedientesListResult(
         bucket_id=bucket_id,
         count=len(rows),
-        rows=[ExpedienteSnapshotSummaryPayload(**_expedientes_row(r)) for r in rows],  # type: ignore[arg-type]
+        rows=[ExpedienteSnapshotSummaryPayload(**_expedientes_row(r)) for r in rows],  # CAST-RATIONALE-WIRE-PAYLOAD-EXPEDIENTES-ROW: _expedientes_row returns Mapping[str, object]; splat matches ExpedienteSnapshotSummaryPayload fields exactly at this boundary  # type: ignore[arg-type]
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
@@ -1359,7 +1359,7 @@ def verify_list(
     result = VerifyListResult(
         bucket_id=bucket_id,
         count=len(rows),
-        rows=[VerifyObservationSummaryPayload(**_verify_row(r)) for r in rows],  # type: ignore[arg-type]
+        rows=[VerifyObservationSummaryPayload(**_verify_row(r)) for r in rows],  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LIST: _verify_row returns Mapping[str, object]; splat matches VerifyObservationSummaryPayload fields exactly at this boundary  # type: ignore[arg-type]
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
@@ -1389,7 +1389,7 @@ def verify_show(
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
     from ._app_live_payloads import VerifyViewResult
 
-    result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
+    result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-VIEW: _verify_row returns Mapping[str, object]; splat matches VerifyViewResult fields exactly at this boundary  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
@@ -1453,7 +1453,7 @@ def verify_latest(
             ],
         )
         return
-    result = VerifyLatestResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
+    result = VerifyLatestResult(bucket_id=bucket_id, **_verify_row(record))  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-LATEST: _verify_row returns Mapping[str, object]; splat matches VerifyLatestResult fields exactly at this boundary  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
@@ -1506,7 +1506,7 @@ def verify_nif_iva(
     )
     from ._app_live_payloads import VerifyNifIvaResult
 
-    result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
+    result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-NIF-IVA: _verify_row returns Mapping[str, object]; splat matches VerifyNifIvaResult fields exactly at this boundary  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
@@ -1558,7 +1558,7 @@ def verify_tgvi(
     )
     from ._app_live_payloads import VerifyTgviResult
 
-    result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))  # type: ignore[arg-type]
+    result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))  # CAST-RATIONALE-WIRE-PAYLOAD-VERIFY-TGVI: _verify_row returns Mapping[str, object]; splat matches VerifyTgviResult fields exactly at this boundary  # type: ignore[arg-type]
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
     _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
@@ -1634,7 +1634,7 @@ def borrador_100_list(
     result = Borrador100ListResult(
         bucket_id=bucket_id,
         count=len(rows),
-        rows=[Borrador100SnapshotSummaryPayload(**_borrador_row(r)) for r in rows],  # type: ignore[arg-type]
+        rows=[Borrador100SnapshotSummaryPayload(**_borrador_row(r)) for r in rows],  # CAST-RATIONALE-WIRE-PAYLOAD-BORRADOR-LIST: _borrador_row returns Mapping[str, object]; splat matches Borrador100SnapshotSummaryPayload fields exactly at this boundary  # type: ignore[arg-type]
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
