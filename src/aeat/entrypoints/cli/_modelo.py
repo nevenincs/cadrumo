@@ -5198,6 +5198,21 @@ def modelo_project(
         # default single-filer projection. Operator-supplied profile
         # fact or ``--binding`` overrides.
         f"renta-{year}-profile-family-minor-children-in-unit": Decimal("0"),
+        # Art. 81 / 81 bis deduction levers: a missing profile fact
+        # means the operator did not claim the deduction. Zero is the
+        # semantically correct "not claimed" value. Profile resolver
+        # overrides when the fact is set; ``--binding`` overrides both.
+        f"renta-{year}-profile-guarderia-gastos-reales": Decimal("0"),
+        f"renta-{year}-profile-cotizaciones-ss-madre": Decimal("0"),
+        # Matrimonio sobrevenido (Art. 84.2.4 LIRPF integers): with
+        # ``declaration_type=1`` (individual) and no ``marriage_date``
+        # on the profile, the derived facts are zero by construction.
+        # The profile resolver computes non-zero values from
+        # ``marriage_date`` when present; this baseline is the
+        # operator-declared-nothing fallback.
+        f"renta-{year}-profile-marriage-full-year": Decimal("0"),
+        f"renta-{year}-profile-marriage-month-start": Decimal("0"),
+        f"renta-{year}-profile-marriage-month-end": Decimal("0"),
         **{bid: Decimal("0") for bid in _retenciones_binding_ids},
     }
     verb_baseline_enum_bindings: dict[str, str] = {
