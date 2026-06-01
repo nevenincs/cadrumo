@@ -93,7 +93,7 @@ def _create_303_work_unit() -> str:
             "--modelo", "303",
             "--year", "2025",
             "--period", "1T",
-            "--revision", "2009-y-siguientes",
+            "--revision", "2023-y-siguientes",
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
