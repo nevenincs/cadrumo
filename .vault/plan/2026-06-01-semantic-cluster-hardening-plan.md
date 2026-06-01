@@ -150,7 +150,7 @@ Restore the registry meta-gates and calculation-completeness coverage to green. 
 Close calculation-completeness coverage: re-derive the drifted M100/2024 manifest from the calculation surface (stale), and author the missing M210/2025 manifest so the load-time gate is live for IRNR 2025 (real coverage gap).
 
 - [ ] `W06.P13.S30` - Re-derive the modelo-100/2024 calculation-completeness manifest from the registry calculation surface (STALE: ~41 closure-only casillas drifted in since last refresh); `use derive_calculation_completeness_casillas, not hand-typed numbers; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/completeness-manifest.toml`.
-- [ ] `W06.P13.S31` - Author the missing modelo-210/2025 completeness manifest (REAL coverage gap: 7-casilla closure, gate currently dark for IRNR 2025) so the load-time completeness gate is live; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/completeness-manifest.toml`.
+- [x] `W06.P13.S31` - Author the missing modelo-210/2025 completeness manifest (REAL coverage gap: 7-casilla closure, gate currently dark for IRNR 2025) so the load-time completeness gate is live; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/completeness-manifest.toml`.
 
 ### Phase `W06.P14` - validator reviewability baseline
 
@@ -171,7 +171,7 @@ Re-curate the two frozen-list meta-gates that drifted red against legitimate dow
 Repair the born-stale legal-entity rate-schedule test against the restructured Modelo 200 formula, and reconcile the M390 verification-source provenance tag with its mixed real/synthetic fixture pool.
 
 - [ ] `W06.P16.S36` - Fix the born-stale legal-entity rate-schedule test to navigate the restructured nested dispatch (args[2].args[2].args[2].dispatch_table) and assert the full 8-key entity-form set including sal/sll; `src/aeat/domain/calculations/registry/test_taxpayer_rate_schedules.py`.
-- [ ] `W06.P16.S37` - Reconcile the M390 verification_source provenance (REAL mislabel): regenerate 2021-0A as a synthetic fixture matching the synthetic_from_aeat_published_text tag, or split the mixed real/synthetic pool by tagged profile; do not revert the tag; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [ ] `W06.P16.S37` - Reconcile the M390 verification_source provenance (REAL mislabel): regenerate 2021-0A as a synthetic fixture matching the synthetic_from_aeat_published_text tag, or split the mixed real/synthetic pool by tagged profile; `do not revert the tag; `src/aeat/tests/fixtures/justificantes/_generate.py`.
 
 ## Parallelization
 
