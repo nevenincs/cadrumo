@@ -1,3 +1,12 @@
+"""User-facing ledger and transaction management CLI commands.
+
+Provides the ``aeat ledger`` command group for importing, reviewing, and
+exporting financial transaction data. Transaction records are accessed
+through :class:`TransactionCatalogueRepository` and invoice records through
+:class:`InvoiceCatalogueRepository`. Lifecycle events are appended to the
+profile audit trail via :class:`BucketEventHistoryRepository`.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

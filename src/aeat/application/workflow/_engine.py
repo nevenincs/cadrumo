@@ -3,7 +3,9 @@
 :class:`WorkflowEngine` walks the filing pipeline in strict linear order. Every
 stage lives in its own small ``_stage_*`` method so the bailout matrix
 is trivially auditable — a reader drops into a single stage method to
-see exactly which abort reasons it can produce.
+see exactly which abort reasons it can produce. The engine derives a
+:class:`Schedule` from the injected deadline adapter to gate the filing
+window against the active obligation calendar.
 
 Safety invariants enforced by this module:
 

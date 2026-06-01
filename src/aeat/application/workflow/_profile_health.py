@@ -1,4 +1,9 @@
-"""Active-profile health projection shared by status, auth, and repair surfaces."""
+"""Active-profile health projection shared by status, auth, and repair surfaces.
+
+:func:`assess_active_profile_health` reads the persisted
+:class:`UserProfileRecord` from the active bucket and returns an
+:class:`ActiveProfileHealth` verdict used by every operator status surface.
+"""
 
 from __future__ import annotations
 

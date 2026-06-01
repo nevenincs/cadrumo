@@ -12,7 +12,7 @@ modelo aggregation pipelines. The noun-group records here are the
 canonical operator-edit surface for the two source-kind variants
 covered.
 
-Bucket events emitted per CRUD verb:
+Bucket events emitted per mutating verb via :class:`BucketEventHistoryRepository`:
     ``add``     -> ``payable_invoice.created`` / ``collectible_invoice.created``
     ``update``  -> ``payable_invoice.updated`` / ``collectible_invoice.updated``
     ``remove``  -> ``payable_invoice.removed`` / ``collectible_invoice.removed``

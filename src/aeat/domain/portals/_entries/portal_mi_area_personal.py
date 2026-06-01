@@ -1,7 +1,8 @@
-"""Registry entry for the Sede Electrónica authenticated personal area.
+"""Registry entry for the Sede Electronica authenticated personal area.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_MI_AREA_PERSONAL``, exposed as :data:`ENTRY` under the
+:class:`PortalCategory` member ``PERSONAL_AREA``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

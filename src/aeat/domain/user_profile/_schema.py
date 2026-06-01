@@ -1,8 +1,8 @@
 """Strict Pydantic records for the centralized user-profile schema.
 
-These records describe schema metadata only. They do not store live operator
-profile values; live values belong to the secure DB backend implemented by
-later rollout waves.
+Each schema section declares a :class:`SensitivityClass` that governs
+the encryption tier applied when the section's data is persisted to the
+secure DB backend.
 """
 
 from __future__ import annotations

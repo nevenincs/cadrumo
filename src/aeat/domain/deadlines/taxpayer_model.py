@@ -1,4 +1,8 @@
-"""Public taxpayer-model types used by registry rule evaluators."""
+"""Public taxpayer-model types used by registry rule evaluators.
+
+Re-exports :class:`TaxpayerProfile` and the associated enums from the
+private implementation module so callers can import from this stable surface.
+"""
 
 from __future__ import annotations
 

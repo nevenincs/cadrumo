@@ -3,7 +3,8 @@
 Persists :class:`aeat.adapters.outbound.llm.UsageRecord` payloads to the
 encrypted SQL secure-object backend and exposes load and aggregate helpers.
 Records are routed through :func:`aeat.core.redaction.redact_structured` at
-DIAGNOSTIC sensitivity class before they are encrypted.
+:class:`SensitivityClass` DIAGNOSTIC before they are encrypted, so NIFs and
+bearer-shaped tokens are redacted before persistence.
 """
 
 from __future__ import annotations

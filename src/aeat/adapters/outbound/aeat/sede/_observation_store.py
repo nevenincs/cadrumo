@@ -1,8 +1,10 @@
 """Persistence helpers for read-only filed-declaration observations.
 
-Persists each filed-declaration observation as a record through
-:class:`SecureObjectRepository`, keyed by declaration identity so a prior
-filing can be retrieved without re-fetching it from the sede.
+Persists each filed-declaration observation as an :class:`Envelope` record
+through :class:`SecureObjectRepository`, keyed by declaration identity so a
+prior filing can be retrieved without re-fetching it from the sede. Each
+envelope is classified at :class:`SensitivityClass` FINANCIAL and encrypted
+via the active :class:`MasterKeyProvider`.
 """
 
 from __future__ import annotations

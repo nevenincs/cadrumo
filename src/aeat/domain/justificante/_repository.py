@@ -2,17 +2,18 @@
 
 Justificante metadata captures AEAT verification identifiers, operator
 identity, timestamps, and verification URLs. The structured metadata is
-stored as encrypted byte objects in the primary SQL backend at AUDIT
-sensitivity; no plaintext metadata JSON or envelope file lands on disk.
+stored as encrypted byte objects in the primary SQL backend at
+:class:`SensitivityClass` ``AUDIT`` sensitivity; no plaintext metadata
+JSON or envelope file lands on disk.
 
 Sensitivity rationale: justificantes are AEAT-issued verification receipts
 whose sensitivity class is ``AUDIT`` for every modelo. The class is not
-modelo-specific — it is determined by the nature of the artefact (an
+modelo-specific; it is determined by the nature of the artefact (an
 AEAT-issued submission receipt carrying run-trace and NIF-bearing audit
 fields), not by the modelo's ``output_sensitivity`` declaration. The
-``ModeloDefinition.output_sensitivity`` field governs *output* artefacts
+``ModeloDefinition.output_sensitivity`` field governs output artefacts
 (calculation drafts, export payloads); justificante metadata is an
-*audit-sink* artefact and is irreducibly AUDIT regardless of modelo.
+audit-sink artefact and is irreducibly AUDIT regardless of modelo.
 """
 
 from __future__ import annotations

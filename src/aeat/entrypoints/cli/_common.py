@@ -1,3 +1,18 @@
+"""Shared CLI transport helpers used across all ``aeat`` command groups.
+
+Provides output helpers, period normalisation, and repository accessors
+used by the ledger, modelo, and config command groups. The repository
+accessors return typed domain objects: :class:`TransactionCatalogue` and
+:class:`TransactionCatalogueRepository` for transaction ledger access,
+:class:`InvoiceCatalogue` and :class:`InvoiceCatalogueRepository` for
+invoice data, :class:`ModeloDraft` for in-progress modelo drafts, and
+:class:`TaxpayerProfile` for deadline and period calculations.
+
+Application-layer and domain symbols are imported lazily inside each
+helper to avoid pulling the registry parse into fast-path commands such
+as ``aeat --version``.
+"""
+
 from __future__ import annotations
 
 import re as _re

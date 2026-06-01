@@ -1,7 +1,8 @@
-"""Registry entry for the official "submit and consult declarations" index.
+"""Registry entry for the official submit-and-consult declarations index.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_PRESENTAR_CONSULTAR_INDEX``, exposed as :data:`ENTRY` under
+the :class:`PortalCategory` member ``FILING``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

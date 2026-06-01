@@ -1,4 +1,10 @@
-"""Repository-backed Renta expense aggregation from ledger catalogues."""
+"""Repository-backed Renta expense aggregation from ledger catalogues.
+
+The main entry point :func:`aggregate_renta_ledger_expenses_from_repositories`
+loads both a :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`
+and an :class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository` from the
+active bucket and feeds them to :func:`aggregate_renta_ledger_expenses`.
+"""
 
 from __future__ import annotations
 

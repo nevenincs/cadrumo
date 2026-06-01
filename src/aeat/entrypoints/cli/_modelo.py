@@ -3,7 +3,9 @@
 These commands read the registry spine and render it for operators: the
 :class:`ModeloDefinition` and its :class:`ModeloRevision` revisions for
 structure and deadlines, and the :class:`CalculationRevision` produced when a
-modelo is evaluated against a profile.
+modelo is evaluated against a profile. Filed declarations are represented by
+:class:`ModeloRecord` instances; lifecycle events are recorded to the profile
+audit trail through :class:`BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations

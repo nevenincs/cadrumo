@@ -1,6 +1,6 @@
 """Domain-level repository Protocol for the invoice catalogue.
 
-Application-layer code that persists or loads the invoice catalogue
+Application-layer code that persists or loads the :class:`InvoiceCatalogue`
 depends on this Protocol, not on the concrete adapter-backed
 ``InvoiceCatalogueRepository``. This keeps the domain layer free of
 adapter imports while still providing a typed port surface.

@@ -1,4 +1,12 @@
-"""Application service for invoice reconciliation workflows."""
+"""Application service for invoice reconciliation workflows.
+
+:func:`reconcile_invoice_catalogues` accepts an :class:`InvoiceCatalogue`
+and a :class:`TransactionCatalogue` directly.
+:func:`reconcile_invoice_repositories` is the CLI-facing backend: it loads
+an :class:`InvoiceCatalogueRepository` and a
+:class:`TransactionCatalogueRepository`, optionally applies every suggested
+link, and writes the mutated catalogues back.
+"""
 
 from __future__ import annotations
 

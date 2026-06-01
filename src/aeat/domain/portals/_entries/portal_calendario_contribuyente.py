@@ -1,7 +1,9 @@
 """Catalogue entry for the AEAT *Calendario del contribuyente* reference page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.CALENDAR_REFERENCE`.
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_CALENDARIO_CONTRIBUYENTE`` under
+the :class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.CALENDAR_REFERENCE`.
 """
 
 from __future__ import annotations

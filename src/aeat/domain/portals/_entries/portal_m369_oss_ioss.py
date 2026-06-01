@@ -1,9 +1,9 @@
-"""Registry entry for Modelo 369 — OSS / IOSS one-stop-shop return.
+"""Registry entry for Modelo 369 - OSS / IOSS one-stop-shop return.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M369_OSS_IOSS`` under :class:`PortalCategory` ``FILING``,
 exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

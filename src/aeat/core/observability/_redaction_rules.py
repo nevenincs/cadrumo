@@ -1,4 +1,4 @@
-"""Lazily-resolved DIAGNOSTIC-class redaction rule set.
+"""Lazily-resolved :class:`SensitivityClass` DIAGNOSTIC redaction rule set.
 
 The DIAGNOSTIC-class rule set is resolved lazily on first call so the
 observability package does not pull

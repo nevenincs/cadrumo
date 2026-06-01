@@ -26,6 +26,8 @@ The public surface is intentionally narrow:
   :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
   helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
   :class:`EncryptedJSON`, and :class:`HashedLookup`.
+- Classification — :class:`SensitivityClass` tags every persisted record
+  and governs the at-rest treatment applied by the substrate.
 """
 
 from __future__ import annotations

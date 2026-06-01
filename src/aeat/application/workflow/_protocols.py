@@ -13,7 +13,9 @@ surfaces — not concrete classes — for two reasons:
    production adapters at the workflow layer.
 
 Every Protocol here describes **only** the attributes the workflow
-engine actually reads.
+engine actually reads. :class:`DeadlineEngineProtocol` wraps the
+deadline engine's ``compute`` method that returns a :class:`Schedule`
+for a given :class:`TaxpayerProfile`.
 """
 
 from __future__ import annotations

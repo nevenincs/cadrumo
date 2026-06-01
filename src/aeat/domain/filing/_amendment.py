@@ -1,9 +1,13 @@
 """Strict amendment domain records for :mod:`aeat.domain.filing`.
 
-Houses the immutable records that describe an AEAT amendment — the
-:class:`BaseAmendment` shared shape, the two legally distinct concrete
-variants :class:`ModeloComplementaria` (LGT Art. 122.2) and
-:class:`ModeloSustitutiva` (LGT Art. 122.1), the
+Houses the immutable records that describe an AEAT amendment. The
+``amended_draft`` field on each amendment record holds the originating
+:class:`ModeloDraft` that the amendment modifies, keeping the draft's
+casilla arithmetic and tax due values bound to the amendment for
+audit purposes.
+
+Concrete variants are :class:`ModeloComplementaria` (LGT Art. 122.2)
+and :class:`ModeloSustitutiva` (LGT Art. 122.1), the
 :class:`CasillaChange` delta entries, and the :class:`AmendmentKind`
 enum. The orchestration use case
 :func:`aeat.application.filing.build_complementaria` lives at
@@ -13,10 +17,8 @@ only the typed shapes and the deterministic
 :mod:`aeat.domain.filing`) can persist amendments without depending
 on the application layer.
 
-Per ADR Amendment A5: ``ModeloComplementaria`` and
-``ModeloSustitutiva`` are distinct concrete pydantic classes; callers
-operate on the discriminated union ``ModeloComplementaria |
-ModeloSustitutiva``. There is no umbrella alias — pick the variant
+Callers operate on the discriminated union ``ModeloComplementaria |
+ModeloSustitutiva``. There is no umbrella alias - pick the variant
 that matches the LGT Art. 122 article you're filing under.
 """
 

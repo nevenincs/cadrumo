@@ -1,7 +1,8 @@
 """Registry entry for self-assessment payment via card or Bizum.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_PAGO_AUTOLIQUIDACION_TARJETA_BIZUM``, exposed as :data:`ENTRY`
+under the :class:`PortalCategory` member ``PAYMENT``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

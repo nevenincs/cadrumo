@@ -2,8 +2,9 @@
 
 The repository is the only sanctioned read/write path for the invoice
 catalogue. It stores the catalogue as an encrypted byte object via
-:class:`SecureObjectRepository` at FINANCIAL sensitivity; no plaintext
-invoice row, JSON catalogue, or envelope file lands on disk.
+:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL
+using an :class:`Envelope` wrapper; no plaintext invoice row, JSON
+catalogue, or envelope file lands on disk.
 """
 
 from __future__ import annotations

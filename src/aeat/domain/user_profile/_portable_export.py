@@ -1,11 +1,13 @@
 """Portable-export bundle for cross-bucket user-profile transfer.
 
 This module is isolated from :mod:`aeat.domain.user_profile._values` so the
-four heavy domain types it composes (``CalculationRevision``, ``WorkUnit``,
-``Transaction``, ``ModeloRecord``) — and their transitive registry-parse
-cost — do not enter ``sys.modules`` at user-profile package init. Callers
-that need the bundle import directly from this canonical-site path; the
-package surface intentionally does not re-export it.
+four heavy domain types it composes (:class:`CalculationRevision`,
+``WorkUnit``, ``Transaction``, :class:`ModeloRecord`) and their transitive
+registry-parse cost do not enter ``sys.modules`` at user-profile package
+init. The :class:`UserProfileRecord` is included via the ``profile`` field
+of :class:`UserProfilePortableExport`. Callers that need the bundle import
+directly from this canonical-site path; the package surface intentionally
+does not re-export it.
 """
 
 from __future__ import annotations

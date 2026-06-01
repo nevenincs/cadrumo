@@ -1,4 +1,9 @@
-"""Encrypted content-addressed cache for LLM responses."""
+"""Encrypted content-addressed cache for LLM responses.
+
+Each cache entry is stored as an encrypted secure object under
+:class:`SensitivityClass` DIAGNOSTIC so operator-identifying inputs are
+redacted before persistence.
+"""
 
 from __future__ import annotations
 

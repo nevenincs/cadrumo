@@ -1,7 +1,8 @@
 """Catalogue entry for the *Modelo 123* movable-capital withholdings procedure.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING`. Backs the periodic
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M123_RETENCIONES_CAPITAL`` under
+:class:`PortalCategory` ``FILING``. Backs the periodic
 self-assessment of withholdings on movable-capital income.
 """
 

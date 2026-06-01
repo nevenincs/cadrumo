@@ -1,7 +1,10 @@
 """Bundled-export serialiser and deserialiser for :class:`UserProfilePortableExport`.
 
-S105 — serialiser: reads all four financial-history categories from the
+The serialiser reads all four financial-history categories from the
 active bucket's repositories and populates the v2 bundle fields.
+The :class:`TransactionCatalogue` is loaded via
+:class:`TransactionCatalogueRepository` and is one of the four payload
+categories included in each export bundle.
 
 S106 — deserialiser: validates ``bundle_schema_version`` against
 ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before parsing; imports work units,

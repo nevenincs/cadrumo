@@ -1,4 +1,4 @@
-"""Generic SQL-backed envelope repository built on :class:`SecureObjectRepository`.
+"""Generic SQL-backed :class:`Envelope` repository built on :class:`SecureObjectRepository`.
 
 The 8 domain repositories that wrap :class:`SecureObjectRepository`
 (filing drafts, submissions, filing history, complementaria,

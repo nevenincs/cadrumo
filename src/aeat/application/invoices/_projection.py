@@ -1,4 +1,11 @@
-"""Application projections for invoice review and matching surfaces."""
+"""Application projections for invoice review and matching surfaces.
+
+:func:`project_invoice_reviews` accepts an :class:`InvoiceCatalogue` and
+returns one :class:`InvoiceReviewProjection` per invoice that satisfies the
+supplied filter spec. The match projection cross-references an
+:class:`InvoiceCatalogue` against a :class:`TransactionCatalogue` to
+surface payment linkage.
+"""
 
 from __future__ import annotations
 

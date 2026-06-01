@@ -1,9 +1,9 @@
-"""Registry entry for Modelo 303 — periodic IVA self-assessment.
+"""Registry entry for Modelo 303 - periodic IVA self-assessment.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M303_IVA_AUTOLIQUIDACION`` under :class:`PortalCategory`
+``FILING``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

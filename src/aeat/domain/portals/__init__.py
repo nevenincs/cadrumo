@@ -3,7 +3,9 @@
 This subpackage exposes the strict pydantic v2 registry of AEAT and
 adjacent portal metadata used by the project. The registry is built at import
 time from the per-portal entries under the private ``_entries`` package and is
-frozen as a :class:`types.MappingProxyType`.
+frozen as a :class:`types.MappingProxyType`. Each entry is a
+:class:`PortalMetadata` record keyed by a :class:`PortalCategory` and
+identified by a :class:`Portal` code.
 
 Consumers outside :mod:`aeat.domain.portals` MUST import from this module
 only; the underscore-prefixed submodules are internal and unstable.

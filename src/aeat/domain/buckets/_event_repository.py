@@ -2,6 +2,8 @@
 
 Persistence is delegated to :class:`SecureObjectRepository`, which handles
 encrypted BLOB storage and key management for the active profile bucket.
+Each stored record is wrapped in an :class:`Envelope` at
+:class:`SensitivityClass` ``FINANCIAL``.
 """
 
 from __future__ import annotations

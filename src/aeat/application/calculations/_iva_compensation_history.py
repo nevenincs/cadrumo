@@ -1,4 +1,10 @@
-"""Profile-scoped IVA compensation history built from filed Modelo 303s."""
+"""Profile-scoped IVA compensation history built from filed Modelo 303s.
+
+Records are stored at :class:`SensitivityClass` ``AUDIT`` under the IVA
+compensation history namespace. The repository exposes typed
+:class:`IvaCompensationPeriodState` objects; carry-forward projection is
+produced by :func:`build_iva_compensation_carry_forward_report`.
+"""
 
 from __future__ import annotations
 
