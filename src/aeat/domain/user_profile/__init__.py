@@ -38,7 +38,6 @@ from ._schema import (
 from ._values import (
     UserProfileFactValue,
     UserProfileFact,
-    UserProfilePortableExport,
     UserProfileRecord,
     UserProfileSnapshot,
     UserProfileStatus,
@@ -62,7 +61,6 @@ __all__ = [
     "ProfileSnapshotPolicy",
     "StoredProfileDriftError",
     "UserProfileFact",
-    "UserProfilePortableExport",
     "UserProfileRecord",
     "UserProfileRegistryContractIssue",
     "UserProfileRegistryContractReport",

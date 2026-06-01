@@ -1447,7 +1447,7 @@ def config_profile_import(
     from ....application.workflow._profile_bucket_scan import (
         read_profile_bucket_by_id,
     )
-    from ....domain.user_profile import UserProfilePortableExport
+    from ....domain.user_profile._portable_export import UserProfilePortableExport
 
     if not path.is_file():
         raise _CliRefusedBoundaryError(
