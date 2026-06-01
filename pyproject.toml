@@ -151,6 +151,11 @@ dev = [
   "pytest-rerunfailures>=15.0",
   # Parallel unit suite via opt-in `just test-parallel`.
   "pytest-xdist>=3.6.0",
+  # pytest-xdist's `-n auto` calls psutil.cpu_count; pin so `uv sync` restores
+  # a clean install if the cached one is corrupted (observed on this worktree:
+  # __init__.py missing, only the .pyc remained, so AttributeError evaded the
+  # xdist ImportError fallback).
+  "psutil>=5.9",
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
   "ruff>=0.15.12",
