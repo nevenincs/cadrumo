@@ -174,7 +174,7 @@ class RawTransaction(BaseModel):
     def display_counterparty(self) -> str:
         """Return :attr:`counterparty` coerced to an empty string when absent.
 
-        CSV importers may produce :class:`TransactionRaw` rows whose
+        CSV importers may produce :class:`RawTransaction` rows whose
         counterparty column is blank; :func:`_normalize_counterparty`
         collapses those to ``None`` so the domain model carries the
         true absent signal. The CLI ledger surface (list / view / payable

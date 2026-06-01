@@ -311,7 +311,7 @@ def find_rules(
             e.g. ``"MODELO:CASILLA"``. Rules whose
             ``references_casillas`` does not contain this value are
             skipped.
-        kind: Optional :class:`RuleKind` filter.
+        kind: Optional ``RuleKind`` filter.
         lang: Optional :class:`str` filter. When provided, rules
             whose statement cannot be resolved into ``lang`` under the
             configured fallback policy are skipped.

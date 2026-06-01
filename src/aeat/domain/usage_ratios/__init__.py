@@ -4,7 +4,7 @@ This subpackage owns the user-writable substrate for usage-ratio coefficients:
 a frozen pydantic profile (:class:`UsageRatioProfile`), an atomic encrypted
 round-trip via :func:`load_usage_ratios` / :func:`save_usage_ratios`, and the
 pure resolver :func:`resolve_user_ratio` consumed by the deductibility compute
-service in :mod:`aeat.domain.deductibility`.
+service in ``aeat.domain.deductibility``.
 
 Callers must import from this package root rather than reaching into the
 private submodules; the public surface listed in :data:`__all__` is the only

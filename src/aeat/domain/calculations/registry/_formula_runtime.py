@@ -68,7 +68,7 @@ class RegistryCalculationEntry(BaseModel):
     — input casillas and bound casillas are absent from the entries
     tuple. Callers that need provenance for non-computed casillas
     must look them up against
-    :attr:`RegistrySnapshot.revision.casillas` directly.
+    ``RegistrySnapshot.revision.casillas`` directly.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -172,7 +172,7 @@ def calculate_registry_snapshot(
 
     ``enum_binding_values`` carries string-valued bindings (typically
     profile-sourced enums like ``CCAA``) that the
-    :func:`lookup_bracket_by_ccaa` op routes against. They are kept in
+    ``lookup_bracket_by_ccaa`` op routes against. They are kept in
     a separate mapping from ``binding_values`` so the Decimal-only
     contract on numeric bindings stays intact.
 

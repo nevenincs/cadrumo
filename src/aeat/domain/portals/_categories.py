@@ -4,7 +4,7 @@ These enums are the keying dimensions the registry exposes on
 :class:`aeat.domain.portals.PortalMetadata`: the functional category a portal
 belongs to, the authentication method(s) it accepts, the URL-stability
 tier it sits in, and the AEAT-family subdomain it is hosted on. Every
-enum is a :class:`str.StrEnum` so members compare equal to their
+enum is a :class:`enum.StrEnum` so members compare equal to their
 canonical string representation across JSON / CLI boundaries.
 """
 

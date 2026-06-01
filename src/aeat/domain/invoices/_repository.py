@@ -120,7 +120,7 @@ class InvoiceCatalogueRepository:
         """Persist ``catalogue`` atomically under the file lock.
 
         The on-disk database value is an encrypted BLOB at the
-        :attr:`~aeat.adapters.persistence.storage.SensitivityClass.FINANCIAL`
+        :attr:`~aeat.core.classification.SensitivityClass.FINANCIAL`
         classification. No plaintext invoice row lands on disk.
 
         Args:
