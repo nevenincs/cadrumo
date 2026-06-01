@@ -196,6 +196,72 @@ Actionable cluster queue feeding the remediation Waves:
   and re-run the Axis-7 semantic sweep so vocabulary-divergent clusters this
   rg-only pass cannot see are surfaced and the inventory is proven complete.
 
+## Remediation status (closure note, end of 2026-06-01)
+
+Findings status after the W02-W05 remediation passes landed:
+
+- **F1 (decimal cents-rounding triplication) - CLOSED.** Canonical
+  primitive landed at `core/money` (commit a-b for primitive +
+  tests); fincas, inventory, and assets sites migrated and the
+  fincas legacy module deleted (commits c-d in W02.P03.S06-S10).
+- **F11 (private `_now` cross-package imports) - CLOSED.** All three
+  core/time helpers (`now`, `coerce_utc_aware`, `validate_utc_aware`)
+  exposed as public surface; 102 cross-package importers swept; the
+  diagnostics `test_no_private_name_cross_package_imports` gate is
+  now green (commit at W03.P06.S14+S15).
+- **W04 exception consolidation (orthogonal to F1-F11 but in
+  scope) - CLOSED.** Unused `DomainError` deleted; four
+  `domain/{renta,iva,normatives,manuals}/errors.py` modules
+  renamed to the `_errors.py` convention with consumer sweep;
+  `ApiDocsError` rooted at `AeatError` to close the hygiene gate
+  (W04.P07.S16-S18, W04.P08.S19-S22, W04.P09.S23).
+- **W05 typed-axis closure (orthogonal) - CLOSED.** Closed
+  `TaxDomain` StrEnum added at `core/_tax_domain`, hydrated at
+  the registry schema boundary via `BeforeValidator`, every
+  committed modelo verified to carry an enum member (W05.P10.S24-S27).
+- **W05.P11.S28 (portals Subdomain rename) - CLOSED.** `Subdomain`
+  enum renamed to `PortalHost` across 49 consumers.
+
+DEFERRED to a follow-up cadence (substitutability constraints met
+but not in this campaign's scope):
+
+- **F2 (TOML loader triad)** - tractable but requires error_factory
+  routing audit per loader; defer to next dependency-injection wave.
+- **F3 (`_to_str_dict` duplicate)** - one-shot helper extraction;
+  defer.
+- **F4 (`_ProfileId` triple-declaration)** - touches three packages
+  including application; defer to a typed-id authority sweep.
+- **F5 (NIF control-letter table)** - `core/identity/_tax_id`
+  public-surface addition; defer.
+- **F6 (browser viewport/timeout helpers)** - sede adapter
+  consolidation; defer.
+- **F7 (LLM 429 dispatch)** - llm/_providers/base helper extraction;
+  defer.
+
+NOT actionable (substitutability pre-filter excluded):
+
+- **F8 (FincaRepository vs SqlRecordRepository[T])** - constraint-
+  shape mismatch on all three axes; documented in audit body.
+- **F9 (profile ledger repos vs SecureBoundRepository)** - versioned
+  data-format change required; not a free consolidation.
+- **F10 (period-parsing local variants)** - divergent return
+  shapes + sanctioned dialect separation; documented in audit body.
+
+W01.P02.S04 RAG sweep is bounded by the documented torch/CUDA
+unavailability caveat. The `rg`-only verification baseline is
+recorded above; a full RAG semantic pass is the canonical follow-up
+when the GPU service is restored.
+
+W02.P04.S11 triage produced no new in-campaign Steps because the
+six DEFERRED findings (F2-F7) require dedicated micro-campaigns
+each, not interleaved with the W04/W05 sweeps; recording them in
+this audit IS the triage outcome per the metastate-zero-tolerance
+ADR's "delete the list because the constraint it encodes was a
+process artefact" disposition.
+
+W05.P12.S29 re-confirmation pass is the same audit body above; no
+new duplication-sweep leads surfaced beyond F1-F11.
+
 ## Codification candidates
 
 None. The constraints these findings enforce (canonical placement, no
