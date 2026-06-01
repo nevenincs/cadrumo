@@ -20,11 +20,12 @@ Public functions:
 from __future__ import annotations
 
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core.money import round_to_cents as _quantize
 from ..errors import (
     InventoryLedgerError as _InventoryLedgerError,
     InventoryValidationError as _InventoryValidationError,
@@ -34,7 +35,6 @@ from ..errors import (
 INVENTORY_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
-_CENT = Decimal("0.01")
 _ZERO = Decimal("0.00")
 _ONE = Decimal("1")
 _HUNDRED = Decimal("100")
@@ -498,10 +498,6 @@ def _sorted_movements(ledger: InventoryLedger) -> tuple[MovementRecord, ...]:
 
 def _layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
     return sum((layer.quantity * layer.unit_cost for layer in layers), _ZERO)
-
-
-def _quantize(value: Decimal) -> Decimal:
-    return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
 __all__ = [

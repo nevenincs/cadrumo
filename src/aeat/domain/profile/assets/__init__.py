@@ -10,17 +10,17 @@ year accruals), and :class:`LibertadAmortizacionElection`.
 from __future__ import annotations
 
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core.money import round_to_cents as _quantize
 from ..errors import AssetValidationError as _AssetValidationError
 
 ASSETS_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
-_CENT = Decimal("0.01")
 _ONE = Decimal("1")
 _HUNDRED = Decimal("100")
 
@@ -235,10 +235,6 @@ class AssetsLedgerDocument(BaseModel):
         if value != ASSETS_SCHEMA_VERSION:
             raise _AssetValidationError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
         return value
-
-
-def _quantize(value: Decimal) -> Decimal:
-    return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
 __all__ = [

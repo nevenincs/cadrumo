@@ -59,11 +59,11 @@ Consolidates verified substitutable duplication clusters to canonical homes with
 
 Create the canonical core money/Decimal primitive and migrate the three confirmed cents-rounding sites onto it.
 
-- [ ] `W02.P03.S06` - Create the canonical core money Decimal primitive with half-up cents rounding; `src/aeat/core/money/__init__.py`.
-- [ ] `W02.P03.S07` - Add a behaviour and roundtrip test for the core money primitive; `src/aeat/core/money/test_money.py`.
-- [ ] `W02.P03.S08` - Migrate the fincas rounding helper onto the core money primitive; `src/aeat/domain/fincas/_rounding.py`.
-- [ ] `W02.P03.S09` - Migrate the inventory quantize helper onto the core money primitive; `src/aeat/domain/profile/inventory/__init__.py`.
-- [ ] `W02.P03.S10` - Migrate the assets quantize helper onto the core money primitive; `src/aeat/domain/profile/assets/__init__.py`.
+- [x] `W02.P03.S06` - Create the canonical core money Decimal primitive with half-up cents rounding; `src/aeat/core/money/__init__.py`.
+- [x] `W02.P03.S07` - Add a behaviour and roundtrip test for the core money primitive; `src/aeat/core/money/test_money.py`.
+- [x] `W02.P03.S08` - Migrate the fincas rounding helper onto the core money primitive; `src/aeat/domain/fincas/_rounding.py`.
+- [x] `W02.P03.S09` - Migrate the inventory quantize helper onto the core money primitive; `src/aeat/domain/profile/inventory/__init__.py`.
+- [x] `W02.P03.S10` - Migrate the assets quantize helper onto the core money primitive; `src/aeat/domain/profile/assets/__init__.py`.
 
 ### Phase `W02.P04` - delta-surfaced cluster triage
 
