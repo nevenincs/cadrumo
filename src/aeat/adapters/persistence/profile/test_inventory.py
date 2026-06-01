@@ -72,7 +72,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
                 sku="LEAK-CANARY-SKU",
                 quantity=Decimal("1"),
                 taxable_base=Decimal("100.00"),
-                vat_rate=Decimal("21.00"),
+                iva_rate=Decimal("21.00"),
                 vat_amount=Decimal("21.00"),
             ),
         ),

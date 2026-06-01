@@ -512,7 +512,7 @@ class InvoiceObservation(BaseModel):
 
     The fields are scoped to the facts every IVA modelo needs to classify a
     transaction. ``intracommunity_clave`` follows the AEAT clave-de-operacion
-    enum (E, M, H, A, T, S, I, R, D, C). ``vat_regime`` is open-ended so
+    enum (E, M, H, A, T, S, I, R, D, C). ``iva_regime`` is open-ended so
     domestic-IVA modelos can carry their regime classification alongside.
     """
 
@@ -523,7 +523,7 @@ class InvoiceObservation(BaseModel):
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     base_amount: Decimal
-    vat_regime: str | None = Field(default=None, max_length=64)
+    iva_regime: str | None = Field(default=None, max_length=64)
     intracommunity_clave: str | None = Field(default=None, max_length=2)
     is_rectification: bool = False
     rectified_year: int | None = Field(default=None, ge=2000, le=2099)
@@ -589,7 +589,7 @@ class InvoiceObservationRequirement(BaseModel):
     binding_ids: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
-    vat_regime: str | None = None
+    iva_regime: str | None = None
 
     @field_validator("binding_ids", "claves")
     @classmethod
@@ -607,7 +607,7 @@ class _InvoiceSelector(BaseModel):
     fact: _InvoiceFact
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
-    vat_regime: str | None = Field(default=None, max_length=64)
+    iva_regime: str | None = Field(default=None, max_length=64)
     row_field: _InvoiceRowField | None = None
     grouping: _InvoiceGrouping | None = None
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -644,7 +644,7 @@ def invoice_binding_requirements(
         if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
             continue
         selector = _validated_invoice_selector(binding)
-        key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.vat_regime)
+        key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.iva_regime)
         grouped.setdefault(key, set()).add(binding.id)
     requirements: list[InvoiceObservationRequirement] = []
     for (claves, scope, regime), binding_ids in sorted(
@@ -656,7 +656,7 @@ def invoice_binding_requirements(
                 binding_ids=tuple(sorted(binding_ids)),
                 claves=claves,
                 rectification_scope=scope,
-                vat_regime=regime,
+                iva_regime=regime,
             )
         )
     return tuple(requirements)
@@ -779,7 +779,7 @@ def resolve_invoice_binding_row_values(
     """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
-    # Group bindings by (grouping, rectification_scope, claves, vat_regime) so
+    # Group bindings by (grouping, rectification_scope, claves, iva_regime) so
     # that bindings sharing a row source share row indexes.
     cohorts: dict[
         tuple[_InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
@@ -796,7 +796,7 @@ def resolve_invoice_binding_row_values(
             selector.grouping,
             selector.rectification_scope,
             tuple(sorted(selector.claves)),
-            selector.vat_regime,
+            selector.iva_regime,
         )
         cohorts.setdefault(cohort_key, []).append((binding, selector))
     for cohort_key, members in cohorts.items():
@@ -967,7 +967,7 @@ def _filter_invoice_observations(
             continue
         if clave_filter and observation.intracommunity_clave not in clave_filter:
             continue
-        if selector.vat_regime is not None and observation.vat_regime != selector.vat_regime:
+        if selector.iva_regime is not None and observation.iva_regime != selector.iva_regime:
             continue
         yield observation
 
@@ -1778,7 +1778,7 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
         country_code=observation.country_code,
         transaction_date=observation.transaction_date,
         base_amount=observation.base_amount,
-        vat_regime=None,
+        iva_regime=None,
         intracommunity_clave=observation.intracommunity_clave,
         is_rectification=observation.is_rectification,
         rectified_year=observation.rectified_year,

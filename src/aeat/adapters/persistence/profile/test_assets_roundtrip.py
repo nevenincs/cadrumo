@@ -52,7 +52,7 @@ def _populated_asset() -> AssetRecord:
         acquisition_date=date(2024, 3, 15),
         cost_basis=Decimal("11050.00"),
         taxable_base=Decimal("10000.00"),
-        vat_rate=Decimal("21.00"),
+        iva_rate=Decimal("21.00"),
         vat_amount=Decimal("2100.00"),
         deductible_vat_ratio=Decimal("0.50"),
         gross_total=Decimal("12100.00"),

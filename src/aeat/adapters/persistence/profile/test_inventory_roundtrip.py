@@ -65,7 +65,7 @@ def _populated_ledger() -> InventoryLedger:
                 quantity=Decimal("75"),
                 unit_cost=Decimal("11.00"),
                 taxable_base=Decimal("825.00"),
-                vat_rate=Decimal("21.00"),
+                iva_rate=Decimal("21.00"),
                 vat_amount=Decimal("173.25"),
                 deductible_vat_ratio=Decimal("1.00"),
             ),

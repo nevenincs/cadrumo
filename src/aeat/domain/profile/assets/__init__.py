@@ -100,9 +100,9 @@ class AssetRecord(BaseModel):
         taxable_base: Invoice taxable base (VAT-exclusive). When set,
             ``cost_basis`` must equal ``taxable_base + non-deductible
             VAT``.
-        vat_rate: VAT percentage applied to the invoice (0-100).
+        iva_rate: VAT percentage applied to the invoice (0-100).
         vat_amount: Optional explicit VAT amount; when set, must equal
-            ``taxable_base * vat_rate / 100``.
+            ``taxable_base * iva_rate / 100``.
         deductible_vat_ratio: Fraction of input VAT the contribuyente
             may deduct (0-1).
         gross_total: Optional explicit invoice total; when set, must
@@ -126,7 +126,7 @@ class AssetRecord(BaseModel):
     acquisition_date: date
     cost_basis: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = Field(default=None, gt=Decimal("0"))
-    vat_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
+    iva_rate: Decimal = Field(default=Decimal("21.00"), ge=Decimal("0"), le=Decimal("100"))
     vat_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     deductible_vat_ratio: Decimal = Field(default=Decimal("1.00"), ge=Decimal("0"), le=Decimal("1"))
     gross_total: Decimal | None = Field(default=None, gt=Decimal("0"))
@@ -148,9 +148,9 @@ class AssetRecord(BaseModel):
     def _validate_vat_decomposition(self) -> AssetRecord:
         """Cross-check VAT decomposition against ``cost_basis``."""
         base = self.taxable_base or self.cost_basis
-        computed_vat = _quantize(base * self.vat_rate / _HUNDRED)
+        computed_vat = _quantize(base * self.iva_rate / _HUNDRED)
         if self.vat_amount is not None and self.vat_amount != computed_vat:
-            raise _AssetValidationError("vat_amount must equal taxable_base * vat_rate")
+            raise _AssetValidationError("vat_amount must equal taxable_base * iva_rate")
         computed_gross = _quantize(base + computed_vat)
         if self.gross_total is not None and self.gross_total != computed_gross:
             raise _AssetValidationError("gross_total must equal taxable_base + vat_amount")
@@ -169,7 +169,7 @@ class AssetRecord(BaseModel):
     @property
     def resolved_vat_amount(self) -> Decimal:
         """Return the explicit VAT amount or derive it from the taxable base and rate."""
-        return self.vat_amount or _quantize(self.resolved_taxable_base * self.vat_rate / _HUNDRED)
+        return self.vat_amount or _quantize(self.resolved_taxable_base * self.iva_rate / _HUNDRED)
 
     @property
     def resolved_gross_total(self) -> Decimal:

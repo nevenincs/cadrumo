@@ -3109,8 +3109,8 @@ def inventory_movement_add(
     taxable_base: str | None = typer.Option(
         None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for VAT).")
     ),
-    vat_rate: str = typer.Option(
-        "21.00", "--vat-rate", help=tr("cli.app.ledger.inventory.vat_rate_help", default="VAT rate in percent.")
+    iva_rate: str = typer.Option(
+        "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.vat_rate_help", default="VAT rate in percent.")
     ),
 ) -> None:
     from ...application.inventory import InventoryMovementCommand
@@ -3135,7 +3135,7 @@ def inventory_movement_add(
         quantity=_parse_required_decimal(quantity, label="quantity"),
         unit_cost=_parse_decimal(unit_cost, label="unit-cost"),
         taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-        vat_rate=_parse_required_decimal(vat_rate, label="vat-rate"),
+        iva_rate=_parse_required_decimal(iva_rate, label="iva-rate"),
     )
     result = _inventory_service().movement_add(
         bucket_id=bucket_id,
