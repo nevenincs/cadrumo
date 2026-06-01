@@ -281,9 +281,9 @@ Migrate remaining bare emit sites: _overview.py (7), _registry_corpus.py (7), _c
 Author OutputSchema subclasses for the 7 overview command emit sites in _overview_payloads.py, register each, and migrate the emit sites.
 
 - [x] `W05.P18.S148` - author OverviewStatusResult OutputSchema subclass with @register_schema decorator for overview.status; `src/aeat/entrypoints/cli/_overview_payloads.py`.
-- [ ] `W05.P18.S149` - migrate all overview_status bare emit sites to _emit_envelope using typed OverviewStatusResult; `src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W05.P18.S149` - migrate all overview_status bare emit sites to _emit_envelope using typed OverviewStatusResult; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W05.P18.S150` - append overview command paths to MIGRATED_COMMANDS and import _overview_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W05.P18.S151` - re-baseline overview CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_overview.py`.
+- [x] `W05.P18.S151` - re-baseline overview CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_overview.py`.
 
 ### Phase `W05.P19` - _registry_corpus.py payload classes - 7 emit sites
 
@@ -299,27 +299,27 @@ Author OutputSchema subclasses for the 7 registry-corpus command emit sites in _
 - [x] `W05.P19.S159` - migrate list_manuals_cmd bare emit site to _emit_envelope using typed ManualListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
 - [x] `W05.P19.S160` - author ManualShowResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.show; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
 - [x] `W05.P19.S161` - migrate show_manual_cmd bare emit site to _emit_envelope using typed ManualShowResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S162` - author ManualRulesListResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.rules.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S163` - migrate list_manual_rules_cmd bare emit site to _emit_envelope using typed ManualRulesListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S164` - author ManualVerifyResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.verify; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `W05.P19.S165` - migrate verify_manual_cmd bare emit site to _emit_envelope using typed ManualVerifyResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
-- [ ] `W05.P19.S166` - append registry-corpus command paths to MIGRATED_COMMANDS and import _registry_corpus_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W05.P19.S167` - re-baseline registry-corpus CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_registry_corpus.py`.
+- [x] `W05.P19.S162` - author ManualRulesListResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.rules.list; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S163` - migrate list_manual_rules_cmd bare emit site to _emit_envelope using typed ManualRulesListResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S164` - author ManualVerifyResult OutputSchema subclass with @register_schema decorator for registry_corpus.manuals.verify; `src/aeat/entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `W05.P19.S165` - migrate verify_manual_cmd bare emit site to _emit_envelope using typed ManualVerifyResult; `src/aeat/entrypoints/cli/_registry_corpus.py`.
+- [x] `W05.P19.S166` - append registry-corpus command paths to MIGRATED_COMMANDS and import _registry_corpus_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P19.S167` - re-baseline registry-corpus CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/test_registry_corpus.py`.
 
 ### Phase `W05.P20` - _config/_google.py payload classes - 4 emit sites
 
 Author OutputSchema subclasses for the 4 google-config command emit sites in _config/_google_payloads.py, register each, and migrate the emit sites.
 
-- [ ] `W05.P20.S168` - author GoogleRegisterResult OutputSchema subclass with @register_schema decorator for config.google.register; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
-- [ ] `W05.P20.S169` - migrate google_register bare emit site to _emit_envelope using typed GoogleRegisterResult; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W05.P20.S170` - author GoogleLoginResult OutputSchema subclass with @register_schema decorator for config.google.login; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
-- [ ] `W05.P20.S171` - migrate google_login bare emit site to _emit_envelope using typed GoogleLoginResult; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W05.P20.S172` - author GoogleStatusResult OutputSchema subclass with @register_schema decorator for config.google.status; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
-- [ ] `W05.P20.S173` - migrate google_status bare emit site to _emit_envelope using typed GoogleStatusResult; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W05.P20.S174` - author GoogleLogoutResult OutputSchema subclass with @register_schema decorator for config.google.logout; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
-- [ ] `W05.P20.S175` - migrate google_logout bare emit site to _emit_envelope using typed GoogleLogoutResult; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `W05.P20.S176` - append google-config command paths to MIGRATED_COMMANDS and import _config._google_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W05.P20.S177` - re-baseline google CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/_config/test_google_sync_push.py`.
+- [x] `W05.P20.S168` - author GoogleRegisterResult OutputSchema subclass with @register_schema decorator for config.google.register; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
+- [x] `W05.P20.S169` - migrate google_register bare emit site to _emit_envelope using typed GoogleRegisterResult; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W05.P20.S170` - author GoogleLoginResult OutputSchema subclass with @register_schema decorator for config.google.login; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
+- [x] `W05.P20.S171` - migrate google_login bare emit site to _emit_envelope using typed GoogleLoginResult; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W05.P20.S172` - author GoogleStatusResult OutputSchema subclass with @register_schema decorator for config.google.status; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
+- [x] `W05.P20.S173` - migrate google_status bare emit site to _emit_envelope using typed GoogleStatusResult; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W05.P20.S174` - author GoogleLogoutResult OutputSchema subclass with @register_schema decorator for config.google.logout; `src/aeat/entrypoints/cli/_config/_google_payloads.py`.
+- [x] `W05.P20.S175` - migrate google_logout bare emit site to _emit_envelope using typed GoogleLogoutResult; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [x] `W05.P20.S176` - append google-config command paths to MIGRATED_COMMANDS and import _config._google_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P20.S177` - re-baseline google CLI surface tests that previously asserted bare-payload JSON shape; `src/aeat/entrypoints/cli/_config/test_google_sync_push.py`.
 
 ### Phase `W05.P21` - _config/_profile_census.py payload classes - 4 emit sites
 
