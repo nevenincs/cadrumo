@@ -73,7 +73,7 @@ from pydantic import (
 )
 
 from ..fincas._rounding import _round_to_cents
-from .errors import ProrrataInputError, ProrrataSectorError
+from ._errors import ProrrataInputError, ProrrataSectorError
 
 
 class _ProrrataStrictFrozen(BaseModel):
@@ -88,7 +88,7 @@ class _ProrrataStrictFrozen(BaseModel):
 
 SectorId = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_\-.]+$"),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64, pattern=r"^[-._a-zA-Z0-9]+$"),
 ]
 
 

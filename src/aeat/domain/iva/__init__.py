@@ -90,7 +90,7 @@ from ._schema import (
     IvaVerificationReport,
 )
 from ._verify import verify_catalogue
-from .errors import (
+from ._errors import (
     ProrrataError,
     ProrrataInputError,
     ProrrataSectorError,

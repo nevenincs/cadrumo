@@ -609,7 +609,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaCatalogueError",
+        "aeat.domain.iva._errors.IvaCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -620,7 +620,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaCategoryNotFoundError",
+        "aeat.domain.iva._errors.IvaCategoryNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -631,7 +631,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaClassificationError",
+        "aeat.domain.iva._errors.IvaClassificationError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CLASSIFICATION",
             category=ErrorCategory.ERROR,
@@ -642,7 +642,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaError",
+        "aeat.domain.iva._errors.IvaError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT",
             category=ErrorCategory.ERROR,
@@ -653,7 +653,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaRateNotFoundError",
+        "aeat.domain.iva._errors.IvaRateNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -664,7 +664,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaRateOverlapError",
+        "aeat.domain.iva._errors.IvaRateOverlapError",
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
@@ -1516,7 +1516,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.IvaValidationError",
+        "aeat.domain.iva._errors.IvaValidationError",
         ErrorCode(
             code="ERROR_VAT_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1527,7 +1527,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.ProrrataError",
+        "aeat.domain.iva._errors.ProrrataError",
         ErrorCode(
             code="ERROR_VAT_PRORRATA",
             category=ErrorCategory.ERROR,
@@ -1538,7 +1538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.ProrrataInputError",
+        "aeat.domain.iva._errors.ProrrataInputError",
         ErrorCode(
             code="ERROR_VAT_PRORRATA_INPUT",
             category=ErrorCategory.ERROR,
@@ -1549,7 +1549,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.iva.errors.ProrrataSectorError",
+        "aeat.domain.iva._errors.ProrrataSectorError",
         ErrorCode(
             code="ERROR_VAT_PRORRATA_SECTOR",
             category=ErrorCategory.ERROR,

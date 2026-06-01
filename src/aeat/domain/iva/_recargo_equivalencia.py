@@ -38,7 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.resources import bundled_path
 from ._schema import IvaRateKind
-from .errors import IvaCatalogueError, IvaValidationError
+from ._errors import IvaCatalogueError, IvaValidationError
 
 
 class LivaArt161RecargoRates(BaseModel):
