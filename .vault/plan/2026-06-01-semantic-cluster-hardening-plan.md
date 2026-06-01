@@ -141,6 +141,38 @@ Re-confirm prior duplication-sweep conceptual leads against current state and in
 
 - [x] `W05.P12.S29` - Re-confirm prior duplication-sweep conceptual leads and insert one Step per confirmed redefinition; `.vault/audit`.
 
+## Wave `W06` - registry calculation-gate red remediation
+
+Restore the registry meta-gates and calculation-completeness coverage to green. Read-only triage classified the 7 standing registry-gate failures as 2 real coverage/provenance gaps (M210/2025 completeness manifest; M390 fixture provenance) plus 5 stale-baseline / allowlist / born-stale-test drifts; none are filing-math defects, all self-introduced by rapid registry building. Each Step is gated by re-running its named test to green.
+
+### Phase `W06.P13` - completeness-manifest restoration
+
+Close calculation-completeness coverage: re-derive the drifted M100/2024 manifest from the calculation surface (stale), and author the missing M210/2025 manifest so the load-time gate is live for IRNR 2025 (real coverage gap).
+
+- [ ] `W06.P13.S30` - Re-derive the modelo-100/2024 calculation-completeness manifest from the registry calculation surface (STALE: ~41 closure-only casillas drifted in since last refresh); `use derive_calculation_completeness_casillas, not hand-typed numbers; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/completeness-manifest.toml`.
+- [ ] `W06.P13.S31` - Author the missing modelo-210/2025 completeness manifest (REAL coverage gap: 7-casilla closure, gate currently dark for IRNR 2025) so the load-time completeness gate is live; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/completeness-manifest.toml`.
+
+### Phase `W06.P14` - validator reviewability baseline
+
+Refresh the per-module reviewability baselines after benign docstring growth (4 stale baselines) and address the one real module-size regression in _validate_cross_revision.py (387 lines).
+
+- [ ] `W06.P14.S32` - Bump the 4 stale per-module line baselines drifted past by docstring/xlink growth (_validate.py 204->206, _validate_record_sections.py 238->240, _validate_relation_periods.py 198->203, _validate_revision_sections.py 252->254); `src/aeat/domain/calculations/registry/test_registry_reviewability.py`.
+- [ ] `W06.P14.S33` - Resolve _validate_cross_revision.py exceeding the 300-line reviewability cap (REAL: 387 lines from the continuity feature): split the continuity-drift helpers into a sibling module, or add a reviewed explicit baseline; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
+
+### Phase `W06.P15` - meta-gate allowlist and waiver refresh
+
+Re-curate the two frozen-list meta-gates that drifted red against legitimate downstream changes: the schema-hygiene validator-test allowlist and the hand-summed-aggregation waiver list.
+
+- [ ] `W06.P15.S34` - Add the 3 legitimate validator-mechanics test files (test_schema.py, test_registry_schema.py, test_catalogue_verification.py) to the schema-authority-construction allowlist (they exercise broken-shape inputs the loader cannot reach); `src/aeat/domain/calculations/registry/test_schema_hygiene.py`.
+- [ ] `W06.P15.S35` - Refresh the hand-summed-aggregation waivers: rename the stale prior_filing_history->prior_year_history key, add waivers for the new legitimate tests, and confirm the 2 cross-dependency cumulative-sum asserts against an oracle or convert to delta-proof; `src/aeat/domain/calculations/registry/test_tautology_gate.py`.
+
+### Phase `W06.P16` - born-stale test and fixture provenance
+
+Repair the born-stale legal-entity rate-schedule test against the restructured Modelo 200 formula, and reconcile the M390 verification-source provenance tag with its mixed real/synthetic fixture pool.
+
+- [ ] `W06.P16.S36` - Fix the born-stale legal-entity rate-schedule test to navigate the restructured nested dispatch (args[2].args[2].args[2].dispatch_table) and assert the full 8-key entity-form set including sal/sll; `src/aeat/domain/calculations/registry/test_taxpayer_rate_schedules.py`.
+- [ ] `W06.P16.S37` - Reconcile the M390 verification_source provenance (REAL mislabel): regenerate 2021-0A as a synthetic fixture matching the synthetic_from_aeat_published_text tag, or split the mixed real/synthetic pool by tagged profile; do not revert the tag; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+
 ## Parallelization
 
 W01 (the delta-audit gate) must land first; it produces the verified-cluster
