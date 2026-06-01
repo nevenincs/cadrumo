@@ -150,6 +150,7 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "direction",
     "counterparty",
     "description",
+    "source_jurisdiction",
     "business_classification",
     "business_pct",
     "category_id",
