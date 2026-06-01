@@ -221,8 +221,13 @@ Run a fresh-context honesty review against the closure summary before declaring 
 
 ## Wave `W06` - build-time CLI reference migration
 
-Replace the generate-and-commit CLI reference (superseded W02.P07 and decisions 1-2 of the CLI-conformance ADR) with a build-time sphinx-click projection of the live command tree, rendered from the English tr() help. Retire the bespoke generator, the committed docs/cli pages, and the drift test.
+Replace the generate-and-commit CLI reference (supersedes W02.P07 and decisions 1-2 of the CLI-conformance ADR) with a build-time projection of the live command tree rendered from the English tr() help by the existing flat renderer, run in a builder-inited hook into a gitignored docs/cli. Retire the committed pages and the byte-for-byte drift test; conformance shifts to rendering the reference in a fresh English-pinned subprocess.
 
-### Phase `W06.P22` - sphinx-click build-time projection
+### Phase `W06.P22` - build-time flat-renderer projection
 
-Sanitize RST-unsafe help, expose the Click command, wire sphinx-click into the build pinned to English, retire the generator and committed pages, and confirm the live reference renders green.
+Pin English output language before any project import, render the CLI reference from the materialised command tree via the existing flat renderer in a builder-inited hook into a gitignored docs/cli, retire the committed pages and drift test, reframe the conformance test to render into a temporary directory, and confirm the offline nitpicky build renders the reference green.
+
+- [x] `W06.P22.S68` - Pin English output language and render the CLI reference from the live command tree in a builder-inited hook; `docs/conf.py`.
+- [x] `W06.P22.S69` - Gitignore the build-time CLI reference directory and retire the committed pages and byte-for-byte drift test; `.gitignore`.
+- [x] `W06.P22.S70` - Reframe the CLI reference conformance test to render into a fresh English-pinned temporary directory rather than reading committed pages; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
+- [x] `W06.P22.S71` - Stop rewriting __module__ on re-exported json-contract primitives so the build-time CLI import no longer drops them from autodoc; `src/aeat/entrypoints/cli/_schemas.py`.
