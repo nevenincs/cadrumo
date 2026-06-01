@@ -4,6 +4,8 @@ aeat.domain package
 .. automodule:: aeat.domain
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------
@@ -40,4 +42,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.domain._errors
+   aeat.domain._identifiers
    aeat.domain.period
