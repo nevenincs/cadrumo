@@ -174,7 +174,7 @@ from ....core._period import StandardPeriodCode
 
 _STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
 _EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
-_AD_HOC_PATTERN = r"^AD-HOC$"
+_AD_HOC_PATTERN = re.compile(r"^AD-HOC$")
 _EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
 
 
@@ -194,7 +194,7 @@ def _validate_period_code(value: object) -> object:
         raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
     if value in _STANDARD_PERIOD_CODES:
         return value
-    if _EXT_PATTERN.match(value) or value == _AD_HOC_PATTERN or _EVENT_PATTERN.match(value):
+    if _EXT_PATTERN.match(value) or _AD_HOC_PATTERN.match(value) or _EVENT_PATTERN.match(value):
         return value
     raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
 

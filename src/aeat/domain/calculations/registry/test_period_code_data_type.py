@@ -86,6 +86,11 @@ class TestPeriodCodeRejects:
             "FY2024",      # year-style
             "EVENT-",      # event needs number
             "AD HOC",      # space variant rejected
+            "^AD-HOC$",    # the raw regex literal must NOT pass — a previous
+                           # bug compared values against this string instead
+                           # of regex-matching against the AD-HOC pattern;
+                           # this anti-tautology guard pins the fix and would
+                           # accept the literal back if the regression returns
         ],
     )
     def test_invalid_inputs_rejected_through_adapter(self, raw: str) -> None:
