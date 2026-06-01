@@ -10,7 +10,15 @@ related:
   - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'
 ---
 
-
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `schema-hardening` `continuity ADR conformance` plan
 
@@ -68,7 +76,7 @@ Close generic continuity-validator gaps without adding modelo-specific schema or
 
 Apply the generic substrate to corpus safety gates only after validator conformance is proven.
 
-- [ ] `P03.S04` - Add registry TOML file-size and fragmentation regression gate; `src/aeat/domain/calculations/registry`.
+- [x] `P03.S04` - Add registry TOML file-size and fragmentation regression gate; `src/aeat/domain/calculations/registry`.
 - [ ] `P03.S05` - Author the next evidence-grounded M100 continuity slice using only generic continuity records; `src/aeat/_data/registry/aeat/modelos/100`.
 
 ### Phase `P04` - evidence and closeout
