@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.attachment import AttachmentStore
-from aeat.domain.attachments._enums import AttachmentKind, AttachmentSource
-from aeat.domain.attachments._errors import AttachmentNotFoundError
-from aeat.domain.attachments._service import (
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ._enums import AttachmentKind, AttachmentSource
+from ._errors import AttachmentNotFoundError
+from ._service import (
     add_attachment,
     list_attachments,
     load_attachment,
 )
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

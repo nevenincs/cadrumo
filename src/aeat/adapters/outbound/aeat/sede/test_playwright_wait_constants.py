@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede._browser_constants import (
+from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED,
     PLAYWRIGHT_WAIT_NETWORKIDLE,
 )

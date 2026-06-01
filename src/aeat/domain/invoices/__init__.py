@@ -17,7 +17,12 @@ from ._errors import (
     InvoiceNotFoundError,
     InvoicePersistenceError,
 )
-from ..iva._invoice_classification import (
+# Sibling-package import deferred below `._enums` and `._errors`: the
+# classification module imports back into this package for IvaRate. If
+# this `from ..iva...` block is hoisted above local imports, the
+# invoices package is only partially initialised when classification
+# resolves `from ..invoices import IvaRate` and import fails.
+from ..iva._invoice_classification import (  # noqa: E402, I001
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
     invoice_line_to_iva_observation,
@@ -45,13 +50,13 @@ __all__ = [
     "InvoicePersistenceError",
     "IvaInvoiceClassification",
     "IvaRate",
-    "iva_rate_percentage",
     "LinkInconsistency",
     "PaymentStatus",
     "ReconciliationSuggestion",
     "classify_invoice_line_for_iva",
     "derive_invoice_id",
     "invoice_line_to_iva_observation",
+    "iva_rate_percentage",
     "link_transaction",
     "suggest_reconciliations",
     "verify_link_consistency",

@@ -9,10 +9,11 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId, TransactionId
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
-from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
@@ -29,7 +30,6 @@ from ...domain.transactions._models import (
 from ..export import ExportSerializationFormat
 from ..review import LedgerReviewStatus
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _TRANSFER_ALLOWED_STATES = frozenset(
     {
         BusinessClassification.NOT_YET_PROCESSED,

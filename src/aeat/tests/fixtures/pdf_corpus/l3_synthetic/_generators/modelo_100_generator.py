@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
-from aeat.adapters.inbound.borrador._schema import ArtefactKind
+from ......adapters.inbound.borrador._schema import ArtefactKind
 
 from ._generator_shared import (
     A4_HEIGHT,

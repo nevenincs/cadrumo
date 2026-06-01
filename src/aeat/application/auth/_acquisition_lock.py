@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import now as _utc_now
+from ...core.time import now as _utc_now
 
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING

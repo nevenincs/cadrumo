@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId

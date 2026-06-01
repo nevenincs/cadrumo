@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path

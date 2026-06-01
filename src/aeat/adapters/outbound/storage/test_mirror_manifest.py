@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.storage import (
+from . import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     RemoteMirrorIssueKind,
     RemoteMirrorNamespaceManifest,
@@ -19,13 +19,13 @@ from aeat.adapters.outbound.storage import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
-from aeat.adapters.outbound.storage._local import LocalFileSystemProvider
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from aeat.core.classification import SensitivityClass
-from aeat.core.config import Settings
+from ._local import LocalFileSystemProvider
+from ...persistence.storage import EphemeralMasterKeyProvider
+from ...persistence.storage.sql._orm import Base
+from ...persistence.storage.sql.engine import create_engine_from_settings
+from ...persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....core.classification import SensitivityClass
+from ....core.config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

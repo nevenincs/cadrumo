@@ -25,6 +25,7 @@ from ...core.errors import CoreValidationError
 from ...core.time._utc import validate_utc_aware
 from ._errors import TransactionValidationError
 
+
 class SourceFormat(StrEnum):
     """Closed taxonomy of supported raw-transaction input formats.
 

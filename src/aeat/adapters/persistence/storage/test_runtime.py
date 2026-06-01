@@ -8,24 +8,24 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
-from aeat.adapters.persistence.storage.errors import StorageValidationError
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.runtime import (
+from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from .errors import StorageValidationError
+from .master_key._active_session import activate_session
+from .master_key._bucket_session import BucketSession
+from .runtime import (
     StorageRuntime,
     StorageRuntimeReadinessCode,
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
-from aeat.adapters.persistence.storage.runtime_repository import (
+from .runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_cold_bootstrap_state,
 )
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
-from aeat.core.config import Settings, StorageRouteKind, override_settings
-from aeat.core.errors import resolve_error_message
+from .sql import SecureObjectRepository
+from .sql.secure_objects import SecureObjectWrite
+from ....core.config import Settings, StorageRouteKind, override_settings
+from ....core.errors import resolve_error_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -261,9 +261,8 @@ def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> Non
         aeat_local_storage_root=tmp_path,
         aeat_active_profile="bucket-a",
         aeat_output_language="en",
-    ):
-        with pytest.raises(StorageValidationError) as excinfo:
-            secure_object_repository_for_cold_bootstrap_state()
+    ), pytest.raises(StorageValidationError) as excinfo:
+        secure_object_repository_for_cold_bootstrap_state()
     assert (
         excinfo.value.translated_message
         == "errors.storage.runtime.cold_bootstrap_active_profile_refused"

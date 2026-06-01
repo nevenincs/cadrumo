@@ -12,10 +12,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import load_legal_parameters_only
-from aeat.domain.fincas._errors import FincaValidationError
-from aeat.domain.fincas._imputacion_parameters import (
+from ...core.resources import bundled_path
+from ..calculations.registry import load_legal_parameters_only
+from ._errors import FincaValidationError
+from ._imputacion_parameters import (
     LirpfArt85ImputacionParameters,
     _parameters_from_catalogue,
     load_imputacion_parameters,

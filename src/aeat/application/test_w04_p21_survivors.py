@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.errors import (
+from ..core.errors import (
     ERROR_REGISTRY,
     AeatError,
     build_error_envelope,
@@ -49,14 +49,14 @@ def _assert_registered_and_roundtrip(cls: type) -> None:
 
 
 def test_profile_registration_error_is_registered_and_roundtrips() -> None:
-    from aeat.core.profile import ProfileRegistrationError
+    from ..core.profile import ProfileRegistrationError
 
     _assert_registered_and_roundtrip(ProfileRegistrationError)
 
 
 def test_profile_registration_error_raised_on_double_register() -> None:
     """register_project_answers raises ProfileRegistrationError on a second distinct callable."""
-    from aeat.core.profile import ProfileRegistrationError, _PROJECT_ANSWERS_SLOT, register_project_answers
+    from ..core.profile import _PROJECT_ANSWERS_SLOT, ProfileRegistrationError, register_project_answers
 
     # Snapshot the slot state to restore it after the test
     original = list(_PROJECT_ANSWERS_SLOT)
@@ -85,13 +85,13 @@ def test_profile_registration_error_raised_on_double_register() -> None:
 
 
 def test_session_deserialization_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.auth._sessions import SessionDeserializationError
+    from .auth._sessions import SessionDeserializationError
 
     _assert_registered_and_roundtrip(SessionDeserializationError)
 
 
 def test_session_deserialization_error_raised_on_bad_type() -> None:
-    from aeat.application.auth._sessions import SessionDeserializationError, _session_metadata_datetime
+    from .auth._sessions import SessionDeserializationError, _session_metadata_datetime
 
     with pytest.raises(SessionDeserializationError):
         _session_metadata_datetime(12345, field="started_at")
@@ -103,19 +103,19 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 
 
 def test_iva_compensation_year_range_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.calculations._iva_compensation_history import IvaCompensationYearRangeError
+    from .calculations._iva_compensation_history import IvaCompensationYearRangeError
 
     _assert_registered_and_roundtrip(IvaCompensationYearRangeError)
 
 
 def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.calculations._iva_compensation_history import IvaCompensationDecimalParseError
+    from .calculations._iva_compensation_history import IvaCompensationDecimalParseError
 
     _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
-    from aeat.application.calculations._iva_compensation_history import (
+    from .calculations._iva_compensation_history import (
         IvaCompensationYearRangeError,
         iva_compensation_period_key,
     )
@@ -125,7 +125,7 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() 
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:
-    from aeat.application.calculations._iva_compensation_history import (
+    from .calculations._iva_compensation_history import (
         IvaCompensationYearRangeError,
         build_iva_compensation_carry_forward_report,
     )
@@ -140,7 +140,7 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -
 
 
 def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.modelo._actions import ModeloApplicabilityFilterError
+    from .modelo._actions import ModeloApplicabilityFilterError
 
     _assert_registered_and_roundtrip(ModeloApplicabilityFilterError)
 
@@ -151,7 +151,7 @@ def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> Non
 
 
 def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.auth._errors import AuthDiagnosticPayloadError
+    from .auth._errors import AuthDiagnosticPayloadError
 
     _assert_registered_and_roundtrip(AuthDiagnosticPayloadError)
 
@@ -159,8 +159,8 @@ def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
 def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
     import json
 
-    from aeat.application.auth._diagnostics import _payload
-    from aeat.application.auth._errors import AuthDiagnosticPayloadError
+    from .auth._diagnostics import _payload
+    from .auth._errors import AuthDiagnosticPayloadError
 
     raw = json.dumps([1, 2, 3]).encode()
     with pytest.raises(AuthDiagnosticPayloadError):
@@ -173,7 +173,7 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 
 
 def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.workflow._errors import WorkflowInputMismatchError
+    from .workflow._errors import WorkflowInputMismatchError
 
     _assert_registered_and_roundtrip(WorkflowInputMismatchError)
 
@@ -184,7 +184,7 @@ def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
 
 
 def test_source_mesh_error_is_registered_and_roundtrips() -> None:
-    from aeat.application.aggregation._source_mesh import SourceMeshError
+    from .aggregation._source_mesh import SourceMeshError
 
     _assert_registered_and_roundtrip(SourceMeshError)
 
@@ -192,7 +192,7 @@ def test_source_mesh_error_is_registered_and_roundtrips() -> None:
 def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from pydantic import ValidationError
 
-    from aeat.application.aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
+    from .aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(owned_sources=("  ",))
@@ -201,7 +201,7 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from pydantic import ValidationError
 
-    from aeat.application.aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
+    from .aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
         CalculationSourceResolution(owned_sources=("bank", "bank"))
@@ -217,13 +217,13 @@ def test_try_load_certificate_metadata_does_not_swallow_unrelated_exceptions() -
     # We only verify that the function is importable and the except clause is narrow.
     # The real certificate load path requires a PKCS#12 file; we exercise the guard via
     # the password=None early-exit path (returns None without exception).
-    from aeat.application.auth._operator import _try_load_certificate_metadata
+    from .auth._operator import _try_load_certificate_metadata
     result = _try_load_certificate_metadata.__doc__
     assert result is not None  # function exists and has a docstring
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:
     """The profile tax-id probe in _live_auth_identity_state is narrow: confirm function is importable."""
-    from aeat.application.auth import _operator as operator_mod
+    from .auth import _operator as operator_mod
 
     assert hasattr(operator_mod, "_live_auth_identity_state")

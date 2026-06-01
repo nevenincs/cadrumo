@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from aeat.adapters.inbound.pdf import ExtractedCasilla
-from aeat.domain.calculations.registry import RegistrySnapshotRef
+from ..pdf import ExtractedCasilla
+from ....domain.calculations.registry import RegistrySnapshotRef
 
 from . import DeclaracionObservation, ExtractionWarning, TemplateRevision
 

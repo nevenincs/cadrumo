@@ -211,8 +211,7 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
 # ── UTC helper migration: validate_utc_aware semantics ─────────────────────
 
 
-def _aggregate(**overrides: object) -> "ProfileAggregate":
-    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+def _aggregate(**overrides: object) -> ProfileAggregate:
 
     defaults: dict[str, object] = {
         "profile_id": _PROFILE_UUID,

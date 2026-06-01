@@ -16,8 +16,8 @@ from decimal import Decimal
 
 from ...domain.filing._protocols import ModeloInputs
 from ...domain.filing._schema import ModeloDraft
-from ...domain.submission import ModeloDraftStatus
 from ...domain.period import PeriodValidationError, parse_canonical_period
+from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
 

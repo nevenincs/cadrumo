@@ -17,9 +17,10 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.profile import SetupAnswers
+
 from ...core.errors import ERROR_REGISTRY, ProfileAnswerTypeError, build_error_envelope
 from ._errors import WizardAnswerTypeError
-from aeat.core.profile import SetupAnswers
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

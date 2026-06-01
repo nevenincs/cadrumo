@@ -12,7 +12,7 @@ import logging
 
 import pytest
 
-from ...core.logging import SecretScrubbingFilter, get_logger
+from ...core.logging import SecretScrubbingFilter
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

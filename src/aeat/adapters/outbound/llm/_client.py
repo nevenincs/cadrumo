@@ -7,7 +7,7 @@ import json
 
 from pydantic import SecretStr
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.config import Settings
 from ....core.logging import get_logger

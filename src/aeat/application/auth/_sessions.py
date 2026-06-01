@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.errors import AeatError
 from ...core.logging import get_logger

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings

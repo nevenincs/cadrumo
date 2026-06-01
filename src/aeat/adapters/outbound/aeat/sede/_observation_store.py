@@ -14,7 +14,7 @@ import re
 from contextlib import nullcontext
 from pathlib import Path
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass

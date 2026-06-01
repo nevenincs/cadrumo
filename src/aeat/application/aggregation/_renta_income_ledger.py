@@ -31,6 +31,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -40,13 +41,10 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS = "01"

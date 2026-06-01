@@ -12,8 +12,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.aggregation._errors import AggregationConfigError
-from aeat.application.aggregation._service import (
+from ._errors import AggregationConfigError
+from ._service import (
     ACCEPTED_SOURCE_KINDS,
     AggregationSourceKind,
     PerModeloAggregationContract,
@@ -22,9 +22,7 @@ from aeat.application.aggregation._service import (
     PerModeloAggregationProviderContract,
     PerModeloAggregationResult,
 )
-from aeat.application.aggregation._counterpart import CounterpartAggregation
-from aeat.application.aggregation._retenciones import RetencionesAggregation
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
+from ...core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -156,8 +154,8 @@ def test_site4_contract_rejects_wrong_source_kind_taxonomy() -> None:
 
 def test_site5_command_rejects_cross_family_observations() -> None:
     """PerModeloAggregationCommand._only_matching_observation_family_is_populated raises AggregationConfigError."""
-    from aeat.application.aggregation._service import PerModeloAggregationCommand
-    from aeat.application.aggregation._foreign_assets import ForeignAssetIngestObservation, ForeignAssetClass
+    from ._foreign_assets import ForeignAssetClass, ForeignAssetIngestObservation
+    from ._service import PerModeloAggregationCommand
 
     obs = ForeignAssetIngestObservation(
         source_kind="purchase_invoice_evidence",
@@ -180,8 +178,8 @@ def test_site5_command_rejects_cross_family_observations() -> None:
 
 def test_site6_result_rejects_duplicate_source_kinds() -> None:
     """PerModeloAggregationResult._source_kinds_are_unique raises AggregationConfigError."""
-    from aeat.application.aggregation._service import PerModeloAggregationCommand, aggregate_per_modelo
-    from aeat.application.aggregation._retenciones import RetencionObservation, RetencionScheme
+    from ._retenciones import RetencionObservation, RetencionScheme
+    from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = RetencionObservation(
         source_kind="ledger_transaction",
@@ -221,8 +219,8 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
 
 def test_site7_result_rejects_modelo_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for modelo mismatch."""
-    from aeat.application.aggregation._service import PerModeloAggregationCommand, aggregate_per_modelo
-    from aeat.application.aggregation._counterpart import CounterpartObservation
+    from ._counterpart import CounterpartObservation
+    from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = CounterpartObservation(
         source_kind="ledger_transaction",
@@ -263,8 +261,8 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
 
 def test_site8_result_rejects_period_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for period mismatch."""
-    from aeat.application.aggregation._service import PerModeloAggregationCommand, aggregate_per_modelo
-    from aeat.application.aggregation._counterpart import CounterpartObservation
+    from ._counterpart import CounterpartObservation
+    from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = CounterpartObservation(
         source_kind="ledger_transaction",
@@ -305,8 +303,8 @@ def test_site8_result_rejects_period_mismatch() -> None:
 
 def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
     """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for provider/payload mismatch."""
-    from aeat.application.aggregation._service import PerModeloAggregationCommand, aggregate_per_modelo
-    from aeat.application.aggregation._retenciones import RetencionObservation, RetencionScheme
+    from ._retenciones import RetencionObservation, RetencionScheme
+    from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
     obs = RetencionObservation(
         source_kind="ledger_transaction",
@@ -364,7 +362,7 @@ def test_accepted_source_kinds_covers_all_four_members() -> None:
 
 def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
     """_counterpart._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
-    from aeat.application.aggregation._counterpart import _CANONICAL_SOURCE_KINDS as counterpart_kinds
+    from ._counterpart import _CANONICAL_SOURCE_KINDS as counterpart_kinds
 
     assert len(counterpart_kinds) == 4
     for kind in counterpart_kinds:
@@ -375,7 +373,7 @@ def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
 
 def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
     """_retenciones._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
-    from aeat.application.aggregation._retenciones import _CANONICAL_SOURCE_KINDS as retenciones_kinds
+    from ._retenciones import _CANONICAL_SOURCE_KINDS as retenciones_kinds
 
     assert len(retenciones_kinds) == 4
     for kind in retenciones_kinds:
@@ -386,7 +384,7 @@ def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
     """_foreign_assets._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
-    from aeat.application.aggregation._foreign_assets import _CANONICAL_SOURCE_KINDS as foreign_kinds
+    from ._foreign_assets import _CANONICAL_SOURCE_KINDS as foreign_kinds
 
     assert len(foreign_kinds) == 4
     for kind in foreign_kinds:
@@ -397,7 +395,7 @@ def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
 
 def test_registry_provider_counterpart_binding_source_kinds_are_enum_members() -> None:
     """_registry_provider._COUNTERPART_BINDING_SOURCE_KINDS must contain AggregationSourceKind members."""
-    from aeat.application.aggregation._registry_provider import _COUNTERPART_BINDING_SOURCE_KINDS
+    from ._registry_provider import _COUNTERPART_BINDING_SOURCE_KINDS
 
     assert len(_COUNTERPART_BINDING_SOURCE_KINDS) == 4
     for kind in _COUNTERPART_BINDING_SOURCE_KINDS:
@@ -408,7 +406,7 @@ def test_registry_provider_counterpart_binding_source_kinds_are_enum_members() -
 
 def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds() -> None:
     """_operator._ACCEPTED_KIND_TO_INTERNAL must use AggregationSourceKind for the four aggregation kinds."""
-    from aeat.application.review._operator import _ACCEPTED_KIND_TO_INTERNAL
+    from ..review._operator import _ACCEPTED_KIND_TO_INTERNAL
 
     aggregation_keys = {
         AggregationSourceKind.LEDGER_TRANSACTION,

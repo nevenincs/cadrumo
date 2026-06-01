@@ -9,17 +9,17 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import SecretStoreBackend, override_settings
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.domain.modelos._codes import ModeloCode
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from aeat.tests import FIXTURES_DIR
-from aeat.tests.secure_sql import dev_test_database_password
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ..user_profile._orchestration import profile_create_storage_span
+from ..user_profile._testing import register_minimal_profile
+from ..workflow._persistence import workflow_state_repository
+from ...core.config import SecretStoreBackend, override_settings
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...domain.modelos._codes import ModeloCode
+from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ...tests import FIXTURES_DIR
+from ...tests.secure_sql import dev_test_database_password
 
 from ._reconcile import (
     ModeloReconciliationCommand,

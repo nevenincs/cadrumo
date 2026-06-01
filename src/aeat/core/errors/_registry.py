@@ -155,7 +155,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES
+from .registry import _ALL_DECLARED_ERROR_CODES
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
     {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES}

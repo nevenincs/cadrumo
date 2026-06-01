@@ -18,20 +18,20 @@ from datetime import UTC, datetime
 
 import pytest
 
-from aeat.adapters.persistence.storage.bucket._errors import RecoveryVerificationError
-from aeat.adapters.persistence.storage.master_key._recovery import (
+from ..bucket._errors import RecoveryVerificationError
+from ._recovery import (
     decode_mnemonic,
     encode_mnemonic,
 )
-from aeat.adapters.persistence.storage.master_key._recovery_facade import (
+from ._recovery_facade import (
     MintedRecovery,
     mint_recovery_envelope,
     open_session_from_recovery,
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
 )
-from aeat.adapters.persistence.storage.master_key._recovery_record import RecoveryRecord
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
+from ._recovery_record import RecoveryRecord
+from .....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

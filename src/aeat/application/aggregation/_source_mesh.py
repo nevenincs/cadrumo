@@ -22,6 +22,7 @@ from ...core.logging import get_logger
 from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
 
+
 class SourceMeshError(CoreValidationError):
     """Raised when a ``CalculationSourceMesh`` field validator rejects an invariant.
 
@@ -34,6 +35,7 @@ class SourceMeshError(CoreValidationError):
     """
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 _log = get_logger(__name__)
 
 CalculationSourceDiagnosticReason = Literal[

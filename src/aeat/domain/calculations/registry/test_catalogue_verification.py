@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
-from aeat.core.resources import bundled_path
+from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 
 from ._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
 from ._coverage import audit_registry_model_law_coverage

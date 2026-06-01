@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path, resources
+from ....core.resources import bundled_path, resources
 
 from . import RegistrySnapshotError, ValidatedRegistryAuthority, calculate_registry_snapshot
 

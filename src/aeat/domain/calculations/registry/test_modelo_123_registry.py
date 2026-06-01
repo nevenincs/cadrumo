@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
 

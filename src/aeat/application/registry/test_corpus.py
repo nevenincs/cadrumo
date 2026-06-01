@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from aeat.core.resources import resources
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ...core.resources import resources
 
 from ...core.config import override_settings
 from ...core.errors import build_error_envelope

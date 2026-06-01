@@ -41,18 +41,18 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import now
-from aeat.domain.calculations.registry.applicability import (
+from ...core.time import now
+from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     PayerFact as _PayerFact,
 )
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     taxpayer_model_is_declared as _taxpayer_model_is_declared,
 )
 

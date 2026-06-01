@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.classification import (
+from .classification import (
     OutputSensitivityClass,
     SensitivityClass,
     default_output_policy_for,
     default_policy_for,
 )
-from aeat.core.redaction import (
+from .redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,

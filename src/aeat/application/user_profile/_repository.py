@@ -22,7 +22,7 @@ from collections.abc import Iterable
 
 from pydantic import ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,

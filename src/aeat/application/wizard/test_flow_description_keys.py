@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.wizard._catalogue import WIZARD_FLOWS
-from aeat.core.i18n import tr
+from ._catalogue import WIZARD_FLOWS
+from ...core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

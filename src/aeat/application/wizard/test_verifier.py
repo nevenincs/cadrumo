@@ -11,13 +11,13 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.profile import SetupAnswers
-from aeat.application.wizard._verifier import (
+from ._verifier import (
     WizardCheckSeverity,
     verify_setup_answers,
 )
-from aeat.domain.deadlines._models import IVARegime
-from aeat.domain.profile._ccaa import CCAA
+from ...core.profile import SetupAnswers
+from ...domain.deadlines._models import IVARegime
+from ...domain.profile._ccaa import CCAA
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

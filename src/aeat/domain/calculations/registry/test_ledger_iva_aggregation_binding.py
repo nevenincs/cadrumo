@@ -15,8 +15,8 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ....core.resources import resources
+from . import (
     CasillaObservation,
     DataBindingDefinition,
     IvaLedgerObservation,
@@ -31,7 +31,7 @@ from aeat.domain.calculations.registry import (
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
 )
-from aeat.domain.iva import (
+from ...iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,

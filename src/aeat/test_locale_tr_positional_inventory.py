@@ -39,8 +39,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
-from collections.abc import Mapping
-from typing import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 

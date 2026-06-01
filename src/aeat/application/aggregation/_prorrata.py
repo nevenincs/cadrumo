@@ -267,9 +267,9 @@ def aggregate_definitiva_prorrata(
 
 
 __all__ = (
-    "ProrrataAggregation",
     "IvaOperation",
     "IvaOperationKind",
+    "ProrrataAggregation",
     "aggregate_definitiva_prorrata",
     "aggregate_prorrata_inputs",
     "aggregate_provisional_prorrata",

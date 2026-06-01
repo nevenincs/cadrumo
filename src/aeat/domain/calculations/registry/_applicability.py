@@ -93,14 +93,13 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
-
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SEED_COVERAGE_NOTICE = (
     "Seed coverage only — the modelos in this table are the core "

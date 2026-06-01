@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources import resources
+from ....core.resources import resources
 
 from ._schema import ModeloDefinition
 

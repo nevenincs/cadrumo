@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.errors import AeatError
 from ....core.logging import get_logger

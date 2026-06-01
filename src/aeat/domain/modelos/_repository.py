@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.logging import get_logger
 

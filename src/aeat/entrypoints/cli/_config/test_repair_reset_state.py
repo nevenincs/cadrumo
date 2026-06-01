@@ -8,18 +8,18 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
+from ....adapters.persistence.storage import (
     activate_master_key_provider,
     get_master_key_provider,
 )
-from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.workflow._models import WorkflowState
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import override_settings
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.workflow._models import WorkflowState
+from ....application.workflow._persistence import workflow_state_repository
+from ....core.config import override_settings
+from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -58,12 +58,15 @@ def _seed_workflow_state() -> None:
             "create",
             "operator",
             "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--irpf-income-categories",
+            "actividad_economica",
             "--tax-id",
             "00000000T",
             "--activity",
             "Servicios",
-            "--iva-regime",
-            "GENERAL",
         ]
     )
     assert created.exit_code == 0, created.output

@@ -19,8 +19,6 @@ All seven canonical inventory ratchets must remain green simultaneously.
 
 from __future__ import annotations
 
-import importlib
-import inspect
 import pathlib
 import subprocess
 import sys

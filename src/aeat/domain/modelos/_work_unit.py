@@ -72,6 +72,7 @@ _OptionalHex64 = Annotated[
 
 from ...core.identity import BucketId
 from ._ids import WorkUnitId
+
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),

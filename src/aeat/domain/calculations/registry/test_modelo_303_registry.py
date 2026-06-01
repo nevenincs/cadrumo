@@ -8,7 +8,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
@@ -186,11 +186,11 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     ledger_iva_aggregation runtime resolver."""
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry import (
+    from . import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.iva import (
+    from ...iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,
@@ -287,7 +287,7 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
 
 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_output() -> None:
-    from aeat.domain.calculations.registry import (
+    from . import (
         CasillaObservation,
         RegistryModeloObservation,
         materialize_relation_binding_values,
@@ -343,7 +343,7 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_o
 
 
 def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
-    from aeat.domain.calculations.registry import (
+    from . import (
         CasillaObservation,
         RegistryModeloObservation,
         materialize_relation_binding_values,
@@ -399,7 +399,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
-    from aeat.domain.calculations.registry import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from . import calculate_registry_snapshot, resolve_bound_casilla_inputs
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")
@@ -483,8 +483,8 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
 def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
     """The monthly schedule must fire for SII-enrolled profiles and be excluded
     for standard quarterly profiles."""
-    from aeat.domain.calculations.registry import applicable_filing_schedules
-    from aeat.domain.deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
+    from . import applicable_filing_schedules
+    from ...deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
@@ -524,7 +524,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     tipo general = 21%), NOT from the registry implementation under test; this
     test would fail if the formula were mis-wired or the tipo were wrong.
     """
-    from aeat.domain.calculations.registry import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from . import calculate_registry_snapshot, resolve_bound_casilla_inputs
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -568,7 +568,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
     tipo 21%), not from a second call to the same formula.  If the formula
     constant were changed to, say, 0.10, this test would catch it immediately.
     """
-    from aeat.domain.calculations.registry import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from . import calculate_registry_snapshot, resolve_bound_casilla_inputs
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")

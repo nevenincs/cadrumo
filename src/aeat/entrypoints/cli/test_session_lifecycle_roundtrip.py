@@ -34,12 +34,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.errors import SessionExpiredError
-from aeat.adapters.persistence.storage.master_key._active_session import _active_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql.secure_objects import SensitivityClass
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...adapters.persistence.storage.errors import SessionExpiredError
+from ...adapters.persistence.storage.master_key._active_session import _active_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql.secure_objects import SensitivityClass
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

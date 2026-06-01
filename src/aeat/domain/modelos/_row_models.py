@@ -339,11 +339,11 @@ class Modelo347ContraparteRow(BaseModel):
 ModeloDetailRow = Modelo184MemberRow | Modelo232VinculadaRow | Modelo349OperadorRow | Modelo347ContraparteRow
 
 __all__ = [
+    "M347_THRESHOLD_EUR",
     "Modelo184MemberRow",
     "Modelo232VinculadaRow",
-    "Modelo349OperadorRow",
     "Modelo347ContraparteRow",
+    "Modelo349OperadorRow",
     "ModeloDetailRow",
-    "M347_THRESHOLD_EUR",
     "validate_m349_nif_format",
 ]

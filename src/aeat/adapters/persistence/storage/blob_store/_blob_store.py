@@ -42,7 +42,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE

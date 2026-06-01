@@ -20,7 +20,6 @@ from ._ratios import (
     censo_override_warning,
 )
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 

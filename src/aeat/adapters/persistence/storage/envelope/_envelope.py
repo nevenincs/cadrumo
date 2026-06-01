@@ -53,6 +53,7 @@ from ..master_key._master_key import MasterKeyProvider
 _log = get_logger(__name__)
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
+
 class AeadAlgorithm(StrEnum):
     """Closed catalogue of AEAD identifiers recognised by the substrate.
 

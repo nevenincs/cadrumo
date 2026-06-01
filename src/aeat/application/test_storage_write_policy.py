@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.storage_write_policy import (
+from .storage_write_policy import (
     StorageWritePolicyCode,
     inspect_storage_write_policy,
     is_profile_bound_write_verb_path,
 )
-from aeat.core.config import Settings, StorageRouteKind
+from ..core.config import Settings, StorageRouteKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

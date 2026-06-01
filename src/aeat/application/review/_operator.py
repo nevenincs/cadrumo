@@ -7,7 +7,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from aeat.core.aggregation import AggregationSourceKind
+from ...core.aggregation import AggregationSourceKind
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -16,7 +18,6 @@ from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
 from ._models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ReviewQueueRow(BaseModel):
     """CLI-ready read-only review queue row."""
@@ -205,7 +206,6 @@ def _render_summary(value: str) -> str:
 
 def _active_bucket_id() -> str:
     from ..workflow._models import active_bucket_id_or_raise
-    from ..workflow._persistence import workflow_state_repository
 
     return active_bucket_id_or_raise()
 

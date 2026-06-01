@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.auth import LiveAuthPreflightReport
-from aeat.application.live import (
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.auth import LiveAuthPreflightReport
+from ...application.live import (
     Borrador100SnapshotService,
     IvaRemoteStateAcquisitionReport,
     LiveIvaAcquisitionFailureMode,
@@ -21,12 +21,12 @@ from aeat.application.live import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
-from aeat.application.live._verify import VerifyService, VerifySurface
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import override_settings
-from aeat.entrypoints.cli._app_live import (
+from ...application.live._verify import VerifyService, VerifySurface
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._persistence import workflow_state_repository
+from ...core.config import override_settings
+from ._app_live import (
     _iva_remote_state_capture_lines,
     _live_auth_preflight_lines,
     _live_iva_outcome_label,
@@ -35,7 +35,7 @@ from aeat.entrypoints.cli._app_live import (
     iva_wallet_app,
     verify_app,
 )
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

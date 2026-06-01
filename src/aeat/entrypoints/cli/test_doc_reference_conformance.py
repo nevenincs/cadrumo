@@ -58,7 +58,7 @@ def _rendered_reference() -> dict[str, str]:
     """
     import tempfile
 
-    from aeat.entrypoints.cli._doc_reference import generate_cli_reference_in_subprocess
+    from ._doc_reference import generate_cli_reference_in_subprocess
 
     with tempfile.TemporaryDirectory() as tmp:
         return generate_cli_reference_in_subprocess(Path(tmp))
@@ -99,7 +99,7 @@ def test_every_live_leaf_is_documented() -> None:
     Failures indicate that a command was added to the tree but the reference
     was not regenerated and committed.
     """
-    from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
+    from ._doc_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     documented_keys = _rendered_doc_registry_keys()
@@ -118,7 +118,7 @@ def test_every_documented_path_resolves_to_a_live_command() -> None:
     Failures indicate that a command was removed from the tree but the reference
     was not regenerated — a stale documentation entry.
     """
-    from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
+    from ._doc_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     documented_keys = _rendered_doc_registry_keys()
@@ -147,8 +147,8 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     explicitly exempted because they register under a group callback rather than
     a leaf command.
     """
-    from aeat.core.json_contract import SCHEMA_REGISTRY
-    from aeat.entrypoints.cli import (  # noqa: F401
+    from ...core.json_contract import SCHEMA_REGISTRY
+    from . import (  # noqa: F401
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -159,11 +159,11 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
         _review_payloads,
         _root_payloads,
     )
-    from aeat.entrypoints.cli._config import (  # noqa: F401
+    from ._config import (  # noqa: F401
         _google_payloads,
         _profile_censo_payloads,
     )
-    from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
+    from ._doc_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())
@@ -189,8 +189,8 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     generated reference docs are not consulted here so the gate is independent
     of the drift check.
     """
-    from aeat.core.json_contract import SCHEMA_REGISTRY
-    from aeat.entrypoints.cli import (  # noqa: F401
+    from ...core.json_contract import SCHEMA_REGISTRY
+    from . import (  # noqa: F401
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -201,11 +201,11 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
         _review_payloads,
         _root_payloads,
     )
-    from aeat.entrypoints.cli._config import (  # noqa: F401
+    from ._config import (  # noqa: F401
         _google_payloads,
         _profile_censo_payloads,
     )
-    from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
+    from ._doc_reference import collect_live_leaf_paths_in_subprocess
 
     live_keys = set(collect_live_leaf_paths_in_subprocess())
     registry_keys = set(SCHEMA_REGISTRY.keys())
@@ -226,8 +226,8 @@ def test_documented_schema_classes_match_registry() -> None:
     class name matches the actual registered schema class — catching renames
     or migrations that updated the registry without regenerating the reference.
     """
-    from aeat.core.json_contract import SCHEMA_REGISTRY
-    from aeat.entrypoints.cli import (  # noqa: F401
+    from ...core.json_contract import SCHEMA_REGISTRY
+    from . import (  # noqa: F401
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -238,7 +238,7 @@ def test_documented_schema_classes_match_registry() -> None:
         _review_payloads,
         _root_payloads,
     )
-    from aeat.entrypoints.cli._config import (  # noqa: F401
+    from ._config import (  # noqa: F401
         _google_payloads,
         _profile_censo_payloads,
     )
@@ -302,8 +302,8 @@ def test_retired_surfaces_are_not_live_commands() -> None:
     import click
     from typer.main import get_command as _typer_get_command
 
-    from aeat.application.operator_surface import RETIRED_OPERATOR_SURFACES
-    from aeat.entrypoints.cli import app
+    from ...application.operator_surface import RETIRED_OPERATOR_SURFACES
+    from . import app
 
     root_cmd = _typer_get_command(app)
     root_cmd.name = app.info.name or "aeat"
@@ -327,7 +327,7 @@ def test_retired_surfaces_appear_in_index_as_redirect_notes() -> None:
     older ``aeat`` version need redirect guidance even when those roots no
     longer appear in ``aeat --help``.
     """
-    from aeat.application.operator_surface import RETIRED_OPERATOR_SURFACES
+    from ...application.operator_surface import RETIRED_OPERATOR_SURFACES
 
     index_text = _rendered_reference()["cli/index.rst"]
     missing: list[str] = []

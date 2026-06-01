@@ -9,6 +9,7 @@ from typing import get_args
 
 from pydantic import BaseModel, Field
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
@@ -46,7 +47,6 @@ from ...domain.normatives._errors import NormativeParseError
 from ..topics import Topic, TopicCatalogue, load_topic_catalogue
 from ._errors import RegistryApplicationInputError
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _LOGGER = get_logger(__name__)
 
 class RegistryManualId(StrEnum):

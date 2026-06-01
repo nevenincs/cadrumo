@@ -16,7 +16,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.logging import get_logger
 from ._enums import BusinessClassification

@@ -27,13 +27,13 @@ tautologies.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ...core.errors import BaseSeverity
 from ...domain.transactions import (
     RawProvenance,
     RawTransaction,

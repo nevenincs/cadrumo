@@ -16,6 +16,7 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import TypedDict
 
+from .....core.external_constants import DEFAULT_CURRENCY
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
@@ -26,7 +27,6 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from .....core.external_constants import DEFAULT_CURRENCY
 from ._constants import PDF_EXTENSION
 
 _HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"

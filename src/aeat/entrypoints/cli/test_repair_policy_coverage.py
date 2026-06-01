@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
-from aeat.application.repair_integrity import build_repair_policy_command_surface_catalog
+from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from ...application.repair_integrity import build_repair_policy_command_surface_catalog
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

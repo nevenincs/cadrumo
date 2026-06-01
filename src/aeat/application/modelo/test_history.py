@@ -7,25 +7,25 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.modelo import (
+from . import (
     WorkUnitNotFoundError,
     assemble_work_unit_history,
     create_work_unit,
     discard_work_unit,
 )
-from aeat.domain.modelos._errors import ModeloError
-from aeat.domain.buckets import (
+from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
 )
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.modelos._verification_repository import (
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._errors import ModeloError
+from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

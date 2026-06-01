@@ -23,7 +23,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.logging import get_logger
 from ....domain.justificante._errors import JustificanteCsvNotFoundError, JustificanteParseError

@@ -14,17 +14,17 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.persistence.storage.errors import (
+from ..errors import (
     EncryptionError,
     KeyDerivationError,
     SecretStoreError,
     StorageValidationError,
 )
-from aeat.adapters.persistence.storage.master_key._errors import (
+from ._errors import (
     MasterKeyReentrantError,
     MasterKeyTypeError,
 )
-from aeat.core.errors import ERROR_REGISTRY, AeatError, build_error_envelope
+from .....core.errors import ERROR_REGISTRY, AeatError, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -77,7 +77,7 @@ def test_master_key_reentrant_error_is_secret_store_error_subtype() -> None:
 def test_master_key_type_error_is_storage_error_and_type_error() -> None:
     """MasterKeyTypeError must be catchable as both StorageError and TypeError."""
 
-    from aeat.adapters.persistence.storage.errors import StorageError
+    from ..errors import StorageError
 
     assert issubclass(MasterKeyTypeError, StorageError)
     assert issubclass(MasterKeyTypeError, TypeError)

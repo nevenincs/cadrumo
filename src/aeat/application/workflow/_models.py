@@ -31,11 +31,10 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ...core._bucket_pointer_io import resolve_active_bucket_id
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ..auth._models import AuthState
 from ._utils import utc_now
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository

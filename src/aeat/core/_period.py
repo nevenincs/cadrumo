@@ -110,7 +110,7 @@ def _format_accepted_period_set() -> str:
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
         f"Ad-hoc: {_AD_HOC_PERIOD}",
-        f"Event-driven: EVENT-N (where N is an integer)",
+        "Event-driven: EVENT-N (where N is an integer)",
     ]
     return "; ".join(lines)
 
@@ -118,8 +118,8 @@ def _format_accepted_period_set() -> str:
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
 __all__ = [
-    "StandardPeriodCode",
     "RegistryPeriodCode",
+    "StandardPeriodCode",
     "accepted_period_codes",
     "accepted_period_patterns",
 ]

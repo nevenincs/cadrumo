@@ -16,12 +16,11 @@ from contextlib import contextmanager
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 from urllib.parse import unquote
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Annotated
 
 from .errors import CoreValidationError
 from .external_constants import DEFAULT_CURRENCY, OutputLanguage

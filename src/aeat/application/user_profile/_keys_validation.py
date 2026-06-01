@@ -23,6 +23,7 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.profile import (
     ProfileKey,
     ProfileKeyRequirement,
@@ -30,7 +31,6 @@ from ...domain.profile import (
 )
 from ...domain.profile._keys import _profile_keys as _get_profile_keys
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ProfileValidationResult(BaseModel):
     """Typed result of :func:`validate_profile_values`."""

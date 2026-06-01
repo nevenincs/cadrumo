@@ -31,22 +31,21 @@ No mocks — these tests use the real domain functions directly.
 
 from __future__ import annotations
 
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from aeat.domain.calculations.registry import (
+from ...domain.calculations.registry import (
     ApplicabilityVerdict,
     Modelo202Modality,
     derive_modelo_202_modality,
 )
-from aeat.domain.deadlines._models import IVARegime, TaxpayerProfile
-from aeat.domain.deadlines.taxpayer_model import EntityType
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...domain.deadlines._models import IVARegime, TaxpayerProfile
+from ...domain.deadlines.taxpayer_model import EntityType
+from ._test_envelope import unwrap_schema_envelope as _payload
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -188,7 +187,7 @@ def test_sl_with_declared_incn_is_applicable_for_modelo_202() -> None:
     for a legal entity; the INCN modality split is a downstream concern.
     """
 
-    from aeat.domain.calculations.registry import derive_modelo_applicability
+    from ...domain.calculations.registry import derive_modelo_applicability
 
     profile = _sl_profile(incn=_INCN_ABOVE_THRESHOLD)
     verdict = derive_modelo_applicability(profile, "202")
@@ -203,7 +202,7 @@ def test_natural_person_is_not_applicable_for_modelo_202() -> None:
     person before the INCN modality gate is even consulted.
     """
 
-    from aeat.domain.calculations.registry import derive_modelo_applicability
+    from ...domain.calculations.registry import derive_modelo_applicability
 
     profile = _natural_person_profile()
     verdict = derive_modelo_applicability(profile, "202")
@@ -218,7 +217,7 @@ def test_attribution_entity_is_not_applicable_for_modelo_202() -> None:
     gate must refuse them for Modelo 202.
     """
 
-    from aeat.domain.calculations.registry import derive_modelo_applicability
+    from ...domain.calculations.registry import derive_modelo_applicability
 
     profile = _attribution_entity_profile()
     verdict = derive_modelo_applicability(profile, "202")
@@ -242,9 +241,8 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
     work unit. The outer applicability guard must not block a legal entity.
     """
 
-    import json
 
-    from aeat.tests.cli_runner import invoke_cached_cli
+    from ...tests.cli_runner import invoke_cached_cli
 
     result = invoke_cached_cli(
         [

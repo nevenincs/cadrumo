@@ -22,6 +22,11 @@ Example::
 from __future__ import annotations
 
 from ._cite import cite, short_title
+from ._errors import (
+    NormativeError,
+    NormativeNotFoundError,
+    NormativeParseError,
+)
 from ._loader import load_catalogue
 from ._lookup import find_articulo, find_reference
 from ._schema import (
@@ -33,11 +38,6 @@ from ._schema import (
     NormativeVerificationReport,
 )
 from ._verify import raise_on_errors, verify_catalogue
-from ._errors import (
-    NormativeError,
-    NormativeNotFoundError,
-    NormativeParseError,
-)
 
 
 class _LazyCatalogue:

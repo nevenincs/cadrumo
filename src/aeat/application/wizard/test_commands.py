@@ -16,13 +16,13 @@ import typer
 from pydantic import SecretStr
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.wizard._catalogue import SETUP_FLOW
-from aeat.application.wizard._commands import build_wizard_command
-from aeat.application.wizard._persistence import WizardPersistMode
-from aeat.core.config import SecretStoreBackend, override_settings
-from aeat.core.i18n import tr
-from aeat.tests.secure_sql import dev_test_database_password
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ._catalogue import SETUP_FLOW
+from ._commands import build_wizard_command
+from ._persistence import WizardPersistMode
+from ...core.config import SecretStoreBackend, override_settings
+from ...core.i18n import tr
+from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

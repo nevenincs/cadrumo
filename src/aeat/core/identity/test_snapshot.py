@@ -7,7 +7,7 @@ import hashlib
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.core.identity import SnapshotId
+from . import SnapshotId
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

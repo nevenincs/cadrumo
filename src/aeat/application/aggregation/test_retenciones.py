@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.aggregation._retenciones import (
+from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
     RetencionScheme,
@@ -168,9 +168,9 @@ class TestAggregate111:
         assert forward.model_dump_json() == reverse.model_dump_json()
 
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
-        from aeat.application.aggregation._grouping import filter_observations_for_modelo
-        from aeat.application.aggregation._retenciones import _MODELO_SCHEME_CATALOGUE
+        from ._errors import AggregationUnsupportedModeloError
+        from ._grouping import filter_observations_for_modelo
+        from ._retenciones import _MODELO_SCHEME_CATALOGUE
 
         with pytest.raises(AggregationUnsupportedModeloError, match="modelo '347'"):
             filter_observations_for_modelo(

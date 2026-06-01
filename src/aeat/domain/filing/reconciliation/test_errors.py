@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.errors import AeatError
-from aeat.domain.filing.reconciliation._errors import (
+from ....core.errors import AeatError
+from ._errors import (
     ReconciliationDeclaracionParseError,
     ReconciliationDriftError,
     ReconciliationError,

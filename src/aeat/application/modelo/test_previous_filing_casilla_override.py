@@ -21,11 +21,11 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo import calculate_modelo_revision, create_work_unit
-from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.tests.secure_sql import isolated_runtime_profile
+from . import calculate_modelo_revision, create_work_unit
+from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -193,7 +193,7 @@ def test_casilla_15_binding_already_supplied_is_not_overwritten(repos) -> None:
     committed to a specific binding value and passing a conflicting casilla override
     is a mistake that should surface as an error, not be silently reconciled.
     """
-    from aeat.domain.calculations.registry import RegistryValidationError
+    from ...domain.calculations.registry import RegistryValidationError
 
     work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
 

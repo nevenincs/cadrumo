@@ -23,7 +23,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Protocol
 
-from aeat.core.time import now as _utc_now
+from ....core.time import now as _utc_now
 
 from ....core.decimal import format_decimal
 from ....core.logging import get_logger

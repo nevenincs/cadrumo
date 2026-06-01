@@ -26,7 +26,7 @@ import ast
 import re
 from pathlib import Path
 
-from aeat.core.logging import get_logger
+from ..core.logging import get_logger
 
 _log = get_logger(__name__)
 

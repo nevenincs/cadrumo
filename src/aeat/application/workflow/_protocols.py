@@ -24,7 +24,6 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ...domain.submission._protocols import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
@@ -33,6 +32,7 @@ from ...domain.deadlines import Schedule, TaxpayerProfile
 # engine re-exports them here so adapters can import the contract from
 # the workflow package without taking a second divergent definition.
 from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
+from ...domain.submission._protocols import ModeloDraftLike
 
 
 @runtime_checkable

@@ -21,7 +21,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from aeat.core.aggregation import AggregationSourceKind
+from ...core.aggregation import AggregationSourceKind
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 

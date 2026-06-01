@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import date
 
 from ._catalogue import resolve_catalogue
-from ._rates import load_iva_rate_table
-from ._schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateRecord, IvaRateKind
 from ._errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
+from ._rates import load_iva_rate_table
+from ._schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateKind, IvaRateRecord
 
 
 def lookup_rate(

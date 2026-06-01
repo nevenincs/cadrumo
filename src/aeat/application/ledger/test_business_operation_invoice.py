@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.application.ledger._business_operation_invoice import (
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ._business_operation_invoice import (
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoiceNotFoundError,
     BusinessOperationInvoicePatch,
@@ -19,9 +19,9 @@ from aeat.application.ledger._business_operation_invoice import (
     PayableInvoiceService,
     validate_eu_iva_id,
 )
-from aeat.core.config import Settings
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...core.config import Settings
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -486,8 +486,8 @@ class TestIntracomFieldsPersistence:
         import json
         from datetime import UTC, datetime
 
-        from aeat.application._storage_paths import storage_path
-        from aeat.application.ledger._business_operation_invoice import (
+        from .._storage_paths import storage_path
+        from ._business_operation_invoice import (
             BusinessOperationInvoiceSourceKind,
         )
 

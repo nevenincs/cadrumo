@@ -6,14 +6,14 @@ from datetime import date
 
 import pytest
 
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import ValidatedRegistryAuthority
-from aeat.domain.calculations.registry.applicability import (
+from ....core.resources import bundled_path
+from . import ValidatedRegistryAuthority
+from .applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
-from aeat.domain.deadlines import (
+from ...deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,

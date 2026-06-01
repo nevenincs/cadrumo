@@ -18,7 +18,7 @@ Each function is keyed on the resolved AEAT profile name (per
 
 from __future__ import annotations
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql import SecureObjectRepository

@@ -48,7 +48,6 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from urllib.parse import urlparse
 
-from ..hashing import sha256_hex as _sha256_hex
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -64,6 +63,7 @@ from ..classification import (
 from ..classification import (
     default_policy_for as _default_policy_for,
 )
+from ..hashing import sha256_hex as _sha256_hex
 
 # NIF / NIE / CIF — Spanish identity numbers. Eight digits + check letter
 # with optional leading X / Y / Z for foreigners.

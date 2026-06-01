@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.config import override_settings
-from aeat.core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
-from aeat.tests import FIXTURES_DIR
+from .....core.config import override_settings
+from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
+from .....tests import FIXTURES_DIR
 
 from .. import CsvProvider
 
@@ -178,7 +178,7 @@ def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain() -> None:
     """
     with override_settings(financial_default_csv_encoding="utf-8"):
         provider = CsvProvider()
-        raw = "hello".encode("utf-8")
+        raw = b"hello"
         text, winning_encoding = provider._decode_bytes(raw)
     assert winning_encoding == "utf-8"
     assert text == "hello"

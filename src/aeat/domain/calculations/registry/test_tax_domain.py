@@ -6,10 +6,10 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core._tax_domain import TaxDomain
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import load_registry_tree
-from aeat.domain.calculations.registry._schema import ModeloDefinition
+from ....core._tax_domain import TaxDomain
+from ....core.resources import bundled_path
+from . import load_registry_tree
+from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

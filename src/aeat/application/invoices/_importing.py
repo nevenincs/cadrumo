@@ -19,8 +19,8 @@ from pydantic import BaseModel, ConfigDict
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository
-from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices._errors import InvoiceValidationError
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
 
 

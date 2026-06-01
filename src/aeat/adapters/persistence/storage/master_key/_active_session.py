@@ -32,7 +32,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
-from aeat.core.time import now
+from .....core.time import now
 
 from ..bucket._errors import BucketLockedError
 from ..errors import SecretStoreError

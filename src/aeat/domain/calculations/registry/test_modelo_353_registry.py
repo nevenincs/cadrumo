@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
@@ -102,11 +102,11 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry import (
+    from . import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-y-siguientes"]

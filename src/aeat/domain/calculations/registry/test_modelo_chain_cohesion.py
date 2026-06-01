@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._loader import load_registry_tree
 from ._schema import ModeloDefinition

@@ -55,7 +55,7 @@ from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 from cryptography.exceptions import InvalidTag
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import now
+from .....core.time import now
 
 if TYPE_CHECKING:
     from contextlib import AbstractContextManager

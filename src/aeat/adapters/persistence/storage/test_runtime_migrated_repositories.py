@@ -13,52 +13,52 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from aeat.adapters.outbound.aeat.auth import _session_store
-from aeat.adapters.outbound.aeat.sede import ExpedienteNotFoundError
-from aeat.adapters.outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
-from aeat.adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact
-from aeat.adapters.outbound.google import _session_store as google_session_store
-from aeat.adapters.outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
-from aeat.adapters.outbound.llm._cache import LLMCache
-from aeat.adapters.outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from aeat.adapters.outbound.llm._usage import UsageRecorder
-from aeat.adapters.persistence.profile.assets import (
+from ...outbound.aeat.auth import _session_store
+from ...outbound.aeat.sede import ExpedienteNotFoundError
+from ...outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
+from ...outbound.aeat.sede._schema import FiledDeclaracionArtefact
+from ...outbound.google import _session_store as google_session_store
+from ...outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ...outbound.llm._cache import LLMCache
+from ...outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
+from ...outbound.llm._usage import UsageRecorder
+from ..profile.assets import (
     load_amortizacion_ledger,
     load_assets,
     save_amortizacion_ledger,
     save_assets,
 )
-from aeat.adapters.persistence.profile.inventory import load_inventory, save_inventory
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, SensitivityClass
-from aeat.adapters.persistence.storage._namespace_registry import LLM_USAGE_NAMESPACE
-from aeat.adapters.persistence.storage.attachment import AttachmentStore
-from aeat.adapters.persistence.storage.errors import StorageValidationError
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.auth._diagnostics import list_auth_diagnostics
-from aeat.application.calculations._iva_compensation_history import (
+from ..profile.inventory import load_inventory, save_inventory
+from . import EphemeralMasterKeyProvider, SensitivityClass
+from ._namespace_registry import LLM_USAGE_NAMESPACE
+from .attachment import AttachmentStore
+from .errors import StorageValidationError
+from .master_key._active_session import activate_session
+from .master_key._bucket_session import BucketSession
+from .runtime_repository import secure_object_repository_for_active_bucket
+from .sql.engine import dispose_engine
+from ....application.auth._diagnostics import list_auth_diagnostics
+from ....application.calculations._iva_compensation_history import (
     IvaCompensationHistoryRepository,
     IvaCompensationPeriodState,
 )
-from aeat.application.calculations._observations_repository import CalculationObservationRepository
-from aeat.application.diagnostics import preview_quarantine_unreadable_secure_objects
-from aeat.application.filing import ModeloHistory, ModeloHistoryEntry
-from aeat.application.filing._history_repository import ModeloHistoryRepository
-from aeat.application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
-from aeat.application.live._snapshot_base import SnapshotLifecycleState
-from aeat.application.repair_integrity import (
+from ....application.calculations._observations_repository import CalculationObservationRepository
+from ....application.diagnostics import preview_quarantine_unreadable_secure_objects
+from ....application.filing import ModeloHistory, ModeloHistoryEntry
+from ....application.filing._history_repository import ModeloHistoryRepository
+from ....application.live._borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
+from ....application.live._snapshot_base import SnapshotLifecycleState
+from ....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
     repair_remediation_decision_id,
 )
-from aeat.application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
-from aeat.application.workflow._persistence import WorkflowRunRepository, WorkflowStateRepository
-from aeat.core.config import override_settings
-from aeat.core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
-from aeat.domain.attachments import AttachmentNotFoundError
-from aeat.domain.buckets import (
+from ....application.workflow import DeclaracionPointer, WorkflowResult, WorkflowStage, WorkflowState, WorkflowStep
+from ....application.workflow._persistence import WorkflowRunRepository, WorkflowStateRepository
+from ....core.config import override_settings
+from ....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+from ....domain.attachments import AttachmentNotFoundError
+from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,
     BucketEventHistoryRepository,
@@ -66,9 +66,9 @@ from aeat.domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from aeat.domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
-from aeat.domain.categories import SpendingCategory
-from aeat.domain.filing import (
+from ....domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
+from ....domain.categories import SpendingCategory
+from ....domain.filing import (
     AmendmentKind,
     CasillaChange,
     ModeloAmendmentRepository,
@@ -79,7 +79,7 @@ from aeat.domain.filing import (
     ModeloValueKind,
     make_amendment_id,
 )
-from aeat.domain.invoices import (
+from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
@@ -87,35 +87,35 @@ from aeat.domain.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from aeat.domain.iva import InvoiceKind
-from aeat.domain.justificante import Justificante
-from aeat.domain.justificante._repository import JustificanteRepository
-from aeat.domain.modelos import ModeloCode
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._calculation_revision import (
+from ....domain.iva import InvoiceKind
+from ....domain.justificante import Justificante
+from ....domain.justificante._repository import JustificanteRepository
+from ....domain.modelos import ModeloCode
+from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from aeat.domain.modelos._filing_record import (
+from ....domain.modelos._filing_record import (
     ModeloRecord,
     ModeloRecordCatalogue,
     derive_filing_record_id,
 )
-from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.modelos._verification_report import (
+from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....domain.modelos._verification_report import (
     VerificationCompletenessStatus,
     VerificationReport,
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from aeat.domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from aeat.domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
-from aeat.domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
-from aeat.domain.profile.inventory import InventoryLedger, ValuationMethod
-from aeat.domain.submission import (
+from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ....domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from ....domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
+from ....domain.profile.inventory import InventoryLedger, ValuationMethod
+from ....domain.submission import (
     ModeloDraftStatus,
     ModeloPresentado,
     SubmissionAttempt,
@@ -123,7 +123,7 @@ from aeat.domain.submission import (
     SubmissionStatus,
     make_submission_id,
 )
-from aeat.domain.transactions import (
+from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -132,7 +132,7 @@ from aeat.domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from aeat.domain.usage_ratios import UsageRatioProfile, load_usage_ratios, save_usage_ratios
+from ....domain.usage_ratios import UsageRatioProfile, load_usage_ratios, save_usage_ratios
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

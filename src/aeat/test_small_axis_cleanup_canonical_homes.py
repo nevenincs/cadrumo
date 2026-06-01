@@ -47,7 +47,7 @@ def test_setup_answers_module_not_importable() -> None:
 
 def test_setup_answers_canonical_home_is_core_profile() -> None:
     """SetupAnswers must be importable from aeat.core.profile and nowhere else."""
-    from aeat.core.profile import SetupAnswers
+    from .core.profile import SetupAnswers
 
     assert SetupAnswers.__module__ == "aeat.core.profile", (
         f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; "
@@ -60,7 +60,7 @@ def test_setup_answers_canonical_home_is_core_profile() -> None:
 
 def test_counterpart_source_kind_canonical_in_domain() -> None:
     """CounterpartSourceKind must be defined in the domain bindings module."""
-    import aeat.domain.calculations.registry._bindings as bindings_mod
+    from .domain.calculations.registry import _bindings as bindings_mod
 
     assert hasattr(bindings_mod, "CounterpartSourceKind"), (
         "CounterpartSourceKind not found in domain._bindings"
@@ -69,10 +69,10 @@ def test_counterpart_source_kind_canonical_in_domain() -> None:
 
 def test_counterpart_source_kind_application_imports_from_domain() -> None:
     """The application _counterpart module must re-export the domain alias."""
-    from aeat.application.aggregation._counterpart import (
+    from .application.aggregation._counterpart import (
         CounterpartSourceKind as app_csk,
     )
-    from aeat.domain.calculations.registry._bindings import (
+    from .domain.calculations.registry._bindings import (
         CounterpartSourceKind as domain_csk,
     )
 
@@ -88,8 +88,7 @@ def test_counterpart_source_kind_application_imports_from_domain() -> None:
 
 def test_notifications_parse_date_delegates_to_canonical() -> None:
     """sede._notifications._parse_date_local must delegate to core._parse_date."""
-    import aeat.adapters.outbound.aeat.sede._notifications as notif_mod
-    from aeat.core.parsing._dates import _parse_date as canonical
+    from .adapters.outbound.aeat.sede import _notifications as notif_mod
 
     # The wrapper must be present and call through to canonical.
     assert hasattr(notif_mod, "_parse_date_local"), (
@@ -109,8 +108,7 @@ def test_notifications_parse_date_delegates_to_canonical() -> None:
 
 def test_censo_parse_date_delegates_to_canonical() -> None:
     """sede._censo._parse_date must delegate to core._parse_date_canonical."""
-    import aeat.adapters.outbound.aeat.sede._censo as censo_mod
-    from aeat.core.parsing._dates import _parse_date as canonical
+    from .adapters.outbound.aeat.sede import _censo as censo_mod
 
     # Source-code inspection: the function body must reference _parse_date_canonical.
     src = inspect.getsource(censo_mod._parse_date)
@@ -125,8 +123,7 @@ def test_censo_parse_date_delegates_to_canonical() -> None:
 
 def test_profiles_parse_date_delegates_to_canonical() -> None:
     """domain.deadlines._profiles._parse_date must delegate to core._parse_date_canonical."""
-    import aeat.domain.deadlines._profiles as profiles_mod
-    from aeat.core.parsing._dates import _parse_date as canonical
+    from .domain.deadlines import _profiles as profiles_mod
 
     src = inspect.getsource(profiles_mod._parse_date)
     assert "_parse_date_canonical" in src, (
@@ -143,7 +140,6 @@ def test_profiles_parse_date_delegates_to_canonical() -> None:
 
 def test_apoderado_service_importable_and_has_cli_callers() -> None:
     """ApoderadoService must be importable; CLI entrypoint must reference it."""
-    from aeat.application.auth._apoderado import ApoderadoService
 
     cli_path = Path(__file__).parents[1] / "aeat/entrypoints/cli/_config/__init__.py"
     assert cli_path.exists(), f"CLI entrypoint not found at {cli_path}"
@@ -159,16 +155,14 @@ def test_apoderado_service_importable_and_has_cli_callers() -> None:
 
 def test_financial_provider_init_subclass_rejects_missing_verification_source() -> None:
     """A concrete subclass missing verification_source must raise FinancialProviderConfigError."""
-    from abc import abstractmethod
     from collections.abc import Iterator
-    from pathlib import Path
 
-    from aeat.adapters.inbound.financial.providers._base import (
+    from .adapters.inbound.financial.providers._base import (
         FinancialProvider,
         FinancialProviderConfigError,
         ProviderValidation,
     )
-    from aeat.domain.transactions import RawTransaction
+    from .domain.transactions import RawTransaction
 
     with pytest.raises(FinancialProviderConfigError, match="verification_source"):
 
@@ -187,16 +181,14 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
 
 def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional() -> None:
     """A no_corpus provider with provisional_pending_specimen=False must raise FinancialProviderConfigError."""
-    from abc import abstractmethod
     from collections.abc import Iterator
-    from pathlib import Path
 
-    from aeat.adapters.inbound.financial.providers._base import (
+    from .adapters.inbound.financial.providers._base import (
         FinancialProvider,
         FinancialProviderConfigError,
         ProviderValidation,
     )
-    from aeat.domain.transactions import RawTransaction
+    from .domain.transactions import RawTransaction
 
     with pytest.raises(FinancialProviderConfigError, match="no_corpus"):
 
@@ -217,13 +209,12 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
 def test_financial_provider_init_subclass_accepts_valid_provider() -> None:
     """A fully-compliant concrete subclass must not raise at definition."""
     from collections.abc import Iterator
-    from pathlib import Path
 
-    from aeat.adapters.inbound.financial.providers._base import (
+    from .adapters.inbound.financial.providers._base import (
         FinancialProvider,
         ProviderValidation,
     )
-    from aeat.domain.transactions import RawTransaction, SourceFormat
+    from .domain.transactions import RawTransaction, SourceFormat
 
     class _GoodProvider(FinancialProvider):
         name = "good-provider"

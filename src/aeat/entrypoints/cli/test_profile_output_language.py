@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -47,10 +47,10 @@ def _isolate(tmp_path: Path) -> None:
 def test_config_profile_create_writes_profile_output_language(
     tmp_path: Path,
 ) -> None:
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.core._bucket_pointer_io import resolve_active_bucket_id
-    from aeat.core.config import override_settings
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core.config import override_settings
 
     _isolate(tmp_path)
 
@@ -84,7 +84,7 @@ def test_config_profile_create_writes_profile_output_language(
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from aeat.application.user_profile._orchestration import fact_value
+        from ...application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "en"
         profile_id = record.profile_id
@@ -103,8 +103,8 @@ def test_config_profile_create_writes_profile_output_language(
 def test_config_profile_create_validates_profile_output_language(
     tmp_path: Path,
 ) -> None:
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...application.workflow._persistence import workflow_state_repository
 
     _isolate(tmp_path)
     valid_result = _invoke(
@@ -147,7 +147,7 @@ def test_config_profile_create_validates_profile_output_language(
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
-        from aeat.application.user_profile._orchestration import fact_value
+        from ...application.user_profile._orchestration import fact_value
 
         assert fact_value(record, "preferences.output_language") == "ca"
         assert invalid_result.exit_code != 0
@@ -171,9 +171,9 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
     left exactly as stored.
     """
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.application.user_profile._orchestration import fact_value
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...application.user_profile._orchestration import fact_value
+    from ...application.workflow._persistence import workflow_state_repository
 
     _isolate(tmp_path)
 

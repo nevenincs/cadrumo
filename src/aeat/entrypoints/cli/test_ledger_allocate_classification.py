@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.entrypoints.cli import app
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

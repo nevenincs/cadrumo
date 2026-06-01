@@ -25,7 +25,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import (
     LIVE_CENSO_SNAPSHOT_NAMESPACE as CENSO_SNAPSHOT_STORAGE_NAMESPACE,

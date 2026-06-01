@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from aeat.core.errors import CoreValidationError
+from ..errors import CoreValidationError
 
 
 def coerce_utc_aware(value: datetime) -> datetime:

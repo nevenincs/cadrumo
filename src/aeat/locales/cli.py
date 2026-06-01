@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from aeat.core.i18n import tr
+from ..core.i18n import tr
 
 from .manager import LocaleError, LocaleManager
 

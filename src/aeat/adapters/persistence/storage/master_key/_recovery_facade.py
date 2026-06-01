@@ -32,6 +32,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..bucket._errors import RecoveryVerificationError
 from ..crypto._crypto import EncryptedBlob
 from ..errors import DecryptionError, StorageValidationError
@@ -45,8 +46,6 @@ from ._recovery import (
     wrap_master_key,
 )
 from ._recovery_record import RecoveryRecord
-
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _GCM_TAG_BYTES = 16
 _HKDF_INFO = "aeat.recovery-key.master-wrap.v1"

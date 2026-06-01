@@ -42,7 +42,6 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-
 from . import _shared_issue_reasons
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t

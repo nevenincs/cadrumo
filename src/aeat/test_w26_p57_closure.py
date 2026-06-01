@@ -7,7 +7,6 @@ test itself passes.
 
 from __future__ import annotations
 
-import importlib
 import pathlib
 import subprocess
 import sys

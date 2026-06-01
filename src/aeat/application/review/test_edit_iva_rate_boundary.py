@@ -14,8 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.review._edit import InvoiceEditSpec
-from aeat.application.review._errors import EditParseError
+from ._edit import InvoiceEditSpec
+from ._errors import EditParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

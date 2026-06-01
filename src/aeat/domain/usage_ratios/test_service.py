@@ -15,17 +15,17 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import Envelope, SensitivityClass
-from aeat.adapters.persistence.storage.errors import StorageValidationError
-from aeat.domain.categories import SpendingCategory
-from aeat.domain.usage_ratios import (
+from ...adapters.persistence.storage import Envelope, SensitivityClass
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ..categories import SpendingCategory
+from . import (
     UsageRatioPersistenceError,
     UsageRatioProfile,
     load_usage_ratios,
     save_usage_ratios,
     usage_ratios_object_key,
 )
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

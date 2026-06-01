@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.auth._apoderado import (
+from ._apoderado import (
     ApoderadoService,
     ApoderadoStatus,
 )
-from aeat.core.config import Settings
-from aeat.domain.auth.apoderamientos import UnknownScopeError
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...core.config import Settings
+from ...domain.auth.apoderamientos import UnknownScopeError
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

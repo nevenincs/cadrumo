@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ..errors import KeyDerivationError, StorageValidationError
+from ..errors import StorageValidationError
 
 if TYPE_CHECKING:
     from ..bucket._manifest import ManifestKdfParams

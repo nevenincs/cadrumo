@@ -18,7 +18,6 @@ import pytest
 
 from ._censo import CensoFactSet, CensoParseError, parse_g313_html
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 

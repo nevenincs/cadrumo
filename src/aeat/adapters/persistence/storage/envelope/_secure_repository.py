@@ -26,7 +26,7 @@ from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger

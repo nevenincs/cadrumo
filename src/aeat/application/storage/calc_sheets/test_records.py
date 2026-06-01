@@ -7,13 +7,12 @@ re-exported as ``_utc_now`` from ``_records`` rather than a locally-inlined
 
 from __future__ import annotations
 
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 import pytest
 
-from aeat.core.time import now
-from aeat.application.storage.calc_sheets._records import _utc_now
-
+from ._records import _utc_now
+from ....core.time import now
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

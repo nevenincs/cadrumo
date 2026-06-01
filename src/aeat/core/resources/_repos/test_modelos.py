@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources._errors import ResourceNotFoundError
-from aeat.core.resources._repos.modelos import StaticModeloRepository
+from .._errors import ResourceNotFoundError
+from .modelos import StaticModeloRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

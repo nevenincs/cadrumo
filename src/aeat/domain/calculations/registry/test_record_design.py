@@ -10,7 +10,7 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (

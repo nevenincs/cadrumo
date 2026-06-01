@@ -23,7 +23,6 @@ from ..categories import (
 from ._errors import UsageRatioValidationError
 from ._service import derive_home_office_ratios_from_censo
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 

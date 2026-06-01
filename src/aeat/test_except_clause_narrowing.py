@@ -32,11 +32,10 @@ class TestSiteHealthValidatorUsesValueError:
     """
 
     def test_non_str_marker_raises_validation_error_not_type_error(self) -> None:
+        from pydantic import AnyHttpUrl as _AnyHttpUrl
         from pydantic import ValidationError
 
-        from aeat.adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
-
-        from pydantic import AnyHttpUrl as _AnyHttpUrl
+        from .adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
 
         with pytest.raises(ValidationError) as exc_info:
             SiteHealthEvidence(
@@ -58,7 +57,7 @@ class TestSiteHealthValidatorUsesValueError:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
         from pydantic import ValidationError
 
-        from aeat.adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
+        from .adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
 
         try:
             SiteHealthEvidence(
@@ -84,9 +83,8 @@ class TestWorkbookParityScanNarrowing:
 
     def test_corrupt_xlsx_returns_failed_report(self, tmp_path) -> None:
         """openpyxl raises BadZipFile on corrupt .xlsx — absorbed into a failed report."""
-        from pathlib import Path
 
-        from aeat.domain.calculations.registry._workbook_parity import scan_workbook
+        from .domain.calculations.registry._workbook_parity import scan_workbook
 
         # Create a file with .xlsx extension but not a valid ZIP/OOXML
         bad_xlsx = tmp_path / "bad.xlsx"
@@ -106,7 +104,7 @@ class TestTokenizerFallbackNarrowing:
     """_formula_references falls back to regex on TokenizerError; other errors propagate."""
 
     def test_tokenizer_error_triggers_regex_fallback(self) -> None:
-        from aeat.domain.calculations.registry._workbook_parity import _formula_references
+        from .domain.calculations.registry._workbook_parity import _formula_references
 
         # openpyxl Tokenizer raises TokenizerError on malformed formula syntax
         # A formula that starts with '=' but has unmatched parens/brackets
@@ -115,7 +113,7 @@ class TestTokenizerFallbackNarrowing:
         assert isinstance(result, tuple)
 
     def test_well_formed_formula_returns_refs(self) -> None:
-        from aeat.domain.calculations.registry._workbook_parity import _formula_references
+        from .domain.calculations.registry._workbook_parity import _formula_references
 
         result = _formula_references("Sheet1", "=SUM(A1,B2,C3)", remaining=10)
         assert isinstance(result, tuple)
@@ -130,7 +128,7 @@ class TestSiteHealthValidatorHappyPath:
     def test_valid_str_markers_accepted(self) -> None:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
 
-        from aeat.adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
+        from .adapters.outbound.aeat.browser._site_health import SiteHealthEvidence
 
         ev = SiteHealthEvidence(
             url=_AnyHttpUrl("https://sede.agenciatributaria.gob.es/"),
@@ -150,7 +148,7 @@ class TestPdfplumberBackendNarrowing:
 
     def test_non_pdf_bytes_returns_none(self, tmp_path) -> None:
         """pypdfium2 raises on non-PDF content (or ImportError if not installed) → absorbed → None."""
-        from aeat.adapters.inbound.declaracion._parsers._pdfplumber_backend import (
+        from .adapters.inbound.declaracion._parsers._pdfplumber_backend import (
             _extract_pages_text_with_pdfium_cached,
         )
 
@@ -239,8 +237,7 @@ class TestPersistDeadlineNarrowing:
 
     def test_os_error_is_caught_by_narrowed_handler(self) -> None:
         """OSError from a persist call must be absorbed, not propagate."""
-        import os
-        from aeat.adapters.outbound.aeat.auth._errors import AuthError
+        from .adapters.outbound.aeat.auth._errors import AuthError
 
         # The narrowed handler is: except (OSError, AuthError): log.warning(...)
         # Verify both are in the tuple and that unexpected types are not
@@ -250,7 +247,7 @@ class TestPersistDeadlineNarrowing:
 
     def test_unexpected_exception_would_propagate_from_narrowed_handler(self) -> None:
         """MemoryError is not OSError or AuthError, so it must NOT be caught."""
-        from aeat.adapters.outbound.aeat.auth._errors import AuthError
+        from .adapters.outbound.aeat.auth._errors import AuthError
 
         handled = (OSError, AuthError)
         assert not issubclass(MemoryError, handled)
@@ -265,7 +262,7 @@ class TestAuthenticatorDescribeNarrowing:
     """Verify the describe-path handler only catches CertificateError and OSError."""
 
     def test_certificate_error_and_oserror_caught(self) -> None:
-        from aeat.adapters.outbound.aeat.auth.certificate import CertificateError
+        from .adapters.outbound.aeat.auth.certificate import CertificateError
 
         handled = (CertificateError, OSError)
         assert issubclass(CertificateError, handled)
@@ -273,10 +270,11 @@ class TestAuthenticatorDescribeNarrowing:
 
     def test_unexpected_exception_raises_auth_validation_error(self, tmp_path) -> None:
         """An unexpected exception from the certificate health check raises AuthValidationError."""
-        from aeat.adapters.outbound.aeat.auth._errors import AuthValidationError
-        from aeat.adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
-        from aeat.core.config import Settings
         from pydantic import SecretStr
+
+        from .adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
+        from .adapters.outbound.aeat.auth._errors import AuthValidationError
+        from .core.config import Settings
 
         cert_path = tmp_path / "cert.p12"
         cert_path.write_bytes(b"x")
@@ -301,10 +299,11 @@ class TestAuthenticatorDescribeNarrowing:
 
     def test_certificate_error_returns_unavailable_description(self, tmp_path) -> None:
         """CertificateError (expected) returns available=False description, not re-raises."""
-        from aeat.adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
-        from aeat.adapters.outbound.aeat.auth.certificate import CertificateError
-        from aeat.core.config import Settings
         from pydantic import SecretStr
+
+        from .adapters.outbound.aeat.auth._authenticator import AeatAuthenticator
+        from .adapters.outbound.aeat.auth.certificate import CertificateError
+        from .core.config import Settings
 
         cert_path = tmp_path / "cert.p12"
         cert_path.write_bytes(b"x")
@@ -332,8 +331,7 @@ class TestDiagnosticContextNarrowing:
     """_active_profile_diagnostic_context catches (ImportError, KeyError, AttributeError, UserProfileError)."""
 
     def test_narrows_correctly_to_expected_types(self) -> None:
-        from aeat.adapters.outbound.aeat.auth._clave_movil import ClaveMovilAuthProvider
-        from aeat.domain.user_profile._errors import UserProfileError
+        from .domain.user_profile._errors import UserProfileError
 
         handled = (ImportError, KeyError, AttributeError, UserProfileError)
         assert issubclass(ImportError, handled)
@@ -342,7 +340,7 @@ class TestDiagnosticContextNarrowing:
         assert issubclass(UserProfileError, handled)
 
     def test_memory_error_not_handled(self) -> None:
-        from aeat.domain.user_profile._errors import UserProfileError
+        from .domain.user_profile._errors import UserProfileError
 
         handled = (ImportError, KeyError, AttributeError, UserProfileError)
         assert not issubclass(MemoryError, handled)

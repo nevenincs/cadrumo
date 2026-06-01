@@ -11,15 +11,15 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.domain.deadlines import TaxpayerProfile
-from aeat.domain.deadlines._models import (
+from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines._models import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
 )
 
-from aeat.domain.calculations.registry.applicability import ApplicabilityVerdict
 from ._errors import OverviewExplainError
 from ._explain import OverviewExplain, build_overview_explain
 
@@ -153,7 +153,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
     only for an APPLICABLE verdict. explain and the operational views
     cannot diverge because both derive from the same rule table."""
 
-    from aeat.domain.calculations.registry.applicability import derive_modelo_applicability
+    from ...domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _autonomo_profile()
     result = build_overview_explain(profile, modelo="303", year=2026)

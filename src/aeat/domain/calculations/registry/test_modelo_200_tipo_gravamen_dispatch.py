@@ -36,7 +36,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree
 from ._errors import RegistryValidationError

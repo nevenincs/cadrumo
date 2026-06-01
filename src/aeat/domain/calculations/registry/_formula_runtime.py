@@ -1261,7 +1261,7 @@ def read_parameter(
     Raises :class:`RegistryValidationError` if the modelo / revision / parameter
     is not registered, or if the date context selects 0 or >1 dated values.
     """
-    from aeat.core.resources import bundled_path
+    from ....core.resources import bundled_path
 
     from ._authority import ValidatedRegistryAuthority
 

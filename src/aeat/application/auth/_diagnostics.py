@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket

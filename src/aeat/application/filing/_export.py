@@ -33,7 +33,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file

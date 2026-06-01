@@ -13,8 +13,8 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from aeat.entrypoints.cli import app
-from aeat.entrypoints.cli._ledger import app as ledger_app
+from . import app
+from ._ledger import app as ledger_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

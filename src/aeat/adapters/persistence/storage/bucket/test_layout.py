@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage.bucket._errors import BucketValidationError
-from aeat.adapters.persistence.storage.bucket._layout import (
+from ._errors import BucketValidationError
+from ._layout import (
     BucketPaths,
     bucket_paths,
     provision_bucket_directory,

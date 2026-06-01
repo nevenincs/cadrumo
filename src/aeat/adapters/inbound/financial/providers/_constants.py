@@ -14,8 +14,6 @@ edit in every dispatch branch.
 
 from __future__ import annotations
 
-from typing import Final
-
 from .....core.external_constants import PDF_EXTENSION, XLSX_EXTENSION
 
 CSV_EXTENSIONS: frozenset[str] = frozenset({".csv", ".txt"})

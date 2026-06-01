@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import typer
 
-from aeat.domain.buckets import BucketEventType
+from ....domain.buckets import BucketEventType
 
 from . import _parse_bucket_event_types
 

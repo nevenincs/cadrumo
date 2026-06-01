@@ -34,7 +34,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from aeat.core.time import now as _utc_now
+from ...core.time import now as _utc_now
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings

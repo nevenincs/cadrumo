@@ -35,14 +35,14 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.auth import AuthProviderDescription, AuthProviderKind
-from aeat.application.filing import (
+from ..auth import AuthProviderDescription, AuthProviderKind
+from ..filing import (
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
     filing_profile_from_taxpayer,
 )
-from aeat.application.modelo import (
+from . import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
@@ -61,7 +61,7 @@ from aeat.application.modelo import (
     mark_revision_verificado_completo,
     verify_modelo_revision,
 )
-from aeat.application.workflow import (
+from ..workflow import (
     DeadlineEngineAdapter,
     ModeloInputs,
     WorkflowAbortReason,
@@ -69,33 +69,33 @@ from aeat.application.workflow import (
     WorkflowPurpose,
     WorkflowStage,
 )
-from aeat.core.config import Settings
-from aeat.core.resources import resources
-from aeat.domain.buckets import (
+from ...core.config import Settings
+from ...core.resources import resources
+from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
 )
-from aeat.domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
-from aeat.domain.calculations.registry import InputKind
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
-from aeat.domain.modelos._filing_record import ModeloRecordStatus
-from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.modelos._verification_report import (
+from ...domain.calculations.registry import InputKind
+from ...domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos._filing_record import ModeloRecordStatus
+from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from aeat.domain.modelos._verification_repository import (
+from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
-from aeat.domain.modelos._work_unit import WorkUnit
-from aeat.domain.period import parse_canonical_period
-from aeat.domain.submission import SubmissionEngine
-from aeat.domain.transactions import TransactionCatalogue
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...domain.modelos._work_unit import WorkUnit
+from ...domain.period import parse_canonical_period
+from ...domain.submission import SubmissionEngine
+from ...domain.transactions import TransactionCatalogue
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -1115,7 +1115,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
     """A discarded work unit refuses further calculation. The
     operator must create a fresh work unit to continue."""
 
-    from aeat.application.modelo import (
+    from . import (
         WorkUnitMutationRefusedError,
         discard_work_unit,
     )
@@ -1145,8 +1145,8 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
 
-    from aeat.application.modelo import discard_work_unit
-    from aeat.domain.buckets._event import BucketEventObjectType, BucketEventType
+    from . import discard_work_unit
+    from ...domain.buckets._event import BucketEventObjectType, BucketEventType
 
     wu_repo, _, _, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
@@ -1342,10 +1342,10 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # BLOCKING_RULE path explicitly: the work unit was anchored at a
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
-    from aeat.domain.modelos._calculation_repository import (
+    from ...domain.modelos._calculation_repository import (
         upsert_calculation_revision,
     )
-    from aeat.domain.modelos._calculation_revision import (
+    from ...domain.modelos._calculation_revision import (
         CalculationRevision,
         derive_calculation_revision_id,
     )
@@ -1887,7 +1887,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
     ``CalculationRegistryUnavailableError`` rather than persisting a
     revision that bypasses the engine."""
 
-    from aeat.application.modelo import CalculationRegistryUnavailableError
+    from . import CalculationRegistryUnavailableError
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     # Modelo 130 at year 2010 predates the registry's earliest

@@ -8,7 +8,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import resources
+from ....core.resources import resources
 
 from ....core.errors import get_registered_error_code
 from . import (

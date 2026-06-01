@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.logging import get_logger
 

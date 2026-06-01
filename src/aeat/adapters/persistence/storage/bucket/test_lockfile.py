@@ -11,11 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.bucket._errors import BucketBusyError
-from aeat.adapters.persistence.storage.bucket._layout import (
+from ._errors import BucketBusyError
+from ._layout import (
     provision_bucket_directory,
 )
-from aeat.adapters.persistence.storage.bucket._lockfile import (
+from ._lockfile import (
     acquire_lock,
     lock_path,
     release_lock,

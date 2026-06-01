@@ -166,7 +166,7 @@ def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
     """
     import logging
 
-    from aeat.core.logging import SecretScrubbingFilter, attach_run_sink
+    from ..logging import SecretScrubbingFilter, attach_run_sink
 
     _RUN_ID = "0123456789abcdef"
     target = tmp_path / "run_events.jsonl"

@@ -13,7 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.decimal import coerce_decimal

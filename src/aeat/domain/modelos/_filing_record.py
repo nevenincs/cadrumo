@@ -33,11 +33,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ...core.identity import BucketId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
-
-from ...core.identity import BucketId
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
+
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),

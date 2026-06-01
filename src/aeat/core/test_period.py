@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.core._period import (
+from ._period import (
     RegistryPeriodCode,
     StandardPeriodCode,
     accepted_period_codes,

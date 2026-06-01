@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import inspect
 
-from aeat.core.time import now
+from ..time import now
 
 from ..logging import get_logger
 from ._context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR

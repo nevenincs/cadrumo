@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core._bucket_pointer import BucketPointer
-from aeat.core._bucket_pointer_io import write_pointer
-from aeat.core.config import (
+from ._bucket_pointer import BucketPointer
+from ._bucket_pointer_io import write_pointer
+from .config import (
     Settings,
     StorageRouteKind,
     classify_storage_route,
     settings_for_active_profile_bucket,
 )
-from aeat.core.errors import CoreValidationError
+from .errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.aggregation._counterpart import (
+from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
     CounterpartSourceKind,
@@ -16,7 +16,7 @@ from aeat.application.aggregation._counterpart import (
     aggregate_counterpart_349,
     declarable_for_347,
 )
-from aeat.core.external_constants import M347_THRESHOLD_EUR
+from ...core.external_constants import M347_THRESHOLD_EUR
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -154,9 +154,9 @@ class TestAggregate349:
 
 class TestInvariants:
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from aeat.application.aggregation._counterpart import _MODELO_KIND_CATALOGUE
-        from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
-        from aeat.application.aggregation._grouping import filter_observations_for_modelo
+        from ._counterpart import _MODELO_KIND_CATALOGUE
+        from ._errors import AggregationUnsupportedModeloError
+        from ._grouping import filter_observations_for_modelo
 
         with pytest.raises(AggregationUnsupportedModeloError) as exc_info:
             filter_observations_for_modelo(

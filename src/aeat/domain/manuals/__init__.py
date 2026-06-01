@@ -28,6 +28,14 @@ Examples:
 
 from __future__ import annotations
 
+from ._errors import (
+    ManifestError,
+    ManualError,
+    ManualNotFoundError,
+    ManualParseError,
+    ManualReviewRequiredError,
+    RuleExtractionError,
+)
 from ._fetch import (
     PART_SPECS,
     FetchResult,
@@ -68,14 +76,6 @@ from ._verify import (
     ManualVerificationReport,
     raise_on_errors,
     verify_manual_dir,
-)
-from ._errors import (
-    ManifestError,
-    ManualError,
-    ManualNotFoundError,
-    ManualParseError,
-    ManualReviewRequiredError,
-    RuleExtractionError,
 )
 
 __all__ = [

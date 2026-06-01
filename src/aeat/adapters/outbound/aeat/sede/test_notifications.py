@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.tests import FIXTURES_DIR
+from .....tests import FIXTURES_DIR
 
 from ._notifications import (
     parse_notifications_query,

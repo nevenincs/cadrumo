@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.core.config import override_settings
-from aeat.core.i18n._render import output_language
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ..application.user_profile._orchestration import profile_create_storage_span
+from ..core.config import override_settings
+from ..core.i18n._render import output_language
+from .secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -31,7 +31,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
     locale resolver a real backing store to read from.
     """
 
-    from aeat.adapters.persistence.storage.sql import dispose_engine
+    from ..adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
     with (
@@ -46,10 +46,10 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_profile_language(language: str) -> None:
-    from aeat.application.user_profile._orchestration import set_active_field
-    from aeat.application.user_profile._testing import register_minimal_profile
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.domain.user_profile import UserProfileFact
+    from ..application.user_profile._orchestration import set_active_field
+    from ..application.user_profile._testing import register_minimal_profile
+    from ..application.workflow._persistence import workflow_state_repository
+    from ..domain.user_profile import UserProfileFact
 
     repository = workflow_state_repository()
     repository.update(lambda state: register_minimal_profile(state, profile_id="default"))
@@ -62,7 +62,7 @@ def test_output_language_reads_active_profile_without_emitting_bucket_events(
     isolated_language_state: None,
 ) -> None:
     del isolated_language_state
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from ..application.workflow._persistence import workflow_state_repository
 
     _seed_profile_language("ca")
     repository = workflow_state_repository()

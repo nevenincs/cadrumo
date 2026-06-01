@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import RegistryCatalogues, RegistryValidationError
 from ._loader import load_registry_tree

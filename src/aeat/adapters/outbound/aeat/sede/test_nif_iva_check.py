@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
+from ._nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     NifIvaCheckObservation,
     NifIvaCheckResult,
@@ -23,8 +23,8 @@ from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
     extract_verdict_from_response_text,
     is_aeat_auth_gate_redirect,
 )
-from aeat.core.config import Settings
-from aeat.domain.calculations.registry import RegistryValidationError
+from .....core.config import Settings
+from .....domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

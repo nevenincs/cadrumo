@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
-from aeat.application.evidence import (
+from ...adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
+from . import (
     BundleVerificationState,
     EvidenceBundleNotFoundError,
     EvidenceBundleService,
@@ -17,8 +17,8 @@ from aeat.application.evidence import (
     EvidenceBundleVerificationReport,
     VerificationCheck,
 )
-from aeat.application.evidence._models import derive_bundle_id
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ._models import derive_bundle_id
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -294,8 +294,8 @@ class TestBucketIsolation:
 
 class TestDeriveBundleId:
     def test_derive_changes_when_record_digest_changes(self) -> None:
-        from aeat.application.evidence._models import EvidenceRecordRef
-        from aeat.domain.buckets._event import BucketEventObjectType
+        from ._models import EvidenceRecordRef
+        from ...domain.buckets._event import BucketEventObjectType
 
         rec_a = EvidenceRecordRef(
             object_type=BucketEventObjectType.CALCULATION_REVISION,

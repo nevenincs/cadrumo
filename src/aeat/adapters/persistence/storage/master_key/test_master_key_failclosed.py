@@ -15,12 +15,12 @@ from collections.abc import Iterator
 
 import pytest
 
-from aeat.adapters.persistence.storage.master_key._master_key import (
+from ..errors import SecretStoreError
+from ._master_key import (
     PASSPHRASE_ENV_VAR,
     _default_passphrase_callback,
 )
-from aeat.adapters.persistence.storage.errors import SecretStoreError
-from aeat.core.config import override_settings
+from .....core.config import override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -59,9 +59,8 @@ def test_override_passphrase_none_falls_through_to_getpass(
         raise EOFError("no terminal available for passphrase prompt")
 
     monkeypatch.setattr("getpass.getpass", _fake_getpass)
-    with override_settings(aeat_secret_passphrase=None):
-        with pytest.raises(EOFError):
-            _default_passphrase_callback()
+    with override_settings(aeat_secret_passphrase=None), pytest.raises(EOFError):
+        _default_passphrase_callback()
 
 
 def test_override_passphrase_only_crlf_raises_secret_store_error(
@@ -77,9 +76,8 @@ def test_override_passphrase_only_crlf_raises_secret_store_error(
     secret store either. Interior whitespace is preserved by
     design (some passphrase policies require it).
     """
-    with override_settings(aeat_secret_passphrase="\r\n"):
-        with pytest.raises(SecretStoreError):
-            _default_passphrase_callback()
+    with override_settings(aeat_secret_passphrase="\r\n"), pytest.raises(SecretStoreError):
+        _default_passphrase_callback()
 
 
 def test_override_passphrase_valid_value_resolves(

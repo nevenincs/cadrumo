@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.domain.calculations.registry import RegistryValidationError, parse_export_payload
-from aeat.domain.filing import FilingExportError
-from aeat.domain.submission import ModeloDraftStatus
+from ...domain.calculations.registry import RegistryValidationError, parse_export_payload
+from ...domain.filing import FilingExportError
+from ...domain.submission import ModeloDraftStatus
 
 from . import (
     DeclaracionExportFormat,

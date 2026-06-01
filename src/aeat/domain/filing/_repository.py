@@ -17,7 +17,6 @@ from ._runtime_repository import resolve_filing_repository_bucket_id, secure_obj
 from ._schema import ModeloDraft
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 

@@ -11,13 +11,13 @@ from __future__ import annotations
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._cite import cite
+from ._errors import NormativeError, NormativeParseError
 from ._loader import load_catalogue
 from ._schema import (
     NormativeCatalogue,
     NormativeVerificationIssue,
     NormativeVerificationReport,
 )
-from ._errors import NormativeError, NormativeParseError
 
 _logger = get_logger(__name__)
 

@@ -13,6 +13,8 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
+from ...core.aggregation import AggregationSourceKind
+
 from ...core.logging import get_logger
 from ._counterpart import (
     CounterpartAggregation,
@@ -32,10 +34,10 @@ from ._retenciones import (
     aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
-from aeat.core.aggregation import AggregationSourceKind
 
 LOGGER = get_logger(__name__)
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 
 class PerModeloAggregationProvider(StrEnum):
     """Implemented provider families owned by ``aeat.application.aggregation``."""

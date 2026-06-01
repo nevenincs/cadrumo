@@ -16,7 +16,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.outbound.google._errors import (
+from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientNotRegisteredError,
     GoogleAuthClientRevokedError,
@@ -31,7 +31,7 @@ from aeat.adapters.outbound.google._errors import (
     GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
 )
-from aeat.adapters.outbound.google._records import (
+from ._records import (
     DRIVE_FILE_SCOPE,
     REQUIRED_SCOPES,
     SHEETS_SCOPE,

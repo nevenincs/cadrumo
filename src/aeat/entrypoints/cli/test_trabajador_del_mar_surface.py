@@ -34,17 +34,17 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.calculations._maritime_exemption_service import (
+from ...application.calculations._maritime_exemption_service import (
     resolve_maritime_exemption,
 )
-from aeat.core.errors import get_registered_error_code
-from aeat.core.i18n import tr
-from aeat.domain.renta import (
+from ...core.errors import get_registered_error_code
+from ...core.i18n import tr
+from ...domain.renta import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from aeat.domain.user_profile import load_user_profile_schema
+from ...domain.user_profile import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

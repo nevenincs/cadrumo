@@ -8,11 +8,12 @@ strings are computed independently of the implementation.
 
 from __future__ import annotations
 
-import pytest
 from decimal import Decimal
 
-from aeat.core.decimal import format_decimal
-from aeat.core.errors import DecimalFormatError
+import pytest
+
+from . import format_decimal
+from ..errors import DecimalFormatError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

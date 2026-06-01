@@ -30,16 +30,16 @@ from ...application.registry import (
     verify_registry_citations,
     verify_registry_manual,
 )
+from ...core.i18n import tr
 from ...domain.manuals import ManualPart
 from ._common import _emit_envelope
-from ...core.i18n import tr
 from ._registry_corpus_payloads import (
     CitationListResult,
     CitationShowResult,
     CitationVerifyResult,
     ManualListResult,
-    ManualShowResult,
     ManualRulesListResult,
+    ManualShowResult,
     ManualVerifyResult,
 )
 

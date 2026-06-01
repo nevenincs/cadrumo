@@ -165,7 +165,7 @@ def test_remove_active_profile_tombstones_and_clears_pointer(schema) -> None:
             routing_profile_id=routing_profile_id,
         )
         state = remove_active_profile(state, schema=schema)
-    from aeat.application.workflow._models import resolve_active_bucket_id
+    from ..workflow._models import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
     assert state.bucket_events[-1].action == "profile.tombstoned"

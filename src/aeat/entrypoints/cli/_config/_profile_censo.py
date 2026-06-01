@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import typer
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr

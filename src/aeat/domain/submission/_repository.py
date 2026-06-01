@@ -17,7 +17,7 @@ from ...core.logging import get_logger
 from ._models import ModeloPresentado
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    pass
 
 _log = get_logger(__name__)
 

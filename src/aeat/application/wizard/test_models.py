@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from aeat.application.wizard._models import (
+from ._models import (
     WizardChoice,
     WizardCondition,
     WizardFlow,
@@ -21,7 +21,7 @@ from aeat.application.wizard._models import (
     WizardSection,
     WizardWidget,
 )
-from aeat.core.i18n import Translatable as tr
+from ...core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

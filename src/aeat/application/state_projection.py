@@ -34,7 +34,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
-from ..core.config import Settings
+from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.errors import AeatError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -57,8 +57,6 @@ from .user_profile import ProfilePreflightRequirement
 from .workflow._models import WorkflowState, resolve_active_bucket_id
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
-
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _log = get_logger(__name__)
 

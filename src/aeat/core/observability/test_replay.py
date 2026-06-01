@@ -119,10 +119,10 @@ class TestReplayRun:
         from ..config import PROJECT_ROOT as _PROJECT_ROOT
         from ..config import Settings as _Settings
         from . import (
-            run_context,
+            compute_corpus_sha256 as _compute_corpus_sha256,
         )
         from . import (
-            compute_corpus_sha256 as _compute_corpus_sha256,
+            run_context,
         )
         from ._store import load_trace
 

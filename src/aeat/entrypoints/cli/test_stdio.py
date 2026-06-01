@@ -34,13 +34,13 @@ import os
 
 import pytest
 
-from aeat.entrypoints.cli._stdio import (
+from ._stdio import (
     _COLUMNS_ENV_VAR,
     _MIN_HELP_RENDER_COLUMNS,
     _ensure_help_render_width,
     configure_stdio_for_utf8,
 )
-from aeat.tests.env_scope import scoped_env_var, scoped_sys_argv
+from ...tests.env_scope import scoped_env_var, scoped_sys_argv
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -183,10 +183,9 @@ def test_help_invocation_below_floor_widens_columns() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
-        scoped_env_var("COLUMNS", "80"),
+        scoped_env_var("COLUMNS", "80"),_ensure_help_render_width()
     ):
-        with _ensure_help_render_width():
-            assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
+        assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
 
 
 def test_help_invocation_keeps_wider_columns() -> None:
@@ -194,10 +193,9 @@ def test_help_invocation_keeps_wider_columns() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
-        scoped_env_var("COLUMNS", "300"),
+        scoped_env_var("COLUMNS", "300"),_ensure_help_render_width()
     ):
-        with _ensure_help_render_width():
-            assert os.environ["COLUMNS"] == "300"
+        assert os.environ["COLUMNS"] == "300"
 
 
 def test_non_help_invocation_leaves_columns_untouched() -> None:
@@ -209,10 +207,9 @@ def test_non_help_invocation_leaves_columns_untouched() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "list"]),
-        scoped_env_var("COLUMNS", "80"),
+        scoped_env_var("COLUMNS", "80"),_ensure_help_render_width()
     ):
-        with _ensure_help_render_width():
-            assert os.environ["COLUMNS"] == "80"
+        assert os.environ["COLUMNS"] == "80"
 
 
 def test_non_help_invocation_without_columns_set() -> None:
@@ -220,10 +217,9 @@ def test_non_help_invocation_without_columns_set() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "list"]),
-        scoped_env_var("COLUMNS", None),
+        scoped_env_var("COLUMNS", None),_ensure_help_render_width()
     ):
-        with _ensure_help_render_width():
-            assert "COLUMNS" not in os.environ
+        assert "COLUMNS" not in os.environ
 
 
 # --- _COLUMNS_ENV_VAR constant (S188) ----------------------------------------
@@ -249,10 +245,9 @@ def test_columns_env_var_used_for_env_write() -> None:
     """
     with (
         scoped_sys_argv(["aeat", "--help"]),
-        scoped_env_var(_COLUMNS_ENV_VAR, "80"),
+        scoped_env_var(_COLUMNS_ENV_VAR, "80"),_ensure_help_render_width()
     ):
-        with _ensure_help_render_width():
-            assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
 
 def test_columns_env_var_used_for_env_read() -> None:
@@ -265,10 +260,9 @@ def test_columns_env_var_used_for_env_read() -> None:
     wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
     with (
         scoped_sys_argv(["aeat", "--help"]),
-        scoped_env_var(_COLUMNS_ENV_VAR, wide),
+        scoped_env_var(_COLUMNS_ENV_VAR, wide),_ensure_help_render_width()
     ):
-        with _ensure_help_render_width():
-            assert os.environ[_COLUMNS_ENV_VAR] == wide
+        assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
 # --- COLUMNS env-write scoping (S306) ----------------------------------------
@@ -349,7 +343,7 @@ def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
     logger, and ``configure_logging()`` installs ``SecretScrubbingFilter`` on
     root.  This test verifies that propagation contract end-to-end.
     """
-    from aeat.core.logging import configure_logging
+    from ...core.logging import configure_logging
 
     configure_logging()
 
@@ -383,7 +377,7 @@ def test_stdio_logger_scrubbing_filter_present_on_root_after_configure() -> None
     Verifies the structural precondition that makes NIF scrubbing effective for
     stdlib loggers (including the _stdio module's logger) that propagate to root.
     """
-    from aeat.core.logging import SecretScrubbingFilter, configure_logging
+    from ...core.logging import SecretScrubbingFilter, configure_logging
 
     configure_logging()
     root_logger = logging.getLogger()

@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from pydantic import ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 if TYPE_CHECKING:
     from ...adapters.inbound.financial.providers import ProviderValidation

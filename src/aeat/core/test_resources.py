@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import as_path, packaged_data
+from .resources import as_path, packaged_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

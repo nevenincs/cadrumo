@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.identity import BucketId
 from ...domain.categories import (
     ProportionalityRule,
     SpendingCategory,
@@ -25,7 +26,6 @@ from ...domain.categories import (
     family_for,
     resolve_category_profiles,
 )
-from ...core.identity import BucketId
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,

@@ -10,8 +10,8 @@ from textwrap import dedent
 
 import pytest
 
-from aeat.application.storage_write_policy import is_profile_bound_write_verb_path
-from aeat.core.paths import PROJECT_ROOT
+from ...application.storage_write_policy import is_profile_bound_write_verb_path
+from ...core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

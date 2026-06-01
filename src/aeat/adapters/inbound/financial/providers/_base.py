@@ -49,7 +49,7 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal

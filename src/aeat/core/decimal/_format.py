@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from aeat.core.errors import DecimalFormatError
-from aeat.core.logging import get_logger
+from ..errors import DecimalFormatError
+from ..logging import get_logger
 
 _logger = get_logger(__name__)
 
