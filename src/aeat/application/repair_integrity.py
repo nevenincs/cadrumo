@@ -2,7 +2,9 @@
 
 Implements the subverbs for configuration repair and integrity checks. Each function
 returns a strict Pydantic report consumed by the CLI's ``_emit``
-renderer; both functions are read-only and emit no bucket events.
+renderer; both functions are read-only and emit no bucket events. Integrity
+sweeps iterate every namespace inside a :class:`SecureObjectRepository` to
+assess decryptability and produce per-namespace counts.
 
   ``build_repair_integrity_report``  per-namespace decryptability
                                      summary (optionally filtered to
@@ -540,7 +542,16 @@ _LEDGER_POLICY = RepairPolicyNamespacePolicy(
     recovery_policy="reimport_authoritative_ledger_source",
     mutation_authority="operator_requested_import_or_export_only",
 )
-_REPAIR_ADR_LINKS: tuple[str, ...] = ()
+_REPAIR_ADR_LINKS: tuple[str, ...] = (
+    # Catalog itself (build_repair_policy_command_surface_catalog,
+    # repair_remediation_decision_id, and the linkage-coordination
+    # contract these surfaces serve as the executable mirror of).
+    "[[2026-05-26-linkage-design-audit-adr]]",
+    # Repair CLI shape (the operator-facing verb surface every entry
+    # in the catalog mirrors — adding a verb here without an entry
+    # there is the drift the gate exists to catch).
+    "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]",
+)
 
 
 def _secure_object_policy(
