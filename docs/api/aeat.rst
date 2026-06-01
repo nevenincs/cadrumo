@@ -4,6 +4,8 @@ aeat package
 .. automodule:: aeat
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------
@@ -12,6 +14,7 @@ Subpackages
    :maxdepth: 4
 
    aeat.adapters
+   aeat.apidocs
    aeat.application
    aeat.core
    aeat.diagnostics

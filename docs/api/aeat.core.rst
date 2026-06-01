@@ -4,6 +4,8 @@ aeat.core package
 .. automodule:: aeat.core
    :members:
    :show-inheritance:
+   :ignore-module-all:
+
 
 Subpackages
 -----------
@@ -14,12 +16,15 @@ Subpackages
    aeat.core.access_gate
    aeat.core.classification
    aeat.core.corpus_manifest
+   aeat.core.decimal
    aeat.core.errors
    aeat.core.i18n
    aeat.core.identity
    aeat.core.observability
+   aeat.core.parsing
    aeat.core.redaction
    aeat.core.resources
+   aeat.core.time
 
 Submodules
 ----------
@@ -27,14 +32,23 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.core._bucket_pointer
+   aeat.core._bucket_pointer_io
+   aeat.core._models
+   aeat.core._period
+   aeat.core._toml
+   aeat.core.aggregation
    aeat.core.click_context
    aeat.core.config
    aeat.core.env_io
    aeat.core.external_constants
    aeat.core.file_permissions
+   aeat.core.hashing
    aeat.core.json_contract
    aeat.core.locks
    aeat.core.locks_errors
    aeat.core.logging
    aeat.core.output_rendering
    aeat.core.paths
+   aeat.core.profile
+   aeat.core.profile_catalogue
