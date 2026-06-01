@@ -8,8 +8,8 @@ from textwrap import dedent
 import pytest
 
 from .....core.config import Settings
-from . import G313_LAUNCHER_URL, census_fact_set_to_mapping, fetch_g313_census
-from ._censo_live import _fetch_g313_census_with_storage_state
+from . import G313_LAUNCHER_URL, censo_fact_set_to_mapping, fetch_g313_censo
+from ._censo_live import _fetch_g313_censo_with_storage_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -75,8 +75,8 @@ class _RecordingBrowserSession:
 
 
 def test_g313_live_driver_is_exported_from_public_sede_surface() -> None:
-    assert callable(fetch_g313_census)
-    assert callable(census_fact_set_to_mapping)
+    assert callable(fetch_g313_censo)
+    assert callable(censo_fact_set_to_mapping)
     assert G313_LAUNCHER_URL.endswith("/Sede/procedimientoini/G313.shtml")
 
 
@@ -99,7 +99,7 @@ async def test_g313_fetch_uses_authenticated_storage_and_parses_page_content() -
         assert isinstance(settings, Settings)
         return browser_session
 
-    fact_set = await _fetch_g313_census_with_storage_state(
+    fact_set = await _fetch_g313_censo_with_storage_state(
         storage_state,
         settings=Settings(),
         browser_session_factory=browser_session_factory,
@@ -109,13 +109,13 @@ async def test_g313_fetch_uses_authenticated_storage_and_parses_page_content() -
     assert browser_session.page.goto_calls == [(G313_LAUNCHER_URL, "domcontentloaded")]
     assert browser_session.context.close_calls == 1
     assert browser_session.close_calls == 1
-    assert census_fact_set_to_mapping(fact_set) == {
+    assert censo_fact_set_to_mapping(fact_set) == {
         "activities.iae_epigraph": "721",
         "address.cadastral_reference": "1234567AB1234S0001WX",
         "address.is_habitual_vivienda": "true",
-        "census.activity_start_date": "2018-03-15",
-        "census.elected_withholding_pct": "15",
-        "census.establecimiento_type": "propio",
+        "censo.activity_start_date": "2018-03-15",
+        "censo.elected_withholding_pct": "15",
+        "censo.establecimiento_type": "propio",
         "vivienda_office.office_m2": "24.1",
         "vivienda_office.total_m2": "120.5",
     }

@@ -237,7 +237,7 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
     assert profile.irpf_estimation_regime is None
     assert profile.iva.sii_enrolled is False
     assert profile.iva.redeme_enrolled is False
-    # The optional census alta date is also undeclared for a v1 record.
+    # The optional censo alta date is also undeclared for a v1 record.
     assert profile.activity_start_date is None
 
 
@@ -245,10 +245,10 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
     secure_objects: SecureObjectRepository,
     schema,
 ) -> None:
-    """The optional census alta date survives the real encrypted-SQL cycle.
+    """The optional censo alta date survives the real encrypted-SQL cycle.
 
     Round-4 testimonial finding D1 added an optional
-    ``census.activity_start_date`` profile fact. A profile carrying it
+    ``censo.activity_start_date`` profile fact. A profile carrying it
     at a NON-DEFAULT value (a real 2026 date, not the ``None`` default)
     must round-trip through the encrypted store and reconstruct the
     typed ``date`` on :class:`TaxpayerProfile.activity_start_date`, so
@@ -262,7 +262,7 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
             UserProfileFact(path="iva.regime", value="GENERAL") if f.path == "iva.regime" else f
             for f in _required_facts(schema)
         ),
-        UserProfileFact(path="census.activity_start_date", value=alta.isoformat()),
+        UserProfileFact(path="censo.activity_start_date", value=alta.isoformat()),
     )
 
     state = register_active_profile(
@@ -280,7 +280,7 @@ def test_activity_start_date_fact_survives_encrypted_sql_roundtrip(
     # The fact survives the encrypted boundary with its exact value;
     # the schema declares the field ``type = "date"``, so the persisted
     # fact reloads as a typed ``date``, not a string.
-    assert _fact_value(record, "census.activity_start_date") == alta
+    assert _fact_value(record, "censo.activity_start_date") == alta
 
     # The reloaded record reconstructs the typed date on the taxpayer
     # model, so the deadline-engine gate can suppress pre-alta windows.

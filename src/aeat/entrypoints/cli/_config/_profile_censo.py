@@ -1,6 +1,6 @@
-"""CLI verbs for ``aeat config profile census {refresh, show, compare, apply}``.
+"""CLI verbs for ``aeat config profile censo {refresh, show, compare, apply}``.
 
-Mounts the operator-facing census-sync surface on the existing
+Mounts the operator-facing censo-sync surface on the existing
 ``config profile`` subgroup. The backend is
 :class:`aeat.application.user_profile.CensoSyncService`; this module is the
 thin Typer layer that resolves the active profile/bucket, calls the
@@ -23,11 +23,11 @@ from ....core.i18n import tr
 from ....domain.profile._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
-from ._profile_census_payloads import (
-    CensusApplyResult,
-    CensusCompareResult,
-    CensusRefreshResult,
-    CensusShowResult,
+from ._profile_censo_payloads import (
+    CensoApplyResult,
+    CensoCompareResult,
+    CensoRefreshResult,
+    CensoShowResult,
 )
 
 
@@ -54,7 +54,7 @@ def _build_service(bucket_id: str):
     return CensoSyncService(bucket_id=bucket_id)
 
 
-def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_id: str) -> None:
+def _emit_censo_event(*, bucket_id: str, event_type, profile_id: str, snapshot_id: str) -> None:
 
     from ....domain.buckets import (
         BucketEvent,
@@ -96,24 +96,24 @@ def _emit_census_event(*, bucket_id: str, event_type, profile_id: str, snapshot_
 
 
 def register(profile_app: typer.Typer) -> None:
-    """Attach the census subgroup to ``profile_app``."""
-    census_app = typer.Typer(
-        name="census",
+    """Attach the censo subgroup to ``profile_app``."""
+    censo_app = typer.Typer(
+        name="censo",
         help=tr(
-            "cli.config.profile.census.help",
-            default="Sync your AEAT 036 census against this profile.",
+            "cli.config.profile.censo.help",
+            default="Sync your AEAT 036 censo against this profile.",
         ),
         no_args_is_help=True,
     )
 
-    @census_app.command(
+    @censo_app.command(
         "refresh",
         help=tr(
-            "cli.config.profile.census.refresh_help",
-            default="Pull your latest census from AEAT into this profile's snapshot store.",
+            "cli.config.profile.censo.refresh_help",
+            default="Pull your latest censo from AEAT into this profile's snapshot store.",
         ),
     )
-    def census_refresh(ctx: typer.Context) -> None:
+    def censo_refresh(ctx: typer.Context) -> None:
         import asyncio
 
         from ....application.user_profile import CensoNotAvailableError
@@ -122,16 +122,16 @@ def register(profile_app: typer.Typer) -> None:
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
         try:
-            snapshot = asyncio.run(service.refresh_census_from_sede(profile_id=profile_id))
+            snapshot = asyncio.run(service.refresh_censo_from_sede(profile_id=profile_id))
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        _emit_census_event(
+        _emit_censo_event(
             bucket_id=bucket_id,
-            event_type=BucketEventType.CENSUS_REFRESHED,
+            event_type=BucketEventType.CENSO_REFRESHED,
             profile_id=profile_id,
             snapshot_id=snapshot.snapshot_id,
         )
-        typed_refresh = CensusRefreshResult(
+        typed_refresh = CensoRefreshResult(
             snapshot_id=snapshot.snapshot_id,
             profile_id=snapshot.profile_id,
             captured_at=snapshot.captured_at.isoformat(),
@@ -142,22 +142,22 @@ def register(profile_app: typer.Typer) -> None:
             f"captured_at\t{snapshot.captured_at.isoformat()}",
             f"facts\t{len(snapshot.censo_facts)}",
         ]
-        _emit_envelope(ctx, command="config.profile.census.refresh", result=typed_refresh, lines=lines)
+        _emit_envelope(ctx, command="config.profile.censo.refresh", result=typed_refresh, lines=lines)
 
-    @census_app.command(
+    @censo_app.command(
         "show",
         help=tr(
-            "cli.config.profile.census.show_help",
-            default="Show the last census AEAT reported for this profile.",
+            "cli.config.profile.censo.show_help",
+            default="Show the last censo AEAT reported for this profile.",
         ),
     )
-    def census_show(
+    def censo_show(
         ctx: typer.Context,
         snapshot_id: str = typer.Option(
             "",
             "--snapshot-id",
             help=tr(
-                "cli.config.profile.census.snapshot_id_help",
+                "cli.config.profile.censo.snapshot_id_help",
                 default="Show a specific snapshot id (prefix matches accepted).",
             ),
         ),
@@ -167,13 +167,13 @@ def register(profile_app: typer.Typer) -> None:
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
         try:
-            snapshot = service.show_census(
+            snapshot = service.show_censo(
                 profile_id=profile_id,
                 snapshot_id=snapshot_id or None,
             )
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        typed_show = CensusShowResult(
+        typed_show = CensoShowResult(
             snapshot_id=snapshot.snapshot_id,
             profile_id=snapshot.profile_id,
             captured_at=snapshot.captured_at.isoformat(),
@@ -188,22 +188,22 @@ def register(profile_app: typer.Typer) -> None:
         ]
         for path, value in sorted(snapshot.censo_facts.items()):
             lines.append(f"{path}\t{value}")
-        _emit_envelope(ctx, command="config.profile.census.show", result=typed_show, lines=lines)
+        _emit_envelope(ctx, command="config.profile.censo.show", result=typed_show, lines=lines)
 
-    @census_app.command(
+    @censo_app.command(
         "compare",
         help=tr(
-            "cli.config.profile.census.compare_help",
-            default="Show the field-by-field difference between AEAT's census and this profile.",
+            "cli.config.profile.censo.compare_help",
+            default="Show the field-by-field difference between AEAT's censo and this profile.",
         ),
     )
-    def census_compare(
+    def censo_compare(
         ctx: typer.Context,
         snapshot_id: str = typer.Option(
             "",
             "--snapshot-id",
             help=tr(
-                "cli.config.profile.census.snapshot_id_help",
+                "cli.config.profile.censo.snapshot_id_help",
                 default="Compare against a specific snapshot id (prefix matches accepted).",
             ),
         ),
@@ -213,40 +213,40 @@ def register(profile_app: typer.Typer) -> None:
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
         try:
-            comparison = service.compare_census_with_profile(
+            comparison = service.compare_censo_with_profile(
                 profile_id=profile_id,
                 snapshot_id=snapshot_id or None,
             )
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        typed_compare = CensusCompareResult.model_validate(comparison.model_dump(mode="json"))
+        typed_compare = CensoCompareResult.model_validate(comparison.model_dump(mode="json"))
         lines = [
             f"snapshot_id\t{comparison.snapshot_id}",
             f"diverging\t{len(comparison.diverging)}",
-            f"census_only\t{len(comparison.census_only)}",
+            f"censo_only\t{len(comparison.censo_only)}",
             f"profile_only\t{len(comparison.profile_only)}",
         ]
         for row in comparison.rows:
             lines.append(
                 f"{row.status.value}\t{row.path}\t"
-                f"census={row.census_value or ''}\tprofile={row.profile_value or ''}"
+                f"censo={row.censo_value or ''}\tprofile={row.profile_value or ''}"
             )
-        _emit_envelope(ctx, command="config.profile.census.compare", result=typed_compare, lines=lines)
+        _emit_envelope(ctx, command="config.profile.censo.compare", result=typed_compare, lines=lines)
 
-    @census_app.command(
+    @censo_app.command(
         "apply",
         help=tr(
-            "cli.config.profile.census.apply_help",
-            default="Overwrite this profile's census fields with the AEAT-reported values.",
+            "cli.config.profile.censo.apply_help",
+            default="Overwrite this profile's censo fields with the AEAT-reported values.",
         ),
     )
-    def census_apply(
+    def censo_apply(
         ctx: typer.Context,
         snapshot_id: str = typer.Option(
             "",
             "--snapshot-id",
             help=tr(
-                "cli.config.profile.census.snapshot_id_help",
+                "cli.config.profile.censo.snapshot_id_help",
                 default="Apply a specific snapshot id (prefix matches accepted).",
             ),
         ),
@@ -260,7 +260,7 @@ def register(profile_app: typer.Typer) -> None:
         profile_id, bucket_id = _active_pointer()
         service = _build_service(bucket_id)
         try:
-            result = service.apply_census_to_profile(
+            result = service.apply_censo_to_profile(
                 profile_id=profile_id,
                 snapshot_id=snapshot_id or None,
             )
@@ -268,13 +268,13 @@ def register(profile_app: typer.Typer) -> None:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         except CensoApplyConflictError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        _emit_census_event(
+        _emit_censo_event(
             bucket_id=bucket_id,
-            event_type=BucketEventType.CENSUS_APPLIED,
+            event_type=BucketEventType.CENSO_APPLIED,
             profile_id=profile_id,
             snapshot_id=result.snapshot_id,
         )
-        typed_apply = CensusApplyResult.model_validate(result.model_dump(mode="json"))
+        typed_apply = CensoApplyResult.model_validate(result.model_dump(mode="json"))
         lines = [
             f"snapshot_id\t{result.snapshot_id}",
             f"written\t{len(result.written_paths)}",
@@ -284,9 +284,9 @@ def register(profile_app: typer.Typer) -> None:
             lines.append(f"written\t{path}")
         for path in result.unchanged_paths:
             lines.append(f"unchanged\t{path}")
-        _emit_envelope(ctx, command="config.profile.census.apply", result=typed_apply, lines=lines)
+        _emit_envelope(ctx, command="config.profile.censo.apply", result=typed_apply, lines=lines)
 
-    profile_app.add_typer(census_app, name="census")
+    profile_app.add_typer(censo_app, name="censo")
 
 
 __all__ = ["register"]

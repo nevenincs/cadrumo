@@ -403,11 +403,11 @@ class RegistryQueryService:
         bare_upper = bare.upper()
         # A bare period token is one of: a registry time-code
         # (``0A``, ``1T``-``4T``, ``01``-``12``, ...) matched by
-        # ``_BARE_PERIOD_RE``, or a non-date census / event token
+        # ``_BARE_PERIOD_RE``, or a non-date censo / event token
         # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``) declared
-        # verbatim by a census modelo's ``period_selector``. Both are
+        # verbatim by a censo modelo's ``period_selector``. Both are
         # resolved by matching the token against each revision's
-        # declared periods, so a census token is accepted on the same
+        # declared periods, so a censo token is accepted on the same
         # path as a quarterly time-code.
         declared_by_revision = {
             token

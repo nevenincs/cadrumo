@@ -397,12 +397,12 @@ _PROFILE_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
-            # Optional census alta date. When set, the deadline engine
+            # Optional censo alta date. When set, the deadline engine
             # suppresses obligation windows that close before it, so a
             # recent registrant is not shown overdue returns for periods
             # that precede their alta.
             id="activity-start-date",
-            profile_key="census.activity_start_date",
+            profile_key="censo.activity_start_date",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.activity-start-date.prompt"),
             help=tr("wizard.setup.profile.activity-start-date.help"),
@@ -672,10 +672,10 @@ _ENROLLMENT_SECTION = WizardSection(
     id="enrollment",
     title=tr("wizard.setup.enrollment.title"),
     questions=(
-        _confirm("enrollment-large-company", "census.large_company", suffix="enrollment"),
+        _confirm("enrollment-large-company", "censo.large_company", suffix="enrollment"),
         _confirm(
             "enrollment-public-administration-budget-gt-6000000",
-            "census.public_administration_budget_gt_6000000",
+            "censo.public_administration_budget_gt_6000000",
             suffix="enrollment",
         ),
     ),

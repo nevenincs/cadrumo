@@ -2304,7 +2304,7 @@ def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
     period is "alta"; the previous misnamed fixture "2025-0A.pdf" used a
     time-code that did not match any revision period, causing NOT-CHAIN-READY.
 
-    Extraction verdict: EXTRACTION-ONLY -- M036 is a census registration form;
+    Extraction verdict: EXTRACTION-ONLY -- M036 is a censo registration form;
     the registry has no numeric closure formula over decl.event-kind.
     decl.vigencia-2025 is informational only and not extractable from the
     printed-form PDF (absent from target_casillas in the extraction profile).

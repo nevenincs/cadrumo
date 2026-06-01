@@ -81,7 +81,7 @@ _ENTRIES: tuple[PortalMetadata, ...] = (
     portal_cert_selection.ENTRY,
     portal_cert_validation_rest.ENTRY,
     portal_dnie_sede_entry.ENTRY,
-    # FILING / CENSUS
+    # FILING / CENSO
     portal_m036_censal.ENTRY,
     portal_m037_censal_simplificada.ENTRY,
     portal_m100_renta.ENTRY,
@@ -271,8 +271,8 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
 def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
     """Return every FILING or BORRADOR portal linked to ``code``.
 
-    CENSUS portals are intentionally excluded: ``portals_for_modelo``
-    is a filing-dispatch helper, and the census procedures (Modelo
+    CENSO portals are intentionally excluded: ``portals_for_modelo``
+    is a filing-dispatch helper, and the censo procedures (Modelo
     036/037) live in their own category so callers can look them up
     with :func:`portals_by_category` when needed.
 

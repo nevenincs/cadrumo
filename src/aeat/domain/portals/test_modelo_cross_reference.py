@@ -46,7 +46,7 @@ def test_portal_metadata_has_no_modelo_binding_field() -> None:
 
 
 def test_retired_modelo_037_portal_is_not_registry_linked_for_filing() -> None:
-    """Retired census metadata does not imply filing-grade modelo support."""
+    """Retired censo metadata does not imply filing-grade modelo support."""
     metadata = PORTAL_REGISTRY[Portal.PORTAL_M037_CENSAL_SIMPLIFICADA]
     assert metadata.active is False
     assert portals_for_modelo("037") == ()

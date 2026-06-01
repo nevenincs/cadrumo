@@ -11,7 +11,7 @@ The launcher procedure URL is the documented G313 entry point from
 AEAT cookies acquired via certificate or Cl@ve Móvil, so the launcher
 redirects directly to the Mis Datos Censales data page instead of
 bouncing through the login surface. If the session is not valid for
-the operator's NIF (e.g. certificate not registered against the census),
+the operator's NIF (e.g. certificate not registered against the censo),
 the page returns AEAT's standard auth-gate error shape and the parser
 returns a :class:`CensoFactSet` with no fields populated — the caller
 decides whether that is a refusal.
@@ -51,12 +51,12 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
-G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.census_g313_launcher}"
+G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.censo_g313_launcher}"
 """AEAT-published entry point for *Mis Datos Censales* (the read-only
-operator-facing projection of the operator's 036 census record)."""
+operator-facing projection of the operator's 036 censo record)."""
 
 
-async def fetch_g313_census(
+async def fetch_g313_censo(
     session: AeatSession,
     *,
     settings: Settings | None = None,
@@ -70,7 +70,7 @@ async def fetch_g313_census(
 
     Returns:
         A :class:`CensoFactSet` parsed from the live HTML. May be
-        empty (every field ``None``) when AEAT publishes no census
+        empty (every field ``None``) when AEAT publishes no censo
         for the operator's NIF — the caller (CensoSyncService) raises
         :class:`CensoNotAvailableError` on that path.
 
@@ -87,23 +87,23 @@ async def fetch_g313_census(
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     storage_state = storage_state_for_session(session)
-    return await _fetch_g313_census_with_storage_state(
+    return await _fetch_g313_censo_with_storage_state(
         storage_state,
         settings=settings,
         browser_session_factory=default_browser_session_factory,
     )
 
 
-async def _fetch_g313_census_with_storage_state(
+async def _fetch_g313_censo_with_storage_state(
     storage_state: Mapping[str, object],
     *,
     settings: Settings,
     browser_session_factory: BrowserSessionFactory,
 ) -> CensoFactSet:
-    """Storage-state-driven core of :func:`fetch_g313_census`.
+    """Storage-state-driven core of :func:`fetch_g313_censo`.
 
     Split out so unit tests can drive the Playwright orchestration
-    with a recording double — the public :func:`fetch_g313_census`
+    with a recording double — the public :func:`fetch_g313_censo`
     derives ``storage_state`` from an :class:`AeatSession` then
     delegates here.
 
@@ -138,7 +138,7 @@ async def _fetch_g313_census_with_storage_state(
             html = await page.content()
             fact_set = parse_g313_html(html)
             log.info(
-                "fetch_g313_census: parsed %d fields from %s",
+                "fetch_g313_censo: parsed %d fields from %s",
                 _populated_count(fact_set),
                 G313_LAUNCHER_URL,
             )
@@ -147,12 +147,12 @@ async def _fetch_g313_census_with_storage_state(
             try:
                 await context.close()
             except Exception as exc:
-                log.debug("fetch_g313_census: context.close suppressed: %s", exc, exc_info=True)
+                log.debug("fetch_g313_censo: context.close suppressed: %s", exc, exc_info=True)
     finally:
         await browser_session.close()
 
 
-def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
+def censo_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
     """Project a :class:`CensoFactSet` into the dotted-key mapping the snapshot store accepts.
 
     Mirrors the ``model_selectors`` declarations in the schema so
@@ -172,13 +172,13 @@ def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
             ),
         )
     if fact_set.activity_start_date is not None:
-        pairs.append(("census.activity_start_date", fact_set.activity_start_date.isoformat()))
+        pairs.append(("censo.activity_start_date", fact_set.activity_start_date.isoformat()))
     if fact_set.activity_end_date is not None:
-        pairs.append(("census.activity_end_date", fact_set.activity_end_date.isoformat()))
+        pairs.append(("censo.activity_end_date", fact_set.activity_end_date.isoformat()))
     if fact_set.establecimiento_type is not None:
-        pairs.append(("census.establecimiento_type", fact_set.establecimiento_type))
+        pairs.append(("censo.establecimiento_type", fact_set.establecimiento_type))
     if fact_set.elected_withholding_pct is not None:
-        pairs.append(("census.elected_withholding_pct", fact_set.elected_withholding_pct))
+        pairs.append(("censo.elected_withholding_pct", fact_set.elected_withholding_pct))
     if fact_set.vivienda_office_total_m2 is not None:
         _m2_text = format_decimal(fact_set.vivienda_office_total_m2, normalize=True)
         pairs.append(("vivienda_office.total_m2", _m2_text if "." in _m2_text else f"{_m2_text}.00"))
@@ -211,6 +211,6 @@ def _populated_count(fact_set: CensoFactSet) -> int:
 
 __all__ = [
     "G313_LAUNCHER_URL",
-    "census_fact_set_to_mapping",
-    "fetch_g313_census",
+    "censo_fact_set_to_mapping",
+    "fetch_g313_censo",
 ]

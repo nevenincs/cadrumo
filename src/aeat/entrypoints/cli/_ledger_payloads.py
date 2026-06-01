@@ -483,7 +483,7 @@ class RatiosListResult(OutputSchema):
     bucket_id: str
     rows: list[RatiosRowPayload]
     count: int
-    census_mismatch: str | None = None
+    censo_mismatch: str | None = None
 
 
 @register_schema("ledger.ratios.set")

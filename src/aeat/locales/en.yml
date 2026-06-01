@@ -797,7 +797,7 @@ cli:
         missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for census
+        period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
         preview_help: Preview bindings with temporary overrides without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
@@ -841,7 +841,7 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_error: 'Registry error: %{message}'
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
-          1T-4T quarters, 01-12 months; for census modelos (036) use alta, modificacion,
+          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
           or baja.'
         period_token_invalid: '--period ''%{period}'' is not a valid period token
           for modelo %{modelo}. Valid tokens: %{tokens}.'
@@ -1119,7 +1119,7 @@ cli:
           app modelo bindings list --missing` to see the bindings the calculation
           needs.
         period_help: 'Work-unit period token: 0A annual, 1T-4T quarters, 01-12 months;
-          for census modelos (036) use alta, modificacion, or baja.'
+          for censo modelos (036) use alta, modificacion, or baja.'
         period_token_invalid: '--period ''%{token}'' is not a valid period token for
           modelo %{modelo}. --year and --period are composed separately: pass --year
           %{year} for the filing year and one of the declared period tokens for --period.
@@ -1279,7 +1279,7 @@ cli:
         configure_help: Set active apoderado configuration
         help: Manage apoderado configuration
         scope:
-          censo: Census declarations (registration, modification, deregistration)
+          censo: Censo declarations (registration, modification, deregistration)
             (modelo 036)
           exped: Files and procedures
           generalnt: General tax procedures
@@ -1478,12 +1478,12 @@ cli:
       help: List every registered profile and mark the active one
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
-      census:
-        apply_help: Overwrite the profile with census values reported by AEAT
-        compare_help: Compare AEAT census and this profile field by field
-        help: Sync AEAT 036 census data with this profile
-        refresh_help: Download the latest census from AEAT and save a snapshot
-        show_help: Show the latest census AEAT reported for this profile
+      censo:
+        apply_help: Overwrite the profile with censo values reported by AEAT
+        compare_help: Compare AEAT censo and this profile field by field
+        help: Sync AEAT 036 censo data with this profile
+        refresh_help: Download the latest censo from AEAT and save a snapshot
+        show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
       create_help: Initialize a new active profile and config bucket.
       delete_active_cleared: The deleted profile was the active one; the active-profile
@@ -2111,7 +2111,7 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
-        profile_census: Sync AEAT census facts for the active profile.
+        profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
         profile_list: List profile facts.
@@ -2496,15 +2496,15 @@ entries:
     label: Set Up Direct Debit for Payments
     purpose: Direct-debit setup for self-assessments and tax payments.
   portal_m036_censal:
-    label: Form 036 — Census Declaration
-    purpose: Registration, amendment and deregistration in the census of businesses
+    label: Form 036 — Censo Declaration
+    purpose: Registration, amendment and deregistration in the censo of businesses
       and professionals.
   portal_m037_censal_simplificada:
-    label: Form 037 — Simplified Census Declaration (retired)
+    label: Form 037 — Simplified Censo Declaration (retired)
     notes:
       '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
-      '1': Use Form 036 for any subsequent census procedure.
-    purpose: Simplified census declaration for sole traders, abolished in 2025.
+      '1': Use Form 036 for any subsequent censo procedure.
+    purpose: Simplified censo declaration for sole traders, abolished in 2025.
   portal_m100_renta:
     label: Form 100 — Personal Income Tax Return
     purpose: Annual personal income tax (IRPF) return.
@@ -2570,8 +2570,8 @@ entries:
     label: My Personal Area
     purpose: Authenticated taxpayer personal area in the Electronic Office.
   portal_mis_datos_censales:
-    label: My Census Data
-    purpose: Review of the taxpayer's registered census data.
+    label: My Censo Data
+    purpose: Review of the taxpayer's registered censo data.
   portal_mis_documentos_pendientes_firma:
     label: Documents Awaiting Signature
     purpose: Signature portfolio with documents awaiting electronic signature.
@@ -2709,12 +2709,12 @@ errors:
     unsupported_comparison_op: 'Unsupported comparison operator: %{op}.'
     unsupported_op: 'Unsupported formula operator: %{op}.'
   censo:
-    no_snapshot_captured: No census snapshot has been captured for profile {profile_id}.
+    no_snapshot_captured: No censo snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
-      census.
-    sede_g313_no_census: AEAT sede G313 returned no readable census for profile {profile_id};
+      censo.
+    sede_g313_no_censo: AEAT sede G313 returned no readable censo for profile {profile_id};
       confirm your certificate or Cl@ve is registered against this NIF.
-    sede_no_census: AEAT's sede returned no readable census for profile {profile_id}.
+    sede_no_censo: AEAT's sede returned no readable censo for profile {profile_id}.
   error:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
@@ -2901,7 +2901,7 @@ errors:
     error_iva_prorrata_sector: 'The sectoral-separation inputs for the IVA prorrata are inconsistent.'
     error_iva_validation: 'A IVA field value is not valid.'
   fail:
-    census_sync: The Modelo 036 census sync failed.
+    censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
     declaration_parse: The filed declaration export could not be parsed for reconciliation.
     exchange_rate_provider: The exchange-rate provider did not respond.
@@ -2957,7 +2957,7 @@ errors:
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
     fail_secure_storage: A secure-storage error occurred.
-    fail_sede_census_parse: A value on the AEAT Sede census page could not be parsed.
+    fail_sede_censo_parse: A value on the AEAT Sede censo page could not be parsed.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
     fail_sede_parse: The captured AEAT Sede page could not be parsed.
@@ -3140,11 +3140,11 @@ errors:
       authentication session.
     bootstrap_already_complete: A profile already exists; first-run setup runs only
       once. Use `aeat config profile switch NAME` to change profile.
-    census_apply_conflict: The census cannot be applied because there is in-flight
+    censo_apply_conflict: The censo cannot be applied because there is in-flight
       work on a dependent unit. Resolve the pending state first.
-    census_field_validation: The AEAT census returned a value the schema cannot accept.
+    censo_field_validation: The AEAT censo returned a value the schema cannot accept.
       Review the field named with your adviser.
-    census_not_available: The AEAT returned no readable census. You may not be registered
+    censo_not_available: The AEAT returned no readable censo. You may not be registered
       for IAE, or your certificate may not be registered against your NIF.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
@@ -3152,9 +3152,9 @@ errors:
       be requested without a prior registration.
     modelo_036_terminal_state: The Modelo 036 record is already deregistered and accepts
       no further operations.
-    modelo_census_stale: 'The operation is refused because you applied a new census
+    modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
-      it against the current census.'
+      it against the current censo.'
     modelo_export_cross_bucket: The addressed revision belongs to a bucket other than
       the active profile's. Export only operates within the active profile bucket.
     modelo_export_no_active_bucket: Export requires an active profile. Create or select
@@ -3237,9 +3237,9 @@ errors:
       source document.
     refused_financial_provider_validation: A field in the financial document (date
       or amount) failed validation.
-    refused_financial_usage_ratios_census_mismatch: A saved home-office usage ratio
-      disagrees with the census, which is the binding legal source. Align it with
-      the census value.
+    refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
+      disagrees with the censo, which is the binding legal source. Align it with
+      the censo value.
     refused_google_profile_unbound: No active profile is bound. Select a profile or
       use --profile.
     refused_google_unsecured_mode: Google cannot be authorized in unsecured-storage
@@ -3267,7 +3267,7 @@ errors:
       identifier provided.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
-    refused_live_censo_snapshot_not_found: No Modelo 036 census snapshot exists with
+    refused_live_censo_snapshot_not_found: No Modelo 036 censo snapshot exists with
       the identifier provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
       the identifier provided.
@@ -3679,7 +3679,7 @@ wizard:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
       activity-start-date:
-        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional;
+        help: Censo registration / start-of-activity date (YYYY-MM-DD). Optional;
           when set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode

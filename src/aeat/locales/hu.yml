@@ -1553,7 +1553,7 @@ cli:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
-      census:
+      censo:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
@@ -2216,7 +2216,7 @@ cli:
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
-        profile_census: AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.
+        profile_censo: AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
         profile_list: Profiladatok listázása.
@@ -2822,14 +2822,14 @@ errors:
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
-    no_snapshot_captured: Nem sikerült census-pillanatképet rögzíteni a(z) {profile_id}
+    no_snapshot_captured: Nem sikerült censo-pillanatképet rögzíteni a(z) {profile_id}
       profilhoz.
-    profile_not_found: A(z) {profile_id} profil nem létezik; census alkalmazása előtt
+    profile_not_found: A(z) {profile_id} profil nem létezik; censo alkalmazása előtt
       hozza létre.
-    sede_g313_no_census: Az AEAT G313 szekcióból nem sikerült olvasható censust lekérni
+    sede_g313_no_censo: Az AEAT G313 szekcióból nem sikerült olvasható censot lekérni
       a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je
       regisztrálva van-e.
-    sede_no_census: Az AEAT szekcióból nem sikerült olvasható censust lekérni a(z)
+    sede_no_censo: Az AEAT szekcióból nem sikerült olvasható censot lekérni a(z)
       {profile_id} profilhoz.
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
@@ -3011,7 +3011,7 @@ errors:
     error_iva_prorrata_sector: 'Az IVA prorrata szektoriális-szétválasztási adatai ellentmondásosak.'
     error_iva_validation: 'Egy IVA-mezőérték érvénytelen.'
   fail:
-    census_sync: A Modelo 036 census-szinkronizáció meghiúsult.
+    censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
     declaration_parse: A benyújtott bevallás exportját nem sikerült egyeztetési célból
       elemezni.
@@ -3068,7 +3068,7 @@ errors:
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
     fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni sanitizáláshoz.
     fail_secure_storage: Biztonságos tárhelyhiba történt.
-    fail_sede_census_parse: Az AEAT Sede census-oldalán egy értéket nem sikerült elemezni.
+    fail_sede_censo_parse: Az AEAT Sede censo-oldalán egy értéket nem sikerült elemezni.
     fail_sede_justificante_fetch: A bizonylat PDF letöltése az AEAT Sede-ről meghiúsult,
       vagy a fájl hibás.
     fail_sede_parse: A rögzített AEAT Sede oldalt nem sikerült elemezni.
@@ -3245,11 +3245,11 @@ errors:
       kért hitelesítési munkamenettel.
     bootstrap_already_complete: Már létezik profil; az első futtatás beállítása csak
       egyszer fut le. Profil váltáshoz használja az  parancsot.
-    census_apply_conflict: A census nem alkalmazható, mert folyamatban van munka egy
+    censo_apply_conflict: A censo nem alkalmazható, mert folyamatban van munka egy
       függő egységen. Először oldja meg a függőben lévő állapotot.
-    census_field_validation: Az AEAT census olyan értéket adott vissza, amelyet a
+    censo_field_validation: Az AEAT censo olyan értéket adott vissza, amelyet a
       séma nem tud elfogadni. Tekintse át az elnevezett mezőt tanácsadójával.
-    census_not_available: Az AEAT nem adott vissza olvasható censust. Előfordulhat,
+    censo_not_available: Az AEAT nem adott vissza olvasható censot. Előfordulhat,
       hogy nincs IAE-n regisztrálva, vagy a tanúsítványa nincs a NIF-jéhez rendelve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modelo-futtatást,
       mert az még nem nyújtható be.
@@ -3257,9 +3257,9 @@ errors:
       bejegyzés nélkül.
     modelo_036_terminal_state: A Modelo 036 rekord már törölve van, és nem fogad el
       további műveleteket.
-    modelo_census_stale: 'A műveletet elutasítottuk, mert új censust alkalmazott az
+    modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
-      a legfrissebb census alapján.'
+      a legfrissebb censo alapján.'
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az export csak az aktív profil bucket-en belül
       működik.
@@ -3344,8 +3344,8 @@ errors:
       értelmezni ezt a forrásdokumentumot.
     refused_financial_provider_validation: Egy mező a pénzügyi dokumentumban (dátum
       vagy összeg) nem ment át az érvényesítésen.
-    refused_financial_usage_ratios_census_mismatch: Egy mentett otthoni irodahasználati
-      arány eltér a censustól, amely a kötelező jogi forrás. Igazítsa a census értékéhez.
+    refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
+      arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válasszon profilt, vagy
       használja a --profile kapcsolót.
     refused_google_unsecured_mode: A Google nem engedélyezhető nem biztonságos tárolási
@@ -3372,7 +3372,7 @@ errors:
       azonosítóval.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
-    refused_live_censo_snapshot_not_found: Nem létezik Modelo 036 census-pillanatkép
+    refused_live_censo_snapshot_not_found: Nem létezik Modelo 036 censo-pillanatkép
       a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.

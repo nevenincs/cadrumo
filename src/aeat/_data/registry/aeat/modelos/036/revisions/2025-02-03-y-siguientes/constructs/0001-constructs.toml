@@ -1,6 +1,6 @@
 [[revisions."2025-02-03-y-siguientes".constructs]]
-id = "modelo-036-census-foundation"
-title = "Modelo 036 census foundation"
+id = "modelo-036-censo-foundation"
+title = "Modelo 036 censo foundation"
 legal_refs = [
     "rd-1065-2007:art-9",
     "rd-1065-2007:art-10",
@@ -15,9 +15,9 @@ source_refs = [
     "aeat-modelo-036-procedure",
 ]
 casillas = ["decl.event-kind", "decl.vigencia-2025"]
-bindings = ["modelo-036-profile-census-status"]
+bindings = ["modelo-036-profile-censo-status"]
 workbook_parity_refs = ["modelo-036-dr-2025"]
-verification_expectations = ["modelo-036-census-foundation-verification"]
+verification_expectations = ["modelo-036-censo-foundation-verification"]
 application_links = [
     "modelo-036-workflow",
     "modelo-036-filing",

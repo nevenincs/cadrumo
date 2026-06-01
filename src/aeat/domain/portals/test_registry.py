@@ -64,7 +64,7 @@ def test_replaced_by_resolves_for_every_retired_entry() -> None:
 def test_modelo_037_entries_are_retired() -> None:
     """Modelo 037 portal records are retained only as inactive history."""
     metadata = PORTAL_REGISTRY[Portal.PORTAL_M037_CENSAL_SIMPLIFICADA]
-    assert metadata.category is PortalCategory.CENSUS
+    assert metadata.category is PortalCategory.CENSO
     assert metadata.active is False
 
 
@@ -100,8 +100,8 @@ def test_portals_for_modelo_scope_is_filing_and_borrador() -> None:
     assert categories == {PortalCategory.FILING}
 
 
-def test_portals_for_modelo_excludes_census_for_036() -> None:
-    """Modelo 036 CENSUS portal is not surfaced by ``portals_for_modelo``."""
+def test_portals_for_modelo_excludes_censo_for_036() -> None:
+    """Modelo 036 CENSO portal is not surfaced by ``portals_for_modelo``."""
     entries = portals_for_modelo("036")
     assert entries == ()
 
@@ -117,7 +117,7 @@ def test_portals_for_modelo_accepts_string_code() -> None:
         f"portals_for_modelo must return entries sorted by portal.value, got {portal_values}"
     )
     # Pin category contract — every returned entry must be a FILING or
-    # BORRADOR portal (CENSUS portals are excluded by the function's spec).
+    # BORRADOR portal (CENSO portals are excluded by the function's spec).
     for entry in entries:
         assert entry.category.value in {"filing", "borrador"}, (
             f"portals_for_modelo returned a non-filing/borrador entry: {entry.portal} ({entry.category})"
@@ -147,7 +147,7 @@ def test_portals_by_category_counts_match_adr() -> None:
     """Per-category counts match the canonical breakdown."""
     assert len(portals_by_category(PortalCategory.AUTH)) == 8
     assert len(portals_by_category(PortalCategory.FILING)) == 19
-    assert len(portals_by_category(PortalCategory.CENSUS)) == 2
+    assert len(portals_by_category(PortalCategory.CENSO)) == 2
     assert len(portals_by_category(PortalCategory.BORRADOR)) == 2
     assert len(portals_by_category(PortalCategory.CONSULTATION)) == 4
     assert len(portals_by_category(PortalCategory.PAYMENT)) == 5

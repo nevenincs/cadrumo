@@ -1,9 +1,9 @@
-"""Real-behavior tests for the census refuse-load guard.
+"""Real-behavior tests for the censo refuse-load guard.
 
 Locks the contract that
-:func:`aeat.domain.usage_ratios.load_usage_ratios_with_census_guard`
+:func:`aeat.domain.usage_ratios.load_usage_ratios_with_censo_guard`
 refuses on every disagreement path between the persisted
-:class:`UsageRatioProfile` and the bound census, with no auto-migration
+:class:`UsageRatioProfile` and the bound censo, with no auto-migration
 and no silent coercion (per the modelo-036-037-foundation ADR
 2026-05-16 amendment).
 """
@@ -20,7 +20,7 @@ from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
     CensoRatioMismatchError,
     UsageRatioProfile,
-    load_usage_ratios_with_census_guard,
+    load_usage_ratios_with_censo_guard,
     save_usage_ratios,
 )
 from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -40,7 +40,7 @@ def test_load_returns_profile_when_no_home_office_overrides() -> None:
         bucket_id="b1",
     )
 
-    profile = load_usage_ratios_with_census_guard(
+    profile = load_usage_ratios_with_censo_guard(
         bucket_id="b1",
         raw_afectacion_ratio=None,
     )
@@ -48,14 +48,14 @@ def test_load_returns_profile_when_no_home_office_overrides() -> None:
     assert profile.ratios == {SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}
 
 
-def test_refuses_when_census_unset_but_home_office_override_persisted() -> None:
+def test_refuses_when_censo_unset_but_home_office_override_persisted() -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.20")}),
         bucket_id="b1",
     )
 
     with pytest.raises(CensoRatioMismatchError) as exc:
-        load_usage_ratios_with_census_guard(
+        load_usage_ratios_with_censo_guard(
             bucket_id="b1",
             raw_afectacion_ratio=None,
         )
@@ -63,14 +63,14 @@ def test_refuses_when_census_unset_but_home_office_override_persisted() -> None:
     assert "suministros_home_office_luz" in str(exc.value)
 
 
-def test_refuses_on_mismatch_between_persisted_and_census_derived() -> None:
+def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO: Decimal("0.50")}),
         bucket_id="b1",
     )
 
     with pytest.raises(CensoRatioMismatchError) as exc:
-        load_usage_ratios_with_census_guard(
+        load_usage_ratios_with_censo_guard(
             bucket_id="b1",
             raw_afectacion_ratio=Decimal("0.20"),
         )
@@ -80,7 +80,7 @@ def test_refuses_on_mismatch_between_persisted_and_census_derived() -> None:
     assert "0.20" in str(exc.value)
 
 
-def test_accepts_when_persisted_matches_census_derived_value() -> None:
+def test_accepts_when_persisted_matches_censo_derived_value() -> None:
     raw = Decimal("0.20")
     save_usage_ratios(
         UsageRatioProfile(
@@ -92,7 +92,7 @@ def test_accepts_when_persisted_matches_census_derived_value() -> None:
         bucket_id="b1",
     )
 
-    profile = load_usage_ratios_with_census_guard(
+    profile = load_usage_ratios_with_censo_guard(
         bucket_id="b1",
         raw_afectacion_ratio=raw,
     )

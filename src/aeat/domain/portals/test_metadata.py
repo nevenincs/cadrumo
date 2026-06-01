@@ -61,25 +61,25 @@ def test_filing_url_must_match_gcode_pattern() -> None:
         )
 
 
-def test_census_url_must_match_gcode_pattern() -> None:
-    """Active CENSUS URL path must match the G-code regex."""
+def test_censo_url_must_match_gcode_pattern() -> None:
+    """Active CENSO URL path must match the G-code regex."""
     with pytest.raises(ValidationError, match=r"url path must match"):
         PortalMetadata.model_validate(
             _base_kwargs(
                 portal=Portal.PORTAL_M036_CENSAL,
-                category=PortalCategory.CENSUS,
+                category=PortalCategory.CENSO,
                 url="https://sede.agenciatributaria.gob.es/Sede/censal.html",
             )
         )
 
 
 def test_retired_filing_skips_gcode_check() -> None:
-    """Retired FILING/CENSUS entries bypass the G-code path check."""
+    """Retired FILING/CENSO entries bypass the G-code path check."""
     # Even with a non-G-code path, a retired entry validates.
     metadata = PortalMetadata.model_validate(
         _base_kwargs(
             portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
-            category=PortalCategory.CENSUS,
+            category=PortalCategory.CENSO,
             url="https://sede.agenciatributaria.gob.es/Sede/retired-path.html",
             url_stability=UrlStability.RETIRED,
             active=False,
@@ -145,7 +145,7 @@ def test_retired_without_replacement_requires_notes() -> None:
         PortalMetadata.model_validate(
             _base_kwargs(
                 portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
-                category=PortalCategory.CENSUS,
+                category=PortalCategory.CENSO,
                 url_stability=UrlStability.RETIRED,
                 active=False,
                 replaced_by=None,
@@ -159,7 +159,7 @@ def test_retired_without_replacement_with_notes_is_valid() -> None:
     metadata = PortalMetadata.model_validate(
         _base_kwargs(
             portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
-            category=PortalCategory.CENSUS,
+            category=PortalCategory.CENSO,
             url="https://sede.agenciatributaria.gob.es/Sede/retired.html",
             url_stability=UrlStability.RETIRED,
             active=False,

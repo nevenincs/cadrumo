@@ -7,7 +7,7 @@ data_type = "text"
 semantic_role = "tipo_evento_censal"
 required = true
 input_kind = "bound"
-binding = "modelo-036-profile-census-status"
+binding = "modelo-036-profile-censo-status"
 legal_refs = [
     "rd-1065-2007:art-9",
     "rd-1065-2007:art-10",

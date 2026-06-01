@@ -1,5 +1,5 @@
 [[revisions."2025-02-03-y-siguientes".verification_expectations]]
-id = "modelo-036-census-foundation-verification"
+id = "modelo-036-censo-foundation-verification"
 computed_casillas = ["decl.event-kind"]
 tolerance = "0.00"
 rounding = "none"

@@ -186,9 +186,9 @@ def validate_ratios_for_bucket(
 
 
 class RatiosCensoOverrideWarning(BaseModel):
-    """A non-fatal warning that the operator's per-category override deviates from the census-derived value.
+    """A non-fatal warning that the operator's per-category override deviates from the censo-derived value.
 
-    The census is the binding legal source of truth for censo-derived
+    The censo is the binding legal source of truth for censo-derived
     ratios. Operators may still override (e.g. to model a planned
     afectación change), but the engine emits a typed warning so downstream
     auditors can review the divergence.
@@ -198,26 +198,26 @@ class RatiosCensoOverrideWarning(BaseModel):
 
     category: SpendingCategory
     override_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
-    census_derived_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    censo_derived_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
     raw_afectacion_ratio: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
 
 
-def census_business_pct_for(
+def censo_business_pct_for(
     category: SpendingCategory,
     raw_afectacion_ratio: Decimal | None,
     *,
     year: int = 2025,
 ) -> Decimal | None:
-    """Return the legally-effective business_pct for a category from census.
+    """Return the legally-effective business_pct for a category from censo.
 
     The per-category projection of
-    :func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_census`:
+    :func:`aeat.domain.usage_ratios.derive_home_office_ratios_from_censo`:
     given a single :class:`SpendingCategory` and the operator's bound
-    census ``office_m2 / total_m2``, returns the
+    censo ``office_m2 / total_m2``, returns the
     ``raw_afectacion_ratio * statutory_multiplier`` value the classify
     and allocate paths should stamp onto ``Transaction.business_pct``
     when no operator override is present. Returns ``None`` for
-    categories outside the HOME_OFFICE families or when no census has
+    categories outside the HOME_OFFICE families or when no censo has
     been applied yet, signalling to the caller that the operator's
     explicit value (or the registry default) governs instead.
     """
@@ -229,18 +229,18 @@ def census_business_pct_for(
     return effective_usage_ratio(rule, raw_afectacion_ratio)
 
 
-def census_override_warning(
+def censo_override_warning(
     *,
     category: SpendingCategory,
     override_ratio: Decimal,
     raw_afectacion_ratio: Decimal,
     year: int = 2025,
 ) -> RatiosCensoOverrideWarning | None:
-    """Return a typed warning when an override deviates from the census.
+    """Return a typed warning when an override deviates from the censo.
 
     The check is silent for non-HOME_OFFICE categories: only the
     suministros and ownership home-office families are legally bound
-    to the census-derived afectación ratio (LIRPF Art. 30.2 rule 5,
+    to the censo-derived afectación ratio (LIRPF Art. 30.2 rule 5,
     Ley 6/2017 BOE-A-2017-12544). For HOME_OFFICE categories the
     helper computes the legally-effective ratio (raw afectación times
     the rule's ``statutory_multiplier``) and compares it against
@@ -252,7 +252,7 @@ def census_override_warning(
         category: The category being overridden via ``ratios set``.
         override_ratio: The operator-supplied override.
         raw_afectacion_ratio: ``office_m2 / total_m2`` from the bound
-            census snapshot.
+            censo snapshot.
         year: Registry year whose proportionality rule drives the
             derivation.
 
@@ -269,7 +269,7 @@ def census_override_warning(
     return RatiosCensoOverrideWarning(
         category=category,
         override_ratio=override_ratio,
-        census_derived_ratio=derived,
+        censo_derived_ratio=derived,
         raw_afectacion_ratio=raw_afectacion_ratio,
     )
 
@@ -279,8 +279,8 @@ __all__ = [
     "RatiosCensoOverrideWarning",
     "RatiosValidationFinding",
     "RatiosValidationReport",
-    "census_business_pct_for",
-    "census_override_warning",
+    "censo_business_pct_for",
+    "censo_override_warning",
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
     "validate_ratios_for_bucket",

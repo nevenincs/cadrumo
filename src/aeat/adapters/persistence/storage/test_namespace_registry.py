@@ -25,7 +25,7 @@ from aeat.adapters.persistence.storage import (
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
-    LIVE_CENSUS_SNAPSHOT_NAMESPACE,
+    LIVE_CENSO_SNAPSHOT_NAMESPACE,
     LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
     LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
     LIVE_VERIFY_OBSERVATION_NAMESPACE,
@@ -65,12 +65,12 @@ def test_registry_rejects_duplicate_namespace_values() -> None:
 
 
 def test_secure_object_registry_names_application_namespaces() -> None:
-    census = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_census_snapshot")
+    censo = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_censo_snapshot")
     repair = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("repair_integrity_decisions")
 
-    assert census == LIVE_CENSUS_SNAPSHOT_NAMESPACE
-    assert census.sensitivity is SensitivityClass.IDENTITY
-    assert census.object_key_grammar == "census-snapshot:{bucket_id}:{snapshot_id}"
+    assert censo == LIVE_CENSO_SNAPSHOT_NAMESPACE
+    assert censo.sensitivity is SensitivityClass.IDENTITY
+    assert censo.object_key_grammar == "censo-snapshot:{bucket_id}:{snapshot_id}"
     assert repair == REPAIR_INTEGRITY_DECISION_NAMESPACE
     assert repair.sensitivity is SensitivityClass.AUDIT
     assert repair.object_key_grammar == "{decision_id_sha256_hex}"

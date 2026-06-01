@@ -14,7 +14,7 @@ def test_portal_category_has_exactly_7_members() -> None:
     expected = {
         PortalCategory.AUTH,
         PortalCategory.FILING,
-        PortalCategory.CENSUS,
+        PortalCategory.CENSO,
         PortalCategory.CONSULTATION,
         PortalCategory.BORRADOR,
         PortalCategory.PAYMENT,

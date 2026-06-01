@@ -1,4 +1,4 @@
-"""Registry entry for the taxpayer's census-data consultation portal.
+"""Registry entry for the taxpayer's censo-data consultation portal.
 
 Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
 exposed as :data:`ENTRY` and consumed by
@@ -18,7 +18,7 @@ _SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MIS_DATOS_CENSALES,
-    path=_SEDE_PATHS.census_g313_launcher,
+    path=_SEDE_PATHS.censo_g313_launcher,
     subdomain=PortalHost.SEDE,
     category=PortalCategory.CONSULTATION,
     auth_methods=(
@@ -31,4 +31,4 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_mis_datos_censales.label",
     purpose="entries.portal_mis_datos_censales.purpose",
 )
-"""Portal entry for census-data consultation and light modification."""
+"""Portal entry for censo-data consultation and light modification."""

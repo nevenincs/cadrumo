@@ -141,7 +141,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LIVE_CENSO_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_live_censo_snapshot_not_found",
-            default_suggestion="aeat config profile census refresh",
+            default_suggestion="aeat config profile censo refresh",
             retryable=False,
             runbook_id=None,
         ),
@@ -600,10 +600,10 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.usage_ratios._errors.CensoRatioMismatchError",
         ErrorCode(
-            code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSUS_MISMATCH",
+            code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_financial_usage_ratios_census_mismatch",
-            default_suggestion="aeat config profile census refresh && aeat config profile census apply",
+            message_key="errors.refused.refused_financial_usage_ratios_censo_mismatch",
+            default_suggestion="aeat config profile censo refresh && aeat config profile censo apply",
             retryable=False,
             runbook_id=None,
         ),
@@ -2178,9 +2178,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
         "aeat.domain.modelos._errors.CensoStaleRefusedError",
         ErrorCode(
-            code="REFUSED_MODELO_CENSUS_STALE",
+            code="REFUSED_MODELO_CENSO_STALE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_census_stale",
+            message_key="errors.refused.modelo_censo_stale",
             default_suggestion="aeat app modelo work calculate",
             retryable=False,
             runbook_id=None,

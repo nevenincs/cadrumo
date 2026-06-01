@@ -262,8 +262,8 @@ def _config_help() -> HelpDocument:
                         description=tr("cli.operator_surface.help.config.profile_status"),
                     ),
                     HelpEntry(
-                        command="aeat config profile census",
-                        description=tr("cli.operator_surface.help.config.profile_census"),
+                        command="aeat config profile censo",
+                        description=tr("cli.operator_surface.help.config.profile_censo"),
                     ),
                 ),
             ),

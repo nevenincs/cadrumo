@@ -86,7 +86,7 @@ type = "string"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Fiscal address declared for taxpayer/census purposes."
+description = "Fiscal address declared for taxpayer/censo purposes."
 
 [[sections.fields]]
 key = "postcode"
@@ -103,7 +103,7 @@ type = "string"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Catastral reference of the operator's fiscal address. Carried by the 036 census so AEAT can locate the address in the Catastro."
+description = "Catastral reference of the operator's fiscal address. Carried by the 036 censo so AEAT can locate the address in the Catastro."
 model_selectors = ["address.cadastral_reference"]
 legal_refs = ["RDLeg 1/2004 TR Ley Catastro (BOE-A-2004-4163)"]
 
@@ -159,8 +159,8 @@ description = "Common-regime or explicit unsupported foral state. Defaults to co
 enum_values = ["common_regime", "foral_unsupported"]
 
 [[sections]]
-key = "census"
-title = "Census and enrollment"
+key = "censo"
+title = "Censo and enrollment"
 sensitivity = "identity"
 effective_dated = true
 
@@ -170,7 +170,7 @@ type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Modelo 036 census state."
+description = "Modelo 036 censo state."
 enum_values = ["alta", "modificacion", "baja"]
 
 [[sections.fields]]
@@ -199,8 +199,8 @@ type = "date"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "AEAT census alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility."
-model_selectors = ["census.activity_start_date"]
+description = "AEAT censo alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility."
+model_selectors = ["censo.activity_start_date"]
 legal_refs = ["RGAT Art. 9 (BOE-A-2007-15984)", "RGAT Art. 11 (BOE-A-2007-15984)"]
 
 [[sections.fields]]
@@ -209,8 +209,8 @@ type = "date"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "AEAT census baja date for the economic activity. Caps obligation calendar after baja."
-model_selectors = ["census.activity_end_date"]
+description = "AEAT censo baja date for the economic activity. Caps obligation calendar after baja."
+model_selectors = ["censo.activity_end_date"]
 legal_refs = ["RGAT Art. 9 (BOE-A-2007-15984)", "RGAT Art. 11 (BOE-A-2007-15984)"]
 
 [[sections.fields]]
@@ -219,9 +219,9 @@ type = "enum"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Form of business establishment declared on the 036 census. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa."
+description = "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa."
 enum_values = ["propio", "arrendado", "cedido_gratuitamente"]
-model_selectors = ["census.establecimiento_type"]
+model_selectors = ["censo.establecimiento_type"]
 legal_refs = ["LIRPF Art. 28 (BOE-A-2006-20764)", "LIRPF Art. 29 (BOE-A-2006-20764)", "LIRPF Art. 30 (BOE-A-2006-20764)"]
 
 [[sections.fields]]
@@ -230,9 +230,9 @@ type = "enum"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Elected IRPF withholding rate on professional invoices, declared on the 036 census. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos."
+description = "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos."
 enum_values = ["15", "7", "1"]
-model_selectors = ["census.elected_withholding_pct"]
+model_selectors = ["censo.elected_withholding_pct"]
 legal_refs = ["LIRPF Art. 101.5 (BOE-A-2006-20764)", "RIRPF Art. 95.1 (BOE-A-2007-6820)", "RIRPF Art. 95.2 (BOE-A-2007-6820)", "Orden HAC/1425/2025 (BOE-A-2025-25272)"]
 
 [[sections]]
@@ -416,7 +416,7 @@ type = "string"
 required = true
 sensitivity = "identity"
 effective_dated = true
-description = "Census activity description."
+description = "Censo activity description."
 
 [[sections.fields]]
 key = "cnae"
@@ -607,7 +607,7 @@ type = "boolean"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Whether the taxpayer is registered on AEAT's Registro de Operadores Intracomunitarios (ROI / VIES). Distinct from does_intracomunitario: ROI enrollment is the legal census state, opted into via Modelo 036/037 checkbox 582. Live cross-references that consult ROI-only AEAT surfaces (GROI, IXVI) gate applicability on this field."
+description = "Whether the taxpayer is registered on AEAT's Registro de Operadores Intracomunitarios (ROI / VIES). Distinct from does_intracomunitario: ROI enrollment is the legal censo state, opted into via Modelo 036/037 checkbox 582. Live cross-references that consult ROI-only AEAT surfaces (GROI, IXVI) gate applicability on this field."
 model_selectors = ["iva.roi_enrolled"]
 schedule_predicates = ["iva.roi_enrolled"]
 
@@ -1185,7 +1185,7 @@ type = "enum"
 required = false
 sensitivity = "audit"
 description = "Source of the profile fact. Defaults to manual_cli when the wizard runner does not record a provenance value."
-enum_values = ["manual_cli", "setup_wizard", "modelo_036_import", "aeat_census_read", "registry_inference"]
+enum_values = ["manual_cli", "setup_wizard", "modelo_036_import", "aeat_censo_read", "registry_inference"]
 
 [[sections.fields]]
 key = "valid_from"

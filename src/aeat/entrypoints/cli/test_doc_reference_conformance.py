@@ -161,7 +161,7 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     )
     from aeat.entrypoints.cli._config import (  # noqa: F401
         _google_payloads,
-        _profile_census_payloads,
+        _profile_censo_payloads,
     )
     from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
 
@@ -203,7 +203,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     )
     from aeat.entrypoints.cli._config import (  # noqa: F401
         _google_payloads,
-        _profile_census_payloads,
+        _profile_censo_payloads,
     )
     from aeat.entrypoints.cli._doc_reference import collect_live_leaf_paths_in_subprocess
 
@@ -240,7 +240,7 @@ def test_documented_schema_classes_match_registry() -> None:
     )
     from aeat.entrypoints.cli._config import (  # noqa: F401
         _google_payloads,
-        _profile_census_payloads,
+        _profile_censo_payloads,
     )
 
     # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
