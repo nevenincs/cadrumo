@@ -98,7 +98,7 @@ Replace bespoke or implicit config/auth output redaction with the central render
 
 Enroll the high-volume application command modules that emit profile, bucket, tax, token, and URL context.
 
-- [ ] `W02.P06.S31` - enroll live-read CLI output and auth preflight lines in central redaction; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W02.P06.S31` - enroll live-read CLI output and auth preflight lines in central redaction; `src/aeat/entrypoints/cli/_app_live.py`.
 - [ ] `W02.P06.S32` - enroll ledger CLI profile and bucket output in central redaction; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W02.P06.S33` - enroll modelo CLI profile, bucket, tax, and token output in central redaction; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W02.P06.S34` - enroll overview CLI profile and bucket output in central redaction; `src/aeat/entrypoints/cli/_overview.py`.
