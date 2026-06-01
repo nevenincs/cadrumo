@@ -82,9 +82,7 @@ _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
 # ---------------------------------------------------------------------------
 _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
     {
-        ("adapters/inbound/declaracion/_parser.py", 519),
-        ("adapters/persistence/storage/envelope/_envelope.py", 158),
-        ("application/calculations/_iva_wallet_reconciliation.py", 196),
+        # W26.P59 paydown removed 28 entries (S668-S670); 11 hard/deferred remain.
         ("application/live/_borrador_100.py", 276),
         ("application/live/_censo.py", 337),
         ("application/live/_snapshot_base.py", 511),
@@ -92,35 +90,10 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
         ("application/workflow/_adapters.py", 110),
         ("application/workflow/_adapters.py", 144),
         ("application/workflow/_adapters.py", 151),
-        ("diagnostics/_identity_placement.py", 1028),
         ("domain/buckets/_event.py", 307),
         ("domain/calculations/registry/conftest.py", 15),
-        ("domain/profile/_descendant_facts.py", 207),
-        ("entrypoints/cli/_app_live.py", 1062),
-        ("entrypoints/cli/_app_live.py", 1088),
-        ("entrypoints/cli/_app_live.py", 1176),
-        ("entrypoints/cli/_app_live.py", 1362),
-        ("entrypoints/cli/_app_live.py", 1392),
-        ("entrypoints/cli/_app_live.py", 1456),
-        ("entrypoints/cli/_app_live.py", 1509),
-        ("entrypoints/cli/_app_live.py", 1561),
-        ("entrypoints/cli/_app_live.py", 1637),
         ("entrypoints/cli/_app_live.py", 1681),
-        ("entrypoints/cli/_doc_reference.py", 533),
-        ("entrypoints/cli/_modelo.py", 894),
-        ("entrypoints/cli/_modelo.py", 896),
-        ("entrypoints/cli/_modelo.py", 898),
-        ("entrypoints/cli/_modelo.py", 917),
         ("entrypoints/cli/_modelo.py", 1575),
-        ("entrypoints/cli/_modelo.py", 3114),
-        ("entrypoints/cli/_modelo.py", 3115),
-        ("entrypoints/cli/_modelo.py", 3116),
-        ("entrypoints/cli/_modelo.py", 3152),
-        ("entrypoints/cli/_modelo.py", 3153),
-        ("entrypoints/cli/_modelo.py", 3154),
-        ("entrypoints/cli/_modelo.py", 5782),
-        ("entrypoints/cli/_modelo.py", 5783),
-        ("entrypoints/cli/_modelo.py", 5784),
     }
 )
 
