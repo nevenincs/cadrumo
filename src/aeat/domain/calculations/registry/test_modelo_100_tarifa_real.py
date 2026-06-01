@@ -107,16 +107,9 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) ->
         inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
-        binding_values={
-            "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-            # declaration_type = 1 (individual) → 0461 computed = 0
-            "renta-2024-profile-declaration-type": Decimal("1"),
-            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        },
+        binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     assert result.values["0511"] == _EXPECTED_MINIMO_CONTRIBUYENTE, (
@@ -146,16 +139,9 @@ def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot
         inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
-        binding_values={
-            "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-            # declaration_type = 1 (individual) → 0461 computed = 0
-            "renta-2024-profile-declaration-type": Decimal("1"),
-            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        },
+        binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     cuota_estatal = result.values["0545"]
@@ -180,16 +166,9 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
         inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
-        binding_values={
-            "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-            # declaration_type = 1 (individual) → 0461 computed = 0
-            "renta-2024-profile-declaration-type": Decimal("1"),
-            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        },
+        binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     cuota_autonomica = result.values["0546"]
@@ -212,16 +191,9 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
         inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
-        binding_values={
-            "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-            # declaration_type = 1 (individual) → 0461 computed = 0
-            "renta-2024-profile-declaration-type": Decimal("1"),
-            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        },
+        binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     assert result.values["0545"] > Decimal("0"), (
@@ -304,7 +276,38 @@ def _base_binding_values() -> dict:
         "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+        # declaration_type = 1 (individual) → 0461 computed = 0
+        "renta-2024-profile-declaration-type": Decimal("1"),
+        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in scenarios
+        # without childcare deduction (mínimo del contribuyente chain only).
+        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
+        "renta-2024-profile-marriage-full-year": Decimal("0"),
+        "renta-2024-profile-marriage-month-start": Decimal("0"),
+        "renta-2024-profile-marriage-month-end": Decimal("0"),
     }
+
+
+# Art. 57.1.b LIRPF age supplement requires a taxpayer birth_date; supply a
+# representative date outside the 65/75 brackets for non-age scenarios.
+_BIRTH_DATE_BINDINGS_2024 = {
+    "renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15),
+}
+
+# RD 439/2007 Art. 110 pagos-fraccionados relations; zero in scenarios that
+# do not exercise M130/M131 cross-model integration.
+_RELATION_VALUES_2024 = {
+    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+}
 
 
 def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
@@ -325,6 +328,8 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     cuota_estatal = result.values["0545"]
@@ -359,6 +364,8 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     cuota_estatal = result.values["0545"]
@@ -388,6 +395,8 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     cuota_estatal = result.values["0545"]
@@ -448,6 +457,8 @@ def test_s353_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     assert result.values["0505"] == _EXPECTED_0505_NO_ANUALIDADES, (
@@ -480,6 +491,8 @@ def test_s353_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     assert result.values["0527"] == _ANUALIDADES_3000, (
@@ -510,6 +523,8 @@ def test_s353_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> No
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
     result_with_anualidades = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -517,6 +532,8 @@ def test_s353_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> No
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     cuota_no = result_no_anualidades.values["0545"]
@@ -576,6 +593,8 @@ def test_s361_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> Non
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     c0585 = result.values["0585"]
@@ -606,6 +625,8 @@ def test_s361_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     c0609 = result.values["0609"]
@@ -630,6 +651,8 @@ def test_s361_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     c0595 = result.values["0595"]
@@ -661,6 +684,8 @@ def test_s361_anti_tautology_higher_retencion_reduces_cuota_diferencial(
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
     result_high = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -668,6 +693,8 @@ def test_s361_anti_tautology_higher_retencion_reduces_cuota_diferencial(
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values=_base_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
+        date_binding_values=_BIRTH_DATE_BINDINGS_2024,
     )
 
     c0610_low = result_low.values["0610"]
