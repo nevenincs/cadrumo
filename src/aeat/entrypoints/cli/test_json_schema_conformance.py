@@ -257,3 +257,64 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
     schema = SCHEMA_REGISTRY[command_path]
     envelope_cls = SchemaEnvelope[schema]  # type: ignore[valid-type]
     assert envelope_cls.__pydantic_generic_metadata__["args"] == (schema,)
+
+
+# ---------------------------------------------------------------------
+# Zero-bare-emit gate (emit-envelope-schema-burndown W06.P27.S206)
+# ---------------------------------------------------------------------
+
+# Production CLI sites that legitimately emit through the bare ``_emit``
+# helper rather than the OutputSchema-gated ``_emit_envelope``. Each
+# entry carries a durable rationale per the metastate-zero-tolerance
+# ADR — these are not metastate lists; they encode a per-entry
+# constraint-shape decision about which surfaces are typed payloads
+# vs unstructured operator-facing prose.
+_BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
+    {
+        (
+            "src/aeat/entrypoints/cli/_config/__init__.py",
+            # help-document prose: rendered help text is operator-facing
+            # prose with no typed payload shape; not an OutputSchema candidate.
+        ),
+        (
+            "src/aeat/entrypoints/cli/_config/__init__.py",
+            # repair-report passthrough: emits the raw model_dump of the
+            # underlying ConfigRepairReport; OutputSchema wrapping would
+            # double-validate the already-validated typed report.
+        ),
+    }
+)
+
+
+def test_zero_bare_emit_sites_outside_exemption_set() -> None:
+    """Production CLI modules must use ``_emit_envelope``, not bare ``_emit``.
+
+    Walks every Python file under ``src/aeat/entrypoints/cli/`` (excluding
+    tests + the ``_common`` helper module that DEFINES ``_emit``) and
+    counts call sites matching ``_emit(ctx`` outside the documented
+    exemption set. Any new bare-emit site fails the gate so the
+    OutputSchema envelope contract stays the canonical CLI emit path.
+    """
+    from pathlib import Path
+
+    root = Path("src/aeat/entrypoints/cli")
+    violations: list[str] = []
+    for path in sorted(root.rglob("*.py")):
+        if path.name.startswith("test_") or path.name == "conftest.py":
+            continue
+        if path.name == "_common.py":
+            continue  # canonical definition of _emit lives here
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if "_emit(ctx" not in line:
+                continue
+            relative = path.as_posix()
+            if relative.startswith("src/aeat/entrypoints/cli/_config/__init__.py"):
+                # Exempt: help-document + repair-report sites documented above.
+                continue
+            violations.append(f"{relative}:{lineno}: {line.strip()}")
+    assert violations == [], (
+        "New bare _emit(ctx call site detected outside the exemption set; "
+        "every CLI command emit must route through _emit_envelope with a "
+        "registered OutputSchema. Violations:\n  " + "\n  ".join(violations)
+    )
