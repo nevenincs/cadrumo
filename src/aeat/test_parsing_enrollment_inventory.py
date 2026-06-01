@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 
@@ -111,16 +111,39 @@ def _inline_bool_violations(path: pathlib.Path, lines: list[str]) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def _collect_fromisoformat_violations() -> list[str]:
+def _collect_fromisoformat_violations(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST] | None = None,
+) -> list[str]:
+    """Return ``file:line`` strings for bare ``date.fromisoformat()`` calls.
+
+    When *source_tree_ast* is supplied (test path), consume the cached
+    parsed AST per file. When omitted, fall back to walk-and-parse so
+    the helper's no-arg signature stays compatible with importlib
+    callers.
+    """
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    if source_tree_ast is None:
+        for path in sorted(_SRC_ROOT.rglob("*.py")):
+            if _is_excluded(path):
+                continue
+            source = path.read_text(encoding="utf-8", errors="replace")
+            try:
+                tree = ast.parse(source, filename=str(path))
+            except SyntaxError:
+                continue
+            for lineno in _fromisoformat_call_linenos(tree):
+                rel = path.relative_to(_SRC_ROOT.parent.parent)
+                violations.append(f"{rel}:{lineno}")
+        return violations
+
+    for path in sorted(source_tree_ast):
         if _is_excluded(path):
             continue
-        source = path.read_text(encoding="utf-8", errors="replace")
         try:
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
+            path.relative_to(_SRC_ROOT)
+        except ValueError:
             continue
+        tree = source_tree_ast[path]
         for lineno in _fromisoformat_call_linenos(tree):
             rel = path.relative_to(_SRC_ROOT.parent.parent)
             violations.append(f"{rel}:{lineno}")
@@ -143,13 +166,18 @@ def _collect_inline_bool_violations() -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def test_no_bare_date_fromisoformat() -> None:
+def test_no_bare_date_fromisoformat(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+) -> None:
     """Zero ``date.fromisoformat(`` calls survive in production modules.
 
     All date parsing must go through ``_parse_iso8601_date`` or
     ``_parse_ddmmyyyy_date`` from ``aeat.core.parsing._dates``.
+
+    Consumes the session-scoped AST cache so the per-file parse cost is
+    amortised across the full ratchet suite.
     """
-    violations = _collect_fromisoformat_violations()
+    violations = _collect_fromisoformat_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(
