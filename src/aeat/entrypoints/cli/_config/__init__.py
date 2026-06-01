@@ -42,6 +42,7 @@ from ....application.wizard._commands import build_wizard_command as _build_wiza
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
 from ....core.errors import AeatError as _AeatError
+from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
@@ -996,11 +997,10 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1725,11 +1725,10 @@ def config_reset(
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
 def auth_providers(
     ctx: typer.Context,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1766,11 +1765,10 @@ def auth_configure(
         help=tr("cli.config.auth.provider_help"),
     ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1841,11 +1839,10 @@ def auth_configure(
 def auth_status(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1875,11 +1872,10 @@ def auth_status(
 def auth_test(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1916,11 +1912,10 @@ def auth_login(
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
     fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
     reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1964,11 +1959,10 @@ def auth_clear(
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
