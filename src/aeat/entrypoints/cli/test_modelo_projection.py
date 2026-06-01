@@ -333,11 +333,14 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # second authority constructor, which the resources() module gates.
     authority = resources().modelos.authority
     m100_snapshot = authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    # Casilla 0604 is computed in the 2024 revision (formula
+    # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
+    # relation channels). The oracle path supplies the same M130 total
+    # through the relation map that the project verb threads.
     oracle_result = calculate_registry_snapshot(
         m100_snapshot,
         inputs={
             "0171": _TOTAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
-            "0604": _TOTAL_PAGOS_FRACCIONADOS,
         },
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
         binding_values={
@@ -349,6 +352,10 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         },
         enum_binding_values={
             f"renta-{_FILING_YEAR}-profile-tax-residence-ccaa": _CCAA,
+        },
+        relation_values={
+            f"renta-{_FILING_YEAR}-rel-130-pagos-fraccionados": _TOTAL_PAGOS_FRACCIONADOS,
+            f"renta-{_FILING_YEAR}-rel-131-pagos-fraccionados": Decimal("0"),
         },
     )
 
@@ -369,7 +376,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert projected_value == oracle_value, (
             f"M100 casilla {casilla_id}: project verb returned {projected_value}, "
             f"oracle (direct calculate_registry_snapshot) returned {oracle_value}. "
-            f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}, 0604={_TOTAL_PAGOS_FRACCIONADOS}, "
+            f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}; "
+            f"rel-130-pagos-fraccionados={_TOTAL_PAGOS_FRACCIONADOS}; "
             f"ccaa={_CCAA!r}."
         )
 

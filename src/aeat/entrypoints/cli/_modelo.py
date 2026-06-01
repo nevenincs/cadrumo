@@ -5156,11 +5156,17 @@ def modelo_project(
     # propagates the projected net income through base liquidable general.
     # Casilla 0505 is computed (max(0, 0500 − 0527)); supplying it directly as an
     # input raises RegistryValidationError — hence the injection at the leaf casilla.
-    # Pagos fraccionados go to 0604 (manual-kind, actividades económicas).
+    # Pagos fraccionados land in casilla 0604, but 0604 is computed (formula
+    # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
+    # relation channels). Supply the M130 total via the relation map below;
+    # M131 has no quarterly aggregation here, so its relation is zero.
     m100_inputs: dict[str, Decimal] = {
         "0171": projected_rendimiento_neto,  # EDS ingresos explotación (projection leaf)
-        "0604": total_pagos_fraccionados,  # pagos fraccionados M130 (manual, actual paid)
         **extra_inputs,
+    }
+    m100_relations: dict[str, Decimal] = {
+        f"renta-{year}-rel-130-pagos-fraccionados": total_pagos_fraccionados,
+        f"renta-{year}-rel-131-pagos-fraccionados": Decimal("0"),
     }
 
     # Default retenciones bindings to zero; caller may override via --binding.
@@ -5188,6 +5194,7 @@ def modelo_project(
             date_context={"filing_period": date(year, 12, 31)},
             binding_values=m100_bindings,
             enum_binding_values=m100_enum_bindings,
+            relation_values=m100_relations,
         )
     except RegistryValidationError as exc:
         # Operator surface is intentionally terse (the localised
@@ -5197,12 +5204,13 @@ def modelo_project(
         # inputs that drove it; log them here so the AEAT log file and
         # pytest's --log-cli-level=ERROR capture surface the cause.
         _log.exception(
-            "modelo.project: M100 calculation failed for year=%s ccaa=%s; inputs=%r bindings=%r enum_bindings=%r; registry_error=%s",
+            "modelo.project: M100 calculation failed for year=%s ccaa=%s; inputs=%r bindings=%r enum_bindings=%r relations=%r; registry_error=%s",
             year,
             ccaa,
             m100_inputs,
             m100_bindings,
             m100_enum_bindings,
+            m100_relations,
             exc,
         )
         raise typer.BadParameter(
