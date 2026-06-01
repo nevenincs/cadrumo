@@ -14,9 +14,9 @@ using a Sphinx role such as `:class:`ModeloRevision``.
 The API documentation is only navigable if its docstrings form a graph that
 steers a reader toward the canonical spine. A module that depends on a core
 struct but never names it in a cross-reference is a dead end: a newcomer has no
-thread to follow back to the authoritative definition. A baseline scan found
-only 53% of module docstrings and 26% of documented public symbols carried any
-cross-reference at all. The gate `test_docstring_core_struct_links.py` makes the
+thread to follow back to the authoritative definition. Cross-reference coverage
+started well below half of module docstrings and documented public symbols. The
+gate `test_docstring_core_struct_links.py` makes the
 contract enforceable: it self-verifies the anchor set, recomputes the violation
 worklist from the AST on every run, and fails with a precise
 `module -> :class:`Struct`` enumeration. It is hard-cut with no stored baseline,

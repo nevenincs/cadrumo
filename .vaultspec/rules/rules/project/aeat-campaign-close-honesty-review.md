@@ -4,7 +4,7 @@ name: aeat-campaign-close-honesty-review
 
 # AEAT campaign close honesty review
 
-Every campaign close MUST trigger a fresh-context honesty review against the closure summary BEFORE the campaign is declared structurally complete. The agent driving execution self-reports "campaign complete" with a documented ~30% structural-incompleteness rate; the honesty review is the gate that surfaces the hidden items.
+Every campaign close MUST trigger a fresh-context honesty review against the closure summary BEFORE the campaign is declared structurally complete. The agent driving execution routinely self-reports "campaign complete" while a substantial fraction of the work is still structurally incomplete; the honesty review is the gate that surfaces the hidden items.
 
 The review may be performed by one of:
 
@@ -16,6 +16,4 @@ The review may be performed by one of:
 
 The honesty-review output is persisted as a vault audit document. Items it surfaces are tracked as new Steps with verification gates. The campaign is NOT structurally complete until honest-pass items are either closed with verification or formally deferred (closed with a follow-up campaign reference).
 
-The pattern of recurring ~14-item discoveries per pass is documented and expected. Each pass narrows the surface; full eradication in one campaign is not the gate. The gate is: did a fresh honest review run before closure was declared?
-
-Recorded under modelo-130-relation-regression campaign P07/P08/P09 audit trail at .vault/audit/2026-05-27-modelo-130-relation-regression-audit.md.
+A pattern of recurring multi-item discoveries per pass is documented and expected. Each pass narrows the surface; full eradication in one campaign is not the gate. The gate is: did a fresh honest review run before closure was declared?
