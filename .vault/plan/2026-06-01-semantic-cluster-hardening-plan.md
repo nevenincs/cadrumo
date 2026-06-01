@@ -48,8 +48,8 @@ Add the standing 7th axis to the swarm-audit cadence and sync it into provider s
 Enumerate the changed-module delta since baseline, run the Axis-7 RAG-plus-rg sweep, and persist a verified-cluster audit document.
 
 - [x] `W01.P02.S03` - Enumerate Python modules added and modified since the 2026-05-19 baseline; `src/aeat`.
-- [ ] `W01.P02.S04` - Run the Axis-7 RAG functional-concept sweep over the delta and verify candidate clusters with rg; `src/aeat`.
-- [ ] `W01.P02.S05` - Persist the verified functionality-cluster delta-audit document; `.vault/audit`.
+- [x] `W01.P02.S04` - Run the Axis-7 RAG functional-concept sweep over the delta and verify candidate clusters with rg; `src/aeat`.
+- [x] `W01.P02.S05` - Persist the verified functionality-cluster delta-audit document; `.vault/audit`.
 
 ## Wave `W02` - duplication-cluster consolidation
 
@@ -69,7 +69,7 @@ Create the canonical core money/Decimal primitive and migrate the three confirme
 
 Triage the verified clusters from the delta audit and insert one consolidation Step per confirmed cluster.
 
-- [ ] `W02.P04.S11` - Triage verified delta-audit clusters and insert one consolidation Step per confirmed cluster; `.vault/audit`.
+- [x] `W02.P04.S11` - Triage verified delta-audit clusters and insert one consolidation Step per confirmed cluster; `.vault/audit`.
 
 ## Wave `W03` - base-definition and pydantic enrollment re-verification
 
@@ -139,7 +139,7 @@ Rename the mis-named portals Subdomain StrEnum to a portal-host concept with con
 
 Re-confirm prior duplication-sweep conceptual leads against current state and insert one Step per confirmed redefinition.
 
-- [ ] `W05.P12.S29` - Re-confirm prior duplication-sweep conceptual leads and insert one Step per confirmed redefinition; `.vault/audit`.
+- [x] `W05.P12.S29` - Re-confirm prior duplication-sweep conceptual leads and insert one Step per confirmed redefinition; `.vault/audit`.
 
 ## Parallelization
 
