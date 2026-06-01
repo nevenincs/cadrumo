@@ -59,67 +59,67 @@ _EVENT_PERIOD_RE = re.compile(r"^EVENT-\d+$")
 
 
 def _validate_period_against_registry(value: str) -> str:
-	"""Validate and normalize a period code against the union of accepted forms.
+    """Validate and normalize a period code against the union of accepted forms.
 
-	Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
-	ad-hoc literal (AD-HOC), and event-driven forms (EVENT-N where N is an integer).
+    Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
+    ad-hoc literal (AD-HOC), and event-driven forms (EVENT-N where N is an integer).
 
-	Raises ValueError with the full accepted-set list on rejection; pydantic
-	wraps it into a ValidationError at the BeforeValidator boundary.
-	"""
-	if not isinstance(value, str):
-		raise ValueError(f"period code must be a string, got {type(value).__name__}")
+    Raises ValueError with the full accepted-set list on rejection; pydantic
+    wraps it into a ValidationError at the BeforeValidator boundary.
+    """
+    if not isinstance(value, str):
+        raise ValueError(f"period code must be a string, got {type(value).__name__}")
 
-	normalized = value.strip().upper()
+    normalized = value.strip().upper()
 
-	if normalized in _STANDARD_PERIOD_SET:
-		return normalized
-	if normalized in _EXTENDED_PERIOD_SET:
-		return normalized
-	if normalized == _AD_HOC_PERIOD:
-		return normalized
-	if _EVENT_PERIOD_RE.match(normalized):
-		return normalized
+    if normalized in _STANDARD_PERIOD_SET:
+        return normalized
+    if normalized in _EXTENDED_PERIOD_SET:
+        return normalized
+    if normalized == _AD_HOC_PERIOD:
+        return normalized
+    if _EVENT_PERIOD_RE.match(normalized):
+        return normalized
 
-	accepted = _format_accepted_period_set()
-	raise ValueError(
-		f"invalid period code '{value}'; accepted forms: {accepted}"
-	)
+    accepted = _format_accepted_period_set()
+    raise ValueError(
+        f"invalid period code '{value}'; accepted forms: {accepted}"
+    )
 
 
 def accepted_period_codes() -> tuple[str, ...]:
-	"""Return the fully enumerable period codes (StandardPeriodCode + extended literals)."""
-	return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
+    """Return the fully enumerable period codes (StandardPeriodCode + extended literals)."""
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
 
 
 def accepted_period_patterns() -> tuple[str, ...]:
-	"""Return the period code patterns (including regex shapes for EVENT-N)."""
-	return (
-		"StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
-		"Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
-		"Ad-hoc (AD-HOC)",
-		"Event-driven (EVENT-N where N is an integer)",
-	)
+    """Return the period code patterns (including regex shapes for EVENT-N)."""
+    return (
+        "StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
+        "Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
+        "Ad-hoc (AD-HOC)",
+        "Event-driven (EVENT-N where N is an integer)",
+    )
 
 
 def _format_accepted_period_set() -> str:
-	"""Format the accepted period set for error messages."""
-	standard = sorted(_STANDARD_PERIOD_SET)
-	extended = sorted(_EXTENDED_PERIOD_SET)
-	lines = [
-		f"StandardPeriodCode: {', '.join(standard)}",
-		f"Extended: {', '.join(extended)}",
-		f"Ad-hoc: {_AD_HOC_PERIOD}",
-		f"Event-driven: EVENT-N (where N is an integer)",
-	]
-	return "; ".join(lines)
+    """Format the accepted period set for error messages."""
+    standard = sorted(_STANDARD_PERIOD_SET)
+    extended = sorted(_EXTENDED_PERIOD_SET)
+    lines = [
+        f"StandardPeriodCode: {', '.join(standard)}",
+        f"Extended: {', '.join(extended)}",
+        f"Ad-hoc: {_AD_HOC_PERIOD}",
+        f"Event-driven: EVENT-N (where N is an integer)",
+    ]
+    return "; ".join(lines)
 
 
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
 __all__ = [
-	"StandardPeriodCode",
-	"RegistryPeriodCode",
-	"accepted_period_codes",
-	"accepted_period_patterns",
+    "StandardPeriodCode",
+    "RegistryPeriodCode",
+    "accepted_period_codes",
+    "accepted_period_patterns",
 ]
