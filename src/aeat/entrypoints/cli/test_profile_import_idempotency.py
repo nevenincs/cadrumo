@@ -105,10 +105,15 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
         assert r_list.exit_code == 0, r_list.output
         # The display name (not UUID) appears in list output.
         assert "idempotency-test" in r_list.output
-        # The profile_id UUID is available via `profile show` — confirm round-trip.
-        r_show = _invoke(["config", "profile", "show"])
-        assert r_show.exit_code == 0, r_show.output
-        assert exported_id in r_show.output
+        # Profile IDs are redacted at the CLI boundary; verify UUID
+        # round-trip by reading the encrypted manifest directly through
+        # the persistence layer.
+        from aeat.application.user_profile._orchestration import profile_storage_session
+        from aeat.application.user_profile._profile_repository import ProfileRepository
+
+        with profile_storage_session(exported_id):
+            aggregate = ProfileRepository().load(exported_id)
+        assert aggregate.profile_id == exported_id
 
 
 # ---------------------------------------------------------------------------
@@ -211,12 +216,22 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         assert "idempotency-test" in r_list.output
         assert "idempotency-test-mutated" in r_list.output
 
-        # Verify the imported UUID for the original bundle matches the exported one.
+        # Profile IDs are redacted at the CLI boundary; verify UUID
+        # round-trip by reading the encrypted manifest of the
+        # identity-preserving import (the first one, without --label).
+        # The --label path mints a fresh UUID by design (see
+        # ``config_profile_import``'s D5 two-tier collision guard), so
+        # the imported bucket's id does not equal ``mutated_id``; that
+        # path is asserted via the display-name + list-output surfaces.
+        from aeat.application.user_profile._orchestration import profile_storage_session
+        from aeat.application.user_profile._profile_repository import ProfileRepository
+
+        with profile_storage_session(exported_id):
+            original_aggregate = ProfileRepository().load(exported_id)
+        assert original_aggregate.profile_id == exported_id
+
+        # Both display names must still be reachable via the operator surface.
         r_show = _invoke(["config", "profile", "show", "idempotency-test"])
         assert r_show.exit_code == 0, r_show.output
-        assert exported_id in r_show.output
-
-        # Verify the imported UUID for the mutated bundle is the mutated one.
         r_show_mut = _invoke(["config", "profile", "show", "idempotency-test-mutated"])
         assert r_show_mut.exit_code == 0, r_show_mut.output
-        assert mutated_id in r_show_mut.output
