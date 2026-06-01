@@ -14,6 +14,15 @@ related:
   - '[[2026-05-19-profile-lifecycle-cli-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `profile-lifecycle-disaster` recovery plan
 
@@ -96,7 +105,7 @@ Dispatch the same five operator personas blind against the rebuilt
 feature. Pass criterion: every persona scores ≤1 on every prior
 pain point.
 
-- [ ] `P06.S42` - dispatch persona newcomer for first-time-operator retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-newcomer-retest.md`.
+- [x] `P06.S42` - dispatch persona newcomer for first-time-operator retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-newcomer-retest.md`.
 - [x] `P06.S43` - dispatch persona returning for Monday-morning retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-returning-retest.md`.
 - [x] `P06.S44` - dispatch persona dual for two-profile retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-dual-retest.md`.
 - [x] `P06.S45` - dispatch persona fumbler for error-prone retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-fumbler-retest.md`.
