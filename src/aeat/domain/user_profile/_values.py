@@ -1,8 +1,8 @@
 """Strict Pydantic value records for centralized user profiles.
 
-:class:`UserProfilePortableExport` bundles user profile facts with
-associated :class:`CalculationRevision` records for portable export
-and import across profile buckets.
+The portable-export bundle (:class:`UserProfilePortableExport`) lives in
+the sibling :mod:`._portable_export` module so its heavy domain-type
+imports do not enter ``sys.modules`` at user-profile package init.
 """
 
 from __future__ import annotations
@@ -20,19 +20,11 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
 from ...core.time import now as utc_now
-from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
-from ..modelos._filing_record import ModeloRecord as _ModeloRecord
-from ..modelos._work_unit import WorkUnit as _WorkUnit
-from ..transactions._models import Transaction as _Transaction
 from ._errors import UserProfileValidationError
-
-_ProfileId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=96, pattern=r"^[A-Za-z0-9][A-Za-z_0-9.-]*$"),
-]
 _SnapshotId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z_0-9.:-]*$"),
@@ -265,39 +257,6 @@ class UserProfileSnapshot(BaseModel):
             facts=facts,
             canonical_hash=digest,
         )
-
-class UserProfilePortableExport(BaseModel):
-    """User-directed portable profile export payload.
-
-    ``bundle_schema_version`` gates forward-compatible import: callers that read
-    an export bundle compare this integer to their supported range before
-    attempting to parse ``profile``. Increment it when the serialised shape
-    changes in a backward-incompatible way.
-
-    Version 1 is the facts-only bundle (``profile`` only) and remains
-    importable. Version 2 is the full bundle — it adds ``work_units``,
-    ``ledger_transactions``, ``calculation_revisions``, and
-    ``filing_records``, all defaulting to empty tuples so v1 facts-only
-    bundles remain importable.
-
-    Encrypted-material blobs are NOT included (ADR D2: strip encrypted
-    material; re-encrypt under recipient bucket DEK on import).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bundle_schema_version: int = Field(default=2, ge=1)
-    exported_at: datetime = Field(default_factory=utc_now)
-    profile: UserProfileRecord
-
-    # --- v2 financial-history fields -----------------------------------------
-    # All default to empty tuples so v1 facts-only bundles round-trip
-    # cleanly; the import path checks bundle_schema_version before reading.
-
-    work_units: tuple[_WorkUnit, ...] = ()
-    ledger_transactions: tuple[_Transaction, ...] = ()
-    calculation_revisions: tuple[_CalculationRevision, ...] = ()
-    filing_records: tuple[_ModeloRecord, ...] = ()
 
 def _derive_canonical_hash(
     *,
