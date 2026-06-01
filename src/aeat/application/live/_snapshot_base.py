@@ -57,7 +57,7 @@ class SnapshotNotFoundError(AeatError, KeyError):
     via the ``AeatError.__init_subclass__`` hook, and callers that catch
     the broad ``KeyError`` family remain unaffected. ``AeatError`` is
     listed first so MRO routes ``__init__`` through
-    :meth:`AeatError.__init__` (which accepts the structured
+    ``AeatError.__init__`` (which accepts the structured
     ``suggestion=`` / ``context=`` kwargs) rather than ``KeyError``'s
     C-level constructor.
 
