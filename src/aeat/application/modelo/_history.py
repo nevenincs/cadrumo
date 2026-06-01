@@ -25,7 +25,6 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...core.identity import BucketId
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
