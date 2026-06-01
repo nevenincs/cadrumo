@@ -48,7 +48,7 @@ from typing import Literal
 from aeat.domain.calculations.registry._bindings import CasillaObservation
 from aeat.domain.calculations.registry._ids import CasillaId
 
-from .errors import RentaError, RentaValidationError
+from ._errors import RentaError, RentaValidationError
 
 # ---------------------------------------------------------------------------
 # Domain errors

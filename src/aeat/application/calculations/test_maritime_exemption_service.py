@@ -27,7 +27,7 @@ from aeat.domain.renta._maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from aeat.domain.renta.errors import RentaValidationError
+from aeat.domain.renta._errors import RentaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

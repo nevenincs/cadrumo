@@ -1027,7 +1027,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.renta.errors.RentaError",
+        "aeat.domain.renta._errors.RentaError",
         ErrorCode(
             code="ERROR_RENTA",
             category=ErrorCategory.ERROR,
@@ -1038,7 +1038,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.renta.errors.RentaValidationError",
+        "aeat.domain.renta._errors.RentaValidationError",
         ErrorCode(
             code="ERROR_RENTA_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -1604,7 +1604,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.renta.errors.RentaError",
+        "aeat.domain.renta._errors.RentaError",
         ErrorCode(
             code="ERROR_RENTA",
             category=ErrorCategory.ERROR,
@@ -1615,7 +1615,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.renta.errors.RentaValidationError",
+        "aeat.domain.renta._errors.RentaValidationError",
         ErrorCode(
             code="ERROR_RENTA_VALIDATION",
             category=ErrorCategory.ERROR,
