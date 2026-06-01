@@ -42,7 +42,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from aeat.core._models import STRICT_FROZEN_CONFIG
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ._errors import PdfModeloImportError
 from ._utils import sha256_file
@@ -249,7 +249,7 @@ def compute_sidecar(
         original_sha256=sha256_file(original_path),
         scrubbed_sha256=sha256_file(scrubbed_path),
         scrub_version=SCRUB_VERSION,
-        scrubbed_at=_now(),
+        scrubbed_at=now(),
         fields_touched=fields_touched,
         consent_revocable_until=consent_revocable_until,
         original_filename=original_path.name,

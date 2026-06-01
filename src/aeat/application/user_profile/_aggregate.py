@@ -23,7 +23,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket._manifest import ManifestKdfParams
-from ...core.time._utc import _validate_utc_aware
+from ...core.time._utc import validate_utc_aware
 from ...domain.user_profile import UserProfileRecord, UserProfileStatus
 from ...domain.user_profile._errors import UserProfileValidationError
 
@@ -64,7 +64,7 @@ class ProfileAggregate(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _validate_utc_aware(value)
+        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _validate_cross_store_agreement(self) -> ProfileAggregate:

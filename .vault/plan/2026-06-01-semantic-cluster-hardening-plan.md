@@ -79,15 +79,15 @@ Re-proves, never trusts, the claimed canonical enrollment completeness (STRICT_F
 
 Re-scan the current tree for local strict/frozen ConfigDict copies and close any stragglers against the canonical constant.
 
-- [ ] `W03.P05.S12` - Re-scan the current tree for local strict-frozen ConfigDict copies versus the canonical constant; `src/aeat`.
-- [ ] `W03.P05.S13` - Triage the local-config stragglers and insert one migration Step per confirmed site; `src/aeat`.
+- [x] `W03.P05.S12` - Re-scan the current tree for local strict-frozen ConfigDict copies versus the canonical constant; `src/aeat`.
+- [x] `W03.P05.S13` - Triage the local-config stragglers and insert one migration Step per confirmed site; `src/aeat`.
 
 ### Phase `W03.P06` - typed-alias and enum enrollment re-verification
 
 Re-run the diagnostics enforcement suite, record gaps in the delta, and insert one migration Step per confirmed gap.
 
-- [ ] `W03.P06.S14` - Re-run the diagnostics enrollment enforcement suite and record gaps; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
-- [ ] `W03.P06.S15` - Triage typed-alias and enum enrollment gaps in the delta and insert one migration Step per confirmed gap; `src/aeat`.
+- [x] `W03.P06.S14` - Re-run the diagnostics enrollment enforcement suite and record gaps; `src/aeat/diagnostics/test_identity_primitive_placement.py`.
+- [x] `W03.P06.S15` - Triage typed-alias and enum enrollment gaps in the delta and insert one migration Step per confirmed gap; `src/aeat`.
 
 ## Wave `W04` - exception consolidation
 

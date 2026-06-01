@@ -411,13 +411,13 @@ def test_settings_loads_cert_env_vars(tmp_path: Path) -> None:
     assert SECRET_PASSPHRASE not in repr(settings)
 
 
-# ── UTC helper migration: _coerce_utc_aware semantics ───────────────────────
+# ── UTC helper migration: coerce_utc_aware semantics ───────────────────────
 
 
 def test_load_certificate_not_before_is_utc_aware(tmp_path: Path) -> None:
     """not_before on a loaded certificate is always UTC-aware.
 
-    ``_coerce_utc_aware`` is the coerce helper: naive datetimes get UTC
+    ``coerce_utc_aware`` is the coerce helper: naive datetimes get UTC
     attached, aware datetimes are converted to UTC.  The PKCS#12 boundary
     must always produce UTC-aware timestamps regardless of what
     ``x509_cert.not_valid_before_utc`` returns.
@@ -438,7 +438,7 @@ def test_load_certificate_not_after_is_utc_aware(tmp_path: Path) -> None:
 
     Mirrors ``test_load_certificate_not_before_is_utc_aware`` for the
     expiry timestamp, confirming both PKCS#12 datetime call-sites pass
-    through ``_coerce_utc_aware``.
+    through ``coerce_utc_aware``.
     """
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(

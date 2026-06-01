@@ -11,7 +11,7 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
@@ -190,7 +190,7 @@ class DeadlineEngine:
             profile=profile,
             year=year,
             obligations=tuple(obligations),
-            generated_at=_now(),
+            generated_at=now(),
         )
 
     def _obligation_for_window(

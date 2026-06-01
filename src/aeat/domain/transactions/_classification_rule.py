@@ -16,7 +16,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.logging import get_logger
 from ._enums import BusinessClassification
@@ -85,7 +85,7 @@ class LedgerClassificationRule(BaseModel):
             classification=classification,
             category_id=category_id,
             priority=priority,
-            created_at=created_at or _now(),
+            created_at=created_at or now(),
             actor=actor,
         )
 

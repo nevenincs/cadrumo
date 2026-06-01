@@ -43,7 +43,7 @@ from .....core.config import unwrap_optional_secret
 from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.time._clock import _now
+from .....core.time._clock import now
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .....domain.user_profile._errors import UserProfileError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -397,7 +397,7 @@ class ClaveMovilAuthProvider:
 
             persisted = self._load_persisted(storage_state_path)
             metadata = self._load_metadata(storage_state_path, persisted)
-            if metadata.idle_deadline <= _now():
+            if metadata.idle_deadline <= now():
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil session past idle deadline",
                     translated_message="adapters.auth.clave_movil.errors.session_expired",
@@ -517,7 +517,7 @@ class ClaveMovilAuthProvider:
             resolved_target_url=resolved_target_url,
             target_path=target_path,
         )
-        attempted_at = _now()
+        attempted_at = now()
         start = time.perf_counter()
         status_code = 0
         landing_url: str | None = None
@@ -1017,7 +1017,7 @@ class ClaveMovilAuthProvider:
                 await self._close_browser_session(session_like)
             raise
 
-        authenticated_at = _now()
+        authenticated_at = now()
         idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
         try:
             metadata = _ClaveMovilSessionMetadata(
@@ -1082,7 +1082,7 @@ class ClaveMovilAuthProvider:
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
-        if metadata.idle_deadline <= _now():
+        if metadata.idle_deadline <= now():
             raise AeatLoginAssertionError(
                 "Cl@ve Móvil session past idle deadline",
                 translated_message="adapters.auth.clave_movil.errors.session_expired",
@@ -1477,13 +1477,13 @@ class ClaveMovilAuthProvider:
         plaintext files.
         """
         try:
-            ts = _now().strftime("%Y%m%dT%H%M%SZ")
+            ts = now().strftime("%Y%m%dT%H%M%SZ")
             url = getattr(page, "url", "") or ""
             payload: dict[str, object] = {
                 "diagnostic_id": ts,
                 "reason": reason,
                 "url": url,
-                "captured_at": _now().isoformat(),
+                "captured_at": now().isoformat(),
                 "auth_attempt": self._attempt_context(),
             }
             content = getattr(page, "content", None)
@@ -1511,7 +1511,7 @@ class ClaveMovilAuthProvider:
                 object_key=ts,
                 classification=SensitivityClass.SESSION,
                 schema_version=1,
-                written_at=_now(),
+                written_at=now(),
                 payload=json.dumps(payload, sort_keys=True, default=str).encode(UTF_8_ENCODING),
             )
             log.warning(

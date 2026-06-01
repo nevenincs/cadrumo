@@ -18,12 +18,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
-from ...core.time._utc import _coerce_utc_aware
+from ...core.time._utc import coerce_utc_aware
 from . import AuthProviderKind
 
 if TYPE_CHECKING:
@@ -89,7 +89,7 @@ def inspect_auth_acquisition_lock(
 ) -> AuthAcquisitionLockStatus:
     """Return the current acquisition-lock health without mutating it."""
     path = auth_acquisition_lock_path(settings, kind)
-    reference = _coerce_utc_aware(now) if now is not None else datetime.now(UTC)
+    reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     if not path.exists():
         return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path)
     try:
@@ -156,7 +156,7 @@ def acquire_auth_acquisition_lock(
     """
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
-    now = _now()
+    now = now()
     from ..workflow._models import require_active_bucket_id
 
     record = AuthAcquisitionLockRecord(

@@ -26,7 +26,7 @@ def _kdf() -> ManifestKdfParams:
     )
 
 
-def _now() -> datetime:
+def now() -> datetime:
     return datetime.now(tz=UTC)
 
 
@@ -34,7 +34,7 @@ def _manifest(**overrides: object) -> BucketManifest:
     defaults: dict[str, Any] = {
         "bucket_id": "bucket-001",
         "label": "Primary",
-        "created_at": _now(),
+        "created_at": now(),
         "last_unlocked_at": None,
         "kdf_params": _kdf(),
         "recovery_enrolled": False,
@@ -69,7 +69,7 @@ def test_rejects_unknown_keys() -> None:
             {
                 "bucket_id": "bucket-001",
                 "label": "Primary",
-                "created_at": _now(),
+                "created_at": now(),
                 "last_unlocked_at": None,
                 "kdf_params": _kdf(),
                 "recovery_enrolled": False,
@@ -84,7 +84,7 @@ def test_rejects_missing_bucket_id() -> None:
         BucketManifest.model_validate(
             {
                 "label": "Primary",
-                "created_at": _now(),
+                "created_at": now(),
                 "last_unlocked_at": None,
                 "kdf_params": _kdf(),
                 "recovery_enrolled": False,
@@ -147,7 +147,7 @@ def test_last_unlocked_at_naive_rejected() -> None:
         _manifest(last_unlocked_at=datetime(2026, 1, 1, 0, 0, 0))
 
 
-# ── UTC helper migration: _validate_utc_aware semantics ─────────────────────
+# ── UTC helper migration: validate_utc_aware semantics ─────────────────────
 
 
 def test_created_at_naive_raises_validation_error() -> None:

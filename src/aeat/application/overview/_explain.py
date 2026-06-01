@@ -23,7 +23,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
@@ -237,7 +237,7 @@ def build_overview_explain(
         legal_refs=applicability.legal_refs,
         scheduling_rationale=scheduling_rationale,
         profile_facts=_extract_profile_facts(profile),
-        generated_at=_now(),
+        generated_at=now(),
     )
 
 def _scheduling_rationale(

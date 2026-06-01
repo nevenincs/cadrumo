@@ -20,7 +20,7 @@ from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import _now
+from aeat.core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
@@ -148,7 +148,7 @@ def build_overview_agenda(
         due_today=tuple(due_today),
         due_soon=tuple(due_soon),
         overdue=tuple(overdue),
-        generated_at=_now(),
+        generated_at=now(),
         warnings=calendar.warnings,
         completeness=calendar.completeness,
         taxpayer_model_declared=calendar.taxpayer_model_declared,
