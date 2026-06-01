@@ -2903,11 +2903,6 @@ errors:
       deklarációi hiányoznak vagy érvénytelenek.
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
-    error_financial_vat: IVA-számítási hiba történt.
-    error_financial_vat_catalogue: Az IVA-katalógust nem sikerült betölteni, feloldani
-      vagy érvényesíteni.
-    error_financial_vat_category_not_found: A kért IVA-kategória nem található a katalógusban.
-    error_financial_vat_classification: Az IVA nem sorolható be egyértelműen.
     error_fixture_provisioning: A tesztfixture-öket nem sikerült kiosztani.
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
@@ -3001,17 +2996,20 @@ errors:
     error_transaction_validation: Egy tranzakció-mezőérték érvénytelen.
     error_usage_ratios_validation: Egy használati arány profil sérti a domain invariánsait.
     error_user_profile: Felhasználói profil hiba történt.
-    error_vat_prorrata: Hiba történt az IVA prorrata-számítás során.
-    error_vat_prorrata_input: Az IVA prorrata bemeneti adatai sértik az invariánsokat.
-    error_vat_prorrata_sector: Az IVA prorrata szektoriális-szétválasztási adatai
-      ellentmondásosak.
-    error_vat_validation: Egy IVA-mezőérték érvénytelen.
     error_wizard: Varázsló hiba történt.
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
     error_financial_iva_rate_not_found: 'Nem található IVA-kulcs a kért tagállam és típus esetén.'
     error_financial_iva_rate_overlap: 'Két IVA-kulcs azonos hatályossági ablakot oszt.'
+    error_financial_iva: 'IVA-számítási hiba történt.'
+    error_financial_iva_catalogue: 'Az IVA-katalógust nem sikerült betölteni, feloldani vagy érvényesíteni.'
+    error_financial_iva_category_not_found: 'A kért IVA-kategória nem található a katalógusban.'
+    error_financial_iva_classification: 'Az IVA nem sorolható be egyértelműen.'
+    error_iva_prorrata: 'Hiba történt az IVA prorrata-számítás során.'
+    error_iva_prorrata_input: 'Az IVA prorrata bemeneti adatai sértik az invariánsokat.'
+    error_iva_prorrata_sector: 'Az IVA prorrata szektoriális-szétválasztási adatai ellentmondásosak.'
+    error_iva_validation: 'Egy IVA-mezőérték érvénytelen.'
   fail:
     census_sync: A Modelo 036 census-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.

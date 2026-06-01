@@ -613,7 +613,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATALOGUE",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_catalogue",
+            message_key="errors.error.error_financial_iva_catalogue",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -624,7 +624,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_category_not_found",
+            message_key="errors.error.error_financial_iva_category_not_found",
             default_suggestion="aeat app ledger review",
             retryable=False,
             runbook_id=None,
@@ -635,7 +635,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_VAT_CLASSIFICATION",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat_classification",
+            message_key="errors.error.error_financial_iva_classification",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -646,7 +646,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_FINANCIAL_VAT",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_vat",
+            message_key="errors.error.error_financial_iva",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -1520,7 +1520,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_VAT_VALIDATION",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_validation",
+            message_key="errors.error.error_iva_validation",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -1531,7 +1531,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_VAT_PRORRATA",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_prorrata",
+            message_key="errors.error.error_iva_prorrata",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -1542,7 +1542,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_VAT_PRORRATA_INPUT",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_prorrata_input",
+            message_key="errors.error.error_iva_prorrata_input",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -1553,7 +1553,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="ERROR_VAT_PRORRATA_SECTOR",
             category=ErrorCategory.ERROR,
-            message_key="errors.error.error_vat_prorrata_sector",
+            message_key="errors.error.error_iva_prorrata_sector",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
