@@ -82,16 +82,13 @@ _TYPE_IGNORE_RE = re.compile(r"#\s*type:\s*ignore")
 # ---------------------------------------------------------------------------
 _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
     {
-        # W26.P59 paydown removed 28 entries (S668-S670); 11 hard/deferred remain.
-        ("application/live/_borrador_100.py", 276),
-        ("application/live/_censo.py", 337),
+        # W26.P59 paydown removed 28 entries (S668-S670); W26.P60.S672 removed 3 more (8 remain).
         ("application/live/_snapshot_base.py", 511),
         ("application/workflow/_adapters.py", 105),
         ("application/workflow/_adapters.py", 110),
         ("application/workflow/_adapters.py", 144),
         ("application/workflow/_adapters.py", 151),
         ("domain/buckets/_event.py", 307),
-        ("domain/calculations/registry/conftest.py", 15),
         ("entrypoints/cli/_app_live.py", 1681),
         ("entrypoints/cli/_modelo.py", 1575),
     }

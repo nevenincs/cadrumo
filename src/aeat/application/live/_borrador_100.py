@@ -273,6 +273,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
             binding_values=binding_values,
         )
 
+    # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN: subclass returns narrower snapshot type and adds optional filter params; base-class signature widening would ripple to N subclasses.
     def list_snapshots(  # type: ignore[override]
         self,
         *,

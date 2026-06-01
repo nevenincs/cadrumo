@@ -334,6 +334,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=censo_facts,
         )
 
+    # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN: subclass returns narrower snapshot type and adds optional filter params; base-class signature widening would ripple to N subclasses.
     def list_snapshots(  # type: ignore[override]
         self,
         *,
