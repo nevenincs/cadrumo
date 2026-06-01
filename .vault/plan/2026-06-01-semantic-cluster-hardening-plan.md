@@ -149,7 +149,7 @@ Restore the registry meta-gates and calculation-completeness coverage to green. 
 
 Close calculation-completeness coverage: re-derive the drifted M100/2024 manifest from the calculation surface (stale), and author the missing M210/2025 manifest so the load-time gate is live for IRNR 2025 (real coverage gap).
 
-- [ ] `W06.P13.S30` - Re-derive the modelo-100/2024 calculation-completeness manifest from the registry calculation surface (STALE: ~41 closure-only casillas drifted in since last refresh); `use derive_calculation_completeness_casillas, not hand-typed numbers; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/completeness-manifest.toml`.
+- [x] `W06.P13.S30` - Re-derive the modelo-100/2024 calculation-completeness manifest from the registry calculation surface (STALE: ~41 closure-only casillas drifted in since last refresh); `use derive_calculation_completeness_casillas, not hand-typed numbers; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/completeness-manifest.toml`.
 - [x] `W06.P13.S31` - Author the missing modelo-210/2025 completeness manifest (REAL coverage gap: 7-casilla closure, gate currently dark for IRNR 2025) so the load-time completeness gate is live; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/completeness-manifest.toml`.
 
 ### Phase `W06.P14` - validator reviewability baseline
