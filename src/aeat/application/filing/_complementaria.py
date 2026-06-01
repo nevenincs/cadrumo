@@ -135,11 +135,28 @@ def _require_original_registry_snapshot(
 
 
 def _merge_inputs(original_draft: ModeloDraft, updated_inputs: CasillaInputs) -> ModeloInputs:
+    # Only LITERAL casilla values are operator inputs. COMPUTED and
+    # INHERITED entries are engine-derived (formula output and bound
+    # binding projection respectively) and must not be re-supplied as
+    # casilla inputs on rebuild — the registry calculation re-derives
+    # them, and the runtime rejects bound casillas supplied via inputs
+    # without their matching binding_values entry.
     merged: dict[str, ModeloInputValue] = {
         value.casilla_id: value.value
         for value in original_draft.values
-        if value.value is not None and value.kind is not ModeloValueKind.COMPUTED
+        if value.value is not None and value.kind is ModeloValueKind.LITERAL
     }
+    # Re-project the original draft's binding values into the inputs
+    # dict keyed by binding_id. build_draft routes binding_id-keyed
+    # entries through filing_binding_values into the engine's
+    # binding_values parameter; without this step, the rebuild would
+    # lose every previously-supplied binding (e.g. the M130 carry-
+    # forward binding modelo-130-resultados-negativos-anteriores or
+    # construct bindings like irpf.previous_year_economic_activity_net_income).
+    for binding_value in original_draft.binding_values:
+        if binding_value.value is None:
+            continue
+        merged.setdefault(binding_value.binding_id, binding_value.value)
     merged.update(updated_inputs)
     return merged
 
