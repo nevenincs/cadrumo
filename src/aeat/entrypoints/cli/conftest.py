@@ -1,9 +1,30 @@
 from pathlib import Path
+from typing import Any
 
 import pytest
-from click.testing import CliRunner
+import typer
+import typer.main
+from click.testing import CliRunner, Result
 
 from aeat.core.i18n import OUTPUT_LANGUAGE_ENV_VAR
+
+
+class _TyperAwareCliRunner(CliRunner):
+    """CliRunner that auto-wraps ``typer.Typer`` objects to ``click.Command``.
+
+    click 8.x's :meth:`CliRunner.invoke` reads ``cli.name`` directly; passing
+    a bare ``typer.Typer`` instance raises ``AttributeError: 'Typer' object
+    has no attribute 'name'``. Production callers always go through
+    ``typer.main.get_command(app)`` before invoking the CLI; the test fixture
+    mirrors that wrapping so test sites can pass the Typer surface directly
+    (the established project pattern across ~200 CLI tests) without an
+    explicit ``get_command`` call at every invoke site.
+    """
+
+    def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]
+        if isinstance(cli, typer.Typer):
+            cli = typer.main.get_command(cli)
+        return super().invoke(cli, *args, **kwargs)
 
 
 @pytest.fixture(autouse=True)
@@ -31,5 +52,5 @@ def cli_runner() -> CliRunner:
     identical bodies. New tests should use this fixture directly
     rather than redeclaring it.
     """
-    return CliRunner()
+    return _TyperAwareCliRunner()
 
