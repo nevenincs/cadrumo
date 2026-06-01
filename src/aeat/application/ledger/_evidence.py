@@ -29,7 +29,7 @@ from ...core.errors import AeatError
 from ...core.external_constants import PDF_EXTENSION, UTF_8_ENCODING
 from ...core.hashing import sha256_file as _sha256_file
 from ...core.identity import BucketId
-from ...core.time import now
+from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -235,7 +235,7 @@ class PurchaseInvoiceEvidenceService:
             )
         media_kind = _resolve_media_kind(resolved)
         digest = _sha256_file(resolved)
-        now = now()
+        now = _utc_now()
         record = PurchaseInvoiceEvidence(
             evidence_id=uuid.uuid4().hex[:16],
             bucket_id=bucket_id,
@@ -294,7 +294,7 @@ class PurchaseInvoiceEvidenceService:
             for key, value in patch.model_dump(exclude_unset=True).items():
                 if value is not None:
                     data[key] = value
-            now = now()
+            now = _utc_now()
             data["updated_at"] = now
             updated = PurchaseInvoiceEvidence.model_validate(data)
             records[index] = updated
@@ -326,7 +326,7 @@ class PurchaseInvoiceEvidenceService:
             if record.evidence_id == evidence_id:
                 removed = records.pop(index)
                 _save(self._settings, bucket_id, records)
-                now = now()
+                now = _utc_now()
                 event_id = _emit_evidence_event(
                     event_repository=self._event_repository,
                     bucket_id=bucket_id,

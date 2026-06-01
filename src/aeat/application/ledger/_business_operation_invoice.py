@@ -34,7 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
-from ...core.time import now
+from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -371,7 +371,7 @@ class _BusinessOperationInvoiceService:
         operation_type: IntracomOperationType | None = None,
         actor: str = "cli",
     ) -> BusinessOperationInvoiceResult:
-        now = now()
+        now = _utc_now()
         record = BusinessOperationInvoice(
             invoice_id=uuid.uuid4().hex[:16],
             source_kind=self.source_kind,
@@ -427,7 +427,7 @@ class _BusinessOperationInvoiceService:
         for key, value in patch.model_dump(exclude_unset=True).items():
             if value is not None:
                 data[key] = value
-        now = now()
+        now = _utc_now()
         data["updated_at"] = now
         updated = BusinessOperationInvoice.model_validate(data)
         records[index] = updated
@@ -452,7 +452,7 @@ class _BusinessOperationInvoiceService:
         records = _load(self._settings, self.source_kind, bucket_id)
         target = _resolve_id(records, invoice_id)
         records.remove(target)
-        now = now()
+        now = _utc_now()
         _save(self._settings, self.source_kind, bucket_id, records)
         removed_type = _EVENT_MAP[self.source_kind.value][2]
         event_id = _emit_invoice_event(
