@@ -130,7 +130,7 @@ def emit_json_document(
 ) -> None:
     r"""Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
 
-    When ``stream`` exposes :meth:`_ReconfigurableStream.reconfigure`,
+    When ``stream`` exposes ``_ReconfigurableStream.reconfigure``,
     the helper pins it to ``encoding="utf-8", errors="strict"`` first so
     downstream cp1252 consoles can not silently corrupt non-ASCII
     characters in the rendered output.

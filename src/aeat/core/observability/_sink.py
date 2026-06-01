@@ -85,7 +85,7 @@ class JsonlRunSink(logging.Handler):
         encode) is wrapped in a single ``try`` — a serialisation
         failure (e.g. the pydantic model grew a non-JSON-safe field in
         a future refactor) must not crash the logging system, and must
-        instead fall through to :meth:`handleError` like any other
+        instead fall through to ``handleError`` like any other
         handler failure.
         """
         event = getattr(record, "run_event", None)

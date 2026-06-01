@@ -189,7 +189,7 @@ def _flush_deferred_binds() -> None:
 def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
     """Bind a stable :class:`ErrorCode` to ``error_type``.
 
-    Called from :meth:`AeatError.__init_subclass__` at class-creation
+    Called from ``AeatError.__init_subclass__`` at class-creation
     time.  If the global :data:`_DECLARED_CODE_BY_QUALNAME` mapping is
     not yet available (the module is still initialising due to a circular
     import) the class is added to :data:`_DEFERRED_BIND` and bound
