@@ -602,13 +602,33 @@ class ReplayPayload(_ParityModel):
     response data) and an optional ``raw_evidence_locator`` that links
     back to the raw HTTP response artifact for audit trails.
 
+    Replay fixtures on disk are captured response artefacts and carry
+    additional documented metadata that pre-dates the tightened schema:
+
+    * ``scenario_id`` — fixture-author label that identifies the
+      operator scenario the payload was captured against;
+    * ``profile_overrides`` — per-fixture profile overrides used to
+      drive the registry comparison;
+    * ``expected`` — operator-facing labels paired with their
+      expected values (the human-readable AEAT mapping the fixture
+      author transcribed from the live response);
+    * ``expected_by_casilla`` — registry-casilla-keyed expected
+      values, used by the oracle's matcher;
+    * ``observed_by_casilla`` — registry-casilla-keyed observed
+      values, used by the oracle's matcher.
+
     ``model_config`` inherits ``strict=True, frozen=True, extra="forbid"``
-    from :class:`_ParityModel`, so unknown keys are rejected at validation
-    time and the field types are not coerced.
+    from :class:`_ParityModel`. The documented fields above are typed
+    explicitly; any other unknown key still raises at validation.
     """
 
     observed: Mapping[str, str]
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
+    scenario_id: str | None = Field(default=None, max_length=256)
+    profile_overrides: Mapping[str, str] = Field(default_factory=dict)
+    expected: Mapping[str, str] = Field(default_factory=dict)
+    expected_by_casilla: Mapping[str, str] = Field(default_factory=dict)
+    observed_by_casilla: Mapping[str, str] = Field(default_factory=dict)
 
 
 def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> ReplayPayload:
