@@ -15,7 +15,7 @@ from decimal import Decimal
 
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
-from ...core.time._clock import now
+from ...core.time import now
 from ._protocols import (
     CasillaCollection,
     CasillaSchemaProvider,

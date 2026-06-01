@@ -24,7 +24,7 @@ from pathlib import Path
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time._clock import now
+from ....core.time import now
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,

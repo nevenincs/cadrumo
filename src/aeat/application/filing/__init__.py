@@ -9,7 +9,7 @@ from functools import lru_cache
 
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.resources import resources as _resources
-from ...core.time._clock import now as _utc_now
+from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
 )
