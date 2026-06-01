@@ -1158,3 +1158,17 @@ Allowlist at 11. Final paydown attempts the 3 moderate sites and enrols the 8 ha
 - [x] `W26.P60.S673` - pay down 1 moderate site: entrypoints/cli/_modelo.py:1575 (add definition parameter annotation per audit). Shrink allowlist by 1; `src/aeat/entrypoints/cli/_modelo.py` + `src/aeat/test_type_ignore_rationale_inventory.py`.
 - [x] `W26.P60.S674` - enrol 7 hard sites with TYPE-IGNORE-RATIONALE-HARD-DEFERRED-<scope> markers explaining why each is genuinely structural and deferred to successor epic: application/live/_snapshot_base.py:511 (Envelope generic specialization limit), application/workflow/_adapters.py:105/110/144/151 (Protocol bridging circular-import risk), domain/buckets/_event.py:307 (pydantic BaseModel.__iter__ multi-checker), entrypoints/cli/_app_live.py:1681 (Borrador100ViewResult structural refactor). Markers landed inline; `sites REMAIN in allowlist (rationale tokens document the hard-deferred status); shrink allowlist by 0 — only the documentation changes; `multiple src/aeat/ files + `src/aeat/test_type_ignore_rationale_inventory.py` (no allowlist removal)`.
 - [x] `W26.P60.S675` - aggregate test asserting S672+S673 paydown landed (allowlist at 11 - 4 = 7) + S674 hard-deferred markers present at the 7 remaining sites + prior-wave ratchets green; `src/aeat/test_w26_p60_closure.py`.
+
+## Wave `W27` - close W27 audit findings: 2 W26-introduced regressions
+
+W27 swarm re-audit: 7 of 9 axes clean. 2 real regressions caught by the standing audit cadence (the very purpose of the recurring-epic structure):
+1. A8 — parameter-Any ratchet has 5 stale line numbers because W26 comment-line insertions shifted def lines by +1.
+2. A2 — new import logging site in _stdio.py added by W26 without LOGGING-STDLIB-RATIONALE-* marker.
+
+### Phase `W27.P61` - W27 regression closure
+
+Mechanical fix-up: ratchet line-number realignment + logging marker addition + aggregate test.
+
+- [ ] `W27.P61.S676` - A8 regression: update _KNOWN_VIOLATING_LINES in test_any_param_rationale_inventory.py — _envelope.py 169→170, 365→366; _borrador_100.py 310→311, 319→320; _censo.py 400→401; ratchet must run green post-fix; `src/aeat/test_any_param_rationale_inventory.py`.
+- [ ] `W27.P61.S677` - A2 regression: add LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK marker on the new import logging at _stdio.py:27 (stdlib logging used for debug-level platform diagnostic on Windows ctypes failure; core logging unavailable at stream-bootstrap time); `src/aeat/entrypoints/cli/_stdio.py`.
+- [ ] `W27.P61.S678` - aggregate test asserting both W27 fixes landed (5 ratchet entries shifted + LOGGING-STDLIB marker present) + all standing inventory ratchets remain green; `src/aeat/test_w27_p61_closure.py`.
