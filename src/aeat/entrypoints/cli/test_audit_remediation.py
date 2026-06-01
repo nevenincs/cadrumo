@@ -149,8 +149,8 @@ class TestOverviewCalendarRequiresProfileCreate:
 
         assert result.exit_code == 0, _combined_output(result)
         _assert_no_internal_leak(_combined_output(result))
-        payload = json.loads(result.output)
-        modelos = {entry["modelo"] for entry in payload["entries"]}
+        envelope = json.loads(result.output)
+        modelos = {entry["modelo"] for entry in envelope["result"]["entries"]}
         assert "303" in modelos
 
 
