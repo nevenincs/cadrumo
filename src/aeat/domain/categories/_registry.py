@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Mapping
 from decimal import Decimal
 from functools import lru_cache
@@ -11,7 +10,7 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core._toml import to_str_keyed_dict
+from ...core._toml import read_toml, to_str_keyed_dict
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
@@ -48,13 +47,7 @@ def _load_category_profile_file_cached(
 ) -> Mapping[SpendingCategory, CategoryProfile]:
     del byte_count, modified_ns
     target = Path(path)
-    try:
-        with target.open("rb") as fh:
-            payload: dict[str, object] = tomllib.load(fh)
-    except tomllib.TOMLDecodeError as exc:
-        raise CategoryValidationError(f"{target}: invalid category profile TOML: {exc}") from exc
-    except OSError as exc:
-        raise CategoryValidationError(f"{target}: cannot read category profile registry: {exc}") from exc
+    payload = read_toml(target, error_factory=CategoryValidationError)
 
     raw_profiles = payload.get("profiles")
     if not isinstance(raw_profiles, list) or not raw_profiles:

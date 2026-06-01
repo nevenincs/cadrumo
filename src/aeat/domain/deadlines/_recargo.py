@@ -18,7 +18,6 @@ populate the :class:`Recovery` field on every OVERDUE
 
 from __future__ import annotations
 
-import tomllib
 from collections.abc import Sequence
 from decimal import Decimal
 from functools import lru_cache
@@ -26,6 +25,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...core._toml import read_toml
 from ...core.decimal import coerce_decimal
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
@@ -68,12 +68,7 @@ def _required_decimal(value: object) -> Decimal:
 def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoBand, ...]:
     del byte_count, modified_ns
     target = Path(path)
-    try:
-        raw = tomllib.loads(target.read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise DeadlineValidationError(f"{target}: cannot read recargo bracket registry: {exc}") from exc
-    except tomllib.TOMLDecodeError as exc:
-        raise DeadlineValidationError(f"{target}: invalid recargo bracket TOML: {exc}") from exc
+    raw = read_toml(target, error_factory=DeadlineValidationError)
     rows = raw.get("band", [])
     if not rows:
         raise DeadlineValidationError(f"recargo bracket TOML at {target} declares no bands")
