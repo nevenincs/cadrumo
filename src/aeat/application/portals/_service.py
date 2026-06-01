@@ -1,4 +1,10 @@
-"""Read-only portal discovery wrapping the domain registry."""
+"""Read-only portal discovery wrapping the domain registry.
+
+:class:`PortalsService` exposes a local read surface over the immutable portal
+registry. Each entry is identified by a :class:`Portal` value and carries
+a :class:`PortalCategory` axis so callers can filter by portal kind without
+inspecting the raw registry.
+"""
 
 from __future__ import annotations
 

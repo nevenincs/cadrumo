@@ -1,7 +1,9 @@
 """Catalogue entry for the *Modelo 036* censo-declaration procedure page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.CENSO`. Covers registration,
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_M036_CENSAL`` under the
+:class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.CENSO`. Covers registration,
 modification, and deregistration on the censo of entrepreneurs,
 professionals, and withholders.
 """

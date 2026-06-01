@@ -3,13 +3,14 @@
 Concrete adapter-layer implementation of the
 :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
-reads/writes encrypted attachment blobs and manifests through the
-:class:`SecureObjectRepository` persistence substrate.
+reads/writes encrypted attachment blobs and manifests wrapped in
+:class:`Envelope` records through the :class:`SecureObjectRepository`
+persistence substrate.
 
 Sensitivity rationale: attachment blobs and manifests are content-addressed
 byte objects (invoice PDFs, bank statements, supporting documents) that are
 FINANCIAL regardless of the modelo that triggered the upload. Attachments are
-not modelo-scoped — a single blob may be referenced from multiple modelos and
+not modelo-scoped - a single blob may be referenced from multiple modelos and
 filing revisions. The ``ModeloDefinition.output_sensitivity`` field governs
 model *output* artefacts; attachment storage is an independent content-
 addressed substrate and its sensitivity class is irreducibly FINANCIAL.

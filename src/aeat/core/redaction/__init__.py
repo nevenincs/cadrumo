@@ -1,8 +1,8 @@
 """Redaction-rule registry and the :func:`redact` helper family.
 
 The :class:`~aeat.core.classification.RedactionRule` shape lives in
-:mod:`aeat.core.classification` so the classification policy table can
-reference rule names without a circular import. This module ships:
+:mod:`aeat.core.classification` so the :class:`SensitivityClass` policy
+table can reference rule names without a circular import. This module ships:
 
 * a small in-memory registry of default
   :class:`~aeat.core.classification.RedactionRule` instances keyed by

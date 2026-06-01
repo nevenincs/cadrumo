@@ -4,10 +4,12 @@ Mounts the operator-facing censo-sync surface on the existing
 ``config profile`` subgroup. The backend is
 :class:`aeat.application.user_profile.CensoSyncService`; this module is the
 thin Typer layer that resolves the active profile/bucket, calls the
-service, emits payload + text, and surfaces typed refusals.
+service, emits payload + text, and surfaces typed refusals. Censo lifecycle
+events are appended to the profile event log through
+:class:`BucketEventHistoryRepository`.
 
 ``refresh`` is mounted but refuses with a typed CLI boundary error
-until the sede G313 driver lands — the verb is visible in ``--help``
+until the sede G313 driver lands - the verb is visible in ``--help``
 so operators see the canonical name now and get an explicit message
 about what is missing rather than a silent absence.
 """

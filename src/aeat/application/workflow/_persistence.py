@@ -1,4 +1,10 @@
-"""Encrypted persistence for workflow state and workflow runs."""
+"""Encrypted persistence for workflow state and workflow runs.
+
+Workflow state is stored as an :class:`Envelope`-wrapped record in the
+secure-object backend. The load path deserialises the envelope and
+validates it; callers receive a typed :class:`WorkflowState` or a
+diagnostic error class rather than a raw payload.
+"""
 
 from __future__ import annotations
 

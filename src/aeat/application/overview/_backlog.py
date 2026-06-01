@@ -1,10 +1,10 @@
 """Overview backlog: past-due / triage cohort listing.
 
-`build_overview_backlog` is the application service backing
-``aeat app overview backlog``. It composes
-:func:`build_overview_calendar` over an operator-supplied date window
-(defaulting to the last 365 days through today) and enumerates every
-obligation whose ``adjusted_closes_on`` precedes today AND whose
+:func:`build_overview_backlog` is the application service backing
+``aeat app overview backlog``. It accepts a :class:`TaxpayerProfile`,
+composes :func:`build_overview_calendar` over an operator-supplied date
+window (defaulting to the last 365 days through today), and enumerates
+every obligation whose ``adjusted_closes_on`` precedes today AND whose
 ``user_state`` indicates it has not yet been filed.
 
 The verb is a read model only: it never mutates state and never

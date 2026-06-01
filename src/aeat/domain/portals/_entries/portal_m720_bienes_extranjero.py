@@ -1,9 +1,9 @@
-"""Registry entry for Modelo 720 — foreign assets and rights informational return.
+"""Registry entry for Modelo 720 - foreign assets and rights informational return.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
-:data:`aeat.domain.portals.PORTAL_REGISTRY` via
-:mod:`aeat.domain.portals._registry`.
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M720_BIENES_EXTRANJERO`` under :class:`PortalCategory`
+``FILING``, exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
 """
 
 from __future__ import annotations

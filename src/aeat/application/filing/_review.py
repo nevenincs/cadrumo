@@ -4,8 +4,12 @@ Provides the :func:`approve_draft` / :func:`unapprove_draft` /
 :func:`refresh_review_status` lifecycle on top of
 :class:`aeat.domain.filing.ModeloDraft`, plus the deterministic
 fingerprint pipeline that lets :func:`approval_stale_reasons` detect
-when an APPROVED draft has been invalidated by upstream changes
-(catalogue, profiles, schema, or the draft's own validation surface).
+when an APPROVED draft has been invalidated by upstream changes.
+
+The :func:`compute_current_approval_basis` helper accepts an optional
+:class:`TransactionCatalogueRepository` override; when omitted, it
+loads the :class:`TransactionCatalogue` from the encrypted
+secure-object backend.
 """
 
 from __future__ import annotations

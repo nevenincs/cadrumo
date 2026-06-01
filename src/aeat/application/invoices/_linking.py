@@ -1,4 +1,10 @@
-"""Application service for explicit invoice-to-transaction linking."""
+"""Application service for explicit invoice-to-transaction linking.
+
+:func:`link_invoice_transaction_repositories` loads both the
+:class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository` and
+the :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`,
+applies the bidirectional link, and persists both updated catalogues.
+"""
 
 from __future__ import annotations
 

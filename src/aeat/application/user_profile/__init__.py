@@ -12,7 +12,8 @@ The records here have no business logic — they are the typed contract.
 The service implementations live in sibling modules
 (``ProfileLifecycleService``, ``ProfileSnapshotService``,
 ``ProfileValidationService``, ``ProfilePreflightService``) and the
-secure-storage adapters that consume these records.
+secure-storage adapters that consume these records. The aggregate passed
+across service boundaries is :class:`UserProfileRecord`.
 """
 
 from __future__ import annotations

@@ -16,7 +16,7 @@ Configuration is persisted per-bucket as an encrypted envelope row in
 the :class:`SecureObjectRepository` under the
 ``aeat.auth.apoderado`` namespace. The ``represented_nif`` is an
 identity-bearing tax identifier, so the record carries
-:attr:`SensitivityClass.IDENTITY` and is encrypted at rest; the
+:class:`SensitivityClass` ``IDENTITY`` and is encrypted at rest; the
 service never writes plaintext to disk. Live mutation of AEAT-side
 apoderamiento state (registrar, ampliar, revocar, confirmar,
 renunciar, presentar-en-representacion) is permanently refused at

@@ -1,7 +1,8 @@
-"""Registry entry for Modelo 347 — annual third-party transactions return.
+"""Registry entry for Modelo 347 - annual third-party transactions return.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M347_OPERACIONES_TERCEROS``, exposed as :data:`ENTRY` under
+the :class:`PortalCategory` member ``INFORMATIVA``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

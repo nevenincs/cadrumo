@@ -1,9 +1,9 @@
 """Catalogue entry for the Cl@ve whole-of-government identity provider root.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.AUTH`. Hosted on
-:attr:`aeat.domain.portals.PortalHost.CLAVE_GOB`; sits adjacent to AEAT but
-is in scope because the scraper hands off to it during Cl@ve flows.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_CLAVE_IDP_ROOT`` under :class:`PortalCategory`
+``AUTH``. Hosted on ``clave.gob.es``; in scope because the scraper
+hands off to it during Cl@ve flows.
 """
 
 from __future__ import annotations

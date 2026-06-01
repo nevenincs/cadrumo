@@ -1,8 +1,9 @@
 """Encrypted SQL repository for verification reports.
 
 Persists and loads verification reports via :class:`SecureObjectRepository`
-at FINANCIAL sensitivity. The catalogue is stored as a single encrypted
-BLOB per profile bucket.
+at :class:`SensitivityClass` FINANCIAL. The catalogue is stored as a
+single encrypted BLOB per profile bucket. Each stored record is wrapped
+in an :class:`Envelope` before serialisation.
 """
 
 from __future__ import annotations

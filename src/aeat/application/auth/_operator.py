@@ -1,4 +1,9 @@
-"""Operator-facing auth application services for the config CLI."""
+"""Operator-facing auth application services for the config CLI.
+
+Auth configuration and login actions emit bucket events through
+:class:`BucketEventHistoryRepository` so every provider switch and
+session renewal is reflected in the audit trail.
+"""
 
 from __future__ import annotations
 

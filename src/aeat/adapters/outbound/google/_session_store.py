@@ -1,16 +1,16 @@
 """Encrypted :class:`SecureObjectRepository` persistence for Google OAuth records.
 
-Three per-profile records back each Google session:
+Three per-profile records back each Google session, each tagged with the
+appropriate :class:`SensitivityClass`:
 
 - `oauth-client` — operator-imported Cloud Console Desktop client JSON.
-  Stored under SECRET classification because `client_secret` is a
-  long-lived credential.
-- `oauth-token` — refresh token issued by the consent screen. SECRET.
+  Stored at SECRET class because `client_secret` is a long-lived credential.
+- `oauth-token` — refresh token issued by the consent screen. SECRET class.
   Rotates after every successful refresh.
 - `oauth-metadata` — audit fields (account email, granted scopes,
-  issued/last-refreshed timestamps, reauth-required flag). FINANCIAL
-  classification because none of these fields are secrets but the
-  presence of a Google session is operator-private state.
+  issued/last-refreshed timestamps, reauth-required flag). FINANCIAL class
+  because none of these fields are secrets but the presence of a Google
+  session is operator-private state.
 
 Each function is keyed on the resolved AEAT profile name (per
 `_profile_binding.resolve_active_profile`).

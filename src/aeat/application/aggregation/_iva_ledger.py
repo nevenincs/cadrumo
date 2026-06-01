@@ -1,7 +1,12 @@
 """Repository-backed IVA observation projection from ledger catalogues.
 
 Consumes a :class:`ModeloRevision` to resolve the IVA aggregation binding
-values declared for the target modelo period.
+values declared for the target modelo period. The primary entry point
+:func:`aggregate_iva_ledger_observations` accepts a
+:class:`TransactionCatalogue` and returns an :class:`IvaLedgerAggregation`.
+The repository-backed entry point constructs a
+:class:`TransactionCatalogueRepository` for the active bucket when none
+is supplied.
 """
 
 from __future__ import annotations

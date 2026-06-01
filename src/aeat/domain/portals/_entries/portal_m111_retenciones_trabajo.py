@@ -1,7 +1,9 @@
 """Catalogue entry for the *Modelo 111* withholdings procedure page.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING`. Backs the periodic
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_M111_RETENCIONES_TRABAJO`` under
+the :class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.FILING`. Backs the periodic
 self-assessment of withholdings and on-account payments on labour income
 and economic activities.
 """

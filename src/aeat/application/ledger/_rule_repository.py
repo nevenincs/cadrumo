@@ -1,4 +1,8 @@
-"""Profile-scoped encrypted repository for ledger classification rules."""
+"""Profile-scoped encrypted repository for ledger classification rules.
+
+Records are stored at the :class:`SensitivityClass` declared by the
+``LEDGER_CLASSIFICATION_RULES_NAMESPACE`` and are encrypted at rest.
+"""
 
 from __future__ import annotations
 

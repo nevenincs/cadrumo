@@ -1,5 +1,10 @@
 """Repository-backed Renta income aggregation for actividad económica (Modelo 130).
 
+The primary entry point :func:`aggregate_renta_income_ledger_from_repositories`
+loads a :class:`TransactionCatalogue` via :class:`TransactionCatalogueRepository`
+from the active bucket and delegates to :func:`aggregate_renta_income_ledger`
+for period-scoped aggregation.
+
 Modelo 130 casilla 01 (Ingresos íntegros) accumulates professional-service
 revenue from the start of the fiscal year through the end of the declared
 quarter. Unlike the expense pipeline, which processes annual periods, the

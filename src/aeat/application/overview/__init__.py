@@ -17,7 +17,9 @@ six-state enum. The typed query record
 :class:`aeat.domain.deadlines.DeadlineEngine` over the year window.
 
 The aggregator is pure: no I/O, no mutation. The CLI wires it to the
-operator's active profile and the parsed ``--from`` / ``--to`` dates.
+operator's active :class:`TaxpayerProfile` and the parsed ``--from`` /
+``--to`` dates. The resulting :class:`Schedule` drives obligation
+date computation and period-level state classification.
 
 When the caller supplies ``raw_values`` (the operator's user_cli
 profile values mapping), the aggregator additionally detects which

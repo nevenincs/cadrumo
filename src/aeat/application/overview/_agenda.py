@@ -1,10 +1,10 @@
 """Overview agenda: upcoming-deadline ranking with a top-of-payload next_due.
 
-`build_overview_agenda` is the application service backing
-``aeat app overview agenda``. It composes the existing
-:func:`build_overview_calendar` over a window anchored on the
-operator's ``as_of`` date, then partitions the resulting entries into
-``overdue`` / ``due_today`` / ``due_soon`` cohorts and surfaces the
+:func:`build_overview_agenda` is the application service backing
+``aeat app overview agenda``. It accepts a :class:`TaxpayerProfile`
+and composes :func:`build_overview_calendar` over a window anchored
+on the operator's ``as_of`` date, then partitions the resulting entries
+into ``overdue`` / ``due_today`` / ``due_soon`` cohorts and surfaces the
 earliest future obligation as ``next_due`` so the CLI can render a
 single "what is the next thing I have to do" answer without re-walking
 the calendar.

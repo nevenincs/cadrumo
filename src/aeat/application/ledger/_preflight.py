@@ -1,4 +1,10 @@
-"""Backend readiness preflight for bucket-scoped ledger transactions."""
+"""Backend readiness preflight for bucket-scoped ledger transactions.
+
+:func:`preflight_ledger_tax_readiness` loads a :class:`TransactionCatalogue`
+via :class:`TransactionCatalogueRepository` from the active bucket and
+delegates to :func:`preflight_transaction_catalogue` for pure in-memory
+analysis.
+"""
 
 from __future__ import annotations
 

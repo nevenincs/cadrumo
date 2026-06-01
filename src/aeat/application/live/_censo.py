@@ -1,10 +1,10 @@
 """Application-live persistence for captured Modelo 036 censo snapshots.
 
-`CensoSnapshot` holds the AEAT-side censo facts the operator's
+``CensoSnapshot`` holds the AEAT-side censo facts the operator's
 profile must mirror. AEAT is the binding legal source of truth for
 censo data; the local profile is a cache that must be kept honest.
-Snapshot records are persisted through a :class:`SecureObjectRepository`
-at PERSONAL sensitivity under the censo namespace.
+Snapshot records are persisted as :class:`Envelope` objects through a
+:class:`SecureObjectRepository` at PERSONAL sensitivity under the censo namespace.
 
 The snapshot pattern mirrors :mod:`aeat.application.live._borrador_100`:
 content-addressed snapshot ids, encrypted SQLite persistence under a
@@ -12,8 +12,8 @@ namespaced secure-object key, and a closed ACTIVE / SUPERSEDED /
 DISCARDED state machine. Re-fetch auto-supersedes the prior ACTIVE
 snapshot for the same profile.
 
-The CLI-facing `CensoSyncService` is the only caller; the
-sede G313 adapter populates `censo_facts` from the live
+The CLI-facing ``CensoSyncService`` is the only caller; the
+sede G313 adapter populates ``censo_facts`` from the live
 Mis Datos Censales endpoint.
 """
 

@@ -1,9 +1,9 @@
 """Filing-amendment boundaries for :mod:`aeat.application.filing`.
 
 The persisted amendment records live in :mod:`aeat.domain.filing`. This
-application module builds complementaria records from registry-backed
-draft construction and persists them through the governed amendment
-repository.
+application module builds complementaria records from a :class:`ModeloDraft`
+loaded through the governed draft repository, then constructs and persists an
+amended draft through the governed amendment repository.
 """
 
 from __future__ import annotations

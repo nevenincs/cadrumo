@@ -2,7 +2,9 @@
 
 Registry query and corpus validation services consume a
 :class:`ValidatedRegistryAuthority` as the single entry point for
-modelo definitions, revision snapshots, and deadline windows.
+modelo definitions, revision snapshots, and deadline windows. The
+observation-persistence path accepts an optional :class:`MasterKeyProvider`
+to construct the encrypted observation store.
 """
 
 from __future__ import annotations

@@ -1,4 +1,8 @@
-"""Inventory application service: bucket-scoped CRUD over InventoryLedger."""
+"""Inventory application service: bucket-scoped CRUD over InventoryLedger.
+
+Every mutating verb (add, update, remove) appends an event to the
+per-bucket audit trail via :class:`BucketEventHistoryRepository`.
+"""
 
 from __future__ import annotations
 

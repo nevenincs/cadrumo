@@ -1,9 +1,9 @@
 """Governed-persistence repository for filing drafts.
 
-Filing drafts carry exact casilla arithmetic and tax due values. They
-are stored as encrypted byte objects via :class:`SecureObjectRepository`
-at FINANCIAL sensitivity; no plaintext draft JSON or envelope file lands
-on disk.
+:class:`ModeloDraft` records carry exact casilla arithmetic and tax due
+values. They are stored as encrypted byte objects via
+:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL;
+no plaintext draft JSON or envelope file lands on disk.
 """
 
 from __future__ import annotations

@@ -1,9 +1,9 @@
 """Catalogue entry for the *Modelo 115* urban-rental withholdings procedure.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING`. Backs the periodic
-self-assessment of withholdings and on-account payments on income from
-urban property leases.
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M115_RETENCIONES_ARRENDAMIENTOS`` under
+:class:`PortalCategory` ``FILING``. Backs the periodic
+self-assessment of withholdings on urban property lease income.
 """
 
 from __future__ import annotations

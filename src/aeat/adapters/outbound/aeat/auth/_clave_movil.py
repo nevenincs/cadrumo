@@ -16,7 +16,9 @@ Design summary:
   headlessly because no human interaction is required.
 * The persisted session stores Playwright state and provider metadata
   together in the encrypted session object. Kind-namespaced logical
-  storage keys keep the Cl@ve and certificate sessions separate.
+  storage keys keep the Cl@ve and certificate sessions separate. Each
+  persisted object is tagged with :class:`SensitivityClass` SESSION so
+  the storage substrate applies the correct at-rest treatment.
 """
 
 from __future__ import annotations

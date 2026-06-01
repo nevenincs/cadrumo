@@ -4,8 +4,9 @@ This service is the single sanctioned write path for live user-profile
 values. It routes every register / edit / remove / duplicate / list /
 read operation through the secure-DB repository and the schema-aware
 validation service. CLI thin adapters and downstream consumers call
-this surface; no caller should construct ``UserProfileRecord``
-aggregates or touch the secure repository directly.
+this surface; no caller should construct :class:`UserProfileRecord`
+aggregates or touch the secure repository directly. Every mutating
+operation emits a typed bucket event to :class:`BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations

@@ -1,7 +1,8 @@
-"""Registry entry for Modelo 202 — corporate-tax instalment payment.
+"""Registry entry for Modelo 202 - corporate-tax instalment payment.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M202_SOCIEDADES_FRACCIONADO``, exposed as :data:`ENTRY` under
+the :class:`PortalCategory` member ``FILING``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

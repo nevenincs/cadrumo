@@ -1,7 +1,8 @@
-"""Registry entry for Modelo 190 — annual summary of labour withholdings.
+"""Registry entry for Modelo 190 - annual summary of labour withholdings.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M190_RESUMEN_TRABAJO``, exposed as :data:`ENTRY` under the
+:class:`PortalCategory` member ``FILING``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

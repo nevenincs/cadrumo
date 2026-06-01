@@ -6,7 +6,9 @@ defined here as a frozen, strict, ``extra="forbid"``
 enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
 diagnostics emitted by workflow diagnostics. Some helpers accept an
 optional :class:`SecureObjectRepository` so callers can supply a custom
-storage backend without going through the runtime default.
+storage backend without going through the runtime default. The
+:class:`WorkflowState` record carries a reference to the active-bucket
+:class:`TransactionCatalogueRepository` when one is needed downstream.
 
 Import ordering note
 --------------------

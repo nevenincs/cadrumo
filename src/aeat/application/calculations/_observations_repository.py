@@ -14,9 +14,10 @@ will write here when an operator successfully files via the app,
 and the live-AEAT capture path will write here when justificantes
 are parsed. This module exposes only the typed read/write surface.
 
-Sensitivity is `AUDIT` — these records reconstruct exactly what
-was filed and so are identity-bearing tax substrate. They are
-stored encrypted at rest.
+Sensitivity is :class:`SensitivityClass` ``AUDIT`` — these records
+reconstruct exactly what was filed and so are identity-bearing tax
+substrate. They are stored encrypted at rest through an
+:class:`Envelope`-wrapped repository.
 """
 
 from __future__ import annotations

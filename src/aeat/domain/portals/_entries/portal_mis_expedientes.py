@@ -1,7 +1,8 @@
 """Registry entry for the taxpayer's case-file consultation portal.
 
-Defines the :class:`~aeat.domain.portals._metadata.PortalMetadata` record
-exposed as :data:`ENTRY` and consumed by
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_MIS_EXPEDIENTES``, exposed as :data:`ENTRY` under the
+:class:`PortalCategory` member ``PERSONAL_AREA``, consumed by
 :data:`aeat.domain.portals.PORTAL_REGISTRY` via
 :mod:`aeat.domain.portals._registry`.
 """

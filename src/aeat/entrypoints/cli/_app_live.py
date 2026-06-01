@@ -1,4 +1,8 @@
-"""Explicit read-only AEAT live observation CLI commands."""
+"""Explicit read-only AEAT live observation CLI commands.
+
+The ``portals`` sub-command accepts an optional ``--category`` argument
+whose valid values are drawn from :class:`PortalCategory`.
+"""
 
 from __future__ import annotations
 

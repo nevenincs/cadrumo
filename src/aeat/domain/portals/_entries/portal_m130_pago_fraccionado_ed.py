@@ -1,9 +1,11 @@
 """Catalogue entry for the *Modelo 130* IRPF instalment payment procedure.
 
-Exposes :data:`ENTRY`, a frozen :class:`aeat.domain.portals.PortalMetadata`
-under :attr:`aeat.domain.portals.PortalCategory.FILING`. Used by entrepreneurs and
-professionals on the IRPF *direct-assessment* (estimación directa) regime
-to settle on-account quarterly instalments.
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_M130_PAGO_FRACCIONADO_ED`` under
+the :class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.FILING`. Used by entrepreneurs
+and professionals on the IRPF direct-assessment (estimación directa)
+regime to settle on-account quarterly instalments.
 """
 
 from __future__ import annotations

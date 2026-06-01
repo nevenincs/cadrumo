@@ -1,4 +1,9 @@
-"""Strict schema authority for AEAT registry definitions."""
+"""Strict schema authority for AEAT registry definitions.
+
+Each modelo revision carries an ``output_sensitivity`` field typed as
+:class:`SensitivityClass` that governs the encryption tier applied to
+generated output envelopes.
+"""
 
 from __future__ import annotations
 

@@ -11,7 +11,8 @@ Both surfaces are on-demand single-shot checks. The service records
 each check as a typed observation tied to the active bucket so the
 operator can audit which NIFs were verified, when, and against what
 verdict. Subsequent invocations against the same NIF produce a new
-observation row; history is never overwritten.
+observation row; history is never overwritten. Each observation is
+wrapped in an :class:`Envelope` before being written to the secure store.
 
 Structurally read-only:
   * the service has no submit / mutate verb;

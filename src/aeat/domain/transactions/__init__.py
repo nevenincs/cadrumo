@@ -1,8 +1,11 @@
 """Immutable transaction catalogue surface for the financial pipeline.
 
-Public surface — callers must import transaction models, errors, and
-service functions exclusively from ``aeat.domain.transactions`` and
-must not reach into the private underscore modules inside this package.
+The central type is :class:`TransactionCatalogue`, which holds an immutable
+mapping of ledger transactions keyed by stable transaction identifiers.
+Persistence is handled by :class:`TransactionCatalogueRepository`.
+Callers must import transaction models, errors, and service functions
+exclusively from ``aeat.domain.transactions`` and must not reach into
+the private underscore modules inside this package.
 """
 
 from __future__ import annotations

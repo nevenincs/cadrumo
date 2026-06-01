@@ -2,17 +2,18 @@
 
 The substrate's at-rest encryption derives a per-consumer key from the
 project master key via HKDF-SHA256 over a stable, per-consumer
-``hkdf_context``. Rotating the master key therefore requires walking
-every consumer's persisted ciphertext, decrypting under the old key,
-and re-writing under the new key. This module is the single sanctioned
-path for that operation.
+``hkdf_context``. Callers supply the old and new keys as
+:class:`MasterKeyProvider` instances. Rotating the master key requires
+walking every consumer's persisted ciphertext, decrypting under the old
+key, and re-writing under the new key. This module is the single
+sanctioned path for that operation.
 
-Rotation operates at the bytes level — it never parses the inner
+Rotation operates at the bytes level - it never parses the inner
 :class:`Envelope` payload. That keeps the rotation contract
 content-preserving across every consumer's payload type without
 requiring rotation code to know the typed payload schemas.
 
-The rotation is **per-file atomic** — each cipher envelope is
+The rotation is **per-file atomic** - each cipher envelope is
 re-written via tempfile + ``os.replace`` so a crash mid-rotation
 leaves either the old or the new ciphertext on disk, never a torn
 state. The whole rotation is **not** transactional across files:

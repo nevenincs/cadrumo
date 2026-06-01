@@ -1,4 +1,10 @@
-"""Preflight service: which schema fields a given modelo/revision needs."""
+"""Preflight service: which schema fields a given modelo/revision needs.
+
+:class:`ProfilePreflightService` inspects the schema's ``model_selectors``
+against a :class:`UserProfileRecord` and returns a
+:class:`ProfilePreflightReport` listing every required field that the
+record does not yet carry.
+"""
 
 from __future__ import annotations
 

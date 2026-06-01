@@ -1,4 +1,10 @@
-"""Application query projections for invoice CLI surfaces."""
+"""Application query projections for invoice CLI surfaces.
+
+Query functions accept an :class:`InvoiceCatalogue` or load one from the
+:class:`InvoiceCatalogueRepository`; :func:`verify_invoice_repository_links`
+additionally loads the :class:`TransactionCatalogueRepository` to detect
+one-sided links.
+"""
 
 from __future__ import annotations
 
