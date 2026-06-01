@@ -17,6 +17,7 @@ import typer
 
 from ..application.repair_integrity import build_repair_list_report
 from ..core.i18n import tr
+from ..core.redaction import redact_for_cli_output
 
 
 def register(app: typer.Typer) -> None:
@@ -46,9 +47,9 @@ def register(app: typer.Typer) -> None:
             include_all=include_all,
             only_unreadable=only_unreadable,
         )
-        typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.namespace')}\t{namespace}")
+        typer.echo(redact_for_cli_output(f"{tr('cli.diagnostics.secure_objects.labels.namespace')}\t{namespace}"))
         typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.count')}\t{len(report.rows)}")
         for row in report.rows:
-            typer.echo(f"{row.namespace}\t{row.object_key_digest}")  # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW: typer.echo of {namespace}\t{object_key_digest} is structured machine output (tab-separated record), not user-facing prose; locale-key wrapping not applicable.
+            typer.echo(redact_for_cli_output(f"{row.namespace}\t{row.object_key_digest}"))  # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW: structured machine output; secure-object digests route through central redaction so any drift in digest shape is captured at the boundary.
 
     app.add_typer(sub)
