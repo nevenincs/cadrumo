@@ -1,4 +1,9 @@
-"""Encrypted persistence for AEAT browser session state."""
+"""Encrypted persistence for AEAT browser session state.
+
+Stores the serialized session as a SECRET-class record through
+:class:`SecureObjectRepository`, so the browser cookies and tokens never touch
+disk in plaintext.
+"""
 
 from __future__ import annotations
 

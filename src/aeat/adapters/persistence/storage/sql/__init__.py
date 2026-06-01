@@ -7,7 +7,8 @@ Re-exports the engine factory (:func:`create_engine_from_settings`,
 (:class:`ModeloCatalogueRecord`, :class:`PortalRecord`, :class:`PortalAuthMethod`,
 :class:`CorpusArtifactRecord`), and the per-domain repositories
 (:class:`SqlRecordRepository`, :class:`ModeloRepository`, :class:`PortalRepository`,
-:class:`CorpusArtifactRepository`).
+:class:`CorpusArtifactRepository`), and the encrypted key-value store
+:class:`SecureObjectRepository`.
 
 Schema is materialised from the ORM metadata on first engine access; the
 codebase is forward-only and carries no migration history.

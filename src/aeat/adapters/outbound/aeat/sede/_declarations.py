@@ -18,6 +18,12 @@ results.
 The walker drives the form for one ``(modelo, ejercicio)`` query at
 a time. Multi-modelo or multi-year callers invoke the helper once per
 query.
+
+Parsed filings are grounded against the registry: each declaration is
+resolved to its :class:`ModeloRevision` and a :class:`RegistrySnapshot`
+(loaded through :class:`ValidatedRegistryAuthority`), and reported casilla
+values are surfaced as :class:`CasillaObservation` rows carrying their
+legal and source references.
 """
 
 from __future__ import annotations

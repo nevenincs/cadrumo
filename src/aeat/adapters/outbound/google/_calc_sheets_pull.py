@@ -3,7 +3,7 @@
 Pairs with `_calc_sheets_apply.py`. The push side materialises a
 `SheetExportPlan` as a real Google Sheets workbook; this module
 reads the operator's edits back out, validates the workbook is
-still bound to the registry snapshot the engine compiled it from,
+still bound to the :class:`RegistrySnapshot` the engine compiled it from,
 and returns typed records the caller can apply to its ledger /
 filing flow.
 

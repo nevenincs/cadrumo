@@ -2,7 +2,8 @@
 
 :class:`aeat.domain.profile.assets.AssetRecord` and
 :class:`aeat.domain.profile.assets.AmortizacionLedger` payloads are stored
-as FINANCIAL-class secure objects in the primary database.
+as FINANCIAL-class secure objects in the primary database through
+:class:`SecureObjectRepository`.
 """
 
 from __future__ import annotations

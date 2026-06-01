@@ -1,4 +1,4 @@
-"""Encrypted SecureObjectRepository persistence for Google OAuth records.
+"""Encrypted :class:`SecureObjectRepository` persistence for Google OAuth records.
 
 Three per-profile records back each Google session:
 
