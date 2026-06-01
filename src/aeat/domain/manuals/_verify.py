@@ -16,7 +16,7 @@ from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._loader import iter_sections, load_manual, resolve_part_root
 from ._schema import ManualId, ManualPart, Section
-from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
+from ._errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
 
 _logger = get_logger(__name__)
 

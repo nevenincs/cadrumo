@@ -69,7 +69,7 @@ from ._verify import (
     raise_on_errors,
     verify_manual_dir,
 )
-from .errors import (
+from ._errors import (
     ManifestError,
     ManualError,
     ManualNotFoundError,

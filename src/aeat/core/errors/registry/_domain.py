@@ -719,7 +719,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManifestError",
+        "aeat.domain.manuals._errors.ManifestError",
         ErrorCode(
             code="INTEGRITY_MANUALS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -730,7 +730,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualError",
+        "aeat.domain.manuals._errors.ManualError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL",
             category=ErrorCategory.ERROR,
@@ -741,7 +741,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualNotFoundError",
+        "aeat.domain.manuals._errors.ManualNotFoundError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -752,7 +752,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualParseError",
+        "aeat.domain.manuals._errors.ManualParseError",
         ErrorCode(
             code="FAIL_MANUALS_MANUAL_PARSE",
             category=ErrorCategory.FAIL,
@@ -763,7 +763,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualReviewRequiredError",
+        "aeat.domain.manuals._errors.ManualReviewRequiredError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL_REVIEW_REQUIRED",
             category=ErrorCategory.ERROR,
@@ -774,7 +774,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.RuleExtractionError",
+        "aeat.domain.manuals._errors.RuleExtractionError",
         ErrorCode(
             code="ERROR_MANUALS_RULE_EXTRACTION",
             category=ErrorCategory.ERROR,
@@ -1736,7 +1736,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.manuals.errors.ManualValidationError",
+        "aeat.domain.manuals._errors.ManualValidationError",
         ErrorCode(
             code="ERROR_MANUALS_VALIDATION",
             category=ErrorCategory.ERROR,
