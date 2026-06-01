@@ -123,7 +123,8 @@ def extract_pages_text_concatenated(
         newlines. May be empty if every page is empty.
 
     Raises:
-        error_class: When pdfplumber cannot open the file.
+        Exception: An instance of the supplied ``error_class`` when pdfplumber
+            cannot open the file.
     """
     try:
         with pdfplumber.open(str(pdf_path)) as pdf:
