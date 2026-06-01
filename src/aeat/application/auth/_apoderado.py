@@ -1,11 +1,16 @@
 """Apoderado application service.
 
 Operator verbs:
-  status     read-only summary of the active apoderado configuration
-  configure  set --represented-nif NIF --scope SCOPE [repeated]
-  clear      retire the apoderado configuration for the active bucket
-  check      read-only live verification (calls
-             :func:`AeatAccessGate.require_live_read`)
+
+``status``
+    Read-only summary of the active apoderado configuration.
+``configure``
+    Set ``--represented-nif NIF --scope SCOPE`` (repeated).
+``clear``
+    Retire the apoderado configuration for the active bucket.
+``check``
+    Read-only live verification (calls
+    :func:`AeatAccessGate.require_live_read`).
 
 Configuration is persisted per-bucket as an encrypted envelope row in
 the :class:`SecureObjectRepository` under the
