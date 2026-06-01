@@ -52,6 +52,8 @@ from pathlib import Path
 
 import pytest
 
+import aeat.application.wizard._catalogue  # noqa: F401  # register wizard catalogue at import time
+import aeat.application.wizard._persistence  # noqa: F401  # register project_answers projector at import time
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
@@ -177,7 +179,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Projection Test Autónomo",
+        display_name="M130 projection regression test profile",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Projection Test Autónomo"),

@@ -109,7 +109,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
         schema_id="aeat.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
-        display_name="Compare Test Autónomo",
+        display_name="Modelo compare regression test profile",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(path="identity.name", value="Compare Test Autónomo"),

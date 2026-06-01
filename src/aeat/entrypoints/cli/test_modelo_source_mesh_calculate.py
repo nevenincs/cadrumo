@@ -84,7 +84,7 @@ def _create_303_work_unit() -> dict[str, object]:
             "--period",
             "1T",
             "--revision",
-            "2009-y-siguientes",
+            "2023-y-siguientes",
         ]
     )
     assert result.exit_code == 0, result.output
