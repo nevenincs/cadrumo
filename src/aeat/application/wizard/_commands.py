@@ -877,10 +877,15 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         from ...core.json_contract import emit_json_success
 
         verb = "created" if mode == "create" else "updated"
+        # `next_label` is the operator-facing localised label for the
+        # next-step tab; `next` is the machine-parseable command hint
+        # scripted consumers parse on the lowercase key column. The two
+        # coexist so the JSON payload carries both audiences.
         payload: dict[str, object] = {
             "profile_name": profile_name,
             "status": verb,
             "next": "aeat app modelo work create",
+            "next_label": tr("application.wizard.output_labels.next"),
         }
         # `create` writes the active-profile pointer above, so the new
         # profile is now the active one. Surface that explicitly — the
