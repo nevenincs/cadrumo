@@ -3,8 +3,8 @@
 Concrete adapter-layer implementation of the
 :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
-reads/writes encrypted attachment blobs and manifests through the secure-
-object persistence substrate.
+reads/writes encrypted attachment blobs and manifests through the
+:class:`SecureObjectRepository` persistence substrate.
 
 Sensitivity rationale: attachment blobs and manifests are content-addressed
 byte objects (invoice PDFs, bank statements, supporting documents) that are

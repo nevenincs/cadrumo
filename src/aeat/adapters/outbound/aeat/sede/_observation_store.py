@@ -1,4 +1,9 @@
-"""Persistence helpers for read-only filed-declaration observations."""
+"""Persistence helpers for read-only filed-declaration observations.
+
+Persists each filed-declaration observation as a record through
+:class:`SecureObjectRepository`, keyed by declaration identity so a prior
+filing can be retrieved without re-fetching it from the sede.
+"""
 
 from __future__ import annotations
 
