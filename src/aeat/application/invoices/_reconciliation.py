@@ -9,6 +9,7 @@ from ...domain.invoices import (
     InvoiceCatalogueRepository,
     InvoiceError,
 )
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices._service import ReconciliationSuggestion, link_transaction, suggest_reconciliations
 from ...domain.transactions import (
     TransactionCatalogue,
@@ -110,7 +111,7 @@ def reconcile_invoice_repositories(
     *,
     bucket_id: str,
     apply: bool = False,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceReconciliationResult:
     """Reconcile persisted invoice and transaction catalogues.

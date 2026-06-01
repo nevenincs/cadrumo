@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository
+from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices._errors import InvoiceValidationError
 from ...domain.iva import InvoiceKind
 
@@ -104,7 +105,7 @@ def import_invoices_from_path(
     *,
     kind: InvoiceKind | str,
     dry_run: bool = False,
-    repository: InvoiceCatalogueRepository | None = None,
+    repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceImportResult:
     """Import invoices from ``path`` through the secure invoice repository."""
     invoices = parse_invoice_payload(path.read_text(encoding=UTF_8_ENCODING), default_kind=kind)
