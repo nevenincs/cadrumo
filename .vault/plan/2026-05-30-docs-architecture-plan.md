@@ -95,7 +95,7 @@ Generate the CLI reference from the materialized command tree, committed and dri
 
 - [x] `W02.P07.S21` - add the cli reference generator walking the materialized click tree with language pinned to en; `src/aeat/entrypoints/cli/_doc_reference.py`.
 - [x] `W02.P07.S22` - generate and commit the cli reference pages under the docs cli subtree; `docs/cli/index.rst`.
-- [ ] `W02.P07.S23` - add the committed-versus-regenerated drift test on the docs-check lane; `src/aeat/entrypoints/cli/test_doc_reference_drift.py`.
+- [x] `W02.P07.S23` - add the committed-versus-regenerated drift test on the docs-check lane; `src/aeat/entrypoints/cli/test_doc_reference_drift.py`.
 - [x] `W02.P07.S24` - assert the generator detects and rejects any import-failure fallback subtree; `src/aeat/entrypoints/cli/_doc_reference.py`.
 
 ### Phase `W02.P08` - docs versus tree conformance
