@@ -33,7 +33,7 @@ from ._schema import (
     NormativeVerificationReport,
 )
 from ._verify import raise_on_errors, verify_catalogue
-from .errors import (
+from ._errors import (
     NormativeError,
     NormativeNotFoundError,
     NormativeParseError,

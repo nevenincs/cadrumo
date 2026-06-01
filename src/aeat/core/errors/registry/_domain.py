@@ -785,7 +785,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeError",
+        "aeat.domain.normatives._errors.NormativeError",
         ErrorCode(
             code="ERROR_NORMATIVES_NORMATIVE",
             category=ErrorCategory.ERROR,
@@ -796,7 +796,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeNotFoundError",
+        "aeat.domain.normatives._errors.NormativeNotFoundError",
         ErrorCode(
             code="ERROR_NORMATIVES_NORMATIVE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -807,7 +807,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeParseError",
+        "aeat.domain.normatives._errors.NormativeParseError",
         ErrorCode(
             code="FAIL_NORMATIVES_NORMATIVE_PARSE",
             category=ErrorCategory.FAIL,
@@ -1681,7 +1681,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.normatives.errors.NormativeValidationError",
+        "aeat.domain.normatives._errors.NormativeValidationError",
         ErrorCode(
             code="ERROR_NORMATIVES_VALIDATION",
             category=ErrorCategory.ERROR,
