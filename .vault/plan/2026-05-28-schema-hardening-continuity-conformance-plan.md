@@ -83,7 +83,7 @@ Apply the generic substrate to corpus safety gates only after validator conforma
 
 Record execution evidence, residual risks, and explicit pass or fail signals for the conformance slice.
 
-- [ ] `P04.S06` - Record verification evidence residual risks and next-step decision points; `.vault/exec`.
+- [x] `P04.S06` - Record verification evidence residual risks and next-step decision points; `.vault/exec`.
 
 ### Phase `P05` - ADR language and governing comments
 
