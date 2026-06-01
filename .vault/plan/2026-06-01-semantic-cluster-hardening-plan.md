@@ -124,10 +124,10 @@ Re-confirms prior duplication-sweep conceptual leads against current state, prom
 
 Add a closed core tax_domain StrEnum, hydrate it at the loader boundary, and re-type the schema field with a roundtrip test.
 
-- [ ] `W05.P10.S24` - Add the closed tax_domain StrEnum typed-constant to core; `src/aeat/core/_tax_domain.py`.
-- [ ] `W05.P10.S25` - Hydrate tax_domain to the typed enum at the registry loader boundary; `src/aeat/domain/calculations/registry/_loader.py`.
-- [ ] `W05.P10.S26` - Re-type the ModeloDefinition tax_domain field to the enum; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `W05.P10.S27` - Add a roundtrip test for tax_domain loader hydration; `src/aeat/domain/calculations/registry/test_tax_domain.py`.
+- [x] `W05.P10.S24` - Add the closed tax_domain StrEnum typed-constant to core; `src/aeat/core/_tax_domain.py`.
+- [x] `W05.P10.S25` - Hydrate tax_domain to the typed enum at the registry loader boundary; `src/aeat/domain/calculations/registry/_loader.py`.
+- [x] `W05.P10.S26` - Re-type the ModeloDefinition tax_domain field to the enum; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W05.P10.S27` - Add a roundtrip test for tax_domain loader hydration; `src/aeat/domain/calculations/registry/test_tax_domain.py`.
 
 ### Phase `W05.P11` - Subdomain rename
 
