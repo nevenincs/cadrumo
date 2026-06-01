@@ -36,6 +36,10 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...domain.transactions._protocols import (
+    TransactionCatalogueRepositoryProtocol,
+)
+
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
@@ -189,7 +193,7 @@ def aggregate_iva_ledger_observations_from_repositories(
     *,
     bucket_id: str,
     period: Period | str,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations."""
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
