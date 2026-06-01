@@ -72,19 +72,22 @@ class TestPersistenceRoundTrip:
         assert b"translation" not in raw
 
     def test_load_missing_raises(self, tmp_path: Path) -> None:
-        with pytest.raises(WorkflowError, match=r"workflow"):
+        with pytest.raises(WorkflowError) as excinfo:
             load_run("missing")
+        assert excinfo.value.translated_message == "application.workflow.errors.run_not_found"
 
     def test_load_rejects_traversal_id(self, tmp_path: Path) -> None:
-        with pytest.raises(WorkflowError, match="path separators"):
+        with pytest.raises(WorkflowError) as excinfo:
             load_run("../escape")
+        assert excinfo.value.translated_message == "application.workflow.errors.run_id_invalid_separators"
 
     def test_save_rejects_traversal_id(self, tmp_path: Path) -> None:
         escaped = _result("a" * 16, datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)).model_copy(
             update={"run_id": "../escape"}
         )
-        with pytest.raises(WorkflowError, match="path separators"):
+        with pytest.raises(WorkflowError) as excinfo:
             save_run(escaped, runs_dir=tmp_path)
+        assert excinfo.value.translated_message == "application.workflow.errors.run_id_invalid_separators"
 
     def test_list_runs_sorted_descending(self, tmp_path: Path) -> None:
         early = _result("a" * 16, datetime(2026, 4, 10, tzinfo=UTC))
