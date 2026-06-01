@@ -126,6 +126,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
     ]
     if degraded:
         paths = ", ".join(degraded)
+        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(
             f"Import-failure fallback detected in CLI subtree(s): {paths}. "
             "Ensure all optional dependencies are installed before generating the reference."
@@ -714,6 +715,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         check=False,
     )
     if result.returncode != 0:
+        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(
             f"CLI reference generation subprocess failed (exit {result.returncode}):\n"
             f"{result.stderr}"
@@ -775,6 +777,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         check=False,
     )
     if result.returncode != 0:
+        # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
         raise RuntimeError(
             f"CLI leaf-path collection subprocess failed (exit {result.returncode}):\n"
             f"{result.stderr}"
