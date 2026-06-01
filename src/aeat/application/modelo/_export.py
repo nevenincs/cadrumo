@@ -43,6 +43,7 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._errors import ModeloError, ModeloExportError
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
+from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (
@@ -340,7 +341,7 @@ def export_modelo_revision(
     command: ModeloExportCommand,
     *,
     workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,

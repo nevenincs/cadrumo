@@ -46,6 +46,7 @@ from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.iva import InvoiceKind
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
+from ...domain.modelos._protocols import WorkUnitCatalogueRepositoryProtocol
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.transactions import (
     TX_BUCKET_NAMESPACE,
@@ -230,7 +231,7 @@ def attach_manual_transaction_evidence(
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -579,7 +580,7 @@ def archive_manual_transaction(
     source_command: str = "aeat app ledger archive",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -609,7 +610,7 @@ def stash_manual_transaction(
     source_command: str = "aeat app ledger stash",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -641,7 +642,7 @@ def remove_manual_transaction(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerTransactionRemovalReport:
@@ -747,7 +748,7 @@ def reset_ledger_catalogue(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerCatalogueResetReport:
@@ -1225,7 +1226,7 @@ def update_manual_transaction(
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -1345,7 +1346,7 @@ def update_manual_transaction_fields(
     invoice_repository: InvoiceCatalogueRepository | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -1402,7 +1403,7 @@ def split_transaction(
     reason: str = "",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> SplitTransactionResult:
@@ -1586,7 +1587,7 @@ def _reject_split_with_finalized_modelo_blockers(
     *,
     parent: Transaction,
     bucket_id: str,
-    work_unit_repository: WorkUnitCatalogueRepository | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
     calculation_repository: CalculationRevisionCatalogueRepository | None,
 ) -> None:
     """Refuse the split if any finalized modelo calculation references the parent.
@@ -1713,7 +1714,7 @@ def merge_transactions(
     reason: str = "",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> MergeTransactionsResult:
@@ -2365,7 +2366,7 @@ def _transition_manual_transaction_lifecycle(
     source_command: str,
     transaction_repository: TransactionCatalogueRepository | None,
     bucket_event_repository: BucketEventHistoryRepository | None,
-    work_unit_repository: WorkUnitCatalogueRepository | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
     calculation_repository: CalculationRevisionCatalogueRepository | None,
     occurred_at: datetime | None,
 ) -> ManualLedgerTransactionResult:
@@ -2450,7 +2451,7 @@ def _blocking_modelo_references(
     *,
     bucket_id: str,
     transaction_ids: tuple[str, ...],
-    work_unit_repository: WorkUnitCatalogueRepository | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
     calculation_repository: CalculationRevisionCatalogueRepository | None,
 ) -> tuple[LedgerRemovalBlocker, ...]:
     if not transaction_ids:
