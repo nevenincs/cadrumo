@@ -196,6 +196,15 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
                 path="tax_residence.jurisdiction_scope", value="common_regime"
             ),
             UserProfileFact(path="provenance.source", value="manual_cli"),
+            # Declaration type (person vs entity) — required by binding validation
+            # in modelo-100 formulas.
+            UserProfileFact(path="filing_export.declaration_type", value="individual"),
+            # Birth date drives the M100 ``age_at_year_end`` operator used by
+            # the mínimo del contribuyente formula and any age-sensitive tramo.
+            # Use a deterministic 1980 value so the taxpayer is 44 in 2024
+            # (below the over-65 supplement threshold) — keeps the
+            # M130→M100 oracle stable across runs.
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
         ),
     )
     lifecycle = UserProfileLifecycleRepository(
@@ -336,7 +345,11 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # Casilla 0604 is computed in the 2024 revision (formula
     # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
     # relation channels). The oracle path supplies the same M130 total
-    # through the relation map that the project verb threads.
+    # through the relation map that the project verb threads. The
+    # `renta-2024-profile-taxpayer-birth-date` date_binding is required
+    # by the ``age_at_year_end`` op used in mínimo del contribuyente; the
+    # seeded profile fact `renta_taxpayer.birth_date = 1980-01-01` is the
+    # source of truth, mirrored here on the oracle.
     oracle_result = calculate_registry_snapshot(
         m100_snapshot,
         inputs={
@@ -356,6 +369,9 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         relation_values={
             f"renta-{_FILING_YEAR}-rel-130-pagos-fraccionados": _TOTAL_PAGOS_FRACCIONADOS,
             f"renta-{_FILING_YEAR}-rel-131-pagos-fraccionados": Decimal("0"),
+        },
+        date_binding_values={
+            f"renta-{_FILING_YEAR}-profile-taxpayer-birth-date": date(1980, 1, 1),
         },
     )
 
