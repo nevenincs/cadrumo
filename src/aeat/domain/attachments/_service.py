@@ -1,7 +1,7 @@
 """Service-layer helpers over :class:`AttachmentStoreProtocol`.
 
 Thin orchestration on top of the storage primitives in
-:mod:`aeat.domain.attachments._repository`: ingest a file from disk,
+:mod:`aeat.domain.attachments._protocols`: ingest a file from disk,
 build the corresponding :class:`~aeat.domain.attachments._models.Attachment`
 manifest, persist it, and expose simple read paths for callers that
 do not need the full repository API.
