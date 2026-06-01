@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import importlib
 import pathlib
+from collections.abc import Mapping
 from typing import Iterator
 
 import pytest
@@ -91,17 +92,45 @@ def _cast_call_linenos(tree: ast.AST) -> Iterator[int]:
             yield node.lineno
 
 
-def _collect_cast_violations() -> list[str]:
+def _collect_cast_violations(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST] | None = None,
+) -> list[str]:
+    """Return the list of ``cast()`` sites that lack a rationale marker.
+
+    When *source_tree_ast* is supplied (test path), consume the cached
+    parsed AST per file and read the raw source text only to render line
+    snippets. When omitted, fall back to walk-and-parse so the helper's
+    signature stays compatible with importlib callers.
+    """
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    if source_tree_ast is None:
+        for path in sorted(_SRC_ROOT.rglob("*.py")):
+            if path.name.startswith("test_"):
+                continue
+            source = path.read_text(encoding="utf-8", errors="replace")
+            try:
+                tree = ast.parse(source, filename=str(path))
+            except SyntaxError:
+                continue
+            lines = source.splitlines()
+            for lineno in _cast_call_linenos(tree):
+                if not _has_rationale_above(lines, lineno):
+                    rel = path.relative_to(_SRC_ROOT.parent.parent)
+                    violations.append(f"{rel}:{lineno}")
+        return violations
+
+    for path in sorted(source_tree_ast):
         if path.name.startswith("test_"):
             continue
-        source = path.read_text(encoding="utf-8", errors="replace")
         try:
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
+            path.relative_to(_SRC_ROOT)
+        except ValueError:
             continue
-        lines = source.splitlines()
+        tree = source_tree_ast[path]
+        try:
+            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
         for lineno in _cast_call_linenos(tree):
             if not _has_rationale_above(lines, lineno):
                 rel = path.relative_to(_SRC_ROOT.parent.parent)
@@ -109,9 +138,15 @@ def _collect_cast_violations() -> list[str]:
     return violations
 
 
-def test_every_production_cast_has_rationale_marker() -> None:
-    """Every production cast() call must carry a CAST-RATIONALE-* marker."""
-    violations = _collect_cast_violations()
+def test_every_production_cast_has_rationale_marker(
+    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+) -> None:
+    """Every production cast() call must carry a CAST-RATIONALE-* marker.
+
+    Consumes the session-scoped AST cache so the per-file parse cost is
+    amortised across the full ratchet suite.
+    """
+    violations = _collect_cast_violations(source_tree_ast)
     if violations:
         joined = "\n  ".join(violations)
         raise AssertionError(

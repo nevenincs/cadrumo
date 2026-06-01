@@ -182,9 +182,9 @@ def run_context(
         The active :class:`RunContextInfo` for the block.
 
     Raises:
-        persistence_error: When trace persistence fails and the yielded
-            body completed successfully (outcome ``OK``). The exception
-            is the one captured during the ``save_trace`` call.
+        Exception: The error captured during the ``save_trace`` call, re-raised
+            when trace persistence fails and the yielded body completed
+            successfully (outcome ``OK``).
     """
     # Local imports break the recorder ↔ context cycle.
     from ._recorder import record_event

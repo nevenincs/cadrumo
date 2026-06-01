@@ -10,7 +10,7 @@ store and reach the deadline engine, which looks values up by exact
 key.
 
 This is the only definition of the profile-key normaliser. Callers
-import this function (or :meth:`ProfileKey.normalise`, which forwards
+import this function (or ``ProfileKey.normalise``, which forwards
 here) and never re-implement the rule.
 """
 

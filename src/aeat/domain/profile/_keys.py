@@ -180,12 +180,12 @@ def get_profile_key(key: str) -> ProfileKey:
 
 
 def required_profile_keys() -> tuple[ProfileKey, ...]:
-    """Return only the keys whose :attr:`requirement` is ``REQUIRED``."""
+    """Return only the keys whose ``requirement`` is ``REQUIRED``."""
     return tuple(entry for entry in _profile_keys() if entry.requirement is ProfileKeyRequirement.REQUIRED)
 
 
 def optional_profile_keys() -> tuple[ProfileKey, ...]:
-    """Return only the keys whose :attr:`requirement` is ``OPTIONAL``."""
+    """Return only the keys whose ``requirement`` is ``OPTIONAL``."""
     return tuple(entry for entry in _profile_keys() if entry.requirement is ProfileKeyRequirement.OPTIONAL)
 
 

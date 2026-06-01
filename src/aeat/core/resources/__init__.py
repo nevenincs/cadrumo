@@ -7,14 +7,14 @@ Exposes:
   feature.
 * The typed repository surface (``ResourceCacheRepository``,
   ``ResourceRepository``) for read-only bundled resources.
-* The :func:`resources` factory and :class:`ResourceRegistry`
+* The ``resources`` factory and :class:`ResourceRegistry`
   aggregate that holds every repository.
 * The typed error hierarchy (``ResourceLoadError`` and its three
   top-level subclasses).
 
 Per the resource-management-api ADR this is the project's only
 resource-access surface. Consumer code that wants a bundled
-resource imports :func:`resources` and goes through the
+resource imports ``resources`` and goes through the
 appropriate Repository attribute; tests that verify the data-
 tree shape may use ``bundled_path`` / ``packaged_data`` directly.
 """

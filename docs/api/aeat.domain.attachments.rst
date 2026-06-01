@@ -18,5 +18,4 @@ Submodules
    aeat.domain.attachments._ids
    aeat.domain.attachments._models
    aeat.domain.attachments._protocols
-   aeat.domain.attachments._repository
    aeat.domain.attachments._service

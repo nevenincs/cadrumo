@@ -277,7 +277,7 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
     with :func:`portals_by_category` when needed.
 
     Args:
-        code: A :class:`ModeloCode` member or its string value.
+        code: A :class:`aeat.domain.modelos.ModeloCode` member or its string value.
 
     Returns:
         A tuple of matching :class:`PortalMetadata` entries declared by

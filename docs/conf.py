@@ -229,7 +229,7 @@ nitpick_ignore_regex = [
     # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) are not
     # documentable objects; they appear in generic signatures only. Listed
     # explicitly so the pattern cannot mask a real CamelCase class.
-    (r"py:.*", r"^(T|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType)$"),
+    (r"py:.*", r"^(T|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation)$"),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
     # fully-qualified name, but written short (or under SQLAlchemy's private
@@ -311,7 +311,15 @@ nitpick_ignore_regex = [
         r"Field|TypeAliasType|SkipValidation|PrivateAttr|PydanticBaseSettingsSource|"
         r"CliSettingsSource|PathType|DotenvType|EnvPrefixTarget|Engine|sessionmaker|"
         r"MappingProxyType|ContextVar|deque|InvalidOperation|APIRequestContext|"
-        r"MonkeyPatch|Credentials)$",
+        r"MonkeyPatch|Credentials|"
+        # prompt_toolkit Input/Output rendered short-form from a wizard prompter
+        # signature, and the private Callable protocol aliases used as workflow
+        # source types - neither is a documentable cross-reference target.
+        r"Input|Output|ExpedientesSource|NotificationsSource|"
+        # Period-token regex fragments (``Q``, ``annual`` from a
+        # StringConstraints ``^(Q[1-4]|...|annual)$`` pattern) that autodoc
+        # mis-renders as bare class targets.
+        r"Q|annual)$",
     ),
     # Bound-method references on external (stdlib / pydantic) types, written
     # ``datetime.now`` / ``date.today``; the owning type resolves via inventory

@@ -1320,7 +1320,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     """Override one or more :class:`Settings` fields for the with-block.
 
     Resolves the current effective Settings, calls
-    :meth:`Settings.model_copy` with ``update=overrides`` so Pydantic
+    ``Settings.model_copy`` with ``update=overrides`` so Pydantic
     validates the merged dict, and sets a process-local
     :class:`contextvars.ContextVar` so :func:`load_settings` returns
     the overridden instance for the duration of the block. The prior

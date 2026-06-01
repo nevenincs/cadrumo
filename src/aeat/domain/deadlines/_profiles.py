@@ -40,7 +40,7 @@ def taxpayer_profile_from_mapping(
     """Build an :class:`TaxpayerProfile` from a profile-values mapping.
 
     The mapping is projected through the descriptor's
-    :func:`project_answers` so canonical-token semantics for every
+    ``project_answers`` so canonical-token semantics for every
     boolean / select / text field stay in lockstep with the wizard's
     on-prompt validation. Missing identity fields fall back to
     ``tax_id_default`` / ``iva_regime_default``.

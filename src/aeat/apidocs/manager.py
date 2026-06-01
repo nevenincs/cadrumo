@@ -88,7 +88,7 @@ class ApiStubManager:
         """Return True when *path* is outside the documentable module set.
 
         Args:
-            path: An absolute ``Path`` to a Python file under :attr:`src_aeat`.
+            path: An absolute ``Path`` to a Python file under ``src_aeat``.
 
         Returns:
             True when the file should be skipped.
@@ -109,7 +109,7 @@ class ApiStubManager:
         return bool(parts and parts[0] in _EXCLUDED_PACKAGES)
 
     def discover_modules(self) -> list[tuple[str, bool]]:
-        """Walk :attr:`src_aeat` and collect ``(dotted_module_name, is_package)`` pairs.
+        """Walk ``src_aeat`` and collect ``(dotted_module_name, is_package)`` pairs.
 
         Returns:
             Sorted list of ``(dotted_name, is_package)`` tuples.

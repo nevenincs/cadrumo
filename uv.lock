@@ -74,6 +74,7 @@ dev = [
     { name = "playwright" },
     { name = "playwright-stealth" },
     { name = "prek" },
+    { name = "psutil" },
     { name = "pydoclint" },
     { name = "pyright" },
     { name = "pytest" },
@@ -148,6 +149,7 @@ dev = [
     { name = "playwright", specifier = ">=1.58.0" },
     { name = "playwright-stealth", specifier = ">=2.0.3" },
     { name = "prek", specifier = ">=0.2.0" },
+    { name = "psutil", specifier = ">=5.9" },
     { name = "pydoclint", specifier = ">=0.6" },
     { name = "pyright", specifier = ">=1.1.409" },
     { name = "pytest", specifier = ">=9.0.3" },
@@ -173,8 +175,8 @@ dev = [
     { name = "types-pyyaml", specifier = ">=6.0.12.20260510" },
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
     { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
-    { name = "vaultspec-core", specifier = ">=0.1.18" },
-    { name = "vaultspec-rag", specifier = ">=0.2.8" },
+    { name = "vaultspec-core", specifier = ">=0.1.20" },
+    { name = "vaultspec-rag", specifier = ">=0.2.10" },
 ]
 
 [[package]]
@@ -3962,7 +3964,7 @@ wheels = [
 
 [[package]]
 name = "vaultspec-core"
-version = "0.1.18"
+version = "0.1.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -3977,14 +3979,14 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/88/182f4a58782077ee978ce841d9c3fe759115062cc94af5f2ef6fada314f1/vaultspec_core-0.1.18.tar.gz", hash = "sha256:a65eb726ec2c6c51c02715a674665d949ea49a8134fb50d3d55e2b34a2974ba6", size = 1330332, upload-time = "2026-05-06T06:55:54.808Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/3e/b9d36ec7dc3336ea25dee01047cd79dbd3e7a4d3de7673fba8f8793cf5cc/vaultspec_core-0.1.20.tar.gz", hash = "sha256:0a2219ebe29b33d0553dbcb4693fa64367ca828940085e706fabd894ea691d0d", size = 1577445, upload-time = "2026-05-26T20:03:22.475Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/76/d2078ca446dc78018c452b3d880d55d586052409958b97a513df52c280f6/vaultspec_core-0.1.18-py3-none-any.whl", hash = "sha256:32feda72de1a91c55c22dc379fca1f5245d6d1d452b6410b4052c0dcba65b556", size = 563629, upload-time = "2026-05-06T06:55:56.287Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/76/e579ac8a2fedee1d5ae169aeea185552a42ce927e2bbbd05b1c77535eb0a/vaultspec_core-0.1.20-py3-none-any.whl", hash = "sha256:bfe00188bf047e81ab19fe2641e8194fea2077c8fb8dc4e377679fec0d53f542", size = 681834, upload-time = "2026-05-26T20:03:21.178Z" },
 ]
 
 [[package]]
 name = "vaultspec-rag"
-version = "0.2.8"
+version = "0.2.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -4006,9 +4008,9 @@ dependencies = [
     { name = "vaultspec-core" },
     { name = "watchfiles" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/69/3d5ed6d18d42f48ae959efe3d4ba6fc18642d2bac5a368734eb9881f8a05/vaultspec_rag-0.2.8.tar.gz", hash = "sha256:6163252a8e71a1ae55a8d129d1261ef2a1b33bdd1cdc5527b784e47099e416f5", size = 910659, upload-time = "2026-05-03T14:51:09.051Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/e0/5e50b6dacbd55fc889213f1c5d94327eee27fd9f4b1fdc29349764a99ddf/vaultspec_rag-0.2.10.tar.gz", hash = "sha256:2a69ed0eac4ec9cd6daaef3e78ab725906a5ed2d9647c731bb79fac9638ccfc0", size = 1099914, upload-time = "2026-05-31T18:50:01.954Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/99/3c81bbef2fd4951dc4fdcd4d73331139e2e42852c939fd8ae905f49028ec/vaultspec_rag-0.2.8-py3-none-any.whl", hash = "sha256:91bb148d1baa9df26009bdc205539aa6bdcff643990547c3d64d861c0fcdf3cd", size = 264033, upload-time = "2026-05-03T14:51:10.516Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/7d/1a7b7cb3ca394d0b687d3fa9b86074d4c997616a8cc14e6ce18c9d39e807/vaultspec_rag-0.2.10-py3-none-any.whl", hash = "sha256:6ac775d16d4c60b4d306f7f186ca6a67049e06bfdd1289da9c5c76dada102e43", size = 289187, upload-time = "2026-05-31T18:50:00.14Z" },
 ]
 
 [[package]]

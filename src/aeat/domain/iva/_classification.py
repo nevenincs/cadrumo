@@ -104,7 +104,7 @@ class InvoiceKind(StrEnum):
     Single canonical enum spanning both the substrate classifier
     (``IvaInvoiceClassificationCriteria.direction``) and ledger / invoice
     records (``Invoice.kind``). Replaces the prior split between
-    :class:`InvoiceDirection` (substrate) and :class:`InvoiceKind` (invoices)
+    ``InvoiceDirection`` (substrate) and :class:`InvoiceKind` (invoices)
     that carried identical semantics with mismatched lowercase / uppercase
     string values. Values are lowercase to align with TOML registry selectors
     (``invoice_direction = "issued"``).

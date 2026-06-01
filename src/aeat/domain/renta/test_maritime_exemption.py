@@ -250,7 +250,7 @@ class TestCheckRetmarMandatoryFiling:
         assert err.context.get("legal_ref") == "Ley 47/2015 BOE-A-2015-11346"
 
     def test_retmar_warning_is_renta_error_subclass(self) -> None:
-        from aeat.domain.renta.errors import RentaError
+        from aeat.domain.renta._errors import RentaError
 
         facts = MaritimeWorkerFacts(retmar_registered=True)
         with pytest.raises(RentaError):
@@ -353,7 +353,7 @@ class TestCalculateArt7pExemption:
         assert obs.casilla_id == RENTA_EXENTA_CASILLA
 
     def test_raises_when_not_eligible(self) -> None:
-        from aeat.domain.renta.errors import RentaValidationError
+        from aeat.domain.renta._errors import RentaValidationError
 
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
@@ -368,7 +368,7 @@ class TestCalculateArt7pExemption:
             )
 
     def test_raises_on_zero_salary(self) -> None:
-        from aeat.domain.renta.errors import RentaValidationError
+        from aeat.domain.renta._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_art_7p_exemption(
@@ -378,7 +378,7 @@ class TestCalculateArt7pExemption:
             )
 
     def test_raises_on_zero_qualifying_days(self) -> None:
-        from aeat.domain.renta.errors import RentaValidationError
+        from aeat.domain.renta._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_art_7p_exemption(
@@ -388,7 +388,7 @@ class TestCalculateArt7pExemption:
             )
 
     def test_raises_on_qualifying_days_exceeding_year(self) -> None:
-        from aeat.domain.renta.errors import RentaValidationError
+        from aeat.domain.renta._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_art_7p_exemption(
@@ -485,7 +485,7 @@ class TestCalculateRebecaExemption:
         assert obs.casilla_id == RENTA_EXENTA_CASILLA
 
     def test_raises_when_not_eligible(self) -> None:
-        from aeat.domain.renta.errors import RentaValidationError
+        from aeat.domain.renta._errors import RentaValidationError
 
         facts = MaritimeWorkerFacts(
             worker_class="trabajador_del_mar",
@@ -498,7 +498,7 @@ class TestCalculateRebecaExemption:
             )
 
     def test_raises_on_zero_income(self) -> None:
-        from aeat.domain.renta.errors import RentaValidationError
+        from aeat.domain.renta._errors import RentaValidationError
 
         with pytest.raises(RentaValidationError):
             calculate_rebeca_exemption(

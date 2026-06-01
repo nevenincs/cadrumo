@@ -86,7 +86,7 @@ class UnhandledWorkflowError(WorkflowComponentError):
     """Raised when a workflow stage propagates an exception with no typed handler.
 
     Wraps every bare ``except Exception`` catch inside
-    :meth:`aeat.application.workflow._engine.WorkflowEngine._record_unhandled`
+    ``aeat.application.workflow._engine.WorkflowEngine._record_unhandled``
     so the unhandled path produces a structured :class:`ErrorEnvelope` with
     a stable ``INTERNAL_WORKFLOW_UNHANDLED`` code rather than an opaque
     ``UNHANDLED_EXCEPTION`` abort reason alone.
@@ -122,7 +122,7 @@ class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, 
     and the project-wide naming convention requires the ``Error`` suffix on all
     exception classes. The engine treats it as an internal control-flow vehicle
     — it never propagates outside :class:`aeat.application.workflow.WorkflowEngine`.
-    :meth:`WorkflowEngine._drive` always catches it and materialises the
+    ``WorkflowEngine._drive`` always catches it and materialises the
     :class:`aeat.application.workflow.WorkflowResult`. Subclasses
     :class:`WorkflowError` so the project-wide error-hierarchy rule
     still holds and the registry can bind a stable

@@ -53,7 +53,7 @@ def record_event(
     :class:`contextvars.ContextVar`. These propagate across
     :func:`asyncio.create_task` and :func:`asyncio.run` automatically
     (PEP 567), but NOT across plain :class:`threading.Thread` targets
-    nor :func:`asyncio.to_thread` / :meth:`loop.run_in_executor` workers
+    nor :func:`asyncio.to_thread` / ``loop.run_in_executor`` workers
     unless the caller wraps the target with
     :func:`contextvars.copy_context`. A call to :func:`record_event`
     from a detached thread therefore raises

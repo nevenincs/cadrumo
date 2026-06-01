@@ -49,6 +49,7 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
+from ...core import StandardPeriodCode
 from ...core.errors import AeatError, resolve_error_message
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
@@ -5877,7 +5878,7 @@ def work_preview_maritime_exemption(
         resolve_maritime_exemption,
     )
     from ...domain.renta import ProfileCompletenessError
-    from ...domain.renta.errors import RentaValidationError
+    from ...domain.renta._errors import RentaValidationError
 
     facts = _maritime_facts_from_active_profile()
 

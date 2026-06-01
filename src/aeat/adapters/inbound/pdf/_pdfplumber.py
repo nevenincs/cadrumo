@@ -63,9 +63,10 @@ def extract_pages_text_from_path(
         preserve their slot as the empty string.
 
     Raises:
-        error_class: When the file does not exist, when pdfplumber cannot open it,
-            or when every page is empty (suggesting a scan-only / XFA PDF without
-            an embedded text layer).
+        Exception: An instance of the supplied ``error_class`` when the file
+            does not exist, when pdfplumber cannot open it, or when every page
+            is empty (suggesting a scan-only / XFA PDF without an embedded text
+            layer).
     """
     if not pdf_path.is_file():
         raise error_class(f"{not_found_label}: {pdf_path}")
@@ -122,7 +123,8 @@ def extract_pages_text_concatenated(
         newlines. May be empty if every page is empty.
 
     Raises:
-        error_class: When pdfplumber cannot open the file.
+        Exception: An instance of the supplied ``error_class`` when pdfplumber
+            cannot open the file.
     """
     try:
         with pdfplumber.open(str(pdf_path)) as pdf:

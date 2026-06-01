@@ -1,0 +1,30 @@
+<vaultspec type="config">
+## Vaultspec Rules
+
+You MUST respect these rules at all times:
+
+@.claude/rules/aeat-agent-delivery.md
+@.claude/rules/aeat-architecture-boundaries.md
+@.claude/rules/aeat-calculation-grounding.md
+@.claude/rules/aeat-campaign-close-honesty-review.md
+@.claude/rules/aeat-documentation-workflow.md
+@.claude/rules/aeat-git-worktree-safety.md
+@.claude/rules/aeat-local-execution.md
+@.claude/rules/aeat-quality-gates.md
+@.claude/rules/aeat-rag-discovery.md
+@.claude/rules/aeat-registry-authority-flow.md
+@.claude/rules/aeat-roundtrip-discipline.md
+@.claude/rules/aeat-safety-legal-gates.md
+@.claude/rules/aeat-source-hygiene.md
+@.claude/rules/aeat-swarm-audit-cadence.md
+@.claude/rules/aeat-vaultspec-centralisation.md
+@.claude/rules/no-tautological-calculation-tests.md
+@.claude/rules/vaultspec-archive-discipline.builtin.md
+@.claude/rules/vaultspec-cli.builtin.md
+@.claude/rules/vaultspec-codify.builtin.md
+@.claude/rules/vaultspec-dry-run-discipline.builtin.md
+@.claude/rules/vaultspec-plan-editing-discipline.builtin.md
+@.claude/rules/vaultspec-rag.builtin.md
+@.claude/rules/vaultspec-system.builtin.md
+@.claude/rules/vaultspec.builtin.md
+</vaultspec>

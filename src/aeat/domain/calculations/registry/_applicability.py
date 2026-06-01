@@ -57,7 +57,7 @@ re-implement the logic in another module or maintain a parallel copy
 of the rules dict.
 
 **Relation to ``applicability_conditions`` on ``ModeloDeadlineWindow``.**
-:class:`~aeat.domain.deadlines.ModeloDeadlineWindow` carries a
+``ModeloDeadlineWindow`` carries a
 ``applicability_conditions`` mapping that governs *window-level*
 scheduling — which specific deadline window applies for a profile
 within the set of applicable windows (e.g. Modelo 202 uses different
