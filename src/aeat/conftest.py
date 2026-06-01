@@ -1,0 +1,60 @@
+"""Package-level pytest fixtures for every test under ``src/aeat/``.
+
+Hosts the ``source_tree_ast`` session-scoped fixture that ratchet
+inventories consume to amortise the AST parse cost across the suite.
+The fixture has to live here (not in ``src/aeat/tests/conftest.py``)
+because pytest's conftest discovery walks UP from each test file; a
+conftest inside the ``tests/`` subdirectory is invisible to ratchets
+hosted at ``src/aeat/test_*.py`` and elsewhere under ``src/aeat/``.
+
+Marker-contract and live-import gating remain hosted from
+``src/aeat/tests/conftest.py`` (collection-time hook scope is shared
+across all child conftests by pytest).
+"""
+
+from __future__ import annotations
+
+import ast
+from collections.abc import Mapping
+from pathlib import Path
+
+import pytest
+
+_SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
+"""Root of the ``src/aeat/`` source tree (the directory hosting this conftest)."""
+
+
+@pytest.fixture(scope="session")
+def source_tree_ast() -> Mapping[Path, ast.AST]:
+    """Return a session-cached mapping of every ``src/aeat/`` ``.py`` file to its parsed AST.
+
+    Walks ``src/aeat/`` once per pytest session via ``rglob("*.py")``, skips
+    ``__pycache__`` directories, ``.venv`` parents, and the ``_data/``
+    payload tree, reads each file as UTF-8 with ``errors='replace'`` (so
+    a stray encoding cookie cannot raise), and parses it with the
+    standard library ``ast`` module. Files that fail to parse with
+    ``SyntaxError`` are silently skipped — the fixture is a best-effort
+    cache, not a syntax gate; ratchets that need to surface unparseable
+    files should fall back to their own per-test scan.
+
+    Consumers retain their own filter predicates (e.g. ``test_*.py``
+    only, or exclude certain subdirs). The fixture is the AST cache;
+    the policy is per-test.
+    """
+    cache: dict[Path, ast.AST] = {}
+    for path in _SRC_AEAT_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        if ".venv" in path.parts:
+            continue
+        if "_data" in path.parts:
+            continue
+        try:
+            source = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        try:
+            cache[path] = ast.parse(source, filename=str(path))
+        except SyntaxError:
+            continue
+    return cache
