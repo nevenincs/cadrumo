@@ -9,13 +9,17 @@ deployments are out of scope.
 
 from __future__ import annotations
 
+import logging
+
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .._errors import LLMProviderError
 from .._models import LLMProvider
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
+
+_LOG = logging.getLogger(__name__)
 
 _OLLAMA_API_URL = Settings().aeat_llm_ollama_chat_url
 """Ollama ``/api/chat`` endpoint targeted by :class:`LocalAdapter`."""
@@ -90,10 +94,7 @@ class LocalAdapter(_ProviderAdapter):
                     },
                 },
             )
-        if response.status_code == 429:
-            raise_rate_limit("Local Ollama endpoint rate limit exceeded.", response.headers.get("retry-after"))
-        if response.status_code >= 400:
-            raise LLMProviderError(f"Local Ollama endpoint failure ({response.status_code}).")
+        check_http_error(response, provider_name="Local Ollama", model=request.model, logger=_LOG)
         parsed = _LocalResponse.model_validate_json(response.text)
         return ProviderCompletion(
             text=parsed.message.content.strip(),
