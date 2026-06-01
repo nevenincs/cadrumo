@@ -18,6 +18,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
 )
+from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.profile.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -97,7 +98,7 @@ InventoryRepositoryFactory = Callable[[str], InventoryLedgerRepository]
 
 def _emit_inventory_event(
     *,
-    event_repository: BucketEventHistoryRepository,
+    event_repository: BucketEventHistoryRepositoryProtocol,
     bucket_id: str,
     event_type: BucketEventType,
     actividad_id: str,
@@ -163,7 +164,7 @@ class InventoryService:
     def __init__(
         self,
         settings: Settings | None = None,
-        bucket_event_repository: BucketEventHistoryRepository | None = None,
+        bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
         repository_factory: InventoryRepositoryFactory | None = None,
     ) -> None:
         # `Settings()` bypasses `override_settings`; route through
