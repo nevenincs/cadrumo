@@ -211,10 +211,10 @@ required_text = ["modelo 303"]
 op = "subtract"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
-casilla = "iva.cuota-devengada-total"
+casilla = "27"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
-casilla = "iva.cuota-deducible-total"
+casilla = "45"
 
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
