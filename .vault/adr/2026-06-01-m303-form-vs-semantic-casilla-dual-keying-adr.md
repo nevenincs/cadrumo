@@ -8,6 +8,13 @@ related:
   - "[[2026-05-22-schema-hardening-adr]]"
   - "[[2026-05-22-schema-hardening-plan]]"
   - "[[2026-04-17-modelo-303-formulas-adr]]"
+amendment: |
+  Amended 2026-06-01: Added Finding E documenting XSD-dictionary keying axis (task #136).
+  XSD-dictionary identifiers (kebab-case attribute tokens in M036; positional codes in M100)
+  form a third legitimate keying axis used by the XSD export adapter, distinct from the
+  dual-keying convention (id vs number). Decision D6 acknowledges the axis as intentional.
+  Regression-test-gate section updated to reference the three-shape predicate from
+  regression gate #134 (W12.P61 typed-boundary bulk).
 ---
 
 <!-- LINK RULES:
@@ -60,6 +67,20 @@ Read-only inspection of `src/aeat/application/verification/_verify.py` and `src/
 
 Given Findings B and C, the partial #111 fix's regression on verification cannot have been caused by switching engine-side formula references from form-numbered to semantic casilla ids — both the engine and the verification chain consume `casilla.id` exclusively. The regression must have been a different defect class — most likely a downstream consumer (test fixture, hardcoded expectation, or a missed call site referring to a casilla via its `number` field rather than its `id`) that wasn't updated alongside the formula rewrite. The revert at `64baa15a6` was the right operational call (preserve a green suite), but the root-cause framing in #111 was incomplete.
 
+### Finding E — A third keying axis exists: XSD-dictionary identifiers
+
+Regression gate #134 (three-shape predicate testing on M036 and M100 casillas) discovered a third legitimate keying axis distinct from the dual-keying convention (id vs number) documented in D1–D4. XSD-dictionary identifiers are AEAT data-record attribute tokens and positional codes used by the XSD export adapter in `src/aeat/adapters/outbound/` to project casillas onto AEAT export form layouts. Examples:
+
+- M036 (Impuesto sobre Transmisiones Patrimoniales y Actos Jurídicos Documentados): kebab-case attribute tokens (e.g., `'tipo-declaracion'`, `'vigencia'`, `'operaciones-exoneradas'`) map directly to casilla dictionary identifiers in the XSD export schema.
+- M100 (Impuesto sobre el Patrimonio): positional codes using bracket notation (e.g., `'*10'`, `'*06-09'`, `'*68 *69'`) designate ranges or aggregations of form field values; these resolve through the XSD export layer.
+
+The XSD axis is orthogonal to id/number dual-keying: a single casilla row may carry all three keys. XSD-dictionary identifiers are stored as a separate field in the casilla schema (e.g., `xsd_id` or `xsd_codes`; exact field name varies by modelo revision). The export adapter consumes these identifiers to build the XSD projection; the engine and verification chain do NOT consult this axis.
+
+The #134 gate's three-shape predicate validates that casilla rows conform to one of three legal shapes:
+- **Dual-keying only** (id + number, per D1–D2): Form-displayed casillas or engine-internal totals with no XSD export responsibility.
+- **Dual-keying + XSD** (id + number + xsd_id/codes): Casillas that participate in both engine calculations AND XSD export.
+- **XSD-only** (xsd_id/codes, no id): Pure export-side projections that do not correspond to engine casillas (rare; observed in M036 and M100 for form-layout padding or metadata fields).
+
 ## Decision
 
 ### D1 — The canonical key axis is `casilla.id` (semantic). The `number` field is a documentary / export-side shape.
@@ -91,6 +112,20 @@ Task #126 ("register casilla 65 default=100 OR derive from profile binding") was
 
 That verdict stands independently of this ADR. Task #126 is NOT a dual-keying issue; it is a profile-state-derivation issue masquerading as operator input. The two tasks share the modelo (M303) but not the root cause.
 
+### D6 — The XSD-dictionary axis is intentional, not drift. Three-shape predicate governs valid casilla rows.
+
+Finding E documents a third keying axis discovered by regression gate #134. This is NOT a defect or structural dual-keying violation; it is an intentional, separate axis serving XSD export and form projection. The distinction:
+
+- The dual-keying convention (D1–D2) governs the ENGINE and VERIFICATION layer: `casilla.id` is canonical semantic; `casilla.number` is documentary form-reference. These two always coexist for casillas that reach the engine.
+- The XSD axis (Finding E) governs the EXPORT layer: `casilla.xsd_id` / `casilla.xsd_codes` are AEAT data-record tokens. They may coexist with id/number (dual-keying casillas that also export) or stand alone (XSD-only projections).
+
+The three-shape predicate from #134 regression gate enforces that every casilla row conforms to one of these valid shapes:
+1. **Dual-keying only** (id + number, no XSD): Engine casillas with no export responsibility.
+2. **Dual-keying + XSD** (id + number + xsd_id/codes): Engine casillas that also project to XSD export.
+3. **XSD-only** (xsd_id/codes, no id): Pure export projections (rare; form-layout padding, metadata fields).
+
+Any row that introduces a fourth shape (e.g., XSD-only with a form-field number but no engine id, in violation of the XSD-only contract) is genuinely a defect and must be rejected. The gate implements this predicate in #134 as a structural test.
+
 ## Consequences
 
 ### Code surfaces affected
@@ -103,7 +138,12 @@ That verdict stands independently of this ADR. Task #126 is NOT a dual-keying is
 
 ### Regression-test gate
 
-- A new gate test should be added to verify the convention: for every casilla row in every modelo revision, assert that `casilla.id` is the unique key consulted by the engine's `casillas_by_id` lookup, and that `casilla.number` carries either the AEAT form-page field number (matching a corresponding `export_refs` entry) OR mirrors `casilla.id` (for engine-internal casillas). The gate refuses any new casilla row that introduces a third keying axis.
+- The three-shape predicate gate in regression #134 validates casilla structure across all modelo revisions: for every casilla row, assert that it conforms to one of three legal shapes (dual-keying only; dual-keying + XSD; XSD-only per Finding E / Decision D6). The gate rejects any row that violates the three-shape contract. Specifically:
+  - **Dual-keying only shape**: `casilla.id` (semantic, engine-canonical) + `casilla.number` (form-page field or internal display). No XSD axis.
+  - **Dual-keying + XSD shape**: `casilla.id` + `casilla.number` + `casilla.xsd_id` (or `xsd_codes`). The casilla participates in both engine and XSD export.
+  - **XSD-only shape**: `casilla.xsd_id` (or `xsd_codes`) with NO `casilla.id`. Pure export projection; no engine participation.
+  - **Invalid (rejected)**: Any other combination, including XSD-only rows that carry a `number` field, or rows that claim dual-keying shape but carry incomplete XSD data.
+- This gate is implemented in regression test #134 as a structural predicate. Future casilla authoring must satisfy the predicate, not just the dual-keying convention in isolation.
 
 ### Future predicate / formula authoring discipline
 
