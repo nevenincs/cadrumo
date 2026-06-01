@@ -28,11 +28,11 @@ from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
-    from playwright.async_api import Locator, Page, ViewportSize
+    from playwright.async_api import Locator, Page
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
-from .....core.config import Settings, load_settings
+from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -54,6 +54,10 @@ from ._adapter_utils import (
 )
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+)
+from ._browser_constants import (
+    default_viewport,
+    selector_probe_timeout_ms,
 )
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
@@ -112,26 +116,10 @@ async def _locate(
         stage=stage,
         description=description,
         timeout_ms=timeout_ms,
-        probe_timeout_ms=_get_selector_probe_timeout_ms(),
+        probe_timeout_ms=selector_probe_timeout_ms(),
         surface_label="NIF-IVA",
         shape_suggestion=_nif_iva_shape_suggestion(),
     )
-
-
-def _get_timeout_defaults() -> int:
-    return load_settings().aeat_browser_navigation_timeout_ms
-
-
-def _get_selector_probe_timeout_ms() -> int:
-    return load_settings().aeat_browser_selector_probe_timeout_ms
-
-
-def _get_default_viewport() -> ViewportSize:
-    settings = load_settings()
-    return {
-        "width": settings.aeat_browser_viewport_width,
-        "height": settings.aeat_browser_viewport_height,
-    }
 
 
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
@@ -312,7 +300,7 @@ async def collect_nif_iva_check_observations(
             )
         page: _Page = _raw_page
         await _playwright_stage(
-            page.set_viewport_size(_get_default_viewport()),
+            page.set_viewport_size(default_viewport()),
             stage="set-viewport",
             description="NIF-IVA viewport",
             timeout_ms=timeout_ms,

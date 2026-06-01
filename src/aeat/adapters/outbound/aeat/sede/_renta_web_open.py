@@ -8,9 +8,9 @@ from re import compile
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from playwright.async_api import BrowserContext, Locator, Page, ViewportSize
+    from playwright.async_api import BrowserContext, Locator, Page
 
-from .....core.config import Settings, load_settings
+from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -25,21 +25,13 @@ from .....domain.calculations.registry import (
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, BrowserSession, default_browser_session_factory
 from ._adapter_utils import registry_failure_message
-from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE
+from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE, default_viewport
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
 DEFAULT_VIEWPORT_WIDTH: int = 1920
 DEFAULT_VIEWPORT_HEIGHT: int = 1080
-
-
-def _get_default_viewport() -> ViewportSize:
-    settings = load_settings()
-    return {
-        "width": settings.aeat_browser_viewport_width,
-        "height": settings.aeat_browser_viewport_height,
-    }
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
@@ -178,7 +170,7 @@ async def _open_renta_web_open_session(
     page: _Page = _raw_page
     await install_page_safety_net(page)
     await _playwright_stage(
-        page.set_viewport_size(_get_default_viewport()),
+        page.set_viewport_size(default_viewport()),
         stage="set-viewport",
         description="Renta WEB Open viewport",
         timeout_ms=live_payload.timeout_ms,
