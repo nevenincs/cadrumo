@@ -439,7 +439,7 @@ search_path = ["src", "stubs"]
 testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'unit and not docs' --strict-markers -n auto --dist=loadfile"
+addopts = "-v --tb=short -m 'unit and not docs and not workbook_parity' --strict-markers"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
@@ -455,6 +455,7 @@ markers = [
   "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only",
   "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk",
   "docs: documentation build and conformance gate; runs a real sphinx-build, excluded from the fast unit lane and run via just docs-check",
+  "workbook_parity: LibreOffice subprocess parity tests; excluded from the default unit lane (adds 60-90s wallclock) and run via just test-workbook-parity",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────

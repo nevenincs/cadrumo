@@ -37,7 +37,7 @@ _DOMAIN_MARKERS = frozenset(
         "domain_persistence",
     }
 )
-_AUXILIARY_MARKERS = frozenset({"docs", "flaky", "fixture_tier_l3"})
+_AUXILIARY_MARKERS = frozenset({"docs", "flaky", "fixture_tier_l3", "workbook_parity"})
 _EXPECTED_CONFIGURED_MARKERS = _ACCESS_MARKERS | _DOMAIN_MARKERS | _AUXILIARY_MARKERS
 
 

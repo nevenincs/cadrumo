@@ -110,6 +110,12 @@ docs-check:
     uv run --no-sync pytest -m docs
     uv run --no-sync doc8 docs
 
+# Run the LibreOffice workbook-parity tests. Excluded from the default unit
+# lane (adds 60-90s wallclock per soffice subprocess call). Requires
+# LibreOffice / soffice on PATH.
+test-workbook-parity:
+    uv run --no-sync pytest -m workbook_parity
+
 # Run unit plus live_read tests (requires AEAT_LIVE_TESTS_ENABLED=1 for live_read items).
 test-live:
     uv run pytest -m "unit or live_read"
