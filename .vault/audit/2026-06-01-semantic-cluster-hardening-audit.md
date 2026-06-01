@@ -134,15 +134,33 @@ is a versioned data-format change, not a free consolidation. Track for a
 dedicated slice. Also: `assets.py` hardcodes its namespace string instead of
 reading `PROFILE_ASSETS_LEDGER_NAMESPACE` (inconsistent with `inventory.py`).
 
-### F10 - Period-parsing local regex copies (partial-overlap)
+### F10 - Period-parsing local variants (EXCLUDED on verification, largely divergent)
 
-`application/filing/reconciliation/_reconcile.py:383`,
-`application/workflow/_engine.py:94` (carries a dead `YYYYMn` branch),
-`application/filing/_import.py:37`, and
-`application/invoices/_source_resolver.py:86` re-encode quarter/annual/month
-period logic that `domain/period.py` owns. Return-shape/error-type differ.
-Remediation: delegate to `parse_canonical_period` / `period_start_date`
-/`period_end_date` and drop the local regexes; remove the dead branch.
+`application/filing/reconciliation/_reconcile.py`, `application/workflow/_engine.py`,
+`application/filing/_import.py`, and `application/invoices/_source_resolver.py`
+re-encode quarter/annual/month period logic also present in `domain/period.py`.
+Live verification (2026-06-01) finds these are NOT clean duplicates under the
+substitutability pre-filter:
+
+- `domain/period.py`'s own module docstring sanctions deliberately separate
+  period dialects ("a deliberately separate dialect; do not unify it with
+  this surface"), so divergent period parsers are an accepted pattern, not
+  drift.
+- `_engine._registry_period_token` returns `(int, str)` but raises
+  `WorkflowError` with i18n-TRANSLATED message keys (not
+  `PeriodValidationError`) and accepts an extra `YYYYMn` dialect. Delegating
+  would silently drop the translated user-facing error contract.
+- `_reconcile._canonical_draft_period_token` returns a bare token `str` (not
+  `(year, token)`) and raises `ModeloBuilderError`; `_import` produces a
+  canonical `"YYYYQn"` STRING; `_source_resolver` tests membership and accepts
+  both `Qn` and `nT` token styles. Each serves a different return shape and
+  error type.
+- The one mechanically-removable item (the `_engine` `YYYYMn` branch, 4 lines)
+  cannot be proven dead without tracing every `obligation.period` producer;
+  removing an unprovable-dead branch for marginal gain is not justified.
+
+Verdict: divergent return shapes + error/i18n contracts + sanctioned dialect
+separation. NOT actionable as consolidation.
 
 ### F11 - Private `core.time._now` cross-package imports (LIVE REGRESSION, high)
 
