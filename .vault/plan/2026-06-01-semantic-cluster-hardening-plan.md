@@ -171,7 +171,7 @@ Re-curate the two frozen-list meta-gates that drifted red against legitimate dow
 Repair the born-stale legal-entity rate-schedule test against the restructured Modelo 200 formula, and reconcile the M390 verification-source provenance tag with its mixed real/synthetic fixture pool.
 
 - [x] `W06.P16.S36` - Fix the born-stale legal-entity rate-schedule test to navigate the restructured nested dispatch (args[2].args[2].args[2].dispatch_table) and assert the full 8-key entity-form set including sal/sll; `src/aeat/domain/calculations/registry/test_taxpayer_rate_schedules.py`.
-- [ ] `W06.P16.S37` - Reconcile the M390 verification_source provenance (REAL mislabel): regenerate 2021-0A as a synthetic fixture matching the synthetic_from_aeat_published_text tag, or split the mixed real/synthetic pool by tagged profile; `do not revert the tag; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [x] `W06.P16.S37` - Reconcile the M390 verification_source provenance (REAL mislabel): regenerate 2021-0A as a synthetic fixture matching the synthetic_from_aeat_published_text tag, or split the mixed real/synthetic pool by tagged profile; `do not revert the tag; `src/aeat/tests/fixtures/justificantes/_generate.py`.
 
 ## Parallelization
 
