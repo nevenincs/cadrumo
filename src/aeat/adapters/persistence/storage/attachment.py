@@ -1,7 +1,7 @@
 """Encrypted SQL-backed content-addressed attachment store implementation.
 
 Concrete adapter-layer implementation of the
-:class:`~aeat.domain.attachments._repository.AttachmentStoreProtocol`. The
+:class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`. The
 domain declares the protocol; this module provides the implementation that
 reads/writes encrypted attachment blobs and manifests through the secure-
 object persistence substrate.
@@ -69,7 +69,7 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 class AttachmentStore(BaseModel):
     """Encrypted SQL-backed content-addressed attachment store.
 
-    Implements :class:`~aeat.domain.attachments._repository.AttachmentStoreProtocol`.
+    Implements :class:`~aeat.domain.attachments._protocols.AttachmentStoreProtocol`.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
