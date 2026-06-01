@@ -110,22 +110,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No hi ha cap perfil AEAT actiu enllaçat per a Google OAuth.
-    refresh:
-      errors:
-        google_auth_not_importable: La biblioteca google-auth no es pot importar;
-          la renovació d'OAuth Google no pot continuar.
-        reauth_required: La credencial OAuth de Google està marcada com a pendent
-          de reautenticació; la ruta de renovació automàtica està tancada.
-        refresh_failed: La renovació de Google OAuth ha fallat.
-        refresh_refused: Google OAuth ha rebutjat la sol·licitud de renovació; el
-          refresh token ja no és vàlid.
-        token_endpoint_unreachable: L'endpoint de token de Google OAuth no és accessible.
-      suggestions:
-        check_network: Comprova la connectivitat de xarxa amb els endpoints OAuth
-          de Google i torna-ho a intentar.
-      testing_project_cap_warning: El refresh token de Google OAuth s'apropa al límit
-        de 7 dies del projecte en mode Testing (queden unes {hours_remaining}h); torna
-        a executar `aeat config google login` per allargar la vida útil de la credencial.
   inbound:
     declaracion:
       errors:
@@ -1760,8 +1744,8 @@ cli:
         ambiguous_profile: 'Nom de perfil ambigu: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'Cap perfil actiu seleccionat.'
-        profile_empty: '--profile no pot estar en blanc.'
+        no_active_profile: Cap perfil actiu seleccionat.
+        profile_empty: --profile no pot estar en blanc.
         unknown_profile: 'Perfil desconegut: %{profile}.'
         unknown_profile_key: 'Clau de perfil desconeguda: %{key}.'
       get_help: Read one profile key stored value.
@@ -1827,7 +1811,8 @@ cli:
       venv_stale: L'entorn virtual esta desactualitzat.
     version:
       no_revisions: No hi ha revisions del registre disponibles.
-      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles, %{formulas} fórmules, %{revisions} revisions.'
+      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} caselles,
+        %{formulas} fórmules, %{revisions} revisions.'
       registry_unavailable: '%{package} %{version}: registre no disponible (%{error}).'
   ledger:
     add:
@@ -2862,6 +2847,7 @@ errors:
     error_aeat_core_not_found: No s'ha trobat el recurs o registre sol·licitat.
     error_aeat_observability: S'ha produït un error en la telemetria de l'aplicació.
     error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
+    error_apidocs: errors.error.error_apidocs
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
     error_application_live_iva_surface_timeout: La superfície de lectura d'IVA en
       viu ha esgotat el temps abans de retornar evidència de l'AEAT.
@@ -2897,7 +2883,6 @@ errors:
       però no s''ha configurat cap substitut.'
     error_declaracion_template_not_detected: No s'ha pogut detectar automàticament
       la versió de plantilla del PDF de la declaració.
-    error_domain: S'ha produït un error en la lògica de negoci.
     error_domain_submission: S'ha produït un error en el domini d'enviament.
     error_domain_submission_preflight: L'esborrany no ha superat la comprovació prèvia
       d'enviament local.

@@ -113,22 +113,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
-    refresh:
-      errors:
-        google_auth_not_importable: La librería google-auth no se puede importar;
-          la renovación de OAuth Google no puede continuar.
-        reauth_required: La credencial OAuth de Google está marcada como pendiente
-          de reautenticación; la ruta de renovación automática está cerrada.
-        refresh_failed: La renovación de Google OAuth ha fallado.
-        refresh_refused: Google OAuth rechazó la solicitud de renovación; el refresh
-          token ya no es válido.
-        token_endpoint_unreachable: El endpoint de token de Google OAuth no es accesible.
-      suggestions:
-        check_network: Comprueba la conectividad de red con los endpoints OAuth de
-          Google y vuelve a intentarlo.
-      testing_project_cap_warning: El refresh token de Google OAuth se acerca al límite
-        de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve
-        a ejecutar `aeat config google login` para prolongar la vida útil de la credencial.
   inbound:
     declaracion:
       errors:
@@ -1791,8 +1775,8 @@ cli:
         ambiguous_profile: 'Nombre de perfil ambiguo: %{profile}.'
         invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'No hay perfil activo seleccionado.'
-        profile_empty: '--profile no puede estar en blanco.'
+        no_active_profile: No hay perfil activo seleccionado.
+        profile_empty: --profile no puede estar en blanco.
         unknown_profile: 'Perfil desconocido: %{profile}.'
         unknown_profile_key: 'Clave de perfil desconocida: %{key}.'
       get_help: Lee el valor guardado de una clave de perfil.
@@ -2910,6 +2894,7 @@ errors:
     error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
+    error_apidocs: errors.error.error_apidocs
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
     error_application_live_iva_surface_timeout: La superficie de lectura de IVA en
       vivo agotó el tiempo antes de devolver evidencia de la AEAT.
@@ -2945,7 +2930,6 @@ errors:
       pero no se configuró un sustituto.'
     error_declaracion_template_not_detected: No se pudo detectar automáticamente la
       versión de plantilla del PDF de la declaración.
-    error_domain: Se produjo un error en la lógica de negocio.
     error_domain_submission: Se produjo un error en el dominio de envío.
     error_domain_submission_preflight: El borrador no superó la comprobación previa
       de envío local.

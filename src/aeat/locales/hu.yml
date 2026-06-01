@@ -108,23 +108,6 @@ adapters:
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
-    refresh:
-      errors:
-        google_auth_not_importable: A google-auth könyvtár nem importálható; a Google
-          OAuth-megújítás nem folytatható.
-        reauth_required: A Google OAuth-hitelesítési adat újrahitelesítést igényel;
-          az automatikus megújítási útvonal le van zárva.
-        refresh_failed: A Google OAuth-megújítás sikertelen.
-        refresh_refused: A Google OAuth elutasította a megújítási kérelmet; a megújítási
-          token már nem érvényes.
-        token_endpoint_unreachable: A Google OAuth-token-végpont nem érhető el.
-      suggestions:
-        check_network: Ellenőrizze a hálózati kapcsolatot a Google OAuth-végpontokhoz,
-          majd próbálja újra.
-      testing_project_cap_warning: 'A Google OAuth-megújítási token közeledik a 7
-        napos tesztelési projekt korlátjához (kb. {hours_remaining} óra van hátra);
-        futtassa újra: `aeat config google login` a hitelesítő adat élettartamának
-        meghosszabbításához.'
   inbound:
     declaracion:
       errors:
@@ -1759,8 +1742,8 @@ cli:
         ambiguous_profile: 'Tobbertelmu profilnev: %{profile}.'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'Nincs kivalasztott aktiv profil.'
-        profile_empty: '--profile nem lehet ures.'
+        no_active_profile: Nincs kivalasztott aktiv profil.
+        profile_empty: --profile nem lehet ures.
         unknown_profile: 'Ismeretlen profil: %{profile}.'
         unknown_profile_key: 'Ismeretlen profilkulcs: %{key}.'
       get_help: Read one profile key stored value.
@@ -2857,6 +2840,7 @@ errors:
     error_aeat_core_not_found: A kért erőforrás vagy rekord nem található.
     error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
+    error_apidocs: errors.error.error_apidocs
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
     error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
       mielőtt AEAT-bizonyítékot adott volna vissza.
@@ -2891,7 +2875,6 @@ errors:
       értékkonfiguráció megadva.'
     error_declaracion_template_not_detected: A bevallás PDF sablon-revíziója nem ismerhető
       fel automatikusan.
-    error_domain: Domain logikai hiba történt.
     error_domain_submission: Benyújtási domain hiba történt.
     error_domain_submission_preflight: A tervezet nem ment át a helyi benyújtás előzetes
       ellenőrzésén.
