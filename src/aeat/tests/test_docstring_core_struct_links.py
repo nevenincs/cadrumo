@@ -1,0 +1,152 @@
+"""Navigability gate: modules that use a core struct must cross-link it.
+
+The API documentation is only useful for navigation if its docstrings form a
+graph that steers a reader toward the canonical "spine" types. A module that
+depends on a core struct but never names it in a Sphinx cross-reference is a
+dead end: the reader has no thread to follow back to the authoritative
+definition.
+
+This gate enforces one objective rule. For a fixed set of canonical core
+structs, every module that *imports* one must *cross-link* it in at least one
+docstring (the module docstring or any public symbol's docstring), using a
+Sphinx role such as ``:class:`ModeloRevision```. The defining module of each
+struct is exempt from linking to itself.
+
+The gate is hard-cut: it requires zero violations and, on failure, enumerates
+every ``module -> struct`` pair that still needs a link. There is no stored
+baseline or per-item progress list; the worklist is recomputed from the AST on
+every run, so it can only shrink to green as docstrings gain their links.
+"""
+
+from __future__ import annotations
+
+import ast
+import re
+from collections import defaultdict
+from pathlib import Path
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core, pytest.mark.docs]
+
+# The canonical spine. Each entry maps a core struct to the dotted module that
+# defines it. ``test_core_struct_anchors_are_unambiguous`` pins every entry to
+# a real, single class definition so the set cannot silently rot as the code
+# moves. Extend this mapping to bring more of the spine under the gate.
+CORE_STRUCTS: dict[str, str] = {
+    "ValidatedRegistryAuthority": "aeat.domain.calculations.registry._authority",
+    "RegistrySnapshot": "aeat.domain.calculations.registry._schema",
+    "ModeloDefinition": "aeat.domain.calculations.registry._schema",
+    "ModeloRevision": "aeat.domain.calculations.registry._schema",
+    "CasillaObservation": "aeat.domain.calculations.registry._bindings",
+    "CalculationRevision": "aeat.domain.modelos._calculation_revision",
+    "OutputSchema": "aeat.core.json_contract",
+    "SchemaEnvelope": "aeat.core.json_contract",
+    "SecureObjectRepository": "aeat.adapters.persistence.storage.sql.secure_objects",
+}
+
+_SRC_ROOT = Path(__file__).resolve().parents[2]  # .../src
+_PKG_ROOT = _SRC_ROOT / "aeat"
+
+# A Sphinx cross-reference role capturing the referenced symbol's final segment,
+# e.g. ``:class:`aeat.domain.filing.ModeloRevision``` -> ``ModeloRevision``.
+_ROLE = re.compile(r":(?:mod|class|func|meth|obj|data|attr|exc|paramref):`[^`]*?([A-Za-z_][A-Za-z0-9_]*)`")
+
+
+def _module_name(path: Path) -> str:
+    """Return the dotted module name for a source file under ``src/``."""
+    rel = path.relative_to(_SRC_ROOT).with_suffix("")
+    parts = list(rel.parts)
+    if parts[-1] == "__init__":
+        parts = parts[:-1]
+    return ".".join(parts)
+
+
+def _is_in_scope(path: Path) -> bool:
+    """Exclude tests, conftest, and non-source data trees from the gate."""
+    posix = path.as_posix()
+    return not (
+        path.name.startswith("test_")
+        or path.name == "conftest.py"
+        or "/tests/" in posix
+        or "/_data/" in posix
+    )
+
+
+def _source_files() -> list[Path]:
+    return [p for p in _PKG_ROOT.rglob("*.py") if _is_in_scope(p)]
+
+
+def _imported_anchors(tree: ast.AST) -> set[str]:
+    """Core-struct names this module imports by name."""
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name in CORE_STRUCTS:
+                    found.add(alias.name)
+    return found
+
+
+def _linked_anchors(tree: ast.AST) -> set[str]:
+    """Core-struct names cross-referenced in any docstring of this module."""
+    docstrings: list[str] = []
+    module_doc = ast.get_docstring(tree)
+    if module_doc:
+        docstrings.append(module_doc)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            doc = ast.get_docstring(node)
+            if doc:
+                docstrings.append(doc)
+    linked: set[str] = set()
+    for doc in docstrings:
+        for name in _ROLE.findall(doc):
+            if name in CORE_STRUCTS:
+                linked.add(name)
+    return linked
+
+
+def test_core_struct_anchors_are_unambiguous() -> None:
+    """Every declared anchor resolves to exactly one class at its canonical module."""
+    problems: list[str] = []
+    for name, dotted in CORE_STRUCTS.items():
+        rel = Path(*dotted.split(".")).with_suffix(".py")
+        path = _SRC_ROOT / rel
+        if not path.is_file():
+            problems.append(f"{name}: declared module {dotted} has no file at {rel}")
+            continue
+        defs = re.findall(rf"^class {re.escape(name)}\b", path.read_text(encoding="utf-8"), re.MULTILINE)
+        if len(defs) != 1:
+            problems.append(f"{name}: expected exactly one `class {name}` in {dotted}, found {len(defs)}")
+    assert not problems, "core-struct anchor set is stale:\n  " + "\n  ".join(problems)
+
+
+def test_modules_that_use_a_core_struct_link_it() -> None:
+    """A module importing a core struct must cross-link it in a docstring."""
+    violations: dict[str, list[str]] = defaultdict(list)
+    for path in _source_files():
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:  # pragma: no cover - a parse failure is its own gate's concern
+            continue
+        module = _module_name(path)
+        linked = _linked_anchors(tree)
+        for anchor in _imported_anchors(tree):
+            if CORE_STRUCTS[anchor] == module:
+                continue  # the struct's own home need not link to itself
+            if anchor not in linked:
+                violations[module].append(anchor)
+
+    if violations:
+        total = sum(len(v) for v in violations.values())
+        lines = [
+            f"{total} module->core-struct uses lack a docstring cross-reference.",
+            "Add a Sphinx role (e.g. :class:`ModeloRevision`) to the module docstring",
+            "or a public symbol's docstring where the struct is used:",
+            "",
+        ]
+        for module in sorted(violations):
+            for anchor in sorted(violations[module]):
+                lines.append(f"  {module}  ->  :class:`{anchor}`")
+        pytest.fail("\n".join(lines))
