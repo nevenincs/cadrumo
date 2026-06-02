@@ -22,8 +22,9 @@ from typing import TYPE_CHECKING
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ....application.ledger._models import LedgerExportResult as _AppLedgerExportResult
-    from ....application.ledger._models import LedgerSourceImportResult as _AppLedgerSourceImportResult
+    from ...application.ledger._models import LedgerExportResult as _AppLedgerExportResult
+    from ...application.ledger._models import LedgerSourceImportResult as _AppLedgerSourceImportResult
+    from ...application.inventory._service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -718,11 +719,13 @@ class InventoryMovementAddResult(InventoryLedgerPayload):
 
 
 @register_schema("ledger.inventory.valuation.preview")
-class InventoryValuationPreviewResult(OutputSchema):
+class InventoryValuationPreviewPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory valuation preview``.
 
-    Mirrors ``InventoryValuationPreview.model_dump(mode='json')`` plus
-    the ``bucket_event_ids`` field the CLI appends at the emit site.
+    Distinct from the application wrapper :class:`InventoryValuationPreviewResult`
+    (DB-26 S52): this envelope *flattens* that wrapper, projecting its inner
+    ``preview`` (:class:`InventoryValuationPreview`) fields and lifting the
+    wrapper's ``bucket_event_ids`` to the top level. Derive via :meth:`from_result`.
     """
 
     actividad_id: str
@@ -731,6 +734,18 @@ class InventoryValuationPreviewResult(OutputSchema):
     closing_stock: str
     cogs: str
     bucket_event_ids: list[str] = []
+
+    @classmethod
+    def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
+        """Flatten the application preview wrapper into this CLI envelope.
+
+        The wrapper carries an inner ``preview`` plus ``bucket_event_ids``;
+        ``model_dump(mode="json")`` on the inner preview performs the
+        enum/Decimal coercion, and the event ids are lifted onto the same level.
+        """
+        data = result.preview.model_dump(mode="json")
+        data["bucket_event_ids"] = list(result.bucket_event_ids)
+        return cls.model_validate(data)
 
 
 # ---------------------------------------------------------------------------

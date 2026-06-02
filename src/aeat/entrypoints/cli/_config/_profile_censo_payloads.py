@@ -10,7 +10,12 @@ Field sets match the production payload dicts constructed in
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from .._schemas import OutputSchema, register_schema
+
+if TYPE_CHECKING:
+    from ....application.user_profile._censo_sync import CensoApplyResult as _AppCensoApplyResult
 
 
 @register_schema("config.profile.censo.refresh")
@@ -51,8 +56,14 @@ class CensoCompareResult(OutputSchema):
 
 
 @register_schema("config.profile.censo.apply")
-class CensoApplyResult(OutputSchema):
-    """JSON envelope for ``aeat config profile censo apply``."""
+class CensoApplyPayload(OutputSchema):
+    """JSON envelope for ``aeat config profile censo apply``.
+
+    Distinct from the application :class:`CensoApplyResult` (DB-26 S52): this
+    envelope projects that result's JSON-coerced fields and (via ``extra=allow``)
+    forwards any provider-specific extras without re-declaring them. Derive
+    instances via :meth:`from_result`.
+    """
 
     snapshot_id: str
     written_paths: list[str] = []
@@ -61,3 +72,12 @@ class CensoApplyResult(OutputSchema):
     # pydantic v2 model_config class var shadows ConfigDict descriptor; mypy
     # assignment check is incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+    @classmethod
+    def from_result(cls, result: _AppCensoApplyResult) -> CensoApplyPayload:
+        """Project the application :class:`CensoApplyResult` into this CLI envelope.
+
+        ``model_dump(mode="json")`` performs the typed-field coercion; ``extra=allow``
+        forwards any additional fields the application result carries.
+        """
+        return cls.model_validate(result.model_dump(mode="json"))

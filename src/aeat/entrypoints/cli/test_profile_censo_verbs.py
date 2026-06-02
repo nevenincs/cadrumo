@@ -238,9 +238,9 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
 
 def test_apply_emits_json_payload_with_written_paths() -> None:
-    """The --format json branch on apply must serialize CensoApplyResult
-    through model_dump(mode='json'); written_paths is a tuple that
-    JSON renders as a list."""
+    """The --format json branch on apply must serialize CensoApplyPayload
+    (projected from the application CensoApplyResult via from_result) through
+    model_dump(mode='json'); written_paths is a tuple that JSON renders as a list."""
 
     import json
 

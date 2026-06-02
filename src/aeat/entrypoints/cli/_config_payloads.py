@@ -23,7 +23,7 @@ from pydantic import ConfigDict
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ....application.auth._operator import AuthClearResult, AuthConfigureResult
+    from ...application.auth._operator import AuthClearResult, AuthConfigureResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)

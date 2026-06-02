@@ -3233,14 +3233,12 @@ def inventory_valuation_preview(
     bucket_id = _ratios_bucket_id()
     result = _inventory_service().valuation_preview(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
     preview = result.preview
-    payload = preview.model_dump(mode="json")
-    payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    from ._ledger_payloads import InventoryValuationPreviewResult
+    from ._ledger_payloads import InventoryValuationPreviewPayload
 
     _emit_envelope(
         ctx,
         command="ledger.inventory.valuation.preview",
-        result=InventoryValuationPreviewResult.model_validate(payload),
+        result=InventoryValuationPreviewPayload.from_result(result),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{preview.actividad_id}",
