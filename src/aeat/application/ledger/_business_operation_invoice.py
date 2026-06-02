@@ -3,7 +3,7 @@
 Two noun-groups (``payable_invoice``, ``collectible_invoice``) each
 expose the canonical five-verb CRUD spine
 ``add``/``remove``/``update``/``view``/``list``. Records are
-bucket-scoped and persisted as JSONL files per noun-kind.
+bucket-scoped and persisted as encrypted secure-object documents per noun-kind.
 
 The records are intentionally slim. Business-detail enrichment (line
 items, IVA breakdown, reconciliation linkages) belongs to the
@@ -31,9 +31,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ...adapters.persistence.storage import LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
 from ...domain.buckets import (
@@ -43,7 +46,6 @@ from ...domain.buckets import (
     append_bucket_event,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from .._storage_paths import storage_path
 
 
 class BusinessOperationInvoiceSourceKind(StrEnum):
@@ -225,6 +227,28 @@ class BusinessOperationInvoiceResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
+class BusinessOperationInvoiceDocument(BaseModel):
+    """Encrypted bucket-local business-operation invoice catalogue."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    source_kind: BusinessOperationInvoiceSourceKind
+    records: tuple[BusinessOperationInvoice, ...] = ()
+
+
+class BusinessOperationInvoiceRepository(SecureBoundRepository[BusinessOperationInvoiceDocument]):
+    """Encrypted repository for one bucket/source-kind invoice catalogue."""
+
+    namespace = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.namespace
+    sensitivity = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.sensitivity
+    schema_version = LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.schema_version
+    payload_type = BusinessOperationInvoiceDocument
+
+    def extract_identifier(self, payload: BusinessOperationInvoiceDocument) -> str:
+        return _document_key(payload.bucket_id, payload.source_kind)
+
+
 _INVOICE_EVENT_PAYLOAD_VERSION = 1
 
 # Map source_kind to the three event types (created, updated, removed).
@@ -289,15 +313,8 @@ def _emit_invoice_event(
 def _load(
     settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str
 ) -> list[BusinessOperationInvoice]:
-    path = storage_path(settings.aeat_invoices_dir / kind.value, bucket_id)
-    if not path.exists():
-        return []
-    records: list[BusinessOperationInvoice] = []
-    for line in path.read_text(encoding=UTF_8_ENCODING).splitlines():
-        if not line.strip():
-            continue
-        records.append(BusinessOperationInvoice.model_validate_json(line))
-    return records
+    document = _repository(settings, bucket_id).load(_document_key(bucket_id, kind))
+    return list(document.records) if document is not None else []
 
 
 def _save(
@@ -306,11 +323,21 @@ def _save(
     bucket_id: str,
     records: list[BusinessOperationInvoice],
 ) -> None:
-    path = storage_path(settings.aeat_invoices_dir / kind.value, bucket_id)
-    payload = "\n".join(record.model_dump_json() for record in records)
-    if payload:
-        payload += "\n"
-    path.write_text(payload, encoding=UTF_8_ENCODING)
+    _repository(settings, bucket_id).save(
+        BusinessOperationInvoiceDocument(
+            bucket_id=bucket_id,
+            source_kind=kind,
+            records=tuple(records),
+        ),
+    )
+
+
+def _repository(settings: Settings, bucket_id: str) -> BusinessOperationInvoiceRepository:
+    return BusinessOperationInvoiceRepository(objects=secure_object_repository_for_bucket(bucket_id, settings))
+
+
+def _document_key(bucket_id: str, kind: BusinessOperationInvoiceSourceKind) -> str:
+    return f"{bucket_id}:{kind.value}"
 
 
 def _resolve_id(records: list[BusinessOperationInvoice], id_or_prefix: str) -> BusinessOperationInvoice:
@@ -343,11 +370,9 @@ class _BusinessOperationInvoiceService:
         settings: Settings | None = None,
         bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
-        # `Settings()` bypasses the `override_settings` context-var, so a
-        # test (or CLI run) that overrides `aeat_invoices_dir` would still
-        # land writes in the project-default location. `load_settings()`
-        # honours the override and falls back to a fresh `Settings()` when
-        # none is active, so production resolution is unchanged.
+        # `Settings()` bypasses the `override_settings` context-var, so
+        # route through `load_settings()` before resolving the runtime
+        # secure-object repository.
         from ...core.config import load_settings as _load_settings
 
         self._settings = settings or _load_settings()
@@ -480,9 +505,11 @@ class CollectibleInvoiceService(_BusinessOperationInvoiceService):
 
 __all__ = [
     "BusinessOperationInvoice",
+    "BusinessOperationInvoiceDocument",
     "BusinessOperationInvoiceInputError",
     "BusinessOperationInvoiceNotFoundError",
     "BusinessOperationInvoicePatch",
+    "BusinessOperationInvoiceRepository",
     "BusinessOperationInvoiceResult",
     "BusinessOperationInvoiceSourceKind",
     "CollectibleInvoiceService",
