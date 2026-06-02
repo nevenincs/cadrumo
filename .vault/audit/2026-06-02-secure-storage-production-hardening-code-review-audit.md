@@ -44,3 +44,11 @@ Reviewer `Nietzsche` completed the `W12.P24.S97` review across the S96 side-stor
 The review reported one LOW stale-documentation issue in purchase invoice evidence method docstrings that still referenced JSONL. That wording was corrected to describe the encrypted bucket-local secure-object catalogue.
 
 Closure assessment: `W12.P24.S97` can close. The scoped modules no longer contain default JSON or JSONL sensitive side-store read/write paths, and the retained evidence ZIP export remains an explicit operator-directed output boundary.
+
+## S99-008 | PASS | Retained evidence ZIP export does not become sensitive persistence
+
+Reviewer `Averroes` completed the `W12.P24.S99` review for the retained evidence export proof.
+
+No findings were reported. The review verified the new test uses real `EvidenceBundleService`, a real isolated runtime profile, and raw secure-object repository iteration to prove the ZIP is written to a caller-supplied path outside the storage root while the encrypted secure-object catalogue fingerprint remains unchanged.
+
+Closure assessment: `W12.P24.S99` can close. The unrelated `_iva_compensation_wallet.py` diagnostic write inventory delta remains outside this S99 slice.
