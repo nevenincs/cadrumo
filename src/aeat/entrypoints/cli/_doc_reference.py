@@ -589,20 +589,20 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     # SCHEMA_REGISTRY.  The CLI loads these lazily at dispatch time; the generator
     # must trigger them explicitly before inspecting the registry.
     from . import (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _modelo_payloads,
-        _overview_payloads,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
+        _app_live_payloads,  # noqa: F401
+        _config_payloads,  # noqa: F401
+        _ledger_payloads,  # noqa: F401
+        _modelo_payloads,  # noqa: F401
+        _overview_payloads,  # noqa: F401
+        _registry_corpus_payloads,  # noqa: F401
+        _registry_payloads,  # noqa: F401
+        _review_payloads,  # noqa: F401
+        _root_payloads,  # noqa: F401
         app,
     )
     from ._config import (
-        _google_payloads,
-        _profile_censo_payloads,
+        _google_payloads,  # noqa: F401
+        _profile_censo_payloads,  # noqa: F401
     )
 
     # Materialise every lazy subtree before the tree walk.

@@ -149,19 +149,19 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     """
     from ...core.json_contract import SCHEMA_REGISTRY
     from . import (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _modelo_payloads,
-        _overview_payloads,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
+        _app_live_payloads,  # noqa: F401
+        _config_payloads,  # noqa: F401
+        _ledger_payloads,  # noqa: F401
+        _modelo_payloads,  # noqa: F401
+        _overview_payloads,  # noqa: F401
+        _registry_corpus_payloads,  # noqa: F401
+        _registry_payloads,  # noqa: F401
+        _review_payloads,  # noqa: F401
+        _root_payloads,  # noqa: F401
     )
     from ._config import (
-        _google_payloads,
-        _profile_censo_payloads,
+        _google_payloads,  # noqa: F401
+        _profile_censo_payloads,  # noqa: F401
     )
     from ._doc_reference import collect_live_leaf_paths_in_subprocess
 
@@ -191,19 +191,19 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     """
     from ...core.json_contract import SCHEMA_REGISTRY
     from . import (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _modelo_payloads,
-        _overview_payloads,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
+        _app_live_payloads,  # noqa: F401
+        _config_payloads,  # noqa: F401
+        _ledger_payloads,  # noqa: F401
+        _modelo_payloads,  # noqa: F401
+        _overview_payloads,  # noqa: F401
+        _registry_corpus_payloads,  # noqa: F401
+        _registry_payloads,  # noqa: F401
+        _review_payloads,  # noqa: F401
+        _root_payloads,  # noqa: F401
     )
     from ._config import (
-        _google_payloads,
-        _profile_censo_payloads,
+        _google_payloads,  # noqa: F401
+        _profile_censo_payloads,  # noqa: F401
     )
     from ._doc_reference import collect_live_leaf_paths_in_subprocess
 
@@ -228,19 +228,19 @@ def test_documented_schema_classes_match_registry() -> None:
     """
     from ...core.json_contract import SCHEMA_REGISTRY
     from . import (
-        _app_live_payloads,
-        _config_payloads,
-        _ledger_payloads,
-        _modelo_payloads,
-        _overview_payloads,
-        _registry_corpus_payloads,
-        _registry_payloads,
-        _review_payloads,
-        _root_payloads,
+        _app_live_payloads,  # noqa: F401
+        _config_payloads,  # noqa: F401
+        _ledger_payloads,  # noqa: F401
+        _modelo_payloads,  # noqa: F401
+        _overview_payloads,  # noqa: F401
+        _registry_corpus_payloads,  # noqa: F401
+        _registry_payloads,  # noqa: F401
+        _review_payloads,  # noqa: F401
+        _root_payloads,  # noqa: F401
     )
     from ._config import (
-        _google_payloads,
-        _profile_censo_payloads,
+        _google_payloads,  # noqa: F401
+        _profile_censo_payloads,  # noqa: F401
     )
 
     # Parse the freshly-rendered pages for (registry_key -> documented_class_name) pairs.
