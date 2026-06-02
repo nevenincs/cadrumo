@@ -85,10 +85,10 @@ P02.S05 to have landed.
 
 Final pass before declaring the sprint complete.
 
-- [ ] `P05.S15` - run `prek run --all-files` and confirm green (or only pre-existing other-agent WIP failures, documented inline); `shell`.
-- [ ] `P05.S16` - run `pytest src/aeat/ -q` and confirm green; `shell`.
-- [ ] `P05.S17` - run the `vaultspec-code-reviewer` agent against this branch and write the audit record; `.vault/audit/2026-05-14-settings-di-code-review-audit.md`.
-- [ ] `P05.S18` - update task #77, #83, #84, #85, #88, #103 to reflect the unblock status that follows from this sprint; `tasks`.
+- [x] `P05.S15` - run `prek run --all-files` and confirm green (or only pre-existing other-agent WIP failures, documented inline); `shell`.
+- [x] `P05.S16` - run `pytest src/aeat/ -q` and confirm green; `shell`.
+- [x] `P05.S17` - run the `vaultspec-code-reviewer` agent against this branch and write the audit record; `.vault/audit/2026-05-14-settings-di-code-review-audit.md`.
+- [x] `P05.S18` - update task #77, #83, #84, #85, #88, #103 to reflect the unblock status that follows from this sprint; `tasks`.
 
 ## Parallelization
 
