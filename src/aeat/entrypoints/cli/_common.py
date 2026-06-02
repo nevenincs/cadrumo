@@ -307,24 +307,21 @@ def _aggregate_renta_filing_inputs(
     transaction_repository: TransactionCatalogueRepository,
     invoice_repository: InvoiceCatalogueRepository,
 ) -> dict[str, object]:
-    from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
+    from ...application.aggregation import resolve_modelo_ledger_binding_values_from_repositories
     from ...core.resources import resources
-    from ...domain.calculations.registry import resolve_ledger_renta_expense_aggregation_binding_values
 
-    aggregation = aggregate_renta_ledger_expenses_from_repositories(
-        bucket_id=bucket_id,
-        period=str(filing_year),
-        transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
-        profile_year=filing_year,
-    )
     authority = resources().modelos.authority
     snapshot = authority.snapshot("100", filing_year=filing_year, period="0A")
-    binding_values = resolve_ledger_renta_expense_aggregation_binding_values(
-        snapshot.revision,
-        aggregation.observations,
+    aggregation = resolve_modelo_ledger_binding_values_from_repositories(
+        bucket_id=bucket_id,
+        modelo="100",
+        revision=snapshot.revision,
+        filing_year=filing_year,
+        period="0A",
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
     )
-    return _bound_inputs_from_available_bindings(snapshot.revision, binding_values)
+    return _bound_inputs_from_available_bindings(snapshot.revision, dict(aggregation.binding_values))
 
 
 def _bound_inputs_from_available_bindings(
