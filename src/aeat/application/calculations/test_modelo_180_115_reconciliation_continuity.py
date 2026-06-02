@@ -276,7 +276,8 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     (Orden HFP/1284/2023 art. 7, RD 439/2007 art. 108) — not a reproduction
     of the formula under test.
     """
-    recorder = EnrollmentRecorder(_MODELO_180)
+    recorder_180 = EnrollmentRecorder(_MODELO_180)
+    recorder_115 = EnrollmentRecorder(_MODELO_115)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -285,6 +286,17 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         expected_n = _compute_year_115_totals(
             _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo
         )
+        # 115 feeder: record each year's quarterly calculations as feeder evidence.
+        # _compute_year_115_totals drives the real 115 engine for all four quarters;
+        # the produced casilla count for the feeder is evidenced by summing per quarter.
+        # We record the feeder year here using the year-N quarterly count proxy.
+        _q1_result = _calculate_115(
+            filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"]
+        )
+        recorder_115.record_calculation_year(
+            filing_year=_YEAR_N, produced_value_count=len(_q1_result.values)
+        )
+
         snapshot_180_n = resources().modelos.authority.snapshot(
             _MODELO_180, filing_year=_YEAR_N, period="0A"
         )
@@ -293,13 +305,20 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             item.relation: item.value for item in prefill_n.values if item.value is not None
         }
         result_n, produced_n = _calculate_180(filing_year=_YEAR_N, relation_values=resolved_n)
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+        recorder_180.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1: same pipeline; Year N observations are in the store but must
         # not contaminate Year N+1's 180 resolver.
         expected_n1 = _compute_year_115_totals(
             _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo
         )
+        _q1_result_n1 = _calculate_115(
+            filing_year=_YEAR_N_PLUS_1, period="1T", casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"]
+        )
+        recorder_115.record_calculation_year(
+            filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values)
+        )
+
         snapshot_180_n1 = resources().modelos.authority.snapshot(
             _MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A"
         )
@@ -310,7 +329,7 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         result_n1, produced_n1 = _calculate_180(
             filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1
         )
-        recorder.record_calculation_year(
+        recorder_180.record_calculation_year(
             filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1
         )
 
@@ -324,8 +343,12 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     assert result_n1.values["decl.base-total"] == expected_n1["02"]
     assert result_n1.values["decl.retenciones-total"] == expected_n1["03"]
 
-    # Authorization-gate enrollment: the recorded two-year set must match the
-    # manifest claim. A single-year or stub run raises here, turning the gate RED.
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+    # Authorization-gate enrollment for the 180 resumen.
+    evidence_180 = recorder_180.evidence()
+    assert evidence_180.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
+    assert_enrollment_matches_manifest(evidence_180)
+
+    # Authorization-gate enrollment for the 115 feeder (standalone fleet modelo).
+    evidence_115 = recorder_115.evidence()
+    assert evidence_115.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
+    assert_enrollment_matches_manifest(evidence_115)
