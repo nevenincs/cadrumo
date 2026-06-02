@@ -275,11 +275,15 @@ Restore the hexagonal import-linter gate to green: clean the 93 stale ignore_imp
 
 Remove every ignore_imports entry import-linter flags as unmatched (edges since refactored away); each confirmed gone from source before removal
 
+- [ ] `W09.P26.S93` - Add fresh precisely-pinned ignore_imports for the ~54 sanctioned test-file roundtrip/fixture edges whose prior ignores went stale on test rename; each verified as a real-adapter roundtrip per the roundtrip discipline; `.importlinter`.
 
 ### Phase `W09.P27` - Triage and resolve real layer violations
 
 For each broken-contract violation chain, classify as production hexagonal drift (fix via DI/relocation, overlaps DB-16/DB-17/DB-18/DB-32) or sanctioned test-adapter roundtrip edge (add a precise ignore with rationale)
 
+- [ ] `W09.P27.S90` - Resolve calculations.registry._scenarios -> domain.renta: the harness imports renta for the first-slice snapshot-check registration side effect, violating 'the registry never names renta'. Move the registration trigger to the scenario harness caller (CLI/test entrypoint) so the calculations package stays renta-free, or sanction it as the documented side-effect pattern if relocation breaks Modelo 100 scenario runs; `src/aeat/domain/calculations/registry/_scenarios.py`.
+- [ ] `W09.P27.S91` - Resolve core.resources._repos.apoderamientos -> domain.auth (core->domain, DB-18 cluster): apply the resource-management-api deferred-loader pattern (function-local import) or invert via a registered provider, consistent with the other core/resources repos; `src/aeat/core/resources/_repos/apoderamientos.py`.
+- [ ] `W09.P27.S92` - Resolve the 7 domain repository -> adapters.persistence.storage edges (DB-16 cluster: usage_ratios._service, justificante/_submission/_filing/_repository, buckets._event_repository, transactions._repository, modelos/filing._runtime_repository) via the persistence-boundary repository-Protocol inversion (R5 ADR); `domain declares the repository port, adapters implement; `src/aeat/domain (repository modules) + persistence-boundary ADR`.
 
 ### Phase `W09.P28` - Restore strict unmatched-ignore alerting
 
