@@ -70,9 +70,7 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         assert source_resolution.owned_sources == ("relation_prefill",)
         assert source_resolution.provenance
         assert all(item.source_kind == "relation_prefill" for item in source_resolution.provenance)
-        assert {
-            item.source_ref for item in source_resolution.provenance
-        } == {
+        assert {item.source_ref for item in source_resolution.provenance} == {
             "modelo-180-rel-115-perceptores-anual:2026:1T,2T,3T,4T",
             "modelo-180-rel-115-base-anual:2026:1T,2T,3T,4T",
             "modelo-180-rel-115-retenciones-anual:2026:1T,2T,3T,4T",
