@@ -78,6 +78,7 @@ Apply the generic substrate to corpus safety gates only after validator conforma
 
 - [x] `P03.S04` - Add registry TOML file-size and fragmentation regression gate; `src/aeat/domain/calculations/registry`.
 - [ ] `P03.S05` - Author the next evidence-grounded M100 continuity slice using only generic continuity records; `src/aeat/_data/registry/aeat/modelos/100`.
+- [x] `P03.S10` - Add generic completeness-manifest fragment merging and repair discovered file-size gate violations; `src/aeat/domain/calculations/registry, src/aeat/_data/registry/aeat/modelos/100, src/aeat/_data/registry/aeat/modelos/303`.
 
 ### Phase `P04` - evidence and closeout
 
