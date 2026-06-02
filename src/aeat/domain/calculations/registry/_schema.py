@@ -125,9 +125,7 @@ def _coerce_input_kind(value: object) -> object:
                 f"input_kind {value!r} is not a recognised InputKind member; "
                 f"expected one of {[m.value for m in InputKind]}"
             ) from None
-    raise RegistryValidationError(
-        f"input_kind must be a string, got {type(value).__name__!r}"
-    )
+    raise RegistryValidationError(f"input_kind must be a string, got {type(value).__name__!r}")
 
 
 InputKindValue = Annotated[InputKind, BeforeValidator(_coerce_input_kind)]
@@ -853,12 +851,15 @@ class ExtractionProfileDefinition(RegistryModel):
     confidence: Literal["strict", "review_required"]
     provisional_pending_specimen: bool = False
     corpus_round_trip_verified: bool = False
-    verification_source: Literal[
-        "real_aeat_corpus_pdf",
-        "synthetic_from_aeat_published_text",
-        "historical_suppression",
-        "not_applicable",
-    ] | None = None
+    verification_source: (
+        Literal[
+            "real_aeat_corpus_pdf",
+            "synthetic_from_aeat_published_text",
+            "historical_suppression",
+            "not_applicable",
+        ]
+        | None
+    ) = None
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
     failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs
@@ -1514,9 +1515,7 @@ class ConvenioRateRow(RegistryModel):
     @model_validator(mode="after")
     def _validate_convenio_rate_row(self) -> ConvenioRateRow:
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise RegistryValidationError(
-                "convenio_rate_row valid_to must be on or after valid_from"
-            )
+            raise RegistryValidationError("convenio_rate_row valid_to must be on or after valid_from")
         # The rate field is either the NOT_YET_AUTHORED sentinel or a
         # parseable Decimal string. Parsing here surfaces malformed
         # values at construction time rather than at lookup time.
@@ -1525,8 +1524,7 @@ class ConvenioRateRow(RegistryModel):
                 Decimal(self.rate)
             except (ArithmeticError, ValueError) as exc:
                 raise RegistryValidationError(
-                    f"convenio_rate_row rate must be a parseable Decimal or "
-                    f"'NOT_YET_AUTHORED'; got {self.rate!r}"
+                    f"convenio_rate_row rate must be a parseable Decimal or 'NOT_YET_AUTHORED'; got {self.rate!r}"
                 ) from exc
         return self
 
@@ -1601,13 +1599,9 @@ class ParameterDefinition(RegistryModel):
         if self.values:
             raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
         if self.keyed_brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets")
         if self.convenio_rates:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix bracket_table and convenio_rates"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and convenio_rates")
         if self.bracket_axis is None:
             raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
         sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
@@ -1634,24 +1628,17 @@ class ParameterDefinition(RegistryModel):
                 f"parameter {self.id!r} declares keyed_bracket_table but has no keyed_brackets"
             )
         if self.values:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix keyed_bracket_table and dated values"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and dated values")
         if self.brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix keyed_bracket_table and numeric brackets"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and numeric brackets")
         if self.convenio_rates:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix keyed_bracket_table and convenio_rates"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix keyed_bracket_table and convenio_rates")
         seen: set[tuple[str, date]] = set()
         for row in self.keyed_brackets:
             pair = (row.key, row.valid_from)
             if pair in seen:
                 raise RegistryValidationError(
-                    f"parameter {self.id!r} keyed_brackets contains duplicate "
-                    f"(key, valid_from) pair {pair!r}"
+                    f"parameter {self.id!r} keyed_brackets contains duplicate (key, valid_from) pair {pair!r}"
                 )
             seen.add(pair)
 
@@ -1673,17 +1660,11 @@ class ParameterDefinition(RegistryModel):
                 f"parameter {self.id!r} declares convenio_rate_table but has no convenio_rates"
             )
         if self.values:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix convenio_rate_table and dated values"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and dated values")
         if self.brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix convenio_rate_table and numeric brackets"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and numeric brackets")
         if self.keyed_brackets:
-            raise RegistryValidationError(
-                f"parameter {self.id!r} cannot mix convenio_rate_table and keyed_brackets"
-            )
+            raise RegistryValidationError(f"parameter {self.id!r} cannot mix convenio_rate_table and keyed_brackets")
         seen: set[tuple[str, str, date]] = set()
         for row in self.convenio_rates:
             triple = (row.country_code, row.tipo_renta, row.valid_from)
