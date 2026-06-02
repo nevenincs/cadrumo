@@ -79,6 +79,15 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-workflow-redesign` `epic` plan
 
@@ -1725,22 +1734,22 @@ This Phase delivers de-shim and de-stub cleanup for currency normalization layer
 This Phase delivers real behavior verification for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
 - [x] `W28.P139.S0829` - Add service contract tests for currency normalization layer; `tests/domain/currency`.
-- [ ] `W28.P139.S0830` - Add persistence or registry integration tests for currency normalization layer; `tests/domain/currency`.
-- [ ] `W28.P139.S0831` - Add negative tests proving rejected aliases do not reach currency normalization layer; `tests/entrypoints/cli`.
-- [ ] `W28.P139.S0832` - Add command behavior tests that exercise currency normalization layer through real services; `tests/entrypoints/cli`.
-- [ ] `W28.P139.S0833` - Add end-to-end workflow coverage for currency normalization layer; `tests`.
+- [x] `W28.P139.S0830` - Add persistence or registry integration tests for currency normalization layer; `tests/domain/currency`.
+- [x] `W28.P139.S0831` - Add negative tests proving rejected aliases do not reach currency normalization layer; `tests/entrypoints/cli`.
+- [x] `W28.P139.S0832` - Add command behavior tests that exercise currency normalization layer through real services; `tests/entrypoints/cli`.
+- [x] `W28.P139.S0833` - Add end-to-end workflow coverage for currency normalization layer; `tests`.
 - [x] `W28.P139.S0834` - Run the targeted test slice for currency normalization layer without skips or xfails; `tests/domain/currency`.
 
 ### Phase `W28.P140` - thin cli exposure
 
 This Phase delivers thin cli exposure for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [ ] `W28.P140.S0835` - Expose accepted command handlers for currency normalization layer under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0836` - Keep argument parsing for currency normalization layer separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0837` - Delegate currency normalization layer execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0838` - Render currency normalization layer results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0839` - Handle currency normalization layer failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0840` - Validate help text for currency normalization layer uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W28.P140.S0835` - Expose accepted command handlers for currency normalization layer under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0836` - Keep argument parsing for currency normalization layer separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0837` - Delegate currency normalization layer execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0838` - Render currency normalization layer results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0839` - Handle currency normalization layer failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0840` - Validate help text for currency normalization layer uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W29` - receipt ocr pdf evidence
 
