@@ -364,6 +364,8 @@ def export_modelo_revision(
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
+            "no active profile bucket; run `aeat config profile create NAME` "
+            "before exporting a modelo revision",
             translated_message="application.modelo.errors.export_no_active_bucket",
         )
 
