@@ -145,9 +145,9 @@ Relocate tax formulas, statutory validations, regulatory thresholds and registry
 
 Remove the M347_THRESHOLD_EUR re-export chain and relocate the M184/M347 validations to domain record validators/functions.
 
-- [ ] `W02.P04.S22` - Remove the M347_THRESHOLD_EUR re-export from domain/modelos/_row_models __all__ and domain/modelos/__init__ __all__; `repoint cli/_modelo to import it directly from core.external_constants (DB-38 shim removal); `src/aeat/domain/modelos/_row_models.py`.
-- [ ] `W02.P04.S23` - Move _validate_m347_threshold into a model_validator on Modelo347ContraparteRow using M347_THRESHOLD_EUR; `delete the CLI helper and let construction enforce it, catching at cli/_modelo:3235 (DB-35a); `src/aeat/domain/modelos/_row_models.py`.
-- [ ] `W02.P04.S24` - Add domain validate_m184_member_share_sum(rows) to domain/modelos; `repoint cli/_modelo:3234 to call it and translate the domain error to typer.BadParameter (DB-35b); `src/aeat/domain/modelos/_row_models.py`.
+- [x] `W02.P04.S22` - Remove the M347_THRESHOLD_EUR re-export from domain/modelos/_row_models __all__ and domain/modelos/__init__ __all__; `repoint cli/_modelo to import it directly from core.external_constants (DB-38 shim removal); `src/aeat/domain/modelos/_row_models.py`.
+- [x] `W02.P04.S23` - Move _validate_m347_threshold into a model_validator on Modelo347ContraparteRow using M347_THRESHOLD_EUR; `delete the CLI helper and let construction enforce it, catching at cli/_modelo:3235 (DB-35a); `src/aeat/domain/modelos/_row_models.py`.
+- [x] `W02.P04.S24` - Add domain validate_m184_member_share_sum(rows) to domain/modelos; `repoint cli/_modelo:3234 to call it and translate the domain error to typer.BadParameter (DB-35b); `src/aeat/domain/modelos/_row_models.py`.
 
 ### Phase `W02.P05` - CLI regulatory formulas to domain
 
