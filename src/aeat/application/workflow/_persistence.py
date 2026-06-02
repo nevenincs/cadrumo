@@ -116,8 +116,7 @@ class WorkflowStateRepository:
             ) from exc
         if envelope.classification is not _STATE_SENSITIVITY:
             raise ClassificationError(
-                f"workflow state has classification {envelope.classification}; "
-                f"consumer expected {_STATE_SENSITIVITY}",
+                f"workflow state has classification {envelope.classification}; consumer expected {_STATE_SENSITIVITY}",
             )
         if envelope.schema_version > _STATE_VERSION:
             raise EnvelopeVersionError(
@@ -235,7 +234,9 @@ class WorkflowStateRepository:
                 reason_class=reason_class or WorkflowEnvelopeReasonClass.ABSENT,
                 recovered_bucket_id=recovered_bucket_id,
             )
-        derived_reason = WorkflowEnvelopeReasonClass.READABLE if envelope_readable else WorkflowEnvelopeReasonClass.UNREADABLE
+        derived_reason = (
+            WorkflowEnvelopeReasonClass.READABLE if envelope_readable else WorkflowEnvelopeReasonClass.UNREADABLE
+        )
         return WorkflowStateResetFingerprint(
             schema_version=metadata.schema_version,
             written_at=metadata.written_at,
@@ -326,8 +327,7 @@ class WorkflowRunRepository:
         envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not _RUN_SENSITIVITY:
             raise ClassificationError(
-                f"workflow run has classification {envelope.classification}; "
-                f"consumer expected {_RUN_SENSITIVITY}",
+                f"workflow run has classification {envelope.classification}; consumer expected {_RUN_SENSITIVITY}",
             )
         if envelope.schema_version > _RUN_VERSION:
             raise EnvelopeVersionError(
