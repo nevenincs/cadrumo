@@ -233,9 +233,7 @@ def test_root_fallback_guard_predicate_leaves_read_and_recovery_paths_open(verb_
 def test_cli_root_delegates_route_classification_to_backend_policy() -> None:
     """The CLI root must not own the storage-route write policy."""
 
-    root_source = (PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "__init__.py").read_text(
-        encoding="utf-8"
-    )
+    root_source = (PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "__init__.py").read_text(encoding="utf-8")
 
     assert "classify_storage_route" not in root_source
     assert "StorageRouteKind" not in root_source
