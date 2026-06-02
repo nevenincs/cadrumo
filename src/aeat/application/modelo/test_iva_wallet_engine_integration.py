@@ -101,9 +101,7 @@ def _store_prior_303_compensation(
     period: str = "1T",
 ) -> None:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
-    casilla = next(
-        item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo"
-    )
+    casilla = next(item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo")
     formula = next(
         item for item in snapshot.revision.formulas if item.target == "iva.compensacion-disponible-fin-periodo"
     )
