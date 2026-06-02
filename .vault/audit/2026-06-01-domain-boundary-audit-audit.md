@@ -1584,8 +1584,27 @@ remediation is currently HELD at audit-only per the active action policy.
   `domain/deadlines/conftest.py` pattern). Only after that bootstrap exists can the lazy
   pull be removed without breaking collection/runtime.
 
-- 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
-  DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
+- 2026-06-03: **S51 T8 (ModeloExport projection) attempted, ABANDONED mid-execution —
+  concurrent peer edit on `cli/_modelo.py`.** `_modelo.py` polled clean at turn start;
+  the projection was implemented cleanly (CLI `ModeloExportResult` -> `ModeloExportPayload`
+  with a `from_result` that stringifies the application ``Path`` output_path and excludes
+  the fichero-BOE bytes; `@register_schema("modelo.export")` preserved; `ty` clean on
+  `_modelo_payloads.py`; the export-verb end-to-end test passes in a registration-complete
+  context). But the pre-commit `git diff` revealed `_modelo.py` had gained
+  **non-authored hunks** during the turn (a peer's `payload = report.model_dump(...)`
+  dead-assignment cleanup + `m100_bindings`/`m100_enum_bindings` removals) — a concurrent
+  peer edit. Since the rename + handler must commit together and `git add -- _modelo.py`
+  would lump the peer's uncommitted work into the commit (the explicitly-forbidden
+  collision), the change was cleanly reverted: `_modelo_payloads.py` back to zero-diff,
+  my `_modelo.py` handler hunk reverted, the peer's hunks left untouched. T8 is
+  implementation-ready (same proven pattern as S51 T6/T7 + S52 T9/T10) and lands the
+  moment `_modelo.py` is quiescent. Also reconfirmed: the CLI json-schema-conformance
+  gate (`test_every_cli_leaf_has_a_registered_schema`) and several modelo CLI tests are
+  collection-scope/registration-order fragile (missing-schema count shifts 150->109 with
+  collected file set; failures include unrelated `test_modelo_casilla_normalisation`), so
+  narrow-subset runs cannot be used to triage them — only full-suite (CI) runs are
+  authoritative for those gates. This is the same wizard/schema registration fragility
+  underlying S64/S89.
   literals in `adapters/persistence/profile/assets.py` from the central
   `PROFILE_ASSETS_LEDGER_NAMESPACE.namespace` /
   `PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace` definitions (values
