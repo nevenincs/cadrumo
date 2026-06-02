@@ -347,6 +347,15 @@ APPLICATION_EVIDENCE_BUNDLE_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{bundle_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
 )
+LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_purchase_invoice_evidence",
+    namespace="aeat.application.ledger.purchase_invoice_evidence",
+    owner="aeat.application.ledger",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{bucket_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
     namespace="aeat.ledger.classification.rules",
@@ -774,6 +783,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         IVA_COMPENSATION_HISTORY_NAMESPACE,
         LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
         APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+        LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_CENSO_SNAPSHOT_NAMESPACE,
@@ -832,6 +842,7 @@ __all__ = [
     "IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE",
     "KEYSTORE_DIRNAME",
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
+    "LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
     "LIVE_CENSO_SNAPSHOT_NAMESPACE",
     "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",

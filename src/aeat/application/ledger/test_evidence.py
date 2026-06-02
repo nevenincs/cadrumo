@@ -10,7 +10,7 @@ import pytest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import Settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ...tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._evidence import (
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
@@ -22,14 +22,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def isolated_settings(tmp_path: Path) -> Settings:
-    return Settings(aeat_purchase_invoice_evidence_dir=tmp_path / "evidence")
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+        yield profile
 
 
 @pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
-        yield profile.repository
+def isolated_settings(runtime_profile: TestRuntimeProfile) -> Settings:
+    return runtime_profile.settings
+
+
+@pytest.fixture
+def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
+    return runtime_profile.repository
 
 
 @pytest.fixture
@@ -123,6 +128,21 @@ class TestEvidenceEventEmission:
         assert svc.list_all(bucket_id="bucket-001") == ()
 
 
+class TestEvidenceSecureStorage:
+    def test_purchase_invoice_evidence_persists_in_secure_object_store(
+        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, pdf_file: Path
+    ) -> None:
+        svc = _make_svc(isolated_settings, secure_objects)
+
+        result = svc.add(bucket_id="bucket-001", source_path=pdf_file, supplier="Acme S.L.")
+        records = svc.list_all(bucket_id="bucket-001")
+
+        assert records == (result.record,)
+        assert not (isolated_settings.aeat_purchase_invoice_evidence_dir / "bucket-001.jsonl").exists()
+        raw_records = tuple(secure_objects.iter_all_records_raw())
+        assert any(row.namespace == "aeat.application.ledger.purchase_invoice_evidence" for row in raw_records)
+
+
 class TestEvidenceErrorPaths:
     def test_add_rejects_missing_file(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path
@@ -146,7 +166,7 @@ class TestEvidenceErrorPaths:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
             svc.update(
-                bucket_id="b1",
+                bucket_id="bucket-001",
                 evidence_id="doesnotexist",
                 patch=PurchaseInvoiceEvidencePatch(notes="x"),
             )
@@ -156,4 +176,4 @@ class TestEvidenceErrorPaths:
     ) -> None:
         svc = _make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
-            svc.remove(bucket_id="b1", evidence_id="doesnotexist")
+            svc.remove(bucket_id="bucket-001", evidence_id="doesnotexist")

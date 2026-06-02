@@ -9,10 +9,9 @@ path. Plaintext, email body, and Drive-URL evidence sources are out of
 scope. ``add`` refuses non-PDF/non-image
 source paths with a typed :class:`PurchaseInvoiceEvidenceInputError`.
 
-Persistence is a bucket-scoped JSON file under
-``Settings.aeat_purchase_invoice_evidence_dir / <bucket_id>.jsonl``. Each
-line is one evidence record encoded as JSON. The format is deliberately
-append-only friendly so concurrent agents do not corrupt previous rows.
+Persistence is bucket-scoped encrypted secure-object storage. Source
+files remain operator-selected inputs; the durable evidence catalogue is
+not a bucket-local plaintext JSONL side store.
 """
 
 from __future__ import annotations
@@ -25,9 +24,12 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
+from ...adapters.persistence.storage import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...core.errors import AeatError
-from ...core.external_constants import PDF_EXTENSION, UTF_8_ENCODING
+from ...core.external_constants import PDF_EXTENSION
 from ...core.hashing import sha256_file as _sha256_file
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
@@ -40,7 +42,6 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from .._storage_paths import storage_path
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
@@ -88,6 +89,15 @@ class PurchaseInvoiceEvidence(BaseModel):
         return None if value is None else str(value)
 
 
+class PurchaseInvoiceEvidenceDocument(BaseModel):
+    """Encrypted bucket-local purchase invoice evidence catalogue."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: BucketId
+    records: tuple[PurchaseInvoiceEvidence, ...] = ()
+
+
 class PurchaseInvoiceEvidencePatch(BaseModel):
     """Mutable subset of ``PurchaseInvoiceEvidence`` fields accepted by ``update``.
 
@@ -131,25 +141,31 @@ class PurchaseInvoiceEvidenceResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
+class PurchaseInvoiceEvidenceRepository(SecureBoundRepository[PurchaseInvoiceEvidenceDocument]):
+    """Encrypted repository for one bucket's purchase invoice evidence records."""
+
+    namespace = LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.namespace
+    sensitivity = LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.sensitivity
+    schema_version = LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.schema_version
+    payload_type = PurchaseInvoiceEvidenceDocument
+
+    def extract_identifier(self, payload: PurchaseInvoiceEvidenceDocument) -> str:
+        return payload.bucket_id
+
+
+def _repository(settings: Settings, bucket_id: str) -> PurchaseInvoiceEvidenceRepository:
+    return PurchaseInvoiceEvidenceRepository(objects=secure_object_repository_for_bucket(bucket_id, settings))
+
+
 def _load(settings: Settings, bucket_id: str) -> list[PurchaseInvoiceEvidence]:
-    path = storage_path(settings.aeat_purchase_invoice_evidence_dir, bucket_id)
-    if not path.is_file():
-        return []
-    records: list[PurchaseInvoiceEvidence] = []
-    for line in path.read_text(encoding=UTF_8_ENCODING).splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        records.append(PurchaseInvoiceEvidence.model_validate_json(line))
-    return records
+    document = _repository(settings, bucket_id).load(bucket_id)
+    return list(document.records) if document is not None else []
 
 
 def _save(settings: Settings, bucket_id: str, records: list[PurchaseInvoiceEvidence]) -> None:
-    path = storage_path(settings.aeat_purchase_invoice_evidence_dir, bucket_id)
-    body = "\n".join(record.model_dump_json() for record in records)
-    if body:
-        body += "\n"
-    path.write_text(body, encoding=UTF_8_ENCODING)
+    _repository(settings, bucket_id).save(
+        PurchaseInvoiceEvidenceDocument(bucket_id=bucket_id, records=tuple(records)),
+    )
 
 
 _EVIDENCE_EVENT_PAYLOAD_VERSION = 1
@@ -457,9 +473,11 @@ class PurchaseInvoiceEvidenceService:
 
 __all__ = [
     "PurchaseInvoiceEvidence",
+    "PurchaseInvoiceEvidenceDocument",
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidencePatch",
+    "PurchaseInvoiceEvidenceRepository",
     "PurchaseInvoiceEvidenceResult",
     "PurchaseInvoiceEvidenceService",
 ]
