@@ -67,6 +67,7 @@ _INJECTION_KEYWORDS: frozenset[str] = frozenset(
     }
 )
 
+
 def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -> None:
     """Ephemeral keys must not write through the process-default SQL repository."""
 
@@ -83,9 +84,7 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
         if _has_autouse_temp_database_isolation(tree):
             continue
         relative_path = path.relative_to(root)
-        violations.extend(
-            _Violation(relative_path, line, constructor) for line, constructor in risky_calls
-        )
+        violations.extend(_Violation(relative_path, line, constructor) for line, constructor in risky_calls)
 
     assert not violations, "\n".join(
         (
@@ -144,8 +143,7 @@ def _iter_test_modules(root: Path) -> tuple[Path, ...]:
 
 def _uses_ephemeral_master_key(tree: ast.AST) -> bool:
     return any(
-        isinstance(node, ast.Call) and _call_name(node.func) == "EphemeralMasterKeyProvider"
-        for node in ast.walk(tree)
+        isinstance(node, ast.Call) and _call_name(node.func) == "EphemeralMasterKeyProvider" for node in ast.walk(tree)
     )
 
 
@@ -217,9 +215,7 @@ def _is_autouse_pytest_fixture(node: ast.FunctionDef | ast.AsyncFunctionDef) -> 
         if _call_name(decorator.func) != "fixture":
             continue
         if any(
-            keyword.arg == "autouse"
-            and isinstance(keyword.value, ast.Constant)
-            and keyword.value.value is True
+            keyword.arg == "autouse" and isinstance(keyword.value, ast.Constant) and keyword.value.value is True
             for keyword in decorator.keywords
         ):
             return True
@@ -309,9 +305,7 @@ def _call_sets_temp_database_url_env(node: ast.AST) -> bool:
 
 def _disposes_engine_around_fixture(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     dispose_calls = sum(
-        1
-        for child in ast.walk(node)
-        if isinstance(child, ast.Call) and _call_name(child.func) == "dispose_engine"
+        1 for child in ast.walk(node) if isinstance(child, ast.Call) and _call_name(child.func) == "dispose_engine"
     )
     has_yield = any(isinstance(child, (ast.Yield, ast.YieldFrom)) for child in ast.walk(node))
     return has_yield and dispose_calls >= 2
@@ -331,10 +325,7 @@ def _sets_literal_secret_passphrase_env(node: ast.Call) -> bool:
         return False
     if len(node.args) < 2:
         return False
-    return (
-        _is_secret_passphrase_env_arg(node.args[0])
-        and _literal_nonblank_string(node.args[1]) is not None
-    )
+    return _is_secret_passphrase_env_arg(node.args[0]) and _literal_nonblank_string(node.args[1]) is not None
 
 
 def _overrides_literal_secret_passphrase(node: ast.Call) -> bool:

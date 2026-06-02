@@ -16,6 +16,7 @@ Asserts:
 
 No mocks, no skips, no tautological assertions.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -45,9 +46,7 @@ def _read(rel: str) -> str:
 def test_plazo_exception_narrowed() -> None:
     """_plazo.py must use bare ``except RegistryError:``; the redundant ``Exception`` catch is gone."""
     src = _read("domain/deadlines/_plazo.py")
-    assert "except RegistryError:" in src, (
-        "domain/deadlines/_plazo.py: missing ``except RegistryError:`` narrowing"
-    )
+    assert "except RegistryError:" in src, "domain/deadlines/_plazo.py: missing ``except RegistryError:`` narrowing"
     assert "except (RegistryError, Exception)" not in src, (
         "domain/deadlines/_plazo.py: redundant ``except (RegistryError, Exception)`` still present"
     )
@@ -80,9 +79,7 @@ _SINK_TOKEN = "LOGGING-STDLIB-RATIONALE-SINK-HANDLER"
 def test_sink_logging_rationale_present() -> None:
     """_sink.py must carry LOGGING-STDLIB-RATIONALE-SINK-HANDLER on the stdlib logging import."""
     src = _read("core/observability/_sink.py")
-    assert _SINK_TOKEN in src, (
-        f"core/observability/_sink.py: missing {_SINK_TOKEN!r}"
-    )
+    assert _SINK_TOKEN in src, f"core/observability/_sink.py: missing {_SINK_TOKEN!r}"
     # Verify it is on the import logging line specifically.
     lines_with_token = [ln for ln in src.splitlines() if _SINK_TOKEN in ln]
     assert lines_with_token, f"{_SINK_TOKEN!r} present in source but no matching line found"
@@ -101,9 +98,7 @@ _LEDGER_TOKEN = "MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE"
 def test_ledger_bulk_classify_failure_machine_format_rationale() -> None:
     """_ledger.py bulk-classify failure line must carry the machine-format rationale marker."""
     src = _read("entrypoints/cli/_ledger.py")
-    assert _LEDGER_TOKEN in src, (
-        f"entrypoints/cli/_ledger.py: missing {_LEDGER_TOKEN!r}"
-    )
+    assert _LEDGER_TOKEN in src, f"entrypoints/cli/_ledger.py: missing {_LEDGER_TOKEN!r}"
     lines_with_token = [ln for ln in src.splitlines() if _LEDGER_TOKEN in ln]
     assert any("transaction_id" in ln or "reason" in ln for ln in lines_with_token), (
         f"entrypoints/cli/_ledger.py: {_LEDGER_TOKEN!r} found but not on the tab-separated failure line"
@@ -120,9 +115,7 @@ _CACHE_TOKEN = "JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT"
 def test_llm_cache_json_loads_rationale_present() -> None:
     """_cache.py _entry_from_payload must carry JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT."""
     src = _read("adapters/outbound/llm/_cache.py")
-    assert _CACHE_TOKEN in src, (
-        f"adapters/outbound/llm/_cache.py: missing {_CACHE_TOKEN!r}"
-    )
+    assert _CACHE_TOKEN in src, f"adapters/outbound/llm/_cache.py: missing {_CACHE_TOKEN!r}"
     # Confirm it is on the _entry_from_payload json.loads line specifically.
     lines = src.splitlines()
     token_lines = [ln for ln in lines if _CACHE_TOKEN in ln]
@@ -140,10 +133,10 @@ def test_schedules_final_path_constants() -> None:
     """_schedules.py must declare _IVA_REGIME_PATH and _TAXPAYER_ENTITY_TYPE_PATH as Final constants."""
     src = _read("domain/calculations/registry/_schedules.py")
     assert '_IVA_REGIME_PATH: Final[str] = "iva.regime"' in src, (
-        'domain/calculations/registry/_schedules.py: missing _IVA_REGIME_PATH Final constant'
+        "domain/calculations/registry/_schedules.py: missing _IVA_REGIME_PATH Final constant"
     )
     assert '_TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"' in src, (
-        'domain/calculations/registry/_schedules.py: missing _TAXPAYER_ENTITY_TYPE_PATH Final constant'
+        "domain/calculations/registry/_schedules.py: missing _TAXPAYER_ENTITY_TYPE_PATH Final constant"
     )
 
 
