@@ -232,7 +232,7 @@ class WorkflowState(BaseModel):
 def require_active_bucket_id() -> str:
     """Resolve the active bucket id via the precedence chain or raise.
 
-    Companion to :func:`active_bucket_id_or_raise` for call sites that
+    Companion to :func:`require_active_bucket_id` for call sites that
     do not hold a :class:`WorkflowState` reference. The auth session-
     path helpers, the Cl@ve Móvil persistence path, the SEDE
     declarations-register profile name, and the
@@ -273,7 +273,7 @@ def active_transaction_catalogue_repository(
     from ._errors import NoActiveProfileError
 
     try:
-        bucket_id = active_bucket_id_or_raise()
+        bucket_id = require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
             translated_message="application.workflow.errors.no_active_profile_bucket",
