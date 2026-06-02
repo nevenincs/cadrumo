@@ -1,22 +1,20 @@
 # Common filing recipes
 
-These recipes assume the basics: a working `aeat` command (check with `aeat --version`), an active profile (created with `aeat config profile create <name>`, switched with `aeat config profile switch <name>`, inspected with `aeat config profile status`), and ledger data to file against. If you're new to the tool, start with the [Tutorial](../tutorials/index.md) to build your first modelo start to finish, then read the [pipeline Explanation](../explanation/index.md) for the concepts behind the verbs. These recipes don't re-teach either; they assume you know the lifecycle and want to get a specific job done.
+These recipes assume the basics: a working `aeat` command (check with `aeat --version`), an active profile (your saved taxpayer identity and settings — created with `aeat config profile create <name>`, switched with `aeat config profile switch <name>`, inspected with `aeat config profile status`), and ledger data to file against. If you're new to the tool, start with the [Tutorial](../tutorials/index.md) to build your first modelo (a numbered Spanish tax form, such as 303 for quarterly VAT) from start to finish, then read the [pipeline Explanation](../explanation/index.md) for the concepts behind the verbs. These recipes don't re-teach either; they assume you know the lifecycle and want to get a specific job done.
 
 ## How to read a recipe
 
-Each recipe states a goal, then gives ordered, copy-pasteable steps built from stable `aeat` verbs. Use `aeat config ...` for local setup and diagnostics, and `aeat app ...` for the tax workflow over the active profile. The command words are the contract; they stay the same in every output language, so a recipe written here works whether your environment renders labels in Spanish, English, Catalan, or Hungarian. Recipes never reference internal module paths. Instead, they instruct you to discover the specifics live: `aeat app modelo describe <modelo>` for revision ids, `aeat app modelo casillas <modelo>` for casilla ids, and `--help` on any verb. This is better than hard-coding values that change between releases.
+Each recipe states a goal, then gives ordered, copy-pasteable steps built from stable `aeat` verbs. Use `aeat config ...` for local setup and diagnostics, and `aeat app ...` for the tax workflow over the active profile. Discover specifics live — `aeat app modelo describe <modelo>` for revision IDs, `aeat app modelo casillas <modelo>` for casilla (numbered form box) IDs, and `--help` on any verb — rather than relying on values hard-coded in a recipe that may change between releases.
 
-Recipes pass identifiers from one step to the next. `aeat app modelo work create` returns a `work_unit_id`; `aeat app modelo work calculate` returns a `calculation_revision_id`. Copy each id from one command's output into the next. Any unambiguous prefix of an id works in place of the full string; an ambiguous prefix stops the command and lists the candidates so you can pick one.
+Recipes pass identifiers from one step to the next. `aeat app modelo work create` returns a `work_unit_id` (the handle for one form-year-period filing); `aeat app modelo work calculate` returns a `calculation_revision_id` (the handle for one draft calculation of that filing). Copy each ID from one command's output into the next. Any unambiguous prefix of an ID works in place of the full string; an ambiguous prefix stops the command and lists the candidates so you can pick one.
 
 For the full flag reference on any verb, see the [CLI reference](../cli/index.rst) rather than these recipes.
 
 ## Two invariants every recipe inherits
 
-**The app never submits to AEAT.** Every filing recipe ends at a local export: `aeat app modelo export` writes an AEAT-compatible fichero-BOE file to disk and never contacts AEAT. You upload that file yourself in the AEAT portal. `aeat app modelo work file` marks a revision as filed in your local workspace - an internal record only - and its own output confirms it does not submit. There is no submit verb anywhere in the command tree.
+**The app never submits to AEAT.** Every recipe ends at a local export: `aeat app modelo export` writes a fichero-BOE file (the fixed-width text file that AEAT, the Spanish Tax Agency — Agencia Estatal de Administración Tributaria, accepts for upload) to disk; it never contacts AEAT. You upload that file yourself in the AEAT portal. For the reasoning behind this design, see the [pipeline Explanation](../explanation/index.md).
 
-**Global flags go before the command group.** Place `--language`, `--format json`, `--profile`, and the other global flags before `app` or `config`, not after the verb. For example, `aeat --format json app modelo work calculate ...` returns machine-readable output; the same flag after `calculate` is rejected. With `--format json`, migrated commands wrap their payload in an envelope of shape `{schema_version, command, result, warnings}`. Calculation output carries both a flat `casilla_values` map and a typed `observations` list bearing the authoritative `legal_refs` and `source_refs` provenance.
-
-A recipe can exit non-zero by design - a `verify` that doesn't grant, an `export` that finds only a draft - rather than crashing. Treat a non-zero exit as the command refusing a precondition and telling you what's missing, not as a bug.
+**Global flags go before the command group.** Place `--language`, `--format json`, `--profile`, and the other global flags before `app` or `config`, not after the verb. For example, `aeat --format json app modelo work calculate ...` returns machine-readable output; the same flag placed after `calculate` is rejected. With `--format json`, calculation output carries both a flat `casilla_values` map and a typed `observations` list with `legal_refs` and `source_refs` links back to the governing law. For the full exit-code table and output-schema contract, see the [CLI reference](../cli/index.rst).
 
 ## The filing spine
 
@@ -168,7 +166,7 @@ For a quarterly filing, use a quarter token (`1T`, `2T`, `3T`, or `4T`) and the 
 
 Goal: build, verify, and export an annual IVA summary - modelo 390 - for a given year.
 
-Modelo 390 aggregates observations from the four quarterly modelo 303 filings for the same year. Calculate and file all four quarterly 303 work units first, so their observations exist when you calculate the 390. For why the annual summary draws on the quarterly filings, see the [Explanation](../explanation/index.md).
+Calculate and file all four quarterly 303 work units for the same year first, so their data is available when you calculate the 390. For why the annual summary draws on the quarterly filings, see the [pipeline Explanation](../explanation/index.md).
 
 With the four 303 filings in place, run these steps.
 
@@ -277,7 +275,7 @@ Goal: verify an already-computed modelo revision, then export it to an AEAT-comp
 
 These steps assume an active profile. All three verbs run locally; none contacts AEAT.
 
-Two identifiers matter, and they differ. `verify` and `file` take a *calculation revision id*. `export` takes a *work unit id* and resolves the revision itself. Both are 64-character SHA-256 digests. Passing one where the other is expected is the most common error here.
+Pass the `calculation_revision_id` to `verify` and `file`; pass the `work_unit_id` to `export`. Passing one where the other is expected is the most common error here. See the [CLI reference](../cli/index.rst) for the full identifier contract.
 
 1. Verify the draft revision:
 
@@ -315,29 +313,11 @@ The default output language here is Spanish. Pass `--language en` on `verify` or
 
 ## Knowledge and discovery surfaces
 
-These recipes assume you already have an active profile and know your way around `aeat app`. They point you to the right surface; they don't re-teach the concepts or the flags.
+These recipes assume you already have an active profile and know your way around `aeat app`. For deeper context, use these surfaces.
 
-### Goal: understand the modelo before you act
-
-Two destinations carry the durable knowledge, and you should reach for them in this order.
-
-For concepts - the mental model of profile, import, review, calculate, and verify, and why the tool never files for you - read [Understanding the AEAT pipeline](../explanation/index.md). That Explanation is the canonical home for the boundaries that matter, including the distinction between the local-only completeness check (`aeat app modelo work verify`) and the read-only AEAT observation log (`aeat app live verify`). Neither contacts AEAT to submit anything; the tool never files on your behalf.
-
-For exact command behavior - every flag, output schema, and exit code - read the [generated CLI reference](../cli/index.rst). Its `index.rst` page documents the cross-cutting contract once: the global flags, the exit-code table from 0 (success) through 10 (partial success), the interactive-versus-JSON output contract, the output-schema registry, and the retired-surface redirect table. The per-family pages `app.rst` and `config.rst` cover their respective command trees.
-
-The CLI reference is generated from the live command tree and is never hand-edited. Treat it as the single source of truth for flags and exit codes, and look up any single command there rather than relying on a recipe to restate its options.
-
-### Goal: discover a surface from the terminal
-
-Use `--help` at every level when you want to find a command without leaving the terminal:
-
-```
-aeat --help
-aeat config --help
-aeat app --help
-```
-
-Each prints a curated help document listing its subcommands. Running bare `aeat` with no subcommand shows a landing card instead of an error: a headline, a quick-start line that adapts to whether a profile exists, a list of the main sections (`config` plus the `app` areas), and a pointer to those three `--help` views.
+- **Concepts and pipeline reasoning** — [the pipeline Explanation](../explanation/index.md): the mental model of profile, ledger, calculate, and verify; and why the tool never files on your behalf.
+- **Flags, exit codes, and output schemas** — [the generated CLI reference](../cli/index.rst): the global flags, the exit-code table, the per-command flag reference, and the retired-surface redirect table.
+- **Terminal discovery** — run `--help` at any level (`aeat --help`, `aeat config --help`, `aeat app --help`) to list subcommands without leaving the terminal.
 
 ### Goal: find out why a form applies to you
 

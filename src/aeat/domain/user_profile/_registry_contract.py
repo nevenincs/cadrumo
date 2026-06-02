@@ -305,7 +305,6 @@ def profile_binding_selectors(selector: Mapping[str, object]) -> tuple[str, ...]
             selectors.append(f"{profile_model}.{profile_field}")
     return tuple(dict.fromkeys(selectors))
 
-_profile_binding_selectors = profile_binding_selectors
 
 def _issue(
     *,

@@ -126,9 +126,19 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             **binding_values,
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
+            # TIPOTRIBUTACION code 1; the joint-filing code is 2)
+            "renta-2025-profile-declaration-type": Decimal("1"),
+            # Neutral not-married marriage axis (peer S213 made these required;
+            # mirrors the convention in test_renta_chain_behaviour and
+            # test_registry_scenarios).
+            "renta-2025-profile-marriage-full-year": Decimal("0"),
+            "renta-2025-profile-marriage-month-start": Decimal("0"),
+            "renta-2025-profile-marriage-month-end": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         date_context={"filing_period": date(2025, 12, 31)},
     )
 

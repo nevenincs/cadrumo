@@ -1017,6 +1017,10 @@ cli:
           elsőbbséget élveznek.
         bucket_id_help: A munkaegységhez tartozó bucket azonosítója.
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
+        calculate_unauthorized_advisory: 'FIGYELMEZTETÉS: a(z) %{modelo} modelo számítási
+          háttere NEM ENGEDÉLYEZETT — még nem bizonyította end-to-end teszt legalább két
+          renta-éven át (többéves renta engedélyezési kapu). Az eredmény kiszámításra és
+          mentésre került, de kezelje ideiglenesként, amíg a modelo engedélyezve nem lesz.'
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
           %{state}). Megőrzött és később folytatható; revíziók listázása: `aeat app
           modelo work revisions %{work_unit_id}`, ezt az egyet újra megtekintheti:
@@ -3015,6 +3019,7 @@ errors:
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
   fail:
+    fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
     declaration_parse: A benyújtott bevallás exportját nem sikerült egyeztetési célból

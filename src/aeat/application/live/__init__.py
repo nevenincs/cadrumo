@@ -71,25 +71,10 @@ from ...application.calculations import (
     CalculationObservationRepository as _CalculationObservationRepository,
 )
 from ...application.calculations import (
-    IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource,
-)
-from ...application.calculations import (
-    IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot,
-)
-from ...application.calculations import (
     IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository,
 )
 from ...application.calculations import (
-    IvaCompensationPeriodState as _IvaCompensationPeriodState,
-)
-from ...application.calculations import (
-    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
-)
-from ...application.calculations import (
     IvaWalletDecisionRepository as _IvaWalletDecisionRepository,
-)
-from ...application.calculations import (
-    build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
 )
 from ...application.calculations import (
     iva_compensation_state_from_filed_observation as _iva_compensation_state_from_filed_observation,
@@ -119,6 +104,24 @@ from ...domain.calculations.registry import (
     RegistryModeloObservation as _RegistryModeloObservation,
 )
 from ...domain.calculations.registry import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
+from ...domain.iva_compensation._carry_forward import (
+    IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot,
+)
+from ...domain.iva_compensation._carry_forward import (
+    IvaCompensationPeriodState as _IvaCompensationPeriodState,
+)
+from ...domain.iva_compensation._carry_forward import (
+    build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
+)
+from ...domain.iva_compensation._carry_forward import (
+    derive_303_compensation_available as _derive_303_compensation_available,
+)
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource,
+)
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
+)
 from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -1177,8 +1180,7 @@ def _with_derived_303_compensation_available(
     if posterior is None or resultado is None:
         return observation
 
-    generated = max(Decimal("0"), -resultado)
-    available = posterior + generated
+    available = _derive_303_compensation_available(posterior=posterior, resultado=resultado)
     snapshot = _resources().modelos.authority.snapshot(
         "303",
         filing_year=observation.filing_year,

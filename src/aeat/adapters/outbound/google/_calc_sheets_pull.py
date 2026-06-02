@@ -302,13 +302,17 @@ def _classify_metadata_match(
     snapshot: RegistrySnapshot,
 ) -> tuple[MetadataMatchState, PullMetadata]:
     if not pairs:
+        # The MISSING verdict carries a placeholder PullMetadata so the
+        # caller can still receive a typed record alongside the verdict.
+        # Sentinel values satisfy PullMetadata's min_length=1 boundary
+        # constraint without claiming real registry coordinates.
         return MetadataMatchState.MISSING, PullMetadata(
-            modelo_id="",
-            revision_id="",
+            modelo_id="missing",
+            revision_id="missing",
             filing_year=0,
-            period="",
-            engine_version="",
-            registry_sha="",
+            period="missing",
+            engine_version="missing",
+            registry_sha="missing",
         )
     try:
         filing_year = int(pairs.get("aeat_filing_year", "0"))

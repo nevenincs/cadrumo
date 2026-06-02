@@ -13,34 +13,9 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from ...outbound.aeat.auth import _session_store
-from ...outbound.aeat.sede import ExpedienteNotFoundError
-from ...outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
-from ...outbound.aeat.sede._schema import FiledDeclaracionArtefact
-from ...outbound.google import _session_store as google_session_store
-from ...outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
-from ...outbound.llm._cache import LLMCache
-from ...outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from ...outbound.llm._usage import UsageRecorder
-from ..profile.assets import (
-    load_amortizacion_ledger,
-    load_assets,
-    save_amortizacion_ledger,
-    save_assets,
-)
-from ..profile.inventory import load_inventory, save_inventory
-from . import EphemeralMasterKeyProvider, SensitivityClass
-from ._namespace_registry import LLM_USAGE_NAMESPACE
-from .attachment import AttachmentStore
-from .errors import StorageValidationError
-from .master_key._active_session import activate_session
-from .master_key._bucket_session import BucketSession
-from .runtime_repository import secure_object_repository_for_active_bucket
-from .sql.engine import dispose_engine
 from ....application.auth._diagnostics import list_auth_diagnostics
 from ....application.calculations._iva_compensation_history import (
     IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
 )
 from ....application.calculations._observations_repository import CalculationObservationRepository
 from ....application.diagnostics import preview_quarantine_unreadable_secure_objects
@@ -88,6 +63,7 @@ from ....domain.invoices import (
     PaymentStatus,
 )
 from ....domain.iva import InvoiceKind
+from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....domain.justificante import Justificante
 from ....domain.justificante._repository import JustificanteRepository
 from ....domain.modelos import ModeloCode
@@ -133,6 +109,30 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.usage_ratios import UsageRatioProfile, load_usage_ratios, save_usage_ratios
+from ...outbound.aeat.auth import _session_store
+from ...outbound.aeat.sede import ExpedienteNotFoundError
+from ...outbound.aeat.sede._observation_store import FiledDeclaracionObservationStore
+from ...outbound.aeat.sede._schema import FiledDeclaracionArtefact
+from ...outbound.google import _session_store as google_session_store
+from ...outbound.google._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
+from ...outbound.llm._cache import LLMCache
+from ...outbound.llm._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
+from ...outbound.llm._usage import UsageRecorder
+from ..profile.assets import (
+    load_amortizacion_ledger,
+    load_assets,
+    save_amortizacion_ledger,
+    save_assets,
+)
+from ..profile.inventory import load_inventory, save_inventory
+from . import EphemeralMasterKeyProvider, SensitivityClass
+from ._namespace_registry import LLM_USAGE_NAMESPACE
+from .attachment import AttachmentStore
+from .errors import StorageValidationError
+from .master_key._active_session import activate_session
+from .master_key._bucket_session import BucketSession
+from .runtime_repository import secure_object_repository_for_active_bucket
+from .sql.engine import dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

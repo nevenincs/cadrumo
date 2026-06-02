@@ -103,28 +103,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.auth._operator.AuthConfigureDanglingActiveProfileError",
-        ErrorCode(
-            code="REFUSED_AUTH_CONFIGURE_DANGLING_ACTIVE_PROFILE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_auth_configure_dangling_active_profile",
-            default_suggestion="aeat config repair profile",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.auth._operator.AuthProviderReservedError",
-        ErrorCode(
-            code="REFUSED_AUTH_PROVIDER_RESERVED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_auth_provider_reserved",
-            default_suggestion="aeat config auth providers",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.auth._operator.AuthLoginNotEnabledError",
         ErrorCode(
             code="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",

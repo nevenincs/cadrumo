@@ -41,8 +41,11 @@ def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> N
     reviewable snapshot; this gate ensures the snapshot stays in
     sync with what the generator would emit at the next build.
     """
-    if not _DOCS_ROOT.is_dir():
-        pytest.skip("docs/ directory not present in this checkout")
+    # The repository ships docs/ — backend_boundary forbids the
+    # conditional-skip idiom in CLI unit tests (rollout meta-language).
+    # Assert the precondition instead so a missing docs/ surfaces as
+    # a hard test failure rather than a silent green.
+    assert _DOCS_ROOT.is_dir(), f"docs/ directory required at {_DOCS_ROOT}"
 
     regenerated = generate_cli_reference(tmp_path)
     docs_cli_root = _DOCS_ROOT / "cli"

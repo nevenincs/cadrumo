@@ -11,6 +11,7 @@ import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.transactions import (
@@ -25,7 +26,7 @@ from ...domain.transactions import (
 )
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
 from ...tests.secure_sql import isolated_runtime_profile
-from ..calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
+from ..calculations import IvaWalletDecisionRepository
 from ..user_profile import UserProfileLifecycleRepository
 from . import (
     ModeloAggregationBindingError,

@@ -100,6 +100,7 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
         binding_values={
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
         enum_binding_values={
             "modelo-200-2024-profile-legal-entity-form": "sl",

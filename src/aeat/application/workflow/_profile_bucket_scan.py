@@ -253,8 +253,12 @@ _MANIFEST_SCAN_EXCEPTIONS = (
 
 
 def _compact_manifest_error(exc: BaseException) -> str:
-    message = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
-    return f"{type(exc).__name__}: {message}"
+    # Unwrap the storage-validation wrapper to the underlying cause so
+    # the operator-facing scan issue names the actual fault class
+    # (e.g. TOMLDecodeError) rather than the storage-layer envelope.
+    root = exc.__cause__ if isinstance(exc, StorageValidationError) and exc.__cause__ is not None else exc
+    message = str(root).splitlines()[0] if str(root) else type(root).__name__
+    return f"{type(root).__name__}: {message}"
 
 
 def _resolve_root(root: Path | None) -> Path:

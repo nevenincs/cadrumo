@@ -21,6 +21,18 @@ _ALLOWLIST = {
     "aeat.application.live._snapshot_base.SnapshotNotFoundError": (
         "structural KeyError mixin; concrete snapshot errors also inherit AeatError"
     ),
+    "aeat.application.calculations._multi_year.EnrollmentEvidenceError": (
+        "private ValueError raised by the multi-year enrollment recorder validator; "
+        "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
+    ),
+    "aeat.domain.modelos._row_models.Modelo347ThresholdError": (
+        "private ValueError raised by row-model pydantic field validators; "
+        "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
+    ),
+    "aeat.domain.modelos._row_models.Modelo184ShareSumError": (
+        "private ValueError raised by row-model pydantic field validators; "
+        "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
+    ),
 }
 
 

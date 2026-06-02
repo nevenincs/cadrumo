@@ -449,7 +449,9 @@ def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_
         inputs={
             "01": Decimal("50000"),
             "02": Decimal("10000"),
-            "03": Decimal("40000"),  # c03 = rendimiento neto = c01 - c02 (user-supplied input)
+            # c03 (rendimiento neto) is computed via the
+            # ``modelo-130-rendimiento-neto`` formula (c01 − c02);
+            # supplying it as input would trip the computed-casilla gate.
             "05": Decimal("0"),
             "06": Decimal("1000"),  # 1000/50000 = 2% — well below threshold; c04=8000 > c06
             "08": Decimal("0"),

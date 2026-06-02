@@ -985,6 +985,10 @@ cli:
           caller --binding overrides always take precedence.
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
+        calculate_unauthorized_advisory: 'ADVISORY: modelo %{modelo} calculation backend
+          is UNAUTHORIZED — it has not yet been proven by an end-to-end test across at
+          least two renta years (multi-year-renta authorization gate). The result was
+          computed and saved, but treat it as provisional until the modelo is authorized.'
         calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
           %{state}). It is persisted and can be resumed later; list revisions with
           `aeat app modelo work revisions %{work_unit_id}` and re-inspect this one
@@ -2909,6 +2913,7 @@ errors:
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
   fail:
+    fail_access_gate_authorization_manifest: The modelo authorization manifest could not be loaded or contains an invalid enrollment entry.
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
     declaration_parse: The filed declaration export could not be parsed for reconciliation.

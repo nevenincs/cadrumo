@@ -76,6 +76,7 @@ from .....domain.calculations.registry import (
     resolve_previous_filing_binding_values,
     resolve_relation_values_from_observations,
 )
+from .....domain.iva_compensation._carry_forward import derive_303_compensation_available
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion, parse_declaracion_bytes
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
@@ -1797,7 +1798,7 @@ def _with_derived_303_compensation_available_observation(
     resultado = _observed_decimal(values, "69", "iva.resultado")
     if posterior is None or resultado is None:
         return observation
-    available = posterior + max(Decimal("0"), -resultado)
+    available = derive_303_compensation_available(posterior=posterior, resultado=resultado)
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(available),

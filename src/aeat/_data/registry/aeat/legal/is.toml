@@ -298,6 +298,30 @@ required_text = [
     "Sociedades cooperativas fiscalmente protegidas",
 ]
 
+# LIS disposición transitoria cuadragésima cuarta, added by Ley 7/2024
+# (disposición final octava). Binding source for the micro-empresa
+# (INCN < 1M EUR) two-tranche transitional rate schedule applied to the
+# 2025 (21%/22%) and 2026 (19%/21%) periods on top of LIS art. 29.1.
+[legal."ley-27-2014:dt-44"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-dt-44.html#dt44"
+document_id = "BOE-A-2024-26694"
+article = "DT-44"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-26694"
+published_at = 2024-12-21
+effective_from = 2025-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS DT 44ª (Ley 7/2024, BOE-A-2024-26694): régimen transitorio del tipo de gravamen de las microempresas cuyo INCN del período inmediato anterior es inferior a 1 millón de euros, sobre la escala del art. 29.1 LIS; ejercicios iniciados en 2025 (21% / 22%) y 2026 (19% / 21%)."
+required_text = [
+    "21 por ciento",
+    "22 por ciento",
+    "1 millón de euros",
+]
+
 [legal."ley-27-2014:art-30"]
 evidence_tier = "legal_authority"
 authority = "boe"

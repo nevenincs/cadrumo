@@ -19,31 +19,27 @@ from ._binding_prefill import (
     resolve_bindings_from_local_store,
 )
 from ._iva_compensation_history import (
-    IvaCompensationCarryForwardLot,
-    IvaCompensationCarryForwardReport,
-    IvaCompensationExpiryReviewState,
     IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
-    build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
     iva_compensation_period_key,
     iva_compensation_state_from_filed_observation,
 )
-from ._iva_wallet_balance import (
-    IvaWalletBalanceReport,
-    build_iva_wallet_balance_report,
-    query_iva_wallet_balance,
-)
+from ._iva_wallet_balance import query_iva_wallet_balance
 from ._iva_wallet_reconciliation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationOverride,
-    IvaCompensationReconciliationDecision,
     IvaCompensationReconciliationReport,
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from ._multi_year import MultiYearResolver, PreviousFilingSourceResolver, resolve_prior_year_observations
+from ._multi_year import (
+    EnrollmentEvidence,
+    EnrollmentEvidenceError,
+    EnrollmentRecorder,
+    EnrollmentYearObservation,
+    MultiYearResolver,
+    PreviousFilingSourceResolver,
+    assert_enrollment_matches_manifest,
+    resolve_prior_year_observations,
+)
 from ._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -70,16 +66,12 @@ __all__ = [
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
-    "IvaCompensationAuthoritySource",
-    "IvaCompensationCarryForwardLot",
-    "IvaCompensationCarryForwardReport",
-    "IvaCompensationExpiryReviewState",
+    "EnrollmentEvidence",
+    "EnrollmentEvidenceError",
+    "EnrollmentRecorder",
+    "EnrollmentYearObservation",
     "IvaCompensationHistoryRepository",
-    "IvaCompensationOverride",
-    "IvaCompensationPeriodState",
-    "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationReport",
-    "IvaWalletBalanceReport",
     "IvaWalletDecisionRepository",
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
@@ -93,9 +85,7 @@ __all__ = [
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding_observations",
-    "build_iva_compensation_carry_forward_report",
-    "build_iva_wallet_balance_report",
-    "enforce_iva_compensation_four_year_window",
+    "assert_enrollment_matches_manifest",
     "extract_modelo_303_local_iva_compensation_recurrence",
     "iva_compensation_period_key",
     "iva_compensation_state_from_filed_observation",

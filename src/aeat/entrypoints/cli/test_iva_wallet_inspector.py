@@ -13,13 +13,15 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from ...application.calculations._iva_compensation_history import (
-    IvaCompensationCarryForwardLot,
-    IvaCompensationExpiryReviewState,
     IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
     seed_iva_compensation_period,
 )
 from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
+from ...domain.iva_compensation._carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationExpiryReviewState,
+    IvaCompensationPeriodState,
+)
 
 # Import the wizard catalogue + persistence so register_wizard_catalogue()
 # and register_project_answers() run before any domain module under

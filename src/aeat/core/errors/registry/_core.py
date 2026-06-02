@@ -323,6 +323,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.access_gate._errors.AuthorizationManifestError",
+        ErrorCode(
+            code="FAIL_ACCESS_GATE_AUTHORIZATION_MANIFEST",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_access_gate_authorization_manifest",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.locales.manager.LocaleError",
         ErrorCode(
             code="FAIL_LOCALE_MANAGER",

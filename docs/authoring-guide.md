@@ -1,22 +1,22 @@
 # Authoring and reviewing documentation
 
-This guide shows you how to make a documentation change and take it through review. A change might touch any of three English documentation surfaces. Two are hand-written: the repository markdown and the in-source docstrings. The third is the generated reference for the application programming interface (API) and the command-line interface (CLI).
+AEAT is a Spanish tax-filing application. This guide shows you how to make a documentation change and take it through review. Three documentation surfaces exist: repository markdown, in-source docstrings, and two generated references — one for the application programming interface (API) and one for the command-line interface (CLI).
 
 ## Choose the right surface
 
 Where you make a change depends on what you're changing:
 
 - **Repository markdown** is hand-written. Edit the README or a guide under `docs/` directly.
-- **Docstrings** are the single source for the API reference. Edit the docstring in the source, and let Sphinx render it. Never copy a signature into prose by hand.
-- **The API reference** is generated from the source modules by `aeat.apidocs`. Don't edit the stubs; regenerate them.
-- **The CLI reference** is generated from the command tree. Don't edit it; regenerate it.
+- **Docstrings** are the single source for the API reference. Edit the docstring in the source, and let Sphinx (the documentation build tool) render it. Never copy a signature into prose by hand.
+- **The API reference** is generated from the source modules by the `aeat.apidocs` tool. It writes stub pages (placeholder reference files); don't edit those pages by hand — regenerate them.
+- **The CLI reference** is generated from the command tree (the full set of CLI commands and subcommands). Don't edit it; regenerate it with the commands that follow.
 
-To regenerate the generated surfaces and check the result, run:
+To rebuild the generated surfaces and verify them, run:
 
 ```bash
-python -m aeat.apidocs scaffold
-just docs
-just docs-check
+python -m aeat.apidocs scaffold  # writes the API stub pages
+just docs                        # builds the full documentation site
+just docs-check                  # validates cross-references, stubs, and CLI output
 ```
 
 `just docs-check` fails on a broken cross-reference, a missing stub, or a command reference that no longer matches the commands.
@@ -25,12 +25,12 @@ just docs-check
 
 A change to the README or a guide under `docs/` moves through a staged review. Each stage has a distinct reviewer, and each completes before the next begins:
 
-1. **Wireframe.** Outline the document as titles and section intents. Assign each page a Diataxis type: tutorial, how-to, reference, or explanation.
+1. **Wireframe.** Outline the document as titles and section intents. Assign each page a Diataxis type — Diataxis is a documentation framework that sorts pages into four kinds: tutorial, how-to, reference, or explanation.
 2. **Refinement.** A reviewer with no project context reads only the wireframe and confirms a newcomer would understand what each section delivers. Revise until every section passes.
 3. **Context.** Researchers gather the facts, commands, paths, and source locations each section needs.
-4. **Drafting.** Authors write each section from the gathered context and the prose-style rules.
+4. **Drafting.** Authors write each section from the gathered context and the prose-style rules (`.claude/skills/vaultspec-documentation/references/prose-style-rules.md`).
 5. **Technical review.** Reviewers verify every command, flag, path, and class name against the code.
-6. **Editorial review.** A reviewer with no project context checks the writing against the prose-style rules.
+6. **Editorial review.** A reviewer with no project context checks the writing against the prose-style rules (same reference as step 4).
 7. **Approval.** The change lands once the technical and editorial reviews pass.
 
 ## Keep the roles separate

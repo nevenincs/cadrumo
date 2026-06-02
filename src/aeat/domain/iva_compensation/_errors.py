@@ -34,9 +34,10 @@ class IvaCompensationYearRangeError(AeatError, ValueError):
 class IvaCompensationDecimalParseError(AeatError, ValueError):
     """Raised when a casilla value cannot be coerced to :class:`~decimal.Decimal`.
 
-    Replaces the bare :exc:`ValueError` re-raised from :exc:`InvalidOperation`
-    inside the casilla-decimal coercion helper. Inherits from :exc:`ValueError`
-    to preserve compatibility and chains the original :exc:`InvalidOperation` cause.
+    Replaces the bare :exc:`ValueError` re-raised from
+    :exc:`~decimal.InvalidOperation` inside the casilla-decimal coercion helper.
+    Inherits from :exc:`ValueError` to preserve compatibility and chains the
+    original :exc:`~decimal.InvalidOperation` cause.
     """
 
 

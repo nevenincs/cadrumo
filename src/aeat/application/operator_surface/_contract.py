@@ -7,6 +7,7 @@ from functools import lru_cache
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import OperatorSurfaceContractError
+from ._filing_status_token import FILED as _FILED_TOKEN
 from ._models import (
     LifecycleContract,
     ModeloLifecycleStep,
@@ -260,7 +261,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="live",
         operator_question="perform explicit read-only AEAT live observations",
         service_owner="aeat.application.live",
-        commands=("filed",),
+        commands=(_FILED_TOKEN,),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

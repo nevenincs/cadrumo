@@ -15,10 +15,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-# Importing the renta package registers the first-slice routing
-# cross-domain snapshot check required by Modelo 100 snapshots.
-from ... import renta as _renta_snapshot_checks
-
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot

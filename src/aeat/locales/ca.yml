@@ -1038,6 +1038,11 @@ cli:
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
           de treball
+        calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
+          NO està autoritzat — encara no s''ha provat amb un test integral al llarg
+          d''almenys dos exercicis de renda (porta d''autorització multi-exercici). El
+          resultat s''ha calculat i desat, però tracta''l com a provisional fins que el
+          model estigui autoritzat.'
         calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
           (estat: %{state}). Està persistit i es pot reprendre més tard; llista les
           revisions amb `aeat app modelo work revisions %{work_unit_id}` i torna a
@@ -3052,6 +3057,7 @@ errors:
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
   fail:
+    fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització de models o conté una entrada d'habilitació no vàlida.
     censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
     declaration_parse: No s'ha pogut interpretar l'exportació de la declaració presentada

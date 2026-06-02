@@ -41,7 +41,6 @@ def _no_env_passphrase(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 def test_override_passphrase_none_falls_through_to_getpass(
     _no_env_passphrase: None,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """``override_settings(aeat_secret_passphrase=None)`` triggers the prompt path.
 
@@ -58,9 +57,8 @@ def test_override_passphrase_none_falls_through_to_getpass(
     def _fake_getpass(prompt: str) -> str:
         raise EOFError("no terminal available for passphrase prompt")
 
-    monkeypatch.setattr("getpass.getpass", _fake_getpass)
     with override_settings(aeat_secret_passphrase=None), pytest.raises(EOFError):
-        _default_passphrase_callback()
+        _default_passphrase_callback(getpass_fn=_fake_getpass)
 
 
 def test_override_passphrase_only_crlf_raises_secret_store_error(

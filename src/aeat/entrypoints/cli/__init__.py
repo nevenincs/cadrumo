@@ -155,39 +155,22 @@ def _root(
         typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
         _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
         raise typer.Exit()
-    # Wire the active-profile output-language resolver into ``core.i18n``
-    # before any subcommand renders prose. Importing the side-effect
-    # module registers the resolver; without it, render paths that never
-    # touch ``aeat.application.user_profile`` (e.g. ``overview status``)
-    # silently ignore a profile's ``preferences.output_language``. Kept
-    # after the ``--version`` / ``--help`` fast-path exits so those
-    # surfaces stay free of the application-layer import.
+    # Defer profile override and bucket-session activation to after the
+    # version/help fast-paths (already exited above). Bare invocation
+    # (ctx.invoked_subcommand is None) defers the full application-layer
+    # imports (user_profile, wizard, workflow) into its own branch so
+    # state-free dispatch avoids the registry load.
     if profile is not None:
         _activate_profile_override(ctx, profile)
-    from ...application.user_profile import _language_resolver as _language_resolver
-
-    # Register the profile-setup wizard catalogue (SETUP_FLOW / WIZARD_FLOWS)
-    # and the project-answers projection through the same side-effect-import
-    # contract as the language resolver above: importing each module runs its
-    # body, which calls ``register_wizard_catalogue`` / ``register_project_
-    # answers``. Without them, any dispatch that reaches the wizard catalogue
-    # or the project-answers projection (e.g. ``app modelo work create``)
-    # fails with "Wizard catalogue has not been registered" /
-    # "project_answers has not been registered". Kept after the ``--version``
-    # / ``--help`` fast-path exits so those surfaces stay free of the
-    # application-layer import.
-    from ...application.wizard import _catalogue as _catalogue
-    from ...application.wizard import _persistence as _persistence
-
-    _activate_active_bucket_session(ctx)
     if ctx.invoked_subcommand is None:
-        # The landing surface needs the workflow / overview application
+        # The landing surface needs the application operator_surface
         # layer; deferring the import keeps it off the ``--version`` /
-        # ``--help`` fast-paths above.
+        # ``--help`` fast-paths above. Bare invocation without an active
+        # profile does NOT import workflow or overview (which pull the
+        # registry) — it only renders the profile-creation prompt.
+        # Use the lightweight core resolver to avoid importing workflow.
         from ...application.operator_surface import build_root_landing_report
-        from ...application.overview import build_overview_status_report
-        from ...application.workflow import workflow_state_repository
-        from ...application.workflow._models import resolve_active_bucket_id
+        from ...core._bucket_pointer_io import resolve_active_bucket_id
         from ._root_landing import render_cli_root_landing_lines
 
         active = resolve_active_bucket_id()
@@ -198,15 +181,29 @@ def _root(
             # action) and exit. Reading the workflow state here would
             # require an active session the operator has not yet
             # established — the F1 / F2 deadlock the disaster ADR
-            # closes.
+            # closes. Skip importing workflow and overview so bare
+            # invocation remains registry-free.
             typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
             _emit_envelope(ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing))
             raise typer.Exit()
+        # An active profile exists: import and render the full overview.
+        # These imports pull the registry, but are now deferred until
+        # a verb that actually needs them is invoked.
+        from ...application.overview import build_overview_status_report
+        from ...application.workflow import workflow_state_repository
+
         workflow_state = workflow_state_repository().load()
         overview_report = build_overview_status_report(state=workflow_state)
         typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
         _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
         raise typer.Exit()
+    else:
+        # A subcommand is being invoked. Activate the bucket session here
+        # so verbs that need it have access to the active profile's
+        # encrypted records. This is deferred after the bare-invocation
+        # path to keep it out of the state-free surfaces (--version,
+        # --help, bare invocation).
+        _activate_active_bucket_session(ctx)
 
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:

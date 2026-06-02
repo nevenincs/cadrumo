@@ -467,7 +467,17 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos) -> No
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={"01": Decimal("1500")},
+        casilla_inputs={
+            "01": Decimal("1500"),
+            "02": Decimal("0"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

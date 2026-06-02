@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ...core.resources import resources
-from ..calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ._actions import ModeloIvaWalletReconciliationBlocked, _apply_iva_compensation_decision_binding
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

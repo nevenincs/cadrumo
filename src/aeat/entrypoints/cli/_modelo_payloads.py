@@ -295,6 +295,12 @@ class WorkCalculateResult(OutputSchema):
     # modelos leave these unset.
     modality: str | None = None
     modality_reason: str | None = None
+    # Multi-year-renta authorization advisory. Populated when the modelo's
+    # calculation backend is UNAUTHORIZED (not yet proven across >=2 renta
+    # years per the modelo-multiyear-renta gate) but an engine exists, so the
+    # calculation still ran. The result is informational, not refused.
+    authorization_advisory: str | None = None
+    authorization_state: str | None = None
 
 
 @register_schema("modelo.work.revisions")

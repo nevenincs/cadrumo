@@ -24,6 +24,7 @@ Subpackages
    aeat.domain.fincas
    aeat.domain.invoices
    aeat.domain.iva
+   aeat.domain.iva_compensation
    aeat.domain.justificante
    aeat.domain.manuals
    aeat.domain.modelos

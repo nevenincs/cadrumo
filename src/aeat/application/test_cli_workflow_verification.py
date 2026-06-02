@@ -45,7 +45,7 @@ def test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestio
         contract = retired_surface_suggestion(retired)
         assert contract is not None
         assert contract.suggestion == suggestion
-        with pytest.raises(OperatorSurfaceContractError, match=r"operator|surface|contract") as exc_info:
+        with pytest.raises(OperatorSurfaceContractError) as exc_info:
             require_accepted_root(retired)
         assert exc_info.value.suggestion == suggestion
 

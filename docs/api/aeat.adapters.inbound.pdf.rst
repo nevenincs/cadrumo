@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   aeat.adapters.inbound.pdf._errors
    aeat.adapters.inbound.pdf._label_regex
    aeat.adapters.inbound.pdf._pdfplumber
    aeat.adapters.inbound.pdf._scrub

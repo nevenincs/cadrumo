@@ -5,6 +5,7 @@ legal_refs = [
     "orden-eha-3012-2008:art-1",
     "orden-eha-3012-2008:art-10",
     "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
     "ley-58-2003:art-93",
 ]
 source_refs = [
@@ -14,7 +15,18 @@ source_refs = [
     "boe-modelo-347-2008-form",
     "boe-modelo-347-2011-amendment",
 ]
-casillas = ["decl.ejercicio", "decl.tipo-declaracion"]
+casillas = [
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+    "contraparte.nif",
+    "contraparte.nombre",
+    "contraparte.clave-operacion",
+    "contraparte.importe-Q1",
+    "contraparte.importe-Q2",
+    "contraparte.importe-Q3",
+    "contraparte.importe-Q4",
+    "contraparte.pais-codigo",
+]
 workbook_parity_refs = ["modelo-347-dr-2025", "modelo-347-dr-2011"]
 live_cross_references = [
     "modelo-347-static-documentation",
