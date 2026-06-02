@@ -95,6 +95,7 @@ def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
 
 # ── helper ────────────────────────────────────────────────────────────────────
 
+
 def _run_2024(snapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
     result = calculate_registry_snapshot(
         snapshot,
@@ -114,6 +115,7 @@ def _run_2024(snapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
 
 # ── Sergio shape: 0029 = 20 000 EUR dividends ─────────────────────────────────
 
+
 def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot) -> None:
     """Sergio shape: casilla 0029 (dividendos) = 20 000 EUR.
 
@@ -127,8 +129,7 @@ def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot) -> None:
 
     # The chain must propagate through: 0036=20000, 0038=20000, 0040=20000, 0041=20000.
     assert values.get("0036") == Decimal("20000"), (
-        f"0036 (total ingresos) = {values.get('0036')!r}; expected 20000.  "
-        "Chain 0029→0036 is broken."
+        f"0036 (total ingresos) = {values.get('0036')!r}; expected 20000.  Chain 0029→0036 is broken."
     )
     assert values.get("0041") == Decimal("20000"), (
         f"0041 (suma rendimientos reducidos) = {values.get('0041')!r}; expected 20000.  "
@@ -163,6 +164,7 @@ def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot) -> Non
 
 # ── Carla shape: 0027 = 1 200 EUR cuenta-corriente interest ──────────────────
 
+
 def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot) -> None:
     """Carla shape: casilla 0027 (intereses cuenta corriente) = 1 200 EUR.
 
@@ -185,6 +187,7 @@ def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot) -> Non
 
 # ── Aitor shape: 0029 = 6 000 EUR dividends SAL ───────────────────────────────
 
+
 def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot) -> None:
     """Aitor shape: casilla 0029 (dividendos SAL) = 6 000 EUR.
 
@@ -199,6 +202,7 @@ def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot) -> None:
 
 
 # ── Anti-tautology: proportional scaling ─────────────────────────────────────
+
 
 def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snapshot) -> None:
     """Anti-tautology: doubling the dividends input must double 0460.
@@ -220,6 +224,7 @@ def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snap
 
 
 # ── 2025 revision: same defect must also be fixed ─────────────────────────────
+
 
 def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot) -> None:
     """2025 revision: same Art. 49.1.a chain must hold.
@@ -243,9 +248,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot) -> None:
         m100_2025_snapshot.revision,
         {
             relation.id: (
-                Decimal("0")
-                if (str((relation.aggregation or {}).get("op", "copy")) == "copy")
-                else (Decimal("0"),)
+                Decimal("0") if (str((relation.aggregation or {}).get("op", "copy")) == "copy") else (Decimal("0"),)
             )
             for relation in m100_2025_snapshot.revision.relations
         },
