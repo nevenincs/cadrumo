@@ -617,9 +617,9 @@ Keep the CLI as the operator-command surface while moving storage readiness and 
 Replace ad hoc database-route sandboxing with a sanctioned real runtime profile path so tests exercise the same storage attachment contract as production.
 
 - [x] `W12.P23.S92` - Add a test runtime profile helper that creates a real isolated profile bucket, SQLite database, bucket manifest, master-key session, and runtime-bound secure-object repository; `src/aeat/tests`.
-- [ ] `W12.P23.S93` - Migrate explicit `aeat_database_url`, `AEAT_DATABASE_URL`, and injected-engine test setup to the test runtime helper except in route-classification and refusal tests; `src/aeat`.
-- [ ] `W12.P23.S94` - Add guard coverage that rejects new production raw secure-object construction and new unapproved route-based test setup; `src/aeat/adapters/persistence/storage`.
-- [ ] `W12.P23.S95` - Persist a test-isolation closeout audit listing remaining approved explicit-route tests and their owning refusal behavior; `.vault/audit`.
+- [x] `W12.P23.S93` - Migrate explicit `aeat_database_url`, `AEAT_DATABASE_URL`, and injected-engine test setup to the test runtime helper except in route-classification and refusal tests; `src/aeat`.
+- [x] `W12.P23.S94` - Add guard coverage that rejects new production raw secure-object construction and new unapproved route-based test setup; `src/aeat/adapters/persistence/storage`.
+- [x] `W12.P23.S95` - Persist a test-isolation closeout audit listing remaining approved explicit-route tests and their owning refusal behavior; `.vault/audit`.
 
 ### Phase `W12.P24` - side-store and mirror disposition
 
