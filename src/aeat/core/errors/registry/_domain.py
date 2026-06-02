@@ -1172,14 +1172,12 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.ModeloIvaWalletReconciliationBlocked",
+        "aeat.application.modelo._actions.ModeloIvaWalletReconciliationBlockedError",
         ErrorCode(
             code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_iva_wallet_reconciliation_blocked",
-            default_suggestion=(
-                "aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm"
-            ),
+            default_suggestion="aeat app ledger iva wallet view",
             retryable=False,
             runbook_id=None,
         ),

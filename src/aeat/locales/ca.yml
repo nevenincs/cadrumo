@@ -2972,9 +2972,7 @@ errors:
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
       sol·licitada.
-    error_modelo_iva_wallet_reconciliation_blocked: El càlcul del Model 303 està bloquejat
-      per la conciliació del moneder d'IVA. Resol la conciliació pendent abans de
-      continuar.
+    error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està bloquejat: cal la reconciliació del wallet d''IVA'
     error_modelo_verification_report_not_found: No s'ha trobat l'informe de verificació
       sol·licitat.
     error_modelo_work_unit_already_discarded: La unitat de treball ja està descartada.
