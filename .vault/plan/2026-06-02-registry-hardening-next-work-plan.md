@@ -67,7 +67,7 @@ Treat every large registry production module as an explicit refactor target, wit
 
 - [x] `P04.S18` - Audit registry Python module size and ownership boundaries; `.vault/audit`.
 - [x] `P04.S19` - Assess loader fragment-compiler extraction boundaries; `src/aeat/domain/calculations/registry/_loader.py`.
-- [ ] `P04.S20` - Assess binding resolver extraction boundaries; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `P04.S20` - Assess binding resolver extraction boundaries; `src/aeat/domain/calculations/registry/_bindings.py`.
 - [ ] `P04.S21` - Assess schema model extraction boundaries and ADR need; `src/aeat/domain/calculations/registry/_schema.py`.
 - [ ] `P04.S22` - Assess record-design extraction boundaries; `src/aeat/domain/calculations/registry/_record_design.py`.
 - [ ] `P04.S23` - Assess applicability extraction boundaries; `src/aeat/domain/calculations/registry/_applicability.py`.

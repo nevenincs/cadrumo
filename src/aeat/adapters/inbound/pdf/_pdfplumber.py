@@ -35,6 +35,12 @@ from pathlib import Path
 
 import pdfplumber
 
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+
+
+def _pdfplumber_failure_label(exc: Exception) -> str:
+    return type(exc).__name__
+
 
 def extract_pages_text_from_path(
     pdf_path: Path,
@@ -69,15 +75,16 @@ def extract_pages_text_from_path(
             layer).
     """
     if not pdf_path.is_file():
-        raise error_class(f"{not_found_label}: {pdf_path}")
+        raise error_class(f"{not_found_label}: {_INPUT_PDF_SOURCE_LABEL}")
     try:
         with pdfplumber.open(pdf_path) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
-    except Exception as exc:  # pragma: no cover — defensive; pdfplumber surface
-        raise error_class(f"pdfplumber could not open {pdf_path}: {exc}") from exc
+    except Exception as exc:
+        failure = _pdfplumber_failure_label(exc)
+        raise error_class(f"pdfplumber could not open {_INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
 
     if not any(pages):
-        raise error_class(f"no text extracted from {pdf_path}; {pdf_label} may be scan-only or XFA")
+        raise error_class(f"no text extracted from {_INPUT_PDF_SOURCE_LABEL}; {pdf_label} may be scan-only or XFA")
     return pages
 
 
@@ -136,8 +143,9 @@ def extract_pages_text_concatenated(
             return "\n".join(chunks)
     except error_class:
         raise
-    except Exception as exc:  # pragma: no cover - defensive
-        raise error_class(f"pdfplumber failed to open {pdf_path}: {exc}") from exc
+    except Exception as exc:
+        failure = _pdfplumber_failure_label(exc)
+        raise error_class(f"pdfplumber failed to open {_INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
 
 
 def extract_pages_text_with_fast_path(
