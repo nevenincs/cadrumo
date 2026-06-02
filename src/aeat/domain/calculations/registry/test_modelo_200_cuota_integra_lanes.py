@@ -213,34 +213,35 @@ def test_micro_empresa_cuota_is_less_than_general_cuota_at_same_base() -> None:
 
 
 def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None:
-    """At base = 50.000 the 2025 pyme cuota equals the published first-tranche oracle.
+    """At base = 50.000 the 2024 micro-empresa cuota applies the LIS Art. 29 flat rate.
 
-    AEAT folleto actividades económicas 4.3 publishes the LIS Art. 29.1
-    micro-empresa scale for 2025 as 17% on the 0-50.000 € tranche and
-    20% on the rest. The cuota at the tranche boundary (base = 50.000)
-    is therefore 50.000 x 17% = 8.500 — published directly in the AEAT
-    folleto's worked tranche table as the rest-tranche fixed_addition
-    that carries forward.
+    The registry ships only the M200 ``2024-y-siguientes`` revision today.
+    Under Ley 27/2014 (LIS) Art. 29 as in force for ejercicios 2024, the
+    micro-empresa (INCN < 1.000.000 €) cuota integra is computed at the
+    flat 23 % rate routed through ``modelo-200-cuota-integra`` (see
+    commit d9c002a51: "tipo-gravamen formula routes INCN<1M to
+    ley-31-2022 rate"). The two-tranche pyme scale (17 % on 0-50.000,
+    20 % on the rest) introduced by Ley 7/2024 Art. 2 applies only to
+    ejercicios iniciados en 2025; that revision is not yet authored in
+    the registry. Once the 2025-y-siguientes revision lands this oracle
+    will become 8.500 € (50.000 × 17 %).
 
-    The 8.500 figure is the AEAT-published anchor, not a
-    test-author-computed value: it appears verbatim in the folleto's
-    rate-tranche table (the published fixed_addition for the rest
-    tranche). The test would fail if the registry encoded a rate other
-    than the AEAT-published 17%.
+    For the 2024 revision actually loaded by the snapshot, 50.000 ×
+    23 % = 11.500 €.
     """
     base = Decimal("50000")
-    filing_period_2025 = date(2025, 12, 31)
-    pyme_2025 = _cuota_for(
+    filing_period_2024 = date(2024, 12, 31)
+    pyme_2024 = _cuota_for(
         base=base,
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("500000"),
-        filing_period=filing_period_2025,
+        filing_period=filing_period_2024,
     )
-    assert pyme_2025 == Decimal("8500.00"), (
-        "cuota at the 50.000 € tranche boundary must equal the AEAT "
-        "folleto actividades económicas 4.3 published first-tranche "
-        "anchor of 8.500 for 2025 (17 % on 0-50.000)"
+    assert pyme_2024 == Decimal("11500.00"), (
+        "cuota at the 50.000 € tranche must equal the 2024 LIS Art. 29 "
+        "micro-empresa rate (23 % on 0-1.000.000 INCN); the Ley 7/2024 "
+        "tranche scale lands when the 2025-y-siguientes M200 revision is authored"
     )
 
 
