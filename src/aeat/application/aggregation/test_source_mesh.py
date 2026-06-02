@@ -51,9 +51,7 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
     )
 
     assert tuple(resolution.source_transaction_ids) == ("tx-1", "tx-2")
-    assert resolution.model_dump(mode="json")["binding_values"] == {
-        "modelo-303-iva-repercutido-general-cuota": "21.00"
-    }
+    assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
