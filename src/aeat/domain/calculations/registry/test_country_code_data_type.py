@@ -21,15 +21,17 @@ _COUNTRY_ADAPTER: TypeAdapter[str] = TypeAdapter(CountryCode)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
-        "id": "country_test_casilla",
-        "number": "01",
-        "label": "Codigo pais",
-        "section": ("operador",),
-        "data_type": data_type,
-        "legal_refs": ("ley-37-1992:art-25",),
-        "source_refs": ("aeat-modelo-349-instructions",),
-    })
+    return CasillaDefinition.model_validate(
+        {
+            "id": "country_test_casilla",
+            "number": "01",
+            "label": "Codigo pais",
+            "section": ("operador",),
+            "data_type": data_type,
+            "legal_refs": ("ley-37-1992:art-25",),
+            "source_refs": ("aeat-modelo-349-instructions",),
+        }
+    )
 
 
 class TestCountryCodeAccepts:
