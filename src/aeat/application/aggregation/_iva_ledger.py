@@ -308,6 +308,10 @@ def aggregate_iva_ledger_candidate_bindings(
 
     Args:
         revision: The :class:`ModeloRevision` used to resolve binding values.
+        candidates: Pre-classified :class:`IvaLedgerCandidate` rows to project
+            into engine binding channels.
+        period: The aggregation :class:`Period` (or its canonical string form)
+            whose date range bounds the candidate set.
     """
     aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
     if aggregation.issues:
