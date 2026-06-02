@@ -72,7 +72,7 @@ Treat every large registry production module as an explicit refactor target, wit
 - [x] `P04.S22` - Assess record-design extraction boundaries; `src/aeat/domain/calculations/registry/_record_design.py`.
 - [x] `P04.S23` - Assess applicability extraction boundaries; `src/aeat/domain/calculations/registry/_applicability.py`.
 - [x] `P04.S24` - Assess workbook parity extraction boundaries; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
-- [ ] `P04.S25` - Assess formula runtime extraction boundaries; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [x] `P04.S25` - Assess formula runtime extraction boundaries; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `P04.S26` - Audit oversized registry test module decomposition; `src/aeat/domain/calculations/registry`.
 - [ ] `P04.S27` - Audit M123 revision file for directory-mode fragmentation need; `src/aeat/_data/registry/aeat/modelos/123`.
 
