@@ -78,9 +78,7 @@ def test_classify_from_csv_applies_all_valid_rows(tmp_path: Path) -> None:
     csv_file = tmp_path / "classify.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--from-csv", str(csv_file)]
-    )
+    result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--from-csv", str(csv_file)])
     assert result.exit_code == 0, result.output
 
     by_id = {r["transaction_id"]: r for r in _list_transactions()}
@@ -112,9 +110,7 @@ def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
     csv_file = tmp_path / "badcol.csv"
     csv_file.write_text(csv_content, encoding="utf-8")
 
-    result = _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--from-csv", str(csv_file)]
-    )
+    result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--from-csv", str(csv_file)])
     assert result.exit_code != 0
 
 
@@ -224,9 +220,7 @@ def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) ->
     tx1, tx2 = _import_two_transactions(tmp_path)
 
     # Manually classify tx1
-    _RUNNER.invoke(
-        app, ["app", "ledger", "classify", "--id", tx1, "--classification", "PERSONAL"]
-    )
+    _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx1, "--classification", "PERSONAL"])
 
     _RUNNER.invoke(
         app,
@@ -275,19 +269,31 @@ def test_rule_priority_order_first_match_wins(tmp_path: Path) -> None:
     _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "rule", "add",
-            "--description-pattern", "INV",
-            "--classification", "PERSONAL",
-            "--priority", "100",
+            "app",
+            "ledger",
+            "rule",
+            "add",
+            "--description-pattern",
+            "INV",
+            "--classification",
+            "PERSONAL",
+            "--priority",
+            "100",
         ],
     )
     _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "rule", "add",
-            "--description-pattern", "INV-001",
-            "--classification", "BUSINESS",
-            "--priority", "1",
+            "app",
+            "ledger",
+            "rule",
+            "add",
+            "--description-pattern",
+            "INV-001",
+            "--classification",
+            "BUSINESS",
+            "--priority",
+            "1",
         ],
     )
 
