@@ -33,6 +33,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
+from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR  # re-export
 
 # ---------------------------------------------------------------------------
@@ -107,15 +108,46 @@ class Modelo184MemberRow(BaseModel):
 
 # Closed catalogue of válid tipo_vinculacion codes per M232 form.
 _M232_TIPO_VINCULACION = Literal[
-    "1", "2", "3", "4", "5", "6", "7", "8",
-    "9", "10", "11", "12", "13", "14", "15", "16",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
 ]
 
 # Closed catalogue of valid tipo_operacion codes per M232 form.
 _M232_TIPO_OPERACION = Literal[
-    "01", "02", "03", "04", "05", "06", "07", "08",
-    "09", "10", "11", "12", "13", "14", "15", "16",
-    "17", "18", "19", "20",
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
 ]
 
 # Closed catalogue of transfer-pricing method codes per M232 / LIS art. 18.
@@ -301,10 +333,10 @@ class Modelo347ContraparteRow(BaseModel):
     row_type: Literal["contraparte"] = "contraparte"
     nif: _NifStr
     nombre: _NameStr = Field(default="")
-    importe_Q1: Decimal = Field(default=Decimal("0"))
-    importe_Q2: Decimal = Field(default=Decimal("0"))
-    importe_Q3: Decimal = Field(default=Decimal("0"))
-    importe_Q4: Decimal = Field(default=Decimal("0"))
+    importe_Q1: Decimal = Field(default=Decimal("0"))  # noqa: N815
+    importe_Q2: Decimal = Field(default=Decimal("0"))  # noqa: N815
+    importe_Q3: Decimal = Field(default=Decimal("0"))  # noqa: N815
+    importe_Q4: Decimal = Field(default=Decimal("0"))  # noqa: N815
     clave_operacion: _M347_CLAVE_OPERACION = "A"
     pais_codigo: _IsoCountryCode | None = None
 
@@ -322,9 +354,7 @@ class Modelo347ContraparteRow(BaseModel):
             return value
         v = value.strip().upper()
         if not v.isalpha() or len(v) != 2:
-            raise ValueError(
-                "pais_codigo must be an uppercase two-letter ISO 3166-1 country code or None for domestic"
-            )
+            raise ValueError("pais_codigo must be an uppercase two-letter ISO 3166-1 country code or None for domestic")
         return v
 
     @property
@@ -345,7 +375,7 @@ ModeloDetailRow = Modelo184MemberRow | Modelo232VinculadaRow | Modelo349Operador
 # ---------------------------------------------------------------------------
 
 
-class Modelo347ThresholdError(ValueError):
+class Modelo347ThresholdError(AeatError, ValueError):
     """A Modelo 347 contraparte row falls at or below the declarability threshold."""
 
     def __init__(self, *, nif: str, total: Decimal) -> None:
@@ -357,7 +387,7 @@ class Modelo347ThresholdError(ValueError):
         )
 
 
-class Modelo184ShareSumError(ValueError):
+class Modelo184ShareSumError(AeatError, ValueError):
     """Modelo 184 member share percentages do not sum to exactly 100%."""
 
     def __init__(self, *, total: Decimal, count: int) -> None:

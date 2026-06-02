@@ -645,7 +645,7 @@ Project-wide grep for every period-token-handling function coverage matrix conve
 
 For every CLI command registering --verbose assert it actually consumes the flag in its rendering path.
 
-- [ ] `W09.P47.S170` - for every CLI command registering --verbose assert it consumes the flag fix or remove unused declarations; `src/aeat/entrypoints/cli/`.
+- [x] `W09.P47.S170` - for every CLI command registering --verbose assert it consumes the flag fix or remove unused declarations; `src/aeat/entrypoints/cli/`.
 
 ### Phase `W09.P48` - Sonnet drift verification pass
 
