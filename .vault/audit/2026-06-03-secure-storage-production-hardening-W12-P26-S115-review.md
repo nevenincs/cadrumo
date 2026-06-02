@@ -28,11 +28,27 @@ Status: closed.
 
 ## S115-003 | INFO | Tests exercise the real auth boundaries
 
-The S115 tests instantiate `AeatAuthenticator`, call the real invalidation helper with a sensitive storage basename, and drive `_run_login_probe()` through a browser-context stand-in that raises a sensitive payload. Assertions cover rendered errors, structured context, model serialization, and captured log messages.
+The S115 tests instantiate `AeatAuthenticator`, call the real invalidation helper with a sensitive storage basename, drive `_run_login_probe()` through a browser-context stand-in that raises a sensitive payload, and inject real certificate-health callables that raise sensitive failure strings. Assertions cover rendered errors, structured context, model serialization, translated health summaries, suppressed exception causes, and captured log messages.
 
 Status: closed.
 
-## S115-004 | INFO | Persisted store contract remains a follow-up row
+## S115-004 | MEDIUM | Certificate-health describe diagnostics rendered raw exception text
+
+Mandatory review found that `describe()` still rendered raw exception text into `AuthProviderDescription.health_summary` and into the unexpected `AuthValidationError` path. That auth surface is adjacent to persisted-session diagnostics and could expose certificate paths or parser details.
+
+Resolution: `describe()` now returns the localized `application.auth.certificate.health.unavailable` summary for known certificate-health failures, raises `AuthValidationError` with the same translated-message key for unexpected failures, and logs only the exception type at debug level.
+
+Status: closed.
+
+## S115-005 | MEDIUM | Persisted invalidation could retain raw exception context
+
+Mandatory review found that malformed load, malformed metadata, and resume failure invalidations were invoked inside `except` frames after interpolating raw exception text into the invalidation reason. Even with a redacted public message, verbose traceback paths could retain sensitive underlying context.
+
+Resolution: those branches now log exception type at debug level, pass stable reason strings into `_raise_invalid_persisted_state()`, and raise the redacted invalidation outside the raw exception-message rendering path where practical. The invalidation helper also uses explicit context suppression.
+
+Status: closed.
+
+## S115-006 | INFO | Persisted store contract remains a follow-up row
 
 This step redacts authenticator diagnostics around persisted session invalidation and probe failure. The session-store schema, storage-state path contract, and encryption/privacy organization remain tracked by the pending AFR-015 / W12.P26.S117 `_session_store.py` row.
 

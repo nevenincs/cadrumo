@@ -14,7 +14,7 @@ import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, NoReturn, cast
 
 import pytest
 from cryptography import x509
@@ -26,6 +26,7 @@ from cryptography.x509.oid import NameOID
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .....core.classification import SensitivityClass
 from .....core.config import CertificateBackend
+from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from . import (
@@ -38,6 +39,7 @@ from . import (
     AeatSessionExpiredError,
     BrowserContextLike,
     BrowserSessionLike,
+    CertificateError,
     CertificateLoginAssertionDetail,
     CertificateNifParseError,
     CertificateSessionDetail,
@@ -51,6 +53,7 @@ from . import (
     select_provider,
 )
 from . import _authenticator as authenticator_module
+from ._errors import AuthValidationError
 from ._fixtures import SECRET_PASSPHRASE
 from .certificate import CertificateBundle
 
@@ -61,6 +64,7 @@ if TYPE_CHECKING:
 _BUCKET_ID = "auth-session"
 _SENSITIVE_STORAGE_BASENAME = "12345678Z-private-storage.json"
 _SENSITIVE_NAVIGATION_PAYLOAD = "12345678Z private browser payload"
+_SENSITIVE_HEALTH_PAYLOAD = "C:/Users/operator/private-cert-12345678Z.p12"
 
 
 @pytest.fixture(autouse=True)
@@ -907,6 +911,60 @@ def test_describe_preserves_expired_certificate_severity(tmp_path: Path, _settin
     assert description.health_severity == "EXPIRED"
     assert description.days_until_expiry is not None
     assert description.days_until_expiry <= 0
+
+
+def test_describe_redacts_certificate_health_error(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    _settings_factory,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+
+    def _certificate_health_error(*args: object, **kwargs: object) -> NoReturn:
+        raise CertificateError(f"failed to inspect {_SENSITIVE_HEALTH_PAYLOAD}")
+
+    caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
+    description = AeatAuthenticator(
+        settings,
+        certificate_health_check=_certificate_health_error,
+    ).describe()
+
+    assert description.available is False
+    assert description.health_summary == tr("application.auth.certificate.health.unavailable")
+
+    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    assert _SENSITIVE_HEALTH_PAYLOAD not in log_text
+    assert "failure=CertificateError" in log_text
+
+
+def test_describe_redacts_unexpected_certificate_health_error(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    _settings_factory,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+
+    def _unexpected_certificate_health_error(*args: object, **kwargs: object) -> NoReturn:
+        raise RuntimeError(f"unexpected certificate probe {_SENSITIVE_HEALTH_PAYLOAD}")
+
+    caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
+    with pytest.raises(AuthValidationError) as exc_info:
+        AeatAuthenticator(
+            settings,
+            certificate_health_check=_unexpected_certificate_health_error,
+        ).describe()
+
+    assert str(exc_info.value) == "certificate health is unavailable"
+    assert exc_info.value.translated_message == "application.auth.certificate.health.unavailable"
+    assert _SENSITIVE_HEALTH_PAYLOAD not in str(exc_info.value)
+    assert exc_info.value.__cause__ is None
+    assert exc_info.value.__context__ is None
+
+    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    assert _SENSITIVE_HEALTH_PAYLOAD not in log_text
+    assert "failure=RuntimeError" in log_text
 
 
 def test_describe_forwards_bundle_backend_and_friendly_name(

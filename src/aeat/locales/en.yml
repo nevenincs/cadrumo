@@ -253,6 +253,7 @@ application:
           PATH' with a valid path.
         path_unset: No certificate file has been selected. Run 'aeat config auth configure
           --provider certificate --file PATH' to set one.
+        unavailable: 'Certificate health is unavailable; see debug logs for diagnostic details.'
       load:
         password_unset: No certificate password is configured. Set the certificate
           password before continuing.
