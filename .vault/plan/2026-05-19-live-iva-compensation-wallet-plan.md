@@ -246,6 +246,27 @@ fail-closed behavior only. Live acquisition functionality remains open until an
 operator-observed, opt-in, read-only AEAT run completes authentication and
 reaches the intended filed-history and wallet/cartera read surfaces.
 
+2026-06-02 active priority and challenge statement: live IVA read-surface work
+now outranks additional backend expansion. The backend storage, reconciliation,
+taxonomy, and CLI paths are necessary but remain provisional until the
+production Playwright driver can reach the authenticated AEAT read surfaces and
+record only redacted aggregate evidence. Current known live blockers are
+filed-history timeout diagnostics and wallet/cartera DOM drift; both must be
+explained by research-backed route evidence before any calculation path may be
+called grounded by AEAT's binding state. Official AEAT help confirms that
+Modelo 303 declarations with result to pay or compensate may be absent from
+`Mis expedientes` and should be consulted through `Consultar declaraciones
+presentadas` or the Modelo 303 procedure query. Official AEAT declaration-query
+help also documents Cl@ve as an accepted access method and describes required
+search fields and filed-file download. Therefore the next coding slices must
+prioritize the declaration-query route, authenticated DOM/trace diagnostics,
+and a legally read-only wallet/cartera route assessment. Backend changes may
+continue only when they directly unblock, preserve, or verify those live
+read-only surfaces. Grounding sources searched on 2026-06-02:
+`https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/presentacion-declaraciones-ayuda-tecnica/modelo-303/incidencia-consultar-303-expedientes-no-todas.html`
+and
+`https://sede.agenciatributaria.gob.es/Sede/eu_es/ayuda/consultas-informaticas/otros-servicios-ayuda-tecnica/consulta-declaraciones-presentadas.html`.
+
 ### Phase `W06.P15` - filed-history pull and wallet pull services
 Implement a single read-only acquisition service that can pull filed-history
 evidence and, where AEAT allows it, wallet/cartera evidence for the authenticated
