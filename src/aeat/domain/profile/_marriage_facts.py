@@ -101,9 +101,7 @@ def parse_marriage_date_flag(raw: str) -> date:
     try:
         return _parse_iso8601_date(stripped)
     except ValueError as exc:
-        raise ProfileAnswerTypeError(
-            f"--taxpayer-marriage-date must be YYYY-MM-DD; got: {raw!r}"
-        ) from exc
+        raise ProfileAnswerTypeError(f"--taxpayer-marriage-date must be YYYY-MM-DD; got: {raw!r}") from exc
 
 
 __all__ = [

@@ -205,8 +205,8 @@ class TestLoader:
         """A dangling section ref fails as ManualNotFoundError, not builtin FileNotFoundError."""
         settings = _seed_iva(tmp_path)
         manual = load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
-        missing_ref = manual.chapters[0].sections[0].model_copy(
-            update={"relative_path": "structure/sections/cap1/missing.json"}
+        missing_ref = (
+            manual.chapters[0].sections[0].model_copy(update={"relative_path": "structure/sections/cap1/missing.json"})
         )
         with pytest.raises(ManualNotFoundError, match=r"missing required file"):
             load_section(settings.aeat_manuals_root / "iva" / "2025", missing_ref)

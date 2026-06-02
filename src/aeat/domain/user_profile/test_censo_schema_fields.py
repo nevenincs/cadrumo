@@ -46,9 +46,7 @@ def test_every_censo_derived_field_declares_legal_refs(
 
     for section_key, field_key in CENSO_DERIVED_FIELDS:
         field = _field(schema, (section_key, field_key))
-        assert field.legal_refs, (
-            f"censo-derived field {section_key}.{field_key} must declare legal_refs"
-        )
+        assert field.legal_refs, f"censo-derived field {section_key}.{field_key} must declare legal_refs"
 
 
 def test_vivienda_office_section_carries_raw_m2_inputs(
