@@ -37,14 +37,14 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.calculations import assert_enrollment_matches_manifest
-from aeat.core.access_gate import (
+from ..application.calculations import assert_enrollment_matches_manifest
+from ..core.access_gate import (
     CANONICAL_MODELO_FLEET,
     FLEET_SIZE,
     MIN_DISTINCT_RENTA_YEARS,
     AuthorizationState,
 )
-from aeat.core.resources import resources
+from ..core.resources import resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model, pytest.mark.inventory]
 
