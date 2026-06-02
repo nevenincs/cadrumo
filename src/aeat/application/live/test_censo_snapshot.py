@@ -19,6 +19,7 @@ from typing import TypedDict
 import pytest
 
 from ...adapters.persistence.storage import LIVE_CENSO_SNAPSHOT_NAMESPACE
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._censo import (
     CENSO_SNAPSHOT_NAMESPACE,
     CensoSnapshot,
@@ -29,7 +30,6 @@ from ._censo import (
     derive_censo_snapshot_id,
 )
 from ._errors import LiveApplicationInputError
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
