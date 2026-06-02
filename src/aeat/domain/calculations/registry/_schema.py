@@ -18,6 +18,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ....core._period import StandardPeriodCode
 from ....core._tax_domain import TaxDomain
 from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
 from ....core.classification import SensitivityClass
@@ -168,8 +169,6 @@ value independently of a casilla declaration should type their
 field as ``ModeloYear``.
 """
 
-
-from ....core._period import StandardPeriodCode
 
 _STANDARD_PERIOD_CODES = frozenset(StandardPeriodCode)
 _EXT_PATTERN = re.compile(r"^EXT-[1-4]T$")
