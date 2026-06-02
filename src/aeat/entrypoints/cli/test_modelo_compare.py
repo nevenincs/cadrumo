@@ -56,8 +56,8 @@ _PROFILE_ID = "modelo-compare-test-profile"
 # Two materially different ingresos for 2025 vs 2026.
 # Oracle: rendimiento neto = ingresos - gastos; pago fraccionado = 20%.
 # Authority: AEAT DR 130 Instrucciones, Casilla 03 and 04.
-_INGRESOS_2025 = "12000.00"   # casilla 01 for year 2025
-_INGRESOS_2026 = "20000.00"   # casilla 01 for year 2026
+_INGRESOS_2025 = "12000.00"  # casilla 01 for year 2025
+_INGRESOS_2026 = "20000.00"  # casilla 01 for year 2026
 
 # Same gastos in both years — the anti-tautology casilla.
 # Delta for casilla 02 must be exactly zero.
@@ -77,8 +77,6 @@ _TAUTOLOGY_CASILLA = "02"
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
-
-
 
 
 @pytest.fixture
@@ -117,9 +115,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(
-                path="tax_residence.jurisdiction_scope", value="common_regime"
-            ),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
@@ -249,9 +245,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert payload["modelo"] == "130"
 
     # Build casilla_id → row lookup from delta_rows.
-    delta_by_casilla: dict[str, dict[str, object]] = {
-        str(row["casilla_id"]): row for row in payload["delta_rows"]
-    }
+    delta_by_casilla: dict[str, dict[str, object]] = {str(row["casilla_id"]): row for row in payload["delta_rows"]}
 
     # -- Assert result casilla deltas match oracle (year_b - year_a) --------
     for casilla_id in _RESULT_CASILLAS:
@@ -260,8 +254,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
         expected_delta = val_b - val_a
 
         assert casilla_id in delta_by_casilla, (
-            f"Casilla {casilla_id} missing from compare delta_rows; "
-            f"available: {sorted(delta_by_casilla)[:15]}"
+            f"Casilla {casilla_id} missing from compare delta_rows; available: {sorted(delta_by_casilla)[:15]}"
         )
         row = delta_by_casilla[casilla_id]
         actual_delta = Decimal(str(row["delta"]))
@@ -325,27 +318,17 @@ def test_compare_delta_rows_carry_provenance() -> None:
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.
-    obs_by_id: dict[str, CasillaObservation] = {
-        obs.casilla_id: obs for obs in engine_result.observations
-    }
+    obs_by_id: dict[str, CasillaObservation] = {obs.casilla_id: obs for obs in engine_result.observations}
 
     # Computed casillas (03, 07, 19) must carry non-empty provenance.
     for casilla_id in ("03", "07", "19"):
         obs = obs_by_id.get(casilla_id)
         assert obs is not None, f"Casilla {casilla_id!r} absent from engine_result.observations"
-        assert obs.formula_id, (
-            f"Computed casilla {casilla_id!r}: formula_id must be non-empty in compare delta_rows"
-        )
-        assert obs.legal_refs, (
-            f"Computed casilla {casilla_id!r}: legal_refs must be non-empty in compare delta_rows"
-        )
-        assert obs.source_refs, (
-            f"Computed casilla {casilla_id!r}: source_refs must be non-empty in compare delta_rows"
-        )
+        assert obs.formula_id, f"Computed casilla {casilla_id!r}: formula_id must be non-empty in compare delta_rows"
+        assert obs.legal_refs, f"Computed casilla {casilla_id!r}: legal_refs must be non-empty in compare delta_rows"
+        assert obs.source_refs, f"Computed casilla {casilla_id!r}: source_refs must be non-empty in compare delta_rows"
 
     # Input casilla (01) must have empty formula_id (not formula-computed).
     input_obs = obs_by_id.get("01")
     assert input_obs is not None, "Casilla '01' (ingresos) must appear in observations"
-    assert input_obs.formula_id is None, (
-        "Input casilla '01' must have formula_id=None (not formula-computed)"
-    )
+    assert input_obs.formula_id is None, "Input casilla '01' must have formula_id=None (not formula-computed)"

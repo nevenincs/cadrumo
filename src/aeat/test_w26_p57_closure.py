@@ -69,41 +69,23 @@ def _file_has_token(rel_path: str, token: str) -> bool:
 
 def test_s659_markers_present() -> None:
     """Every S659 (Cluster B click-stub) file carries the expected marker token."""
-    missing = [
-        rel
-        for rel, token in _S659_SITES
-        if not _file_has_token(rel, token)
-    ]
+    missing = [rel for rel, token in _S659_SITES if not _file_has_token(rel, token)]
     if missing:
-        raise AssertionError(
-            f"S659 marker token missing from: {missing}"
-        )
+        raise AssertionError(f"S659 marker token missing from: {missing}")
 
 
 def test_s660_markers_present() -> None:
     """Every S660 (Cluster A continuation) file carries the expected marker token."""
-    missing = [
-        rel
-        for rel, token in _S660_SITES
-        if not _file_has_token(rel, token)
-    ]
+    missing = [rel for rel, token in _S660_SITES if not _file_has_token(rel, token)]
     if missing:
-        raise AssertionError(
-            f"S660 marker token missing from: {missing}"
-        )
+        raise AssertionError(f"S660 marker token missing from: {missing}")
 
 
 def test_s661_markers_present() -> None:
     """Every S661 (Clusters C/D/E/F) file carries the expected marker token."""
-    missing = [
-        rel
-        for rel, token in _S661_SITES
-        if not _file_has_token(rel, token)
-    ]
+    missing = [rel for rel, token in _S661_SITES if not _file_has_token(rel, token)]
     if missing:
-        raise AssertionError(
-            f"S661 marker token missing from: {missing}"
-        )
+        raise AssertionError(f"S661 marker token missing from: {missing}")
 
 
 def test_allowlist_size_is_49() -> None:
@@ -120,8 +102,7 @@ def test_allowlist_size_is_49() -> None:
 
     known: frozenset[tuple[str, int]] = mod._KNOWN_VIOLATING_LINES  # type: ignore[attr-defined]
     assert len(known) == _EXPECTED_ALLOWLIST_SIZE, (
-        f"Expected {_EXPECTED_ALLOWLIST_SIZE} ratchet entries, got {len(known)}. "
-        "Check S659/S660/S661 paydown counts."
+        f"Expected {_EXPECTED_ALLOWLIST_SIZE} ratchet entries, got {len(known)}. Check S659/S660/S661 paydown counts."
     )
 
 
@@ -143,6 +124,4 @@ def test_ratchet_passes() -> None:
         cwd=_SRC_ROOT.parent.parent,
     )
     if result.returncode != 0:
-        raise AssertionError(
-            f"Ratchet test failed:\n{result.stdout}\n{result.stderr}"
-        )
+        raise AssertionError(f"Ratchet test failed:\n{result.stdout}\n{result.stderr}")
