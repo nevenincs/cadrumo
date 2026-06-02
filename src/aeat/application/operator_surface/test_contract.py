@@ -9,7 +9,11 @@ from collections.abc import Iterator
 import pytest
 from pydantic import ValidationError
 
+from ...core.aggregation import AggregationSourceKind
+from ...core.config import override_settings
+from ...core.errors import get_registered_error_code
 from .. import operator_surface
+from ..overview import FilingStatus
 from . import (
     ModeloLifecycleStep,
     MountedCommandDomain,
@@ -26,9 +30,6 @@ from . import (
     retired_surface_suggestion,
 )
 from ._models import LifecycleContract, RootSurface
-from ..overview import FilingStatus
-from ...core.config import override_settings
-from ...core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -319,4 +320,33 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
     assert bare_literal_count == 0, (
         f"Found {bare_literal_count} bare '\"filed\"' literal(s) in _contract.py; "
         "all occurrences must be replaced with FilingStatus.FILED"
+    )
+
+
+def test_source_kind_is_a_constrained_slice_of_aggregation_source_kind() -> None:
+    """operator-surface SourceKind must stay a subset of core AggregationSourceKind.
+
+    DB-10: SourceKind is the operator-facing source-kind taxonomy. It is a
+    deliberate constraint-divergent subset of the canonical
+    :class:`AggregationSourceKind` — it accepts every aggregation source kind
+    EXCEPT ``INVOICE`` (the operator surface routes invoice evidence through the
+    purchase/payable/collectible kinds, not the bare ``invoice`` kind). This
+    invariant test enforces the single-source-of-truth relationship without
+    duplicating the taxonomy: every SourceKind value must be a real
+    AggregationSourceKind value, and the set difference must be exactly
+    ``{INVOICE}`` so neither enum can silently drift from the other.
+    """
+    operator_values = {member.value for member in SourceKind}
+    canonical_values = {member.value for member in AggregationSourceKind}
+
+    # Every operator source kind is a genuine canonical aggregation source kind.
+    assert operator_values <= canonical_values, (
+        f"SourceKind values {sorted(operator_values - canonical_values)} are not "
+        "valid AggregationSourceKind members — the operator taxonomy has drifted"
+    )
+
+    # The exclusion is exactly INVOICE — a deliberate, asserted constraint.
+    assert canonical_values - operator_values == {AggregationSourceKind.INVOICE.value}, (
+        "operator SourceKind must be exactly AggregationSourceKind minus INVOICE; "
+        f"unexpected difference: {sorted(canonical_values - operator_values)}"
     )
