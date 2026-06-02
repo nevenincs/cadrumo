@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva import InvoiceKind
+from ..transactions import LedgerImportDiagnosticKind
 from ._errors import FilterParseError
 
 __all__ = (
@@ -47,7 +48,6 @@ __all__ = (
     "InvoiceReviewStatus",
     "LedgerReviewFilterKey",
     "LedgerReviewFilterSpec",
-    "LedgerReviewIssue",
     "LedgerReviewStatus",
     "parse_filter_clause",
     "parse_filter_clauses",
@@ -151,19 +151,6 @@ class LedgerReviewStatus(StrEnum):
     REVIEWED = "reviewed"
     SKIPPED = "skipped"
 
-
-class LedgerReviewIssue(StrEnum):
-    """Closed catalogue of ledger ``issue=`` filter values.
-
-    Mirrors :class:`aeat.application.transactions.LedgerImportDiagnosticKind`
-    so callers can route the matched diagnostic kinds straight through
-    the import-diagnostics surface.
-    """
-
-    ORIGINAL_FILE = "original-file"
-    GAP = "gap"
-    DUPLICATE = "duplicate"
-    PARSER = "parser"
 
 
 class InvoiceReviewFilterKey(StrEnum):
@@ -302,7 +289,7 @@ class LedgerReviewFilterSpec(BaseModel):
             Period parsing is delegated to the consuming use-case so
             this layer does not duplicate
             :class:`aeat.application.aggregation.Period`.
-        issue: Resolved :class:`LedgerReviewIssue` if ``issue=`` was
+        issue: Resolved :class:`LedgerImportDiagnosticKind` if ``issue=`` was
             provided.
         import_id: Raw import-batch id if ``import=`` was provided.
             Identifier-shape validation lives on the
@@ -314,7 +301,7 @@ class LedgerReviewFilterSpec(BaseModel):
     clauses: tuple[FilterClause, ...] = ()
     status: LedgerReviewStatus | None = None
     period: str | None = None
-    issue: LedgerReviewIssue | None = None
+    issue: LedgerImportDiagnosticKind | None = None
     import_id: str | None = None
 
     @classmethod
@@ -325,7 +312,7 @@ class LedgerReviewFilterSpec(BaseModel):
         _ensure_unique_keys(clauses, scope="ledger")
         status: LedgerReviewStatus | None = None
         period: str | None = None
-        issue: LedgerReviewIssue | None = None
+        issue: LedgerImportDiagnosticKind | None = None
         import_id: str | None = None
         for clause in clauses:
             if clause.key == LedgerReviewFilterKey.STATUS:
@@ -339,7 +326,7 @@ class LedgerReviewFilterSpec(BaseModel):
             elif clause.key == LedgerReviewFilterKey.ISSUE:
                 issue = _enum_value_or_raise(
                     clause,
-                    LedgerReviewIssue,
+                    LedgerImportDiagnosticKind,
                     scope="ledger-issue",
                 )
             elif clause.key == LedgerReviewFilterKey.IMPORT:
@@ -476,7 +463,6 @@ __all__ = [
     "InvoiceReviewStatus",
     "LedgerReviewFilterKey",
     "LedgerReviewFilterSpec",
-    "LedgerReviewIssue",
     "LedgerReviewStatus",
     "parse_filter_clause",
     "parse_filter_clauses",
