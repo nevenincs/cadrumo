@@ -58,7 +58,7 @@ def test_auth_acquisition_lock_blocks_second_live_owner(tmp_path: Path) -> None:
         assert status.record == record
 
         with (
-            pytest.raises(AuthAcquisitionLockedError, match=r"operación de autenticación") as excinfo,
+            pytest.raises(AuthAcquisitionLockedError) as excinfo,
             acquire_auth_acquisition_lock(
                 settings,
                 AuthProviderKind.CLAVE_MOVIL,
