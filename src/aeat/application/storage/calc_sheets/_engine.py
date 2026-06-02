@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import Final, Literal
 
 from ....core.i18n import tr
-from ....domain.calculations.registry._schema import (
+from ....domain.calculations.registry import (
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,
@@ -23,6 +23,7 @@ from ....domain.calculations.registry._schema import (
     ParameterDefinition,
     RegistrySnapshot,
 )
+from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
@@ -43,7 +44,6 @@ from ._records import (
     TabName,
     _utc_now,
 )
-from ._errors import CalcSheetsEngineError
 from ._translator import translate_formula
 
 _ENGINE_VERSION: Final[str] = "calc-sheets/0.1.0"

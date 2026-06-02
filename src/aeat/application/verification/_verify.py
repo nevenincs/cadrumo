@@ -13,12 +13,11 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from ...core.time import now
-
 from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
+from ...core.time import now
 from ...domain.calculations.registry import (
     InputKind,
     RegistrySnapshot,

@@ -37,13 +37,11 @@ from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
+    AeatNifIvaObservation,
     RegistryValidationError,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
-)
-from .....domain.calculations.registry._aeat_nif_iva_oracle import (
-    AeatNifIvaObservation,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory

@@ -33,11 +33,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.time import now
-
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file
 from ...core.logging import get_logger
+from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaFieldKind,
     ExportFieldDefinition,

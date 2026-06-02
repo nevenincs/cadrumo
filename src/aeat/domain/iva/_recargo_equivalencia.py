@@ -37,8 +37,8 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.resources import bundled_path
-from ._schema import IvaRateKind
 from ._errors import IvaCatalogueError, IvaValidationError
+from ._schema import IvaRateKind
 
 
 class LivaArt161RecargoRates(BaseModel):
@@ -90,7 +90,7 @@ def _load_rates() -> LivaArt161RecargoRates:
     # load_registry_tree path pulls in registry._bindings which imports
     # from aeat.domain.iva, triggering a circular import at this very
     # module's import time.
-    from ..calculations.registry._errors import RegistryError
+    from ..calculations.registry import RegistryError
     from ..calculations.registry._loader import load_legal_parameters_only
 
     try:

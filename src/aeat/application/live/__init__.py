@@ -118,7 +118,7 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     RegistryModeloObservation as _RegistryModeloObservation,
 )
-from ...domain.calculations.registry._authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
+from ...domain.calculations.registry import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,

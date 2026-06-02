@@ -15,10 +15,6 @@ from typing import NamedTuple, get_args
 
 from pydantic import BaseModel, ConfigDict
 
-# Importing the renta package registers the first-slice routing
-# cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain import renta as _renta_snapshot_checks
-
 from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,
 )
@@ -28,14 +24,47 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.persistence.storage import MasterKeyProvider as _MasterKeyProvider
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.resources import bundled_path as _bundled_path
+
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check required by Modelo 100 snapshots.
+from ...domain import renta as _renta_snapshot_checks
+from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
+from ...domain.calculations.registry import (
+    CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
+)
+from ...domain.calculations.registry import GroiOracle as _GroiOracle
 from ...domain.calculations.registry import (
     InputKind as _InputKind,
+)
+from ...domain.calculations.registry import (
+    LiveParityCatalogue as _LiveParityCatalogue,
+)
+from ...domain.calculations.registry import (
+    OracleEnvironment as _OracleEnvironment,
+)
+from ...domain.calculations.registry import (
+    RegistryFiledStateComparison as _RegistryFiledStateComparison,
 )
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
 from ...domain.calculations.registry import (
+    WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport,
+)
+from ...domain.calculations.registry import (
+    audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
+)
+from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
+)
+from ...domain.calculations.registry import (
+    collect_applicability_declarations as _collect_applicability_declarations,
+)
+from ...domain.calculations.registry import (
+    collect_orphan_oracle_ids as _collect_orphan_oracle_ids,
+)
+from ...domain.calculations.registry import (
+    compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
 )
 from ...domain.calculations.registry import (
     generate_parity_tape_path as _generate_parity_tape_path,
@@ -61,38 +90,9 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     save_parity_tape as _save_parity_tape,
 )
+from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
-)
-from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
-from ...domain.calculations.registry._filed_state import (
-    RegistryFiledStateComparison as _RegistryFiledStateComparison,
-)
-from ...domain.calculations.registry._filed_state import (
-    compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
-)
-from ...domain.calculations.registry._groi_oracle import GroiOracle as _GroiOracle
-from ...domain.calculations.registry._legal import verify_legal_catalogue as _verify_legal_catalogue
-from ...domain.calculations.registry._live_parity import (
-    CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
-)
-from ...domain.calculations.registry._live_parity import (
-    LiveParityCatalogue as _LiveParityCatalogue,
-)
-from ...domain.calculations.registry._live_parity import (
-    OracleEnvironment as _OracleEnvironment,
-)
-from ...domain.calculations.registry._live_parity import (
-    audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
-)
-from ...domain.calculations.registry._live_parity import (
-    collect_applicability_declarations as _collect_applicability_declarations,
-)
-from ...domain.calculations.registry._live_parity import (
-    collect_orphan_oracle_ids as _collect_orphan_oracle_ids,
-)
-from ...domain.calculations.registry._workbook_parity import (
-    WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport,
 )
 from ...domain.period import period_end_date as _period_end_date
 from ._corpus import (

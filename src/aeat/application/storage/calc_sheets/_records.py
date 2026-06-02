@@ -39,7 +39,7 @@ from ....domain.calculations.registry import (
     RelationId,
     RevisionId,
 )
-from ....domain.calculations.registry._schema import DecimalValue as _RegistryDecimalValue
+from ....domain.calculations.registry import DecimalValue as _RegistryDecimalValue
 from ._errors import CalcSheetsRecordError
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
