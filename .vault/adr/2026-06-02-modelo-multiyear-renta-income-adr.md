@@ -96,25 +96,38 @@ selector `{ source_modelo = "200", filing_year_delta = -1, period = "0A", source
 unlimited carry self-accumulates through `00671` year over year, so the design uses a single
 prior-year copy rather than a multi-year fan-out.
 
-The base imponible casilla is `DP200014:00552` (semantic_role `is_liquidacion_iii_base_imponible`,
-`intentional_singleton`), `input_kind = "manual"` today, whose `legal_refs` already carry
-`ley-27-2014:art-25` and `ley-27-2014:art-26` (the derivation is anticipated). It is the exact
-casilla guarded by the existing ADVISORY predicate
-`modelo-200-base-imponible-determinada-cuando-resultado-positivo`
-(`implies_nonzero(["00501", "DP200014:00552"])` in
-`verification_expectations/0001-verification_predicates.toml`, `finding_kind = "ADVISORY"`),
-which the `modelo-200-base-determination` ADR tracks for a Phase-2 derivation. This A4 ADR
-**chooses option (b)**: rather than recomputing `00552` and risking conflict with the manual
-entry, keep `00552` manual and add a computed consistency check that upgrades that advisory
-along the documented no-silent-under-declaration advisory→`BLOCKING_RULE` path —
-`00552 == base_previa − min(bin_disponible, max(literal(1000000), percent(70, base_previa)))`,
-i.e. the entered base must equal prior base minus the capped BIN applied. The capped quantity
-itself is the only genuinely-new formula: `if_then_else(greater_equal(base_previa, 0),
-min(bin_disponible, max(literal(1000000), percent(70, base_previa))), literal(0))`, grounding
-both the €1M floor and the 70% ceiling. `00501` (resultado contable) and the per-origin-year
-BIN detail boxes (0174-0182, 00489/00504/.../00700) stay manual. The art.26.1 quitas/esperas
-and extinción exclusions are not modelled; they surface as an ADVISORY note plus a profile
-flag, never a hard refusal.
+The BIN compensation amount actually applied this period is casilla
+`DP200014:00547` (semantic_role `is_liquidacion_iii_compensacion_bin_aplicada`,
+`intentional_singleton`). The companion `modelo-200-base-determination` ADR's base-determination
+build (landed separately) makes the base chain computed — base imponible previa
+`DP200014:00550 = 00501 + DP200013:00417 − DP200013:00418`, and base imponible
+`DP200014:00552 = max(00550 − 01032 − 00547, 0)` — consuming `00547` as the applied-BIN
+subtrahend. `00547` is the handoff point this A4 hook layers onto.
+
+**Cap design — ELECTIVE-CAPPED, not forced-to-cap (as built).** An earlier draft proposed making
+`00552` (or `00547`) *equal* the cap. That is over-specified and would ship wrong tax: LIS
+art. 26.1 — «las bases imponibles negativas ... **podrán** ser compensadas ... **con el límite**
+del 70 por ciento ... En todo caso ... hasta el importe de 1 millón de euros» — makes BIN
+compensation a taxpayer **right bounded by a ceiling**, not a mandate. A filer may lawfully apply
+**less** than the cap (to preserve BIN stock for later years, or when the base is already low).
+Forcing `00547 = cap` would over-apply for every partial-compensation filer. So the implemented
+design keeps `00547` **operator-elective (`input_kind = "manual"`)** and adds, on top, a
+**separate computed ceiling casilla** `DP200014:bin-aplicada-maxima` (internal; no `export_refs`)
+`= min(00670, max(literal(1000000), percent(70, DP200014:00550)))` — the cap base is `00550`, the
+base imponible previa **before** the reserva de capitalización (`01032`) and the compensación
+(`00547`), per art. 26.1 — plus **two `BLOCKING_RULE` `cap_le_when_positive` verification
+predicates**: `cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])` (the
+applied amount must not exceed the art.26.1 ceiling) and
+`cap_le_when_positive(["DP200014:00547", "00670"])` (cannot compensate more than the BIN stock
+held). `cap_le_when_positive` is the existing operator (grounded in the M131 C11≤C10 / M130
+C15≤C14 cap analogues); no new operator is added, and it holds vacuously when the ceiling ≤ 0.
+This is the `no-silent-under-declaration` "Good" path applied to the **over-application**
+direction — the gate **refuses** an over-claim while **permitting** electing less. The existing
+`implies_nonzero(["00501", "DP200014:00552"])` ADVISORY (under-declaration direction) is owned by
+the `modelo-200-base-determination` ADR and left as-is. `00501` (resultado contable) and the
+per-origin-year BIN detail boxes (0174-0182, 00489/00504/.../00700) stay manual. The art.26.1
+quitas/esperas and extinción exclusions are not modelled; they surface as an ADVISORY note plus a
+profile flag, never a hard refusal.
 
 **Modelo 100 — savings-base loss carryforward.** Add three `previous_filing` bindings on the
 carryforward casillas (0462→0393, 0465→0396, 1390→1391), each a straight

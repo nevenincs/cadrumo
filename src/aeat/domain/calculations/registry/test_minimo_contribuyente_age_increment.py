@@ -166,8 +166,7 @@ def test_0511_age_bracket_2024(birth_date: date, expected: Decimal, label: str) 
     actual = values.get("0511")
     assert actual is not None, f"casilla 0511 missing from 2024 result ({label})"
     assert actual == expected, (
-        f"0511 ({label}): got {actual!r}, expected {expected!r} "
-        f"(birth_date={birth_date}, filing_year=2024)"
+        f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year=2024)"
     )
 
 
@@ -190,8 +189,7 @@ def test_0511_age_bracket_2025(birth_date: date, expected: Decimal, label: str) 
     actual = values.get("0511")
     assert actual is not None, f"casilla 0511 missing from 2025 result ({label})"
     assert actual == expected, (
-        f"0511 ({label}): got {actual!r}, expected {expected!r} "
-        f"(birth_date={birth_date}, filing_year=2025)"
+        f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year=2025)"
     )
 
 
@@ -214,7 +212,4 @@ def test_0511_birth_date_change_alters_value_2024() -> None:
 
     assert v_under is not None, "0511 missing from result (under-65 scenario)"
     assert v_over is not None, "0511 missing from result (over-65 scenario)"
-    assert v_under != v_over, (
-        f"0511 must differ across the 65-year threshold: "
-        f"under-65={v_under}, over-65={v_over}"
-    )
+    assert v_under != v_over, f"0511 must differ across the 65-year threshold: under-65={v_under}, over-65={v_over}"

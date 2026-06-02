@@ -29,6 +29,7 @@ class UserProfileRegistryContractSeverity(StrEnum):
     ERROR = "error"
     WARNING = "warning"
 
+
 class UserProfileRegistryContractIssue(BaseModel):
     """One unresolved cross-reference between user-profile schema and modelos."""
 
@@ -48,6 +49,7 @@ class UserProfileRegistryContractIssue(BaseModel):
     selector: str
     message: str = Field(min_length=1)
 
+
 class UserProfileSelectorIndex(BaseModel):
     """Schema-owned selector namespaces consumed by modelo registry surfaces."""
 
@@ -57,6 +59,7 @@ class UserProfileSelectorIndex(BaseModel):
     schedule_predicates: frozenset[str]
     export_headers: frozenset[str]
     field_paths: frozenset[str]
+
 
 class UserProfileRegistryContractReport(BaseModel):
     """Typed result for profile schema coverage against modelo registry usage."""
@@ -83,6 +86,7 @@ class UserProfileRegistryContractReport(BaseModel):
         """Return whether all blocking selector references resolve."""
         return not self.errors
 
+
 def build_user_profile_selector_index(schema: ProfileSchemaDefinition) -> UserProfileSelectorIndex:
     """Build the profile selector namespaces declared by the TOML schema.
 
@@ -103,6 +107,7 @@ def build_user_profile_selector_index(schema: ProfileSchemaDefinition) -> UserPr
         export_headers=frozenset(export_headers),
         field_paths=frozenset(schema.field_paths),
     )
+
 
 def validate_user_profile_registry_contract(
     modelos: Iterable[ModeloDefinition],
@@ -140,6 +145,7 @@ def validate_user_profile_registry_contract(
         checked_modelos=tuple(sorted(checked_modelos)),
         issues=tuple(issues),
     )
+
 
 def _binding_issues(
     modelo_id: str,
@@ -179,6 +185,7 @@ def _binding_issues(
                 )
     return tuple(issues)
 
+
 def _schedule_issues(
     modelo_id: str,
     revision: ModeloRevision,
@@ -200,6 +207,7 @@ def _schedule_issues(
                     )
                 )
     return tuple(issues)
+
 
 def _deadline_issues(
     modelo_id: str,
@@ -223,6 +231,7 @@ def _deadline_issues(
                 )
     return tuple(issues)
 
+
 def _cross_reference_applicability_issues(
     modelo_id: str,
     revision: ModeloRevision,
@@ -244,6 +253,7 @@ def _cross_reference_applicability_issues(
                     )
                 )
     return tuple(issues)
+
 
 def _export_issues(
     modelo_id: str,
@@ -283,6 +293,7 @@ def _export_issues(
                         )
                     )
     return tuple(issues)
+
 
 def profile_binding_selectors(selector: Mapping[str, object]) -> tuple[str, ...]:
     selectors: list[str] = []
