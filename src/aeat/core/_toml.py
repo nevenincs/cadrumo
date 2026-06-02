@@ -68,9 +68,7 @@ def parse_toml_text(text: str, *, error_factory: Callable[[str], Exception]) -> 
         raise error_factory(f"invalid TOML: {exc}") from exc
 
 
-def to_str_keyed_dict(
-    raw: Mapping[object, object], *, error_factory: Callable[[str], Exception]
-) -> dict[str, object]:
+def to_str_keyed_dict(raw: Mapping[object, object], *, error_factory: Callable[[str], Exception]) -> dict[str, object]:
     """Convert a parsed TOML mapping to a str-keyed dict, rejecting non-string keys.
 
     Args:
