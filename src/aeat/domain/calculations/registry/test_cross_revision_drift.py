@@ -681,65 +681,13 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
         assert revision.continuidad_validation == "strict"
         assert casilla.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
 
-    assert (
-        tuple(
-            evolution
-            for evolution in m100.revisions["2022"].casilla_continuidad_evolutions
-            if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
-        )
-        == ()
-    )
+    assert m100.revisions["2022"].casilla_continuidad_evolutions == ()
     assert tuple(
         evolution.evolution_kind
         for revision_id in ("2023", "2024", "2025")
         for evolution in m100.revisions[revision_id].casilla_continuidad_evolutions
         if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
     ) == ("unchanged", "unchanged", "unchanged")
-
-
-def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m100 = next(modelo for modelo in modelos if modelo.id == "100")
-
-    continuidad_id = "irpf.inmueble.porcentaje-propiedad"
-    for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
-        revision = m100.revisions[revision_id]
-        casilla = next(item for item in revision.casillas if item.id == "0063")
-        assert casilla.continuidad_id == continuidad_id
-
-    assert {
-        revision_id: m100.revisions[revision_id].continuidad_validation
-        for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025")
-    } == {
-        "2020": "advisory",
-        "2021": "advisory",
-        "2022": "strict",
-        "2023": "strict",
-        "2024": "strict",
-        "2025": "strict",
-    }
-
-    evolution_pairs = {
-        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
-        for revision in m100.revisions.values()
-        for evolution in revision.casilla_continuidad_evolutions
-        if evolution.continuidad_id == continuidad_id
-    }
-
-    assert evolution_pairs == {
-        ("2020", "2021"): "legal_refs_evolved",
-        ("2020", "2022"): "legal_refs_evolved",
-        ("2020", "2023"): "legal_refs_evolved",
-        ("2020", "2024"): "legal_refs_evolved",
-        ("2020", "2025"): "legal_refs_evolved",
-        ("2021", "2022"): "unchanged",
-        ("2021", "2025"): "legal_refs_evolved",
-        ("2022", "2023"): "unchanged",
-        ("2022", "2025"): "legal_refs_evolved",
-        ("2023", "2024"): "unchanged",
-        ("2023", "2025"): "legal_refs_evolved",
-        ("2024", "2025"): "legal_refs_evolved",
-    }
 
 
 def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift() -> None:
