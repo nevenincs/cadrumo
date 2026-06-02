@@ -123,16 +123,18 @@ class ModeloCasillaRow(BaseModel):
     citations as exposed by the registry query surface.
 
     Attributes:
-        casilla_id: Unique registry identifier for the casilla.
+        casilla_id: Stable registry identifier for the casilla (distinct
+            from the form-printed ``number``).
         number: Short numeric or alphanumeric label printed on the form
             (e.g. ``"0552"``).
-        label: Human-readable description of the casilla's purpose.
+        label: Human-readable description of what the casilla captures.
         section: Ordered breadcrumb path locating the casilla within the
             form's section hierarchy.
         data_type: Raw value type declared by the registry
             (e.g. ``"decimal"``, ``"integer"``).
         input_kind: Whether the casilla is manually entered, computed by
-            a formula, or bound to a financial-data source.
+            a formula, or *bound* — populated from an external
+            financial-data source (see the binding concept).
         required: ``True`` when the casilla must be supplied for a valid
             filing.
         formula: Registry identifier of the formula that computes this
@@ -167,17 +169,18 @@ class ModeloCasillasReport(BaseModel):
     """Full casilla listing for a single resolved modelo revision.
 
     Returned by ``RegistryQueryService.casillas``. The ``revision``,
-    ``filing_year``, and ``period`` fields identify the revision the
-    query resolved against so callers can surface the selection context
-    alongside the row data.
+    ``filing_year``, and ``period`` fields record which version of the
+    form the query selected, so callers can show the user exactly which
+    revision the rows came from.
 
     Attributes:
         code: Modelo identifier (e.g. ``"303"``).
         revision: Registry revision identifier that was resolved.
         filing_year: Filing year used for revision selection, or ``None``
             when no year-scoped period was supplied.
-        period: Registry period token (e.g. ``"1T"``), or ``None`` when
-            the query resolved the latest revision without a period.
+        period: Filing-period code (e.g. ``"1T"`` for the first quarter),
+            or ``None`` when the query resolved the latest revision
+            without a period.
         rows: Ordered tuple of casilla rows for the resolved revision.
     """
 
@@ -219,17 +222,18 @@ class ModeloBindingRow(BaseModel):
 class ModeloBindingsReport(BaseModel):
     """Full binding listing for a single resolved modelo revision.
 
-    Returned by the ``bindings*`` family of methods on
-    ``RegistryQueryService``. A *binding* maps a financial-data source
-    (e.g. an aggregated ledger figure) to a casilla or formula input.
+    A *binding* maps a financial-data source (e.g. an aggregated ledger
+    figure) to a casilla or formula input. This report is the full
+    binding listing for a single resolved modelo revision, returned by
+    the binding-listing methods on ``RegistryQueryService``.
 
     Attributes:
         code: Modelo identifier (e.g. ``"130"``).
         revision: Registry revision identifier that was resolved.
         filing_year: Filing year used for revision selection, or ``None``
             when the query was not scoped to a filing year.
-        period: Registry period token (e.g. ``"1T"``), or ``None`` when
-            the query resolved without a period.
+        period: Filing-period code (e.g. ``"1T"`` for the first quarter),
+            or ``None`` when the query resolved without a period.
         rows: Ordered tuple of binding rows for the resolved revision.
     """
 
@@ -245,9 +249,9 @@ class ModeloBindingsReport(BaseModel):
 class ModeloFormulaRow(BaseModel):
     """One row in a formula listing for a resolved modelo revision.
 
-    Exposes the full dependency surface of a single formula entry so
-    contributors can inspect what inputs drive a computed casilla without
-    reading the raw registry TOML.
+    Lists every input the formula depends on, so contributors can
+    inspect what drives a computed casilla without reading the raw
+    registry TOML.
 
     Attributes:
         formula_id: Unique registry identifier for this formula.
@@ -260,9 +264,11 @@ class ModeloFormulaRow(BaseModel):
         input_parameters: Parameter names referenced in the expression,
             deduplicated in order of first appearance.
         input_relations: Relation identifiers referenced in the
-            expression, deduplicated in order of first appearance.
-        expression: Public JSON-safe mapping representing the formula's
-            AST node, with ``Decimal`` values serialised as strings.
+            expression (cross-casilla or cross-revision links),
+            deduplicated in order of first appearance.
+        expression: A structured, JSON-serialisable representation of the
+            formula's calculation logic, with ``Decimal`` values rendered
+            as strings.
         legal_refs: Regulatory citations grounding the formula's
             calculation rule.
         source_refs: Internal source references linking to AEAT
@@ -293,8 +299,9 @@ class ModeloFormulasReport(BaseModel):
         revision: Registry revision identifier that was resolved.
         filing_year: Filing year used for revision selection, or ``None``
             when no year-scoped period was supplied.
-        period: Registry period token (e.g. ``"0A"``), or ``None`` when
-            the query resolved the latest revision without a period.
+        period: Filing-period code (e.g. ``"0A"`` for the annual period),
+            or ``None`` when the query resolved the latest revision
+            without a period.
         rows: Ordered tuple of formula rows for the resolved revision.
     """
 
