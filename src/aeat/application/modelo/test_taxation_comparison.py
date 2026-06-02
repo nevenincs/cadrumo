@@ -105,6 +105,9 @@ _BASE_BINDINGS = {
     "renta-2025-profile-marriage-full-year": Decimal("1"),  # married full year
     "renta-2025-profile-marriage-month-start": Decimal("1"),
     "renta-2025-profile-marriage-month-end": Decimal("12"),
+    # Fresh-filer scenarios: no prior-period BL negativa to compensate
+    # (LIRPF art. 50.3 carry-forward; defaults to 0 for new couples).
+    "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 _BASE_ENUM_BINDINGS = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
