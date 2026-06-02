@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
-from ....core.classification import SensitivityClass
-from ....core.config import Settings
-from ...persistence.storage import STORAGE_NAMESPACE_REGISTRY, EphemeralMasterKeyProvider, StorageRemoteMirrorPolicy
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
-from ...persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....tests.secure_sql import isolated_runtime_profile
+from ...persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
 from . import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     OutboundStorageIntegrityError,
@@ -33,122 +30,118 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
 def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermark(tmp_path: Path) -> None:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'secure-objects.db').as_posix()}"),
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-manifest") as profile:
+        repo = profile.repository
+        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace = namespace_definition.namespace
+        first_written_at = datetime(2026, 5, 28, 10, 0, tzinfo=UTC)
+        second_written_at = first_written_at + timedelta(minutes=1)
+        repo.save(
+            namespace=namespace,
+            object_key="first-object",
+            classification=namespace_definition.sensitivity,
+            schema_version=1,
+            written_at=first_written_at,
+            payload=b"first-plaintext-payload",
         )
-        Base.metadata.create_all(engine)
-        try:
-            repo = SecureObjectRepository(engine=engine)
-            namespace = "aeat.remote.mirror.fixture"
-            first_written_at = datetime(2026, 5, 28, 10, 0, tzinfo=UTC)
-            second_written_at = first_written_at + timedelta(minutes=1)
-            repo.save(
-                namespace=namespace,
-                object_key="first-object",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=first_written_at,
-                payload=b"first-plaintext-payload",
-            )
-            repo.save(
-                namespace=namespace,
-                object_key="second-object",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=second_written_at,
-                payload=b"second-plaintext-payload",
-            )
-
-            raw_rows = tuple(repo.iter_all_records_raw())
-            manifest = build_remote_mirror_namespace_manifest(namespace, raw_rows)
-            mirror_provider = LocalFileSystemProvider(tmp_path / "mirror")
-            metadata = put_remote_mirror_namespace_manifest(mirror_provider, manifest)
-            payload, _ = mirror_provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, metadata.object_key_hmac)
-            reloaded = RemoteMirrorNamespaceManifest.model_validate_json(payload)
-
-            assert reloaded == manifest
-            assert reloaded.object_count == 2
-            assert b"first-plaintext-payload" not in payload
-            assert b"second-plaintext-payload" not in payload
-
-            raw_by_key_hmac = {remote_mirror_object_key_hmac(row.namespace, row.object_key): row for row in raw_rows}
-            for entry in reloaded.objects:
-                raw = raw_by_key_hmac[entry.object_key_hmac]
-                assert entry.ciphertext_hash == hashlib.sha256(raw.payload).hexdigest()
-                assert entry.ciphertext_hash != hashlib.sha256(b"first-plaintext-payload").hexdigest()
-                assert entry.ciphertext_hash != hashlib.sha256(b"second-plaintext-payload").hexdigest()
-                assert entry.storage_revision_id == raw.revision_id
-                assert entry.revision_written_at == raw.revision_written_at
-
-            latest_entry = max(
-                reloaded.objects,
-                key=lambda entry: entry.revision_written_at or datetime.min.replace(tzinfo=UTC),
-            )
-            assert reloaded.latest_revision_id == latest_entry.storage_revision_id
-            assert reloaded.latest_revision_written_at == latest_entry.revision_written_at
-        finally:
-            engine.dispose()
-
-
-def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(tmp_path: Path) -> None:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'opaque-round-trip.db').as_posix()}"),
+        repo.save(
+            namespace=namespace,
+            object_key="second-object",
+            classification=namespace_definition.sensitivity,
+            schema_version=1,
+            written_at=second_written_at,
+            payload=b"second-plaintext-payload",
         )
-        Base.metadata.create_all(engine)
-        try:
-            repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
-            namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
-            namespace = namespace_definition.namespace
-            plaintext = b"operator plaintext that must never reach the remote mirror"
-            plaintext_text = plaintext.decode()
-            repo.save(
-                namespace=namespace,
-                object_key="opaque-object",
-                classification=namespace_definition.sensitivity,
-                schema_version=1,
-                written_at=datetime(2026, 6, 2, 8, 0, tzinfo=UTC),
-                payload=plaintext,
-            )
-            raw_row = next(repo.iter_all_records_raw())
-            manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
-            entry = manifest.objects[0]
-            mirror_provider = LocalFileSystemProvider(tmp_path / "mirror")
 
-            mirror_provider.put(
-                entry.namespace,
-                entry.object_key_hmac,
-                raw_row.payload,
-                content_hash=f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}",
-                label="opaque-object",
-            )
-            manifest_metadata = put_remote_mirror_namespace_manifest(mirror_provider, manifest)
-            mirrored_payload, mirrored_metadata = mirror_provider.get(entry.namespace, entry.object_key_hmac)
-            manifest_payload, _ = mirror_provider.get(
-                REMOTE_MIRROR_MANIFEST_NAMESPACE,
-                manifest_metadata.object_key_hmac,
-            )
+        raw_rows = tuple(repo.iter_all_records_raw())
+        manifest = build_remote_mirror_namespace_manifest(namespace, raw_rows)
+        mirror_provider = LocalFileSystemProvider(tmp_path / "mirror")
+        metadata = put_remote_mirror_namespace_manifest(mirror_provider, manifest)
+        payload, _ = mirror_provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, metadata.object_key_hmac)
+        reloaded = RemoteMirrorNamespaceManifest.model_validate_json(payload)
 
-            assert raw_row.payload != plaintext
-            assert namespace_definition.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
-            assert namespace_definition.remote_mirror_requires_revision is True
-            assert namespace_definition.remote_mirror_requires_integrity_manifest is True
-            assert plaintext not in raw_row.payload
-            assert mirrored_payload == raw_row.payload
-            assert plaintext not in mirrored_payload
-            assert plaintext not in manifest_payload
-            for artifact in mirror_provider.root.rglob("*"):
-                assert plaintext_text not in artifact.relative_to(mirror_provider.root).as_posix()
-                if artifact.is_file():
-                    assert plaintext not in artifact.read_bytes()
-            assert mirrored_metadata.content_hash == f"sha256-{entry.ciphertext_hash}"
-            assert inspect_remote_mirror_upload(mirror_provider, manifest).ok is True
-            assert inspect_remote_mirror_download(mirror_provider, manifest).ok is True
-        finally:
-            engine.dispose()
+        assert reloaded == manifest
+        assert reloaded.object_count == 2
+        assert b"first-plaintext-payload" not in payload
+        assert b"second-plaintext-payload" not in payload
+
+        raw_by_key_hmac = {remote_mirror_object_key_hmac(row.namespace, row.object_key): row for row in raw_rows}
+        for entry in reloaded.objects:
+            raw = raw_by_key_hmac[entry.object_key_hmac]
+            assert entry.ciphertext_hash == hashlib.sha256(raw.payload).hexdigest()
+            assert entry.ciphertext_hash != hashlib.sha256(b"first-plaintext-payload").hexdigest()
+            assert entry.ciphertext_hash != hashlib.sha256(b"second-plaintext-payload").hexdigest()
+            assert entry.storage_revision_id == raw.revision_id
+            assert entry.revision_written_at == raw.revision_written_at
+
+        latest_entry = max(
+            reloaded.objects,
+            key=lambda entry: entry.revision_written_at or datetime.min.replace(tzinfo=UTC),
+        )
+        assert reloaded.latest_revision_id == latest_entry.storage_revision_id
+        assert reloaded.latest_revision_written_at == latest_entry.revision_written_at
+
+
+@pytest.mark.parametrize(
+    ("namespace_key", "plaintext"),
+    (
+        ("google_oauth_client", b"oauth client secret that must never reach the remote mirror"),
+        ("google_oauth_token", b"oauth refresh token that must never reach the remote mirror"),
+        ("google_oauth_metadata", b"operator metadata that must never reach the remote mirror"),
+    ),
+)
+def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
+    tmp_path: Path,
+    namespace_key: str,
+    plaintext: bytes,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=f"remote-mirror-opaque-{namespace_key}") as profile:
+        repo = profile.repository
+        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(namespace_key)
+        namespace = namespace_definition.namespace
+        plaintext_text = plaintext.decode()
+        repo.save(
+            namespace=namespace,
+            object_key="opaque-object",
+            classification=namespace_definition.sensitivity,
+            schema_version=1,
+            written_at=datetime(2026, 6, 2, 8, 0, tzinfo=UTC),
+            payload=plaintext,
+        )
+        raw_row = next(repo.iter_all_records_raw())
+        manifest = build_remote_mirror_namespace_manifest(namespace, (raw_row,))
+        entry = manifest.objects[0]
+        mirror_provider = LocalFileSystemProvider(tmp_path / "mirror")
+
+        mirror_provider.put(
+            entry.namespace,
+            entry.object_key_hmac,
+            raw_row.payload,
+            content_hash=f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}",
+            label="opaque-object",
+        )
+        manifest_metadata = put_remote_mirror_namespace_manifest(mirror_provider, manifest)
+        mirrored_payload, mirrored_metadata = mirror_provider.get(entry.namespace, entry.object_key_hmac)
+        manifest_payload, _ = mirror_provider.get(
+            REMOTE_MIRROR_MANIFEST_NAMESPACE,
+            manifest_metadata.object_key_hmac,
+        )
+
+        assert raw_row.payload != plaintext
+        assert namespace_definition.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
+        assert namespace_definition.remote_mirror_requires_revision is True
+        assert namespace_definition.remote_mirror_requires_integrity_manifest is True
+        assert plaintext not in raw_row.payload
+        assert mirrored_payload == raw_row.payload
+        assert plaintext not in mirrored_payload
+        assert plaintext not in manifest_payload
+        for artifact in mirror_provider.root.rglob("*"):
+            assert plaintext_text not in artifact.relative_to(mirror_provider.root).as_posix()
+            if artifact.is_file():
+                assert plaintext not in artifact.read_bytes()
+        assert mirrored_metadata.content_hash == f"sha256-{entry.ciphertext_hash}"
+        assert inspect_remote_mirror_upload(mirror_provider, manifest).ok is True
+        assert inspect_remote_mirror_download(mirror_provider, manifest).ok is True
 
 
 def test_remote_mirror_upload_inspection_detects_missing_ciphertext_object(tmp_path: Path) -> None:
@@ -189,6 +182,54 @@ def test_remote_mirror_download_inspection_detects_ciphertext_drift(tmp_path: Pa
 
     assert inspection.ok is False
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.PARTIAL_DOWNLOAD}
+
+
+def test_remote_mirror_download_inspection_detects_provider_metadata_byte_length_drift(tmp_path: Path) -> None:
+    manifest, payload = _single_object_manifest_with_payload(tmp_path)
+    entry = manifest.objects[0]
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    provider.put(
+        entry.namespace,
+        entry.object_key_hmac,
+        payload,
+        content_hash=f"sha256-{hashlib.sha256(payload).hexdigest()}",
+        label="metadata-drift",
+    )
+    drifted_sidecar = _rewrite_local_provider_sidecar(
+        provider,
+        entry.namespace,
+        update={"byte_length": len(payload) + 1},
+    )
+    assert drifted_sidecar["content_hash"] == f"sha256-{hashlib.sha256(payload).hexdigest()}"
+
+    inspection = inspect_remote_mirror_download(provider, manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.PARTIAL_DOWNLOAD}
+
+
+def test_remote_mirror_upload_inspection_detects_provider_metadata_byte_length_drift(tmp_path: Path) -> None:
+    manifest, payload = _single_object_manifest_with_payload(tmp_path)
+    entry = manifest.objects[0]
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    provider.put(
+        entry.namespace,
+        entry.object_key_hmac,
+        payload,
+        content_hash=f"sha256-{hashlib.sha256(payload).hexdigest()}",
+        label="metadata-drift",
+    )
+    put_remote_mirror_namespace_manifest(provider, manifest)
+    _rewrite_local_provider_sidecar(
+        provider,
+        entry.namespace,
+        update={"byte_length": len(payload) + 1},
+    )
+
+    inspection = inspect_remote_mirror_upload(provider, manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.PARTIAL_UPLOAD}
 
 
 def test_remote_mirror_manifest_loader_wraps_malformed_payload_in_storage_error(tmp_path: Path) -> None:
@@ -284,88 +325,87 @@ def test_remote_mirror_comparison_detects_revision_conflict(tmp_path: Path) -> N
 
 
 def _single_object_manifest(tmp_path: Path) -> RemoteMirrorNamespaceManifest:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'single-object.db').as_posix()}"),
+    manifest, _payload = _single_object_manifest_with_payload(tmp_path)
+    return manifest
+
+
+def _single_object_manifest_with_payload(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManifest, bytes]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-single") as profile:
+        repo = profile.repository
+        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace = namespace_definition.namespace
+        repo.save(
+            namespace=namespace,
+            object_key="single-object",
+            classification=namespace_definition.sensitivity,
+            schema_version=1,
+            written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
+            payload=b"single-plaintext-payload",
         )
-        Base.metadata.create_all(engine)
-        try:
-            repo = SecureObjectRepository(engine=engine)
-            namespace = "aeat.remote.mirror.single"
-            repo.save(
-                namespace=namespace,
-                object_key="single-object",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
-                payload=b"single-plaintext-payload",
-            )
-            return build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
-        finally:
-            engine.dispose()
+        raw_row = next(repo.iter_all_records_raw())
+        return build_remote_mirror_namespace_manifest(namespace, (raw_row,)), raw_row.payload
+
+
+def _rewrite_local_provider_sidecar(
+    provider: LocalFileSystemProvider,
+    namespace: str,
+    *,
+    update: dict[str, object],
+) -> dict[str, object]:
+    sidecar_path = next((provider.root / namespace).glob("*.meta.json"))
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    assert isinstance(sidecar, dict)
+    sidecar.update(update)
+    sidecar_path.write_text(json.dumps(sidecar, sort_keys=True), encoding="utf-8")
+    return sidecar
 
 
 def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'overwrite.db').as_posix()}"),
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-overwrite") as profile:
+        repo = profile.repository
+        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace = namespace_definition.namespace
+        repo.save(
+            namespace=namespace,
+            object_key="same-object",
+            classification=namespace_definition.sensitivity,
+            schema_version=1,
+            written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
+            payload=b"first-payload",
         )
-        Base.metadata.create_all(engine)
-        try:
-            repo = SecureObjectRepository(engine=engine)
-            namespace = "aeat.remote.mirror.overwrite"
-            repo.save(
-                namespace=namespace,
-                object_key="same-object",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
-                payload=b"first-payload",
-            )
-            remote_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
-            repo.save(
-                namespace=namespace,
-                object_key="same-object",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime(2026, 5, 28, 10, 1, tzinfo=UTC),
-                payload=b"second-payload",
-            )
-            local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
-            return remote_manifest, local_manifest
-        finally:
-            engine.dispose()
+        remote_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
+        repo.save(
+            namespace=namespace,
+            object_key="same-object",
+            classification=namespace_definition.sensitivity,
+            schema_version=1,
+            written_at=datetime(2026, 5, 28, 10, 1, tzinfo=UTC),
+            payload=b"second-payload",
+        )
+        local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
+        return remote_manifest, local_manifest
 
 
 def _three_revision_manifest_pair(
     tmp_path: Path,
 ) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'three-revisions.db').as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            repo = SecureObjectRepository(engine=engine)
-            namespace = "aeat.remote.mirror.three.revisions"
-            for offset, payload in enumerate((b"first-payload", b"second-payload", b"third-payload")):
-                repo.save(
-                    namespace=namespace,
-                    object_key="same-object",
-                    classification=SensitivityClass.FINANCIAL,
-                    schema_version=1,
-                    written_at=datetime(2026, 5, 28, 10, offset, tzinfo=UTC),
-                    payload=payload,
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="remote-mirror-three-revisions") as profile:
+        repo = profile.repository
+        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace = namespace_definition.namespace
+        for offset, payload in enumerate((b"first-payload", b"second-payload", b"third-payload")):
+            repo.save(
+                namespace=namespace,
+                object_key="same-object",
+                classification=namespace_definition.sensitivity,
+                schema_version=1,
+                written_at=datetime(2026, 5, 28, 10, offset, tzinfo=UTC),
+                payload=payload,
+            )
+            if offset == 0:
+                remote_manifest = build_remote_mirror_namespace_manifest(
+                    namespace,
+                    tuple(repo.iter_all_records_raw()),
                 )
-                if offset == 0:
-                    remote_manifest = build_remote_mirror_namespace_manifest(
-                        namespace,
-                        tuple(repo.iter_all_records_raw()),
-                    )
-            local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
-            return remote_manifest, local_manifest
-        finally:
-            engine.dispose()
+        local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
+        return remote_manifest, local_manifest
