@@ -134,9 +134,7 @@ class DiagnosticCheck(BaseModel):
         next_action = self.next_action if self.next_action else None
         dead_end = self.dead_end if self.dead_end else None
         if next_action is not None and dead_end is not None:
-            raise DiagnosticModelError(
-                "DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both"
-            )
+            raise DiagnosticModelError("DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both")
         if self.status in {"fail", "warn"}:
             if next_action is None and dead_end is None:
                 raise DiagnosticModelError(
@@ -145,9 +143,7 @@ class DiagnosticCheck(BaseModel):
                 )
         else:  # status == "ok"
             if next_action is not None or dead_end is not None:
-                raise DiagnosticModelError(
-                    "DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`"
-                )
+                raise DiagnosticModelError("DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`")
         return self
 
 
@@ -349,8 +345,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     # summary + next_action already guide the operator.
                     detail=None if missing_active_bucket_session else _compact_exception(exc),
                     next_action=(
-                        profile_health.next_action
-                        or "aeat config profile switch NAME"
+                        profile_health.next_action or "aeat config profile switch NAME"
                         if missing_active_bucket_session
                         else "aeat config repair reset-state --yes"
                     ),
@@ -396,6 +391,7 @@ def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthSt
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var.
     from ..core.config import load_settings as _load_settings
+
     resolved = settings or _load_settings()
     return asyncio.run(_probe_browser_connectivity(resolved))
 
@@ -431,9 +427,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
             status = exc.status
             if not isinstance(status, SiteHealthStatus):
-                raise DiagnosticModelError(
-                    "SiteHealthError carried a non-SiteHealthStatus payload"
-                ) from exc
+                raise DiagnosticModelError("SiteHealthError carried a non-SiteHealthStatus payload") from exc
             return status
         return _ok_site_health_status(url)
     finally:
@@ -467,6 +461,7 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
         observed_at=now(),
     )
 
+
 def render_config_repair_text(report: ConfigRepairReport) -> str:
     """Render a compact human-readable repair report."""
     lines = [
@@ -498,13 +493,9 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
             tag = _finding_tag(finding)
             lines.append(f"{tr('cli.diagnostics.repair.finding_label', default='-')}\t{tag}{finding.summary}")
             if finding.detail:
-                lines.append(
-                    f"  {tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{finding.detail}"
-                )
+                lines.append(f"  {tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{finding.detail}")
             if finding.next_action:
-                lines.append(
-                    f"  {tr('cli.diagnostics.repair.next_label', default='Next')}\t{finding.next_action}"
-                )
+                lines.append(f"  {tr('cli.diagnostics.repair.next_label', default='Next')}\t{finding.next_action}")
         if check.next_action:
             lines.append(f"{tr('cli.diagnostics.repair.next_label', default='Next')}\t{check.next_action}")
         if check.dead_end:
@@ -834,8 +825,7 @@ def _profile_check(
         # record probe is unavailable, so the row still names what is wrong.
         if not missing_required:
             missing_required = tuple(
-                DiagnosticFinding(summary=key, requirement="required")
-                for key in report.missing_required
+                DiagnosticFinding(summary=key, requirement="required") for key in report.missing_required
             )
         enrolment_findings = tuple(
             DiagnosticFinding(summary=key, requirement="required")
@@ -973,8 +963,8 @@ def render_cli_version_text(report: CliVersionReport) -> str:
             version=report.package_version,
             error=registry.error or "",
         )
-    revision_label = ", ".join(registry.revision_ids) if registry.revision_ids else tr(
-        "cli.diagnostics.version.no_revisions"
+    revision_label = (
+        ", ".join(registry.revision_ids) if registry.revision_ids else tr("cli.diagnostics.version.no_revisions")
     )
     return tr(
         "cli.diagnostics.version.registry_summary",

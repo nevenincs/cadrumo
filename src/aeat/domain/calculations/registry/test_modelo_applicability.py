@@ -29,9 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     """The W03.S11 seed rules are exposed by the registry package."""
 
-    assert derive_modelo_applicability.__module__ == (
-        "aeat.domain.calculations.registry._applicability"
-    )
+    assert derive_modelo_applicability.__module__ == ("aeat.domain.calculations.registry._applicability")
     rules = iter_modelo_applicability_rules()
     assert {rule.modelo for rule in rules} == {
         "100",
@@ -56,9 +54,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
     """Every seed applicability rule carries real scoped legal refs."""
 
-    authority = ValidatedRegistryAuthority.load(
-        bundled_path("registry", "aeat"), source_root=bundled_path()
-    )
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     registered_legal_ids = set(authority.catalogues.legal)
     assert registered_legal_ids
 
@@ -80,9 +76,7 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
         iva_regime=IVARegime.GENERAL,
     )
-    objetiva_autonomo = direct_autonomo.model_copy(
-        update={"irpf_estimation_regime": IrpfEstimationRegime.OBJETIVA}
-    )
+    objetiva_autonomo = direct_autonomo.model_copy(update={"irpf_estimation_regime": IrpfEstimationRegime.OBJETIVA})
     sociedad_limitada = TaxpayerProfile(
         tax_id="B12345674",
         entity_type=EntityType.LEGAL_ENTITY,
@@ -90,21 +84,11 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
         iva_regime=IVARegime.GENERAL,
     )
 
-    assert derive_modelo_applicability(direct_autonomo, "130").verdict is (
-        ApplicabilityVerdict.APPLICABLE
-    )
-    assert derive_modelo_applicability(direct_autonomo, "131").verdict is (
-        ApplicabilityVerdict.NOT_APPLICABLE
-    )
-    assert derive_modelo_applicability(objetiva_autonomo, "131").verdict is (
-        ApplicabilityVerdict.APPLICABLE
-    )
-    assert derive_modelo_applicability(sociedad_limitada, "202").verdict is (
-        ApplicabilityVerdict.APPLICABLE
-    )
-    assert derive_modelo_applicability(sociedad_limitada, "100").verdict is (
-        ApplicabilityVerdict.NOT_APPLICABLE
-    )
+    assert derive_modelo_applicability(direct_autonomo, "130").verdict is (ApplicabilityVerdict.APPLICABLE)
+    assert derive_modelo_applicability(direct_autonomo, "131").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
+    assert derive_modelo_applicability(objetiva_autonomo, "131").verdict is (ApplicabilityVerdict.APPLICABLE)
+    assert derive_modelo_applicability(sociedad_limitada, "202").verdict is (ApplicabilityVerdict.APPLICABLE)
+    assert derive_modelo_applicability(sociedad_limitada, "100").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
 
 
 def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None:
