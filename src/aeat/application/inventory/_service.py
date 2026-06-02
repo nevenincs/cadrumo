@@ -176,6 +176,7 @@ class InventoryService:
         # `load_settings()` so CLI surface tests that override
         # `aeat_inventories_dir` see their tmp_path isolation.
         from ...core.config import load_settings as _load_settings
+
         self._settings = settings or _load_settings()
         self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
         self._repository_factory = repository_factory or _runtime_repository_factory(self._settings)
