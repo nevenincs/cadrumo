@@ -1390,6 +1390,24 @@ remediation is currently HELD at audit-only per the active action policy.
   module needs per-test bucket/secure-storage isolation (fresh runtime profile per
   test, as the roundtrip-discipline fixtures do elsewhere).
 
+- 2026-06-02 (cont.): more W04/W05/W07 dispositioning + one landed fix.
+  - **S56 (DB-31) LANDED** — `_registry_sha` promoted to the calc_sheets public
+    surface `registry_sha`; google pull adapter + 3 tests repointed off the private
+    `_engine` path (commit `6f9523538`). Collection clean.
+  - **S84/S85 (DB-36 usage_ratios CLI routing) BLOCKED — peer WIP.** `cli/_ledger.py`
+    carries uncommitted non-authored changes; per the git-diff-before-edit safety
+    discipline, aborted rather than risk a collision. Retry when the file is clean.
+  - **S76 (DB-10 operator_surface SourceKind) analyzed — actionable, deferred.**
+    operator `SourceKind` {LEDGER_TRANSACTION, PURCHASE_INVOICE_EVIDENCE,
+    PAYABLE_INVOICE, COLLECTIBLE_INVOICE} is `core.AggregationSourceKind` (5 members)
+    MINUS `INVOICE` — a deliberate constraint-divergent subset, so the fix is NOT a
+    free promotion: it must express the 4-member operator slice as a Literal/frozenset
+    over AggregationSourceKind (per the substitutability pre-filter) to kill the
+    4-string value-duplication while preserving the INVOICE exclusion. This is a
+    pydantic-serialization-sensitive typed-enum refactor across SourceKindAlias,
+    OperatorSurfaceContract.source_kinds, _contract SOURCE_KINDS, resolve_source_kind_alias
+    + the S77 test — execute with care on fresh context.
+
 ## Codification candidates
 
 
