@@ -12,8 +12,10 @@ The scenario (grounded against the Ley 19/1991 thresholds committed in the
 legal catalogue):
 - Year N: patrimonio neto / base imponible €2.100.000 (above the €2.000.000
   Modelo-714 filing obligation, Orden HAC/1023/2021), base liquidable
-  €1.400.000 after the €700.000 mínimo exento (Ley 19/1991 art. 28), cuota
-  íntegra entered per the art. 30 escala.
+  €1.400.000 after the €700.000 mínimo exento (Ley 19/1991 art. 28), and a
+  cuota íntegra as an arbitrary non-default manual entry (Phase-A has no calc
+  engine; the art. 30 escala computation is the deferred Phase-B — this figure
+  is a roundtrip-fidelity input, not an escala-derived value).
 - Year N+1: the wealth base grows to €2.300.000 (base liquidable €1.600.000)
   — a distinct ejercicio whose figures must not bleed into year N.
 
@@ -64,7 +66,7 @@ _FILING_OBLIGATION_EUR = Decimal("2000000.00")
 # Year-N wealth figures (above the €2.000.000 filing obligation).
 _BASE_IMPONIBLE_N = Decimal("2100000.00")     # patrimonio neto
 _BASE_LIQUIDABLE_N = Decimal("1400000.00")    # tras €700.000 mínimo exento (art. 28)
-_CUOTA_INTEGRA_N = Decimal("8523.36")         # entered per art. 30 escala (manual, Phase-A)
+_CUOTA_INTEGRA_N = Decimal("8523.36")         # arbitrary non-default manual Phase-A figure (no calc; NOT escala-derived)
 
 # Year-N+1 wealth figures (distinct ejercicio; grown base).
 _BASE_IMPONIBLE_N1 = Decimal("2300000.00")
