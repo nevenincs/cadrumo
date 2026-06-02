@@ -4348,10 +4348,10 @@ def _evidence_bundle_service():
 
 
 def _active_bucket_id() -> str:
-    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._models import require_active_bucket_id
 
     try:
-        return active_bucket_id_or_raise()
+        return require_active_bucket_id()
     except Exception as exc:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 

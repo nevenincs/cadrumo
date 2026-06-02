@@ -205,9 +205,9 @@ def _render_summary(value: str) -> str:
     return rendered or value
 
 def _active_bucket_id() -> str:
-    from ..workflow._models import active_bucket_id_or_raise
+    from ..workflow._models import require_active_bucket_id
 
-    return active_bucket_id_or_raise()
+    return require_active_bucket_id()
 
 def _year_period(value: str) -> str:
     return value[:7]

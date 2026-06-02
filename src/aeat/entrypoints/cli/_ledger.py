@@ -18,8 +18,6 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from ...core.time import now
-
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
@@ -65,6 +63,7 @@ from ...application.workflow._models import resolve_active_bucket_id
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ...core.time import now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -75,7 +74,9 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
+from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.iva._schema import EUMemberState, IvaCategory
+from ...domain.profile._renta_codes import FiscalResidency
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -95,8 +96,6 @@ from ._common import (
 )
 
 _log = get_logger(__name__)
-from ...domain.deadlines._models import IrpfSpecialRegime
-from ...domain.profile._renta_codes import FiscalResidency
 
 app = typer.Typer(
     name="ledger",
@@ -500,7 +499,14 @@ def ledger_update(
         raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerUpdateResult
 
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.update", result_cls=LedgerUpdateResult)
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.update",
+        result_cls=LedgerUpdateResult,
+    )
 
 
 @app.command("classify", help=tr("cli.ledger.classify.help"))
@@ -575,12 +581,6 @@ def ledger_classify(
             source_command="aeat app ledger classify",
             transaction_repository=transaction_repository,
         )
-        payload = {
-            "total": result.total,
-            "applied": result.applied,
-            "skipped": result.skipped,
-            "failures": [f.model_dump(mode="json") for f in result.failures],
-        }
         lines = [
             tr(
                 "cli.ledger.classify.bulk_summary",
@@ -597,7 +597,9 @@ def ledger_classify(
         from ._ledger_payloads import LedgerClassifyResult
 
         for failure in result.failures:
-            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")  # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id\treason), not user-facing prose.
+            # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE:
+            # tab-separated machine record (id, reason), not user-facing prose.
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
         classify_result = LedgerClassifyResult.model_validate(
             {
                 "total": result.total,
@@ -662,8 +664,6 @@ def ledger_classify(
         raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerClassifyResult
 
-    if reaffirm:
-        typer.echo(tr("cli.ledger.classify.reaffirmed"))
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
     classify_result = LedgerClassifyResult.model_validate(
@@ -675,17 +675,20 @@ def ledger_classify(
             "transaction": transaction_payload.model_dump(mode="json"),
         }
     )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+        f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+        f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+        f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    if reaffirm:
+        lines.insert(0, tr("cli.ledger.classify.reaffirmed"))
     _emit_envelope(
         ctx,
         command="ledger.classify",
         result=classify_result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
+        lines=lines,
     )
 
 
@@ -803,7 +806,14 @@ def ledger_allocate(
         raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerAllocateResult
 
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.allocate", result_cls=LedgerAllocateResult)
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.allocate",
+        result_cls=LedgerAllocateResult,
+    )
 
 
 @app.command("attach", help=tr("cli.ledger.attach.help"))
@@ -837,7 +847,14 @@ def ledger_attach(
     )
     from ._ledger_payloads import LedgerAttachResult
 
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.attach", result_cls=LedgerAttachResult)
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.attach",
+        result_cls=LedgerAttachResult,
+    )
 
 
 @app.command("archive", help=tr("cli.ledger.archive.help"))
@@ -864,7 +881,14 @@ def ledger_archive(
     )
     from ._ledger_payloads import LedgerArchiveResult
 
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.archive", result_cls=LedgerArchiveResult)
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.archive",
+        result_cls=LedgerArchiveResult,
+    )
 
 
 @app.command("stash", help=tr("cli.ledger.stash.help"))
@@ -891,7 +915,14 @@ def ledger_stash(
     )
     from ._ledger_payloads import LedgerStashResult
 
-    _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids, command="ledger.stash", result_cls=LedgerStashResult)
+    _emit_update_result(
+        ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        result.bucket_event_ids,
+        command="ledger.stash",
+        result_cls=LedgerStashResult,
+    )
 
 
 @app.command("remove", help=tr("cli.ledger.remove.help"))
@@ -1657,7 +1688,6 @@ def ledger_status(
         transaction_repository=transaction_repository,
     )
     transactions = transaction_repository.load()
-    payload = report.model_dump(mode="json")
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
         f"{tr('cli.ledger.labels.rows')}\t{report.total_count}",
@@ -1980,10 +2010,10 @@ app.add_typer(ratios_app, name="ratios")
 def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
     from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._models import require_active_bucket_id
 
     try:
-        return active_bucket_id_or_raise()
+        return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
 
@@ -1997,10 +2027,10 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     silent because there is no profile to look up snapshots against.
     """
     from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
+    from ...application.workflow._models import require_active_bucket_id, resolve_active_bucket_id
 
     try:
-        bucket_id = active_bucket_id_or_raise()
+        bucket_id = require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
     return bucket_id, resolve_active_bucket_id()
@@ -3479,10 +3509,10 @@ app.add_typer(rule_app, name="rule")
 
 def _rule_bucket_id() -> str:
     from ...application.workflow._errors import NoActiveProfileError
-    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._models import require_active_bucket_id
 
     try:
-        return active_bucket_id_or_raise()
+        return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
 

@@ -229,22 +229,6 @@ class WorkflowState(BaseModel):
         return resolve_active_bucket_id()
 
 
-def active_bucket_id_or_raise() -> str:
-    """Return the active profile's bucket id or raise :class:`NoActiveProfileError`.
-
-    Bucket-scoped repositories use this helper at construction time so
-    application services refuse to operate when no profile is selected.
-    """
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        from ._errors import NoActiveProfileError
-
-        raise NoActiveProfileError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-        )
-    return bucket_id
-
-
 def require_active_bucket_id() -> str:
     """Resolve the active bucket id via the precedence chain or raise.
 
