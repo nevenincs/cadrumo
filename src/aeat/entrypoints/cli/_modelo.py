@@ -4946,21 +4946,9 @@ def modelo_export_verb(
         raise _bad_parameter_from_error(exc) from exc
 
     from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloExportResult as _ModeloExportResult
+    from ._modelo_payloads import ModeloExportPayload as _ModeloExportPayload
 
-    export_result = _ModeloExportResult(
-        work_unit_id=result.work_unit_id,
-        calculation_revision_id=result.calculation_revision_id,
-        bucket_id=result.bucket_id,
-        modelo=result.modelo,
-        filing_year=result.filing_year,
-        period=result.period,
-        output_path=str(result.output_path),
-        byte_size=result.byte_size,
-        file_sha256=result.file_sha256,
-        format=result.format,
-        bucket_event_id=result.bucket_event_id,
-    )
+    export_result = _ModeloExportPayload.from_result(result)
     lines = [
         "operation\tmodelo.export",
         f"work_unit_id\t{result.work_unit_id}",
