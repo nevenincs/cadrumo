@@ -307,9 +307,7 @@ async def _open_authenticated_surface(
         try:
             await page.wait_for_url(
                 lambda url: (
-                    target_path in url
-                    or is_aeat_wallet_auth_gate_redirect(url)
-                    or _is_representation_gate_url(url)
+                    target_path in url or is_aeat_wallet_auth_gate_redirect(url) or _is_representation_gate_url(url)
                 ),
                 timeout=settings.aeat_browser_navigation_timeout_ms,
             )
@@ -503,11 +501,9 @@ async def _submit_wallet_execute_gate_if_present(
                 expected_path=expected_path,
                 timeout_ms=settings.aeat_browser_navigation_timeout_ms,
             )
-            if (
-                _wallet_execute_gate_status(post_execute_html, expected_path=expected_path)
-                == "wallet-execute-submit-present"
-                and not _has_wallet_table(post_execute_html)
-            ):
+            if _wallet_execute_gate_status(
+                post_execute_html, expected_path=expected_path
+            ) == "wallet-execute-submit-present" and not _has_wallet_table(post_execute_html):
                 raise SedeNavigationError(
                     "AEAT IVA wallet read query left the executable wallet shell without a wallet table",
                     failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
