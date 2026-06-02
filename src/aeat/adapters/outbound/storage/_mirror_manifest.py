@@ -62,7 +62,12 @@ def inspect_remote_mirror_upload(
     provider: StorageProvider,
     expected_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Detect remote upload drift for the expected namespace manifest."""
+    """Detect remote upload drift for the expected namespace manifest.
+
+    Returns:
+        A :class:`RemoteMirrorInspection` describing the drift between the
+        expected manifest and the remote mirror.
+    """
     remote_manifest = _load_remote_manifest(provider, expected_manifest.namespace)
     issues = list(_compare_manifest_objects(local=expected_manifest, remote=remote_manifest))
     for entry in expected_manifest.objects:

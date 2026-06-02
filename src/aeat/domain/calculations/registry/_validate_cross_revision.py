@@ -3,7 +3,8 @@
 Applies two policies over the divergences detected by
 :mod:`aeat.domain.calculations.registry._cross_revision_divergence`: the
 strict hard-fail continuity policy for overlapping revisions and declared
-continuity surfaces, and the advisory non-overlapping drift summary.
+continuity surfaces, and the advisory non-overlapping drift summary. Both
+policies operate over the casillas of each :class:`ModeloRevision`.
 """
 
 from __future__ import annotations
