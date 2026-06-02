@@ -222,7 +222,7 @@ class TestBareInvocationWithActiveProfile:
 
         assert help_result.exit_code == 0, help_result.output
         help_envelope = json.loads(help_result.output)
-        help_payload = help_envelope["result"] if "result" in help_envelope else help_envelope
+        help_payload = help_envelope.get("result", help_envelope)
         assert help_payload["surface"] == "root"
         assert help_payload["heading"]  # locale-driven; presence is the structural assertion
 
@@ -232,6 +232,6 @@ class TestBareInvocationWithActiveProfile:
 
         assert active.exit_code == 0, active.output
         active_envelope = json.loads(active.output)
-        active_payload = active_envelope["result"] if "result" in active_envelope else active_envelope
+        active_payload = active_envelope.get("result", active_envelope)
         assert active_payload["active_profile"] == "operator"
         assert active_payload["transactions"] == 0
