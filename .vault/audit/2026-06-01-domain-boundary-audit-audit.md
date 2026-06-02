@@ -1335,6 +1335,24 @@ remediation is currently HELD at audit-only per the active action policy.
     tooling baseline) for incremental refactor under the originating waves.
   W08 is standing/recurring — these baselines re-evaluate each cadence tick.
 
+- 2026-06-02 (cont.): **DB-24 / W04.P11.S45 dispositioned EXCLUDED via the
+  substitutability pre-filter** (not actioned-as-written). The proposed fold of
+  `application.registry._corpus.RegistryManualId` (members {renta, iva}) into the
+  domain `ManualId` ({renta, iva, **sociedades**}) fails the pre-filter:
+  `ManualId` is a strict SUPERSET, so `RegistryManualId` is a deliberate
+  constraint-divergent enum encoding the renta/iva-only *registry manual operator
+  surface* (its docstring: "Manual identifiers approved for the registry manual
+  operator surface"). A sociedades (IS / modelo-200) manual DOES exist in the
+  corpus but is wired through a different path (`_data/registry/aeat/legal/is.toml`
+  `corpus_path`), NOT the RegistryManualId operator commands. Folding to `ManualId`
+  + a CLI `Choice([renta,iva])` gate would relocate the constraint from the type
+  system to a runtime boundary, type-admitting `ManualId.SOCIEDADES` into the
+  registry corpus models (`RegistryTopicProjection.manual` et al.) for any non-CLI
+  constructor — a net weakening. `_domain_manual_id` (`ManualId(manual_id.value)`)
+  is a legitimate operator-surface→domain boundary conversion, not a re-export
+  shim. KEEP RegistryManualId; same disposition family as DB-11 / DB-38 / S21
+  (constraint-shape divergence, excluded-as-written).
+
 ## Codification candidates
 
 
