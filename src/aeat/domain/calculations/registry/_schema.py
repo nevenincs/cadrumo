@@ -1743,11 +1743,34 @@ class DataBindingDefinition(RegistryModel):
     aeat_prefilled: bool = False
 
 
+class RegistryRoundingCode(StrEnum):
+    """Closed rounding-code vocabulary for formula results.
+
+    Shared by the formula evaluator and the calc-sheets translator. The TOML
+    loader hydrates the raw string into this enum at the boundary; ``None``
+    (absent) means no rounding is applied to the formula result.
+    """
+
+    MONEY_2 = "money-2"
+    INTEGER = "integer"
+
+
+def _coerce_rounding_code(value: object) -> object:
+    """Hydrate a raw TOML rounding string into :class:`RegistryRoundingCode`.
+
+    RegistryModel runs in strict mode (no implicit str -> StrEnum coercion), so
+    the loader's raw string is converted to the enum here at the boundary.
+    """
+    if isinstance(value, str) and not isinstance(value, RegistryRoundingCode):
+        return RegistryRoundingCode(value)
+    return value
+
+
 class FormulaDefinition(RegistryModel):
     id: FormulaId
     target: CasillaId
     expression: FormulaExpression
-    rounding: str | None = None
+    rounding: Annotated[RegistryRoundingCode | None, BeforeValidator(_coerce_rounding_code)] = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
