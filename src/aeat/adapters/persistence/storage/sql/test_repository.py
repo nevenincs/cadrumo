@@ -53,9 +53,7 @@ def test_modelo_repository_crud_round_trip(tmp_path: Path) -> None:
             assert repo.list_all() == [created]
 
             updated = repo.upsert(
-                ModeloCatalogueRecord(
-                    id=created.id, identifier="MODELO_130", name="Pagos fraccionados IRPF"
-                )
+                ModeloCatalogueRecord(id=created.id, identifier="MODELO_130", name="Pagos fraccionados IRPF")
             )
             assert updated.name.endswith("IRPF")
 
