@@ -15,14 +15,16 @@ from ...adapters.outbound.aeat.sede import (
 )
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.resources import resources
-from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
+from ...domain.iva_compensation._errors import (
+    IvaCompensationReconciliationInputError,
+    IvaWalletReconciliationError,
+)
 from ...domain.iva_compensation._reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationOverride,
+    IvaCompensationWalletObservationProtocol,
 )
 from ..aggregation import CalculationSourceContext
-from . import _iva_wallet_reconciliation as wallet_reconciliation
-from ._errors import IvaWalletReconciliationError
 from ._iva_wallet_reconciliation import (
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
@@ -36,8 +38,11 @@ _TAXPAYER_REF = "synthetic-taxpayer"
 _OTHER_TAXPAYER_REF = "other-synthetic-taxpayer"
 
 
-def test_wallet_reconciliation_uses_public_sede_observation_export() -> None:
-    assert wallet_reconciliation.IvaCompensationWalletObservation is IvaCompensationWalletObservation
+def test_sede_observation_satisfies_the_domain_wallet_protocol() -> None:
+    """The Sede adapter observation structurally satisfies the domain wallet port the
+    reconciliation logic consumes, so the domain never imports the adapter (DB-26 S89)."""
+    wallet = _wallet(Decimal("100.00"))
+    assert isinstance(wallet, IvaCompensationWalletObservationProtocol)
 
 
 def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensationWalletObservation:
