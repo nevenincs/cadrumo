@@ -299,7 +299,7 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
         _logging_mod._CONFIGURED = original_configured or True
 
     # Trigger module imports — side-effects would show up as level mutations.
-    from ..adapters.inbound.pdf import _pdfplumber
+    from ..adapters.inbound.pdf import _pdfplumber  # noqa: F401  # side-effect: module import for level-mutation check
     from ..domain.calculations.registry import _record_design  # noqa: F401
 
     pdfminer_logger = logging.getLogger("pdfminer")
