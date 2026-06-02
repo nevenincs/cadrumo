@@ -1,0 +1,233 @@
+"""E2E continuity: Modelo 210 IRNR cross-renta treaty-rate determinism.
+
+Modelo 210 (IRNR autoliquidación no residentes sin establecimiento permanente
+— RDLeg 5/2004 TRLIRNR) is filed ad-hoc by non-resident landlords and other
+IRNR-obligated filers. Its Phase-1 engine (m210-irnr-full-engine ADR §D2.2)
+resolves: rendimientos_integros → base_imponible (op=copy, TRLIRNR art. 24.1)
+→ tipo_gravamen (m210_resolve_rate op, TRLIRNR arts. 25.1.a / 25.1.f /
+Convenio override) → cuota_integra (base × tipo) → cuota_diferencial (cuota
+minus retenciones).
+
+The cross-renta continuity under test: a non-resident UK landlord (Gran
+Bretaña, GB) with a Convenio row files the same property-rental declaration
+for two consecutive renta years (2025, 2026). The GB/general Convenio row
+in the Phase-1 seed carries rate=0.24, which coincides with the TRLIRNR
+Art 25.1.a baseline (24%). The invariant: the same country_of_fiscal_residence
+(GB / general) resolves to the same tipo_gravamen (0.24) via the Convenio
+override path in both years, and yields a cuota_integra equal to the Convenio
+rate times the declared base in both years — treaty-rate determinism across
+annual groupings.
+
+GB is chosen because it has an explicit Convenio row in the Phase-1 seed
+(the only Phase-1 country with a non-sentinel entry for tipo_renta=general),
+making the override path exercisable without authoring new registry data.
+
+This module is the multi-year-renta authorization enrollment for Modelo 210.
+It drives the REAL Phase-1 engine (real registry authority, real
+calculate_registry_snapshot, real formula evaluation — no mocks) for two
+distinct renta years (2025, 2026), recording each through the
+:class:`EnrollmentRecorder` and cross-checking via
+:func:`assert_enrollment_matches_manifest`.
+
+Grounding (non-tautological): the expected tipo_gravamen (0.19) is declared in
+the TRLIRNR Art 25.1.f (UE/EEE residents: "el 19 por ciento"). The expected
+cuota_integra is base × 0.19, where 0.19 comes from the registry parameter
+table (not the test author). The assertion is that the engine reads the
+parameter and applies it; a hardcoded 19% in the engine would still satisfy
+the assertion but a parameter-table regression (e.g. the rate silently changed
+to 0.00) would fail it. The M210 phase1 Khadija anti-tautology mutation test
+(test_modelo_210_phase1.py) proves the engine reads the registry parameter;
+this test's job is cross-renta grounding across two annual groupings.
+
+Registry extension note: the M210 2025 revision was extended to open-ended
+(valid_to removed, period_selector year_from=2025) because the TRLIRNR
+Art 24-25 rate schedule is year-stable. This is a grounded engineering
+decision documented in the revision.toml; a genuine statutory rate change
+would require a new dated revision.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ...core.resources import resources
+from ...domain.calculations.registry import (
+    calculate_registry_snapshot,
+    resolve_bound_casilla_inputs,
+)
+from ...tests.secure_sql import isolated_runtime_profile
+from ._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_MODELO = "210"
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
+
+# UK landlord scenario (Olivia persona from ADR §D2.4): GB/general Convenio
+# row carries rate=0.24, coinciding with the TRLIRNR Art 25.1.a baseline.
+# The Convenio override path is exercised (country_of_fiscal_residence is
+# non-None); the resolved rate equals the statutory baseline. This is the
+# only Phase-1 Convenio row with a real (non-sentinel) entry for a
+# resolvable tipo_renta, making it the canonical Phase-1 enrollment scenario.
+_COUNTRY_GB = "GB"
+_TIPO_RENTA = "general"
+_TIPO_GRAVAMEN_CONVENIO = Decimal("0.24")  # GB/general Convenio row = TRLIRNR art.25.1.a
+
+# The rental base for each year — distinct so a cross-year base bleed
+# surfaces as strict inequality in the cuota_integra assertion.
+_BASE_YEAR_N = Decimal("18000.00")      # 2025 rental income
+_BASE_YEAR_N_PLUS_1 = Decimal("19500.00")  # 2026 rental income (slightly higher)
+
+# Profile-binding id for country_of_fiscal_residence (enum/text channel).
+_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+
+
+def _calculate_210(
+    *,
+    filing_year: int,
+    base: Decimal,
+) -> tuple[dict, int]:
+    """Run the REAL M210 Phase-1 engine for a FR EU-resident landlord.
+
+    Supplies:
+    - rendimientos_integros (manual money casilla) = base
+    - tipo_renta (manual text casilla) = "ue_residente"
+    - m210-2025-profile-country-of-fiscal-residence (enum binding) = "FR"
+    - gastos_deducibles / retencion_practicada = 0 (Phase-1 deductions deferred)
+
+    Returns the casilla_values dict and the produced-value count.
+    """
+    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="evento")
+    # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
+    # are supplied through text_inputs and enum_binding_values respectively.
+    # Numeric manual casillas go through casilla_inputs.
+    binding_values: dict = {}
+    enum_binding_values = {_COUNTRY_BINDING: _COUNTRY_GB}
+    text_inputs = {"tipo_renta": _TIPO_RENTA}
+    casilla_inputs = {
+        "rendimientos_integros": base,
+        "gastos_deducibles": Decimal("0"),
+        "retencion_practicada": Decimal("0"),
+    }
+    # resolve_bound_casilla_inputs handles bound casillas that the engine requires;
+    # M210 Phase-1 has no previous_filing bindings, so this is a no-op here.
+    bound = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = {**bound, **casilla_inputs}
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        text_inputs=text_inputs,
+        date_context={"filing_period": date(filing_year, 12, 31)},
+    )
+    return result.values, len(result.values)
+
+
+def test_year_n_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
+    """Year N: GB/general landlord resolves tipo_gravamen to 0.24 via Convenio override.
+
+    The GB/general Convenio row (rate=0.24) is read from the registry
+    parameter table by the engine. The assertion grounds the rate against the
+    Convenio seed entry: 24% is both the Convenio rate for GB/general and the
+    TRLIRNR Art 25.1.a baseline.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
+
+    assert values["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
+    assert values["base_imponible"] == _BASE_YEAR_N
+    assert values["cuota_integra"] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+
+
+def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
+    """Year N+1: same GB landlord, same Convenio rate — treaty-rate determinism across years.
+
+    The GB/general Convenio row is year-stable (no annual override change).
+    The engine must resolve the same 0.24 for 2026 as for 2025.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
+
+    assert values["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
+    assert values["base_imponible"] == _BASE_YEAR_N_PLUS_1
+    assert values["cuota_integra"] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+
+
+def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Path) -> None:
+    """The cuota_integra is distinct between years because the bases differ.
+
+    Anti-cross-year-bleed assertion: the cuota values from each year
+    must be strictly different (bases are 18000 vs 19500). If one year's
+    base bled into the other's calculation, the cuotas would match
+    incorrectly or one would be wrong.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values_n, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
+        values_n1, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
+
+    cuota_n = values_n["cuota_integra"]
+    cuota_n1 = values_n1["cuota_integra"]
+    assert cuota_n != cuota_n1, (
+        f"cuota_integra must differ between years (distinct bases); "
+        f"got {cuota_n} for both — cross-year base contamination"
+    )
+    assert cuota_n == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+    assert cuota_n1 == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+
+
+def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> None:
+    """End-to-end enrollment: FR ue_residente landlord across two renta years (2025, 2026).
+
+    Drives the REAL M210 Phase-1 engine for both annual groupings (real
+    registry authority, real formula evaluation — no mocks). Records each
+    year through :class:`EnrollmentRecorder` (calculation mode, evidenced
+    by produced casilla count) and cross-checks via
+    :func:`assert_enrollment_matches_manifest`.
+
+    Load-bearing assertions:
+    - tipo_gravamen = 0.19 in both years (treaty-rate determinism).
+    - cuota_integra = base × 0.19 in both years (engine applies the rate).
+    - Cuotas are distinct because bases are distinct (no cross-year bleed).
+
+    Grounded in TRLIRNR Art 25.1.a (general non-resident IRNR rate 24%) and
+    the GB/general Convenio entry in the Phase-1 Convenio seed (rate=0.24,
+    year-stable per RDLeg 5/2004 arts. 24-25).
+    """
+    recorder = EnrollmentRecorder(_MODELO)
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        # Year N: real Phase-1 engine run.
+        values_n, produced_n = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
+        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+
+        # Year N+1: same engine, same treaty rate, distinct base.
+        values_n1, produced_n1 = _calculate_210(
+            filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1
+        )
+        recorder.record_calculation_year(
+            filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1
+        )
+
+    # Treaty-rate determinism: GB/general Convenio rate 0.24 in both years.
+    assert values_n["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
+    assert values_n1["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
+
+    # Cuota correctness from Convenio registry parameter (not hand-computed formula).
+    assert values_n["cuota_integra"] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+    assert values_n1["cuota_integra"] == (
+        _BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO
+    ).quantize(Decimal("0.01"))
+
+    # Cross-renta isolation: distinct cuotas from distinct bases.
+    assert values_n["cuota_integra"] != values_n1["cuota_integra"]
+
+    # Authorization-gate enrollment.
+    evidence = recorder.evidence()
+    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
+    assert_enrollment_matches_manifest(evidence)

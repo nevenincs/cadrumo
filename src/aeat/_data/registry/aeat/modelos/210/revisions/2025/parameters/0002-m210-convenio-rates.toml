@@ -31,24 +31,21 @@ country_code = "GB"
 tipo_renta = "general"
 rate = "0.24"
 legal_ref_anchor = "boe-a-2014-5171"
-notes = "Convenio España-UK Art 7 rendimientos sin establecimiento permanente; tarifa coincide con TRLIRNR baseline"
+notes = "Convenio España-UK Art 7 rendimientos sin establecimiento permanente; tarifa coincide con TRLIRNR baseline. valid_to open: treaty rate year-stable, no subsequent BOE amendment published."
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 
 [[revisions."2025".parameters.convenio_rates]]
 country_code = "MA"
 tipo_renta = "interest"
 rate = "0.10"
 legal_ref_anchor = "boe-a-1985-13340"
-notes = "Convenio España-Marruecos Art 14 intereses; override 10 por ciento del baseline TRLIRNR Art 25.1.f del 19 por ciento"
+notes = "Convenio España-Marruecos Art 14 intereses; override 10 por ciento del baseline TRLIRNR Art 25.1.f del 19 por ciento. valid_to open: treaty rate year-stable."
 valid_from = 2025-01-01
-valid_to = 2025-12-31
 
 [[revisions."2025".parameters.convenio_rates]]
 country_code = "AR"
 tipo_renta = "pension"
 rate = "NOT_YET_AUTHORED"
 legal_ref_anchor = "BOE-CONVENIO-AR-NOT-FOUND"
-notes = "Convenio España-Argentina pensiones tarifa pendiente de verificación corpus BOE; placeholder activa BLOCKING finding al lookup"
+notes = "Convenio España-Argentina pensiones tarifa pendiente de verificación corpus BOE; placeholder activa BLOCKING finding al lookup. valid_to open: placeholder remains until corpus-blocking resolves."
 valid_from = 2025-01-01
-valid_to = 2025-12-31
