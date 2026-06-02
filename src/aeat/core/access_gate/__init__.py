@@ -26,10 +26,25 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from ._authorization import (
+    AUTHORIZATION_MANIFEST_FILENAME,
+    CANONICAL_MODELO_FLEET,
+    FLEET_SIZE,
+    MIN_DISTINCT_RENTA_YEARS,
+    AuthorizationManifest,
+    AuthorizationState,
+    EnrollmentEvidenceClass,
+    ModeloAuthorization,
+    ModeloAuthorizationEntry,
+    derive_modelo_authorization,
+    load_authorization_manifest,
+    manifest_path,
+)
 from ._errors import (
     AccessGateSubmissionError,
     AccessGateSubmissionPreflightError,
     AeatLiveReadNotEnabledError,
+    AuthorizationManifestError,
     LiveSubmitForbiddenError,
 )
 
@@ -157,10 +172,23 @@ class AeatAccessGate:
 
 
 __all__ = [
+    "AUTHORIZATION_MANIFEST_FILENAME",
+    "CANONICAL_MODELO_FLEET",
+    "FLEET_SIZE",
+    "MIN_DISTINCT_RENTA_YEARS",
     "AccessGateSubmissionError",
     "AccessGateSubmissionPreflightError",
     "AeatAccessGate",
     "AeatGateEnvSnapshot",
     "AeatLiveReadNotEnabledError",
+    "AuthorizationManifest",
+    "AuthorizationManifestError",
+    "AuthorizationState",
+    "EnrollmentEvidenceClass",
     "LiveSubmitForbiddenError",
+    "ModeloAuthorization",
+    "ModeloAuthorizationEntry",
+    "derive_modelo_authorization",
+    "load_authorization_manifest",
+    "manifest_path",
 ]

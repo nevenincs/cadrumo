@@ -1820,6 +1820,44 @@ def _guard_stub_modelo(modelo: str) -> None:
     raise CliRefusedBoundaryError(_refusals[modelo_code])
 
 
+def _authorization_advisory(modelo: str) -> tuple[str, str] | None:
+    """Return the ``(advisory_text, state)`` for an UNAUTHORIZED-but-computable modelo.
+
+    The ``modelo-multiyear-renta`` gate makes a calculation backend
+    NON-FUNCTIONAL until an enrolling end-to-end persona test proves it across
+    at least two distinct renta years. A modelo that is UNAUTHORIZED but has a
+    working engine still COMPUTES on ``work calculate`` (honouring the
+    pre-calculation use case in the work-verify-deadline-independence ADR); this
+    helper produces the ADVISORY banner that names its unauthorized state so the
+    operator is *informed*, not refused. Returns ``None`` when the modelo is
+    AUTHORIZED (no banner) — and also when it has no engine, since a no-engine
+    modelo is refused earlier at ``work create`` by :func:`_guard_stub_modelo`
+    rather than reaching a calculation that would warrant an advisory.
+    """
+    from ...core.access_gate import AuthorizationState
+    from ...core.resources import resources
+
+    try:
+        capability = resources().modelos.authority.authorization(modelo.strip())
+    except AeatError:
+        return None
+    if capability.state is AuthorizationState.AUTHORIZED:
+        return None
+    if not capability.has_engine:
+        return None
+    advisory = tr(
+        "cli.app.modelo.work.calculate_unauthorized_advisory",
+        modelo=modelo.strip(),
+        default=(
+            "ADVISORY: modelo %{modelo} calculation backend is UNAUTHORIZED — it has not "
+            "yet been proven by an end-to-end test across at least two renta years "
+            "(multi-year-renta authorization gate). The result was computed and saved, "
+            "but treat it as provisional until the modelo is authorized."
+        ),
+    )
+    return advisory, capability.state.value
+
+
 #: Registry-validation translated-message keys that signal an
 #: unsatisfied calculation input the operator can supply with
 #: ``--binding`` / ``--relation``. The first ``work calculate`` of a
@@ -3240,6 +3278,20 @@ def work_calculate(
         }
         modality_lines = [f"modality\t{_verdict.modality.value}"]
 
+    # Multi-year-renta authorization advisory: an UNAUTHORIZED-but-computable
+    # modelo still computes (it reached here) but is flagged provisional. The
+    # banner informs; it never refuses (work-verify-deadline-independence ADR).
+    authorization_payload: dict[str, object] = {}
+    authorization_lines: list[str] = []
+    advisory = _authorization_advisory(str(unit_for_modality.modelo))
+    if advisory is not None:
+        advisory_text, advisory_state = advisory
+        authorization_payload = {
+            "authorization_advisory": advisory_text,
+            "authorization_state": advisory_state,
+        }
+        authorization_lines = [f"authorization_state\t{advisory_state}", advisory_text]
+
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkCalculateResult
 
@@ -3249,6 +3301,7 @@ def work_calculate(
             "saved_confirmation": saved_confirmation,
             **_calculation_revision_payload(revision).model_dump(mode="python"),
             **modality_payload,
+            **authorization_payload,
         }
     )
     plazo_lines = _work_unit_plazo_lines(unit_for_modality)
@@ -3257,6 +3310,7 @@ def work_calculate(
         *_calculation_revision_lines(revision),
         *modality_lines,
         *plazo_lines,
+        *authorization_lines,
         saved_confirmation,
     ]
     _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)

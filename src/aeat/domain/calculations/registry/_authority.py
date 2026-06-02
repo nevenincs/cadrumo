@@ -13,6 +13,12 @@ from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
+from ....core.access_gate import (
+    AuthorizationManifest,
+    ModeloAuthorization,
+    derive_modelo_authorization,
+    load_authorization_manifest,
+)
 from ....core.resources import bundled_path as _bundled_path
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
@@ -37,6 +43,7 @@ class ValidatedRegistryAuthority:
     _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
+    _authorization_manifest: AuthorizationManifest
 
     @classmethod
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
@@ -78,6 +85,59 @@ class ValidatedRegistryAuthority:
         self._validator.validate_registry(self.modelos)
         self._registry_validated = True
         self._validated_modelos.update(modelo.id for modelo in self.modelos)
+
+    @property
+    def authorization_manifest(self) -> AuthorizationManifest:
+        """Return the loaded multi-year-renta authorization manifest.
+
+        The manifest is the single writable authorization surface; the CI
+        meta-test reads it through this accessor to cross-check each
+        enrolling claim against the recorder evidence.
+        """
+        return self._authorization_manifest
+
+    def modelo_has_engine(self, modelo_id: str) -> bool:
+        """Return whether ``modelo_id`` declares a calculation surface.
+
+        A modelo "has an engine" when any of its revisions declares an
+        application-link whose ``surface`` is ``"calculation"`` — the
+        registry's own marker that a runtime calculation consumer is wired
+        for the modelo. This drives the authorization gate's
+        ADVISORY-vs-refusal split (an unauthorized modelo with an engine
+        still computes with an advisory banner; one with no engine is
+        refused at ``work create``). Returns ``False`` for an unknown
+        modelo rather than raising, so the fleet-wide capability sweep can
+        ask about every canonical modelo id including the engine-build
+        modelos that do not load yet.
+        """
+        modelo = self._modelos_by_id.get(modelo_id)
+        if modelo is None:
+            return False
+        return any(
+            link.surface == "calculation"
+            for revision in modelo.revisions.values()
+            for link in revision.application_links
+        )
+
+    def authorization(self, modelo_id: str) -> ModeloAuthorization:
+        """Return the derived per-modelo authorization capability.
+
+        This is the layer-(b) derivation of the ``modelo-multiyear-renta``
+        gate: the capability is *computed* from the manifest (layer a)
+        cross-checked against the loaded registry — never an independently
+        authored per-revision flag — so it cannot drift from the manifest.
+        An unknown / not-yet-loadable modelo derives to ``UNAUTHORIZED``
+        with ``has_engine = False``, which is the correct default for the
+        engine-build modelos that carry no loadable definition yet.
+
+        Returns:
+            The derived :class:`ModeloAuthorization` for ``modelo_id``.
+        """
+        return derive_modelo_authorization(
+            modelo_id,
+            manifest=self._authorization_manifest,
+            has_engine=self.modelo_has_engine(modelo_id),
+        )
 
     def snapshot(
         self,
@@ -174,6 +234,11 @@ def _load_authority(
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},
+        # Authorization is derived at this boundary from the manifest
+        # (default-deny-by-absence: an absent manifest authorizes nothing).
+        # The manifest is fingerprinted into _collect_registry_tree_fingerprints
+        # so this lru_cache invalidates when the manifest changes on disk.
+        _authorization_manifest=load_authorization_manifest(root),
     )
     authority.validate_registry()
     return authority

@@ -813,12 +813,20 @@ def _collect_registry_tree_fingerprints(resolved: Path) -> tuple[tuple[str, int,
     Covers every catalogue source the loader will subsequently
     re-open: ``legal/*.toml``, single-file ``modelos/*.toml``, and
     directory-mode ``modelos/<id>/manifest.toml`` plus its
-    ``revisions/*.toml`` siblings. The cache key invalidates the
+    ``revisions/*.toml`` siblings. It also covers the multi-year-renta
+    ``authorization.toml`` manifest, which the authority reads at the same
+    registry root: per ``aeat-registry-authority-flow`` the authorization
+    surface must invalidate the registry cache when it changes, so editing
+    the manifest reliably re-derives every per-modelo capability rather
+    than serving a stale authorization. The cache key invalidates the
     moment any of those files changes shape on disk.
     """
     legal_dir = resolved / "legal"
     modelos_dir = resolved / "modelos"
     fingerprints: list[tuple[str, int, int]] = []
+    authorization_manifest = resolved / "authorization.toml"
+    if authorization_manifest.is_file():
+        fingerprints.append(_toml_fingerprint(authorization_manifest))
     for path in sorted(legal_dir.glob("*.toml")):
         fingerprints.append(_toml_fingerprint(path))
     for path in sorted(modelos_dir.glob("*.toml")):
