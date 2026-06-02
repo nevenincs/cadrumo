@@ -363,6 +363,9 @@ convention = "google"
 "src/aeat/test_semantic_intent_sampler.py" = ["S105", "S311"]
 # Token catalogue test fixture identifiers (e.g. "BTC") are not passwords.
 "src/aeat/application/calculations/test_modelo_721_cripto_exterior_fidelity.py" = ["S105"]
+# Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows
+# (key + 18-char numeric value) that exceed 120 columns and cannot be split.
+"src/aeat/application/calculations/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
