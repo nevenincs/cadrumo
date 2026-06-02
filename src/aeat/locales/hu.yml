@@ -127,6 +127,12 @@ adapters:
         template_not_detected: A(z) {path} sablona nem észlelhető automatikusan; a
           felülbíráláshoz adja meg a --modelo és --año értékeket.
         year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: Nem sikerült elemezni az N26 PDF-kivonatot. A forrás elérési
+              útja ki lett takarva a diagnosztikából.
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a
@@ -3265,6 +3271,8 @@ errors:
       bejegyzés nélkül.
     modelo_036_terminal_state: A Modelo 036 rekord már törölve van, és nem fogad el
       további műveleteket.
+    modelo_184_share_sum: 'A Modelo 184 tagi részesedési százalékainak pontosan 100%-ot kell kitenniük.'
+    modelo_347_threshold: 'A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett bevallási lefedettség szükséges.'
     modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
       után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
       a legfrissebb censo alapján.'

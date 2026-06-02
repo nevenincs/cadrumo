@@ -133,6 +133,12 @@ adapters:
         template_not_detected: No s'ha pogut detectar automàticament la plantilla
           de {path}; indica --modelo i --año per forçar-la.
         year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: No s'ha pogut analitzar l'extracte PDF de N26. La ruta d'origen
+              s'ha ocultat als diagnòstics.
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
@@ -3329,6 +3335,8 @@ errors:
       del Model 036 sense una alta prèvia.
     modelo_036_terminal_state: El registre del Model 036 ja està en estat de baixa;
       no admet més operacions.
+    modelo_184_share_sum: 'Els percentatges de participació dels membres del Model 184 han de sumar exactament el 100 %.'
+    modelo_347_threshold: 'Les operacions del Model 347 per sobre del llindar informatiu requereixen cobertura declarativa explícita.'
     modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
       de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
       amb el cens actual.'

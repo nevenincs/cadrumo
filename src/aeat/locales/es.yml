@@ -136,6 +136,12 @@ adapters:
         template_not_detected: No se pudo detectar automáticamente la plantilla de
           {path}; indica --modelo y --año para forzarla.
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: No se pudo analizar el extracto PDF de N26. La ruta de origen
+              se ha ocultado en los diagnósticos.
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
@@ -3370,6 +3376,8 @@ errors:
       del Modelo 036 sin un alta previa.
     modelo_036_terminal_state: El registro del Modelo 036 ya está en estado de baja;
       no admite más operaciones.
+    modelo_184_share_sum: 'Los porcentajes de participación de los miembros del Modelo 184 deben sumar exactamente el 100 %.'
+    modelo_347_threshold: 'Las operaciones del Modelo 347 por encima del umbral informativo requieren cobertura declarativa explícita.'
     modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
       de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
       con el censo actual.'
