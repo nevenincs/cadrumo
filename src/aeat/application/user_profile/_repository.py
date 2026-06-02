@@ -22,8 +22,6 @@ from collections.abc import Iterable
 
 from pydantic import ValidationError
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
 )
@@ -36,6 +34,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.bucket._errors import BucketValidationError
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,

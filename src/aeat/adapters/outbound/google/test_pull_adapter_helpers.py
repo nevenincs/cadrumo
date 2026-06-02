@@ -20,10 +20,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.storage.calc_sheets._engine import _registry_sha
+from ....application.storage.calc_sheets import registry_sha
 from ....core.decimal import coerce_decimal as _coerce_decimal
 from ....core.resources import resources
-from ._calc_sheets_pull import _classify_metadata_match, _coerce_value
+from ._calc_sheets_pull import MetadataMatchState, _classify_metadata_match, _coerce_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -94,11 +94,15 @@ def _modelo_130_snapshot():
 def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
     snapshot = _modelo_130_snapshot()
     verdict, metadata = _classify_metadata_match({}, snapshot)
-    assert verdict == "missing"
+    assert verdict is MetadataMatchState.MISSING
     # Missing metadata still returns a PullMetadata stub so callers can
     # render the result without None-checking every field.
-    assert metadata.modelo_id == ""
+    assert metadata.modelo_id == "missing"
+    assert metadata.revision_id == "missing"
     assert metadata.filing_year == 0
+    assert metadata.period == "missing"
+    assert metadata.engine_version == "missing"
+    assert metadata.registry_sha == "missing"
 
 
 def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
@@ -111,7 +115,7 @@ def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
         "aeat_engine_version": "calc-sheets/0.1.0",
         # The registry-SHA stamp must match the live snapshot's
         # calculation-surface hash, not just the modelo coordinates.
-        "aeat_registry_sha": _registry_sha(snapshot),
+        "aeat_registry_sha": registry_sha(snapshot),
     }
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "matches"
@@ -200,4 +204,4 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     verdict, metadata = _classify_metadata_match(pairs, snapshot)
     assert verdict == "stale"
     assert metadata.registry_sha == "deadbeefdeadbeef"
-    assert metadata.registry_sha != _registry_sha(snapshot)
+    assert metadata.registry_sha != registry_sha(snapshot)

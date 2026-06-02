@@ -32,8 +32,6 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -41,6 +39,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObject
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
+from ...core.time import now
 from ._errors import LiveApplicationInputError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
@@ -301,9 +300,7 @@ class VerifyService:
     ) -> VerifyObservation | None:
         """Return the most recent :class:`VerifyObservation` for (surface, nif), or None."""
         matches = [
-            o
-            for o in self._repository_for(bucket_id).list_observations()
-            if o.surface is surface and o.nif == nif
+            o for o in self._repository_for(bucket_id).list_observations() if o.surface is surface and o.nif == nif
         ]
         if not matches:
             return None

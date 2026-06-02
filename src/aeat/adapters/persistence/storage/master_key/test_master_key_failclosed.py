@@ -15,12 +15,12 @@ from collections.abc import Iterator
 
 import pytest
 
+from .....core.config import override_settings
 from ..errors import SecretStoreError
 from ._master_key import (
     PASSPHRASE_ENV_VAR,
     _default_passphrase_callback,
 )
-from .....core.config import override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

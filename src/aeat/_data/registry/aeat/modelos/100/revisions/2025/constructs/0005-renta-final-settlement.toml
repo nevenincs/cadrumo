@@ -39,9 +39,11 @@ legal_refs = [
     "rd-439-2007:art-86",
     "rd-439-2007:art-90",
     "rd-439-2007:art-95",
+    "ley-35-2006:art-82",
 ]
 source_refs = [
     "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-xsd",
     "boe-modelo-100-2025-form",
     "aeat-renta-2025-manual-parte1",
 ]
@@ -97,6 +99,10 @@ formulas = [
     "renta-2025-total-pagos-a-cuenta",
     "renta-2025-cuota-diferencial",
     "renta-2025-resultado-declaracion",
+    # Personal-family deduction inputs (Ley 35/2006 art. 82 marriage axis).
+    "renta-2025-matrimonio-vigente-todo-anio",
+    "renta-2025-matrimonio-mes-inicio",
+    "renta-2025-matrimonio-mes-fin",
 ]
 relations = [
     "renta-2025-rel-130-pagos-fraccionados",

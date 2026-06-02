@@ -210,7 +210,4 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Pa
     )
     assert revision_2024.casilla_values["decl.ejercicio"] == Decimal("2024")
     assert revision_2026.casilla_values["decl.ejercicio"] == Decimal("2026")
-    assert (
-        revision_2024.casilla_values["decl.ejercicio"]
-        != revision_2026.casilla_values["decl.ejercicio"]
-    )
+    assert revision_2024.casilla_values["decl.ejercicio"] != revision_2026.casilla_values["decl.ejercicio"]

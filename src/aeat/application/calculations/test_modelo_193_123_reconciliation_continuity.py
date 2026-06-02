@@ -318,7 +318,8 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     EHA/3377/2011 art. 1, Ley 35/2006 arts. 25, 99, 101, and the AEAT
     M193 form (BOE-modelo-193-2011-form).
     """
-    recorder = EnrollmentRecorder(_MODELO_193)
+    recorder_193 = EnrollmentRecorder(_MODELO_193)
+    recorder_123 = EnrollmentRecorder(_MODELO_123)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -327,6 +328,14 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         expected_n = _compute_year_123_totals(
             _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo
         )
+        # 123 feeder: evidence the feeder year via one real quarterly calculation.
+        _q1_result = _calculate_123(
+            filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"]
+        )
+        recorder_123.record_calculation_year(
+            filing_year=_YEAR_N, produced_value_count=len(_q1_result.values)
+        )
+
         snapshot_193_n = resources().modelos.authority.snapshot(
             _MODELO_193, filing_year=_YEAR_N, period="0A"
         )
@@ -335,13 +344,20 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             item.relation: item.value for item in prefill_n.values if item.value is not None
         }
         result_n, produced_n = _calculate_193(filing_year=_YEAR_N, relation_values=resolved_n)
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+        recorder_193.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1: same pipeline; Year N observations sit in the store but must
         # not contaminate Year N+1's 193 resolver.
         expected_n1 = _compute_year_123_totals(
             _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo
         )
+        _q1_result_n1 = _calculate_123(
+            filing_year=_YEAR_N_PLUS_1, period="1T", casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"]
+        )
+        recorder_123.record_calculation_year(
+            filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values)
+        )
+
         snapshot_193_n1 = resources().modelos.authority.snapshot(
             _MODELO_193, filing_year=_YEAR_N_PLUS_1, period="0A"
         )
@@ -352,7 +368,7 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         result_n1, produced_n1 = _calculate_193(
             filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1
         )
-        recorder.record_calculation_year(
+        recorder_193.record_calculation_year(
             filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1
         )
 
@@ -366,7 +382,12 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     assert result_n1.values["decl.base-total"] == expected_n1["06"]
     assert result_n1.values["decl.retenciones-total"] == expected_n1["09"]
 
-    # Authorization-gate enrollment.
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
+    # Authorization-gate enrollment for the 193 resumen.
+    evidence_193 = recorder_193.evidence()
+    assert evidence_193.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
+    assert_enrollment_matches_manifest(evidence_193)
+
+    # Authorization-gate enrollment for the 123 feeder (standalone fleet modelo).
+    evidence_123 = recorder_123.evidence()
+    assert evidence_123.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
+    assert_enrollment_matches_manifest(evidence_123)

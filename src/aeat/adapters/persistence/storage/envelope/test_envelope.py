@@ -9,14 +9,13 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from ..errors import ClassificationError, EnvelopeVersionError
 from . import EncryptionMetadata, Envelope
 from ._envelope import EnvelopeMigrator, load_envelope, save_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
-
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class _DemoPayloadV1(BaseModel):
@@ -25,6 +24,7 @@ class _DemoPayloadV1(BaseModel):
     name: str
     count: int
 
+
 class _DemoPayloadV2(BaseModel):
     model_config = _STRICT_FROZEN
 
@@ -32,8 +32,10 @@ class _DemoPayloadV2(BaseModel):
     count: int
     note: str = ""
 
+
 def _now_utc() -> datetime:
     return datetime.now(UTC)
+
 
 class TestEnvelopeShape:
     """The envelope frozen-pydantic record validates field constraints."""
@@ -66,6 +68,7 @@ class TestEnvelopeShape:
                 classification=SensitivityClass.OPERATIONAL,
                 payload=_DemoPayloadV1(name="x", count=1),
             )
+
 
 class TestEnvelopeRoundTrip:
     """``save_envelope`` and ``load_envelope`` are inverse functions."""
@@ -135,6 +138,7 @@ class TestEnvelopeRoundTrip:
         )
         assert loaded.payload.name == "beta"
 
+
 class TestClassificationGate:
     """Loading with a different classification than the writer raises."""
 
@@ -154,6 +158,7 @@ class TestClassificationGate:
                 expected_class=SensitivityClass.OPERATIONAL,
                 max_supported_version=1,
             )
+
 
 class TestVersionGate:
     """Future-version envelopes are refused; older versions migrate forward."""
@@ -224,6 +229,7 @@ class TestVersionGate:
             migrators=(migrator,),
         )
         assert loaded.schema_version == 2
+
 
 class TestEncryptionMetadata:
     """``EncryptionMetadata`` round-trips and validates the algorithm name."""

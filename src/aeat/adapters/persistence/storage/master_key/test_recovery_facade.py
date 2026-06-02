@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from .....core.errors import ERROR_REGISTRY, build_error_envelope
 from ..bucket._errors import RecoveryVerificationError
 from ._recovery import (
     decode_mnemonic,
@@ -31,7 +32,6 @@ from ._recovery_facade import (
     verify_recovery_mnemonic,
 )
 from ._recovery_record import RecoveryRecord
-from .....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

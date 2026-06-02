@@ -57,6 +57,5 @@ def test_master_key_providers_carry_zero_classvar_state() -> None:
 
     assert violations == [], (
         "Master-key providers must not carry ClassVar mutable state; "
-        "every cache moved to the per-bucket BucketSession. Violations:\n  "
-        + "\n  ".join(violations)
+        "every cache moved to the per-bucket BucketSession. Violations:\n  " + "\n  ".join(violations)
     )

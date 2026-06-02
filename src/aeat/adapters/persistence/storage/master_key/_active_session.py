@@ -28,12 +28,12 @@ session explicitly via :func:`contextvars.copy_context`.
 
 from __future__ import annotations
 
+import atexit as _atexit
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 
 from .....core.time import now
-
 from ..bucket._errors import BucketLockedError
 from ..errors import SecretStoreError
 from ._bucket_session import BucketSession
@@ -132,9 +132,6 @@ def _close_active_session_at_exit() -> None:
         # Interpreter shutdown is a degraded environment; never raise
         # from an atexit hook.
         return
-
-
-import atexit as _atexit
 
 _atexit.register(_close_active_session_at_exit)
 

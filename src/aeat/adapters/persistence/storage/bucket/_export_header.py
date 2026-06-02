@@ -21,6 +21,7 @@ from .....core.time._utc import validate_utc_aware
 
 _SHA256_HEX_LEN = 64
 
+
 class ExportArchiveHeader(BaseModel):
     """Plaintext frontmatter for a sealed bucket-export archive."""
 
@@ -53,5 +54,6 @@ class ExportArchiveHeader(BaseModel):
             return validate_utc_aware(value)
         except CoreValidationError as exc:
             raise ValueError(str(exc)) from exc
+
 
 __all__ = ["ExportArchiveHeader"]

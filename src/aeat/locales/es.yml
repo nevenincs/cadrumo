@@ -3843,8 +3843,8 @@ wizard:
     simplificado: Simplified
   commands:
     status:
-      created: creado
-      updated: actualizado
+      created: 'creado'
+      updated: 'actualizado'
   demo:
     description: A demonstration section to test wizard functionality
     section:

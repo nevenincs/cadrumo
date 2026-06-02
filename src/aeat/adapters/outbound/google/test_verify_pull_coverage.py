@@ -103,9 +103,7 @@ def _populated_pull(
         row_set_edits=tuple(
             RowSetEdit(
                 grouping=grouping,
-                cells=(
-                    RowSetCellEdit(binding=f"binding.{grouping}.code", row_index=1, value="row-1"),
-                ),
+                cells=(RowSetCellEdit(binding=f"binding.{grouping}.code", row_index=1, value="row-1"),),
             )
             for grouping in groupings
         ),
@@ -129,12 +127,21 @@ def test_verify_pull_coverage_detects_metadata_drift() -> None:
     plan = _populated_plan()
     pull = _populated_pull(plan, metadata_overrides={"revision_id": "2023-y-siguientes"})
     discrepancies = verify_pull_coverage(plan, pull)
-    assert any(
-        d.kind == "metadata_mismatch" and "revision_id" in d.detail for d in discrepancies
-    )
+    assert any(d.kind == "metadata_mismatch" and "revision_id" in d.detail for d in discrepancies)
     flagged = next(d for d in discrepancies if d.kind == "metadata_mismatch")
     assert flagged.expected == "2024-y-siguientes"
     assert flagged.observed == "2023-y-siguientes"
+
+
+def test_verify_pull_coverage_detects_registry_sha_drift() -> None:
+    """Matching modelo coordinates still fail coverage when registry SHA drifts."""
+
+    plan = _populated_plan()
+    pull = _populated_pull(plan, metadata_overrides={"registry_sha": "deadbeef" * 8})
+    discrepancies = verify_pull_coverage(plan, pull)
+    flagged = next(d for d in discrepancies if d.kind == "metadata_mismatch" and "registry_sha" in d.detail)
+    assert flagged.expected == plan.metadata.registry_sha
+    assert flagged.observed == "deadbeef" * 8
 
 
 def test_verify_pull_coverage_detects_missing_row_set() -> None:
@@ -143,10 +150,7 @@ def test_verify_pull_coverage_detects_missing_row_set() -> None:
     plan = _populated_plan(row_set_groupings=("detalle-actividades", "detalle-perceptors"))
     pull = _populated_pull(plan, row_set_groupings=("detalle-actividades",))
     discrepancies = verify_pull_coverage(plan, pull)
-    assert any(
-        d.kind == "row_set_missing" and d.expected == "detalle-perceptors"
-        for d in discrepancies
-    )
+    assert any(d.kind == "row_set_missing" and d.expected == "detalle-perceptors" for d in discrepancies)
 
 
 def test_verify_pull_coverage_detects_extra_row_set() -> None:
@@ -155,10 +159,7 @@ def test_verify_pull_coverage_detects_extra_row_set() -> None:
     plan = _populated_plan(row_set_groupings=("detalle-actividades",))
     pull = _populated_pull(plan, row_set_groupings=("detalle-actividades", "detalle-rogue"))
     discrepancies = verify_pull_coverage(plan, pull)
-    assert any(
-        d.kind == "row_set_extra" and d.observed == "detalle-rogue"
-        for d in discrepancies
-    )
+    assert any(d.kind == "row_set_extra" and d.observed == "detalle-rogue" for d in discrepancies)
 
 
 def test_pull_coverage_discrepancy_model_is_strict_frozen_forbid_extras() -> None:

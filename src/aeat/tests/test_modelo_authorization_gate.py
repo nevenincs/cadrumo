@@ -2,8 +2,9 @@
 
 The ``modelo-multiyear-renta`` ADR makes every modelo's calculation backend
 NON-FUNCTIONAL until an enrolling end-to-end persona test proves it across at
-least two distinct renta (annual) years. The authorization manifest
-(``authorization.toml``) is the single source of truth; this meta-test is the
+least two distinct renta (annual) years. The directory-mode authorization
+manifest (``authorization.d/<modelo>.toml`` fragments, one per enrolled modelo,
+merged by the loader) is the single source of truth; this meta-test is the
 fleet-level structural gate over it.
 
 The gate has two jobs:

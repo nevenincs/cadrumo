@@ -8,6 +8,7 @@ private underscore modules inside this package.
 
 from __future__ import annotations
 
+# isort: off
 from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import (
     InvoiceCatalogueError,
@@ -16,6 +17,7 @@ from ._errors import (
     InvoiceLinkInconsistencyError,
     InvoiceNotFoundError,
     InvoicePersistenceError,
+    InvoiceValidationError,
 )
 # Sibling-package import deferred below `._enums` and `._errors`: the
 # classification module imports back into this package for IvaRate. If
@@ -36,6 +38,7 @@ from ._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+# isort: on
 
 __all__ = [
     "Invoice",
@@ -48,6 +51,7 @@ __all__ = [
     "InvoiceLinkInconsistencyError",
     "InvoiceNotFoundError",
     "InvoicePersistenceError",
+    "InvoiceValidationError",
     "IvaInvoiceClassification",
     "IvaRate",
     "LinkInconsistency",

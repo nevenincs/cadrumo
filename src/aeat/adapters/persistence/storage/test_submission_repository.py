@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-
 from ....domain.submission._models import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -24,6 +22,7 @@ from ....domain.submission._models import (
 from ....domain.submission._repository import (
     SubmissionRepository,
 )
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from . import (
     SensitivityClass,
 )

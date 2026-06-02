@@ -134,6 +134,7 @@ auth_browser_action_patterns = [
   wallet_browser_action_patterns = [
     "clave-movil-authorize",
     "representation-gate-own-name-continue",
+    "wallet-discovered-entrypoint-open",
     "wallet-execute-read-query",
   ]
 declarations_browser_action_patterns = [

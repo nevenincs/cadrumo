@@ -65,6 +65,12 @@ def _calculate_303_from_observations(
     snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        # Autoconsumo (LIVA art. 9) is zero for the standard
+        # autónomo path exercised by this prefill comparison test.
+        "modelo-303-autoconsumo-promotor-base": Decimal("0"),
+        # Common-regime taxpayers receive 100% State attribution (M303 C65
+        # binding from derived tax_residence.state_attribution_ratio).
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)

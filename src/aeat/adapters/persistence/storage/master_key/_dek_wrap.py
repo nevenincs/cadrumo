@@ -32,6 +32,7 @@ _TAG_BYTES = 16
 _DEK_BYTES = 32
 _KEK_BYTES = 32
 
+
 class WrappedDek(BaseModel):
     """Frozen AES-256-GCM envelope around one bucket's data-encryption key."""
 
@@ -41,11 +42,13 @@ class WrappedDek(BaseModel):
     ciphertext: bytes = Field(min_length=_DEK_BYTES, max_length=_DEK_BYTES)
     tag: bytes = Field(min_length=_TAG_BYTES, max_length=_TAG_BYTES)
 
+
 def _associated_data(bucket_id: str) -> bytes:
     """Compose the AEAD additional-authenticated-data for one bucket."""
     if not bucket_id:
         raise EncryptionError("bucket_id must be non-empty")
     return f"aeat.dek-wrap.v1:{bucket_id}".encode()
+
 
 def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
     """Wrap `dek` under `kek` using AES-256-GCM keyed to `bucket_id`.
@@ -77,6 +80,7 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
     ciphertext, tag = cipher_with_tag[:_DEK_BYTES], cipher_with_tag[_DEK_BYTES:]
     return WrappedDek(nonce=nonce, ciphertext=ciphertext, tag=tag)
 
+
 def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
     """Recover the 32-byte DEK from `wrapped` under `kek` and `bucket_id`.
 
@@ -98,5 +102,6 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
     aad = _associated_data(bucket_id)
     cipher_with_tag = wrapped.ciphertext + wrapped.tag
     return AESGCM(kek).decrypt(wrapped.nonce, cipher_with_tag, aad)
+
 
 __all__ = ["WrappedDek", "unwrap_dek", "wrap_dek"]

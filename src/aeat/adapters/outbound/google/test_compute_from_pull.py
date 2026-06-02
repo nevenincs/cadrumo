@@ -44,7 +44,7 @@ def _modelo_130_snapshot():
 def _matching_metadata(snapshot) -> PullMetadata:
     """Build a PullMetadata that matches the snapshot's registry-SHA stamp."""
 
-    from ....application.storage.calc_sheets._engine import _registry_sha
+    from ....application.storage.calc_sheets import registry_sha
 
     return PullMetadata(
         modelo_id=snapshot.modelo.id,
@@ -52,7 +52,7 @@ def _matching_metadata(snapshot) -> PullMetadata:
         filing_year=snapshot.filing_year,
         period=snapshot.period,
         engine_version="calc-sheets/0.1.0",
-        registry_sha=_registry_sha(snapshot),
+        registry_sha=registry_sha(snapshot),
     )
 
 
@@ -120,7 +120,7 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match="metadata_match=<MetadataMatchState.STALE"):
+    with pytest.raises(OutboundStorageConflictError, match=r"metadata_match=<MetadataMatchState\.STALE"):
         compute_from_pull(snapshot, pull)
 
 
@@ -136,8 +136,30 @@ def test_compute_from_pull_refuses_missing_metadata() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match="metadata_match=<MetadataMatchState.MISSING"):
+    with pytest.raises(OutboundStorageConflictError, match=r"metadata_match=<MetadataMatchState\.MISSING"):
         compute_from_pull(snapshot, pull)
+
+
+def test_compute_from_pull_refuses_contradictory_matching_metadata_verdict() -> None:
+    """A MATCHES verdict cannot override metadata that no longer binds to the snapshot."""
+
+    snapshot = _modelo_130_snapshot()
+    pull = PullResult(
+        spreadsheet_id="test-id",
+        operator_edits=_operator_edits_for(snapshot, {"01": Decimal("100")}),
+        binding_edits=_binding_edits_for(snapshot),
+        relation_edits=_relation_edits_for(snapshot),
+        metadata=_stale_metadata(snapshot),
+        metadata_match=MetadataMatchState.MATCHES,
+        cells_read=1,
+    )
+
+    with pytest.raises(OutboundStorageConflictError) as raised:
+        compute_from_pull(snapshot, pull)
+
+    assert raised.value.context is not None
+    assert raised.value.context["workbook_registry_sha"] == "0" * 16
+    assert raised.value.context["snapshot_registry_sha"] == _matching_metadata(snapshot).registry_sha
 
 
 def test_compute_from_pull_runs_against_matching_snapshot() -> None:

@@ -134,8 +134,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             envelope = _json.loads(row.payload.decode("utf-8"))
             manifest = envelope["payload"]
             assert manifest["sha256"] == manifest["attachment_id"], (
-                "fixture must persist matching sha256 + attachment_id "
-                "for this proof test to be meaningful"
+                "fixture must persist matching sha256 + attachment_id for this proof test to be meaningful"
             )
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
             manifest["sha256"] = tampered_digest

@@ -3797,8 +3797,8 @@ wizard:
     simplificado: Simplified
   commands:
     status:
-      created: creat
-      updated: actualitzat
+      created: 'creat'
+      updated: 'actualitzat'
   demo:
     description: A demonstration section to test wizard functionality
     section:

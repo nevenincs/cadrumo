@@ -26,10 +26,9 @@ from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
-from .....core.time import now
-
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
+from .....core.time import now
 from .._path_safety import safe_repository_id
 from ..errors import ClassificationError, EnvelopeVersionError, RepositorySetupError
 from ..runtime_repository import (
@@ -103,8 +102,7 @@ class SecureBoundRepository[T: BaseModel]:
         for attr in ("namespace", "payload_type", "sensitivity", "schema_version"):
             if not hasattr(cls, attr) or getattr(cls, attr, None) is None:
                 raise RepositorySetupError(
-                    f"{cls.__name__} must set class attribute {attr!r} "
-                    f"before instantiating SecureBoundRepository",
+                    f"{cls.__name__} must set class attribute {attr!r} before instantiating SecureBoundRepository",
                 )
 
     # ------------------------------------------------------------------
@@ -234,7 +232,9 @@ class SecureBoundRepository[T: BaseModel]:
             # model_validate_json against Envelope[self.payload_type] == Envelope[T].
             # Future improvement: eliminate via generic ClassVar alias
             # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
-            identifiers.append(self.extract_identifier(cast(T, envelope.payload)))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+            identifiers.append(
+                self.extract_identifier(cast(T, envelope.payload))
+            )  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
         yield from sorted(identifiers)
 
     def iter_records(self) -> Iterator[T]:

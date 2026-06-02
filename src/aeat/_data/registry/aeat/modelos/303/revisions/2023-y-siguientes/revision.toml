@@ -268,10 +268,10 @@ required_text = ["modelo 303"]
 op = "subtract"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "27"
+casilla = "iva.cuota-devengada-total"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "45"
+casilla = "iva.cuota-deducible-total"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"

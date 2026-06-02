@@ -36,13 +36,13 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .....core.time import now
-
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
+from .....core.time import now
 from .....core.time._utc import validate_utc_aware
 from .._namespace_registry import SECRET_RECORD_SCHEMA_VERSION
 from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
@@ -60,8 +60,6 @@ from ..master_key._active_session import get_active_master_key
 from ..master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
-
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"

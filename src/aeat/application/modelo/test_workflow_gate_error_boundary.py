@@ -21,14 +21,14 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ._actions import ModeloWorkflowGateError
+from ...core.errors import render_error_json, render_error_text
 from ..workflow import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
 )
-from ...core.errors import render_error_json, render_error_text
+from ._actions import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

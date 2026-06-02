@@ -13,7 +13,7 @@ import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
@@ -63,6 +63,7 @@ _WALLET_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.f
     target=quote(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet, safe="")
 )
 _OWN_NAME_REPRESENTATION_ACTION = "representation-gate-own-name-continue"
+_WALLET_DISCOVERED_ENTRYPOINT_ACTION = "wallet-discovered-entrypoint-open"
 _WALLET_EXECUTE_READ_ACTION = "wallet-execute-read-query"
 IVA_COMPENSATION_WALLET_URL = _WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
@@ -126,15 +127,28 @@ async def fetch_iva_compensation_wallet(
                             "the IVA compensation wallet."
                         ),
                     )
-                wallet_execute_submitted = await _open_authenticated_surface(
-                    page,
-                    browser_session=browser_session,
-                    settings=settings,
-                    selector_url=_WALLET_SELECTOR_URL,
-                    target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-                    expected_url=_WALLET_URL,
-                    surface="iva_compensation_wallet",
+                pre303_html = await page.content()
+                discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
+                    pre303_html,
+                    base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
                 )
+                if discovered_wallet_url is not None:
+                    wallet_execute_submitted = await _open_discovered_wallet_entrypoint(
+                        page,
+                        browser_session=browser_session,
+                        settings=settings,
+                        discovered_url=discovered_wallet_url,
+                    )
+                else:
+                    wallet_execute_submitted = await _open_authenticated_surface(
+                        page,
+                        browser_session=browser_session,
+                        settings=settings,
+                        selector_url=_WALLET_SELECTOR_URL,
+                        target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+                        expected_url=_WALLET_URL,
+                        surface="iva_compensation_wallet",
+                    )
             except PlaywrightError as exc:
                 raise SedeNavigationError(
                     f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}"
@@ -195,7 +209,7 @@ def parse_iva_compensation_wallet_html(
     captured_at: datetime,
     allow_empty_wallet_shell: bool = False,
 ) -> IvaCompensationWalletObservation:
-    """Parse wallet rows from a captured AEAT wallet HTML page and return an :class:`IvaCompensationWalletObservation`."""
+    """Parse wallet rows from a captured AEAT wallet HTML page."""
     validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
     soup = BeautifulSoup(html, "html.parser")
     rows: list[IvaCompensationWalletRow] = []
@@ -243,6 +257,19 @@ def parse_iva_compensation_wallet_html(
         captured_at=captured_at,
         raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
     )
+
+
+def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> str | None:
+    """Return AEAT's Pre303-provided wallet URL when the authenticated page exposes one."""
+    soup = BeautifulSoup(html, "html.parser")
+    for node in soup.find_all(["a", "form"]):
+        raw_url = node.get("href") if node.name == "a" else node.get("action")
+        if not raw_url:
+            continue
+        candidate = _absolute_audited_wallet_url(str(raw_url), base_url=base_url)
+        if candidate is not None:
+            return candidate
+    return None
 
 
 def is_aeat_wallet_auth_gate_redirect(current_url: str) -> bool:
@@ -330,6 +357,41 @@ def _is_representation_gate_url(current_url: str) -> bool:
     except ValueError:
         return False
     return _EXTERNAL.aeat.clave_movil.dialogo_representacion_path_marker in path
+
+
+async def _open_discovered_wallet_entrypoint(
+    page: Page,
+    *,
+    browser_session: DefaultBrowserSession,
+    settings: Settings,
+    discovered_url: str,
+) -> bool:
+    """Open a wallet link discovered from the authenticated Pre303 page."""
+    _assert_read_http("GET", discovered_url)
+    _assert_read_browser_action(_WALLET_DISCOVERED_ENTRYPOINT_ACTION)
+    await browser_session.navigate(page, discovered_url)
+    await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
+    if _is_representation_gate_url(getattr(page, "url", "") or ""):
+        await _continue_own_name_representation(
+            page,
+            settings=settings,
+            expected_url=_WALLET_URL,
+            target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+            surface="iva_compensation_wallet",
+        )
+    try:
+        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+    except PlaywrightError:
+        log.debug(
+            "Discovered IVA wallet entrypoint did not reach networkidle current_url=%s",
+            getattr(page, "url", None),
+            exc_info=True,
+        )
+    return await _submit_wallet_execute_gate_if_present(
+        page,
+        settings=settings,
+        expected_url=_WALLET_URL,
+    )
 
 
 async def _continue_own_name_representation(
@@ -532,6 +594,14 @@ def _has_wallet_table(html: str) -> bool:
 
 def _wallet_page_shape_context(html: str, *, landing_url: str) -> dict[str, object]:
     soup = BeautifulSoup(html, "html.parser")
+    wallet_entrypoints = tuple(
+        entrypoint
+        for entrypoint in (
+            _wallet_entrypoint_path(str(node.get("href") if node.name == "a" else node.get("action") or ""))
+            for node in soup.find_all(["a", "form"])[:40]
+        )
+        if entrypoint is not None
+    )
     forms = tuple(
         {
             "id": _bounded_text(form.get("id", "")),
@@ -555,6 +625,8 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> dict[str, obje
         "heading_count": len(soup.find_all(["h1", "h2", "h3"])),
         "table_count": len(soup.find_all("table")),
         "form_count": len(soup.find_all("form")),
+        "wallet_entrypoint_count": len(wallet_entrypoints),
+        "wallet_entrypoint_paths": wallet_entrypoints[:8],
         "forms": forms,
         "inputs": inputs,
         "raw_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
@@ -574,6 +646,38 @@ def _redacted_url(value: object) -> str | None:
     if not parsed.scheme and not parsed.netloc:
         return parsed.path
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+def _absolute_audited_wallet_url(raw_url: str, *, base_url: str) -> str | None:
+    try:
+        candidate = urljoin(base_url, raw_url)
+        parsed = urlsplit(candidate)
+    except ValueError:
+        return None
+    if parsed.path != _EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
+        return None
+    if not _is_allowed_wallet_host(parsed.netloc):
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+def _wallet_entrypoint_path(raw_url: str) -> str | None:
+    try:
+        path = urlsplit(raw_url).path
+    except ValueError:
+        return None
+    if path == _EXTERNAL.aeat.sede_paths.iva_compensation_wallet:
+        return path
+    return None
+
+
+def _is_allowed_wallet_host(netloc: str) -> bool:
+    host = netloc.casefold()
+    return host in {
+        _WALLET_HOST.casefold(),
+        _WALLET_RUNTIME_HOST.casefold(),
+        _SEDE_HOST.casefold(),
+    }
 
 
 def _normalised_title(soup: BeautifulSoup) -> str:
@@ -685,6 +789,7 @@ def _assert_read_browser_action(action: str) -> None:
 __all__ = [
     "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
+    "discover_iva_compensation_wallet_entrypoint",
     "fetch_iva_compensation_wallet",
     "is_aeat_wallet_auth_gate_redirect",
     "parse_iva_compensation_wallet_html",

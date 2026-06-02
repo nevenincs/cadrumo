@@ -10,7 +10,14 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY  # re-exported for application.ledger consumers via test_external_constants gate
+
+# CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
+from ...core.external_constants import (
+    CLASSIFIED_BY_MANUAL as CLASSIFIED_BY_MANUAL,
+)
+from ...core.external_constants import (
+    DEFAULT_CURRENCY,
+)
 from ...core.identity import BucketId, TransactionId
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
@@ -38,6 +45,7 @@ _TRANSFER_ALLOWED_STATES = frozenset(
         BusinessClassification.SKIPPED_BY_RULE,
     }
 )
+
 
 class ManualLedgerTransactionCommand(BaseModel):
     """Backend command for creating or updating one manual ledger transaction."""
@@ -79,9 +87,7 @@ class ManualLedgerTransactionCommand(BaseModel):
             return None
         normalised = value.strip()
         if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise ValueError(
-                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
-            )
+            raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
         return normalised
 
     @field_validator(
@@ -182,6 +188,7 @@ class ManualLedgerTransactionCommand(BaseModel):
             joined = ", ".join(populated)
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
+
 class ManualLedgerTransactionPatch(BaseModel):
     """Typed partial update for one bucket-scoped ledger transaction."""
 
@@ -254,6 +261,7 @@ class ManualLedgerTransactionPatch(BaseModel):
             raise TransactionValidationError("manual ledger patch must carry at least one field")
         return self
 
+
 class ManualLedgerTransactionResult(BaseModel):
     """Backend result for a persisted manual ledger transaction mutation."""
 
@@ -262,6 +270,7 @@ class ManualLedgerTransactionResult(BaseModel):
     ref: BucketTransactionRef
     transaction: Transaction
     bucket_event_ids: tuple[str, ...] = ()
+
 
 class LedgerTransactionPayload(BaseModel):
     """Canonical read projection for one ledger transaction."""
@@ -300,10 +309,9 @@ class LedgerTransactionPayload(BaseModel):
             return None
         normalised = value.strip()
         if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise ValueError(
-                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
-            )
+            raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
         return normalised
+
 
 class LedgerTransactionReviewPayload(BaseModel):
     """Canonical read projection for one ledger transaction plus review status."""
@@ -343,10 +351,9 @@ class LedgerTransactionReviewPayload(BaseModel):
             return None
         normalised = value.strip()
         if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise ValueError(
-                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
-            )
+            raise ValueError("source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code")
         return normalised
+
 
 class LedgerTransactionResultPayload(BaseModel):
     """Canonical projection for a single ledger mutation/read result."""
@@ -357,6 +364,7 @@ class LedgerTransactionResultPayload(BaseModel):
     transaction_id: TransactionId
     review_status: LedgerReviewStatus
     transaction: LedgerTransactionPayload
+
 
 class LedgerTransactionTrackingPayload(BaseModel):
     """Durable event lineage fields for one ledger transaction."""
@@ -369,6 +377,7 @@ class LedgerTransactionTrackingPayload(BaseModel):
     edit_lineage: tuple[TransactionEditLineageEntry, ...]
     lifecycle_state: str = Field(min_length=1)
     lifecycle_lineage: tuple[TransactionLifecycleLineageEntry, ...]
+
 
 class SplitChildCommand(BaseModel):
     """One slice of an N-way split.
@@ -410,6 +419,7 @@ class SplitChildCommand(BaseModel):
         trimmed = value.strip()
         return trimmed or None
 
+
 class SplitTransactionResult(BaseModel):
     """Backend result of a successful N-way split."""
 
@@ -422,6 +432,7 @@ class SplitTransactionResult(BaseModel):
     parent_transaction: Transaction
     child_transactions: tuple[Transaction, ...]
     bucket_event_id: str = Field(min_length=64, max_length=64)
+
 
 class MergeTransactionsResult(BaseModel):
     """Backend result of a successful split re-merge."""
@@ -437,6 +448,7 @@ class MergeTransactionsResult(BaseModel):
     parent_transaction: Transaction
     bucket_event_id: str = Field(min_length=64, max_length=64)
 
+
 class LedgerImportOperationResult(BaseModel):
     """Backend result for an imported ledger transaction batch."""
 
@@ -445,6 +457,7 @@ class LedgerImportOperationResult(BaseModel):
     summary: ImportSummary
     import_batch_id: str | None = Field(default=None, min_length=64, max_length=64)
     bucket_event_ids: tuple[str, ...] = ()
+
 
 class LedgerSourceValidationReport(BaseModel):
     """Backend read model for source-provider validation details."""
@@ -456,6 +469,7 @@ class LedgerSourceValidationReport(BaseModel):
     encoding: str | None = None
     dialect: str | None = None
 
+
 class LedgerSourceVerificationReport(BaseModel):
     """Backend read model for optional source-file verification."""
 
@@ -464,6 +478,7 @@ class LedgerSourceVerificationReport(BaseModel):
     requested: bool
     path: str | None = None
     sha256: str | None = None
+
 
 class LedgerImportDiagnosticReport(BaseModel):
     """Backend read model for one persisted or dry-run import diagnostic."""
@@ -476,6 +491,7 @@ class LedgerImportDiagnosticReport(BaseModel):
     source_path: str | None = None
     source_locator: str | None = None
     affected_transaction_ids: tuple[str, ...] = ()
+
 
 class LedgerSourceImportCommand(BaseModel):
     """Backend command for importing ledger rows from an operator source file."""
@@ -502,6 +518,7 @@ class LedgerSourceImportCommand(BaseModel):
             raise TransactionValidationError("ledger source import command text fields must not be blank")
         return trimmed
 
+
 class LedgerSourceImportResult(BaseModel):
     """Backend result for source-file import diagnostics and persistence."""
 
@@ -523,6 +540,7 @@ class LedgerSourceImportResult(BaseModel):
     validation: LedgerSourceValidationReport
     source: LedgerSourceVerificationReport
     diagnostics: tuple[LedgerImportDiagnosticReport, ...] = ()
+
 
 class LedgerReviewQuery(BaseModel):
     """Backend query for operator review rows in one bucket ledger."""
@@ -546,6 +564,7 @@ class LedgerReviewQuery(BaseModel):
             raise TransactionValidationError("ledger review query text fields must not be blank")
         return trimmed
 
+
 class LedgerReviewRow(BaseModel):
     """Backend projection for one ledger review row."""
 
@@ -558,6 +577,7 @@ class LedgerReviewRow(BaseModel):
     status: str = Field(min_length=1)
     transaction: LedgerTransactionPayload | None = None
 
+
 class LedgerReviewQueryResult(BaseModel):
     """Backend result for operator ledger review queries."""
 
@@ -566,6 +586,7 @@ class LedgerReviewQueryResult(BaseModel):
     bucket_id: BucketId
     rows: tuple[LedgerReviewRow, ...]
     filters: tuple[str, ...] = ()
+
 
 class LedgerStatusReport(BaseModel):
     """Backend read model summarizing one bucket's ledger transaction state."""
@@ -586,6 +607,7 @@ class LedgerStatusReport(BaseModel):
     readiness_issue_count: int = Field(default=0, ge=0)
     ready: bool | None = None
 
+
 class LedgerRemovalBlocker(BaseModel):
     """Finalized modelo revision that prevents ledger transaction removal."""
 
@@ -597,6 +619,7 @@ class LedgerRemovalBlocker(BaseModel):
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=16)
+
 
 class LedgerTransactionRemovalReport(BaseModel):
     """Backend report for one bucket-local ledger transaction removal."""
@@ -614,6 +637,7 @@ class LedgerTransactionRemovalReport(BaseModel):
     blocking_modelo_references: tuple[LedgerRemovalBlocker, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
 
+
 class LedgerCatalogueResetReport(BaseModel):
     """Backend report for a protected bucket-local ledger catalogue reset."""
 
@@ -629,6 +653,7 @@ class LedgerCatalogueResetReport(BaseModel):
     cascaded_attachment_ids: tuple[str, ...] = ()
     blocking_modelo_references: tuple[LedgerRemovalBlocker, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
+
 
 class LedgerExportCommand(BaseModel):
     """Backend command for exporting one bucket's canonical ledger rows."""
@@ -650,6 +675,7 @@ class LedgerExportCommand(BaseModel):
             raise TransactionValidationError("ledger export command text fields must not be blank")
         return trimmed
 
+
 class BulkClassifyRow(BaseModel):
     """One row from a ``ledger classify --from-csv`` CSV input file.
 
@@ -665,6 +691,7 @@ class BulkClassifyRow(BaseModel):
     classification: BusinessClassification
     category_id: str | None = None
 
+
 class BulkClassifyFailure(BaseModel):
     """One failed row from a ``ledger classify --from-csv`` operation."""
 
@@ -673,6 +700,7 @@ class BulkClassifyFailure(BaseModel):
     row_index: int = Field(ge=0)
     transaction_id: str
     reason: str = Field(min_length=1)
+
 
 class BulkClassifyResult(BaseModel):
     """Aggregate result for a ``ledger classify --from-csv`` operation.
@@ -690,7 +718,9 @@ class BulkClassifyResult(BaseModel):
     failures: tuple[BulkClassifyFailure, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
 
+
 BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset({"transaction_id", "classification", "category_id"})
+
 
 class ApplyRulesAppliedRow(BaseModel):
     """One successfully rule-applied transaction from ``ledger rule apply``."""
@@ -700,6 +730,7 @@ class ApplyRulesAppliedRow(BaseModel):
     transaction_id: str = Field(min_length=1)
     matched_rule_id: str = Field(min_length=1)
     classification: BusinessClassification
+
 
 class ApplyRulesResult(BaseModel):
     """Aggregate result for a ``ledger rule apply`` operation."""
@@ -713,6 +744,7 @@ class ApplyRulesResult(BaseModel):
     no_match: int = Field(ge=0)
     applied: tuple[ApplyRulesAppliedRow, ...] = ()
     bucket_event_ids: tuple[str, ...] = ()
+
 
 class LedgerExportRow(BaseModel):
     """One serialized ledger transaction row exported from the canonical catalogue."""
@@ -745,6 +777,7 @@ class LedgerExportRow(BaseModel):
     created_by: str = ""
     created_source_command: str = ""
     source_jurisdiction: str = ""
+
 
 class LedgerExportResult(BaseModel):
     """Backend result for an exported canonical ledger transaction snapshot."""

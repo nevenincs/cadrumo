@@ -25,14 +25,6 @@ _ALLOWLIST = {
         "private ValueError raised by the multi-year enrollment recorder validator; "
         "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
     ),
-    "aeat.domain.modelos._row_models.Modelo347ThresholdError": (
-        "private ValueError raised by row-model pydantic field validators; "
-        "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
-    ),
-    "aeat.domain.modelos._row_models.Modelo184ShareSumError": (
-        "private ValueError raised by row-model pydantic field validators; "
-        "internal contract sentinel — not surfaced to user/CLI/registry-error envelopes"
-    ),
 }
 
 

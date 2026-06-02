@@ -104,7 +104,7 @@ def test_oauth_client_rejects_non_https_auth_uri() -> None:
 def test_oauth_client_is_frozen() -> None:
     client = OAuthClient(**_valid_client_kwargs())
     with pytest.raises(ValidationError, match="frozen"):
-        setattr(client, "client_id", "other.apps.googleusercontent.com")
+        client.client_id = "other.apps.googleusercontent.com"
 
 
 def test_oauth_client_rejects_extra_fields() -> None:
@@ -128,7 +128,7 @@ def test_oauth_token_minimum_shape() -> None:
 def test_oauth_token_is_frozen() -> None:
     token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
     with pytest.raises(ValidationError, match="frozen"):
-        setattr(token, "refresh_token", "1//rotated")
+        token.refresh_token = "1//rotated"
 
 
 def test_oauth_token_rejects_empty_refresh() -> None:

@@ -265,9 +265,7 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
 
 def test_w05_s41_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
     production_namespaces = tuple(
-        namespace
-        for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces
-        if not namespace.key.startswith("test_")
+        namespace for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces if not namespace.key.startswith("test_")
     )
 
     assert production_namespaces

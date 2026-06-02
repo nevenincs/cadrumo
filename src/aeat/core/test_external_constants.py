@@ -177,6 +177,7 @@ def test_live_safety_action_patterns_are_centralized() -> None:
     safety = load_external_constants().aeat.live_safety
 
     assert "clave-movil-authorize" in safety.auth_browser_action_patterns
+    assert "wallet-discovered-entrypoint-open" in safety.wallet_browser_action_patterns
     assert "wallet-execute-read-query" in safety.wallet_browser_action_patterns
     assert "buscar-declaraciones-presentadas" in safety.declarations_browser_action_patterns
     assert "csv-verifier-query" in safety.csv_verify_browser_action_patterns
@@ -522,7 +523,6 @@ def test_default_currency_is_final_str() -> None:
 def test_ledger_transaction_command_reads_currency_from_external_constants() -> None:
     """The manual ledger transaction command default currency comes from ``DEFAULT_CURRENCY``."""
 
-
     # Construct with no explicit currency — the field default must resolve to DEFAULT_CURRENCY.
     # We verify by inspecting that the module imports DEFAULT_CURRENCY (not a local literal).
     from ..application.ledger import _models as _models_mod
@@ -644,9 +644,7 @@ def test_application_ledger_imports_classified_by_manual_from_core() -> None:
     ledger_init = importlib.import_module("aeat.application.ledger")
 
     # The public surface exposes the constant and it is the same object.
-    assert hasattr(ledger_init, "CLASSIFIED_BY_MANUAL"), (
-        "aeat.application.ledger must expose CLASSIFIED_BY_MANUAL"
-    )
+    assert hasattr(ledger_init, "CLASSIFIED_BY_MANUAL"), "aeat.application.ledger must expose CLASSIFIED_BY_MANUAL"
     assert ledger_init.CLASSIFIED_BY_MANUAL is CLASSIFIED_BY_MANUAL
 
 
@@ -664,9 +662,7 @@ def test_application_ledger_models_does_not_define_classified_by_manual_locally(
     models_mod = importlib.import_module("aeat.application.ledger._models")
 
     # The module still exposes the constant (via import), and it is the same object.
-    assert hasattr(models_mod, "CLASSIFIED_BY_MANUAL"), (
-        "_models must import CLASSIFIED_BY_MANUAL from core"
-    )
+    assert hasattr(models_mod, "CLASSIFIED_BY_MANUAL"), "_models must import CLASSIFIED_BY_MANUAL from core"
     assert models_mod.CLASSIFIED_BY_MANUAL is CLASSIFIED_BY_MANUAL
 
 
@@ -734,8 +730,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
 
     assert offenders == [], (
         "Local classified_by manual sentinels found; "
-        "import CLASSIFIED_BY_MANUAL from aeat.core.external_constants instead:\n"
-        + "\n".join(offenders)
+        "import CLASSIFIED_BY_MANUAL from aeat.core.external_constants instead:\n" + "\n".join(offenders)
     )
 
 
@@ -791,8 +786,7 @@ def test_declarations_uses_json_mime_constant() -> None:
     mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
 
     assert hasattr(mod, "_JSON_MIME_TYPE"), (
-        "_declarations must import JSON_MIME_TYPE from aeat.core.external_constants "
-        "under the alias _JSON_MIME_TYPE"
+        "_declarations must import JSON_MIME_TYPE from aeat.core.external_constants under the alias _JSON_MIME_TYPE"
     )
     assert mod._JSON_MIME_TYPE is JSON_MIME_TYPE
     assert mod._JSON_MIME_TYPE == "application/json"
@@ -812,8 +806,7 @@ def test_tabular_export_uses_csv_mime_constant() -> None:
     mod = importlib.import_module("aeat.application.export._tabular")
 
     assert hasattr(mod, "_CSV_MIME_TYPE"), (
-        "_tabular must import CSV_MIME_TYPE from aeat.core.external_constants "
-        "under the alias _CSV_MIME_TYPE"
+        "_tabular must import CSV_MIME_TYPE from aeat.core.external_constants under the alias _CSV_MIME_TYPE"
     )
     assert mod._CSV_MIME_TYPE is CSV_MIME_TYPE
     assert mod._CSV_MIME_TYPE == "text/csv"
@@ -827,9 +820,7 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
     """
 
     repo_root = Path(__file__).parents[3]
-    source = (
-        repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py"
-    ).read_text(encoding="utf-8")
+    source = (repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     offenders: list[str] = []
@@ -838,9 +829,8 @@ def test_no_bare_json_mime_literal_in_declarations() -> None:
             continue
         offenders.append(f"_declarations.py:{node.lineno}: bare 'application/json' literal")
 
-    assert offenders == [], (
-        "Bare 'application/json' literals found; use _JSON_MIME_TYPE instead:\n"
-        + "\n".join(offenders)
+    assert offenders == [], "Bare 'application/json' literals found; use _JSON_MIME_TYPE instead:\n" + "\n".join(
+        offenders
     )
 
 
@@ -892,9 +882,7 @@ def test_no_bare_threshold_347_literal_in_counterpart() -> None:
     """
 
     repo_root = Path(__file__).parents[3]
-    source = (
-        repo_root / "src/aeat/application/aggregation/_counterpart.py"
-    ).read_text(encoding="utf-8")
+    source = (repo_root / "src/aeat/application/aggregation/_counterpart.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     offenders: list[str] = []
@@ -903,19 +891,14 @@ def test_no_bare_threshold_347_literal_in_counterpart() -> None:
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        func_name = (
-            func.id
-            if isinstance(func, ast.Name)
-            else (func.attr if isinstance(func, ast.Attribute) else "")
-        )
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
         if func_name != "Decimal":
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "3005.06":
             offenders.append(f"_counterpart.py:{node.lineno}: bare Decimal('3005.06'); use M347_THRESHOLD_EUR")
 
     assert offenders == [], (
-        "Local M347 threshold literals found; import M347_THRESHOLD_EUR from core instead:\n"
-        + "\n".join(offenders)
+        "Local M347 threshold literals found; import M347_THRESHOLD_EUR from core instead:\n" + "\n".join(offenders)
     )
 
 
@@ -967,9 +950,7 @@ def test_no_bare_threshold_720_literal_in_foreign_assets() -> None:
     """
 
     repo_root = Path(__file__).parents[3]
-    source = (
-        repo_root / "src/aeat/application/aggregation/_foreign_assets.py"
-    ).read_text(encoding="utf-8")
+    source = (repo_root / "src/aeat/application/aggregation/_foreign_assets.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     offenders: list[str] = []
@@ -977,17 +958,12 @@ def test_no_bare_threshold_720_literal_in_foreign_assets() -> None:
         if not isinstance(node, ast.Call):
             continue
         func = node.func
-        func_name = (
-            func.id
-            if isinstance(func, ast.Name)
-            else (func.attr if isinstance(func, ast.Attribute) else "")
-        )
+        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
         if func_name != "Decimal":
             continue
         if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "50000.00":
             offenders.append(
-                f"_foreign_assets.py:{node.lineno}: bare Decimal('50000.00'); "
-                "use MODELO_720_REPORTING_THRESHOLD_EUR"
+                f"_foreign_assets.py:{node.lineno}: bare Decimal('50000.00'); use MODELO_720_REPORTING_THRESHOLD_EUR"
             )
 
     assert offenders == [], (
@@ -1004,9 +980,7 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
     """
 
     repo_root = Path(__file__).parents[3]
-    source = (
-        repo_root / "src/aeat/application/export/_tabular.py"
-    ).read_text(encoding="utf-8")
+    source = (repo_root / "src/aeat/application/export/_tabular.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
     offenders: list[str] = []
@@ -1015,7 +989,4 @@ def test_no_bare_csv_mime_literal_in_tabular() -> None:
             continue
         offenders.append(f"_tabular.py:{node.lineno}: bare 'text/csv' literal")
 
-    assert offenders == [], (
-        "Bare 'text/csv' literals found; use _CSV_MIME_TYPE instead:\n"
-        + "\n".join(offenders)
-    )
+    assert offenders == [], "Bare 'text/csv' literals found; use _CSV_MIME_TYPE instead:\n" + "\n".join(offenders)

@@ -49,7 +49,9 @@ _CLI_HARNESS = dedent(
 
 
 def _env() -> dict[str, str]:
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
+    env = {
+        key: value for key, value in os.environ.items() if not key.startswith("AEAT_") and not key.startswith("PYTEST_")
+    }
     env.update(
         {
             "PYTHONIOENCODING": "utf-8",
@@ -108,7 +110,7 @@ def test_profile_create_provisions_file_custody_and_switch_reopens_it(tmp_path: 
     )
 
     assert created.returncode == 0, _combined_output(created)
-    assert "status\tcreated" in created.stdout
+    assert "Status\tcreated" in created.stdout
     secret_dir = tmp_path / "secrets"
     assert (secret_dir / "master.key").is_file()
     assert (secret_dir / "master.kdf").is_file()
@@ -211,9 +213,9 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
     explicit_root = _run_aeat(
         tmp_path,
         ("--profile", "alpha", "config", "profile", "show"),
-        extra_env={"AEAT_ACTIVE_PROFILE": next(
-            bucket_id for bucket_id, label in labels_by_id.items() if label == "beta"
-        )},
+        extra_env={
+            "AEAT_ACTIVE_PROFILE": next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta")
+        },
     )
     assert explicit_root.returncode == 0, _combined_output(explicit_root)
     assert "display_name\talpha" in explicit_root.stdout
@@ -253,9 +255,7 @@ def test_profile_selection_precedence_uses_explicit_env_then_pointer(tmp_path: P
                 ),
             )
             assert result.returncode == 0, _combined_output(result)
-            counts[bucket_id] = sum(
-                1 for line in result.stdout.splitlines() if "\tauth.provider.configured\t" in line
-            )
+            counts[bucket_id] = sum(1 for line in result.stdout.splitlines() if "\tauth.provider.configured\t" in line)
         return counts
 
     before = _auth_event_counts()

@@ -344,6 +344,5 @@ def test_cast_rationale_markers_present_in_secure_repository_source() -> None:
     ]
     for marker in required_markers:
         assert marker in text, (
-            f"Cast rationale marker {marker!r} is missing from "
-            f"{source}. Either restore the comment or remove the cast."
+            f"Cast rationale marker {marker!r} is missing from {source}. Either restore the comment or remove the cast."
         )

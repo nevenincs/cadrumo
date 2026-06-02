@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.errors import ERROR_REGISTRY, AeatError, build_error_envelope
 from ..errors import (
     EncryptionError,
     KeyDerivationError,
@@ -24,7 +25,6 @@ from ._errors import (
     MasterKeyReentrantError,
     MasterKeyTypeError,
 )
-from .....core.errors import ERROR_REGISTRY, AeatError, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -33,9 +33,7 @@ def _envelope_round_trip(err: AeatError) -> None:
     """Assert `err` round-trips through build_error_envelope to a valid envelope."""
 
     code = err.code
-    assert code.code in ERROR_REGISTRY, (
-        f"{type(err).__name__}.code={code.code!r} not found in ERROR_REGISTRY"
-    )
+    assert code.code in ERROR_REGISTRY, f"{type(err).__name__}.code={code.code!r} not found in ERROR_REGISTRY"
 
     envelope = build_error_envelope(err)
     assert envelope.schema_version == "1"

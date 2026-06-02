@@ -32,10 +32,9 @@ from collections.abc import Iterator
 from datetime import datetime
 from typing import Any
 
-from ....core.time import now
-
 from ....core.config import Settings as _Settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
+from ....core.time import now
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -118,7 +117,10 @@ def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageEr
     return OutboundStorageNetworkError(detail, context=context)
 
 
-def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
+# ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
+# googleapiclient.discovery.build() returns an untyped Resource object; no stub
+# narrows the concrete type.
+def _service_factory(credentials: object) -> Any:
     """Real Drive v3 service factory. Lazily imports google-api-python-client."""
     try:
         from googleapiclient.discovery import build
@@ -158,12 +160,18 @@ class GoogleDriveProvider:
     def root_folder_id(self) -> str:
         return self._root_folder_id
 
-    def _get_service(self) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
+    # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
+    # googleapiclient.discovery.build() returns an untyped Resource object; no
+    # stub narrows the concrete type.
+    def _get_service(self) -> Any:
         if self._service is None:
             self._service = _service_factory(self._credentials)
         return self._service
 
-    def _execute(self, request: Any, *, action: str) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
+    # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
+    # googleapiclient.discovery.build() returns an untyped Resource object; no
+    # stub narrows the concrete type.
+    def _execute(self, request: Any, *, action: str) -> Any:
         try:
             return request.execute()
         except OutboundStorageError:
@@ -414,7 +422,9 @@ class GoogleDriveProvider:
             action = "files.update"
         response = self._execute(request, action=action)
         if not isinstance(response, dict):
-            raise OutboundStorageNetworkError(f"drive {action} returned non-dict response", context={"response": str(response)})
+            raise OutboundStorageNetworkError(
+                f"drive {action} returned non-dict response", context={"response": str(response)}
+            )
 
         return _metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
 
@@ -634,7 +644,10 @@ class GoogleDriveProvider:
         )
 
 
-def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
+# ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
+# googleapiclient.discovery.build() returns an untyped Resource object; no stub
+# narrows the concrete type.
+def _build_media_body(payload: bytes) -> Any:
     """Build a `MediaIoBaseUpload` from `payload`. Lazy-imported."""
     try:
         from googleapiclient.http import MediaIoBaseUpload

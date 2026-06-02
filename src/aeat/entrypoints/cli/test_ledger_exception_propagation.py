@@ -17,7 +17,7 @@ production call stack.  No monkeypatching, no test doubles.
 The call chain under test:
   ``aeat app ledger ratios list``
     → ``_ratios_bucket_and_profile()``
-      → ``active_bucket_id_or_raise()``
+      → ``require_active_bucket_id()``
         → ``resolve_active_bucket_id()``
           → ``read_pointer(storage_root)``
             → ``BucketPointer.from_toml(corrupt_text)``

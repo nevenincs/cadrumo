@@ -68,7 +68,7 @@ def _wrap_rounded(expression: str, *, rule: str, scale: int | None) -> str:
     return f"ROUND({expression},{scale})"
 
 
-def _registry_sha(snapshot: RegistrySnapshot) -> str:
+def registry_sha(snapshot: RegistrySnapshot) -> str:
     """Stable identity hash of the calculation surface in this snapshot.
 
     The hash covers casilla ids, formula expressions, and parameter
@@ -100,7 +100,7 @@ def _stamp_registry_metadata(snapshot: RegistrySnapshot) -> SheetExportMetadata:
         filing_year=snapshot.filing_year,
         period=snapshot.period,
         engine_version=_ENGINE_VERSION,
-        registry_sha=_registry_sha(snapshot),
+        registry_sha=registry_sha(snapshot),
         exported_at=_utc_now(),
     )
 

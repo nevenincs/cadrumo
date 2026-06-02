@@ -9,6 +9,7 @@ legal_refs = [
     "ley-35-2006:art-79",
     "ley-35-2006:art-80",
     "ley-35-2006:art-81",
+    "ley-35-2006:art-82",
     "ley-35-2006:art-99",
     "ley-35-2006:art-101",
     "ley-35-2006:art-103",
@@ -18,6 +19,7 @@ legal_refs = [
 ]
 source_refs = [
     "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-xsd",
     "boe-modelo-100-2024-form",
     "aeat-renta-2024-manual-parte1",
     "lirpf-cuota-chain-authority",
@@ -29,6 +31,12 @@ formulas = [
     "renta-2024-total-pagos-a-cuenta",
     "renta-2024-cuota-diferencial",
     "renta-2024-resultado-declaracion",
+    # Personal-family deduction inputs (Ley 35/2006 art. 82 marriage axis;
+    # art. 81-bis incremento por gastos en guardería).
+    "renta-2024-matrimonio-vigente-todo-anio",
+    "renta-2024-matrimonio-mes-inicio",
+    "renta-2024-matrimonio-mes-fin",
+    "renta-2024-incremento-guarderia-0613",
 ]
 application_links = [
     "modelo-100-2024-calculation",

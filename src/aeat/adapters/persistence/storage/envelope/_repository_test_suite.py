@@ -161,10 +161,7 @@ def _save_is_idempotent[T: BaseModel](case: SecureRepositoryContractCase[T]) -> 
     repo.save(case.first_payload)
     identifier = repo.extract_identifier(case.first_payload)
     ids = tuple(repo.iter_ids())
-    assert ids.count(identifier) == 1, (
-        f"repeated save of {identifier!r} produced duplicate rows; "
-        f"iter_ids() = {ids!r}"
-    )
+    assert ids.count(identifier) == 1, f"repeated save of {identifier!r} produced duplicate rows; iter_ids() = {ids!r}"
 
 
 def _load_returns_none_when_absent[T: BaseModel](
@@ -215,13 +212,11 @@ def _database_payload_is_encrypted_audit_data[T: BaseModel](
     repo.save(case.first_payload)
     raw = db_path.read_bytes()
     assert b"secure_objects" in raw, (
-        "raw SQLite file does not include the secure_objects table "
-        "marker; encrypted-row backing is not wired"
+        "raw SQLite file does not include the secure_objects table marker; encrypted-row backing is not wired"
     )
     for witness in case.plaintext_witnesses:
         assert witness not in raw, (
-            f"plaintext witness {witness!r} leaked into the raw "
-            f"SQLite file; the column-level encryption is bypassed"
+            f"plaintext witness {witness!r} leaked into the raw SQLite file; the column-level encryption is bypassed"
         )
     identifier = repo.extract_identifier(case.first_payload)
     assert repo.load(identifier) == case.first_payload
@@ -274,11 +269,7 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload[T: BaseModel](
     assert baseline == case.first_payload
 
     with session_scope(engine) as session:
-        stmt = (
-            select(SecureObjectRow)
-            .where(SecureObjectRow.namespace == repo.namespace)
-            .limit(1)
-        )
+        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == repo.namespace).limit(1)
         row = session.execute(stmt).scalar_one()
         decoded = json.loads(row.payload.decode("utf-8"))
         assert case.mutation_field in decoded["payload"], (

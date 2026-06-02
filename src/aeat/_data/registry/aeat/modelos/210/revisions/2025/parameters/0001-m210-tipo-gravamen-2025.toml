@@ -46,28 +46,28 @@ required_text = ["tipo de gravamen", "no residentes"]
 key = "general"
 value = "0.24"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "ue_residente"
 value = "0.19"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "ganancia_patrimonial"
 value = "0.19"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "inmobiliaria"
 value = "0.24"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "interest"
 value = "0.24"
 valid_from = 2025-01-01
-valid_to = 2025-12-31
+# valid_to open: TRLIRNR Art 25 rate schedule year-stable (no annual coefficient table).

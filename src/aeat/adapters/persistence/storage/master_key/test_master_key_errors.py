@@ -12,9 +12,9 @@ import secrets
 
 import pytest
 
+from .....core.errors import ERROR_REGISTRY, build_error_envelope
 from . import EphemeralMasterKeyProvider
 from ._errors import MasterKeyReentrantError
-from .....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
