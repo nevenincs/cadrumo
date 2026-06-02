@@ -8,11 +8,6 @@ related:
   - '[[2026-05-28-centralized-output-redaction-plan]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline `code`. -->
 
 # W03.P10.S57 modelo CLI redaction expectations
 

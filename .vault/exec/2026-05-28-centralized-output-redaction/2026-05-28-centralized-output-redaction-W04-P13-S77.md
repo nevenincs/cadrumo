@@ -8,27 +8,8 @@ related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace centralized-output-redaction with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     step_id is the originating Step's canonical identifier, e.g. S01.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar-plan]]' and link the
-     parent plan.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # update JSON-contract API reference after envelope redaction lands
 
@@ -38,10 +19,15 @@ related:
 
 ## Description
 
-<!-- Succint line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Verified the JSON-contract API reference stub remains present after envelope redaction was enrolled.
+- Confirmed the generated-reference surface is sourced from module docstrings through autodoc.
+- Ran the docs conformance gate with the `docs` marker enabled.
 
 ## Outcome
 
+- `docs/api/aeat.core.json_contract.rst` documents `aeat.core.json_contract` through `automodule` with members, inheritance, and `ignore-module-all` enabled.
+- `uv run pytest -q src/aeat/tests/test_docs_build.py -m docs --tb=short -vv` passed: 1 passed.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties (;persistent failiures. Skipped work. Scafolds left in code. Failiures. -->
+- No source or API-reference content change was required for this closeout step.

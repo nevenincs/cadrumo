@@ -8,27 +8,8 @@ related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace centralized-output-redaction with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     step_id is the originating Step's canonical identifier, e.g. S01.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar-plan]]' and link the
-     parent plan.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # update modelo source-mesh tests for central redaction of identifiers
 
@@ -38,10 +19,14 @@ related:
 
 ## Description
 
-<!-- Succint line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Validate `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py` against the centralized JSON output path.
+- Reuse the S58 output-contamination repair: removing `DBG146` stderr probes restored parseable JSON for `work calculate` source-mesh output.
 
 ## Outcome
 
+- `uv run pytest -q src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py --tb=short -vv` passed: 1 passed.
+- The source-mesh assertions continue to inspect the persisted calculation revision and compare public JSON observations against stored observation source refs.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties (;persistent failiures. Skipped work. Scafolds left in code. Failiures. -->
+- This row depends on the same `work calculate` JSON emission contract as S58. The validation confirms source-mesh behavior after central output redaction without adding fakes, monkeypatching, or mirrored business logic.

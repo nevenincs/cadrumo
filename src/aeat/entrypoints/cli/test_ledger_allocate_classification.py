@@ -28,8 +28,15 @@ def _imported_transaction_id(tmp_path: Path) -> str:
     created = _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -40,9 +47,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
         "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
@@ -57,8 +62,15 @@ def _allocate(transaction_id: str, business_pct: str) -> dict:
     result = _RUNNER.invoke(
         app,
         [
-            "--format", "json", "app", "ledger", "allocate",
-            "--id", transaction_id, "--business-pct", business_pct,
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "allocate",
+            "--id",
+            transaction_id,
+            "--business-pct",
+            business_pct,
         ],
     )
     assert result.exit_code == 0, result.output

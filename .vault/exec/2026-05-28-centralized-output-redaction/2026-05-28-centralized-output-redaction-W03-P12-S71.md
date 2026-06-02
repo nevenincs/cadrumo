@@ -8,27 +8,8 @@ related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace centralized-output-redaction with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     step_id is the originating Step's canonical identifier, e.g. S01.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar-plan]]' and link the
-     parent plan.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # update LLM redaction tests for shared redaction vocabulary
 
@@ -38,10 +19,14 @@ related:
 
 ## Description
 
-<!-- Succint line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Validate LLM cache and usage redaction tests against the shared redaction vocabulary.
+- Confirm NIF and bearer-token canaries are redacted while cached JSON/JSONL records remain parseable.
 
 ## Outcome
 
+- `uv run pytest -q src/aeat/application/live/test_iva_wallet_privacy_static_guard.py src/aeat/adapters/outbound/llm/test_redaction.py --tb=short -vv` passed: 8 passed.
+- The LLM redaction tests covered cache plaintext absence, bearer-token redaction, parseability, idempotent reread, usage redaction, and one-record-per-JSONL-line behavior.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties (;persistent failiures. Skipped work. Scafolds left in code. Failiures. -->
+- No fake provider mutation or monkeypatch shortcut was introduced; the tests exercise the existing cache and usage serialization paths.

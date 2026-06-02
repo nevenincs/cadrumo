@@ -37,8 +37,15 @@ def _create_profile_and_import(tmp_path: Path) -> str:
     created = _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -49,9 +56,7 @@ def _create_profile_and_import(tmp_path: Path) -> str:
         "2026-04-15,Client SL,Invoice 1,-50.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
@@ -79,21 +84,36 @@ def test_ledger_add_rejects_business_pct_on_non_mixed_classification(tmp_path: P
     _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
 
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "add",
-            "--date", "2026-04-15",
-            "--amount", "-50.00",
-            "--direction", "OUTGOING",
-            "--description", "office supplies",
-            "--classification", "BUSINESS",
-            "--business-pct", "0.75",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
+            "--classification",
+            "BUSINESS",
+            "--business-pct",
+            "0.75",
         ],
     )
 
@@ -145,9 +165,13 @@ def test_ledger_allocate_rejects_out_of_range_business_pct(tmp_path: Path) -> No
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "allocate",
-            "--id", txn_id,
-            "--business-pct", "1.5",
+            "app",
+            "ledger",
+            "allocate",
+            "--id",
+            txn_id,
+            "--business-pct",
+            "1.5",
         ],
     )
 
@@ -174,13 +198,20 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "split",
-            "--id", txn_id,
+            "app",
+            "ledger",
+            "split",
+            "--id",
+            txn_id,
             "--yes",
-            "--child-amount", "-25.00",
-            "--child-description", "   ",          # blank after strip
-            "--child-amount", "-25.00",
-            "--child-description", "valid slice",
+            "--child-amount",
+            "-25.00",
+            "--child-description",
+            "   ",  # blank after strip
+            "--child-amount",
+            "-25.00",
+            "--child-description",
+            "valid slice",
         ],
     )
 
@@ -210,10 +241,15 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "classify",
-            "--id", txn_id,
-            "--classification", "BUSINESS",
-            "--business-pct", "0.5",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn_id,
+            "--classification",
+            "BUSINESS",
+            "--business-pct",
+            "0.5",
         ],
     )
 
@@ -259,8 +295,15 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
     _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
     # Default profile is already RESIDENT_IRPF / GENERAL — no diagnostics-set needed.
@@ -268,12 +311,19 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
     result = _RUNNER.invoke(
         app,
         [
-            "--format", "json",
-            "app", "ledger", "add",
-            "--date", "2026-04-15",
-            "--amount", "-50.00",
-            "--direction", "OUTGOING",
-            "--description", "office supplies",
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
             # NO --source-jurisdiction
         ],
     )
@@ -295,8 +345,15 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
     _set_profile_axis("irpf.special_regime", "impatriado")
@@ -305,11 +362,17 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "add",
-            "--date", "2026-04-15",
-            "--amount", "-50.00",
-            "--direction", "OUTGOING",
-            "--description", "consulting",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "consulting",
             # NO --source-jurisdiction
         ],
     )
@@ -338,8 +401,15 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
     _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
@@ -354,11 +424,17 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "add",
-            "--date", "2026-04-15",
-            "--amount", "-50.00",
-            "--direction", "OUTGOING",
-            "--description", "non-resident expense",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "non-resident expense",
             # NO --source-jurisdiction
         ],
     )
@@ -384,21 +460,36 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
     _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
 
     result = _RUNNER.invoke(
         app,
         [
-            "--format", "json",
-            "app", "ledger", "add",
-            "--date", "2026-04-15",
-            "--amount", "100.00",
-            "--direction", "INCOMING",
-            "--description", "foreign dividend",
-            "--source-jurisdiction", "FR",
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "100.00",
+            "--direction",
+            "INCOMING",
+            "--description",
+            "foreign dividend",
+            "--source-jurisdiction",
+            "FR",
         ],
     )
     assert result.exit_code == 0, result.output

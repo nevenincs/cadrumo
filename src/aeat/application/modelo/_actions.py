@@ -135,6 +135,7 @@ from ..workflow import (
     ModeloInputs,
     RegistryModeloDraftProtocol,
     WorkflowEngine,
+    WorkflowInputMismatchError,
     WorkflowPurpose,
     WorkflowResult,
     WorkflowRunRepository,
@@ -205,9 +206,6 @@ def _emit_bucket_event(
     catalogue = repository.load()
     repository.save(append_bucket_event(catalogue, event))
     return event
-
-
-from ..workflow import WorkflowInputMismatchError
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -893,8 +891,11 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloIvaWalletReconciliationBlocked(ModeloError):
+class ModeloIvaWalletReconciliationBlockedError(ModeloError):
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
+
+
+ModeloIvaWalletReconciliationBlocked = ModeloIvaWalletReconciliationBlockedError
 
 
 class CasillaProvenanceMissingError(ModeloError):
@@ -1103,21 +1104,6 @@ def calculate_modelo_revision(
         )
     )
 
-    # TEMP DEBUG #146 — remove after evidence captured.
-    import logging as _logging_debug
-    _logging_debug.getLogger(__name__).error(
-        "calculate_modelo_revision DEBUG: modelo=%s year=%s period=%s decision=%r "
-        "compensacion_binding=%r compensacion_casilla_in_inputs=%r resultado_regimen_general_present=%r "
-        "caller_keys=%s backend_keys=%s resolved_keys=%s",
-        work_unit.modelo, work_unit.filing_year, work_unit.period,
-        iva_compensation_decision,
-        resolved_bindings.get("modelo-303-compensacion-pendiente-anteriores"),
-        resolved_inputs.get("iva.compensacion-pendiente-periodos-anteriores"),
-        "iva.resultado-regimen-general" in resolved_inputs,
-        sorted(caller_binding_values.keys()),
-        sorted(lower_precedence_binding_values.keys()),
-        sorted(resolved_bindings.keys()),
-    )
     engine_result = calculate_registry_snapshot(
         snapshot,
         inputs=resolved_inputs,
@@ -1381,7 +1367,9 @@ def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
         )
 
 
-# ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION: concrete type is IvaWalletCompensationDecision but direct import creates a cross-module cycle; helper accesses .divergence/.reason via duck-typed protocol.
+# ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION:
+# Concrete type is IvaWalletCompensationDecision but direct import creates a
+# cross-module cycle; helper accesses .divergence/.reason via duck typing.
 def _iva_wallet_blocked_message(decision: Any) -> str:
     divergence = str(decision.divergence)
     reason = str(decision.reason)
@@ -2425,17 +2413,13 @@ def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
-_PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
-    r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$"
-)
+_PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$")
 # implies_nonzero(["antecedent_id", "consequent_id"]) — material implication
 # with a strictly-positive antecedent test: predicate holds iff antecedent
 # is <= 0 OR consequent is non-zero. Authored for AEAT cuota-mínima
 # invariants of the shape "cuando C01 sea positivo, C07 debe ser distinta
 # de cero" (M131 EO cuota mínima, M130/M303 régimen simplificado analogues).
-_PREDICATE_IMPLIES_NONZERO = _re.compile(
-    r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$"
-)
+_PREDICATE_IMPLIES_NONZERO = _re.compile(r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 # profile_field_required("field_name", "applicability_filter") —
 # profile-state-aware conditional non-zero requirement; sibling of
 # implies_nonzero per the dsl-conditional-predicate ADR. The
@@ -2443,9 +2427,7 @@ _PREDICATE_IMPLIES_NONZERO = _re.compile(
 # against the TaxpayerProfile threaded through the verification pipeline.
 # First use site: M210 representante-fiscal gate per
 # m210-irnr-full-engine ADR §D2.5 (TRLIRNR Art 10).
-_PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(
-    r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$'
-)
+_PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
 
 # Per-predicate next_action dispatch. Predicates listed here emit their
 # dedicated next_action prose via a direct tr() call (so the locale
@@ -2457,6 +2439,8 @@ def _resolve_predicate_next_action(predicate_id: str) -> str | None:
     if predicate_id == "m210-representante-fiscal-required":
         return tr("application.modelo.findings.representante_fiscal_required.next_action")
     return None
+
+
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
@@ -2475,9 +2459,7 @@ def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
     return ids
 
 
-def _evaluate_applicability_filter(
-    filter_name: str, profile: TaxpayerProfile
-) -> bool:
+def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
     """Return True iff the profile state matches the named applicability filter.
 
     Used by ``profile_field_required`` predicates to gate whether the
@@ -2492,10 +2474,7 @@ def _evaluate_applicability_filter(
         # Phase 1 uses the broader ue_eee_status per m210-irnr-full-engine
         # ADR §D2.5 escape hatch: EEA residents are exempt because of the
         # bilateral mutual-assistance regime.
-        return (
-            profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
-            and not profile.ue_eee_status
-        )
+        return profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and not profile.ue_eee_status
     raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
 
 
@@ -2591,11 +2570,7 @@ def _evaluate_predicate_expression(
         if not _evaluate_applicability_filter(filter_name, profile):
             return True  # rule doesn't apply; predicate trivially holds
         field_value = getattr(profile, field_name, None)
-        if field_value is None or (
-            isinstance(field_value, str) and not field_value.strip()
-        ):
-            return False  # rule applies but field is empty / missing
-        return True
+        return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
 
     return True
 
@@ -2657,8 +2632,10 @@ def _resolve_m210_rate(
 
     baseline_rate: Decimal | None = None
     for entry in baseline_param.keyed_brackets:
-        if entry.key == tipo_renta and entry.valid_from.year <= year and (
-            entry.valid_to is None or entry.valid_to.year >= year
+        if (
+            entry.key == tipo_renta
+            and entry.valid_from.year <= year
+            and (entry.valid_to is None or entry.valid_to.year >= year)
         ):
             try:
                 baseline_rate = Decimal(entry.value)
@@ -2694,15 +2671,11 @@ def _resolve_m210_rate(
     convenio_lookup: dict[tuple[str, str], ConvenioRateRow] = {}
     if convenio_param is not None:
         for row in convenio_param.convenio_rates:
-            if row.valid_from.year <= year and (
-                row.valid_to is None or row.valid_to.year >= year
-            ):
+            if row.valid_from.year <= year and (row.valid_to is None or row.valid_to.year >= year):
                 convenio_lookup[(row.country_code, row.tipo_renta)] = row
 
     matched_row = convenio_lookup.get((cc, tipo_renta))
-    legal_refs: tuple[str, ...] = (
-        tuple(str(r) for r in convenio_param.legal_refs) if convenio_param is not None else ()
-    )
+    legal_refs: tuple[str, ...] = tuple(str(r) for r in convenio_param.legal_refs) if convenio_param is not None else ()
     source_refs: tuple[str, ...] = (
         tuple(str(r) for r in convenio_param.source_refs) if convenio_param is not None else ()
     )
@@ -2871,9 +2844,7 @@ def _evaluate_verification_predicates(
                     )
                 )
         else:
-            if not _evaluate_predicate_expression(
-                predicate.expression, casilla_values, profile
-            ):
+            if not _evaluate_predicate_expression(predicate.expression, casilla_values, profile):
                 next_action = _resolve_predicate_next_action(predicate.predicate_id)
                 if next_action is None:
                     next_action = tr(
@@ -4311,6 +4282,7 @@ __all__ = [
     "ExternalModeloImportError",
     "ModeloAggregationBindingError",
     "ModeloIvaWalletReconciliationBlocked",
+    "ModeloIvaWalletReconciliationBlockedError",
     "ModeloRecordNotFoundError",
     "ModeloWorkflowGateError",
     "VerificationReportNotFoundError",

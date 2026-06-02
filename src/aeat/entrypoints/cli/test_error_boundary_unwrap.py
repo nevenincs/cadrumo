@@ -24,7 +24,6 @@ from ...adapters.persistence.storage.master_key._active_session import (
     NoActiveBucketSessionError,
 )
 from ...core.errors import AeatError
-
 from ._errors import (
     CliUnexpectedBoundaryError,
     _unwrap_aeat_error,
@@ -106,9 +105,9 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
     assert exit_info.value.exit_code != 0
     # No "unexpected exception" traceback was logged: that log line is
     # what lands in aeat.log and is later echoed by `repair logs`.
-    assert not any(
-        "unexpected exception" in record.message for record in caplog.records
-    ), [record.message for record in caplog.records]
+    assert not any("unexpected exception" in record.message for record in caplog.records), [
+        record.message for record in caplog.records
+    ]
 
 
 def test_boundary_still_reports_genuine_bug_as_unexpected(
@@ -132,9 +131,9 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     ):
         wrapped()
 
-    assert any(
-        "unexpected exception" in record.message for record in caplog.records
-    ), [record.message for record in caplog.records]
+    assert any("unexpected exception" in record.message for record in caplog.records), [
+        record.message for record in caplog.records
+    ]
 
 
 def test_cli_unexpected_boundary_error_is_aeat_error() -> None:
