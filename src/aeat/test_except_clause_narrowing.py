@@ -289,11 +289,11 @@ class TestAuthenticatorDescribeNarrowing:
             aeat_certificate_password_secret=SecretStr("test"),
         )
 
-        class _Unexpected(Exception):
+        class _UnexpectedError(Exception):
             pass
 
         def _raise_unexpected(_path, **_kwargs):  # type: ignore[no-untyped-def]
-            raise _Unexpected("boom")
+            raise _UnexpectedError("boom")
 
         auth = AeatAuthenticator(settings, certificate_health_check=_raise_unexpected)
 
