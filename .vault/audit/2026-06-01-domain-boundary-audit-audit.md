@@ -1129,6 +1129,16 @@ remediation is currently HELD at audit-only per the active action policy.
   shim restored to keep HEAD buildable, deletion deferred until the peer's __init__
   repoint lands. Pattern reaffirmed: collision-check every file (git status --short)
   before editing; never delete a module whose HEAD importers haven't been repointed yet.
+- 2026-06-02 (cont.): three more findings landed, gated + pushed: DB-30 (justificante
+  _parse_decimal now delegates to canonical pdf.parse_spanish_decimal; 168 tests),
+  DB-08 (wizard verifier uses domain SituacionFamiliar.conjunta_eligible()/
+  monoparental_required() instead of re-derived frozensets; 273 tests), DB-27 (ORM
+  PortalRow renamed PortalOrmRow to disambiguate from the application DTO; 58 tests).
+  Session-2 total: 11 findings closed (DB-03/05-S67/08/09/12/13/23/27/29/30/37-G2).
+  Remaining contained candidates: DB-24 (RegistryManualId fold), DB-38 (M347 threshold
+  re-export), DB-06 (period re-impl), DB-10 (SourceKind), DB-35 (M347/M184 validators),
+  DB-34 (CLI formulas), DB-36 (CLI bypass). W01.P02 + DB-29-S41 deletion + DB-37-G1
+  remain blocked on peer-owned files (re-check each pass).
 
 ## Codification candidates
 
