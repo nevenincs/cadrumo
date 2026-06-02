@@ -70,7 +70,7 @@ Compare the landed continuity schema, loader, validator, tests, and M100 data sl
 Close generic continuity-validator gaps without adding modelo-specific schema or loader branches.
 
 - [x] `P02.S02` - Add generic retirement and unmatched-continuity validation semantics; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
-- [ ] `P02.S03` - Add real-behavior tests for retired repurposed and unmatched continuity decisions; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
+- [x] `P02.S03` - Add real-behavior tests for retired repurposed and unmatched continuity decisions; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
 
 ### Phase `P03` - corpus and file-size gates
 
