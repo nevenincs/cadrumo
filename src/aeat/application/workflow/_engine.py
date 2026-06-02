@@ -47,6 +47,7 @@ from ._models import (
     WorkflowState,
     WorkflowStep,
     compute_run_id,
+    declaration_key,
 )
 from ._protocols import (
     CertificateBundleProtocol,
@@ -1290,11 +1291,6 @@ class WorkflowEngine:
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
             summary=summary,
         ) from exc
-
-
-def declaration_key(modelo: str, period: str) -> str:
-    """Return the stable dictionary key for a modelo/period pair."""
-    return f"{modelo.strip()}:{period.strip().upper()}"
 
 
 def update_declaration_pointer(
