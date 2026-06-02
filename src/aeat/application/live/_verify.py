@@ -79,6 +79,20 @@ class VerifyObservation(BaseModel):
 
 
 def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:
+    """Return the canonical secure-object key for a :class:`VerifyObservation`.
+
+    The key encodes both the bucket and the observation so the store
+    remains globally unique across buckets even when two buckets check
+    the same NIF at the same instant.
+
+    Args:
+        bucket_id: The profile bucket's UUIDv4 identifier.
+        observation_id: The SHA-256 hex content-address of the observation.
+
+    Raises:
+        LiveApplicationInputError: When either argument is blank after
+            stripping whitespace.
+    """
     trimmed_bucket = bucket_id.strip()
     trimmed_observation = observation_id.strip()
     if not trimmed_bucket:
@@ -114,6 +128,16 @@ class VerifyObservationRepository:
         return self._bucket_id
 
     def load(self, observation_id: str) -> VerifyObservation | None:
+        """Return the :class:`VerifyObservation` for ``observation_id``, or ``None`` if absent.
+
+        Args:
+            observation_id: The full 64-character SHA-256 hex observation id.
+
+        Raises:
+            LiveApplicationInputError: When the loaded observation's
+                ``bucket_id`` or ``observation_id`` does not match the
+                repository's own bucket or the requested id.
+        """
         record = self._objects.load(
             LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
             verify_observation_object_key(self._bucket_id, observation_id),
@@ -150,6 +174,16 @@ class VerifyObservationRepository:
         return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
 
     def save(self, observation: VerifyObservation) -> None:
+        """Persist ``observation`` as an encrypted :class:`Envelope` in the object store.
+
+        Args:
+            observation: The :class:`VerifyObservation` to persist. Its
+                ``bucket_id`` must match the repository's own bucket.
+
+        Raises:
+            LiveApplicationInputError: When ``observation.bucket_id`` does
+                not match the repository's bucket id.
+        """
         if observation.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"verify observation bucket_id={observation.bucket_id!r} "

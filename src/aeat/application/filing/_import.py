@@ -50,6 +50,15 @@ class _RegistryPeriodSubview(Protocol):
 
 
 class RegistryImportSchemaProvider(CasillaSchemaProvider, Protocol):
+    """Combined casilla schema and period-subview provider used by the import path.
+
+    Implementations must satisfy both the :class:`aeat.domain.filing.CasillaSchemaProvider`
+    contract (for draft construction) and expose ``get_subview`` so
+    :func:`import_filing_from_justificante` can look up the supported
+    period tokens for a given modelo during period canonicalisation.
+    The production implementation is ``build_runtime_schema_provider()``.
+    """
+
     def get_subview(self, modelo: str) -> _RegistryPeriodSubview: ...
 
 

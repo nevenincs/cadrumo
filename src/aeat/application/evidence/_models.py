@@ -1,4 +1,20 @@
-"""Pydantic models for evidence bundles."""
+"""Pydantic models for operator-facing evidence bundles.
+
+An evidence bundle is a content-addressed manifest that groups related
+persisted records (calculation revisions, filing records, and their
+attached objects) under a single verifiable identity. The bundle's
+``bundle_id`` is a SHA-256 hash of the canonical manifest inputs so it
+is stable across re-imports of the same data and globally unique per
+bucket + work-unit + manifest-version triple.
+
+Key types:
+
+* :class:`EvidenceBundle` — the persisted manifest record.
+* :class:`EvidenceRecordRef` — one record reference inside the manifest.
+* :class:`BundleVerificationState` — closed lifecycle states for
+  offline bundle verification.
+* :func:`derive_bundle_id` — content-addressed id derivation.
+"""
 
 from __future__ import annotations
 
@@ -26,11 +42,23 @@ class EvidenceBundleNotFoundError(AeatError):
 
 
 class EvidenceBundleVerificationError(AeatError):
-    """Raised when bundle verification fails and the caller refuses ``--force-incomplete``."""
+    """Raised when bundle verification fails and the caller refuses ``--force-incomplete``.
+
+    The verification service raises this when one or more
+    :class:`VerificationCheck` items fail and the operator has not
+    passed an override flag that permits incomplete bundles.
+    """
 
 
 class BundleVerificationState(StrEnum):
-    """Closed lifecycle states for a bundle's verification status."""
+    """Closed lifecycle states for a :class:`EvidenceBundle`'s verification status.
+
+    ``PENDING`` is the initial state when a bundle is first written.
+    ``VERIFIED`` means all :class:`VerificationCheck` items passed.
+    ``INCOMPLETE`` means reachability or digest checks found missing
+    records but the operator accepted the partial bundle.
+    ``FAILED`` means at least one blocking integrity check failed.
+    """
 
     PENDING = "pending"
     VERIFIED = "verified"
@@ -39,7 +67,19 @@ class BundleVerificationState(StrEnum):
 
 
 class VerificationCheck(StrEnum):
-    """Named integrity checks a bundle's verification pass runs."""
+    """Named integrity checks a bundle's offline verification pass runs.
+
+    Each member identifies one distinct check the verifier executes
+    against the bundle manifest and the backing object store:
+
+    * ``MANIFEST_DIGEST`` — recompute ``bundle_id`` and compare.
+    * ``RECORD_DIGESTS`` — re-hash each referenced object payload.
+    * ``BUCKET_BINDING`` — confirm the bundle's ``bucket_id`` matches
+      the repository it was loaded from.
+    * ``WORK_UNIT_BINDING`` — confirm the ``work_unit_id`` exists.
+    * ``OBJECT_REACHABILITY`` — confirm every referenced object is
+      present in the bucket's object store.
+    """
 
     MANIFEST_DIGEST = "manifest_digest"
     RECORD_DIGESTS = "record_digests"
@@ -49,7 +89,12 @@ class VerificationCheck(StrEnum):
 
 
 class EvidenceBundleCheckResult(BaseModel):
-    """One check's outcome from a bundle verification pass."""
+    """One :class:`VerificationCheck` outcome from a bundle verification pass.
+
+    ``passed`` is ``True`` when the check succeeded. ``detail`` carries
+    a human-readable explanation when the check failed or when extra
+    diagnostic context is available.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -59,7 +104,14 @@ class EvidenceBundleCheckResult(BaseModel):
 
 
 class EvidenceRecordRef(BaseModel):
-    """One referenced record inside an evidence bundle's manifest."""
+    """One referenced record entry inside an :class:`EvidenceBundle` manifest.
+
+    ``object_type`` names the ``BucketEventObjectType`` of the record;
+    ``object_id`` is its stable store key; ``content_sha256`` is the
+    SHA-256 hex digest of the record's raw payload bytes;
+    ``payload_size_bytes`` is the byte count used for
+    completeness-ratio calculation.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -124,6 +176,7 @@ def derive_bundle_id(
 
 
 def utcnow() -> datetime:
+    """Return the current UTC timestamp via :func:`aeat.core.time.now`."""
     return now()
 
 

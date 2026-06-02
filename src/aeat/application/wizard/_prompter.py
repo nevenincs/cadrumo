@@ -107,6 +107,17 @@ class ScriptedPrompter:
         return tuple(self._asked)
 
     def ask(self, question: WizardQuestion, *, default: str | None) -> str:
+        """Pop and return the next scripted canonical-token answer.
+
+        Args:
+            question: The :class:`WizardQuestion` being asked (used only in
+                the underflow error message).
+            default: Ignored; the scripted queue always supplies an explicit
+                answer.
+
+        Raises:
+            WizardScriptUnderflowError: When the answer queue is empty.
+        """
         del default
         if not self._answers:
             context = {"question_id": question.id, "prompt_key": str(question.prompt)}
@@ -201,6 +212,21 @@ class QuestionaryPrompter:
             ) from exc
 
     def ask(self, question: WizardQuestion, *, default: str | None) -> str:
+        """Render ``question`` interactively and return the canonical-token answer.
+
+        Dispatches to the appropriate ``questionary`` primitive based on
+        ``question.widget`` and returns the operator's response as a
+        canonical-token string (``"true"``/``"false"`` for CONFIRM,
+        comma-separated tokens for CHECKBOX, raw text otherwise).
+
+        Args:
+            question: The :class:`WizardQuestion` to render.
+            default: Pre-filled answer string shown to the operator.
+
+        Raises:
+            WizardUnsupportedConsoleError: When the host terminal cannot
+                host an interactive prompt (Windows no-console, non-TTY).
+        """
         prompt = tr(str(question.prompt))
         try:
             match question.widget:
