@@ -23,10 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _MODELO_180_DIR = _REGISTRY_ROOT / "modelos" / "180"
 _MODELO_180_FIRST_RELATION_FRAGMENT = (
-    Path("revisions")
-    / "2023-y-siguientes"
-    / "relations"
-    / "0001-modelo-180-rel-115-perceptores-anual.toml"
+    Path("revisions") / "2023-y-siguientes" / "relations" / "0001-modelo-180-rel-115-perceptores-anual.toml"
 )
 
 

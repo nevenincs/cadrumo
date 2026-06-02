@@ -66,9 +66,8 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
             or (cmp.expected_legal_refs and cmp.actual_legal_refs != cmp.expected_legal_refs)
             or (cmp.expected_source_refs and cmp.actual_source_refs != cmp.expected_source_refs)
         ]
-        assert not provenance_mismatches, (
-            f"Provenance mismatches in {report.scenario_id!r}:\n"
-            + "\n".join(f"  - {m}" for m in provenance_mismatches)
+        assert not provenance_mismatches, f"Provenance mismatches in {report.scenario_id!r}:\n" + "\n".join(
+            f"  - {m}" for m in provenance_mismatches
         )
 
 
