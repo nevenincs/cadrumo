@@ -1458,6 +1458,21 @@ remediation is currently HELD at audit-only per the active action policy.
   materially smaller than the raw open-step count, and each remaining step needs the
   same per-item verification before it is executed (never bulk-"completed").
 
+- 2026-06-02 (cont.): **S70/DB-06 analyzed — conditionally actionable, verification-gated.**
+  workflow `_registry_period_token` accepts a SUPERSET of period dialects vs
+  `parse_canonical_period`: it additionally handles the M-prefixed monthly form
+  `YYYYMn` (e.g. `2026M3`), which parse_canonical_period rejects (it takes `YYYY-MM`).
+  No producer of the `YYYYMn` form was found (the branch appears dead), so S70 MAY be
+  a clean dedup — but executing it safely requires (a) confirming `obligation.period`
+  only ever carries parse_canonical_period-accepted shapes, and (b) preserving the
+  error-behaviour change: `_period_to_year` returns `None` on unparseable input while
+  `parse_canonical_period` RAISES `PeriodValidationError` — the call sites (:809 the
+  already-filed year gate, :968) must wrap into `WorkflowError` without changing the
+  gate's pass/fail semantics (the already-filed gate is safety-relevant). Careful
+  fresh-context execution; not an exhausted-context change. S71 remains EXCLUDED
+  (confirmed convention divergence). The two DB-06 halves are NOT a single mechanical
+  dedup.
+
 ## Codification candidates
 
 
