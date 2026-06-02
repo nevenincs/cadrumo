@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import (
     BusinessClassification,
@@ -33,10 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        try:
-            yield profile.repository
-        finally:
-            dispose_engine(profile.settings)
+        yield profile.repository
 
 
 def _raw_transaction(
