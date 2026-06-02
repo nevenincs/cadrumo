@@ -1,14 +1,14 @@
 [project]
 name = "aeat"
 version = "0.1.0"
-description = "Spanish tax authority (AEAT) automation - tax information and filing tools"
+description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 authors = [
   { name = "wgergely" },
 ]
-keywords = ["aeat", "hacienda", "impuestos", "spain", "tax"]
+keywords = ["aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -352,6 +352,23 @@ convention = "google"
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/entrypoints/cli/**/*.py" = ["B008"]
 "src/aeat/domain/portals/_cli.py" = ["B008"]
+
+# `_CERT_PASSWORD_SECRET_ENV` is the NAME of an env var, not a password literal.
+"src/aeat/adapters/outbound/aeat/auth/_authenticator.py" = ["S105"]
+# Registry applicability enum + legal-text rationale strings are not passwords.
+"src/aeat/domain/calculations/registry/_applicability.py" = ["S105"]
+# Module-walking test fixtures use file paths and rationale tokens as constants
+# that ruff misreads as hardcoded secret strings.
+"src/aeat/test_diagnostics_and_sidecar_rationale.py" = ["S105"]
+"src/aeat/test_semantic_intent_sampler.py" = ["S105"]
+"src/aeat/test_w17_p49_closure.py" = ["S105"]
+"src/aeat/test_w18_p50_closure.py" = ["S105"]
+"src/aeat/test_w20_p52_closure.py" = ["S105"]
+# Token catalogue test fixture identifiers (e.g. "BTC") are not passwords.
+"src/aeat/application/calculations/test_modelo_721_cripto_exterior_fidelity.py" = ["S105"]
+# Bundled `git ls-files` invocation reads from PATH; the explicit command list
+# is reviewed and audited rather than a partial path risk.
+"src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S607"]
 
 # ── Group G structural / domain-justified per-file-ignores ────────────────
 
