@@ -13,34 +13,27 @@ validates, and caches registry material), and :class:`CasillaObservation`
 from __future__ import annotations
 
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
-from ._authority import ValidatedRegistryAuthority, bundled_authority
-from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
-from ._ids import (
-    ApplicationLinkId,
-    BindingId,
-    CasillaId,
-    ConstructId,
-    CrossReferenceId,
-    DeadlineWindowId,
-    DependencyClassificationId,
-    ExportFieldId,
-    ExportLayoutId,
-    ExtractionProfileId,
-    FormulaId,
-    LegalRefId,
-    ModeloId,
-    OracleId,
-    ParameterId,
-    RecordId,
-    RelationId,
-    RevisionId,
-    SourceRefId,
-    SupportRemovalDecisionId,
-    VerificationExpectationId,
-    WorkbookFixtureId,
-    WorkbookParityRefId,
-    is_registry_id,
+
+# Applicability is imported after _schema so its transitive import of
+# aeat.domain.deadlines (which depends on DeadlineWindowDefinition
+# exported above) does not race a partially-initialised registry
+# namespace.
+from ._applicability import (
+    ApplicabilityVerdict,
+    Modelo202Modality,
+    Modelo202ModalityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
+    PayerFact,
+    TaxRoute,
+    derive_modelo_202_modality,
+    derive_modelo_applicability,
+    derive_tax_route,
+    has_applicability_rule,
+    iter_modelo_applicability_rules,
+    taxpayer_model_is_declared,
 )
+from ._authority import ValidatedRegistryAuthority, bundled_authority
 from ._bindings import (
     AtributionMemberObservation,
     CasillaObservation,
@@ -110,6 +103,7 @@ from ._coverage import (
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
+from ._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
 from ._export import (
     ResolvedExportLayout,
@@ -118,6 +112,7 @@ from ._export import (
     resolve_export_layout,
 )
 from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
+from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
 from ._formula_runtime import (
     M210_CONVENIO_MISSING_SENTINEL,
     M210_DEFERRED_TIPO_SENTINEL,
@@ -134,6 +129,32 @@ from ._groi_oracle import (
     GroiObservation,
     GroiOracle,
     GroiReplayDriver,
+)
+from ._ids import (
+    ApplicationLinkId,
+    BindingId,
+    CasillaId,
+    ConstructId,
+    CrossReferenceId,
+    DeadlineWindowId,
+    DependencyClassificationId,
+    ExportFieldId,
+    ExportLayoutId,
+    ExtractionProfileId,
+    FormulaId,
+    LegalRefId,
+    ModeloId,
+    OracleId,
+    ParameterId,
+    RecordId,
+    RelationId,
+    RevisionId,
+    SourceRefId,
+    SupportRemovalDecisionId,
+    VerificationExpectationId,
+    WorkbookFixtureId,
+    WorkbookParityRefId,
+    is_registry_id,
 )
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._live_parity import (
@@ -239,6 +260,7 @@ from ._runtime_graph import (
 )
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     ApplicationLinkDefinition,
     BboxAnchorSpec,
     BracketEntry,
@@ -246,13 +268,13 @@ from ._schema import (
     CalculationCompletenessManifest,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
-    DecimalValue,
     CasillaFieldKind,
     CasillaFieldKindValue,
     ConstructDefinition,
     ConvenioRateRow,
     DataBindingDefinition,
     DeadlineWindowDefinition,
+    DecimalValue,
     DependencyClassificationDefinition,
     EvidenceTier,
     ExportFieldDefinition,
@@ -264,18 +286,18 @@ from ._schema import (
     FormulaExpression,
     InputKind,
     InputKindValue,
-    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     KeyedBracketEntry,
     LegalParameter,
     LegalReference,
     LiveCrossReferenceDecision,
-    ModeloFilingCapability,
     ModeloDefinition,
+    ModeloFilingCapability,
     ModeloRevision,
     ModeloScheduleDefinition,
     ParameterDefinition,
     ProfilePredicateDefinition,
     RegistryCatalogues,
+    RegistryRoundingCode,
     RegistrySnapshot,
     RegistrySnapshotRef,
     SourceReference,
@@ -286,26 +308,6 @@ from ._schema import (
 )
 from ._snapshot import build_snapshot
 from ._sources import verify_source_catalogue, verify_source_file
-# Applicability is imported after _schema so its transitive import of
-# aeat.domain.deadlines (which depends on DeadlineWindowDefinition
-# exported above) does not race a partially-initialised registry
-# namespace.
-from ._applicability import (
-    ApplicabilityVerdict,
-    Modelo202Modality,
-    Modelo202ModalityVerdict,
-    ModeloApplicability,
-    ModeloApplicabilityRule,
-    PayerFact,
-    TaxRoute,
-    derive_modelo_202_modality,
-    derive_modelo_applicability,
-    derive_tax_route,
-    has_applicability_rule,
-    iter_modelo_applicability_rules,
-    taxpayer_model_is_declared,
-)
-from ._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -481,6 +483,7 @@ __all__ = [
     "RegistryModeloObservation",
     "RegistryModeloObservationRequirement",
     "RegistryQueryService",
+    "RegistryRoundingCode",
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistrySnapshotRef",
