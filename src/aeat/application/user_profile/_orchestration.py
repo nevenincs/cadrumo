@@ -20,8 +20,6 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from ...core.time import now
-
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
@@ -30,6 +28,7 @@ from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.logging import get_logger
+from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
