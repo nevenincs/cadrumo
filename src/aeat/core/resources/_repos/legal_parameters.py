@@ -11,9 +11,7 @@ if TYPE_CHECKING:
     from ....domain.calculations.registry import LegalParameter
 
 
-class LegalParameterRepository(
-    ResourceCacheRepository[Mapping[str, "LegalParameter"], None]
-):
+class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParameter"], None]):
     """Singleton-keyed repository for the registry-wide legal parameters.
 
     Wraps :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
