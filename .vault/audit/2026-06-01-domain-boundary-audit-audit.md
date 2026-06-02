@@ -1529,6 +1529,40 @@ remediation is currently HELD at audit-only per the active action policy.
   follow-up: 5 now-stale `core.resources._repos.* -> application.topics` ignores remain
   in the peer-WIP `.importlinter` (warn-mode tolerates; remove when the file is clean).
 
+- 2026-06-02 (cont.): **W06.P18 (S64/S66) blast-radius DISCOVERED — both blocked/risky,
+  scoped for a dedicated pass.** Deep investigation of the two seemingly-clean W06 tail
+  items found genuine obstacles:
+  - **S66 (DB-39, rename `core/profile_catalogue.py` -> `core/wizard_catalogue.py`)** is
+    blocked by the **S65 peer-WIP on `core/profile.py`**. The true footprint is larger
+    than "4 importers": 4 production importers (`application/wizard/_catalogue.py`,
+    `domain/profile/_keys.py`, `domain/deadlines/_profiles.py`,
+    `entrypoints/cli/_config/__init__.py`) + a test importer + **2 core-registry path
+    strings** in `core/errors/registry/_core.py`
+    (`WizardCatalogueNotRegisteredError`/`...AlreadyRegisteredError`) + **2 hardcoded
+    module-path references** in marker tests (`test_any_return_rationale_markers.py`,
+    `test_w21_p53_closure.py`) + the co-located `test_profile_catalogue.py` rename + the
+    apidocs stub. The hard blocker: `core/profile.py` (peer-WIP, itself S65's target)
+    carries a `:mod:`aeat.core.profile_catalogue`` docstring cross-ref that the rename
+    would stale, reddening the `-n -W` docs build — and a peer-WIP file must not be
+    edited. S66 must follow S65 (or land jointly), since `profile.py` references the
+    renamed module. Sequence S65 then S66.
+  - **S64 (DB-17, remove the `_build_profile_keys` lazy `domain/profile/_keys.py ->
+    application.wizard._compiler` pull)** is registration-order-fragile. The
+    profile-keys *push* (`register_profile_keys`) is triggered only by importing
+    `application/wizard/_status.py` or `_compiler.py` (top-level `_register_compiled_keys()`)
+    or by the lazy fallback itself — there is **no central bootstrap**, evidenced by the
+    many CLI test modules carrying explicit `# side-effect: registers wizard catalogue`
+    imports. Removing the lazy pull (and adding the mandated not-registered guard) would
+    make every profile-key access that does not first import the wizard layer raise,
+    with a large blast radius until a full-suite run, AND needs (a) a central
+    application/entrypoint registration bootstrap so the push is guaranteed (an
+    ADR-worthy design, since domain cannot self-bootstrap without recreating the very
+    edge being removed) and (b) a new registered `ProfileKeysNotRegisteredError`
+    (its own registry + 4-locale cascade like S89). Not a quick win; needs the bootstrap
+    design first.
+  Net: the W06.P18 cluster (S64/S65/S66) is coupled and partly peer-WIP; S63 (the
+  23+-importer `domain/profile` package rename) remains the plan-sequenced-last anchor.
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
