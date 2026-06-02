@@ -100,7 +100,7 @@ lint-imports:
 # Build the HTML documentation (furo) from Google-style docstrings plus
 # the narrative pages under docs/. Output to docs/_build/html (gitignored).
 docs:
-    uv run --no-sync sphinx-build -b html docs docs/_build/html
+    uv run --no-sync sphinx-build -b html -j auto docs docs/_build/html
 
 # Documentation conformance gate: the docs-marked tests (nitpicky
 # warnings-as-errors Sphinx build, module-to-stub correspondence, and CLI
