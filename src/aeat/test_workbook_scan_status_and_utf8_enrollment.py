@@ -33,9 +33,7 @@ _SRC_ROOT = PROJECT_ROOT / "src" / "aeat"
 # ---------------------------------------------------------------------------
 
 _UTF8_CONSTANT_DEFINITION = _SRC_ROOT / "core" / "external_constants.py"
-_WORKBOOK_PARITY_FILE = (
-    _SRC_ROOT / "domain" / "calculations" / "registry" / "_workbook_parity.py"
-)
+_WORKBOOK_PARITY_FILE = _SRC_ROOT / "domain" / "calculations" / "registry" / "_workbook_parity.py"
 
 # Production files that are ALLOWED to keep bare encoding="utf-8" because
 # they are test modules, not production code.  The scan skips them.
@@ -94,9 +92,7 @@ _RE_BARE_SCAN_STATUS_SET = re.compile(r'scan_status\s+in\s+\{[^}]*"(?:failed|tim
 
 def test_no_bare_scan_status_scanned_comparison() -> None:
     """WorkbookArtefactReport.scan_status comparisons must use WorkbookScanStatus members."""
-    assert _WORKBOOK_PARITY_FILE.is_file(), (
-        f"_workbook_parity.py not found at expected path: {_WORKBOOK_PARITY_FILE}"
-    )
+    assert _WORKBOOK_PARITY_FILE.is_file(), f"_workbook_parity.py not found at expected path: {_WORKBOOK_PARITY_FILE}"
     text = _WORKBOOK_PARITY_FILE.read_text(encoding="utf-8")
     hits_scanned = _RE_BARE_SCAN_STATUS_SCANNED.findall(text)
     hits_set = _RE_BARE_SCAN_STATUS_SET.findall(text)
@@ -104,8 +100,7 @@ def test_no_bare_scan_status_scanned_comparison() -> None:
     assert not all_hits, (
         f"Found {len(all_hits)} bare scan_status string comparison(s) in "
         f"_workbook_parity.py; replace with WorkbookScanStatus.SCANNED / "
-        f"WorkbookScanStatus.FAILED / WorkbookScanStatus.TIMEOUT:\n"
-        + "\n".join(f"  {h!r}" for h in all_hits)
+        f"WorkbookScanStatus.FAILED / WorkbookScanStatus.TIMEOUT:\n" + "\n".join(f"  {h!r}" for h in all_hits)
     )
 
 
@@ -115,25 +110,17 @@ def test_no_bare_scan_status_scanned_comparison() -> None:
 # core._models
 # ---------------------------------------------------------------------------
 
-_LAYOUT_FILE = (
-    _SRC_ROOT / "adapters" / "persistence" / "storage" / "bucket" / "_layout.py"
-)
-_SECURE_OBJECTS_FILE = (
-    _SRC_ROOT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
-)
+_LAYOUT_FILE = _SRC_ROOT / "adapters" / "persistence" / "storage" / "bucket" / "_layout.py"
+_SECURE_OBJECTS_FILE = _SRC_ROOT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
 
-_RE_LOCAL_STRICT_FROZEN_DEF = re.compile(
-    r"_STRICT_FROZEN\s*=\s*ConfigDict\s*\("
-)
+_RE_LOCAL_STRICT_FROZEN_DEF = re.compile(r"_STRICT_FROZEN\s*=\s*ConfigDict\s*\(")
 
 
 def test_layout_uses_canonical_strict_frozen_config() -> None:
     """_layout.py must import STRICT_FROZEN_CONFIG from core._models, not define locally."""
     assert _LAYOUT_FILE.is_file(), f"_layout.py not found: {_LAYOUT_FILE}"
     text = _LAYOUT_FILE.read_text(encoding="utf-8")
-    assert "STRICT_FROZEN_CONFIG" in text, (
-        "_layout.py does not import STRICT_FROZEN_CONFIG from core._models"
-    )
+    assert "STRICT_FROZEN_CONFIG" in text, "_layout.py does not import STRICT_FROZEN_CONFIG from core._models"
     assert not _RE_LOCAL_STRICT_FROZEN_DEF.search(text), (
         "_layout.py still defines a local _STRICT_FROZEN = ConfigDict(...); "
         "remove it and use the canonical STRICT_FROZEN_CONFIG import"
@@ -144,9 +131,7 @@ def test_secure_objects_uses_canonical_strict_frozen_config() -> None:
     """secure_objects.py must import STRICT_FROZEN_CONFIG from core._models, not define locally."""
     assert _SECURE_OBJECTS_FILE.is_file(), f"secure_objects.py not found: {_SECURE_OBJECTS_FILE}"
     text = _SECURE_OBJECTS_FILE.read_text(encoding="utf-8")
-    assert "STRICT_FROZEN_CONFIG" in text, (
-        "secure_objects.py does not import STRICT_FROZEN_CONFIG from core._models"
-    )
+    assert "STRICT_FROZEN_CONFIG" in text, "secure_objects.py does not import STRICT_FROZEN_CONFIG from core._models"
     assert not _RE_LOCAL_STRICT_FROZEN_DEF.search(text), (
         "secure_objects.py still defines a local _STRICT_FROZEN = ConfigDict(...); "
         "remove it and use the canonical STRICT_FROZEN_CONFIG import"
@@ -190,6 +175,5 @@ def test_utf8_encoding_enrolled_files_have_no_bare_literals() -> None:
         hits.extend(file_hits)
     assert not hits, (
         f"Found {len(hits)} bare 'utf-8' literal(s) in enrolled files; "
-        "replace with UTF_8_ENCODING from aeat.core.external_constants:\n"
-        + "\n".join(f"  {h}" for h in hits)
+        "replace with UTF_8_ENCODING from aeat.core.external_constants:\n" + "\n".join(f"  {h}" for h in hits)
     )
