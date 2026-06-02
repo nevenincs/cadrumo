@@ -174,9 +174,7 @@ def test_rename_updates_label_only(secure_objects, schema) -> None:
         )
     )
 
-    result = svc.rename(
-        RenameProfileCommand(profile_id="operator", target_display_name="Renamed Operator")
-    )
+    result = svc.rename(RenameProfileCommand(profile_id="operator", target_display_name="Renamed Operator"))
 
     assert result.profile.profile_id == "operator"
     assert result.profile.display_name == "Renamed Operator"
