@@ -18,6 +18,8 @@ related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'
   - '[[2026-05-22-secure-object-backlog-drain-r3-plan]]'
   - '[[2026-05-22-secure-object-backlog-drain-r3-P03-summary]]'
+  - '[[2026-05-28-centralized-output-redaction-plan]]'
+  - '[[2026-06-02-centralized-output-redaction-audit]]'
   - '[[2026-05-21-fresh-cli-persona-testimonials-audit]]'
   - '[[2026-05-21-fresh-cli-persona-findings-inventory]]'
   - '[[2026-05-21-fresh-cli-persona-capability-gap-design]]'
@@ -155,6 +157,8 @@ Constrain remote providers to encrypted object mirroring with revision and integ
 - [x] `W05.P10.S42` - store remote mirror manifests with ciphertext hashes and revision watermarks; `src/aeat/adapters`.
 - [x] `W05.P10.S43` - detect partial upload, partial download, stale mirror, and revision conflicts; `src/aeat/adapters`.
 - [x] `W05.P10.S44` - add real-behavior remote mirror tests using opaque encrypted payloads; `src/aeat/adapters`.
+- [x] `W05.P10.S426` - wire remote mirror inspection into the operator sync path and fail or degrade on partial upload, partial download, stale mirror, and revision conflicts; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/entrypoints/cli/_config/test_google_sync_push.py src/aeat/adapters/outbound/storage`.
+- [x] `W05.P10.S427` - extend remote mirror manifest lineage or apply a conservative conflict rule so stale mirrors cannot be confused with divergent older root revisions; `src/aeat/adapters/outbound/storage/_records.py src/aeat/adapters/outbound/storage/_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_manifest.py`.
 
 ## Wave `W06` - adverse-condition gates and closeout
 
@@ -169,6 +173,7 @@ Exercise the final storage architecture with real code paths, real encrypted sto
 - [x] `W06.P11.S47` - add adverse-condition tests for revision conflicts and partial remote mirrors; `src/aeat/adapters`.
 - [ ] `W06.P11.S48` - run focused storage, config, profile, live, ledger, modelo, and remote provider test gates; `src/aeat`.
 - [ ] `W06.P11.S49` - run final SecureStorage code review and persist audit closeout; `.vault/audit`.
+- [ ] `W06.P11.S428` - run live Google Drive mirror and calc-sheets export verification against configured app-owned Drive contents, including formula-level sheet inspection; `src/aeat/adapters/outbound/storage/test_google_drive_live.py src/aeat/adapters/outbound/google src/aeat/entrypoints/cli/_config/_google.py`.
 
 ## Wave `W07` - classified secure-SQL hygiene backlog adoption
 
