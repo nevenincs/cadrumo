@@ -17,6 +17,7 @@ from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStat
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core._bucket_pointer_io import pointer_path, read_pointer
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import load_settings
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -39,8 +40,6 @@ ProfileHealthStatus = Literal[
 ]
 
 ProfileSource = Literal["none", "env_override", "pointer"]
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class ActiveProfileHealth(BaseModel):

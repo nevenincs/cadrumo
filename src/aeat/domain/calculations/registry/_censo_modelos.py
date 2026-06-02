@@ -15,6 +15,7 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.logging import get_logger
 from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority
@@ -23,7 +24,6 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 CENSO_MODELO_SERVICE_OWNER = "aeat.domain.calculations.registry"
 CENSO_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
 CENSO_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _LOGGER = get_logger(__name__)
 
