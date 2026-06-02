@@ -1563,6 +1563,27 @@ remediation is currently HELD at audit-only per the active action policy.
   Net: the W06.P18 cluster (S64/S65/S66) is coupled and partly peer-WIP; S63 (the
   23+-importer `domain/profile` package rename) remains the plan-sequenced-last anchor.
 
+- 2026-06-02 (cont.): **S64 attempted empirically, BACKED OUT — blast radius CONFIRMED.**
+  The "registration-order-risky" classification above was upgraded from speculation to a
+  reproduced fact. Change made: dropped `_build_profile_keys` (the lazy
+  `domain.profile._keys -> application.wizard._compiler` pull) + the now-unused
+  `get_wizard_flows` import, made `_profile_keys()` raise a not-registered guard, and
+  generalised `ProfileKeysRegistrationError` to take a message (no cascade — default
+  preserved). Isolated smoke tests passed BOTH ways (guard raises when unregistered;
+  importing `application.wizard._compiler` pushes 57 keys and access works). But the
+  first real suite run failed **at collection**: `domain/profile/__init__.py:56`
+  re-exports `PROFILE_KEYS` via `__getattr__`, and `domain/profile/test_keys.py`
+  touches it at import time before any wizard import — so the guard fires during
+  collection (`ProfileKeysRegistrationError`). This proves the lazy fallback is
+  load-bearing for every profile-key access path that does not first import the wizard
+  layer (production AND test), not just a handful. Reverted both files to green
+  (`test_keys.py` 15/15 again). **Confirmed prerequisite for S64:** a guaranteed central
+  registration bootstrap — a production composition-root import of the wizard layer
+  (ADR-bound, since domain cannot self-bootstrap without recreating the DB-17 edge) plus
+  a `domain/profile` test conftest side-effect import (mirroring the existing
+  `domain/deadlines/conftest.py` pattern). Only after that bootstrap exists can the lazy
+  pull be removed without breaking collection/runtime.
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
