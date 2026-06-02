@@ -42,7 +42,7 @@ id = "is.modelo-200.tipo-gravamen-pyme"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
-legal_refs = ["ley-27-2014:art-29"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44"]
 source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".parameters.source_citations]]
@@ -50,10 +50,11 @@ source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["tipo de gravamen"]
 
 # Periods initiated in 2024: 23 % flat rate (LIS Art. 29 pre-2025 pyme
-# regime; Real Decreto Legislativo 4/2004 + Ley 27/2014 Art. 29 as in
-# force for ejercicios iniciados en 2024). The two-tranche micro-empresa
-# scale
-# (17 %/20 %) was introduced for periods initiated in 2025.
+# regime; Ley 31/2022 Art. 39 reduced rate for INCN < 1M, in force for
+# ejercicios iniciados en 2024). The two-tranche micro-empresa scale was
+# introduced for periods initiated in 2025 by Ley 7/2024 (LIS art. 29.1)
+# with the transitional schedule of LIS DT 44ª (21 %/22 % in 2025,
+# 19 %/21 % in 2026).
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"
 fixed_addition = "0"
@@ -61,19 +62,20 @@ marginal_rate = "0.23"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
 
-# Periods initiated in 2025: 17 % on 0-50.000 EUR, 20 % on the rest.
+# Periods initiated in 2025: 21 % on 0-50.000 EUR, 22 % on the rest
+# (LIS DT 44ª transitional micro-empresa scale, Ley 7/2024).
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"
 upper_bound = "50000"
 fixed_addition = "0"
-marginal_rate = "0.17"
+marginal_rate = "0.21"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "50000"
-fixed_addition = "8500"
-marginal_rate = "0.20"
+fixed_addition = "10500"
+marginal_rate = "0.22"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
@@ -199,18 +201,56 @@ id = "is.modelo-200.cuota-integra-bracket-erd"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-31-2022:art-39"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-31-2022:art-39", "ley-27-2014:dt-44"]
 source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["tipo de gravamen"]
 
+# Cuota íntegra for INCN < 1.000.000 EUR (sl/sa/sal/sll/scm/other). The
+# regime is year-dependent and the bracket_axis date filter selects the
+# window per filing period:
+#   2024: flat 23 % (Ley 31/2022 Art. 39 reduced rate for INCN < 1M).
+#   2025: 21 % on 0-50.000 EUR, 22 % on the rest (LIS DT 44ª, Ley 7/2024).
+#   2026: 19 % on 0-50.000 EUR, 21 % on the rest (LIS DT 44ª, Ley 7/2024).
+# Windows mirror is.modelo-200.tipo-gravamen-pyme.
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"
 fixed_addition = "0"
 marginal_rate = "0.23"
-valid_from = 2023-01-01
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "50000"
+fixed_addition = "0"
+marginal_rate = "0.21"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "50000"
+fixed_addition = "10500"
+marginal_rate = "0.22"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "50000"
+fixed_addition = "0"
+marginal_rate = "0.19"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "50000"
+fixed_addition = "9500"
+marginal_rate = "0.21"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
 
 # LIS Art. 29 newly-created-entity 15 % rate (first two profit-making
 # periods). Layered on top of the sub-form by the cuota-integra formula

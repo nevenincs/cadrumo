@@ -122,6 +122,10 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
     )
     assert parameter.bracket_axis == "filing_period"
     assert "ley-27-2014:art-29" in parameter.legal_refs
+    assert "ley-27-2014:dt-44" in parameter.legal_refs, (
+        "the 2025/2026 transitional micro-empresa tranches must cite their "
+        "binding source LIS DT 44ª (Ley 7/2024)"
+    )
     assert not parameter.values, "a bracket_table parameter must not carry flat dated values"
 
     by_window: dict[tuple[date, date | None], dict[Decimal, Decimal]] = {}
@@ -129,9 +133,11 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
         window = (bracket.valid_from, bracket.valid_to)
         by_window.setdefault(window, {})[bracket.lower_bound] = bracket.marginal_rate
 
+    # LIS DT 44ª transitional micro-empresa scale (Ley 7/2024): the
+    # 2025/2026 first/rest tranche rates are the AEAT-published anchors.
     rates_2025 = by_window[(date(2025, 1, 1), date(2025, 12, 31))]
-    assert rates_2025[Decimal("0")] == Decimal("0.17"), "2025 first tranche must be 17 %"
-    assert rates_2025[Decimal("50000")] == Decimal("0.20"), "2025 rest tranche must be 20 %"
+    assert rates_2025[Decimal("0")] == Decimal("0.21"), "2025 first tranche must be 21 % (LIS DT 44ª)"
+    assert rates_2025[Decimal("50000")] == Decimal("0.22"), "2025 rest tranche must be 22 % (LIS DT 44ª)"
 
     rates_2026 = by_window[(date(2026, 1, 1), date(2026, 12, 31))]
     assert rates_2026[Decimal("0")] == Decimal("0.19"), "2026 first tranche must be 19 %"
@@ -157,18 +163,18 @@ def test_micro_empresa_first_tranche_fixed_addition_carries_into_the_rest_tranch
     ``fixed_addition + marginal_rate * (base - lower_bound)``. For the
     micro-empresa scale the rest tranche starts at 50.000 EUR, so its
     ``fixed_addition`` must equal the cuota the first tranche accumulates
-    over its full 0-50.000 width: 50.000 x 17 % = 8.500 for 2025 and
-    50.000 x 19 % = 9.500 for 2026. This is a structural-consistency
-    check on the encoded bracket rows, derived from the tranche widths
-    and the grounded marginal rates, not a recomputation of a registry
-    formula's output.
+    over its full 0-50.000 width: 50.000 x 21 % = 10.500 for 2025 (LIS
+    DT 44ª transitional first-tranche rate) and 50.000 x 19 % = 9.500 for
+    2026. This is a structural-consistency check on the encoded bracket
+    rows, derived from the tranche widths and the grounded marginal rates,
+    not a recomputation of a registry formula's output.
     """
     parameter = _parameters()["is.modelo-200.tipo-gravamen-pyme"]
     rest_by_year: dict[int, Decimal] = {}
     for bracket in parameter.brackets:
         if bracket.lower_bound == Decimal("50000"):
             rest_by_year[bracket.valid_from.year] = bracket.fixed_addition
-    assert rest_by_year[2025] == Decimal("8500"), "2025 rest tranche fixed_addition = 50.000 x 17 %"
+    assert rest_by_year[2025] == Decimal("10500"), "2025 rest tranche fixed_addition = 50.000 x 21 % (LIS DT 44ª)"
     assert rest_by_year[2026] == Decimal("9500"), "2026 rest tranche fixed_addition = 50.000 x 19 %"
 
 

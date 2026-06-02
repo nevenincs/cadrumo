@@ -213,35 +213,51 @@ def test_micro_empresa_cuota_is_less_than_general_cuota_at_same_base() -> None:
 
 
 def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None:
-    """At base = 50.000 the 2024 micro-empresa cuota applies the LIS Art. 29 flat rate.
+    """At base = 50.000 the micro-empresa cuota follows the binding year schedule.
 
-    The registry ships only the M200 ``2024-y-siguientes`` revision today.
-    Under Ley 27/2014 (LIS) Art. 29 as in force for ejercicios 2024, the
-    micro-empresa (INCN < 1.000.000 €) cuota integra is computed at the
-    flat 23 % rate routed through ``modelo-200-cuota-integra`` (see
-    commit d9c002a51: "tipo-gravamen formula routes INCN<1M to
-    ley-31-2022 rate"). The two-tranche pyme scale (17 % on 0-50.000,
-    20 % on the rest) introduced by Ley 7/2024 Art. 2 applies only to
-    ejercicios iniciados en 2025; that revision is not yet authored in
-    the registry. Once the 2025-y-siguientes revision lands this oracle
-    will become 8.500 € (50.000 × 17 %).
+    For INCN < 1.000.000 € the cuota integra (casilla 00562) is routed
+    through ``modelo-200-cuota-integra`` against the year-segmented
+    ``is.modelo-200.cuota-integra-bracket-erd`` bracket, whose
+    ``filing_period`` axis selects the binding rate per ejercicio:
 
-    For the 2024 revision actually loaded by the snapshot, 50.000 ×
-    23 % = 11.500 €.
+    - **2024**: flat 23 % (Ley 31/2022 Art. 39, reduced rate for
+      INCN < 1M). 50.000 × 23 % = **11.500 €**.
+    - **2025**: 21 % on 0-50.000, 22 % on the rest (LIS **disposición
+      transitoria 44ª**, added by Ley 7/2024 — BOE-A-2024-26694; the
+      transitional micro-empresa scale over LIS Art. 29.1).
+      50.000 × 21 % = **10.500 €**.
+
+    These are the AEAT-published transitional anchors (sede AEAT,
+    "Tipo de gravamen y cuota íntegra"), not test-author figures: the
+    21 % first-tranche rate for 2025 appears verbatim in LIS DT 44ª.
+    The 8.500 € (17 %) figure is the *final* régimen rate, not the 2025
+    transitional one, and is not in force for ejercicio 2025.
     """
     base = Decimal("50000")
-    filing_period_2024 = date(2024, 12, 31)
     pyme_2024 = _cuota_for(
         base=base,
         form="sl",
         new_entity=Decimal("0"),
         incn=Decimal("500000"),
-        filing_period=filing_period_2024,
+        filing_period=date(2024, 12, 31),
     )
     assert pyme_2024 == Decimal("11500.00"), (
-        "cuota at the 50.000 € tranche must equal the 2024 LIS Art. 29 "
-        "micro-empresa rate (23 % on 0-1.000.000 INCN); the Ley 7/2024 "
-        "tranche scale lands when the 2025-y-siguientes M200 revision is authored"
+        "cuota at the 50.000 € tranche for 2024 must equal the Ley 31/2022 "
+        "Art. 39 reduced rate (23 % on 0-1.000.000 INCN)"
+    )
+
+    pyme_2025 = _cuota_for(
+        base=base,
+        form="sl",
+        new_entity=Decimal("0"),
+        incn=Decimal("500000"),
+        filing_period=date(2025, 12, 31),
+    )
+    assert pyme_2025 == Decimal("10500.00"), (
+        "cuota at the 50.000 € tranche boundary for 2025 must equal the "
+        "LIS DT 44ª transitional micro-empresa first-tranche rate "
+        "(21 % on 0-50.000 → 10.500), not the final-régimen 17 % (8.500) "
+        "nor the flat 23 % (11.500)"
     )
 
 
