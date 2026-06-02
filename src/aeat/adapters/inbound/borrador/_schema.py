@@ -36,17 +36,20 @@ class ArtefactKind(StrEnum):
     PREDECLARACION = "PREDECLARACION"
     DECLARACION = "DECLARACION"
 
+
 class BorradorParseMode(StrEnum):
     """Parser authority mode requested by the caller."""
 
     OBSERVED = "observed"
     REGISTRY_PROFILE = "registry_profile"
 
+
 class BorradorExtractionTarget(Protocol):
     """Per-target descriptor surface the parser reads from a profile."""
 
     @property
     def casilla_id(self) -> str: ...
+
 
 class BorradorExtractionProfile(Protocol):
     """Registry extraction-profile surface consumed by the parser."""
@@ -59,6 +62,7 @@ class BorradorExtractionProfile(Protocol):
 
     @property
     def min_coverage(self) -> Decimal: ...
+
 
 class BorradorObservation(BaseModel):
     """Observed Modelo 100 PDF data.
