@@ -172,7 +172,7 @@ Exercise the final storage architecture with real code paths, real encrypted sto
 - [x] `W06.P11.S46` - add adverse-condition tests for route mismatch, unregistered namespace, and unsecured backend refusal; `src/aeat/adapters/persistence/storage`.
 - [x] `W06.P11.S47` - add adverse-condition tests for revision conflicts and partial remote mirrors; `src/aeat/adapters`.
 - [x] `W06.P11.S48` - run focused storage, config, profile, live, ledger, modelo, and remote provider test gates; `src/aeat`.
-- [ ] `W06.P11.S49` - run final SecureStorage code review and persist audit closeout; `.vault/audit`.
+- [x] `W06.P11.S49` - run final SecureStorage code review and persist audit closeout; `.vault/audit`.
 - [ ] `W06.P11.S428` - run live Google Drive mirror and calc-sheets export verification against configured app-owned Drive contents, including formula-level sheet inspection; `src/aeat/adapters/outbound/storage/test_google_drive_live.py src/aeat/adapters/outbound/google src/aeat/entrypoints/cli/_config/_google.py`.
 
 ## Wave `W07` - classified secure-SQL hygiene backlog adoption
