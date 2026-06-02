@@ -23,7 +23,7 @@ from pydantic import ConfigDict
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ....application.auth._operator import AuthConfigureResult
+    from ....application.auth._operator import AuthClearResult, AuthConfigureResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -331,11 +331,25 @@ class AuthLoginPayload(OutputSchema):
 
 @register_schema("config.auth.clear")
 class AuthClearPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth clear``."""
+    """JSON envelope for ``aeat config auth clear``.
+
+    Field set is 1:1 with the application :class:`AuthClearResult`; the
+    envelope derives its values via :meth:`from_result` rather than the
+    command handler re-declaring the field map inline (DB-26 S49).
+    """
 
     removed_sessions: int
     cleared_workflow_state: bool
     cleared_locks: int
+
+    @classmethod
+    def from_result(cls, result: AuthClearResult) -> AuthClearPayload:
+        """Project the application :class:`AuthClearResult` (1:1) into this CLI envelope."""
+        return cls(
+            removed_sessions=result.removed_sessions,
+            cleared_workflow_state=result.cleared_workflow_state,
+            cleared_locks=result.cleared_locks,
+        )
 
 
 @register_schema("config.auth.apoderado.check")
