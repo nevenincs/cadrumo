@@ -35,7 +35,7 @@ Plan the next registry-hardening substrate after continuity conformance reached
 
 - [x] `P01.S01` - Audit current TOML fragment and row-size headroom; `.vault/audit`.
 - [x] `P01.S02` - Split M100 2024 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024`.
-- [ ] `P01.S03` - Split M100 2023 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2023`.
+- [x] `P01.S03` - Split M100 2023 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2023`.
 - [ ] `P01.S04` - Split M100 2022 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2022`.
 - [ ] `P01.S05` - Split M100 2021 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2021`.
 - [ ] `P01.S06` - Split M100 2020 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020`.
