@@ -538,12 +538,12 @@ _COMPUTED_CASILLAS_M303 = frozenset(
         "iva.cuota-devengada-total",
         "iva.cuota-deducible-total",
         "iva.resultado-regimen-general",
-        "64",   # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
-        "66",   # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
+        "64",  # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
+        "66",  # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
         "iva.compensacion-aplicada-periodo",
         "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",   # resultado autoliquidación (66 + 77 + 68 - 78)
-        "71",   # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
+        "iva.resultado",  # resultado autoliquidación (66 + 77 + 68 - 78)
+        "71",  # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
         "iva.compensacion-generada-periodo",
         "iva.compensacion-disponible-fin-periodo",
     }
@@ -596,9 +596,7 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
             period_override=period,
         )
     except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}"
-        )
+        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
@@ -668,8 +666,7 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     )
     extracted_resultado = extracted.get("iva.resultado-regimen-general")
     assert isinstance(extracted_resultado, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: "
-        f"{extracted_resultado!r}"
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: {extracted_resultado!r}"
     )
     assert engine_resultado == extracted_resultado, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
@@ -717,9 +714,7 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
             period_override=period,
         )
     except DeclaracionParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}"
-        )
+        pytest.fail(f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
@@ -784,9 +779,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_64 = engine_values.get("64")
-    assert engine_64 is not None, (
-        f"VERIFIED-FAIL [{pdf_stem}]: '64' (suma de resultados) absent from engine result"
-    )
+    assert engine_64 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '64' (suma de resultados) absent from engine result"
     extracted_64 = extracted.get("64")
     assert isinstance(extracted_64, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted '64' is not Decimal: {extracted_64!r}"
@@ -819,9 +812,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_66 = engine_values.get("66")
-    assert engine_66 is not None, (
-        f"VERIFIED-FAIL [{pdf_stem}]: '66' (atribuible Estado) absent from engine result"
-    )
+    assert engine_66 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '66' (atribuible Estado) absent from engine result"
     extracted_66 = extracted.get("66")
     assert isinstance(extracted_66, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted '66' is not Decimal: {extracted_66!r}"
@@ -854,9 +845,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_69 = engine_values.get("iva.resultado")
-    assert engine_69 is not None, (
-        f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado' (box 69) absent from engine result"
-    )
+    assert engine_69 is not None, f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado' (box 69) absent from engine result"
     extracted_69 = extracted.get("iva.resultado")
     assert isinstance(extracted_69, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado' (box 69) is not Decimal: {extracted_69!r}"
@@ -889,9 +878,7 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     extracted, engine_values, inputs = _build_m303_engine_result(pdf_stem, year, period)
 
     engine_71 = engine_values.get("71")
-    assert engine_71 is not None, (
-        f"VERIFIED-FAIL [{pdf_stem}]: '71' (resultado final) absent from engine result"
-    )
+    assert engine_71 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '71' (resultado final) absent from engine result"
     extracted_71 = extracted.get("71")
     assert isinstance(extracted_71, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted '71' is not Decimal: {extracted_71!r}"
@@ -1007,8 +994,7 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
     )
     extracted_resultado = extracted.get("iva.resultado-regimen-general")
     assert isinstance(extracted_resultado, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: "
-        f"{extracted_resultado!r}"
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: {extracted_resultado!r}"
     )
     assert engine_resultado == extracted_resultado, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
@@ -1199,8 +1185,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         f"VERIFIED-FAIL [{pdf_stem}]: 'iva.anual.resultado-regimen-general' absent from engine result"
     )
     assert isinstance(extracted_resultado, Decimal), (
-        f"VERIFIED-FAIL [{pdf_stem}]: extracted resultado-regimen-general is not Decimal: "
-        f"{extracted_resultado!r}"
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted resultado-regimen-general is not Decimal: {extracted_resultado!r}"
     )
     assert engine_resultado == extracted_resultado, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
@@ -1308,10 +1293,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             modelo="115",
             filing_year=2024,
             period=period,
-            observations=tuple(
-                CasillaObservation(casilla_id=cid, value=val)
-                for cid, val in casilla_values.items()
-            ),
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
         )
         for period, casilla_values in sorted(_m115_quarterly.items())
     )
@@ -1460,9 +1442,7 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
         )
 
     inputs: dict[str, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_CASILLAS_M115 and isinstance(val, Decimal)
+        cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M115 and isinstance(val, Decimal)
     }
 
     snapshot = _registry_snapshot("115", 2024, "1T")
@@ -1563,9 +1543,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     inputs: dict[str, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in computed_set and isinstance(val, Decimal)
+        cid: val for cid, val in extracted.items() if cid not in computed_set and isinstance(val, Decimal)
     }
 
     snapshot = _registry_snapshot("123", year, period)
@@ -1590,8 +1568,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
             continue
         extracted_val = extracted[closure_id]
         assert isinstance(extracted_val, Decimal), (
-            f"PARSER-GAP [M123/{pdf_stem}]: casilla {closure_id!r} is not Decimal: "
-            f"{type(extracted_val).__name__!r}"
+            f"PARSER-GAP [M123/{pdf_stem}]: casilla {closure_id!r} is not Decimal: {type(extracted_val).__name__!r}"
         )
         engine_val = engine_values.get(closure_id)
         assert engine_val is not None, (
@@ -1657,16 +1634,13 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
         detail = exc.translated_message or str(exc) or type(exc).__name__
         context = exc.context if exc.context else {}
         pytest.fail(
-            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n"
-            f"  error: {detail} (context={context})"
+            f"PARSER-GAP [M131/2024-1T.pdf/yr=2026]: parse_declaracion raised.\n  error: {detail} (context={context})"
         )
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     inputs: dict[str, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_CASILLAS_M131 and isinstance(val, Decimal)
+        cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M131 and isinstance(val, Decimal)
     }
 
     binding_values: dict[str, Decimal] = {
@@ -1810,10 +1784,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
             modelo="123",
             filing_year=2024,
             period=period,
-            observations=tuple(
-                CasillaObservation(casilla_id=cid, value=val)
-                for cid, val in casilla_values.items()
-            ),
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
         )
         for period, casilla_values in sorted(_m123_quarterly.items())
     )
@@ -1857,8 +1828,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
             f"PARSER-GAP [M193/2024-0A engine]: closure casilla {casilla_id!r} absent from extracted values"
         )
         assert isinstance(extracted_value, Decimal), (
-            f"PARSER-GAP [M193/2024-0A engine]: {casilla_id!r} is not Decimal: "
-            f"{type(extracted_value).__name__!r}"
+            f"PARSER-GAP [M193/2024-0A engine]: {casilla_id!r} is not Decimal: {type(extracted_value).__name__!r}"
         )
         assert engine_value is not None, (
             f"FORMULA-MISMATCH [M193/2024-0A engine]: casilla {casilla_id!r} absent from engine result — "
@@ -1902,12 +1872,30 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
     of any closure impossible. See test_verification_chain_m100_engine_corpus_limited
     for the empirical confirmation of the sanitisation artefact.
     """
-    _EXPECTED_CASILLAS_M100 = frozenset({
-        "0171",
-        "0180", "0218", "0223", "0224", "0226", "0231", "0235",
-        "0432", "0500", "0505", "0510",
-        "0545", "0546", "0585", "0586", "0587", "0595", "0610", "0670",
-    })
+    _EXPECTED_CASILLAS_M100 = frozenset(
+        {
+            "0171",
+            "0180",
+            "0218",
+            "0223",
+            "0224",
+            "0226",
+            "0231",
+            "0235",
+            "0432",
+            "0500",
+            "0505",
+            "0510",
+            "0545",
+            "0546",
+            "0585",
+            "0586",
+            "0587",
+            "0595",
+            "0610",
+            "0670",
+        }
+    )
 
     for year in (2021, 2022, 2023):
         pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
@@ -1919,9 +1907,7 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
                 period_override="0A",
             )
         except DeclaracionParseError as exc:
-            pytest.fail(
-                f"PARSER-GAP [M100/{year}-0A]: parse_declaracion raised.\n  error: {exc}"
-            )
+            pytest.fail(f"PARSER-GAP [M100/{year}-0A]: parse_declaracion raised.\n  error: {exc}")
 
         extracted = {v.casilla_id: v.printed_value for v in filing.values}
         assert set(extracted.keys()) == _EXPECTED_CASILLAS_M100, (
@@ -1987,15 +1973,27 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     #   0510 = 0460 + 0506 + 0507; 0545 = 0532 + 0540 (tax bracket chain from 0505);
     #   0546 = 0533 + 0541 (autonomic bracket chain); 0585 = 0570 + deductions;
     #   0586 = 0571 + autonomic deductions.
-    _COMPUTED_M100 = frozenset({
-        "0180", "0218", "0223", "0224", "0226", "0231", "0235",
-        "0432", "0500", "0510", "0545", "0546", "0585", "0586",
-    })
+    _COMPUTED_M100 = frozenset(
+        {
+            "0180",
+            "0218",
+            "0223",
+            "0224",
+            "0226",
+            "0231",
+            "0235",
+            "0432",
+            "0500",
+            "0510",
+            "0545",
+            "0546",
+            "0585",
+            "0586",
+        }
+    )
 
     inputs: dict[str, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_M100 and isinstance(val, Decimal)
+        cid: val for cid, val in extracted.items() if cid not in _COMPUTED_M100 and isinstance(val, Decimal)
     }
 
     snapshot = _registry_snapshot("100", year, "0A")
@@ -2063,12 +2061,9 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     )
 
     # Step 3: Leaf input 0171 must be extracted by the declaracion_pdf profile.
-    assert "0171" in extracted, (
-        "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values."
-    )
+    assert "0171" in extracted, "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values."
     assert isinstance(extracted["0171"], Decimal), (
-        f"PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: "
-        f"{type(extracted['0171']).__name__!r}"
+        f"PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: {type(extracted['0171']).__name__!r}"
     )
 
 
@@ -2122,8 +2117,7 @@ def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> N
     }, f"PARSER-GAP [M349/2024-1T]: unexpected casilla set.\n  got: {sorted(extracted)}"
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
-            f"PARSER-GAP [M349/2024-1T]: casilla {casilla_id!r} not Decimal: "
-            f"{type(value).__name__!r} = {value!r}"
+            f"PARSER-GAP [M349/2024-1T]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r} = {value!r}"
         )
 
 
@@ -2156,8 +2150,7 @@ def test_verification_chain_m184_parser_extracts_declaracion_pdf_casillas() -> N
         f"PARSER-GAP [M184/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M184/2024-0A]: 'decl.ejercicio' not Decimal: "
-        f"{type(extracted['decl.ejercicio']).__name__!r}"
+        f"PARSER-GAP [M184/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
 
 
@@ -2190,8 +2183,7 @@ def test_verification_chain_m347_parser_extracts_declaracion_pdf_casillas() -> N
         f"PARSER-GAP [M347/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M347/2024-0A]: 'decl.ejercicio' not Decimal: "
-        f"{type(extracted['decl.ejercicio']).__name__!r}"
+        f"PARSER-GAP [M347/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
 
 
@@ -2224,8 +2216,7 @@ def test_verification_chain_m720_parser_extracts_declaracion_pdf_casillas() -> N
         f"PARSER-GAP [M720/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M720/2024-0A]: 'decl.ejercicio' not Decimal: "
-        f"{type(extracted['decl.ejercicio']).__name__!r}"
+        f"PARSER-GAP [M720/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
 
 
@@ -2259,8 +2250,7 @@ def test_verification_chain_m840_parser_extracts_declaracion_pdf_casillas() -> N
         f"PARSER-GAP [M840/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M840/2024-0A]: 'decl.ejercicio' not Decimal: "
-        f"{type(extracted['decl.ejercicio']).__name__!r}"
+        f"PARSER-GAP [M840/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
 
 
@@ -2293,8 +2283,7 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
         f"PARSER-GAP [M369/2024-1T]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M369/2024-1T]: 'decl.ejercicio' not Decimal: "
-        f"{type(extracted['decl.ejercicio']).__name__!r}"
+        f"PARSER-GAP [M369/2024-1T]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
     )
     assert "decl.periodo" in extracted, (
         f"PARSER-GAP [M369/2024-1T]: 'decl.periodo' not extracted.\n  got: {sorted(extracted)}"
@@ -2339,8 +2328,7 @@ def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
         f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["decl.event-kind"], str), (
-        f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not str: "
-        f"{type(extracted['decl.event-kind']).__name__!r}"
+        f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not str: {type(extracted['decl.event-kind']).__name__!r}"
     )
     assert extracted["decl.event-kind"] == "Alta", (
         f"PARSER-GAP [M036/2025-alta]: expected 'Alta', got {extracted['decl.event-kind']!r}"
