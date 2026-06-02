@@ -21,6 +21,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S12]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S13]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S14]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S49]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -163,3 +164,32 @@ The S13/S14 tests are non-tautological for the scoped surfaces: startup coverage
 ### Residual risks
 
 - The S14 canary test exercises the shared stderr writer directly rather than a full decorated command failure in JSON and text modes. That is acceptable for this narrow step because `_emit_error_and_exit` has a single stderr emission path through `write_stderr`, but broader end-to-end error-boundary canaries would still improve regression coverage.
+
+## W03.P09.S49 Review
+
+No HIGH/CRITICAL findings in the scoped S49 implementation.
+
+### Scope
+
+- `src/aeat/core/redaction/__init__.py`
+- `src/aeat/core/test_redaction.py`
+- `src/aeat/entrypoints/cli/_config/__init__.py`
+- `src/aeat/entrypoints/cli/test_repair_privacy_contract.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S49.md`
+
+### Review Findings
+
+- `W03.P09.S49` checklist update in plan is now checked in-place and corresponds to the implemented test surface.
+- `active_profile` is now enrolled in CLI key vocabulary in `src/aeat/core/redaction/__init__.py`, and `test_cli_output_structured_redacts_keyed_values_and_string_leaves` extends coverage to ensure it maps to `CLI_PROFILE_ID_PLACEHOLDER`.
+- Repair/profile local profile-id redaction helpers were removed in favor of `redact_structured_for_cli_output`, and the command assertions in `test_config_repair_profile_cli_redacts_profile_identifiers` exercise real CLI invocations via `invoke_cached_cli` (not helper-only assertions).
+- Profile vs bucket placeholders are now explicitly differentiated in `src/aeat/entrypoints/cli/_config/__init__.py` (`profile_id` -> `CLI_PROFILE_ID_PLACEHOLDER`, `bucket_id` -> `CLI_BUCKET_ID_PLACEHOLDER`) and confirmed in named-profile text/JSON assertions.
+
+### Residual risks
+
+- S49 coverage remains presence-based for the `--repair-manifest-status` and `--clear-active` branches (`test_config_repair_profile_cli_redacts_profile_identifiers` checks absence of UUIDs rather than exact transformed values in those branches).
+- Tests do not yet assert exact redacted values for every nested field variant in `result.before` / `result.after`; schema-drift safety for nested repair payload keys still depends on the helper-level coverage in `src/aeat/core/test_redaction.py`.
+
+### Execution Evidence
+
+- Executed `uv run pytest -q src/aeat/entrypoints/cli/test_repair_privacy_contract.py::test_config_repair_profile_cli_redacts_profile_identifiers src/aeat/entrypoints/cli/test_repair_privacy_contract.py::test_config_repair_cli_redacts_active_profile_identifier src/aeat/core/test_redaction.py::test_cli_output_structured_redacts_keyed_values_and_string_leaves`

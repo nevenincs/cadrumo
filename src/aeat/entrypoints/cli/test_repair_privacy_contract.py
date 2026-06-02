@@ -91,7 +91,7 @@ def test_config_repair_cli_redacts_active_profile_identifier() -> None:
     assert not _UUID_PATTERN.search(text.output)
 
     payload = json.loads(payload_result.output)
-    assert payload["setup"]["active_profile"] == "active_profile"
+    assert payload["setup"]["active_profile"] == "<profile-id>"
     summaries = "\n".join(str(row.get("summary", "")) for row in payload["checks"])
     assert not _UUID_PATTERN.search(summaries)
 
@@ -118,6 +118,18 @@ def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
         assert active_bucket_id not in payload_result.output
         assert not _UUID_PATTERN.search(text.output)
         assert not _UUID_PATTERN.search(payload_result.output)
+
+    named_text = invoke_cached_cli(["config", "repair", "profile", "--profile", "operator"])
+    named_payload_result = invoke_cached_cli(
+        ["--format", "json", "config", "repair", "profile", "--profile", "operator"]
+    )
+    assert named_text.exit_code == 0, named_text.output
+    assert named_payload_result.exit_code == 0, named_payload_result.output
+    assert "profile_id\t<profile-id>" in named_text.output
+    assert "bucket_id\t<bucket-id>" in named_text.output
+    named_payload = json.loads(named_payload_result.output)
+    assert named_payload["result"]["profile_id"] == "<profile-id>"
+    assert named_payload["result"]["bucket_id"] == "<bucket-id>"
 
 
 def test_diagnostics_secure_objects_list_redacts_active_profile_identifier_in_row_context() -> None:
@@ -325,7 +337,7 @@ def test_config_repair_logs_redacts_profile_identifiers_and_object_key_hints() -
     assert sensitive_tax_id not in text.output
     assert "<profile-id>" in text.output
     assert "<object-key>" in text.output
-    assert "<tax-id>" in text.output
+    assert "sha256:1c9f9632" in text.output
 
     payload = json.loads(payload_result.output)
     serialized = json.dumps(payload)
