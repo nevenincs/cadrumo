@@ -107,8 +107,7 @@ def test_iva_ledger_exempt_regimes_contains_enum_members() -> None:
     """
     for member in _IVA_LEDGER_EXEMPT_REGIMES:
         assert isinstance(member, IVARegime), (
-            f"_IVA_LEDGER_EXEMPT_REGIMES contains a bare string {member!r}; "
-            f"expected an IVARegime enum member"
+            f"_IVA_LEDGER_EXEMPT_REGIMES contains a bare string {member!r}; expected an IVARegime enum member"
         )
 
 
@@ -345,6 +344,7 @@ class TestWorkflowInputMismatchError:
     def _stub_profile(self) -> object:
         """Return a minimal stub satisfying the TaxpayerProfile structural need."""
         from types import SimpleNamespace
+
         return SimpleNamespace()
 
     def test_matching_request_does_not_raise(self) -> None:
