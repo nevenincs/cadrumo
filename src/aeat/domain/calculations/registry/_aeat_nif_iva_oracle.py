@@ -70,21 +70,70 @@ class AeatNifIvaDriver(Protocol):
     """Execution boundary for AEAT NIF-IVA live or replay adapters."""
 
     @property
-    def mode(self) -> Literal["live", "replay"]: ...
+    def mode(self) -> Literal["live", "replay"]:
+        """Discriminate whether this driver drives a live AEAT query or a replay.
+
+        Returns:
+            ``"live"`` for a driver that hits the AEAT-hosted verification
+            form over the network, or ``"replay"`` for one that decodes a
+            previously captured response from disk. Callers use this to gate
+            network-touching behaviour without inspecting the concrete type.
+        """
+        ...
 
     def planned_operations(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
+    ) -> tuple[RemoteOperation, ...]:
+        """Describe the remote steps this driver would take, without running them.
+
+        Returns the ordered ``RemoteOperation`` plan the driver intends to run
+        for the given query, so the oracle can surface and guard the plan
+        before any network or filesystem access. A ``RemoteOperation`` is one
+        recorded step in that plan (for example, a network request or a local
+        file parse).
+
+        Args:
+            payload: Raw bytes the driver consumes. For a replay driver this is
+                a captured response; a live driver ignores it or treats it as
+                request context.
+            expected: Mapping from an EU IVA identifier (a VAT number issued by
+                an EU member state) to the verdict expected for it. A verdict
+                is the validity outcome, such as valid or invalid. The mapping
+                is keyed by the identifier string.
+
+        Returns:
+            The ordered tuple of planned ``RemoteOperation`` records.
+        """
+        ...
 
     def collect_observation(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> AeatNifIvaObservation: ...
+    ) -> AeatNifIvaObservation:
+        """Execute the driver and return the observed AEAT NIF-IVA verdicts.
+
+        A NIF-IVA is the Spanish tax identifier for VAT purposes; an observed
+        verdict is the validity outcome (such as valid or invalid) the driver
+        actually saw for each identifier.
+
+        Args:
+            payload: Raw bytes the driver consumes. For a replay driver this is
+                a captured response; a live driver treats it as transport input.
+            expected: Mapping from an EU IVA identifier (a VAT number issued by
+                an EU member state) to its expected verdict, supplied so a live
+                driver knows which identifiers to query.
+
+        Returns:
+            An ``AeatNifIvaObservation`` carrying the per-identifier verdicts
+            the adapter actually saw, plus a locator pointing to the raw
+            evidence (the stored response the verdicts were read from).
+        """
+        ...
 
 
 class AeatNifIvaReplayDriver:
@@ -92,6 +141,13 @@ class AeatNifIvaReplayDriver:
 
     @property
     def mode(self) -> Literal["replay"]:
+        """Identify this driver as a replay driver.
+
+        Returns:
+            The literal ``"replay"``. This driver never touches the network;
+            it decodes a captured AEAT NIF-IVA response from a local payload,
+            so its mode is fixed.
+        """
         return "replay"
 
     def planned_operations(
@@ -100,6 +156,23 @@ class AeatNifIvaReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Report the single local-parse step a replay performs.
+
+        A replay does no remote work, so the plan is one ``RemoteOperation``
+        of kind ``local_workbook`` that parses the captured payload. A
+        ``RemoteOperation`` is one recorded step in a driver plan. Both
+        arguments are accepted to match the shared ``AeatNifIvaDriver``
+        interface but are unused here.
+
+        Args:
+            payload: The captured response bytes (ignored for planning).
+            expected: Expected per-identifier verdicts, where a verdict is the
+                validity outcome such as valid or invalid (ignored for
+                planning).
+
+        Returns:
+            A one-element tuple holding the local-parse ``RemoteOperation``.
+        """
         del payload, expected
         return (RemoteOperation(kind="local_workbook", action="parse-aeat-nif-iva-replay"),)
 
@@ -109,6 +182,23 @@ class AeatNifIvaReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> AeatNifIvaObservation:
+        """Decode the captured payload into observed NIF-IVA verdicts.
+
+        Parses ``payload`` as a replay JSON document and lifts its observed
+        verdict map and raw-evidence locator into an ``AeatNifIvaObservation``.
+        A verdict is the validity outcome (such as valid or invalid) recorded
+        for each identifier; the raw-evidence locator points back to the
+        stored response.
+
+        Args:
+            payload: The captured AEAT NIF-IVA response, as replay JSON bytes.
+            expected: Accepted to match the shared driver interface but unused;
+                a replay reports only what was recorded and never re-queries by
+                expectation.
+
+        Returns:
+            An ``AeatNifIvaObservation`` built from the decoded document.
+        """
         del expected
         document = decode_replay_json_payload(payload, surface_label="AEAT NIF-IVA replay")
         return AeatNifIvaObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
@@ -131,10 +221,26 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
 
     @property
     def oracle_id(self) -> str:
+        """Return the stable catalogue identifier for this oracle.
+
+        Returns:
+            The constant ``"aeat-nif-iva-checker"``. The live-parity catalogue
+            keys oracles by this id, so it must stay stable across releases.
+        """
         return ORACLE_ID
 
     @property
     def surface_kind(self) -> OracleSurfaceKind:
+        """Classify the kind of AEAT surface this oracle verifies.
+
+        Returns:
+            The ``OracleSurfaceKind`` value ``"iva_id_check"``. It marks this
+            oracle as a validator of EU IVA identifiers (a VAT number issued by
+            another EU member state, which AEAT relays to the European
+            Commission's VIES service for checking) rather than a modelo filing
+            surface. A modelo is an AEAT tax form; this oracle checks
+            identifiers, not the casillas (the numbered boxes) on such a form.
+        """
         return "iva_id_check"
 
     def planned_operations(
@@ -143,6 +249,33 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Build the ordered remote plan for verifying the expected identifiers.
+
+        When a driver is bound, the plan is delegated to that driver.
+        Otherwise the oracle emits its own default browser plan: GET the AEAT
+        sede (the AEAT electronic-office website) landing page to acquire the
+        session cookies the form servlet needs, GET the form servlet, open the
+        form, issue one check per expected identifier in sorted order, then
+        discard the anonymous (unauthenticated) session. Endpoint hosts are
+        read from ``Settings.external_constants()`` so they stay inside the
+        remote-state-guard host allowlist (the set of hosts the guard permits).
+
+        Args:
+            payload: Raw bytes forwarded to a bound driver; unused by the
+                default plan.
+            expected: Mapping from an EU IVA identifier (a VAT number issued by
+                an EU member state) to its expected verdict, where a verdict is
+                the validity outcome such as valid or invalid. Must be
+                non-empty.
+
+        Returns:
+            The ordered tuple of planned ``RemoteOperation`` records, where each
+            ``RemoteOperation`` is one recorded step in the plan.
+
+        Raises:
+            RegistryValidationError: If ``expected`` is empty, or if any
+                identifier or verdict normalizes to blank.
+        """
         if not expected:
             raise RegistryValidationError(
                 "AeatNifIvaCheckerOracle.planned_operations requires at least one expected NIF"

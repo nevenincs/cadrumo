@@ -46,12 +46,54 @@ class VerificationReportCatalogueRepository:
 
     @property
     def bucket_id(self) -> str | None:
+        """The profile bucket this repository reads from and writes to.
+
+        A bucket is the per-profile partition of encrypted storage; every
+        modelo (an AEAT tax form/declaration) the profile works on shares one
+        bucket. The value is the trimmed bucket identifier resolved at
+        construction, or ``None`` when the repository was built directly from
+        an injected ``SecureObjectRepository`` and no bucket was named.
+
+        Returns:
+            The resolved bucket identifier, or ``None`` when none was supplied.
+        """
         return self._bucket_id
 
     def exists(self) -> bool:
+        """Report whether a stored verification-report catalogue is present.
+
+        Checks the encrypted store for a catalogue object under this
+        repository's namespace and key without decrypting or loading it.
+        Use this to distinguish a never-written profile from one whose
+        catalogue is empty.
+
+        Returns:
+            ``True`` if a catalogue record exists for this bucket, else
+            ``False``.
+        """
         return self._objects.exists(_VERIFICATION_NAMESPACE, _VERIFICATION_OBJECT_KEY)
 
     def load(self) -> VerificationReportCatalogue:
+        """Load and decrypt this bucket's verification-report catalogue.
+
+        Reads the single encrypted catalogue record, validates that it was
+        stored at the ``FINANCIAL`` sensitivity class, and parses the wrapping
+        ``Envelope`` to recover the typed catalogue. A verification report
+        records the outcome of checking a drafted modelo (an AEAT tax
+        form/declaration) against its registry definition, casilla by casilla
+        (a casilla is a numbered box/field on the form). When no record has
+        ever been written, an empty catalogue is returned rather than raising.
+
+        Returns:
+            The stored ``VerificationReportCatalogue``, or an empty one
+            when nothing has been persisted for this bucket.
+
+        Raises:
+            VerificationReportPersistenceError: If the stored record fails the
+                sensitivity-class check, carries an envelope schema version
+                newer than this consumer supports, or trips a storage-layer
+                classification or envelope-version integrity error.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
@@ -82,6 +124,19 @@ class VerificationReportCatalogueRepository:
         return envelope.payload
 
     def save(self, catalogue: VerificationReportCatalogue) -> None:
+        """Encrypt and persist the verification-report catalogue for this bucket.
+
+        Wraps ``catalogue`` in an ``Envelope`` stamped with the current schema
+        version, the write timestamp, and the ``FINANCIAL`` sensitivity class,
+        then overwrites the single catalogue object held under this
+        repository's namespace and key. The write replaces any prior catalogue
+        wholesale; merge a new report into the existing catalogue with
+        ``upsert_verification_report`` before calling this.
+
+        Args:
+            catalogue: The full ``VerificationReportCatalogue`` to store,
+                keyed by each report's verification-report identifier.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         envelope = Envelope[VerificationReportCatalogue](

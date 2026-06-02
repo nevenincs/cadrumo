@@ -175,17 +175,59 @@ class LiveParityOracle(Protocol):
     """
 
     @property
-    def oracle_id(self) -> str: ...
+    def oracle_id(self) -> str:
+        """Stable identifier this oracle registers under in the catalogue.
+
+        A modelo (an AEAT tax form) binds one of its live cross-references to
+        an oracle by naming this id in registry TOML; the runtime resolves the
+        binding by looking the same id up in the ``LiveParityCatalogue``. The
+        value must be non-empty and unique across the process-wide catalogue.
+
+        Returns:
+            The oracle's catalogue key as a plain ``str``.
+        """
+        ...
 
     @property
-    def surface_kind(self) -> OracleSurfaceKind: ...
+    def surface_kind(self) -> OracleSurfaceKind:
+        """Kind of AEAT verification surface this oracle drives.
+
+        One of the ``OracleSurfaceKind`` literals (``file_validator``,
+        ``open_simulator``, ``iva_id_check``, ``pre_filing_validator``,
+        ``integration_test_service``). The boot-time binding audit cross-checks
+        this value against the cross-reference's own surface using the
+        ``_COMPATIBLE_SURFACE_PAIRS`` allow-list, so a mismatch is reported
+        rather than silently called.
+
+        Returns:
+            The surface classification as an ``OracleSurfaceKind`` literal.
+        """
+        ...
 
     def planned_operations(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
+    ) -> tuple[RemoteOperation, ...]:
+        """Enumerate every remote step this oracle will perform, in order.
+
+        Returns the full, ordered set of HTTP requests, browser actions, or
+        local computations the oracle intends to run for ``payload`` (the
+        registry-rendered bytes to verify) and ``expected`` (the expected
+        response values, keyed by label or casilla — a casilla being a
+        numbered box on the form). The oracle must not perform any operation
+        absent from this tuple; callers pre-flight each entry through the
+        remote-state guard before any side-effecting code runs.
+
+        Args:
+            payload: The synthetic, registry-rendered bytes to verify.
+            expected: Expected response values the oracle will compare against.
+
+        Returns:
+            The planned steps as a tuple of ``RemoteOperation``.
+        """
+        ...
 
     def verify_payload(
         self,
@@ -193,7 +235,26 @@ class LiveParityOracle(Protocol):
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> ParityResult: ...
+    ) -> ParityResult:
+        """Run the payload through the live surface and report parity.
+
+        Pre-flights every planned operation against ``policy`` (the
+        fail-closed remote-state guard for this cross-reference), then drives
+        the surface and compares its response to ``expected``. Never raises on
+        an AEAT-side divergence — a mismatch is data, surfaced as the verdict
+        — and never reports ``"match"`` if any planned operation was skipped
+        or rewritten. A step the policy forbids yields a ``"blocked"`` verdict
+        instead of a remote call.
+
+        Args:
+            policy: The ``RemoteStateGuardPolicy`` gating remote operations.
+            payload: The synthetic, registry-rendered bytes to verify.
+            expected: Expected response values to compare against.
+
+        Returns:
+            A ``ParityResult`` carrying the verdict and per-field comparisons.
+        """
+        ...
 
 
 class LiveParityCatalogue:
@@ -280,6 +341,19 @@ class LiveParityCatalogue:
             raise RegistryValidationError(f"unknown oracle_id {oracle_id!r}") from exc
 
     def is_registered(self, oracle_id: str) -> bool:
+        """Report whether an oracle is registered under ``oracle_id``.
+
+        A membership check that ignores environment classification: it returns
+        ``True`` for any registered oracle regardless of whether it is
+        production-only, test-environment-only, or both. Use ``lookup`` when
+        the environment-visibility rules must be enforced.
+
+        Args:
+            oracle_id: The catalogue key to test.
+
+        Returns:
+            ``True`` if an oracle is registered under ``oracle_id``.
+        """
         return oracle_id in self._oracles
 
     def ids(self, *, environment: OracleEnvironment | None = None) -> tuple[str, ...]:
@@ -716,11 +790,32 @@ class BaseCheckerOracle[CheckerObservation]:
 
     @property
     @abstractmethod
-    def oracle_id(self) -> str: ...
+    def oracle_id(self) -> str:
+        """Stable catalogue identifier for this checker oracle.
+
+        Abstract: each concrete per-key checker (NIF-IVA, GROI, and analogous
+        surfaces) supplies the id its modelo cross-reference binds to in
+        registry TOML. Must be non-empty and unique within the catalogue.
+
+        Returns:
+            The oracle's catalogue key as a plain ``str``.
+        """
+        ...
 
     @property
     @abstractmethod
-    def surface_kind(self) -> OracleSurfaceKind: ...
+    def surface_kind(self) -> OracleSurfaceKind:
+        """Kind of AEAT verification surface this checker oracle drives.
+
+        Abstract: the concrete adapter returns the ``OracleSurfaceKind``
+        literal matching its surface, which the binding audit cross-checks
+        against the cross-reference's declared surface via the
+        ``_COMPATIBLE_SURFACE_PAIRS`` allow-list.
+
+        Returns:
+            The surface classification as an ``OracleSurfaceKind`` literal.
+        """
+        ...
 
     @abstractmethod
     def planned_operations(
@@ -728,7 +823,24 @@ class BaseCheckerOracle[CheckerObservation]:
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
+    ) -> tuple[RemoteOperation, ...]:
+        """Enumerate the remote steps this checker oracle will perform.
+
+        Abstract: the concrete adapter builds the ordered tuple of operations
+        for ``payload`` (the registry-rendered bytes) and ``expected`` (the
+        expected per-key values). The shared ``verify_payload`` template
+        pre-flights this set through the remote-state guard before any step
+        runs, so the returned tuple must list every operation the oracle
+        intends to perform.
+
+        Args:
+            payload: The synthetic, registry-rendered bytes to verify.
+            expected: Expected response values the oracle will compare against.
+
+        Returns:
+            The planned steps as a tuple of ``RemoteOperation``.
+        """
+        ...
 
     @abstractmethod
     def _expected_values(self, expected: Mapping[str, object]) -> dict[str, str]: ...
@@ -753,6 +865,25 @@ class BaseCheckerOracle[CheckerObservation]:
         *,
         expected: Mapping[str, object],
     ) -> ParityResult:
+        """Run the shared checker template and report parity.
+
+        The concrete subclass supplies the surface-specific pieces; this
+        template sequences them: pre-flight every planned operation against
+        ``policy`` (returning a ``"blocked"`` verdict on refusal), translate a
+        missing or erroring driver into an ``"unverifiable"`` verdict, compare
+        expected against observed values per key, and pack the overall verdict
+        into a ``ParityResult``. The verdict is ``"match"`` only when at least
+        one field compared and every field matched. Never raises on an
+        AEAT-side divergence.
+
+        Args:
+            policy: The ``RemoteStateGuardPolicy`` gating remote operations.
+            payload: The synthetic, registry-rendered bytes to verify.
+            expected: Expected per-key values to compare against.
+
+        Returns:
+            A ``ParityResult`` carrying the verdict and per-field comparisons.
+        """
         operations = self.planned_operations(payload, expected=expected)
         try:
             assert_oracle_operations_allowed(self, policy, operations)
