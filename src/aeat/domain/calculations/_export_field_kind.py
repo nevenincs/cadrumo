@@ -60,9 +60,7 @@ def _coerce_casilla_field_kind(value: object) -> object:
                 f"kind {value!r} is not a recognised CasillaFieldKind member; "
                 f"expected one of {[m.value for m in CasillaFieldKind]}"
             ) from None
-    raise ValidationError(
-        f"kind must be a string, got {type(value).__name__!r}"
-    )
+    raise ValidationError(f"kind must be a string, got {type(value).__name__!r}")
 
 
 CasillaFieldKindValue = Annotated[CasillaFieldKind, BeforeValidator(_coerce_casilla_field_kind)]
