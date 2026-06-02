@@ -1508,6 +1508,27 @@ remediation is currently HELD at audit-only per the active action policy.
   `domain/profile` package rename, sequenced last), S64 (DB-17 lazy-import removal;
   `_keys.py` peer-WIP), S65/S66 (core/profile.py + profile_catalogue.py renames).
 
+- 2026-06-02 (cont.): **DB-07/DB-18 A-2 / W05.P14.S54 EXECUTED — topic catalogue
+  relocated application -> core (`relocation:TopicCatalogue`, commit `6cb0f767e`).**
+  `Topic`, `TopicCatalogue`, `TopicNotFoundError`, `load_topic_catalogue` moved out of
+  `application/topics` into a new `core/topics` package, eliminating the
+  `core.resources._repos.topics -> application.topics` drift (core importing the
+  application layer). Core is the correct home: the catalogue depends only on core
+  primitives (`_models`, `errors`, `external_constants`, `paths`,
+  `resources.bundled_path`), and domain would itself violate core->domain. The atomic
+  move deleted the application package (no shim), repointed the singleton repo +
+  `test_singletons`, repointed BOTH `application/registry` consumers (`_corpus.py`,
+  `test_corpus.py` — they used an intra-application `from ..topics` relative import the
+  first absolute-path sweep missed; this was the consumer that made S54 appear blocked),
+  updated the core error-registry path string, and regenerated the apidocs stubs
+  (orphan `application.topics.rst` removed, `core.topics.rst` added, parent toctrees) in
+  the same commit. No import cycle (the repo loads `core.topics` lazily + under
+  TYPE_CHECKING). Verified: registry-enforcement + corpus + topic-catalogue tests green
+  (26), full collect-only clean (13333), `ty` clean, apidocs `--check` conformant, and
+  the `Core must not import outer layers` import-linter contract KEPT. Deferred
+  follow-up: 5 now-stale `core.resources._repos.* -> application.topics` ignores remain
+  in the peer-WIP `.importlinter` (warn-mode tolerates; remove when the file is clean).
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
