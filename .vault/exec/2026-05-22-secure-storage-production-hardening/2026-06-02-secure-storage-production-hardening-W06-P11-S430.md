@@ -22,17 +22,17 @@ Closed.
 
 Evidence:
 
-- `aeat config google folder get` reports the parent folder id `1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ`.
+- `aeat config google folder get` reports a configured parent folder id for the pre-repair Drive setup.
 - `aeat config google status` reports `client_registered=True` and `session_present=False`.
 - `aeat config google sync probe --read-only` fails with the typed Google auth boundary because no OAuth token is persisted for the active profile.
 - Enabled live Drive pytest fails provider construction at the same missing-token boundary instead of skipping.
 - Continuation rerun on 2026-06-02 confirmed `aeat config google status` still reports `client_registered=True` and `session_present=False`.
 - `aeat config google login --refresh-only` refused with a typed JSON error because no metadata/session exists to refresh.
 - A bounded `aeat config google login` consent-flow attempt timed out after approximately 75 seconds, consistent with waiting for browser-based Google OAuth consent; a follow-up status check still reported `session_present=False`.
-- Continuation rerun after operator authorization confirmed the active profile is `live-iva-readonly-20260602`.
+- Continuation rerun after operator authorization confirmed the expected live read-only active profile.
 - `aeat config google register --help`, `aeat config google login --help`, `aeat config google folder --help`, and `aeat config google sync --help` confirm the repo-native setup path remains register/login/folder/sync, with calc-sheets export/verify/pull under `config google sync calc`.
-- Current `aeat config google folder get` reports `configured=True` and root folder id `1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ`.
-- Current `aeat config google status` reports `client_registered=True`, client id ending `...l62otqf.apps.googleusercontent.com`, and `session_present=False`.
+- Current `aeat config google folder get` reports `configured=True` and the pre-repair root folder id.
+- Current `aeat config google status` reports `client_registered=True`, the previously registered deleted client, and `session_present=False`.
 - `aeat config google login` was retried as the repo-native loopback consent flow and timed out after 125 seconds without persisting a session; follow-up status still reported `session_present=False`.
 - Local `gcloud` auth and ADC are present, but the current AEAT Drive provider does not consume ADC for `config google sync`; `src/aeat/adapters/outbound/storage/_factory.py` builds Google credentials only from the per-profile `google_oauth_client` plus `google_oauth_token` secure records.
 - `aeat config google sync probe --read-only` refused at the typed Google auth boundary with `no Google OAuth token persisted for profile '<profile-id>'; run `aeat config google login` first`.
@@ -42,13 +42,13 @@ Evidence:
 - `aeat config google login` was attempted with the active profile and timed out after approximately 180 seconds without persisting a token.
 - Follow-up `aeat config google status` still reported `client_registered=True` and `session_present=False`.
 - The leftover `config google login` process family from that timed-out attempt was stopped by exact PID; unrelated concurrent pytest, docs, and live-app processes were left untouched.
-- The operator created a replacement Cloud Console Desktop client named `AEAT CLI` / `aeat-cli-client`; the JSON at `C:\Users\hello\Downloads\client_secret_165763895566-cggg7ek6ovd1cossjejbq9n0iet9ehbk.apps.googleusercontent.com.json` validates as an installed-client payload with `http://localhost` redirect.
-- `aeat config google register --client-json C:\Users\hello\Downloads\client_secret_165763895566-cggg7ek6ovd1cossjejbq9n0iet9ehbk.apps.googleusercontent.com.json` persisted client id `165763895566-cggg7ek6ovd1cossjejbq9n0iet9ehbk.apps.googleusercontent.com` for project `code-12345678`.
-- `aeat config google login` completed the loopback consent flow for `hello@gergely-wootsch.com`; follow-up `aeat config google status` reported `session_present=True`, the new client id, and `reauth_required=False`.
+- The operator created a replacement Cloud Console Desktop client named `AEAT CLI` / `aeat-cli-client`; the downloaded Desktop-client JSON validates as an installed-client payload with `http://localhost` redirect.
+- `aeat config google register --client-json <downloaded-desktop-client-json>` persisted the new Desktop client for the replacement Google Cloud project.
+- `aeat config google login` completed the loopback consent flow for the operator's Google account; follow-up `aeat config google status` reported `session_present=True`, the new client id, and `reauth_required=False`.
 - The first post-login `aeat config google sync probe --read-only` exposed a CLI payload/schema bug: provider reports may set `root_folder_present=None`, while `GoogleSyncProbeResult` previously required a strict boolean. `src/aeat/entrypoints/cli/_config/_google_payloads.py` now matches the provider contract and `src/aeat/entrypoints/cli/_config/test_google_sync_push.py` covers that boundary.
-- The next post-fix probe reached Google but reported Drive API disabled for project `code-12345678`; `gcloud services enable drive.googleapis.com sheets.googleapis.com --project=code-12345678` completed successfully and subsequent service listing confirmed both APIs enabled.
-- With Drive enabled, the old persisted root folder `1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ` was not visible to the new `drive.file` OAuth app context. A new app-owned root folder was created through the authenticated AEAT credentials and bound with `aeat config google folder set 1ihfBowDJ9Tk_IOaorGGz665Jg2zRMyCA`.
-- Final `aeat config google sync probe --read-only` passed with `reachable=True`, `writable=False`, `root_folder_present=True`, and root folder id `1ihfBowDJ9Tk_IOaorGGz665Jg2zRMyCA`.
-- Focused validation passed: `ruff check src/aeat/entrypoints/cli/_config/_google_payloads.py src/aeat/entrypoints/cli/_config/test_google_sync_push.py`; `pytest src/aeat/entrypoints/cli/_config/test_google_sync_push.py -q`; `AEAT_LIVE_TESTS_ENABLED=1 AEAT_LIVE_TESTS_GOOGLE=1 AEAT_STORAGE_PROVIDER_KIND=google_drive AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID=1ihfBowDJ9Tk_IOaorGGz665Jg2zRMyCA pytest -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py -q`.
+- The next post-fix probe reached Google but reported Drive API disabled for the replacement Google Cloud project; `gcloud services enable drive.googleapis.com sheets.googleapis.com --project=<replacement-google-cloud-project>` completed successfully and subsequent service listing confirmed both APIs enabled.
+- With Drive enabled, the old persisted root folder was not visible to the new `drive.file` OAuth app context. A new app-owned root folder was created through the authenticated AEAT credentials and bound with `aeat config google folder set <app-owned-root-folder-id>`.
+- Final `aeat config google sync probe --read-only` passed with `reachable=True`, `writable=False`, `root_folder_present=True`, and the app-owned root folder id.
+- Focused validation passed: `ruff check src/aeat/entrypoints/cli/_config/_google_payloads.py src/aeat/entrypoints/cli/_config/test_google_sync_push.py`; `pytest src/aeat/entrypoints/cli/_config/test_google_sync_push.py -q`; `AEAT_LIVE_TESTS_ENABLED=1 AEAT_LIVE_TESTS_GOOGLE=1 AEAT_STORAGE_PROVIDER_KIND=google_drive AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID=<app-owned-root-folder-id> pytest -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py -q`.
 
 Drive mutation note: the completed remediation created one new app-owned root folder in the operator's Drive and the live gate created then deleted `_probe` sentinel and manifest objects under that root folder. The old inaccessible folder id was not modified.
