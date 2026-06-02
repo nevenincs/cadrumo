@@ -15,6 +15,9 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core.errors import AeatError
+from ...core.identity import BucketId
+from ...tests.secure_sql import isolated_runtime_profile
 from ._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
 from ._censo import CensoSnapshotNotFoundError, CensoSnapshotRepository
 from ._errors import LiveApplicationInputError
@@ -27,9 +30,6 @@ from ._snapshot_base import (
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
-from ...core.errors import AeatError
-from ...core.identity import BucketId
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
