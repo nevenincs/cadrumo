@@ -26,6 +26,7 @@ Subpackages
    aeat.core.redaction
    aeat.core.resources
    aeat.core.time
+   aeat.core.topics
 
 Submodules
 ----------

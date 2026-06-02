@@ -43,8 +43,8 @@ from ...domain.normatives import (
 from ...domain.normatives import (
     verify_catalogue as verify_normative_catalogue,
 )
+from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
 from ...domain.normatives._errors import NormativeParseError
-from ..topics import Topic, TopicCatalogue, load_topic_catalogue
 from ._errors import RegistryApplicationInputError
 
 _LOGGER = get_logger(__name__)
