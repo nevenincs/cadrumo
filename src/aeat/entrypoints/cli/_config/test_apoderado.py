@@ -5,10 +5,10 @@ import pytest
 from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from .. import app as root_app
-from .__init__ import app
-from .._errors import CliRefusedBoundaryError
 from ....tests.secure_sql import isolated_profile_storage_root
+from .. import app as root_app
+from .._errors import CliRefusedBoundaryError
+from .__init__ import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -71,12 +71,19 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     create = runner.invoke(
         root_app,
         [
-            "config", "profile", "create", "myco",
+            "config",
+            "profile",
+            "create",
+            "myco",
             "--quiet",
-            "--tax-id", "12345678Z",
-            "--name", "MyCo",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "MyCo",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
         ],
     )
     assert create.exit_code == 0, f"create failed: {create.output}"
@@ -93,9 +100,14 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     configure = runner.invoke(
         root_app,
         [
-            "config", "auth", "apoderado", "configure",
-            "--represented-nif", "87654321X",
-            "--scope", "RENT",
+            "config",
+            "auth",
+            "apoderado",
+            "configure",
+            "--represented-nif",
+            "87654321X",
+            "--scope",
+            "RENT",
         ],
     )
     assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
@@ -104,9 +116,7 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     # carries the fingerprint, not the raw NIF. Pin both the field label
     # and the fingerprint shape so an unintended raw leak would still fail.
     assert "represented_nif\tsha256:" in configure.output
-    assert "87654321X" not in configure.output, (
-        f"raw NIF leaked into CLI output: {configure.output!r}"
-    )
+    assert "87654321X" not in configure.output, f"raw NIF leaked into CLI output: {configure.output!r}"
     assert "RENT" in configure.output
 
     # status now reflects the configured state.
