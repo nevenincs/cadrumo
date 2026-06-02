@@ -140,6 +140,28 @@ def test_compute_from_pull_refuses_missing_metadata() -> None:
         compute_from_pull(snapshot, pull)
 
 
+def test_compute_from_pull_refuses_contradictory_matching_metadata_verdict() -> None:
+    """A MATCHES verdict cannot override metadata that no longer binds to the snapshot."""
+
+    snapshot = _modelo_130_snapshot()
+    pull = PullResult(
+        spreadsheet_id="test-id",
+        operator_edits=_operator_edits_for(snapshot, {"01": Decimal("100")}),
+        binding_edits=_binding_edits_for(snapshot),
+        relation_edits=_relation_edits_for(snapshot),
+        metadata=_stale_metadata(snapshot),
+        metadata_match=MetadataMatchState.MATCHES,
+        cells_read=1,
+    )
+
+    with pytest.raises(OutboundStorageConflictError) as raised:
+        compute_from_pull(snapshot, pull)
+
+    assert raised.value.context is not None
+    assert raised.value.context["workbook_registry_sha"] == "0" * 16
+    assert raised.value.context["snapshot_registry_sha"] == _matching_metadata(snapshot).registry_sha
+
+
 def test_compute_from_pull_runs_against_matching_snapshot() -> None:
     """Happy path: matching metadata + zero inputs returns a valid result."""
 
