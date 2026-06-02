@@ -119,6 +119,9 @@ from ...domain.iva_compensation._carry_forward import (
 from ...domain.iva_compensation._carry_forward import (
     build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
 )
+from ...domain.iva_compensation._carry_forward import (
+    derive_303_compensation_available as _derive_303_compensation_available,
+)
 from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -1177,8 +1180,7 @@ def _with_derived_303_compensation_available(
     if posterior is None or resultado is None:
         return observation
 
-    generated = max(Decimal("0"), -resultado)
-    available = posterior + generated
+    available = _derive_303_compensation_available(posterior=posterior, resultado=resultado)
     snapshot = _resources().modelos.authority.snapshot(
         "303",
         filing_year=observation.filing_year,
