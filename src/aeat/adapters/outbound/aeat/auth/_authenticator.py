@@ -888,6 +888,7 @@ class AeatAuthenticator:
         # directly. The authenticator passes the settings-resolved
         # secret straight through; the OpenSSL-binding env channel is
         # gone, so the secret never enters os.environ.
+        unexpected_health_failure = False
         try:
             backend = self._settings.aeat_certificate_backend
             health = self._certificate_health_check(
@@ -929,26 +930,27 @@ class AeatAuthenticator:
             )
         except (CertificateError, OSError) as exc:
             log.debug(
-                "AeatAuthenticator.describe: surfacing unavailable status (%s)",
+                "AeatAuthenticator.describe: surfacing unavailable status failure=%s",
                 type(exc).__name__,
-                exc_info=True,
             )
             return AuthProviderDescription(
                 kind=self.kind,
                 label="AEAT certificate",
                 configured=True,
                 available=False,
-                health_summary=f"{type(exc).__name__}: {exc}",
+                health_summary=tr("application.auth.certificate.health.unavailable"),
             )
         except Exception as exc:
+            unexpected_health_failure = True
             log.debug(
-                "AeatAuthenticator.describe: unexpected error surfacing unavailable status (%s)",
+                "AeatAuthenticator.describe: unexpected error surfacing unavailable status failure=%s",
                 type(exc).__name__,
-                exc_info=True,
             )
+        if unexpected_health_failure:
             raise AuthValidationError(
-                f"Unexpected error reading certificate health: {type(exc).__name__}: {exc}"
-            ) from exc
+                "certificate health is unavailable",
+                translated_message="application.auth.certificate.health.unavailable",
+            )
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.
@@ -1114,6 +1116,7 @@ class AeatAuthenticator:
         owns_session = browser_session is None
         context: BrowserContextLike | None = None
         session: AeatSession | None = None
+        resume_failed = False
         try:
             context = await session_like.create_context(
                 provisioner=CertificateContextProvisioner(
@@ -1165,6 +1168,12 @@ class AeatAuthenticator:
             )
             raise
         except Exception as exc:
+            resume_failed = True
+            log.debug(
+                "AeatAuthenticator: persisted session resume failed session=%s failure=%s",
+                _PERSISTED_SESSION_LABEL,
+                type(exc).__name__,
+            )
             if context is not None:
                 try:
                     await context.close()
@@ -1173,12 +1182,13 @@ class AeatAuthenticator:
                         "AeatAuthenticator: context.close after resume error suppressed: %s",
                         _exc,
                         exc_info=True,
-                    )
+            )
             if owns_session:
                 await self._close_browser_session(session_like)
+        if resume_failed:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                f"persisted AEAT browser session could not be resumed: {exc}",
+                "persisted AEAT browser session could not be resumed",
             )
 
         if context is None or session is None:
@@ -1234,17 +1244,26 @@ class AeatAuthenticator:
 
     def _load_persisted_browser_session(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         """Load encrypted browser session state or invalidate the logical path."""
+        persisted: _session_store.PersistedBrowserSession | None = None
+        load_failed = False
         try:
             persisted = _session_store.load(storage_state_path)
         except (AuthValidationError, ValidationError) as exc:
+            load_failed = True
+            log.debug(
+                "AeatAuthenticator: persisted session load failed session=%s failure=%s",
+                _PERSISTED_SESSION_LABEL,
+                type(exc).__name__,
+            )
+        if load_failed:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                f"persisted storage_state is malformed: {exc}",
+                "persisted storage_state is malformed",
             )
         if persisted is None:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                f"persisted storage_state missing: {storage_state_path}",
+                "persisted storage_state missing",
             )
         return persisted
 
@@ -1252,12 +1271,20 @@ class AeatAuthenticator:
         """Load and validate the persisted metadata."""
         persisted = self._load_persisted_browser_session(storage_state_path)
         metadata: _PersistedSessionMetadata | None = None
+        metadata_failed = False
         try:
             metadata = _PersistedSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
         except (AuthValidationError, ValidationError) as exc:
+            metadata_failed = True
+            log.debug(
+                "AeatAuthenticator: persisted session metadata parse failed session=%s failure=%s",
+                _PERSISTED_SESSION_LABEL,
+                type(exc).__name__,
+            )
+        if metadata_failed:
             self._raise_invalid_persisted_state(
                 storage_state_path,
-                f"persisted metadata is malformed: {exc}",
+                "persisted metadata is malformed",
             )
         if metadata is None:
             raise AeatLoginAssertionError(
@@ -1300,7 +1327,7 @@ class AeatAuthenticator:
             "persisted AEAT browser session is invalid",
             context={"session": _PERSISTED_SESSION_LABEL, "reason": reason_code},
             translated_message="errors.auth.auth_auth_authenticator_persisted_session_invalid",
-        )
+        ) from None
 
     def _invalidate_persisted_state(self, storage_state_path: Path, reason_code: str) -> None:
         """Best-effort delete of the persisted state pair."""

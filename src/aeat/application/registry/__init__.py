@@ -260,7 +260,9 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
 
 
 def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
-    """Load and fail-fast validate every registry modelo against shared catalogues, returning a :class:`RegistryTreeReport`.
+    """Load and fail-fast validate every registry modelo against shared catalogues.
+
+    Returns a :class:`RegistryTreeReport`.
 
     Runs a full strict audit including ``required_text`` corpus checks on
     every legal reference — the checks that the production authority skips
@@ -322,7 +324,10 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
 
 
 def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
-    """Audit registered live-parity oracles against every registry cross-reference and return a :class:`RegistryOracleAuditReport`."""
+    """Audit registered live-parity oracles against every registry cross-reference.
+
+    Returns a :class:`RegistryOracleAuditReport`.
+    """
     typed_environment = _typed_oracle_environment(environment)
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     oracle_catalogue = _LiveParityCatalogue()
