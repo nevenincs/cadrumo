@@ -377,6 +377,10 @@ convention = "google"
 "src/aeat/test_w20_p52_closure.py" = ["S105", "S603"]
 "src/aeat/test_w27_p61_closure.py" = ["S105", "S106", "S603"]
 "src/aeat/test_w28_p62_closure.py" = ["S105", "S106", "S603"]
+# Setup-answers subprocess test shells out to `sys.executable -c <script>` to
+# observe the project_answers registration error path; the script is a vetted
+# literal in this file.
+"src/aeat/core/test_setup_answers.py" = ["S603"]
 # `aeat_secret_store_backend="file"` names the backend enum value, not a
 # password literal.
 "src/aeat/tests/secure_sql.py" = ["S106"]
