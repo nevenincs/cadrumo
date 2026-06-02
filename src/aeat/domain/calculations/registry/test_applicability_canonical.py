@@ -25,9 +25,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SRC_ROOT = Path(__file__).parent.parent.parent.parent  # src/aeat
-_DOMAIN_CANONICAL = (
-    Path(__file__).parent / "_applicability.py"
-)
+_DOMAIN_CANONICAL = Path(__file__).parent / "_applicability.py"
 
 
 def _assignment_targets(tree: ast.AST) -> set[str]:
@@ -92,13 +90,8 @@ def test_application_overview_applicability_shim_is_absent() -> None:
 
 def test_facade_reexport_is_identity_equal_to_domain() -> None:
     """The domain facade re-export resolves to the same object as the implementation."""
-    domain_mod = importlib.import_module(
-        "aeat.domain.calculations.registry._applicability"
-    )
-    facade_mod = importlib.import_module(
-        "aeat.domain.calculations.registry.applicability"
-    )
+    domain_mod = importlib.import_module("aeat.domain.calculations.registry._applicability")
+    facade_mod = importlib.import_module("aeat.domain.calculations.registry.applicability")
     assert facade_mod.derive_modelo_applicability is domain_mod.derive_modelo_applicability, (
-        "domain facade applicability.derive_modelo_applicability "
-        "is not the same object as the domain implementation"
+        "domain facade applicability.derive_modelo_applicability is not the same object as the domain implementation"
     )
