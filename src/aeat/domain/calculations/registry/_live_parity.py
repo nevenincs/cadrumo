@@ -80,6 +80,8 @@ OracleSurfaceKind = Literal[
     "pre_filing_validator",
     "integration_test_service",
 ]
+
+
 class OracleEnvironment(StrEnum):
     """Runtime environment classification for oracle catalogue entries.
 
@@ -93,6 +95,7 @@ class OracleEnvironment(StrEnum):
     PRODUCTION = "production"
     TEST_ENVIRONMENT = "test_environment"
     BOTH = "both"
+
 
 # Allow-list of compatible (cross-reference surface, oracle surface_kind)
 # pairs. Bindings whose pair is not listed here are flagged by the boot-time
@@ -919,9 +922,7 @@ class BaseCheckerOracle[CheckerObservation]:
             self._compare_field(key, expected_value, observed=self._observed_for(observation, key))
             for key, expected_value in sorted(self._expected_values(expected).items())
         )
-        verdict: ParityVerdict = (
-            "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
-        )
+        verdict: ParityVerdict = "match" if fields and all(field.verdict == "match" for field in fields) else "mismatch"
         return ParityResult(
             oracle_id=self.oracle_id,
             cross_reference_id=policy.id,
