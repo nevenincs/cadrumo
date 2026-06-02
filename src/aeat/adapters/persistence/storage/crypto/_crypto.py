@@ -37,6 +37,7 @@ GCM_TAG_SIZE: int = 16
 KEY_SIZE: int = 32
 """AES-256 key size in bytes."""
 
+
 class EncryptedBlob(BaseModel):
     """One frozen unit of AEAD ciphertext.
 
@@ -88,6 +89,7 @@ class EncryptedBlob(BaseModel):
             )
         return cls(nonce=payload[:NONCE_SIZE], ciphertext=payload[NONCE_SIZE:])
 
+
 def encrypt_record(
     plaintext: bytes,
     *,
@@ -129,6 +131,7 @@ def encrypt_record(
         raise EncryptionError(f"AES-256-GCM encryption failed: {exc}") from exc
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext)
 
+
 def decrypt_record(
     blob: EncryptedBlob,
     *,
@@ -163,6 +166,7 @@ def decrypt_record(
         raise DecryptionError("AES-256-GCM tag verification failed") from exc
     except Exception as exc:  # pragma: no cover - defensive
         raise DecryptionError(f"AES-256-GCM decryption failed: {exc}") from exc
+
 
 def derive_key(
     *,
