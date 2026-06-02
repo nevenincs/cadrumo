@@ -18,9 +18,10 @@ staleness fires on material change, not on a relabel.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
+from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._ledger_filing_snapshot import (
     LedgerFilingSnapshot,
     LedgerFilingStalenessVerdict,
@@ -29,6 +30,16 @@ from ...domain.modelos._ledger_filing_snapshot import (
     snapshot_fingerprint,
 )
 from ...domain.transactions import Transaction, TransactionCatalogue
+
+# Finalized revision states whose ledger snapshot, once captured, must stay in
+# sync with the live ledger; drift in any of these is operator-actionable.
+_FINALIZED_STATES = frozenset(
+    {
+        CalculationRevisionState.VERIFICADO_COMPLETO,
+        CalculationRevisionState.PRESENTADO,
+        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+    }
+)
 
 # Tax-relevant projection: (label, accessor). Order is fixed and canonical.
 _FINGERPRINT_FIELDS: tuple[tuple[str, str], ...] = (
@@ -121,8 +132,30 @@ def evaluate_ledger_filing_staleness(
     return diff_ledger_fingerprints(snapshot, current)
 
 
+def stale_filed_revisions(
+    *,
+    revisions: Mapping[str, CalculationRevision],
+    catalogue: TransactionCatalogue,
+) -> tuple[tuple[CalculationRevision, LedgerFilingStalenessVerdict], ...]:
+    """Return every finalized snapshot-backed revision whose ledger drifted.
+
+    Scans verified/filed revisions carrying a ``ledger_filing_snapshot`` and
+    re-evaluates each against the live catalogue. A revision with no snapshot
+    (legacy) or a non-finalized state is skipped. Pure given its inputs.
+    """
+    findings: list[tuple[CalculationRevision, LedgerFilingStalenessVerdict]] = []
+    for revision in revisions.values():
+        if revision.state not in _FINALIZED_STATES or revision.ledger_filing_snapshot is None:
+            continue
+        verdict = evaluate_ledger_filing_staleness(revision.ledger_filing_snapshot, catalogue)
+        if verdict.is_stale:
+            findings.append((revision, verdict))
+    return tuple(findings)
+
+
 __all__ = [
     "compute_ledger_filing_snapshot",
     "evaluate_ledger_filing_staleness",
     "row_fingerprint",
+    "stale_filed_revisions",
 ]
