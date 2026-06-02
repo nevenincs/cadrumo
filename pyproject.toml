@@ -417,9 +417,6 @@ convention = "google"
 # the ratchet covers them; ruff's S105/S106 heuristic flags every such
 # literal as a hardcoded password. They are not credentials.
 "src/aeat/test_w15_p47_maintenance_closure.py" = ["S105", "S106"]
-"src/aeat/test_w17_p49_closure.py" = ["S105", "S106", "S603"]
-"src/aeat/test_w18_p50_closure.py" = ["S105", "S106", "S603"]
-"src/aeat/test_w20_p52_closure.py" = ["S105", "S106", "S603"]
 "src/aeat/test_w22_p54_closure.py" = ["S105", "S106"]
 "src/aeat/test_w26_p59_closure.py" = ["S105", "S106"]
 "src/aeat/test_w26_p60_closure.py" = ["S105", "S106"]
@@ -685,4 +682,3 @@ ignore_unused = [
 [tool.deptry.per_rule_ignores]
 DEP003 = ["click", "pydantic_core", "yaml"]
 DEP004 = ["pytest", "reportlab"]
-
