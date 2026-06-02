@@ -113,6 +113,7 @@ with :attr:`ApplicabilityVerdict.INCOMPLETE` and a rationale pointing
 at the deferred expansion — never a confident guess.
 """
 
+
 class ApplicabilityVerdict(StrEnum):
     """Whether a modelo applies to a taxpayer, derived from its model.
 
@@ -140,6 +141,7 @@ class ApplicabilityVerdict(StrEnum):
     NOT_APPLICABLE = "not_applicable"
     ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
+
 
 class PayerFact(StrEnum):
     """A withholding-payer / trade fact a modelo's applicability needs.
@@ -184,6 +186,7 @@ class PayerFact(StrEnum):
     EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
     BIENES_EXTRANJERO_ABOVE_THRESHOLD = "bienes_extranjero_above_threshold"
 
+
 def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
     """Return whether ``profile`` positively declares the payer ``fact``.
 
@@ -203,6 +206,7 @@ def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
             return profile.third_party_transactions_above_347_threshold
         case PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD:
             return profile.bienes_extranjero_above_threshold
+
 
 class ModeloApplicability(BaseModel):
     """The derived applicability of one modelo for one taxpayer profile.
@@ -246,6 +250,7 @@ class ModeloApplicability(BaseModel):
         pass-through verdict is not an applicable obligation.
         """
         return self.verdict is ApplicabilityVerdict.APPLICABLE
+
 
 class ModeloApplicabilityRule(BaseModel):
     """A single registry-grounded modelo-applicability rule.
@@ -337,10 +342,7 @@ class ModeloApplicabilityRule(BaseModel):
             # is attributed to and taxed in the members' returns
             # (corporate-entity ADR §2). An informational modelo is not
             # cuota-bearing and falls through to NOT_APPLICABLE.
-            if (
-                self.cuota_bearing
-                and profile.entity_type is EntityType.ATTRIBUTION_ENTITY
-            ):
+            if self.cuota_bearing and profile.entity_type is EntityType.ATTRIBUTION_ENTITY:
                 return ModeloApplicability(
                     modelo=self.modelo,
                     verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
@@ -361,9 +363,7 @@ class ModeloApplicabilityRule(BaseModel):
             if self.required_income_categories:
                 if not profile.irpf_income_categories:
                     return _incomplete_applicability(self.modelo)
-                if profile.irpf_income_categories.isdisjoint(
-                    self.required_income_categories
-                ):
+                if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
                     return self._not_applicable()
             # The estimation-regime axis splits Modelo 130 (estimación
             # directa) from Modelo 131 (estimación objetiva). An
@@ -380,9 +380,7 @@ class ModeloApplicabilityRule(BaseModel):
         # asserted in the positive direction — the underlying boolean has
         # no tri-state, so an absent fact yields INCOMPLETE rather than a
         # NOT_APPLICABLE the engine cannot positively justify.
-        if self.required_payer_fact is not None and not _payer_fact_holds(
-            profile, self.required_payer_fact
-        ):
+        if self.required_payer_fact is not None and not _payer_fact_holds(profile, self.required_payer_fact):
             return _undetermined_applicability(self.modelo)
         return ModeloApplicability(
             modelo=self.modelo,
@@ -399,6 +397,7 @@ class ModeloApplicabilityRule(BaseModel):
             reason=self.not_applicable_reason,
             legal_refs=self.legal_refs,
         )
+
 
 # Scoped registry citation keys grounding the "declare your taxpayer
 # type first" answer. An undeclared profile cannot be decided, but the
@@ -489,8 +488,8 @@ verdict still holds.
 """
 
 _IMPATRIADO_M720_LEGAL_REFS: tuple[str, ...] = (
-    "ley-35-2006:art-93",   # LIRPF Art. 93 — régimen especial impatriados.
-    "ley-7-2012:da-1",      # Ley 7/2012 DA 1ª — obligación Modelo 720.
+    "ley-35-2006:art-93",  # LIRPF Art. 93 — régimen especial impatriados.
+    "ley-7-2012:da-1",  # Ley 7/2012 DA 1ª — obligación Modelo 720.
     "orden-hap-72-2013:art-1",  # Orden HAP/72/2013 — aprobación Modelo 720.
 )
 """Legal refs grounding the IRPF Art. 93 impatriado Modelo 720 exemption.
@@ -523,6 +522,7 @@ exemption is enforced even when ``bienes_extranjero_above_threshold`` is
 ``True``.
 """
 
+
 def _incomplete_applicability(
     modelo: str,
     *,
@@ -553,6 +553,7 @@ def _incomplete_applicability(
         legal_refs=_INCOMPLETE_LEGAL_REFS,
     )
 
+
 def _undetermined_applicability(modelo: str) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
 
@@ -578,6 +579,7 @@ def _undetermined_applicability(modelo: str) -> ModeloApplicability:
         reason=_INCOMPLETE_UNDETERMINED_REASON,
         legal_refs=_INCOMPLETE_LEGAL_REFS,
     )
+
 
 # ---------------------------------------------------------------------
 # Seed rule table — core persona coverage (see _SEED_COVERAGE_NOTICE)
@@ -714,9 +716,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # than a guessed NOT_APPLICABLE. Research §1.1.
     "111": ModeloApplicabilityRule(
         modelo="111",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
             "Modelo 111 (retenciones e ingresos a cuenta del IRPF): el "
@@ -746,9 +746,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # yields INCOMPLETE.
     "115": ModeloApplicabilityRule(
         modelo="115",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
         applicable_reason=(
             "Modelo 115 (retenciones por arrendamiento de inmuebles "
@@ -776,9 +774,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # files Modelo 190. Gated on the same payer fact as Modelo 111.
     "190": ModeloApplicabilityRule(
         modelo="190",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason=(
             "Modelo 190 (resumen anual de retenciones del IRPF): el "
@@ -805,9 +801,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # annual companion to Modelo 115: gated on the same payer fact.
     "180": ModeloApplicabilityRule(
         modelo="180",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.PAYS_RENT_WITH_RETENCION,
         applicable_reason=(
             "Modelo 180 (resumen anual de retenciones por arrendamiento): "
@@ -837,9 +831,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # fact yields INCOMPLETE. Research §3.3.
     "349": ModeloApplicabilityRule(
         modelo="349",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.TRADES_INTRACOMMUNITY,
         applicable_reason=(
             "Modelo 349 (declaración recapitulativa de operaciones "
@@ -866,9 +858,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # yields INCOMPLETE.
     "347": ModeloApplicabilityRule(
         modelo="347",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD,
         applicable_reason=(
             "Modelo 347 (declaración anual de operaciones con terceras "
@@ -899,9 +889,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # expansion gated on the SII enrolment axis — research §3.1.)
     "390": ModeloApplicabilityRule(
         modelo="390",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         applicable_reason=(
             "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
@@ -1049,9 +1037,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # authoring is a follow-on step (full casilla inventory not yet authored).
     "721": ModeloApplicabilityRule(
         modelo="721",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset(),
         applicable_reason=(
             "Modelo 721 (declaracion informativa sobre monedas virtuales en "
@@ -1098,9 +1084,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # is evaluated.
     "720": ModeloApplicabilityRule(
         modelo="720",
-        applicable_entity_types=frozenset(
-            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
-        ),
+        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_payer_fact=PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD,
         applicable_reason=(
             "Modelo 720 (declaración informativa sobre bienes y derechos en "
@@ -1133,9 +1117,11 @@ a rationale pointing at the deferred expansion. See
 :data:`_SEED_COVERAGE_NOTICE`.
 """
 
+
 def has_applicability_rule(modelo: str) -> bool:
     """Return whether a seed applicability rule exists for ``modelo``."""
     return modelo in _MODELO_APPLICABILITY_RULES
+
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     """Return the registry-owned seed :class:`ModeloApplicabilityRule` instances.
@@ -1146,6 +1132,7 @@ def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
     public API.
     """
     return tuple(_MODELO_APPLICABILITY_RULES[modelo] for modelo in sorted(_MODELO_APPLICABILITY_RULES))
+
 
 def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     """Return whether the profile carries a usable taxpayer model.
@@ -1165,6 +1152,7 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     if profile.entity_type is EntityType.NATURAL_PERSON:
         return bool(profile.irpf_income_categories)
     return True
+
 
 class TaxRoute(StrEnum):
     """The tax branch a taxpayer profile routes to — corporate-entity ADR §4.
@@ -1194,6 +1182,7 @@ class TaxRoute(StrEnum):
     ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
     INCOMPLETE = "incomplete"
 
+
 _TAX_ROUTE_FOR_ENTITY_TYPE: dict[EntityType, TaxRoute] = {
     EntityType.NATURAL_PERSON: TaxRoute.IRPF,
     EntityType.LEGAL_ENTITY: TaxRoute.IMPUESTO_SOCIEDADES,
@@ -1206,6 +1195,7 @@ None`` (undeclared) is handled separately by :func:`derive_tax_route`
 and yields :attr:`TaxRoute.INCOMPLETE` — the engine never defaults a
 tax.
 """
+
 
 def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
     """Return the tax branch ``profile`` routes to — corporate-entity ADR §4.
@@ -1231,6 +1221,7 @@ def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
     if profile.entity_type is None:
         return TaxRoute.INCOMPLETE
     return _TAX_ROUTE_FOR_ENTITY_TYPE[profile.entity_type]
+
 
 def derive_modelo_applicability(
     profile: TaxpayerProfile,
@@ -1283,6 +1274,7 @@ def derive_modelo_applicability(
         return _incomplete_applicability(modelo, unruled=True)
     return rule.evaluate(profile)
 
+
 # ---------------------------------------------------------------------
 # Modelo 202 pago-fraccionado modality gate — LIS Art. 40 (BOE-A-2014-12328)
 # ---------------------------------------------------------------------
@@ -1321,6 +1313,7 @@ Both keys resolve in the registry ``legal/is.toml`` table.
 # without float rounding.
 _MODELO_202_ART_40_3_INCN_THRESHOLD: Decimal = Decimal("6000000")
 
+
 class Modelo202Modality(StrEnum):
     """The pago-fraccionado modality available to a Modelo 202 filer.
 
@@ -1347,6 +1340,7 @@ class Modelo202Modality(StrEnum):
     ART_40_3_MANDATORY = "art_40_3_mandatory"
     INCOMPLETE = "incomplete"
 
+
 class Modelo202ModalityVerdict(BaseModel):
     """The derived Modelo 202 modality verdict and its grounding.
 
@@ -1364,6 +1358,7 @@ class Modelo202ModalityVerdict(BaseModel):
     modality: Modelo202Modality
     reason: str = Field(min_length=1)
     legal_refs: tuple[str, ...] = Field(min_length=1)
+
 
 _MODELO_202_ART_40_3_MANDATORY_REASON = (
     "Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone "
@@ -1393,6 +1388,7 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
     "contribuyente del Impuesto sobre Sociedades. La modalidad solo se "
     "deriva para entidades jurídicas obligadas al pago fraccionado del IS."
 )
+
 
 def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 pago-fraccionado modality as a :class:`Modelo202ModalityVerdict` for ``profile``.
@@ -1440,6 +1436,7 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
         reason=_MODELO_202_ART_40_2_OPTIONAL_REASON,
         legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
     )
+
 
 __all__ = [
     "ApplicabilityVerdict",
