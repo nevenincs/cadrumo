@@ -391,4 +391,4 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
             "Public names imported into __init__.py but missing from __all__ "
             "(regression caps drifted — fix the underlying drift or update the cap):"
         )
-        assert False, "\n" + header + "\n" + "\n".join(failure_lines)
+        raise AssertionError("\n" + header + "\n" + "\n".join(failure_lines))
