@@ -6,6 +6,7 @@ from functools import lru_cache
 
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ..overview._status import FilingStatus
 from ._errors import OperatorSurfaceContractError
 from ._models import (
     LifecycleContract,
@@ -260,7 +261,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         child="live",
         operator_question="perform explicit read-only AEAT live observations",
         service_owner="aeat.application.live",
-        commands=("filed",),
+        commands=(FilingStatus.FILED,),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
