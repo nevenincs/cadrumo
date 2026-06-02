@@ -2951,8 +2951,7 @@ errors:
     error_modelo_external_filing_import: Az importált külső bevallás nem menthető.
       Ellenőrizze a mező értékeit és az igazolás hivatkozást.
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
-    error_modelo_iva_wallet_reconciliation_blocked: A Modelo 303 számítása az IVA-pénztárca-egyeztetés
-      miatt blokkolva van. Oldja meg a függőben lévő egyeztetést a folytatás előtt.
+    error_modelo_iva_wallet_reconciliation_blocked: 'A 303-as Modelo számítása blokkolva: az IVA tárca egyeztetése szükséges'
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
