@@ -218,7 +218,10 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
 
 
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
-    """Clear a degraded pointer-file active profile when explicitly confirmed and return an :class:`ActiveProfileRepairResult`."""
+    """Clear a degraded pointer-file active profile when explicitly confirmed.
+
+    Returns an :class:`ActiveProfileRepairResult`.
+    """
     before = _assess_with_best_effort_session()
     should_clear = before.repairable_by_clearing_pointer and before.status in {
         "dangling_pointer",
