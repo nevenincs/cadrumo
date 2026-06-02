@@ -1263,10 +1263,7 @@ def test_describe_label_keys_distinguish_locales() -> None:
     # Collect all rendered values for each key across locales.
     at_least_one_distinct = False
     for key in _DESCRIBE_LABEL_KEYS:
-        rendered_per_locale = {
-            locale: tr(key, locale=locale)
-            for locale in SUPPORTED_OUTPUT_LANGUAGES
-        }
+        rendered_per_locale = {locale: tr(key, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES}
         unique_renderings = set(rendered_per_locale.values())
         if len(unique_renderings) > 1:
             at_least_one_distinct = True
@@ -1291,8 +1288,7 @@ def test_describe_output_contains_localized_labels_in_english() -> None:
     for key in _DESCRIBE_LABEL_KEYS:
         expected_label = tr(key, locale="en")
         assert expected_label in result.output, (
-            f"English label for key {key!r} ({expected_label!r}) not found "
-            f"in describe output:\n{result.output}"
+            f"English label for key {key!r} ({expected_label!r}) not found in describe output:\n{result.output}"
         )
 
 
@@ -1334,8 +1330,7 @@ def test_describe_period_error_locale_key_interpolates_message() -> None:
     sentinel = "sentinel-registry-error-xyz"
     rendered = tr("cli.app.modelo.describe.period_error", message=sentinel)
     assert sentinel in rendered, (
-        f"locale key cli.app.modelo.describe.period_error did not interpolate "
-        f"'message' kwarg; got: {rendered!r}"
+        f"locale key cli.app.modelo.describe.period_error did not interpolate 'message' kwarg; got: {rendered!r}"
     )
 
 
@@ -1369,8 +1364,7 @@ def test_dt12_computation_error_locale_key_interpolates_message() -> None:
     rendered = tr("cli.app.modelo.work.dt12_computation_error", message=exc_message)
     assert rendered
     assert exc_message in rendered, (
-        f"locale key cli.app.modelo.work.dt12_computation_error did not interpolate "
-        f"'message' kwarg; got: {rendered!r}"
+        f"locale key cli.app.modelo.work.dt12_computation_error did not interpolate 'message' kwarg; got: {rendered!r}"
     )
 
 
@@ -1399,8 +1393,7 @@ def test_sal_computation_error_locale_key_interpolates_message() -> None:
     rendered = tr("cli.app.modelo.work.sal_computation_error", message=exc_message)
     assert rendered
     assert exc_message in rendered, (
-        f"locale key cli.app.modelo.work.sal_computation_error did not interpolate "
-        f"'message' kwarg; got: {rendered!r}"
+        f"locale key cli.app.modelo.work.sal_computation_error did not interpolate 'message' kwarg; got: {rendered!r}"
     )
 
 
@@ -1456,9 +1449,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         assert len(result) > 0
         assert all(isinstance(t, str) for t in result)
 
-    def test_non_aeat_error_is_logged_at_debug(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
+    def test_non_aeat_error_is_logged_at_debug(self, caplog: pytest.LogCaptureFixture) -> None:
         """A non-AeatError from the resources layer is logged at DEBUG and swallowed.
 
         This test exercises the ``except Exception`` arm by triggering a real
@@ -1498,12 +1489,10 @@ class TestDeclaredPeriodTokensAutocomplete:
 
         # AeatError arm must NOT produce a DEBUG record (it's silent).
         debug_records = [
-            r for r in caplog.records
-            if r.levelno == logging.DEBUG and "_declared_period_tokens" in r.message
+            r for r in caplog.records if r.levelno == logging.DEBUG and "_declared_period_tokens" in r.message
         ]
         assert len(debug_records) == 0, (
-            "AeatError arm must not emit a DEBUG record; "
-            f"got: {[r.message for r in debug_records]}"
+            f"AeatError arm must not emit a DEBUG record; got: {[r.message for r in debug_records]}"
         )
 
     def test_aeat_error_subtype_is_swallowed_not_propagated(self) -> None:
