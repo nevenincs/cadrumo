@@ -182,7 +182,9 @@ class FiledDeclaracionObservationStore:
             )
         if record is None:
             raise ExpedienteNotFoundError(f"IVA wallet observation not found: {object_key}")
-        envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
+        envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
+            record.payload.decode(_UTF_8_ENCODING)
+        )
         if envelope.classification is not _OBSERVATION_CLASSIFICATION:
             raise ClassificationError(
                 f"IVA wallet observation {object_key} has classification {envelope.classification}; "
@@ -205,7 +207,9 @@ class FiledDeclaracionObservationStore:
                 max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
             )
         for record in records:
-            envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
+            envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
+                record.payload.decode(_UTF_8_ENCODING)
+            )
             if envelope.classification is not _OBSERVATION_CLASSIFICATION:
                 raise ClassificationError(
                     f"IVA wallet observation {record.object_key!r} has classification {envelope.classification}; "
