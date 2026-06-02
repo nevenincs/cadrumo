@@ -36,6 +36,9 @@ class TaxDomain(StrEnum):
     IRNR = "irnr"
     """Impuesto sobre la Renta de no Residentes."""
 
+    PATRIMONIO = "patrimonio"
+    """Impuesto sobre el Patrimonio (modelo 714)."""
+
     CROSS_TAX = "cross_tax"
     """Retentions / pagos a cuenta that feed both IRPF and IS."""
 

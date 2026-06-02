@@ -1,0 +1,19 @@
+[modelo]
+id = "714"
+title = "Impuesto sobre el Patrimonio (declaración anual)"
+official_name = "Modelo 714. Impuesto sobre el Patrimonio. Declaración."
+tax_domain = "patrimonio"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+]
+source_refs = [
+    "aeat-modelo-714-procedure",
+    "boe-modelo-714-form",
+    "boe-modelo-714-layout",
+]
