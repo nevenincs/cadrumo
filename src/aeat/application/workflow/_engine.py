@@ -33,6 +33,7 @@ from ...domain.deadlines import (
     next_deadline,
 )
 from ...domain.filing import ModeloBuilderError
+from ...domain.period import PeriodValidationError, parse_canonical_period
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
@@ -79,45 +80,22 @@ class FilingWindowState(StrEnum):
     CLOSED = "closed"
 
 
-def _period_to_year(period: str) -> int | None:
-    """Extract the leading 4-digit calendar year from a period string.
-
-    Period strings used in the deadline engine carry the year as the
-    first four digits — ``"2026"`` (annual), ``"2026Q1"`` (quarterly),
-    ``"2026M3"`` (monthly). The expediente record carries
-    :attr:`aeat.adapters.outbound.aeat.sede.Expediente.ejercicio` as a separate integer year,
-    so the workflow's "already filed" gate matches modelo + year.
-    """
-    head = period[:4]
-    if not head.isdigit():
-        return None
-    return int(head)
-
-
 def _registry_period_token(period: str) -> tuple[int, str]:
-    year = _period_to_year(period)
-    if year is None:
+    """Resolve a deadline-engine period token to ``(filing_year, registry_period)``.
+
+    Delegates to the canonical :func:`aeat.domain.period.parse_canonical_period`
+    parser (DB-06: the registry-period mapping is authored once in the domain,
+    not re-implemented here). Wraps the domain
+    :class:`~aeat.domain.period.PeriodValidationError` into the workflow's
+    :class:`WorkflowError` so the call boundary keeps its trilingual envelope.
+    """
+    try:
+        return parse_canonical_period(period)
+    except PeriodValidationError as exc:
         raise WorkflowError(
-            translated_message="application.workflow.errors.period_registry_year_unresolvable",
+            translated_message="application.workflow.errors.period_registry_unmappable",
             context={"period": period},
-        )
-    if period == str(year) or period == f"{year}A":
-        return year, "0A"
-    if len(period) == 6 and period.startswith(f"{year}Q") and period[-1] in "1234":
-        return year, f"{period[-1]}T"
-    if period.startswith(f"{year}M") and period[5:].isdigit():
-        month = int(period[5:])
-        if 1 <= month <= 12:
-            return year, f"{month:02d}"
-    if len(period) == 7 and period.startswith(f"{year}-"):
-        return year, period[-2:]
-    # Pago-fraccionado: ``"2026P1"`` / ``"2026P2"`` / ``"2026P3"`` → ``(2026, "1P")`` etc.
-    if len(period) == 6 and period.startswith(f"{year}P") and period[-1] in "123":
-        return year, f"{period[-1]}P"
-    raise WorkflowError(
-        translated_message="application.workflow.errors.period_registry_unmappable",
-        context={"period": period},
-    )
+        ) from exc
 
 
 _logger = get_logger(__name__)
@@ -806,11 +784,17 @@ class WorkflowEngine:
                     exc=exc,
                     steps=steps,
                 )
-            target_year = _period_to_year(obligation.period)
+            try:
+                target_year, _ = parse_canonical_period(obligation.period)
+            except PeriodValidationError as exc:
+                raise WorkflowError(
+                    translated_message="application.workflow.errors.period_registry_year_unresolvable",
+                    context={"period": obligation.period},
+                ) from exc
             already = tuple(
                 e
                 for e in expedientes
-                if e.modelo == obligation.modelo and (target_year is None or e.ejercicio == target_year)
+                if e.modelo == obligation.modelo and e.ejercicio == target_year
             )
             if already:
                 _logger.debug(
