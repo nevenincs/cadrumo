@@ -124,8 +124,7 @@ def test_mock_imports_are_documented(
 
     assert not violations, (
         "Undocumented mock-library imports found "
-        "(add to _DOCUMENTED_BOUNDARY_MOCKS with justification, or remove):\n"
-        + "\n".join(violations)
+        "(add to _DOCUMENTED_BOUNDARY_MOCKS with justification, or remove):\n" + "\n".join(violations)
     )
 
 
