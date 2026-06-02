@@ -147,8 +147,7 @@ def test_cooperativa_takes_the_lis_art_29_protected_rate() -> None:
         incn=Decimal("10000000"),
     )
     assert cuota == Decimal("200000.00"), (
-        "cuota íntegra at the LIS Art. 29.2 cooperativa protected 20% "
-        "rate must equal 200.000 for a 1.000.000 base"
+        "cuota íntegra at the LIS Art. 29.2 cooperativa protected 20% rate must equal 200.000 for a 1.000.000 base"
     )
 
 
@@ -297,8 +296,7 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
         "applied to the post-nivelación base (1.000.000 x 15% = 150.000)"
     )
     assert sl_cuota == coop_cuota, (
-        "the new-entity override must bypass the sub-form dispatch — "
-        "an SL and a cooperativa both reach the 15% rate"
+        "the new-entity override must bypass the sub-form dispatch — an SL and a cooperativa both reach the 15% rate"
     )
 
 
@@ -346,9 +344,7 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
     fraccionado según la modalidad regulada en el artículo 40.3 LIS").
     Art. 40.2 is not offered for such a profile.
     """
-    verdict = derive_modelo_202_modality(
-        _legal_entity_profile(Decimal("7000000"))
-    )
+    verdict = derive_modelo_202_modality(_legal_entity_profile(Decimal("7000000")))
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert "ley-27-2014:art-40-3" in verdict.legal_refs
 
@@ -363,12 +359,8 @@ def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> Non
     wording: Art. 40.3 mandates only when INCN "ha superado" the
     threshold — equality alone does not exceed it.
     """
-    below = derive_modelo_202_modality(
-        _legal_entity_profile(Decimal("500000"))
-    )
-    at_threshold = derive_modelo_202_modality(
-        _legal_entity_profile(Decimal("6000000"))
-    )
+    below = derive_modelo_202_modality(_legal_entity_profile(Decimal("500000")))
+    at_threshold = derive_modelo_202_modality(_legal_entity_profile(Decimal("6000000")))
     assert below.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert at_threshold.modality is Modelo202Modality.ART_40_2_OPTIONAL
     assert "ley-27-2014:art-40" in below.legal_refs
