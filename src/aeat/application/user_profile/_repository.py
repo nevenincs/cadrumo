@@ -114,17 +114,30 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
-class UserProfileLifecycleRepository:
-    """Read and write live user-profile aggregates in the secure DB."""
+class _BucketBoundRepository:
+    """Shared bucket-binding init for the user-profile repository pair.
+
+    Both :class:`UserProfileLifecycleRepository` and
+    :class:`UserProfileSnapshotRepository` bind to one bucket's own
+    database (no cross-bucket reads/writes by default) and either accept
+    an injected :class:`SecureObjectRepository` or build one for the
+    named bucket. The constructor is identical across both classes so it
+    lives here as a single source of truth.
+    """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        self._bucket_id = bucket_id.strip()
-        if not self._bucket_id:
+        trimmed = bucket_id.strip()
+        if not trimmed:
             raise BucketValidationError("bucket_id must not be blank")
+        self._bucket_id = trimmed
         # Bind to THIS bucket's own database when no repository is
         # injected — cross-bucket operations must address the named
         # bucket, not whichever profile is currently active.
-        self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
+        self._objects = objects or _secure_objects_for_bucket(trimmed)
+
+
+class UserProfileLifecycleRepository(_BucketBoundRepository):
+    """Read and write live user-profile aggregates in the secure DB."""
 
     @property
     def bucket_id(self) -> str:
@@ -290,17 +303,8 @@ class UserProfileLifecycleRepository:
         return deleted
 
 
-class UserProfileSnapshotRepository:
+class UserProfileSnapshotRepository(_BucketBoundRepository):
     """Read and write immutable filing-time profile snapshots in the secure DB."""
-
-    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        self._bucket_id = bucket_id.strip()
-        if not self._bucket_id:
-            raise BucketValidationError("bucket_id must not be blank")
-        # Bind to THIS bucket's own database when no repository is
-        # injected — cross-bucket operations must address the named
-        # bucket, not whichever profile is currently active.
-        self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str:
