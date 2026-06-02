@@ -620,9 +620,7 @@ def test_live_iva_wallet_pull_output_lines_name_guarded_read_query_policy() -> N
 
     assert "safety_policy=read_only_fail_closed" in lines
     assert "representation_gate_policy=own_name_only_no_represented_taxpayer_choice" in lines
-    assert (
-        "aeat_form_submission_policy=wallet_execute_read_query_only_no_filing_or_represented_taxpayer_data" in lines
-    )
+    assert "aeat_form_submission_policy=wallet_execute_read_query_only_no_filing_or_represented_taxpayer_data" in lines
     assert "selected_authority=aeat_wallet" in lines
 
 
@@ -693,9 +691,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         for line in lines
     )
     assert any(
-        line.startswith("authority_decision=")
-        and "selected_authority=aeat_wallet" in line
-        and "blocked=False" in line
+        line.startswith("authority_decision=") and "selected_authority=aeat_wallet" in line and "blocked=False" in line
         for line in lines
     )
     assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)

@@ -62,8 +62,7 @@ def test_s658_markers_present() -> None:
 
     if missing:
         raise AssertionError(
-            f"{len(missing)} S658 marker site(s) missing the rationale token:\n"
-            + "\n".join(f"  {m}" for m in missing)
+            f"{len(missing)} S658 marker site(s) missing the rationale token:\n" + "\n".join(f"  {m}" for m in missing)
         )
 
 
@@ -96,7 +95,6 @@ def test_ratchet_still_passes() -> None:
 
     current = frozenset(collect_violations())
     new_violations = current - known
-    assert not new_violations, (
-        f"{len(new_violations)} new type-ignore drift site(s) found:\n"
-        + "\n".join(f"  {r}:{ln}" for r, ln in sorted(new_violations))
+    assert not new_violations, f"{len(new_violations)} new type-ignore drift site(s) found:\n" + "\n".join(
+        f"  {r}:{ln}" for r, ln in sorted(new_violations)
     )

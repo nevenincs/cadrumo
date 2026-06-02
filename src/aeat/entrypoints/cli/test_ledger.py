@@ -44,8 +44,7 @@ def test_id_prefix_unknown_key_renders_per_locale(locale: str) -> None:
     )
     # Reject the raw key falling through as the translation value.
     assert rendered != _KEY, (
-        f"locale={locale!r}: tr() returned the key itself, indicating the "
-        f"key is missing from the {locale} catalogue."
+        f"locale={locale!r}: tr() returned the key itself, indicating the key is missing from the {locale} catalogue."
     )
 
 
@@ -56,10 +55,7 @@ def test_id_prefix_unknown_key_distinguishes_locales() -> None:
     that would indicate one or more entries are copy-pasted without
     translation.
     """
-    rendered_values = {
-        locale: tr(_KEY, locale=locale, message=_SENTINEL)
-        for locale in SUPPORTED_OUTPUT_LANGUAGES
-    }
+    rendered_values = {locale: tr(_KEY, locale=locale, message=_SENTINEL) for locale in SUPPORTED_OUTPUT_LANGUAGES}
     # At minimum the prefix of the message (before the sentinel) should
     # differ across locales since each catalogue has its own phrasing.
     prefixes = {v.split(_SENTINEL)[0] for v in rendered_values.values()}

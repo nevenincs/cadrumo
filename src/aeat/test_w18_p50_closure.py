@@ -31,9 +31,7 @@ def _lines(path: pathlib.Path) -> list[str]:
     return path.read_text(encoding="utf-8").splitlines()
 
 
-def _token_precedes_cast_via_comment_walk(
-    lines: list[str], token: str, cast_needle: str = "cast("
-) -> bool:
+def _token_precedes_cast_via_comment_walk(lines: list[str], token: str, cast_needle: str = "cast(") -> bool:
     """Return True if *token* appears on or immediately above any *cast_needle* line.
 
     Mirrors the inventory test's upward-walk: ascend through consecutive
@@ -112,9 +110,7 @@ def test_cast_rationale_inventory_zero_violations() -> None:
     violations: list[str] = mod._collect_violations()
     if violations:
         joined = "\n  ".join(violations)
-        raise AssertionError(
-            f"{len(violations)} cast() call(s) lack a CAST-RATIONALE-* marker:\n  {joined}"
-        )
+        raise AssertionError(f"{len(violations)} cast() call(s) lack a CAST-RATIONALE-* marker:\n  {joined}")
     _logger.debug("cast-rationale inventory: 0 violations")
 
 
