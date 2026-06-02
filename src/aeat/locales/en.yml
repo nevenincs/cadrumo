@@ -3612,8 +3612,8 @@ wizard:
     simplificado: Simplified
   commands:
     status:
-      created: Created
-      updated: Updated
+      created: 'created'
+      updated: 'updated'
   demo:
     description: A demonstration section to test wizard functionality
     section:

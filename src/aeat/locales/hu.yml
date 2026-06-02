@@ -3720,8 +3720,8 @@ wizard:
     simplificado: Egyszerűsített
   commands:
     status:
-      created: létrehozva
-      updated: frissítve
+      created: 'letrehozva'
+      updated: 'frissitett'
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:
