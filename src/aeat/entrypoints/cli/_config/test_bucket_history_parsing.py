@@ -6,7 +6,6 @@ import pytest
 import typer
 
 from ....domain.buckets import BucketEventType
-
 from . import _parse_bucket_event_types
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

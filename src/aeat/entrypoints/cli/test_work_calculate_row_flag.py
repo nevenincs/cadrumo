@@ -333,7 +333,7 @@ class TestRevisionViewSurfacesDetailRows:
     """
 
     @staticmethod
-    def _run_cli(storage_root: object, argv: list[str]) -> "subprocess.CompletedProcess[str]":
+    def _run_cli(storage_root: object, argv: list[str]) -> subprocess.CompletedProcess[str]:
         import subprocess
         import sys
         import textwrap
