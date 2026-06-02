@@ -417,9 +417,9 @@ convention = "google"
 # the ratchet covers them; ruff's S105/S106 heuristic flags every such
 # literal as a hardcoded password. They are not credentials.
 "src/aeat/test_w15_p47_maintenance_closure.py" = ["S105", "S106"]
-"src/aeat/test_w17_p49_closure.py" = ["S105", "S106"]
-"src/aeat/test_w18_p50_closure.py" = ["S105", "S106"]
-"src/aeat/test_w20_p52_closure.py" = ["S105", "S106"]
+"src/aeat/test_w17_p49_closure.py" = ["S105", "S106", "S603"]
+"src/aeat/test_w18_p50_closure.py" = ["S105", "S106", "S603"]
+"src/aeat/test_w20_p52_closure.py" = ["S105", "S106", "S603"]
 "src/aeat/test_w22_p54_closure.py" = ["S105", "S106"]
 "src/aeat/test_w26_p59_closure.py" = ["S105", "S106"]
 "src/aeat/test_w26_p60_closure.py" = ["S105", "S106"]
@@ -441,6 +441,21 @@ convention = "google"
 "src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py" = ["S105", "S106"]
 "src/aeat/adapters/persistence/storage/test_path_safety.py" = ["S105", "S106"]
 "src/aeat/core/test_logging.py" = ["S105", "S106"]
+# Subprocess invocations from tests and from the CLI's own doc-reference
+# helper use fixed argv built from controlled inputs (no untrusted shell
+# input). The aggregate-closure tests under src/aeat/ are likewise
+# controlled. S603 ("subprocess without shell=True") is a heuristic ban
+# that doesn't recognise our controlled-argv pattern; granted per-file.
+"src/aeat/core/test_profile.py" = ["S603"]
+"src/aeat/entrypoints/cli/_doc_reference.py" = ["S603"]
+"src/aeat/entrypoints/cli/test_cold_start_wizard_registration.py" = ["S603"]
+"src/aeat/entrypoints/cli/test_config_custody_profile_lifecycle.py" = ["S603"]
+"src/aeat/entrypoints/cli/test_lazy_command_tree.py" = ["S603"]
+"src/aeat/entrypoints/cli/test_root_fallback_write_guard.py" = ["S603"]
+"src/aeat/entrypoints/cli/test_work_calculate_row_flag.py" = ["S603"]
+"src/aeat/test_w16_p48_closure.py" = ["S603"]
+"src/aeat/test_w26_p57_closure.py" = ["S603"]
+"src/aeat/test_w26_p58_closure.py" = ["S603"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
