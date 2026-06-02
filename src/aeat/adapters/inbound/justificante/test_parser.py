@@ -26,6 +26,7 @@ from ....domain.justificante import (
 from ....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
 from . import parse_justificante
+from ._parsers import extract_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -287,6 +288,24 @@ class TestCsvDetection:
         assert "<input-pdf>" in rendered
         assert exc_info.value.context == {"path": "<input-pdf>"}
         assert exc_info.value.translated_message == "adapters.inbound.justificante.errors.parse_failed"
+
+
+class TestParserDispatch:
+    """Private parser-dispatch boundary behavior."""
+
+    def test_extract_text_missing_file_raises_redacted_error(self, tmp_path: Path) -> None:
+        source = tmp_path / "12345678Z-direct-parser.pdf"
+
+        with pytest.raises(JustificanteParseError) as exc_info:
+            extract_text(source, JustificanteParserBackend.PDFPLUMBER)
+
+        rendered = str(exc_info.value)
+        assert source.name not in rendered
+        assert str(source) not in rendered
+        assert "<input-pdf>" in rendered
+        assert exc_info.value.context == {"path": "<input-pdf>"}
+        assert exc_info.value.translated_message == "adapters.inbound.justificante.errors.parse_failed"
+        assert exc_info.value.missing == ("source_pdf",)
 
 
 class TestJustificanteParseErrorStructuredAttributes:
