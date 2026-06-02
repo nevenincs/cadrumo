@@ -18,7 +18,7 @@ from ...application.registry import (
 )
 from ...core.i18n import tr
 from ...core.resources import bundled_path
-from ...domain.calculations.registry._live_parity import OracleEnvironment as _OracleEnvironment
+from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
 from ._common import _emit_envelope
 from ._registry_corpus import citations_app, manuals_app
 from ._registry_payloads import (

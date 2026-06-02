@@ -13,19 +13,19 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from ....core.time import now
-
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
+from ....core.time import now
 from ....domain.calculations.registry import (
+    BboxAnchorSpec,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
     RegistrySnapshot,
     RegistrySnapshotError,
+    RegistrySnapshotRef,
     ValidatedRegistryAuthority,
 )
-from ....domain.calculations.registry._schema import BboxAnchorSpec, RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
 from ..pdf._utils import sha256_file

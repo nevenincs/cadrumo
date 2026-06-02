@@ -18,8 +18,7 @@ from .._errors import ResourceNotFoundError
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import ValidatedRegistryAuthority
-    from ....domain.calculations.registry._schema import ModeloDefinition
+    from ....domain.calculations.registry import ModeloDefinition, ValidatedRegistryAuthority
 
 
 class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):

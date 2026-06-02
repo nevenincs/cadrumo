@@ -36,15 +36,15 @@ from ...core.aggregation import RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing._dates import _parse_iso8601_date
-from ...domain.calculations.registry._bindings import (
+from ...domain.calculations.registry import (
     AtributionMemberObservation,
     Modelo720RowObservation,
+    ModeloRevision,
     RefundOperationObservation,
+    RegistryValidationError,
     RelatedPartyOperationObservation,
     WithholdingObservation,
 )
-from ...domain.calculations.registry._errors import RegistryValidationError
-from ...domain.calculations.registry._schema import ModeloRevision
 
 __all__ = [
     "AssembledObservations",

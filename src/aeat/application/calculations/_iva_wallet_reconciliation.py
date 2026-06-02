@@ -18,11 +18,10 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.time import now
-
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ...core.errors import AeatError
-from ...domain.calculations.registry._schema import RegistrySnapshot
+from ...core.time import now
+from ...domain.calculations.registry import RegistrySnapshot
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,

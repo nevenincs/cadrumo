@@ -54,12 +54,17 @@ from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....core.decimal import coerce_decimal
 from ....core.time._utc import coerce_utc_aware
-from ....domain.calculations.registry import BindingId, CasillaId, RelationId, RevisionId
-from ....domain.calculations.registry._formula_runtime import (
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaDefinition,
+    CasillaId,
+    InputKind,
     RegistryCalculationResult,
+    RegistrySnapshot,
+    RelationId,
+    RevisionId,
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,

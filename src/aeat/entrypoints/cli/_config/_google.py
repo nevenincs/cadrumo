@@ -35,10 +35,10 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 if TYPE_CHECKING:
     from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
-    from ....domain.calculations.registry._formula_runtime import (
+    from ....domain.calculations.registry import (
         RegistryCalculationResult,
+        RegistrySnapshot,
     )
-    from ....domain.calculations.registry._schema import RegistrySnapshot
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check with the registry validator. build_snapshot
@@ -99,12 +99,11 @@ from ....application.storage.calc_sheets import (
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
-from ....domain import renta as _renta_snapshot_checks
-from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
-from ....domain.calculations.registry._errors import (
+from ....domain.calculations.registry import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
+from ....domain.calculations.registry import bundled_authority as _bundled_authority
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_payloads import (

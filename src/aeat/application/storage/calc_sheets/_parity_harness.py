@@ -54,11 +54,14 @@ from pydantic import BaseModel, Field
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.config import Settings as _Settings
 from ....core.decimal import coerce_decimal
-from ....domain.calculations.registry import CasillaId, RevisionId
-from ....domain.calculations.registry._formula_runtime import (
+from ....domain.calculations.registry import (
+    CasillaDefinition,
+    CasillaId,
+    InputKind,
+    RegistrySnapshot,
+    RevisionId,
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ._engine import build_export_plan
 from ._errors import CalcSheetsParityError
 from ._layout import plan_layout

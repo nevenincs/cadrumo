@@ -34,17 +34,16 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.time import now
-
 from ...core.resources import resources
-from ...domain.calculations.registry import BindingId
-from ...domain.calculations.registry._bindings import (
+from ...core.time import now
+from ...domain.calculations.registry import (
+    BindingId,
     CasillaObservation,
     RegistryModeloObservation,
+    RegistrySnapshot,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
-from ...domain.calculations.registry._schema import RegistrySnapshot
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
 from ._observations_repository import CalculationObservationRepository

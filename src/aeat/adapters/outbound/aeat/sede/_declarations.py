@@ -56,7 +56,6 @@ from .....core.time import now
 # cross-domain snapshot check with the registry validator. build_snapshot
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
-from .....domain import renta as _renta_snapshot_checks
 from .....domain.calculations.registry import (
     CasillaFieldKind,
     CasillaObservation,

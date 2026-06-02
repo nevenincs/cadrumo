@@ -15,13 +15,13 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel, Field
 
 from ..calculations._export_field_kind import CasillaFieldKind
-
 from ._schema import ProfileSchemaDefinition
 
 if TYPE_CHECKING:
-    from ..calculations.registry._schema import ModeloDefinition, ModeloRevision
+    from ..calculations.registry import ModeloDefinition, ModeloRevision
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 
 class UserProfileRegistryContractSeverity(StrEnum):
     """Severity of a user-profile to modelo-registry contract issue."""

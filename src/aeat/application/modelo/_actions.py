@@ -34,12 +34,11 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ...core.time import now as _utc_now
-
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
 from ...core.errors._not_found import CoreNotFoundError
 from ...core.i18n import tr
+from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,

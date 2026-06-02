@@ -13,11 +13,10 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core.time import now
-
 from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
+from ...core.time import now
 
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
