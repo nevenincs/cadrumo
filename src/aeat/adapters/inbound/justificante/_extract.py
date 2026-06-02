@@ -18,16 +18,16 @@ from __future__ import annotations
 import re
 import unicodedata
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from ....core.time import now
-
 from ....core.logging import get_logger
+from ....core.time import now
 from ....domain.justificante._errors import JustificanteCsvNotFoundError, JustificanteParseError
 from ....domain.justificante._schema import Justificante
+from ..pdf import parse_spanish_decimal
 from ..pdf._utils import sha256_file
 
 _logger = get_logger(__name__)
@@ -225,23 +225,14 @@ def _parse_decimal(raw: str, field: str | None = None) -> Decimal:
             When ``field`` is supplied, ``malformed=(field,)`` is set on the
             exception so callers can assert on the structured attribute.
     """
-    cleaned = raw.strip().replace(" ", "")
-    if "," in cleaned and "." in cleaned:
-        # Spanish thousands + comma decimal: 1.234,56 → 1234.56
-        if cleaned.rfind(",") > cleaned.rfind("."):
-            cleaned = cleaned.replace(".", "").replace(",", ".")
-        else:
-            cleaned = cleaned.replace(",", "")
-    elif "," in cleaned:
-        cleaned = cleaned.replace(",", ".")
-    try:
-        return Decimal(cleaned)
-    except InvalidOperation as exc:
+    parsed = parse_spanish_decimal(raw)
+    if parsed is None:
         malformed = (field,) if field is not None else ()
         raise JustificanteParseError(
             f"invalid decimal literal: {raw!r}",
             malformed=malformed,
-        ) from exc
+        )
+    return parsed
 
 
 def _parse_datetime(raw: str) -> datetime:
