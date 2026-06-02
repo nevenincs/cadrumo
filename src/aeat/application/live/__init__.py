@@ -71,13 +71,7 @@ from ...application.calculations import (
     CalculationObservationRepository as _CalculationObservationRepository,
 )
 from ...application.calculations import (
-    IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource,
-)
-from ...application.calculations import (
     IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository,
-)
-from ...application.calculations import (
-    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
 )
 from ...application.calculations import (
     IvaWalletDecisionRepository as _IvaWalletDecisionRepository,
@@ -121,6 +115,12 @@ from ...domain.iva_compensation._carry_forward import (
 )
 from ...domain.iva_compensation._carry_forward import (
     derive_303_compensation_available as _derive_303_compensation_available,
+)
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource,
+)
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
 )
 from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
 from ._borrador_100 import (
