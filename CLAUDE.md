@@ -7,6 +7,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-architecture-boundaries.md
 @.claude/rules/aeat-calculation-grounding.md
 @.claude/rules/aeat-campaign-close-honesty-review.md
+@.claude/rules/aeat-docs-scaffolding-cli.md
 @.claude/rules/aeat-documentation-workflow.md
 @.claude/rules/aeat-git-worktree-safety.md
 @.claude/rules/aeat-local-execution.md
