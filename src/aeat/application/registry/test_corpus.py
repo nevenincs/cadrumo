@@ -14,9 +14,9 @@ from ...core.resources import resources
 
 from ...core.config import override_settings
 from ...core.errors import build_error_envelope
+from ...core.topics import Topic, TopicCatalogue
 from ...domain.manuals import ManualId, ManualPart
 from ...domain.normatives import NormativeNotFoundError
-from ..topics import Topic, TopicCatalogue
 from . import (
     RegistryApplicationInputError,
     RegistryCitationShowCommand,

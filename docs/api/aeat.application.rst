@@ -31,7 +31,6 @@ Subpackages
    aeat.application.review
    aeat.application.setup
    aeat.application.storage
-   aeat.application.topics
    aeat.application.transactions
    aeat.application.user_profile
    aeat.application.verification
