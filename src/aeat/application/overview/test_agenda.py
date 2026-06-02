@@ -15,6 +15,7 @@ from ...domain.deadlines._models import (
 )
 
 from ._agenda import OverviewAgenda, build_overview_agenda
+from ._errors import OverviewAgendaError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -34,7 +35,7 @@ def _profile() -> TaxpayerProfile:
 def test_agenda_horizon_must_be_positive() -> None:
     """A non-positive horizon is refused at the service boundary."""
 
-    with pytest.raises(ValueError, match=r"horizon_days must be positive"):
+    with pytest.raises(OverviewAgendaError, match=r"horizon_days must be positive"):
         build_overview_agenda(_profile(), as_of=date(2026, 1, 15), horizon_days=0)
 
 
