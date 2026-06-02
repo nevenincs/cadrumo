@@ -49,6 +49,7 @@ _OPERATION_KIND_349_TO_CLAVE = {
     OperationKind349.TRIANGULAR.value: "T",
 }
 
+
 class PerModeloRegistryBindingResolution(BaseModel):
     """Registry binding values produced by a per-modelo aggregation provider."""
 
@@ -82,6 +83,7 @@ class PerModeloRegistryBindingResolution(BaseModel):
     @field_serializer("row_values")
     def _serialize_row_values(self, value: Mapping[tuple[str, int], Decimal | str]) -> dict[str, Decimal | str]:
         return {f"{binding_id}:{row_index}": row_value for (binding_id, row_index), row_value in value.items()}
+
 
 def resolve_per_modelo_registry_binding_values(
     command: PerModeloAggregationCommand,
@@ -143,10 +145,12 @@ def resolve_per_modelo_registry_binding_values(
         source_observation_count=len(observations),
     )
 
+
 def _counterpart_binding_sources(revision: ModeloRevision) -> frozenset[str]:
     return frozenset(
         binding.source for binding in revision.bindings if binding.source in _COUNTERPART_BINDING_SOURCE_KINDS
     )
+
 
 def _counterpart_registry_observations(
     command: PerModeloAggregationCommand,
@@ -185,6 +189,7 @@ def _counterpart_registry_observations(
         )
     return tuple(observations)
 
+
 def _declarable_ready_counterpart_keys(
     aggregation: CounterpartAggregation,
 ) -> frozenset[tuple[str, str, str]]:
@@ -193,6 +198,7 @@ def _declarable_ready_counterpart_keys(
         for rollup in aggregation.rollups
         if rollup.declarable_readiness_satisfied
     )
+
 
 __all__ = [
     "PerModeloRegistryBindingResolution",
