@@ -22,14 +22,14 @@ from datetime import date
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
-
 from ._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
 from .family import DescendantInfo, RentaFamilyProfile
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 # ---------------------------------------------------------------------------
 # Fixtures
