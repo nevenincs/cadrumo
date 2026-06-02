@@ -23,9 +23,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _SRC_ROOT = pathlib.Path(__file__).parent
-_DOC_REFERENCE = (
-    _SRC_ROOT / "entrypoints" / "cli" / "_doc_reference.py"
-)
+_DOC_REFERENCE = _SRC_ROOT / "entrypoints" / "cli" / "_doc_reference.py"
 _MARKER_TOKEN = "BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD"
 _RAISE_PATTERN = "raise RuntimeError("
 
@@ -42,9 +40,7 @@ def test_s679_subprocess_guard_markers_precede_all_runtime_errors() -> None:
 
     lines = _DOC_REFERENCE.read_text(encoding="utf-8").splitlines()
 
-    raise_sites: list[int] = [
-        idx for idx, ln in enumerate(lines) if _RAISE_PATTERN in ln
-    ]
+    raise_sites: list[int] = [idx for idx, ln in enumerate(lines) if _RAISE_PATTERN in ln]
     assert raise_sites, f"No '{_RAISE_PATTERN}' found in {_DOC_REFERENCE} — file changed?"
 
     failures: list[str] = []
@@ -52,15 +48,9 @@ def test_s679_subprocess_guard_markers_precede_all_runtime_errors() -> None:
         window_start = max(0, idx - 3)
         window = lines[window_start:idx]
         if not any(_MARKER_TOKEN in ln for ln in window):
-            failures.append(
-                f"Line {idx + 1}: marker absent in preceding 3 lines.\n"
-                f"  Window: {window!r}"
-            )
+            failures.append(f"Line {idx + 1}: marker absent in preceding 3 lines.\n  Window: {window!r}")
 
-    assert not failures, (
-        f"{len(failures)} RuntimeError site(s) lack the rationale marker:\n"
-        + "\n".join(failures)
-    )
+    assert not failures, f"{len(failures)} RuntimeError site(s) lack the rationale marker:\n" + "\n".join(failures)
 
 
 # ---------------------------------------------------------------------------
@@ -95,6 +85,5 @@ def test_standing_inventory_ratchet_green(module_name: str) -> None:
         text=True,
     )
     assert result.returncode == 0, (
-        f"Inventory ratchet {module_name!r} failed.\n"
-        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        f"Inventory ratchet {module_name!r} failed.\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
