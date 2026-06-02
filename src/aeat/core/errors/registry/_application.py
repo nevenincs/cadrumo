@@ -955,7 +955,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._errors.PensionReduccionError",
+        "aeat.domain.modelos._errors.PensionReduccionError",
         ErrorCode(
             code="REFUSED_PENSION_REDUCCION_COMPUTATION",
             category=ErrorCategory.REFUSED,
