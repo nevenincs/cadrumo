@@ -159,7 +159,7 @@ config_custody profile lifecycle, profile-create taxpayer-type paths, google she
 
 test_date_relation_routing non-iso rejection, test_binding_prefill modelo 390 prefill
 
-- [ ] `P08.S26` - Date relation routing non-iso reject; `test_date_inputs_for_ids_rejects_non_iso_value — re-derive non-iso rejection path post _parse_iso8601_date routing`.
+- [x] `P08.S26` - Date relation routing non-iso reject; `test_date_inputs_for_ids_rejects_non_iso_value — re-derive non-iso rejection path post _parse_iso8601_date routing`.
 - [ ] `P08.S27` - Modelo 390 prefill binding-prefill; `test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observations`.
 
 ## Description
