@@ -133,6 +133,7 @@ def _close_active_session_at_exit() -> None:
         # from an atexit hook.
         return
 
+
 _atexit.register(_close_active_session_at_exit)
 
 
