@@ -33,6 +33,33 @@ _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
     "src/aeat/adapters/persistence/storage/runtime.py",
     "src/aeat/adapters/persistence/storage/runtime_repository.py",
 }
+_APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
+    "src/aeat/adapters/persistence/storage/envelope/test_secure_bound_repository.py",
+    "src/aeat/adapters/persistence/storage/envelope/test_secure_bound_repository_contract.py",
+    "src/aeat/adapters/persistence/storage/envelope/_repository_test_suite.py",
+    "src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py",
+    "src/aeat/adapters/persistence/storage/sql/test_constraints.py",
+    "src/aeat/adapters/persistence/storage/sql/test_engine.py",
+    "src/aeat/adapters/persistence/storage/sql/test_repository.py",
+    "src/aeat/adapters/persistence/storage/sql/test_secure_objects.py",
+    "src/aeat/adapters/persistence/storage/sql/test_session.py",
+    "src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py",
+    "src/aeat/adapters/persistence/storage/test_hardening_convention_guards.py",
+    "src/aeat/adapters/persistence/storage/test_runtime.py",
+    "src/aeat/application/test_diagnostics.py",
+    "src/aeat/application/test_repair_integrity.py",
+    "src/aeat/application/test_state_projection.py",
+    "src/aeat/application/test_storage_write_policy.py",
+    "src/aeat/application/user_profile/test_repository.py",
+    "src/aeat/application/workflow/test_runtime_defaults.py",
+    "src/aeat/core/test_storage_route_classification.py",
+    "src/aeat/entrypoints/cli/test_cold_start_no_profile.py",
+    "src/aeat/entrypoints/cli/test_repair_bootstrap_exempt.py",
+    "src/aeat/entrypoints/cli/test_root_fallback_write_guard.py",
+    "src/aeat/tests/secure_sql.py",
+    "src/aeat/tests/test_config.py",
+    "src/aeat/tests/test_secure_sql.py",
+}
 
 
 def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
@@ -104,6 +131,21 @@ def test_production_secure_object_repository_construction_stays_runtime_owned() 
     assert offences == []
 
 
+def test_explicit_database_route_test_setup_stays_approved() -> None:
+    offences: list[str] = []
+    for path in _iter_aeat_python_sources():
+        relative = path.relative_to(PROJECT_ROOT).as_posix()
+        if not _is_test_setup_surface(relative):
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if not _uses_explicit_database_route(tree):
+            continue
+        if relative not in _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES:
+            offences.append(f"{relative}: unapproved explicit database route test setup")
+
+    assert offences == []
+
+
 def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
     offences: list[str] = []
     for relative in _HARDENING_TEST_SURFACES:
@@ -144,6 +186,11 @@ def _is_test_surface(relative: str) -> bool:
         or path.name == "conftest.py"
         or "/test_" in relative
     )
+
+
+def _is_test_setup_surface(relative: str) -> bool:
+    path = Path(relative)
+    return _is_test_surface(relative) or "/tests/" in relative or path.name == "secure_sql.py"
 
 
 def _secure_object_repository_constructor_names(tree: ast.AST) -> set[str]:
@@ -202,6 +249,43 @@ def _is_secure_object_repository_constructor_call(
     if not isinstance(node.func, ast.Attribute) or node.func.attr != "SecureObjectRepository":
         return False
     return _qualified_name(node.func.value) in module_aliases
+
+
+def _uses_explicit_database_route(tree: ast.AST) -> bool:
+    docstring_constant_ids = _docstring_constant_ids(tree)
+    for node in ast.walk(tree):
+        if id(node) in docstring_constant_ids:
+            continue
+        if isinstance(node, ast.keyword) and node.arg == "aeat_database_url":
+            return True
+        if (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and ("AEAT_DATABASE_URL" in node.value or "aeat_database_url" in node.value)
+        ):
+            return True
+        if isinstance(node, ast.JoinedStr):
+            for value in node.values:
+                if (
+                    isinstance(value, ast.Constant)
+                    and isinstance(value.value, str)
+                    and ("AEAT_DATABASE_URL" in value.value or "aeat_database_url" in value.value)
+                ):
+                    return True
+    return False
+
+
+def _docstring_constant_ids(tree: ast.AST) -> set[int]:
+    ids: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        if not node.body:
+            continue
+        first = node.body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+            ids.add(id(first.value))
+    return ids
 
 
 def test_secure_storage_error_registry_bindings_have_locale_keys() -> None:
