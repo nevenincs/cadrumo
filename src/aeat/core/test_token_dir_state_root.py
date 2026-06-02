@@ -22,7 +22,6 @@ from pathlib import Path
 import pytest
 
 from ..tests.env_scope import scoped_env_var
-
 from .config import Settings
 from .paths import resolve_project_path
 
@@ -53,10 +52,7 @@ def test_token_dir_defaults_under_storage_root(tmp_path: Path) -> None:
     assert settings.aeat_token_dir == storage_root / "tokens"
     # The token directory is genuinely nested under the storage root,
     # not merely a sibling that happens to share a prefix.
-    assert (
-        settings.aeat_local_storage_root
-        in settings.aeat_token_dir.parents
-    )
+    assert settings.aeat_local_storage_root in settings.aeat_token_dir.parents
 
 
 def test_token_dir_tracks_a_different_storage_root(tmp_path: Path) -> None:

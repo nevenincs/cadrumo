@@ -46,6 +46,12 @@ ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
+"""Validated string identifying the operator who filed or triggered a filing event.
+
+Strips surrounding whitespace; must be 1–64 characters after stripping.
+Used as ``filed_by`` on :class:`ModeloRecord` and feeds into the
+content-addressed :func:`derive_filing_record_id`.
+"""
 _Notes = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
@@ -129,7 +135,19 @@ def derive_filing_record_id(
 
 
 class ModeloRecord(BaseModel):
-    """Durable receipt of one internal filing event."""
+    """Durable receipt of one internal filing event for an AEAT modelo (tax form).
+
+    Pairs a filed :class:`CalculationRevisionId` with the filing event
+    metadata (actor, timestamp, notes, AEAT-acceptance bit, supersession
+    link). The id is content-addressed by ``work_unit_id``,
+    ``calculation_revision_id``, ``filed_at``, and ``filed_by`` via
+    :func:`derive_filing_record_id`; a ``model_validator`` enforces the
+    derivation on construction.
+
+    ``aeat_accepted`` records an externally-observed AEAT acceptance
+    signal imported through read-only live signals — it does not imply
+    that the application submitted anything.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -187,7 +205,15 @@ class ModeloRecord(BaseModel):
 
 
 class ModeloRecordCatalogue(BaseModel):
-    """Immutable catalogue of every filing record in storage."""
+    """Immutable catalogue of every filing record in a bucket's storage.
+
+    Keyed by ``filing_record_id``; the model validator enforces that every
+    key equals the id of the :class:`ModeloRecord` it maps to, and that at
+    most one record per (bucket_id, modelo, filing_year, period) tuple
+    carries ``status=VIGENTE``.  Iteration yields :class:`ModeloRecord`
+    values (not key–value pairs) — the override is annotated with a
+    suppression comment on ``__iter__``.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -215,6 +241,7 @@ class ModeloRecordCatalogue(BaseModel):
         return self
 
     def get(self, filing_record_id: str) -> ModeloRecord | None:
+        """Return the :class:`ModeloRecord` for ``filing_record_id``, or ``None``."""
         return self.records.get(filing_record_id)
 
     def current_for(
@@ -268,15 +295,19 @@ class ModeloRecordCatalogue(BaseModel):
         return tuple(sorted(matching, key=lambda r: r.filed_at))
 
     def values(self):
+        """Return a view of all :class:`ModeloRecord` values in the catalogue."""
         return self.records.values()
 
     def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+        """Iterate over :class:`ModeloRecord` values (not ``(key, value)`` pairs)."""
         return iter(self.records.values())
 
     def __len__(self) -> int:
+        """Return the number of filing records in the catalogue."""
         return len(self.records)
 
     def __contains__(self, key: object) -> bool:
+        """Test membership by :class:`ModeloRecord` instance or ``filing_record_id`` string."""
         if isinstance(key, ModeloRecord):
             return key.filing_record_id in self.records
         if isinstance(key, str):

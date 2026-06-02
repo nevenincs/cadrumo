@@ -45,6 +45,7 @@ class TemplateRevision(BaseModel):
     revision: str = Field(min_length=1, max_length=32)
     detected_from: Literal["header", "footer", "filename", "explicit_override"] = "header"
 
+
 class ExtractionWarning(BaseModel):
     """One advisory emitted during extraction.
 
@@ -70,6 +71,7 @@ class ExtractionWarning(BaseModel):
     code: str = Field(min_length=1)
     message: str
     primitive_attempted: Literal["acroform", "label_regex", "bbox", "ocr", "merged"]
+
 
 class DeclaracionObservation(BaseModel):
     """Observed values parsed from a declaración PDF.

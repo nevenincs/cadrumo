@@ -59,6 +59,15 @@ class DefaultBrowserSession:
         playwright: Playwright,
         session: BrowserSession,
     ) -> None:
+        """Wrap an existing Playwright runtime and ``BrowserSession`` pair.
+
+        Args:
+            playwright: An already-started Playwright runtime.  Its
+                ``stop()`` is called once by :meth:`close`.
+            session: A :class:`BrowserSession` built from ``playwright``.
+                Its ``close()`` is called before the Playwright runtime
+                is stopped.
+        """
         self._playwright = playwright
         self._session = session
         self._close_lock = asyncio.Lock()
@@ -66,6 +75,7 @@ class DefaultBrowserSession:
 
     @property
     def profile(self) -> Profile:
+        """The :class:`Profile` associated with the underlying session."""
         return self._session.profile
 
     async def create_context(
@@ -75,6 +85,11 @@ class DefaultBrowserSession:
         storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContext:
+        """Delegate context creation to the underlying :class:`BrowserSession`.
+
+        Accepts the same keyword arguments as
+        ``BrowserSession.create_context`` and forwards them unchanged.
+        """
         return await self._session.create_context(
             provisioner=provisioner,
             storage_state_path=storage_state_path,
@@ -86,6 +101,13 @@ class DefaultBrowserSession:
         return await self._session.navigate(page, url)
 
     async def close(self) -> None:
+        """Close the session and stop the Playwright runtime.
+
+        Idempotent: subsequent calls are no-ops. ``BrowserSession.close()``
+        runs first; ``Playwright.stop()`` runs in the ``finally`` block so
+        Playwright resources are released even when the session teardown
+        raises.
+        """
         async with self._close_lock:
             if self._closed:
                 return

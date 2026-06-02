@@ -105,8 +105,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     text = raw.decode("ascii").strip()
     if not text:
         raise AeatExportFormatError(
-            "CURRENCY field is blank; expected zero-padded digits "
-            "(use 0000000000 for an explicit zero, not whitespace)"
+            "CURRENCY field is blank; expected zero-padded digits (use 0000000000 for an explicit zero, not whitespace)"
         )
     cents = int(text)
     return _round_to_cents(Decimal(cents) / Decimal(100))

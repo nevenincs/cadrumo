@@ -2249,6 +2249,7 @@ def _resolve_category(raw: str):
     ),
 )
 def ratios_list(ctx: typer.Context) -> None:
+    """List every per-category proportional-deduction override stored on the active bucket."""
     from ...application.user_profile import CensoSyncService
     from ...domain.usage_ratios import (
         CensoRatioMismatchError,
@@ -2306,17 +2307,14 @@ def ratios_set(
         ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")
     ),
 ) -> None:
-    from ...application.ledger._ratios import censo_override_warning
+    """Set or replace one per-category usage-ratio override on the active bucket."""
+    from ...application.ledger._ratios import censo_override_warning, set_usage_ratio
     from ...application.user_profile import CensoSyncService
-    from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
     category_enum = _resolve_category(category)
     parsed = _parse_required_decimal(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
-    profile = load_usage_ratios(bucket_id=bucket_id)
-    prior = profile.ratios.get(category_enum)
-    updated = profile.with_ratio(category_enum, parsed)
-    save_usage_ratios(updated, bucket_id=bucket_id)
+    prior = set_usage_ratio(bucket_id=bucket_id, category=category_enum, ratio=parsed)
     _emit_ratios_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_SET,
@@ -2359,12 +2357,15 @@ def ratios_unset(
         help=tr("cli.app.ledger.ratios.unset_category_help", default="Spending category id whose override to clear."),
     ),
 ) -> None:
-    from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
+    """Clear one per-category usage-ratio override from the active bucket."""
+    from ...application.ledger._ratios import unset_usage_ratio
+    from ...domain.usage_ratios import UsageRatioValidationError
 
     category_enum = _resolve_category(category)
     bucket_id = _ratios_bucket_id()
-    profile = load_usage_ratios(bucket_id=bucket_id)
-    if category_enum not in profile.ratios:
+    try:
+        prior = unset_usage_ratio(bucket_id=bucket_id, category=category_enum)
+    except UsageRatioValidationError as exc:
         raise _bad(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
@@ -2372,10 +2373,7 @@ def ratios_unset(
                 category=category_enum.value,
                 bucket_id=bucket_id,
             )
-        )
-    prior = profile.ratios.get(category_enum)
-    updated = profile.without_ratio(category_enum)
-    save_usage_ratios(updated, bucket_id=bucket_id)
+        ) from exc
     _emit_ratios_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_UNSET,
@@ -2401,6 +2399,7 @@ def ratios_unset(
     ),
 )
 def ratios_eligible(ctx: typer.Context) -> None:
+    """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     from ...application.ledger._ratios import list_eligible_ratios_for_bucket
 
     bucket_id = _ratios_bucket_id()
@@ -2435,6 +2434,7 @@ def ratios_eligible(ctx: typer.Context) -> None:
     ),
 )
 def ratios_validate(ctx: typer.Context) -> None:
+    """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     from ...application.ledger._ratios import validate_ratios_for_bucket
 
     bucket_id = _ratios_bucket_id()
@@ -2551,6 +2551,7 @@ def payable_invoice_add(
         ),
     ),
 ) -> None:
+    """Register a new payable invoice record (we owe a vendor) on the active bucket."""
     from ...application.ledger._business_operation_invoice import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
@@ -2616,6 +2617,7 @@ def payable_invoice_view(
         ..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")
     ),
 ) -> None:
+    """Show one payable invoice record by id or unambiguous prefix."""
     bucket_id = _ratios_bucket_id()
     record = _payable_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
     from ._ledger_payloads import PayableInvoiceViewResult
@@ -2635,6 +2637,7 @@ def payable_invoice_view(
     ),
 )
 def payable_invoice_list(ctx: typer.Context) -> None:
+    """List every payable invoice record on the active bucket."""
     bucket_id = _ratios_bucket_id()
     rows = _payable_invoice_service().list_all(bucket_id=bucket_id)
     payload = {
@@ -2677,6 +2680,7 @@ def payable_invoice_update(
     total_amount: str | None = typer.Option(None, "--total-amount"),
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
+    """Update mutable fields on one payable invoice record."""
     from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
 
     bucket_id = _ratios_bucket_id()
@@ -2719,6 +2723,7 @@ def payable_invoice_remove(
         False, "--yes", help=tr("cli.app.ledger.payable_invoice.yes_help", default="Confirm removal.")
     ),
 ) -> None:
+    """Delete one payable invoice record (requires ``--yes`` confirmation)."""
     if not yes:
         raise _bad(
             tr(
@@ -2798,6 +2803,7 @@ def collectible_invoice_add(
         ),
     ),
 ) -> None:
+    """Register a new collectible invoice record (a customer owes us) on the active bucket."""
     from ...application.ledger._business_operation_invoice import (
         BusinessOperationInvoiceInputError,
         IntracomOperationType,
@@ -2864,6 +2870,7 @@ def collectible_invoice_view(
         help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
 ) -> None:
+    """Show one collectible invoice record by id or unambiguous prefix."""
     bucket_id = _ratios_bucket_id()
     record = _collectible_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
     from ._ledger_payloads import CollectibleInvoiceViewResult
@@ -2884,6 +2891,7 @@ def collectible_invoice_view(
     ),
 )
 def collectible_invoice_list(ctx: typer.Context) -> None:
+    """List every collectible invoice record on the active bucket."""
     bucket_id = _ratios_bucket_id()
     rows = _collectible_invoice_service().list_all(bucket_id=bucket_id)
     payload = {
@@ -2928,6 +2936,7 @@ def collectible_invoice_update(
     total_amount: str | None = typer.Option(None, "--total-amount"),
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
+    """Update mutable fields on one collectible invoice record."""
     from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
 
     bucket_id = _ratios_bucket_id()
@@ -2972,6 +2981,7 @@ def collectible_invoice_remove(
         False, "--yes", help=tr("cli.app.ledger.collectible_invoice.yes_help", default="Confirm removal.")
     ),
 ) -> None:
+    """Delete one collectible invoice record (requires ``--yes`` confirmation)."""
     if not yes:
         raise _bad(
             tr(
@@ -3035,6 +3045,7 @@ def _inventory_service():
     ),
 )
 def inventory_list(ctx: typer.Context) -> None:
+    """List every per-actividad inventory ledger (stock, movements, valuation) on the active bucket."""
     bucket_id = _ratios_bucket_id()
     rows = _inventory_service().list_all(bucket_id=bucket_id)
     payload = {
@@ -3079,6 +3090,7 @@ def inventory_create(
         "0", "--opening-stock", help=tr("cli.app.ledger.inventory.opening_stock_help", default="Opening stock value.")
     ),
 ) -> None:
+    """Create a fresh inventory ledger for one actividad and fiscal year on the active bucket."""
     bucket_id = _ratios_bucket_id()
     result = _inventory_service().create(
         bucket_id=bucket_id,
@@ -3152,6 +3164,7 @@ def inventory_movement_add(
         "21.00", "--iva-rate", help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent.")
     ),
 ) -> None:
+    """Append one inventory movement (purchase, sale, or adjustment) to an actividad ledger."""
     from ...application.inventory import InventoryMovementCommand
     from ...domain.profile.inventory import MovementKind
 
@@ -3215,6 +3228,7 @@ def inventory_valuation_preview(
     ),
     year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
 ) -> None:
+    """Preview closing stock and COGS for one actividad/year inventory ledger without persisting changes."""
     bucket_id = _ratios_bucket_id()
     result = _inventory_service().valuation_preview(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
     preview = result.preview
@@ -3360,6 +3374,7 @@ def evidence_view(
         ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
     ),
 ) -> None:
+    """Show one purchase invoice evidence record by id."""
     transaction_repository = _tx_repo(_state())
     record = _evidence_service().view(
         bucket_id=transaction_repository.bucket_id,
@@ -3383,6 +3398,7 @@ def evidence_view(
     ),
 )
 def evidence_list(ctx: typer.Context) -> None:
+    """List every purchase invoice evidence record in the active bucket."""
     transaction_repository = _tx_repo(_state())
     records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
     payload = {
@@ -3428,6 +3444,7 @@ def evidence_update(
     iva_amount: str | None = typer.Option(None, "--iva-amount"),
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
+    """Update mutable fields on one purchase invoice evidence record."""
     transaction_repository = _tx_repo(_state())
     patch = PurchaseInvoiceEvidencePatch(
         supplier=supplier,
@@ -3471,6 +3488,7 @@ def evidence_remove(
     ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.app.ledger.evidence.yes_help", default="Confirm removal.")),
 ) -> None:
+    """Delete one purchase invoice evidence record (requires ``--yes`` confirmation)."""
     if not yes:
         raise _bad(tr("cli.app.ledger.evidence.yes_required", default="--yes is required to remove an evidence record"))
     transaction_repository = _tx_repo(_state())

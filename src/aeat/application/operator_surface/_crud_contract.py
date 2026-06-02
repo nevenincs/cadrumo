@@ -35,6 +35,13 @@ class CrudVerb(StrEnum):
 
 
 CANONICAL_CRUD_VERBS: frozenset[CrudVerb] = frozenset(CrudVerb)
+"""The five-verb canonical CRUD set every strict noun-group must register.
+
+A :class:`MutatingNounGroupContract` with
+``exception=STRICT_CRUD`` must declare exactly these five verbs. Tests
+assert against this constant so any future :class:`CrudVerb` addition
+surfaces immediately as a contract drift.
+"""
 
 
 class BucketEventSuffix(StrEnum):
@@ -237,6 +244,12 @@ class CrudContractCatalogue(BaseModel):
         return self
 
     def find(self, cli_path: str) -> MutatingNounGroupContract | None:
+        """Return the contract for ``cli_path``, or ``None`` if not registered.
+
+        Args:
+            cli_path: The Typer mount path to look up (e.g.
+                ``"aeat app ledger payable-invoice"``).
+        """
         for entry in self.entries:
             if entry.cli_path == cli_path:
                 return entry

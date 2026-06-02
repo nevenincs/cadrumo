@@ -140,6 +140,14 @@ class ModeloInputsProviderProtocol(Protocol):
 
 
 class WorkflowExpedienteProtocol(Protocol):
+    """Narrow read surface for one AEAT expediente (open proceeding) entry.
+
+    An expediente is an administrative dossier AEAT associates with one
+    modelo (e.g. ``"303"``) and one ejercicio (tax year). The workflow
+    engine reads these two fields to decide whether an open proceeding
+    blocks filing.
+    """
+
     @property
     def modelo(self) -> str | None: ...
 
@@ -148,6 +156,13 @@ class WorkflowExpedienteProtocol(Protocol):
 
 
 class WorkflowNotificationProtocol(Protocol):
+    """Narrow read surface for one AEAT inbox notification entry.
+
+    The workflow engine reads ``tipo``, ``leida``, ``certificado_id``,
+    and ``concepto`` to decide whether an unread blocking notification
+    (typically a requerimiento) should abort the current run.
+    """
+
     @property
     def tipo(self) -> str: ...
 
@@ -162,12 +177,38 @@ class WorkflowNotificationProtocol(Protocol):
 
 
 class WorkflowNotificationsSnapshotProtocol(Protocol):
+    """Container protocol for a point-in-time AEAT inbox snapshot.
+
+    Wraps a sequence of :class:`WorkflowNotificationProtocol` rows returned
+    by the AEAT inbox adapter. The engine iterates ``rows`` once to find
+    blocking requerimientos.
+    """
+
     @property
     def rows(self) -> Sequence[WorkflowNotificationProtocol]: ...
 
 
 ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
+"""Async callable that fetches open expedientes for a session.
+
+Args:
+    arg0: The authenticated AEAT session object.
+    arg1: Optional modelo filter; ``None`` returns all open expedientes.
+
+Returns:
+    A tuple of :class:`WorkflowExpedienteProtocol` entries.
+"""
+
 NotificationsSource = Callable[[object], Awaitable[WorkflowNotificationsSnapshotProtocol]]
+"""Async callable that fetches the AEAT inbox snapshot for a session.
+
+Args:
+    arg0: The authenticated AEAT session object.
+
+Returns:
+    A :class:`WorkflowNotificationsSnapshotProtocol` with all current
+    notification rows.
+"""
 
 
 # Re-exported for adapter convenience (tests use the fully-qualified

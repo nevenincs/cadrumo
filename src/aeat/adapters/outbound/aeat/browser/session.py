@@ -213,9 +213,7 @@ class BrowserSession:
             context_kwargs.update(dict(provisioner.build_context_kwargs()))
         return context_kwargs
 
-    async def _create_playwright_context(
-        self, browser: Browser, context_kwargs: dict[str, Any]
-    ) -> BrowserContext:
+    async def _create_playwright_context(self, browser: Browser, context_kwargs: dict[str, Any]) -> BrowserContext:
         """Wrap ``browser.new_context(...)`` with the typed BrowserError envelope.
 
         Pops ``client_certificates`` from ``context_kwargs`` after the

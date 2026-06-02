@@ -140,7 +140,10 @@ def _scrub_value(value: set[Any], *, key: str | None = ...) -> set[Any]: ...
 def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
 
 
-def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL: implementation overload must return Any to subsume all concrete overload return types per mypy overload rules.
+# ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL:
+# The implementation overload returns Any to subsume all concrete overload
+# return types per mypy overload rules.
+def _scrub_value(value: object, *, key: str | None = None) -> Any:
     """Recursively scrub sensitive values in common logging payload shapes."""
     if isinstance(value, str):
         return _scrub_text(value, key=key)
@@ -234,6 +237,7 @@ def _install_run_context_record_factory() -> None:
                 RUN_CONTEXT_VAR,
                 STEP_CONTEXT_VAR,
             )
+
             cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
         run_var, step_var = cached_vars
         ctx = run_var.get(None)

@@ -140,9 +140,7 @@ def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
     matches = [
         run
         for run in list_runs()
-        if run.obligation is not None
-        and run.obligation.modelo == modelo
-        and run.obligation.period == period
+        if run.obligation is not None and run.obligation.modelo == modelo and run.obligation.period == period
     ]
     if not matches:
         raise WorkflowError(

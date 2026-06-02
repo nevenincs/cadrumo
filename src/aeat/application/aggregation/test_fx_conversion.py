@@ -205,6 +205,7 @@ def test_missing_rate_leaves_fx_fields_absent(
     This verifies the coupling invariant: both absent is valid; partially set
     is not allowed by the Transaction model_validator.
     """
+
     class _NoRateProvider:
         def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
             return None
@@ -276,6 +277,5 @@ def test_anti_tautology_mutated_rate_changes_value_in_eur(
     assert canonical_eur is not None
     assert mutant_eur is not None
     assert canonical_eur != mutant_eur, (
-        f"Anti-tautology failure: both rates produced value_in_eur={canonical_eur}; "
-        "the rate is not being applied"
+        f"Anti-tautology failure: both rates produced value_in_eur={canonical_eur}; the rate is not being applied"
     )

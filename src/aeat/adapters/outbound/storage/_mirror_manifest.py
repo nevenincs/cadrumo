@@ -271,7 +271,14 @@ def _provider_payload_matches_manifest_entry(
 ) -> bool:
     content_hash = metadata.content_hash
     digest = content_hash.split("-", 1)[1] if content_hash.startswith("sha256-") else content_hash
-    return len(payload) == entry.byte_length and digest == entry.ciphertext_hash
+    return (
+        metadata.namespace == entry.namespace
+        and metadata.object_key_hmac == entry.object_key_hmac
+        and metadata.byte_length == entry.byte_length
+        and len(payload) == entry.byte_length
+        and digest == entry.ciphertext_hash
+        and hashlib.sha256(payload).hexdigest() == entry.ciphertext_hash
+    )
 
 
 def _is_stale_remote_entry(

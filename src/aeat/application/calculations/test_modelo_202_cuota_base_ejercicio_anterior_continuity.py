@@ -28,12 +28,11 @@ cuota líquida, year-isolated, and 03 = 18% of 01 − 02 — grounded in LIS art
 arithmetic against itself.
 
 The 1P (April) instalment binds two years back (``filing_year_delta = -2``)
-because the prior-year M200's July deadline has not elapsed in April; that
-hook is deferred because Modelo 200 is only modelled from 2024, so a 1P delta
-of -2 has no 2023 source revision. Until M200 gains pre-2024 coverage, 1P's
-base stays operator-entered (not silently bound to the wrong ejercicio). This
-enrollment therefore exercises the 2P cross-year hook, which is real and
-sufficient for the >=2-distinct-renta-years gate contract.
+because the prior-year M200's July deadline has not elapsed in April. That
+coverage is guarded explicitly below by seeding historical M200 observations:
+the resolver must bind the target year minus two and must not silently use the
+nearer prior year. The two-year enrollment still exercises the 2P cross-year
+hook, which is the >=2-distinct-renta-years gate contract.
 """
 
 from __future__ import annotations
@@ -83,13 +82,14 @@ _M200_CUOTA_BY_SOURCE_YEAR: dict[int, Decimal] = {
     2025: Decimal("48000.00"),
     2026: Decimal("63000.00"),
 }
+_TARGET_YEAR_1P = 2025
+_M200_1P_SOURCE_TWO_BACK = Decimal("37000.00")
+_M200_1P_NEAR_PRIOR = Decimal("99000.00")
 
 _CLOCK = datetime(2028, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
-def _seed_m200_cuota_liquida(
-    *, source_year: int, cuota: Decimal, obs_repo: CalculationObservationRepository
-) -> None:
+def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M200 cuota líquida as a filed observation."""
     obs_repo.save_observation(
         RegistryModeloObservation(
@@ -113,8 +113,9 @@ def _seed_m202_1p(
     lets the 2P relation batch resolve; without it the resolver refuses the
     whole batch (the self-pago requirement is unmet) and every 2P relation —
     including the prior-M200 cuota-base hook under test — downgrades to blank.
-    The 1P base is operator-entered here (the 1P prior-prior-year auto-bind is
-    deferred — see the module docstring).
+    Casilla 01 is included because this helper records an already-filed 1P
+    observation; the live 1P auto-bind from target year minus two is covered
+    separately.
     """
     obs_repo.save_observation(
         RegistryModeloObservation(
@@ -139,9 +140,7 @@ def _calculate_202_2p(
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M202 2P calculation from the resolved prior-cuota relation."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period="2P")
-    relation_binding_values = materialize_relation_binding_values(
-        snapshot.revision, relation_values, period="2P"
-    )
+    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="2P")
     binding_values = {**relation_binding_values}
     inputs = {
         **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
@@ -159,10 +158,37 @@ def _calculate_202_2p(
     return result, len(result.values)
 
 
-def _resolve_202_relations(*, filing_year: int, obs_repo: CalculationObservationRepository) -> dict[str, Decimal]:
-    snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period="2P")
+def _resolve_202_relations(
+    *, filing_year: int, period: str = "2P", obs_repo: CalculationObservationRepository
+) -> dict[str, Decimal]:
+    snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period=period)
     prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo)
     return {item.relation: item.value for item in prefill.values if item.value is not None}
+
+
+def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(tmp_path: Path) -> None:
+    """1P casilla 01 auto-resolves from target year minus two, not minus one."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        obs_repo = CalculationObservationRepository()
+        _seed_m200_cuota_liquida(
+            source_year=_TARGET_YEAR_1P - 2,
+            cuota=_M200_1P_SOURCE_TWO_BACK,
+            obs_repo=obs_repo,
+        )
+        _seed_m200_cuota_liquida(
+            source_year=_TARGET_YEAR_1P - 1,
+            cuota=_M200_1P_NEAR_PRIOR,
+            obs_repo=obs_repo,
+        )
+        resolved = _resolve_202_relations(
+            filing_year=_TARGET_YEAR_1P,
+            period="1P",
+            obs_repo=obs_repo,
+        )
+
+    assert resolved["modelo-202-2025-y-siguientes-rel-cuota-base-1p"] == _M200_1P_SOURCE_TWO_BACK
+    assert resolved["modelo-202-2025-y-siguientes-rel-cuota-base-1p"] != _M200_1P_NEAR_PRIOR
+    assert "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p" not in resolved
 
 
 def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) -> None:
@@ -174,16 +200,10 @@ def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(
-            source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo
-        )
-        _seed_m202_1p(
-            filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo
-        )
+        _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
-        result, _ = _calculate_202_2p(
-            filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0")
-        )
+        result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
     assert result.values["01"] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
 
 
@@ -197,16 +217,10 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(
-            source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo
-        )
-        _seed_m202_1p(
-            filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo
-        )
+        _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
-        result, _ = _calculate_202_2p(
-            filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0")
-        )
+        result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
     expected_03 = (_M200_CUOTA_BY_SOURCE_YEAR[2025] * _MODALIDAD_40_2_RATE).quantize(Decimal("0.01"))
     assert result.values["03"] == expected_03
 
@@ -227,17 +241,11 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_cuota_liquida(
-            source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo
-        )
-        _seed_m200_cuota_liquida(
-            source_year=2026, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2026], obs_repo=obs_repo
-        )
+        _seed_m200_cuota_liquida(source_year=2025, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
+        _seed_m200_cuota_liquida(source_year=2026, cuota=_M200_CUOTA_BY_SOURCE_YEAR[2026], obs_repo=obs_repo)
         # Each target year cumulates its own 1P pago (distinct per year so a
         # cross-year self-pago contamination would surface).
-        _seed_m202_1p(
-            filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo
-        )
+        _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         _seed_m202_1p(
             filing_year=_TARGET_YEAR_N_PLUS_1, pago=Decimal("6200.00"), base=Decimal("63000.00"), obs_repo=obs_repo
         )
@@ -252,9 +260,7 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
         result_n1, produced_n1 = _calculate_202_2p(
             filing_year=_TARGET_YEAR_N_PLUS_1, relation_values=resolved_n1, casilla_02=Decimal("0")
         )
-        recorder.record_calculation_year(
-            filing_year=_TARGET_YEAR_N_PLUS_1, produced_value_count=produced_n1
-        )
+        recorder.record_calculation_year(filing_year=_TARGET_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant: each target year's 2P base equals the immediately prior
     # M200 cuota líquida, year-isolated.

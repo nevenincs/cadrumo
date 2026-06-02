@@ -1,0 +1,13 @@
+[revisions."2015-y-siguientes"]
+label = "Modelo 151 ejercicios 2015 y siguientes (régimen impatriados, escala 24/47 tras Ley 26/2014)"
+valid_from = 2015-01-01
+period_selector = { year_from = 2015, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+]
+source_refs = [
+    "aeat-modelo-151-procedure",
+    "boe-modelo-151-form",
+    "boe-modelo-151-layout",
+]

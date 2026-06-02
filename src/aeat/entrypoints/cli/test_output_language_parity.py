@@ -50,8 +50,7 @@ def _assert_output_language_registered(args: list[str]) -> None:
         f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{result.output}"
     )
     assert _CHOICE_LIST in result.output, (
-        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\n"
-        f"Help output:\n{result.output}"
+        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\nHelp output:\n{result.output}"
     )
 
 

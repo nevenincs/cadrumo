@@ -130,9 +130,7 @@ def test_manual_match_projection_records_payment_and_matches_existing_transactio
         state=state,
     )
 
-    assert projection.matched == (
-        InvoiceMatchRow(invoice=invoice.invoice_id, payment=transaction_id),
-    )
+    assert projection.matched == (InvoiceMatchRow(invoice=invoice.invoice_id, payment=transaction_id),)
     assert projection.unmatched == ()
 
 

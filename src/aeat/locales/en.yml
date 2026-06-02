@@ -2841,9 +2841,7 @@ errors:
     error_modelo_external_filing_import: The imported external filing could not be
       persisted. Check the casilla values and the evidence reference.
     error_modelo_filing_record_not_found: The requested filing record was not found.
-    error_modelo_iva_wallet_reconciliation_blocked: The Modelo 303 calculation is
-      blocked by IVA wallet reconciliation. Resolve the pending reconciliation before
-      continuing.
+    error_modelo_iva_wallet_reconciliation_blocked: 'Modelo 303 calculation is blocked: IVA wallet reconciliation is required'
     error_modelo_verification_report_not_found: The requested verification report
       was not found.
     error_modelo_work_unit_already_discarded: The work unit is already discarded.

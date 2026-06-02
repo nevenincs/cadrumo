@@ -100,8 +100,7 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
 
     b_db_bytes_after = b_db.read_bytes()
     assert b_db_bytes_after == b_db_bytes_before, (
-        "bucket B's database file changed after bucket A's corruption — "
-        "the two buckets are not file-isolated"
+        "bucket B's database file changed after bucket A's corruption — the two buckets are not file-isolated"
     )
     assert a_db.read_bytes().startswith(b"corrupted")
     assert a_db != b_db

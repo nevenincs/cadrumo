@@ -10,20 +10,19 @@ from typing import cast
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import (
+    InputKind,
     InvoiceObservation,
     RegistryValidator,
     build_snapshot,
     invoice_binding_requirements,
     load_registry_tree,
+    parse_export_payload,
     resolve_bound_casilla_inputs,
+    resolve_export_layout,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from . import resolve_export_layout
-from . import parse_export_payload
-from . import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -159,6 +158,33 @@ def test_committed_modelo_349_casilla_data_types_match_official_record_design(
     revision = modelo.revisions["2020-y-siguientes"]
     casilla = next(item for item in revision.casillas if item.id == casilla_id)
     assert casilla.data_type == expected_data_type
+
+
+def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
+    modelo, _ = _load_modelo_349()
+    revision = modelo.revisions["2020-y-siguientes"]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    expected_ids = {
+        "op.base-imponible",
+        "rect.base-rectificada",
+        "rect.base-anterior",
+    }
+
+    found_ids = {
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.semantic_role == "base_intracomunitaria"
+    }
+    assert found_ids == expected_ids
+
+    for casilla_id in expected_ids:
+        casilla = casillas[casilla_id]
+        assert casilla.data_type == "money"
+        assert casilla.legal_refs == (
+            "orden-eha-769-2010:art-1",
+            "orden-hac-174-2020:art-1",
+            "ley-58-2003:art-93",
+        )
 
 
 def test_committed_modelo_349_casilla_widths_match_official_record_design() -> None:
@@ -935,11 +961,11 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     assert casilla_values["decl.importe-operaciones"] == binding_values["iva-349-declarante-importe-operaciones"]
 
     # Rectification casillas must pass through from binding to casilla unchanged.
-    assert casilla_values["decl.numero-rectificaciones"] == (
-        binding_values["iva-349-declarante-numero-rectificaciones"]
+    assert (
+        casilla_values["decl.numero-rectificaciones"] == (binding_values["iva-349-declarante-numero-rectificaciones"])
     )
-    assert casilla_values["decl.importe-rectificaciones"] == (
-        binding_values["iva-349-declarante-importe-rectificaciones"]
+    assert (
+        casilla_values["decl.importe-rectificaciones"] == (binding_values["iva-349-declarante-importe-rectificaciones"])
     )
 
     # Rectification delta must equal the absolute difference between new and previous base.

@@ -80,9 +80,7 @@ def test_manual_casilla_comparison_produces_same_truth_as_bare_string() -> None:
     """
     authority = _authority()
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
-    manual_required = [
-        c for c in snapshot.revision.casillas if c.required and c.formula is None and c.binding is None
-    ]
+    manual_required = [c for c in snapshot.revision.casillas if c.required and c.formula is None and c.binding is None]
     assert manual_required, "Test invariant: modelo 130 must have required manual casillas"
     for casilla in manual_required:
         assert casilla.input_kind == InputKind.MANUAL

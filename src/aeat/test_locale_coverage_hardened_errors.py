@@ -74,6 +74,4 @@ def test_hardened_error_key_resolves_in_catalogue(key: str, locale: str) -> None
         f"Add a real translation via "
         f"`python -m aeat.locales set {locale} {key!r} <value>`."
     )
-    assert resolved, (
-        f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue."
-    )
+    assert resolved, f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue."

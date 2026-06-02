@@ -24,7 +24,6 @@ EXPECTED_OVERVIEW_VERBS: frozenset[str] = frozenset(
 )
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()

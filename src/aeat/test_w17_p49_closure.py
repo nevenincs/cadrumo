@@ -87,9 +87,8 @@ def test_s634_no_bare_eur_default_in_ledger_expenses() -> None:
             if isinstance(node.value, ast.Constant) and node.value.value == "EUR":
                 violations.append(node.lineno)
         # Assign: `x = "EUR"` (bare assignment, not annotation)
-        if isinstance(node, ast.Assign):
-            if isinstance(node.value, ast.Constant) and node.value.value == "EUR":
-                violations.append(node.lineno)
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and node.value.value == "EUR":
+            violations.append(node.lineno)
         # keyword in Call: `Field(default="EUR")` — detect "EUR" as keyword arg value
         if isinstance(node, ast.Call):
             for kw in node.keywords:

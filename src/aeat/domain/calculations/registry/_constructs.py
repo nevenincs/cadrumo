@@ -17,6 +17,15 @@ from ._schema import ModeloRevision
 
 @dataclass(frozen=True, slots=True)
 class ResolvedConstructMember:
+    """One member resolved from a registry construct group.
+
+    A construct group bundles heterogeneous registry entities (casillas,
+    formulas, parameters, bindings, etc.) under a common id. Each member
+    records the entity ``kind`` (e.g. ``"casilla"``, ``"formula"``), its
+    registry ``id`` string, and the fully-typed ``value`` object retrieved
+    from the revision index.
+    """
+
     kind: str
     id: str
     value: object
@@ -24,6 +33,19 @@ class ResolvedConstructMember:
 
 @dataclass(frozen=True, slots=True)
 class ResolvedConstruct:
+    """A fully-resolved registry construct group for one ``ModeloRevision``.
+
+    A construct is a named thematic bundle declared in the registry TOML that
+    groups related revision entities (casillas, formulas, bindings, etc.) so
+    that consumers can iterate over them without knowing the full revision
+    schema. After resolution every member carries its typed value object, not
+    just its id string.
+
+    ``legal_refs`` and ``source_refs`` carry the provenance declared on the
+    construct entry in the TOML tree; they are propagated unchanged from the
+    ``ModeloRevision`` construct record.
+    """
+
     id: str
     title: str
     legal_refs: tuple[str, ...]
@@ -31,6 +53,15 @@ class ResolvedConstruct:
     members: tuple[ResolvedConstructMember, ...]
 
     def members_of_kind(self, kind: str) -> tuple[ResolvedConstructMember, ...]:
+        """Return every member whose ``kind`` matches the given string.
+
+        Args:
+            kind: Entity kind to filter on, e.g. ``"casilla"`` or ``"formula"``.
+
+        Returns:
+            A tuple of matching ``ResolvedConstructMember`` instances, empty if
+            no members carry the requested kind.
+        """
         return tuple(member for member in self.members if member.kind == kind)
 
 
@@ -75,10 +106,49 @@ _CONSTRUCT_MEMBER_INDEXES: tuple[tuple[str, str, _RevisionIndex], ...] = (
 
 
 def resolve_revision_constructs(revision: ModeloRevision) -> tuple[ResolvedConstruct, ...]:
+    """Resolve all construct groups declared on a revision.
+
+    Iterates over ``revision.constructs`` in declaration order and calls
+    ``resolve_construct`` for each entry.
+
+    Args:
+        revision: The ``ModeloRevision`` (a dated version of an AEAT modelo —
+            tax form) whose construct groups should be resolved.
+
+    Returns:
+        A tuple of ``ResolvedConstruct`` records in the same order as
+        ``revision.constructs``.
+
+    Raises:
+        ``RegistrySnapshotError``: if any construct or its member references
+            are missing from the revision.
+    """
     return tuple(resolve_construct(revision, construct.id) for construct in revision.constructs)
 
 
 def resolve_construct(revision: ModeloRevision, construct_id: str) -> ResolvedConstruct:
+    """Resolve a single named construct group from a revision.
+
+    Looks up ``construct_id`` in ``revision.constructs``, then iterates every
+    member collection declared on the construct (casillas, formulas,
+    parameters, bindings, and the remaining entity kinds in
+    ``_CONSTRUCT_MEMBER_INDEXES``) to build the typed ``ResolvedConstructMember``
+    list. Each member id is looked up in a pre-built revision index; an unknown
+    id raises ``RegistrySnapshotError`` immediately.
+
+    Args:
+        revision: The ``ModeloRevision`` to resolve against.
+        construct_id: The registry-declared id of the construct group to
+            resolve.
+
+    Returns:
+        A ``ResolvedConstruct`` carrying all members with their typed values.
+
+    Raises:
+        ``RegistrySnapshotError``: if ``construct_id`` is not declared on the
+            revision, or if any member id does not exist in the corresponding
+            revision collection.
+    """
     construct = next((item for item in revision.constructs if item.id == construct_id), None)
     if construct is None:
         raise RegistrySnapshotError(f"revision {revision.id!r} has no construct {construct_id!r}")

@@ -39,9 +39,7 @@ def test_fixture_catalogue_is_non_empty() -> None:
         assert fixture.csv
         # Exactly one of the two totals is populated per the
         # ingresar-vs-devolver convention.
-        assert (fixture.total_ingresar is not None) ^ (
-            fixture.total_devolver is not None
-        )
+        assert (fixture.total_ingresar is not None) ^ (fixture.total_devolver is not None)
 
 
 def test_all_per_modelo_fixture_classes_are_frozen_dataclasses() -> None:

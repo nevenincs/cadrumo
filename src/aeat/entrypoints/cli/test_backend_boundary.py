@@ -63,6 +63,7 @@ def _modelo_source_paths(modelo_id: str) -> tuple[Path, ...]:
         return tuple(dict.fromkeys(paths))
     raise AssertionError(f"modelo {modelo_id} is not present in registry sources")
 
+
 _LIVE_TEST_FILES = frozenset[str]()
 
 

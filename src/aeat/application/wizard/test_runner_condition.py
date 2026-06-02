@@ -150,7 +150,4 @@ def test_force_visible_overrides_an_unsatisfied_gate() -> None:
     )
 
     assert _condition_satisfied(question, {"entity": "natural_person"}) is False
-    assert (
-        _condition_satisfied(question, {"entity": "natural_person"}, force_visible=frozenset({"activity"}))
-        is True
-    )
+    assert _condition_satisfied(question, {"entity": "natural_person"}, force_visible=frozenset({"activity"})) is True

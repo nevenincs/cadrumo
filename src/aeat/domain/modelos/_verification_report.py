@@ -39,6 +39,12 @@ ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
+"""Validated string identifying the operator who triggered a verification run.
+
+Strips surrounding whitespace; must be 1–64 characters after stripping.
+Used as ``verified_by`` on :class:`VerificationReport` to record the actor
+label fed into the content-addressed id derivation.
+"""
 _FindingMessage = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
@@ -128,7 +134,17 @@ def derive_verification_report_id(
 
 
 class VerificationReport(BaseModel):
-    """Decision record of one verification run."""
+    """Decision record of one verification run against a calculation revision.
+
+    The id is content-addressed by ``calculation_revision_id``,
+    ``run_at``, and ``verified_by`` via :func:`derive_verification_report_id`.
+    A ``model_validator`` enforces the derivation on construction so
+    no :class:`VerificationReport` can carry an inconsistent id.
+
+    ``granted_verificado_completo`` is ``True`` if and only if
+    ``completeness_status`` is ``COMPLETE`` and no blocking findings exist.
+    The model validator enforces this invariant bidirectionally.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -174,7 +190,15 @@ class VerificationReport(BaseModel):
 
 
 class VerificationReportCatalogue(BaseModel):
-    """Immutable catalogue of every verification report in storage."""
+    """Immutable catalogue of every verification report in a bucket's storage.
+
+    Keyed by ``verification_report_id``; the model validator enforces that
+    every key equals the id of the :class:`VerificationReport` it maps to.
+    Iteration yields :class:`VerificationReport` values (not key–value
+    pairs), which diverges from the standard ``Mapping`` contract — the
+    override is annotated with a suppression comment on
+    ``__iter__``.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -190,6 +214,7 @@ class VerificationReportCatalogue(BaseModel):
         return self
 
     def get(self, verification_report_id: str) -> VerificationReport | None:
+        """Return the :class:`VerificationReport` for ``verification_report_id``, or ``None``."""
         return self.reports.get(verification_report_id)
 
     def for_calculation_revision(self, calculation_revision_id: str) -> tuple[VerificationReport, ...]:
@@ -198,12 +223,15 @@ class VerificationReportCatalogue(BaseModel):
         return tuple(sorted(matching, key=lambda r: r.run_at))
 
     def values(self):
+        """Return a view of all :class:`VerificationReport` values in the catalogue."""
         return self.reports.values()
 
     def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+        """Iterate over :class:`VerificationReport` values (not ``(key, value)`` pairs)."""
         return iter(self.reports.values())
 
     def __len__(self) -> int:
+        """Return the number of reports in the catalogue."""
         return len(self.reports)
 
 

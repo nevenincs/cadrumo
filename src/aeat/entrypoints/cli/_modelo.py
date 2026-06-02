@@ -4370,6 +4370,7 @@ def audit_show(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
+    """Render an evidence bundle's manifest and referenced record list."""
     bucket_id = _active_bucket_id()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._common import _emit_envelope
@@ -4421,6 +4422,7 @@ def audit_check(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
+    """Re-verify the evidence bundle's integrity without mutating state."""
     bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._common import _emit_envelope
@@ -4480,6 +4482,7 @@ def audit_export(
         ),
     ] = False,
 ) -> None:
+    """Write the evidence bundle as a ZIP archive to ``--output``."""
     bucket_id = _active_bucket_id()
     service = _evidence_bundle_service()
     output_path = service.export(
@@ -4522,6 +4525,7 @@ def audit_replay(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
+    """Replay the evidence bundle's case assertions without contacting AEAT."""
     bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._common import _emit_envelope

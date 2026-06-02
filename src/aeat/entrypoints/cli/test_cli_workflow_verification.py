@@ -288,9 +288,7 @@ _REVIEW_ROW_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("key", "expected"), _REVIEW_ROW_EXPECTATIONS)
-def test_config_app_round_trip_review_row_records_field(
-    _isolated_cli_backend: Path, key: str, expected: str
-) -> None:
+def test_config_app_round_trip_review_row_records_field(_isolated_cli_backend: Path, key: str, expected: str) -> None:
     outcome = _drive_workflow_round_trip(_isolated_cli_backend)
     assert _review_rows(outcome)[0][key] == expected
 

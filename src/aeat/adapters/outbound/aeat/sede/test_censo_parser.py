@@ -97,10 +97,7 @@ def test_malformed_cadastral_raises_typed_parse_error() -> None:
 
 
 def test_baja_date_populates_activity_end_date() -> None:
-    fixture = (
-        "<p>Fecha de alta de la actividad: 01/01/2020</p>"
-        "<p>Fecha de baja de la actividad: 31/12/2024</p>"
-    )
+    fixture = "<p>Fecha de alta de la actividad: 01/01/2020</p><p>Fecha de baja de la actividad: 31/12/2024</p>"
 
     result = parse_g313_html(fixture)
 

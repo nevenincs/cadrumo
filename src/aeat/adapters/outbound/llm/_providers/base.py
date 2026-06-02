@@ -126,9 +126,7 @@ def raise_rate_limit(message: str, retry_after: str | None) -> None:
     raise LLMRateLimitError(message, retry_after_seconds=parse_retry_after(retry_after))
 
 
-def check_http_error(
-    response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger
-) -> None:
+def check_http_error(response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger) -> None:
     """Raise a normalized error for a non-2xx LLM HTTP response.
 
     A 429 raises a rate-limit error carrying the parsed ``Retry-After`` hint;

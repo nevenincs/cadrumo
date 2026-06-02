@@ -313,7 +313,15 @@ def assert_enrollment_matches_manifest(
 
 
 class MultiYearResolutionRequest(BaseModel):
-    """A request to scan the local observation store for prior filings."""
+    """Parameters for one prior-filing observation scan.
+
+    Passed to :meth:`MultiYearResolver.resolve`. ``modelo`` and
+    ``current_year`` identify the filing being calculated;
+    ``years_back`` controls how many prior renta years the resolver
+    walks back; ``periods`` optionally restricts the scan to specific
+    period tokens (e.g. ``("1P", "2P", "3P")`` for Modelo 202 pagos
+    fraccionados).
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -324,7 +332,14 @@ class MultiYearResolutionRequest(BaseModel):
 
 
 class MultiYearResolutionReport(BaseModel):
-    """Outcome of one resolver scan with provenance for downstream gating."""
+    """Outcome of one :meth:`MultiYearResolver.resolve` scan.
+
+    Carries the original ``request``, the matched
+    :class:`RegistryModeloObservation` records, and three derived
+    year-sets (``requested_years``, ``found_years``, ``missing_years``)
+    that let callers decide whether to refuse, prompt the operator, or
+    zero-fill for absent prior years without re-scanning the store.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -381,7 +396,17 @@ class MultiYearResolver:
 
 
 class PreviousFilingSourceResolver:
-    """Resolve ``source = "previous_filing"`` bindings through the source mesh."""
+    """Source mesh resolver for ``source = "previous_filing"`` calculation bindings.
+
+    Registered under ``resolver_id = "previous_filing"`` in the source mesh.
+    When the calculation engine encounters a binding whose source is
+    ``"previous_filing"``, this resolver reads the relevant prior-year
+    :class:`RegistryModeloObservation` records from the local
+    :class:`CalculationObservationRepository` and maps them to the binding
+    values the engine expects. Storage-degradation errors
+    (classification, decryption, version) are caught and returned as a
+    :func:`storage_degradation_resolution` rather than propagated.
+    """
 
     resolver_id = "previous_filing"
     owned_sources = ("previous_filing",)

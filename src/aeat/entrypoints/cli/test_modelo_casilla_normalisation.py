@@ -33,8 +33,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _PROFILE_ID = "casilla-norm-test-profile"
 
 
-
-
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
@@ -208,6 +206,4 @@ def test_qualified_casilla_key_passes_through_normaliser_unchanged(
     assert "iva.resultado" in output, (
         "engine error must name 'iva.resultado', proving the qualified id was not corrupted"
     )
-    assert "does not match any casilla" not in output, (
-        "qualified id must not trigger the unknown-casilla diagnostic"
-    )
+    assert "does not match any casilla" not in output, "qualified id must not trigger the unknown-casilla diagnostic"

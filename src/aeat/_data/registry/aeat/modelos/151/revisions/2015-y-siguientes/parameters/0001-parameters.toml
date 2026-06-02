@@ -1,0 +1,35 @@
+# Modelo 151 (régimen impatriados) — escala de la cuota íntegra general.
+#
+# Ley 35/2006 art. 93.2.e).1.º: a la base liquidable general (excluida la parte
+# del ahorro del art. 25.1.f TRLIRNR) se le aplica una escala plana de dos
+# tramos — 24 % hasta 600.000 euros y 47 % sobre el exceso. Grounded verbatim in
+# corpus/normatives/html/ley-35-2006-art-93.html (legal ley-35-2006:art-93).
+#
+# fixed_addition del segundo tramo = 600.000 × 0,24 = 144.000 (cuota acumulada
+# en el límite inferior del tramo), de modo que la cuota de una base de B euros
+# con B > 600.000 es 144.000 + (B − 600.000) × 0,47.
+
+[[revisions."2015-y-siguientes".parameters]]
+id = "modelo-151.escala-cuota-integra-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-form"]
+
+[[revisions."2015-y-siguientes".parameters.source_citations]]
+source_ref = "boe-modelo-151-form"
+required_text = ["modelo 151"]
+
+[[revisions."2015-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "600000"
+fixed_addition = "0"
+marginal_rate = "0.24"
+valid_from = 2015-01-01
+
+[[revisions."2015-y-siguientes".parameters.brackets]]
+lower_bound = "600000"
+fixed_addition = "144000"
+marginal_rate = "0.47"
+valid_from = 2015-01-01

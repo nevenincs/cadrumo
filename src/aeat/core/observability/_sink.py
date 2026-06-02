@@ -22,7 +22,11 @@ competing sinks attached to the root logger at the same time.
 from __future__ import annotations
 
 import json
-import logging  # LOGGING-STDLIB-RATIONALE-SINK-HANDLER: JsonlRunSink subclasses logging.Handler and accepts logging.LogRecord; stdlib import is required by ABC contract.
+
+# LOGGING-STDLIB-RATIONALE-SINK-HANDLER:
+# JsonlRunSink subclasses logging.Handler and accepts logging.LogRecord; stdlib
+# import is required by the ABC contract.
+import logging
 import os
 import threading
 from pathlib import Path

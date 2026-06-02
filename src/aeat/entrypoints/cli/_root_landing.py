@@ -1,3 +1,12 @@
+"""CLI root landing renderer: formats the bare ``aeat`` invocation screen.
+
+Provides :func:`render_cli_root_landing_lines`, which converts a
+:class:`~aeat.application.operator_surface.RootLandingReport` into an
+ordered tuple of i18n-translated strings ready for the CLI output layer.
+The helper functions in this module are all private; only
+``render_cli_root_landing_lines`` is part of the public surface.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

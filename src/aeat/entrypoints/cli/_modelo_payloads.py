@@ -204,6 +204,8 @@ class WorkCreateResult(OutputSchema):
 
 @register_schema("modelo.work.list")
 class WorkListResult(OutputSchema):
+    """Work-unit listing result returned by ``aeat app modelo work list``."""
+
     operation: str = "modelo.work.list"
     bucket_id_filter: str | None = None
     include_discarded: bool
@@ -213,6 +215,8 @@ class WorkListResult(OutputSchema):
 
 @register_schema("modelo.work.status")
 class WorkStatusResult(OutputSchema):
+    """Work-unit status result returned by ``aeat app modelo work status``."""
+
     operation: str = "modelo.work.status"
     work_unit_id: WorkUnitId
     bucket_id: BucketId
@@ -232,6 +236,8 @@ class WorkStatusResult(OutputSchema):
 
 @register_schema("modelo.work.rename")
 class WorkRenameResult(OutputSchema):
+    """Work-unit rename confirmation returned by ``aeat app modelo work rename``."""
+
     operation: str = "modelo.work.rename"
     work_unit_id: WorkUnitId
     bucket_id: BucketId
@@ -251,6 +257,13 @@ class WorkRenameResult(OutputSchema):
 
 @register_schema("modelo.work.discard")
 class WorkDiscardResult(OutputSchema):
+    """Work-unit discard confirmation returned by ``aeat app modelo work discard``.
+
+    The discard is an audit-grade state transition: the work unit is
+    preserved with ``discarded_at`` / ``discarded_by`` / ``discard_reason``
+    populated and subsequent mutations are rejected.
+    """
+
     operation: str = "modelo.work.discard"
     work_unit_id: WorkUnitId
     bucket_id: BucketId
@@ -305,6 +318,12 @@ class WorkCalculateResult(OutputSchema):
 
 @register_schema("modelo.work.revisions")
 class WorkRevisionsResult(OutputSchema):
+    """Calculation-revision listing returned by ``aeat app modelo work revisions``.
+
+    Each entry in ``revisions`` is a :class:`CalculationRevisionPayload`
+    carrying the full casilla table, typed observations, and provenance.
+    """
+
     operation: str = "modelo.work.revisions"
     work_unit_id_filter: str | None = None
     revision_count: int
@@ -344,6 +363,13 @@ class WorkRevisionResult(OutputSchema):
 
 @register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
+    """Verification report returned by ``aeat app modelo work verify``.
+
+    On a successful verificado-completo verdict the revision transitions to
+    ``verificado_completo``; on a refused verdict the revision is unchanged
+    and ``findings`` names every blocking or advisory issue.
+    """
+
     operation: str = "modelo.work.verify"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
@@ -358,6 +384,12 @@ class WorkVerifyResult(OutputSchema):
 
 @register_schema("modelo.work.file")
 class WorkFileResult(OutputSchema):
+    """Internal-filing confirmation returned by ``aeat app modelo work file``.
+
+    Records that the revision was marked as internally filed. Does NOT
+    represent an AEAT submission; ``live_submission`` is always ``False``.
+    """
+
     operation: str = "modelo.work.file"
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
@@ -379,6 +411,13 @@ class WorkFileResult(OutputSchema):
 
 @register_schema("modelo.work.amend")
 class WorkAmendResult(OutputSchema):
+    """Amendment filing confirmation returned by ``aeat app modelo work amend``.
+
+    Carries the amendment-specific pair (``amendment_kind``,
+    ``amends_filing_record_id``) above the standard filing-record body.
+    ``live_submission`` is always ``False``; does NOT submit to AEAT.
+    """
+
     operation: str = "modelo.work.amend"
     amendment_kind: str
     amends_filing_record_id: FilingRecordId
@@ -404,6 +443,8 @@ class WorkAmendResult(OutputSchema):
 
 @register_schema("modelo.filing_record.list")
 class ModeloRecordListResult(OutputSchema):
+    """Filing-record listing returned by ``aeat app modelo filing-record list``."""
+
     operation: str = "modelo.filing_record.list"
     bucket_id_filter: str | None = None
     include_superseded: bool
@@ -413,6 +454,8 @@ class ModeloRecordListResult(OutputSchema):
 
 @register_schema("modelo.filing_record.view")
 class ModeloRecordShowResult(OutputSchema):
+    """Filing-record detail returned by ``aeat app modelo filing-record view``."""
+
     operation: str = "modelo.filing_record.show"
     filing_record_id: FilingRecordId
     work_unit_id: WorkUnitId
@@ -434,6 +477,8 @@ class ModeloRecordShowResult(OutputSchema):
 
 @register_schema("modelo.verification_report.list")
 class VerificationReportListResult(OutputSchema):
+    """Verification-report listing returned by ``aeat app modelo verification-report list``."""
+
     operation: str = "modelo.verification_report.list"
     calculation_revision_id_filter: str | None = None
     report_count: int
@@ -442,6 +487,8 @@ class VerificationReportListResult(OutputSchema):
 
 @register_schema("modelo.verification_report.view")
 class VerificationReportShowResult(OutputSchema):
+    """Verification-report detail returned by ``aeat app modelo verification-report view``."""
+
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId

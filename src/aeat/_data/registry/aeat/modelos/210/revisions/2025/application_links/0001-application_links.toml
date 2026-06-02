@@ -25,3 +25,63 @@ legal_refs = [
     "trlirnr-rdleg-5-2004:art-25.1.f",
 ]
 source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]

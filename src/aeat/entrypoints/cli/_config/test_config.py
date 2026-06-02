@@ -27,9 +27,9 @@ import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
-from ._errors import ConfigBoundaryError
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ._errors import ConfigBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -203,6 +203,7 @@ def test_non_aeat_error_cause_chain_reaches_config_boundary_error(tmp_path: Path
             # Real-failure trigger raises a SQLAlchemy DatabaseError or
             # similar; the wrapped original_exception is non-AeatError.
             from ....core.errors import AeatError
+
             assert not isinstance(cause.original_exception, AeatError)
 
 

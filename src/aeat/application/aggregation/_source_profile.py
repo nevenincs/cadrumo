@@ -37,6 +37,24 @@ class ProfileSourceResolver:
         self._profile_record = profile_record
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve all ``source="profile"`` bindings for the given calculation context.
+
+        Fetches the :class:`RegistrySnapshot` lazily from the resident
+        registry authority when none was supplied at construction.  Delegates
+        binding resolution to ``resolve_profile_sourced_bindings`` and wraps
+        each resolved binding in a :class:`CalculationSourceProvenance` entry
+        so the engine can trace every value back to the originating profile
+        record.
+
+        Args:
+            context: A :class:`CalculationSourceContext` carrying the modelo,
+                filing year, period, and bucket identifier needed to select
+                the correct registry snapshot.
+
+        Returns:
+            A :class:`CalculationSourceResolution` with typed binding maps
+            and a provenance tuple covering every profile-sourced binding.
+        """
         snapshot = self._registry_snapshot
         if snapshot is None:
             from ...core.resources import resources

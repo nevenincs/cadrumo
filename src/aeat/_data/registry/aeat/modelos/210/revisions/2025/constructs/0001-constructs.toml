@@ -13,3 +13,12 @@ formulas = [
     "m210-cuota-integra-2025",
     "m210-cuota-diferencial-2025",
 ]
+application_links = [
+    "modelo-210-2025-calculation",
+    "modelo-210-2025-filing",
+    "modelo-210-2025-verification",
+    "modelo-210-2025-review",
+    "modelo-210-2025-approval",
+    "modelo-210-2025-reconciliation",
+    "modelo-210-2025-workflow",
+]

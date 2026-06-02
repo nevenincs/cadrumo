@@ -334,7 +334,9 @@ def encode_currency(
 
     s = str(cents).rjust(length, "0")
     if len(s) > length:
-        raise AeatExportFormatError(f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)")
+        raise AeatExportFormatError(
+            f"currency value {value} overflows length-{length} field (would need {len(s)} bytes)"
+        )
     return s.encode(encoding)
 
 

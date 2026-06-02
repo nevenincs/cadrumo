@@ -43,8 +43,7 @@ def test_no_source_imports_aeat_core_time() -> None:
             violations.append(str(rel))
     if violations:
         raise AssertionError(
-            f"{len(violations)} source file(s) still reference aeat.core._time:\n  "
-            + "\n  ".join(violations)
+            f"{len(violations)} source file(s) still reference aeat.core._time:\n  " + "\n  ".join(violations)
         )
 
 

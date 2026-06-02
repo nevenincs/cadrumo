@@ -95,12 +95,8 @@ def test_scalar_tipo_gravamen_parameters_carry_the_lis_art_29_rates() -> None:
         assert parameter.data_type == "ratio"
         assert parameter.unit == "percent"
         assert len(parameter.values) == 1, f"{parameter_id!r} must carry one dated value"
-        assert parameter.values[0].value == rate, (
-            f"{parameter_id!r} must encode the LIS Art. 29 rate {rate}"
-        )
-        assert "ley-27-2014:art-29" in parameter.legal_refs, (
-            f"{parameter_id!r} must be grounded in LIS Art. 29"
-        )
+        assert parameter.values[0].value == rate, f"{parameter_id!r} must encode the LIS Art. 29 rate {rate}"
+        assert "ley-27-2014:art-29" in parameter.legal_refs, f"{parameter_id!r} must be grounded in LIS Art. 29"
 
 
 def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
@@ -117,14 +113,11 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
     parameters = _parameters()
     assert "is.modelo-200.tipo-gravamen-pyme" in parameters
     parameter = parameters["is.modelo-200.tipo-gravamen-pyme"]
-    assert parameter.data_type == "bracket_table", (
-        "the micro-empresa rate is a tranche scale, not a flat scalar"
-    )
+    assert parameter.data_type == "bracket_table", "the micro-empresa rate is a tranche scale, not a flat scalar"
     assert parameter.bracket_axis == "filing_period"
     assert "ley-27-2014:art-29" in parameter.legal_refs
     assert "ley-27-2014:dt-44" in parameter.legal_refs, (
-        "the 2025/2026 transitional micro-empresa tranches must cite their "
-        "binding source LIS DT 44ª (Ley 7/2024)"
+        "the 2025/2026 transitional micro-empresa tranches must cite their binding source LIS DT 44ª (Ley 7/2024)"
     )
     assert not parameter.values, "a bracket_table parameter must not carry flat dated values"
 
@@ -191,7 +184,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
     from it — changes accordingly.
     """
     base_inputs = {
-        "DP200014:00552": Decimal("1000000"),
+        "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
         "DP200014B:00592": Decimal("0"),
@@ -246,7 +239,7 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
         calculate_registry_snapshot(
             _snapshot(),
             inputs={
-                "DP200014:00552": Decimal("1000000"),
+                "00501": Decimal("1000000"),
                 "DP200014:01033": Decimal("0"),
                 "DP200014:01034": Decimal("0"),
                 "DP200014B:00592": Decimal("0"),
@@ -275,7 +268,7 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
         calculate_registry_snapshot(
             _snapshot(),
             inputs={
-                "DP200014:00552": Decimal("1000000"),
+                "00501": Decimal("1000000"),
                 "DP200014:01033": Decimal("0"),
                 "DP200014:01034": Decimal("0"),
                 "DP200014B:00592": Decimal("0"),
@@ -302,9 +295,7 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     the runtime routes it through the string-valued enum-dispatch
     channel of ``lookup_parameter_by_entity_type``.
     """
-    binding = next(
-        b for b in _snapshot().revision.bindings if b.id == _DISPATCH_BINDING
-    )
+    binding = next(b for b in _snapshot().revision.bindings if b.id == _DISPATCH_BINDING)
     assert binding.source == "profile"
     assert binding.typed_enum == "LegalEntityForm"
     assert binding.selector.get("field") == "legal_entity_form"
@@ -322,20 +313,14 @@ def test_erd_parameter_encodes_the_ley_31_2022_rate() -> None:
     original LIS Art. 29 and the Ley 31/2022 modification.
     """
     parameters = _parameters()
-    assert "is.modelo-200.tipo-gravamen-erd" in parameters, (
-        "ERD parameter must be registered (Ley 31/2022 Art. 39)"
-    )
+    assert "is.modelo-200.tipo-gravamen-erd" in parameters, "ERD parameter must be registered (Ley 31/2022 Art. 39)"
     erd = parameters["is.modelo-200.tipo-gravamen-erd"]
     assert erd.data_type == "ratio"
     assert erd.unit == "percent"
     assert len(erd.values) == 1
-    assert erd.values[0].value == Decimal("23"), (
-        "ERD rate must be 23 % per Ley 31/2022 Art. 39"
-    )
+    assert erd.values[0].value == Decimal("23"), "ERD rate must be 23 % per Ley 31/2022 Art. 39"
     assert "ley-27-2014:art-29" in erd.legal_refs
-    assert "ley-31-2022:art-39" in erd.legal_refs, (
-        "ERD parameter must cite Ley 31/2022 Art. 39 as modification source"
-    )
+    assert "ley-31-2022:art-39" in erd.legal_refs, "ERD parameter must cite Ley 31/2022 Art. 39 as modification source"
 
 
 def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
@@ -347,7 +332,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     parameter. Aitor Etxegarai oracle: SAL INCN 850.000 → 23 %.
     """
     base_inputs = {
-        "DP200014:00552": Decimal("1000000"),
+        "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
         "DP200014B:00592": Decimal("0"),
@@ -398,7 +383,7 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
     changes the dispatched rate.
     """
     base_inputs = {
-        "DP200014:00552": Decimal("1000000"),
+        "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
         "DP200014B:00592": Decimal("0"),
@@ -432,7 +417,7 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
     new-entity lane is the outermost predicate in the tipo formula.
     """
     base_inputs = {
-        "DP200014:00552": Decimal("500000"),
+        "00501": Decimal("500000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
         "DP200014B:00592": Decimal("0"),
@@ -455,9 +440,7 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
     assert result.values["DP200014:00558"] == Decimal("15"), (
         "new-entity flag must override ERD lane: tipo = 15 %, not 23 %"
     )
-    assert result.values["DP200014:00562"] == Decimal("75000.00"), (
-        "cuota integra at 15 % on 500k base = 75.000"
-    )
+    assert result.values["DP200014:00562"] == Decimal("75000.00"), "cuota integra at 15 % on 500k base = 75.000"
 
 
 def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
@@ -468,7 +451,7 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
     pay 20 %, not 23 %.
     """
     base_inputs = {
-        "DP200014:00552": Decimal("1000000"),
+        "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
         "DP200014B:00592": Decimal("0"),
@@ -488,6 +471,4 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert result.values["DP200014:00558"] == Decimal("20"), (
-        "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
-    )
+    assert result.values["DP200014:00558"] == Decimal("20"), "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"

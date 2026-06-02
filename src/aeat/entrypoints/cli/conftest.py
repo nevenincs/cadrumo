@@ -56,4 +56,3 @@ def cli_runner() -> CliRunner:
     rather than redeclaring it.
     """
     return _TyperAwareCliRunner()
-

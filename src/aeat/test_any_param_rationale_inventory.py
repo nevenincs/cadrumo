@@ -128,10 +128,7 @@ def _preceding_lines_have_marker(
     """Return True if any of _CONTEXT_LINES before *func_lineno* contain a marker."""
     start = max(0, func_lineno - 1 - _CONTEXT_LINES)
     end = func_lineno - 1
-    for line in source_lines[start:end]:
-        if any(m in line for m in _MARKER_TOKENS):
-            return True
-    return False
+    return any(any(m in line for m in _MARKER_TOKENS) for line in source_lines[start:end])
 
 
 def _collect_violations(

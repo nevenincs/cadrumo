@@ -39,6 +39,7 @@ class AuthProviderKind(StrEnum):
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
 
+
 class AuthProviderDescription(BaseModel):
     """Operator-facing description of one configured auth provider.
 
@@ -67,6 +68,7 @@ class AuthProviderDescription(BaseModel):
     health_severity: str | None = None
     days_until_expiry: int | None = None
     health_summary: str | None = None
+
 
 @runtime_checkable
 class AuthProvider(Protocol):
@@ -100,6 +102,7 @@ class AuthProvider(Protocol):
         """Return a safe, log-friendly :class:`AuthProviderDescription` of the provider's configured state."""
         ...
 
+
 def select_provider(
     kind: AuthProviderKind,
     *,
@@ -123,6 +126,7 @@ def select_provider(
         browser_session_factory=browser_session_factory,
     )
 
+
 def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
     """Return a one-paragraph operator-facing summary of how ``description`` affects the workflow.
 
@@ -140,6 +144,7 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     if description.kind == AuthProviderKind.CERTIFICATE:
         return tr("application.auth.provider_impact.certificate_ready")
     return tr("application.auth.provider_impact.generic_ready", label=description.label)
+
 
 from ._acquisition_lock import (
     AuthAcquisitionLockedError,

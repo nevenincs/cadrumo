@@ -40,6 +40,7 @@ _QUANTIZE_PATTERN = re.compile(
 # Pattern 2: bare Decimal(str(...)) coercion.
 _DECIMAL_STR_PATTERN = re.compile(r"Decimal\s*\(\s*str\s*\(")
 
+
 def _is_excluded(path: pathlib.Path) -> bool:
     if path.name.startswith("test_"):
         return True

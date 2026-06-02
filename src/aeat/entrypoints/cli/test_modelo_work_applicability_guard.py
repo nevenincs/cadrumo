@@ -36,8 +36,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
-
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_profile_storage_root(tmp_path=tmp_path):

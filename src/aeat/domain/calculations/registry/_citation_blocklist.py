@@ -8,6 +8,18 @@ from typing import Literal, NamedTuple
 from ....core.i18n import Translatable as tr
 
 CitationSource = Literal["ley", "real_decreto", "orden", "reglamento", "manual", "instruction"]
+"""Closed set of Spanish-law source types a registry legal citation may reference.
+
+Maps to the ``source`` field on ``legal_refs`` entries in the modelo registry
+TOML authoring tree. Values are lowercase identifiers:
+
+* ``"ley"`` — primary legislation (e.g. LIRPF, LIS, LIVA).
+* ``"real_decreto"`` — Royal Decree (e.g. RIRPF, RIS).
+* ``"orden"`` — Ministerial Order (HAC/EHA prefixes).
+* ``"reglamento"`` — secondary regulation.
+* ``"manual"`` — AEAT published guidance manual.
+* ``"instruction"`` — AEAT instruction document.
+"""
 
 
 def _fold_diacritics(text: str) -> str:
@@ -15,6 +27,21 @@ def _fold_diacritics(text: str) -> str:
 
 
 class KnownBadCitation(NamedTuple):
+    """A guardrail entry recording one mis-cited Spanish-tax legal reference.
+
+    Attributes:
+        source: The ``CitationSource`` category of the misfiring citation
+            (e.g. ``"ley"``, ``"reglamento"``).
+        article: The article number string as it appears in registry TOML
+            (e.g. ``"103"``, ``"100.3.a"``).
+        role_substring: A translatable substring that the casilla's
+            ``role`` field must contain to trigger this guard. Matching is
+            done after Unicode diacritic folding and case folding.
+        reason: Human-readable explanation of why the citation is wrong and
+            which article should be used instead. Used in validation
+            error messages surfaced to the registry author.
+    """
+
     source: CitationSource
     article: str
     role_substring: tr
@@ -110,6 +137,22 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
 
 
 def find_known_bad(source: CitationSource, article: str, role_text: str) -> KnownBadCitation | None:
+    """Return the first blocklist entry that matches the supplied citation, or ``None``.
+
+    Matching is performed after diacritic folding: ``role_text`` and every
+    ``KnownBadCitation.role_substring`` are lowercased and stripped of combining
+    diacritics before the substring test runs, so ``"cuota íntegra"`` and
+    ``"cuota integra"`` compare as equal.
+
+    Args:
+        source: The ``CitationSource`` category of the citation being validated.
+        article: The article number string as written in registry TOML.
+        role_text: The free-text ``role`` field of the casilla being validated.
+
+    Returns:
+        The matching :class:`KnownBadCitation` entry, or ``None`` if the citation
+        is not on the blocklist.
+    """
     folded = _fold_diacritics(role_text)
     for entry in _KNOWN_BAD_CITATIONS:
         if entry.source == source and entry.article == article and _fold_diacritics(entry.role_substring) in folded:

@@ -78,10 +78,7 @@ def _file_has_no_type_ignore_on_def(rel_path: str, func_name: str) -> bool:
     if not path.exists():
         return True
     source = path.read_text(encoding="utf-8", errors="replace")
-    for line in source.splitlines():
-        if f"def {func_name}" in line and "# type: ignore" in line:
-            return False
-    return True
+    return all(not (f"def {func_name}" in line and "# type: ignore" in line) for line in source.splitlines())
 
 
 def test_s663_no_type_ignore_on_playwright_functions() -> None:

@@ -107,9 +107,7 @@ class TestCacheRedaction:
         )
         assert entry.response.text == "non sensitive output"
 
-    def test_idempotent_re_read(
-        self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile
-    ) -> None:
+    def test_idempotent_re_read(self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile) -> None:
         """A cache hit re-reads the (already-redacted) text. Re-applying
         the redaction rules to a redacted string is a no-op."""
         cache = LLMCache(root_dir=tmp_path / "cache")

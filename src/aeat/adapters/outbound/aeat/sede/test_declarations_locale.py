@@ -79,9 +79,7 @@ class TestParseListboxTranslation:
         except SedeParseError as exc:
             if "justificante" in exc.args[0]:
                 expected = tr("adapters.sede.errors.justificante_column_missing")
-                assert exc.translated_message == expected, (
-                    f"expected {expected!r}, got {exc.translated_message!r}"
-                )
+                assert exc.translated_message == expected, f"expected {expected!r}, got {exc.translated_message!r}"
             elif "listbox" in exc.args[0]:
                 expected = tr("adapters.sede.errors.listbox_missing")
                 assert exc.translated_message == expected

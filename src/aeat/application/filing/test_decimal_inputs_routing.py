@@ -92,7 +92,10 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
     result = calculate_registry_snapshot(
         snap,
         inputs={
-            "DP200014:00552": Decimal("100000.00"),
+            # Base imponible 00552 is now computed from the base-determination
+            # chain, so the resultado contable 00501 is the operator input;
+            # with zero correcciones/reserva/BIN it computes 00552 = 100000.
+            "00501": Decimal("100000.00"),
             "DP200014:01033": Decimal("0.00"),
             "DP200014:01034": Decimal("0.00"),
         },

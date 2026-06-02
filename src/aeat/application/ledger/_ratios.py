@@ -29,7 +29,9 @@ from ...domain.categories import (
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
+    UsageRatioValidationError,
     load_usage_ratios,
+    save_usage_ratios,
 )
 
 _HOME_OFFICE_FAMILIES = frozenset(
@@ -191,6 +193,40 @@ def validate_ratios_for_bucket(
     )
 
 
+def set_usage_ratio(*, bucket_id: str, category: SpendingCategory, ratio: Decimal) -> Decimal | None:
+    """Set or replace one per-category usage-ratio override on the bucket.
+
+    Loads the bucket's :class:`UsageRatioProfile`, applies the override through
+    the domain ``with_ratio`` validator, and persists the result. Returns the
+    prior override value for the category (``None`` when there was none) so the
+    caller can emit a before/after audit event. Application command boundary for
+    the CLI ``ledger ratios set`` verb; the CLI no longer calls the domain
+    load/save primitives directly.
+    """
+    profile = load_usage_ratios(bucket_id=bucket_id)
+    prior = profile.ratios.get(category)
+    save_usage_ratios(profile.with_ratio(category, ratio), bucket_id=bucket_id)
+    return prior
+
+
+def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal | None:
+    """Clear one per-category usage-ratio override on the bucket.
+
+    Returns the cleared value. Raises :class:`UsageRatioValidationError` when
+    the category carries no persisted override (so the caller can surface a
+    precise "nothing to clear" message). Application command boundary for the
+    CLI ``ledger ratios unset`` verb.
+    """
+    profile = load_usage_ratios(bucket_id=bucket_id)
+    prior = profile.ratios.get(category)
+    if prior is None:
+        raise UsageRatioValidationError(
+            f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}"
+        )
+    save_usage_ratios(profile.without_ratio(category), bucket_id=bucket_id)
+    return prior
+
+
 class RatiosCensoOverrideWarning(BaseModel):
     """A non-fatal warning that the operator's per-category override deviates from the censo-derived value.
 
@@ -289,6 +325,8 @@ __all__ = [
     "censo_override_warning",
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
+    "set_usage_ratio",
+    "unset_usage_ratio",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
 ]

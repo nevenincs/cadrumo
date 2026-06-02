@@ -36,8 +36,15 @@ def _create_profile() -> None:
     created = _RUNNER.invoke(
         app,
         [
-            "config", "profile", "create", "tester", "--quiet",
-            "--tax-id", "00000001R", "--activity", "freelance",
+            "config",
+            "profile",
+            "create",
+            "tester",
+            "--quiet",
+            "--tax-id",
+            "00000001R",
+            "--activity",
+            "freelance",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -49,9 +56,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
@@ -76,11 +81,7 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     expected = {category.value for category in SpendingCategory}
     assert listed == expected
     # Every listed id must belong to a family group, never float free.
-    grouped = {
-        category_id
-        for family in payload["families"]
-        for category_id in family["category_ids"]
-    }
+    grouped = {category_id for family in payload["families"] for category_id in family["category_ids"]}
     assert grouped == expected
 
 
@@ -91,8 +92,15 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "classify", "--id", txn,
-            "--classification", "BUSINESS", "--category-id", "ventas_actividad",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "ventas_actividad",
         ],
     )
     assert result.exit_code != 0
@@ -107,14 +115,66 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
     result = _RUNNER.invoke(
         app,
         [
-            "--format", "json", "app", "ledger", "classify", "--id", txn,
-            "--classification", "BUSINESS",
-            "--category-id", SpendingCategory.MATERIAL_OFICINA.value,
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            SpendingCategory.MATERIAL_OFICINA.value,
         ],
     )
     assert result.exit_code == 0, result.output
     transaction = json.loads(result.output)["result"]["transaction"]
     assert transaction["category_id"] == SpendingCategory.MATERIAL_OFICINA.value
+
+
+def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> None:
+    """`--reaffirm` must not print a plain-text notice before JSON output."""
+    _create_profile()
+    txn = _imported_transaction_id(tmp_path)
+    first = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "BUSINESS",
+        ],
+    )
+    assert first.exit_code == 0, first.output
+
+    reaffirmed = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--reaffirm",
+        ],
+    )
+
+    assert reaffirmed.exit_code == 0, reaffirmed.output
+    assert reaffirmed.output.lstrip().startswith("{")
+    payload = json.loads(reaffirmed.output)
+    assert payload["command"] == "ledger.classify"
+    assert payload["result"]["transaction"]["business_classification"] == "BUSINESS"
+    assert payload["result"]["transaction"]["taxable_base"] == "100"
 
 
 # --- M11: discoverable --provider list --------------------------------------
@@ -137,9 +197,7 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "quickbooks"]
-    )
+    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "quickbooks"])
     assert result.exit_code != 0
     assert "quickbooks" in result.output
     for provider in ("csv", "ofx", "xlsx", "n26"):
@@ -160,9 +218,7 @@ def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None
     _create_profile()
     statement = tmp_path / "empty.csv"
     statement.write_text(_N26_HEADER, encoding="utf-8")
-    result = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert result.exit_code != 0
     assert "no data rows" in result.output.lower()
 
@@ -179,8 +235,8 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
     statement = tmp_path / "blank.csv"
     statement.write_text(_N26_HEADER + " , , , , , \n", encoding="utf-8")
     result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(statement),
-              "--provider", "csv"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -197,13 +253,11 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    first = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    first = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
     second = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(statement),
-              "--provider", "csv"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert second.exit_code == 0, second.output
     payload = json.loads(second.output)["result"]
@@ -228,12 +282,27 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "add",
-            "--date", "2026-04-15", "--amount", "-121.00",
-            "--direction", "OUTGOING", "--description", "Office chair",
-            "--classification", "BUSINESS", "--business-pct", "1.0",
-            "--taxable-base", "100.00", "--iva-rate", "0.21",
-            "--iva-amount", "21.00",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Office chair",
+            "--classification",
+            "BUSINESS",
+            "--business-pct",
+            "1.0",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
         ],
     )
     assert result.exit_code != 0
@@ -248,12 +317,27 @@ def test_add_business_row_without_business_pct_succeeds(tmp_path: Path) -> None:
     result = _RUNNER.invoke(
         app,
         [
-            "--format", "json", "app", "ledger", "add",
-            "--date", "2026-04-15", "--amount", "-121.00",
-            "--direction", "OUTGOING", "--description", "Office chair",
-            "--classification", "BUSINESS",
-            "--taxable-base", "100.00", "--iva-rate", "0.21",
-            "--iva-amount", "21.00",
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Office chair",
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -270,9 +354,7 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
     """`review --id <prefix>` resolves the prefix instead of refusing."""
     _create_profile()
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "review", "--id", txn[:8]]
-    )
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--id", txn[:8]])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["id"] == txn
@@ -285,9 +367,7 @@ def test_review_by_full_id_still_resolves_the_transaction(
     """`review --id <full>` keeps working after the prefix-resolution fix."""
     _create_profile()
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "review", "--id", txn]
-    )
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", "--id", txn])
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["id"] == txn
 
@@ -309,13 +389,31 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
     added = _RUNNER.invoke(
         app,
         [
-            "--format", "json", "app", "ledger", "add",
-            "--date", "2026-04-15", "--amount", "-121.00",
-            "--direction", "OUTGOING", "--description", "Office chair",
-            "--counterparty", "Muebles SL",
-            "--classification", "BUSINESS",
-            "--taxable-base", "100.00", "--iva-rate", "0.21",
-            "--iva-amount", "21.00", "--notes", "Q2 furniture",
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Office chair",
+            "--counterparty",
+            "Muebles SL",
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--notes",
+            "Q2 furniture",
         ],
     )
     assert added.exit_code == 0, added.output
@@ -342,12 +440,27 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     added = _RUNNER.invoke(
         app,
         [
-            "--format", "json", "app", "ledger", "add",
-            "--date", "2026-04-15", "--amount", "-242.00",
-            "--direction", "OUTGOING", "--description", "Laptop",
-            "--counterparty", "PC Shop SL",
-            "--taxable-base", "200.00", "--iva-rate", "0.21",
-            "--iva-amount", "42.00",
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "-242.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "Laptop",
+            "--counterparty",
+            "PC Shop SL",
+            "--taxable-base",
+            "200.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "42.00",
         ],
     )
     assert added.exit_code == 0, added.output
@@ -414,8 +527,7 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
 
     dry_run = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "import", str(statement),
-         "--provider", "csv", "--dry-run"],
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
     payload = json.loads(dry_run.output)["result"]
@@ -426,8 +538,8 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
 
     # A real import of the same file adds exactly what the preview said.
     real = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(statement),
-              "--provider", "csv"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert real.exit_code == 0, real.output
     assert json.loads(real.output)["result"]["imported"] == 4
@@ -439,14 +551,12 @@ def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> No
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    first = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
     dry_run = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(statement),
-              "--provider", "csv", "--dry-run"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
     payload = json.loads(dry_run.output)["result"]
@@ -467,9 +577,7 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
-    first = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    first = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert first.exit_code == 0, first.output
 
     listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
@@ -479,14 +587,13 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
 
     edited = _RUNNER.invoke(
         app,
-        ["app", "ledger", "update", "--id", target,
-         "--description", "Invoice 1 - corrected narrative"],
+        ["app", "ledger", "update", "--id", target, "--description", "Invoice 1 - corrected narrative"],
     )
     assert edited.exit_code == 0, edited.output
 
     reimport = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(statement),
-              "--provider", "csv"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"],
     )
     assert reimport.exit_code == 0, reimport.output
     payload = json.loads(reimport.output)["result"]
@@ -513,14 +620,12 @@ def test_cross_format_import_of_the_same_movements_deduplicates(
     ofx_statement = tmp_path / "statement.ofx"
     ofx_statement.write_text(_FOUR_ROW_OFX, encoding="ascii")
 
-    csv_import = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(csv_statement), "--provider", "csv"]
-    )
+    csv_import = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_statement), "--provider", "csv"])
     assert csv_import.exit_code == 0, csv_import.output
 
     ofx_import = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(ofx_statement),
-              "--provider", "ofx"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(ofx_statement), "--provider", "ofx"],
     )
     assert ofx_import.exit_code == 0, ofx_import.output
     payload = json.loads(ofx_import.output)["result"]
@@ -544,9 +649,7 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    assert _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(first), "--provider", "csv"]
-    ).exit_code == 0
+    assert _RUNNER.invoke(app, ["app", "ledger", "import", str(first), "--provider", "csv"]).exit_code == 0
 
     # Same date and amount, deliberately different reference text.
     second = tmp_path / "second.csv"
@@ -555,8 +658,8 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "import", str(second),
-              "--provider", "csv"],
+        app,
+        ["--format", "json", "app", "ledger", "import", str(second), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -583,8 +686,7 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", txn,
-         "--classification", "BUSINESS", "--taxable-base", "-397.11"],
+        ["app", "ledger", "classify", "--id", txn, "--classification", "BUSINESS", "--taxable-base", "-397.11"],
     )
     assert result.exit_code != 0
     assert "taxable_base" in result.output
@@ -597,8 +699,19 @@ def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "classify", "--id", txn,
-         "--classification", "BUSINESS", "--taxable-base", "100.00"],
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+        ],
     )
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["transaction"]["taxable_base"] == "100"
@@ -630,8 +743,17 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", txn,
-         "--classification", "BUSINESS", "--category-id", "office:material_oficina"],
+        [
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "office:material_oficina",
+        ],
     )
     assert result.exit_code != 0
     valid_ids = {category.value for category in SpendingCategory}
@@ -651,8 +773,19 @@ def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["--format", "json", "app", "ledger", "classify", "--id", txn,
-         "--classification", "MIXED", "--business-pct", "0.5"],
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            txn,
+            "--classification",
+            "MIXED",
+            "--business-pct",
+            "0.5",
+        ],
     )
     assert result.exit_code == 0, result.output
     transaction = json.loads(result.output)["result"]["transaction"]
@@ -679,8 +812,7 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> No
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", "--id", txn,
-         "--classification", "BUSINESS", "--business-pct", "0.5"],
+        ["app", "ledger", "classify", "--id", txn, "--classification", "BUSINESS", "--business-pct", "0.5"],
     )
     assert result.exit_code != 0
     assert "--business-pct" in result.output
@@ -691,9 +823,7 @@ def test_history_accepts_the_id_positionally_like_view(tmp_path: Path) -> None:
     """`ledger history <id>` takes the id positionally, matching `ledger view`."""
     _create_profile()
     txn = _imported_transaction_id(tmp_path)
-    result = _RUNNER.invoke(
-        app, ["--format", "json", "app", "ledger", "history", txn]
-    )
+    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", txn])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["transaction_id"] == txn
@@ -722,9 +852,7 @@ def test_list_and_view_render_accented_descriptions_identically(
         _N26_HEADER + f"2026-04-15,Proveedor SA,{accented},-50.00,EUR,n26-acc\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(
-        app, ["app", "ledger", "import", str(statement), "--provider", "csv"]
-    )
+    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
     listed = _RUNNER.invoke(app, ["app", "ledger", "list"])

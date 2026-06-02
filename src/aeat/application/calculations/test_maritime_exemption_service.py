@@ -137,9 +137,7 @@ class TestResolveMaritimeExemptionRebeca:
         )
         obs = result.observations[0]
         combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-16100" in combined, (
-            f"legal_refs must carry BOE-A-1994-16100, got {obs.legal_refs!r}"
-        )
+        assert "BOE-A-1994-16100" in combined, f"legal_refs must carry BOE-A-1994-16100, got {obs.legal_refs!r}"
         assert "73" in combined
         assert "75" in combined
 

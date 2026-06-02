@@ -137,7 +137,9 @@ def register(app: typer.Typer) -> None:
             except ProfileNotFoundError as exc:
                 raise _bad_unknown_profile(pointer.label) from exc
         value = fact_value(record, canonical_key) or ""
-        typer.echo(redact_for_cli_output(f"{canonical_key}\t{value or tr('cli.diagnostics.profile.unset_placeholder')}"))
+        typer.echo(
+            redact_for_cli_output(f"{canonical_key}\t{value or tr('cli.diagnostics.profile.unset_placeholder')}")
+        )
 
     @sub.command("set", help=tr("cli.diagnostics.profile.set_help"))
     def _set(

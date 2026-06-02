@@ -135,9 +135,7 @@ class SubmissionEngineAdapter:
         self._engine.preflight(draft, today=today, skip_deadline_window=skip_deadline_window)
 
 
-async def _live_expedientes_source(
-    session: object, modelo: str | None
-) -> tuple[WorkflowExpedienteProtocol, ...]:
+async def _live_expedientes_source(session: object, modelo: str | None) -> tuple[WorkflowExpedienteProtocol, ...]:
     from ...adapters.outbound.aeat.sede import walk_expedientes_tree
 
     # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol

@@ -149,9 +149,7 @@ _FISCAL_RESIDENCY_CHOICES: tuple[WizardChoice, ...] = tuple(
     for member in FiscalResidency
 )
 
-_NON_RESIDENT_IRNR = WizardCondition(
-    question_id="fiscal-residency", equals=FiscalResidency.NON_RESIDENT_IRNR.value
-)
+_NON_RESIDENT_IRNR = WizardCondition(question_id="fiscal-residency", equals=FiscalResidency.NON_RESIDENT_IRNR.value)
 
 
 _CCAA_CHOICES: tuple[WizardChoice, ...] = tuple(

@@ -145,8 +145,7 @@ def _encode_currency_field(
         header_val = headers.get(spec.field_id, _ZERO)
         if isinstance(header_val, (str, date)):
             raise AeatExportFormatError(
-                f"CURRENCY field {spec.field_id!r} requires a "
-                f"Decimal in headers; got {type(header_val).__name__}"
+                f"CURRENCY field {spec.field_id!r} requires a Decimal in headers; got {type(header_val).__name__}"
             )
         value = header_val
     return encode_currency(

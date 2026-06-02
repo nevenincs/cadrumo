@@ -107,7 +107,9 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     result = calculate_registry_snapshot(
         _snapshot_2024(),
         inputs={
-            "DP200014:00552": Decimal("100000"),
+            # 00552 is now computed; feed resultado contable 00501 with zero
+            # correcciones/reserva/BIN so the chain computes 00552 = 100.000.
+            "00501": Decimal("100000"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
             "DP200014B:00592": Decimal("0"),
@@ -281,7 +283,9 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
     casilla has no supplied value.
     """
     inputs_without_00562 = {
-        "DP200014:00552": Decimal("200000"),
+        # 00552 is now computed; feed resultado contable 00501 (zero
+        # correcciones/reserva/BIN) so the chain computes 00552 = 200.000.
+        "00501": Decimal("200000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
         "DP200014B:00592": Decimal("0"),

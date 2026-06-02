@@ -143,6 +143,8 @@ def _get_buscar_settle_ms() -> int:
 
 def _get_ver_click_timeout_ms() -> int:
     return load_settings().aeat_browser_ver_click_timeout_ms
+
+
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",
@@ -628,10 +630,7 @@ def _declarations_page_shape_context(
 ) -> dict[str, object]:
     soup = BeautifulSoup(html, "html.parser")
     normalized_text = normalize_response_text(soup.get_text(" ", strip=True))
-    buttons = tuple(
-        _bounded_text(button.get_text(" ", strip=True))
-        for button in soup.find_all("button")[:12]
-    )
+    buttons = tuple(_bounded_text(button.get_text(" ", strip=True)) for button in soup.find_all("button")[:12])
     headers = tuple(
         _bounded_text(header.get_text(" ", strip=True))
         for header in soup.find_all(class_=_has_class("z-listheader"))[:12]
@@ -1540,9 +1539,7 @@ def _observed_casillas_from_submitted_file(
 
 
 def _is_modelo_303_page_03_fallback(casillas: tuple[ObservedCasillaValue, ...]) -> bool:
-    return bool(casillas) and all(
-        casilla.source_locator.startswith("record:T30303:pos:") for casilla in casillas
-    )
+    return bool(casillas) and all(casilla.source_locator.startswith("record:T30303:pos:") for casilla in casillas)
 
 
 def _submitted_file_extraction_coverage(

@@ -1431,6 +1431,8 @@ parameters = [
     "is.modelo-200.tipo-gravamen-non-profit-special-regime",
 ]
 formulas = [
+    "modelo-200-base-imponible-previa",
+    "modelo-200-base-imponible",
     "modelo-200-tipo-gravamen-por-forma-juridica",
     "modelo-200-base-imponible-despues-reserva-nivelacion",
     "modelo-200-cuota-integra",

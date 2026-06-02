@@ -12,8 +12,8 @@ from decimal import Decimal
 
 import pytest
 
-from . import format_decimal
 from ..errors import DecimalFormatError
+from . import format_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -129,9 +129,7 @@ def test_format_decimal_normalize_with_none_policy(value: Decimal | None, expect
         (Decimal("5.00"), "5.00"),
     ],
 )
-def test_format_decimal_censo_caller_pattern(
-    value: Decimal, expected_after_caller_patch: str
-) -> None:
+def test_format_decimal_censo_caller_pattern(value: Decimal, expected_after_caller_patch: str) -> None:
     """The _censo_live.py caller normalizes then appends .00 when no dot present.
 
     This test exercises the canonical output that the caller would produce.

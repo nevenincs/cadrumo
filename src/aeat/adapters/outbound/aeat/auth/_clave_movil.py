@@ -716,9 +716,7 @@ class ClaveMovilAuthProvider:
             identity_kind = "invalid_or_missing"
         auth_mode = "non_qr" if self._settings.aeat_clave_prefer_non_qr else "qr"
         auth_route = (
-            "clave_movil_non_qr_request"
-            if self._settings.aeat_clave_prefer_non_qr
-            else "clave_movil_qr_request"
+            "clave_movil_non_qr_request" if self._settings.aeat_clave_prefer_non_qr else "clave_movil_qr_request"
         )
         context: dict[str, object] = {
             "auth_mode": auth_mode,
@@ -737,8 +735,7 @@ class ClaveMovilAuthProvider:
             "certificate_password_configured": self._settings.aeat_certificate_password_secret is not None,
             "certificate_backend": self._settings.aeat_certificate_backend.value,
             "certificate_file_present": bool(
-                self._settings.aeat_certificate_path is not None
-                and self._settings.aeat_certificate_path.is_file()
+                self._settings.aeat_certificate_path is not None and self._settings.aeat_certificate_path.is_file()
             ),
             "certificate_path_fingerprint": _diagnostic_fingerprint(self._settings.aeat_certificate_path),
         }
@@ -1050,8 +1047,7 @@ class ClaveMovilAuthProvider:
                 self._invalidate_persisted(storage_state_path)
             except Exception as _cleanup_exc:
                 log.debug(
-                    "ClaveMovilAuthProvider: _invalidate_persisted during persist-failure cleanup"
-                    " suppressed: %s",
+                    "ClaveMovilAuthProvider: _invalidate_persisted during persist-failure cleanup suppressed: %s",
                     _cleanup_exc,
                     exc_info=True,
                 )
@@ -1410,9 +1406,10 @@ class ClaveMovilAuthProvider:
             try:
                 response = await asyncio.wait_for(
                     wait_for_response(
-                        lambda candidate: surface.cancelar_clave_movil_path_marker
-                        in str(getattr(candidate, "url", ""))
-                        and int(getattr(candidate, "status", 599)) < 400,
+                        lambda candidate: (
+                            surface.cancelar_clave_movil_path_marker in str(getattr(candidate, "url", ""))
+                            and int(getattr(candidate, "status", 599)) < 400
+                        ),
                         timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS * 1000,
                     ),
                     timeout=_DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
@@ -1624,9 +1621,7 @@ class ClaveMovilAuthProvider:
         modal_marker = pre303.alert_modal_selector.lstrip("#")
         if pre303.alert_modal_selector not in html and modal_marker not in html:
             return
-        continue_selector = (
-            f'{pre303.alert_modal_selector} button:has-text("{pre303.alert_continue_button_text}")'
-        )
+        continue_selector = f'{pre303.alert_modal_selector} button:has-text("{pre303.alert_continue_button_text}")'
         await click(continue_selector)
 
 

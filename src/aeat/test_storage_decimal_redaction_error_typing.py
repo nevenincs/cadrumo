@@ -223,10 +223,7 @@ def _load_censo_sync_error_class() -> type:
 
     spec = importlib.util.spec_from_file_location(
         "aeat.application.user_profile._censo_errors",
-        str(
-            pathlib.Path(__file__).parent
-            / "application/user_profile/_censo_errors.py"
-        ),
+        str(pathlib.Path(__file__).parent / "application/user_profile/_censo_errors.py"),
     )
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)

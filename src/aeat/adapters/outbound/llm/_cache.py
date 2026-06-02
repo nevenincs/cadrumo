@@ -283,7 +283,9 @@ class LLMCache:
 
     def _entry_from_payload(self, payload: bytes) -> CachedEntry:
         """Decode a secure-object payload into a cached entry."""
-        decoded = json.loads(payload.decode("utf-8"))  # JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT: secure-object payload is opaque bytes from SQLAlchemy; downstream re-serialisation guards type at storage boundary.
+        decoded = json.loads(
+            payload.decode("utf-8")
+        )  # JSON-LOADS-RATIONALE-LLM-CACHE-SECURE-OBJECT: secure-object payload is opaque bytes from SQLAlchemy; downstream re-serialisation guards type at storage boundary.
         if decoded.get("logical_root") != self._logical_root():
             raise LLMCacheError("LLM cache payload belongs to a different logical partition")
         return CachedEntry.model_validate_json(json.dumps(decoded["entry"]))
