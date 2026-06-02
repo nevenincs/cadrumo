@@ -1774,10 +1774,10 @@ def auth_configure(
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
-    from .._config_payloads import AuthConfigureResult as _AuthConfigureResult
+    from .._config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     configure_result = result
-    auth_configure_payload = _AuthConfigureResult(
+    auth_configure_payload = _AuthConfigurePayload(
         provider=configure_result.provider,
         file=configure_result.file,
         complete=configure_result.complete,
@@ -1958,9 +1958,9 @@ def auth_clear(
             translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider or ""},
         ) from exc
-    from .._config_payloads import AuthClearResult
+    from .._config_payloads import AuthClearPayload
 
-    clear_result = AuthClearResult(
+    clear_result = AuthClearPayload(
         removed_sessions=result.removed_sessions,
         cleared_workflow_state=result.cleared_workflow_state,
         cleared_locks=result.cleared_locks,
