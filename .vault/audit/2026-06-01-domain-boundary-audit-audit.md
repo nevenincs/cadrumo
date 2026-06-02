@@ -1172,6 +1172,20 @@ remediation is currently HELD at audit-only per the active action policy.
   repeated `lint-imports` runs + a grimp reconciliation script. Add as W08.P25 follow-up
   Steps; gate is RED until reconciled.
 
+- 2026-06-02 (cont.): three peer-blockers re-checked; two cleared and completed.
+  DB-29 S41 COMPLETE — the peer's pdf/__init__ repoint to domain.justificante landed in
+  HEAD, so the orphaned pdf/_errors.py shim was deleted (collection 13043). DB-37
+  COMPLETE — G1 (`--category` typed PortalCategory so Typer renders Choice; manual
+  coercion dropped) once _app_live.py freed, plus G2 earlier. DB-41 PARTIAL FIX —
+  _invoice_classification imported IvaRate from the ..invoices package (partial during
+  invoices/__init__ load); switched to the ..invoices._enums leaf, fixing the
+  invoices-first direction that the W01.P02 registry sweep triggered (332 iva+invoices
+  tests pass). The inherent iva<->invoices bidirectional package cycle remains for the
+  unusual iva-first-direct path (pre-existing, not hit in collection); full robustness
+  needs breaking the bidirectionality (DB-41/DB-11). W01.P02 is now substantially
+  de-risked (registry->_bindings->invoices works); a careful full-sweep re-attempt with
+  collection gating is the next W01 step.
+
 ## Codification candidates
 
 <!-- Findings that satisfy the three durability criteria
