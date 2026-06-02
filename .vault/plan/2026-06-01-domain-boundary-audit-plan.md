@@ -253,19 +253,19 @@ RECURRING, not one-shot: on a cadence (every Wave close and every 6-8 commits) r
 
 Run the type checkers and triage new errors into Steps.
 
-- [ ] `W08.P23.S86` - Run uv run --no-sync ty check src/aeat and uv run --no-sync pyright src/aeat; `record the error count baseline and triage each new error class into a Step or DB-NN finding (recurring each cadence tick); `src/aeat/`.
+- [x] `W08.P23.S86` - Run uv run --no-sync ty check src/aeat and uv run --no-sync pyright src/aeat; `record the error count baseline and triage each new error class into a Step or DB-NN finding (recurring each cadence tick); `src/aeat/`.
 
 ### Phase `W08.P24` - Complexity and lint audit triage (radon + ruff)
 
 Run radon complexity and ruff lint/complexity rules and triage findings.
 
-- [ ] `W08.P24.S87` - Run uv run --no-sync radon cc -s -n C src/aeat (cyclomatic complexity grade C and worse) and the ruff complexity/lint suite; `triage high-complexity functions and new lint classes into refactor Steps (recurring); `src/aeat/`.
+- [x] `W08.P24.S87` - Run uv run --no-sync radon cc -s -n C src/aeat (cyclomatic complexity grade C and worse) and the ruff complexity/lint suite; `triage high-complexity functions and new lint classes into refactor Steps (recurring); `src/aeat/`.
 
 ### Phase `W08.P25` - Architecture-boundary enforcement (import-linter)
 
 Run the import-linter contract and triage layered-architecture / hexagonal-edge violations, feeding the edge-axis findings.
 
-- [ ] `W08.P25.S88` - Run uv run --no-sync lint-imports (import-linter, .importlinter contract); `triage every layered-architecture contract breach as a hexagonal-edge finding under W05 or a new DB-NN (recurring; this is the programmatic counterpart to the manual edge-axis rg sweep); `.importlinter`.
+- [x] `W08.P25.S88` - Run uv run --no-sync lint-imports (import-linter, .importlinter contract); `triage every layered-architecture contract breach as a hexagonal-edge finding under W05 or a new DB-NN (recurring; this is the programmatic counterpart to the manual edge-axis rg sweep); `.importlinter`.
 
 ## Wave `W09` - Import-linter contract remediation (DB-42 expanded)
 

@@ -1311,6 +1311,30 @@ remediation is currently HELD at audit-only per the active action policy.
   per the secure-persistence-foundation ADR); the gate now continuously catches any
   NEW production layer drift. Plan W09 (S90-S94) closed.
 
+- 2026-06-02 (cont.): **W08 recurring tooling-triage tick** (post-W09-close cadence).
+  - **import-linter (P25)**: GREEN, 4 kept / 0 broken (W09). Closed S88.
+  - **ty (P23)**: baseline **918 diagnostics**. Dominated by `invalid-argument-type`
+    (730) + `str` (254) ≈ 85% — but sampling shows these are largely ty's
+    conservative `**dict` kwargs-unpacking handling in TEST code (one
+    `**{"año_override": 2026}` call emits one diagnostic per target parameter,
+    a multiplier) plus ty being a newer/stricter checker than the authoritative
+    pyright. Low production actionability. The actionable production subset is the
+    smaller classes: `unresolved-attribute` (73), `invalid-return-type` (14),
+    `not-subscriptable` (14), `missing-argument` (11), `no-matching-overload` (8),
+    `unresolved-reference` (3) — triage these incrementally; do NOT chase the
+    `**dict`-unpacking test noise. (pyright run deferred to next tick — slower; ty
+    + radon captured this tick.)
+  - **radon (P24)**: baseline **582 blocks at grade C or worse**; D-and-worse
+    production offenders to target for refactor: `_initial_values` (E-35),
+    `reconcile_iva_compensation_wallet` (D-22), `calculate_modelo_revision` (D-23),
+    `_resolve_m210_rate` (D-26), `_evaluate_m210_resolve_rate` (D-27),
+    `verify_declaracion` (D-23), `_apply_iva_compensation_decision_binding` (D-22),
+    `RemoteStateGuardPolicy._validate_policy` (D-27), `taxpayer_profile_from_mapping`
+    (D-26), `build_revision_validation_context` (D-26); the high-complexity `test_*`
+    functions are acceptable (data-table tests). Recorded as DB-43 (code-quality
+    tooling baseline) for incremental refactor under the originating waves.
+  W08 is standing/recurring — these baselines re-evaluate each cadence tick.
+
 ## Codification candidates
 
 
