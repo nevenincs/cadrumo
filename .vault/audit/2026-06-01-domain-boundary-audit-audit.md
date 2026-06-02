@@ -1431,6 +1431,58 @@ remediation is currently HELD at audit-only per the active action policy.
   green; `ty` clean. The one combined-run failure was the registry loader-cache race
   the `aeat-local-execution` rule documents (passed isolated + on sequential re-run).
 
+- 2026-06-02 (cont.): **S89 / W03.P08 blast-radius DISCOVERED — execution-ready spec
+  recorded; deferred to a dedicated atomic pass (not a clean "move + Protocols").** Full
+  investigation of moving `reconcile_iva_compensation_wallet` + its wallet/recurrence
+  predicates from `application/calculations/_iva_wallet_reconciliation.py` into
+  `domain/iva_compensation/_reconciliation.py` found the move is sound BUT carries a
+  hidden cascade the step text did not anticipate:
+  - **Functions to move (canonical-site):** `reconcile_iva_compensation_wallet`,
+    `_validate_wallet_matches_snapshot`, `_is_wallet_stale`, `_authority_sources`,
+    `_is_filed_history_source`, `_local_recurrence_authority_source`, plus constants
+    `_DEFAULT_MAX_WALLET_AGE_DAYS`, `_FILED_HISTORY_OBSERVATION`,
+    `_AEAT_FILED_HISTORY_SOURCE_KINDS`.
+  - **Two domain Protocols** (structural ports; pydantic models satisfy them
+    structurally): `IvaCompensationWalletObservationProtocol` {taxpayer_nif:str,
+    target_year:int, target_period:str, total_pending:Decimal, captured_at:datetime,
+    source_url:object} abstracts the **adapter** `IvaCompensationWalletObservation`
+    (adapters.outbound.aeat.sede) — the domain→adapter edge being removed; and
+    `LocalIvaCompensationRecurrenceProtocol` {amount:Decimal, binding_id:object,
+    source_kind:str, source_modelo:str, source_filing_year:int,
+    source_periods:tuple[str,...], resolved_at:datetime} abstracts the **application**
+    `LocalIvaCompensationRecurrence` (._binding_prefill) — the domain→application edge.
+  - **Hidden cascade (the real cost):** `_is_wallet_stale` raises the *application*
+    error `IvaWalletReconciliationError` (`CoreError`) on a negative
+    `max_wallet_age_days`. A domain function cannot raise it without re-introducing the
+    very domain→application edge being removed. That error is its **only** raise site,
+    is **registered in the core error registry** (`core/errors/registry/_application.py`
+    → code `REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT`, category REFUSED), carries a
+    `message_key` present in **all four locale catalogues** (en/es/ca/hu —
+    `errors.refused.refused_iva_wallet_reconciliation_invariant`), and is **pinned by
+    two tests** in `test_iva_wallet_reconciliation.py` (a registry-coverage test ~L307
+    and `test_negative_max_wallet_age_days_raises...` ~L314). Clean resolution: reroute
+    the guard to the existing **domain** error `IvaCompensationReconciliationInputError`
+    (AeatError, ValueError — already the module's input-validation vocabulary) and
+    **retire** `IvaWalletReconciliationError` (class + registry tuple + 4 locale keys via
+    `python -m aeat.locales remove` + the 2 tests). REFUSED category has 65 members so
+    removal does not empty it; the registry-enforcement test is dynamic (no baseline) so
+    class+entry removal stays green.
+  - **Consumer stability insight:** re-export `reconcile_iva_compensation_wallet` from
+    the application module (import from domain, keep in `__all__`) so
+    `calculations/__init__.py`, `test_iva_compensation_history.py`, and
+    `test_source_mesh_profile_live.py` need no import changes.
+  - **Verification gate list for the atomic commit:** `pytest --collect-only`,
+    `lint-imports` (confirm the domain→adapters/application edges are gone),
+    `test_registry_enforcement.py`, locale parity + honesty gates, the full
+    `test_iva_wallet_reconciliation.py` + `test_iva_compensation_history.py`, and
+    `ty check`.
+  Behaviour-neutral except the negative-`max_wallet_age_days` guard's exception **type**
+  (an internal misconfiguration guard, not an operational refusal); covered by the
+  existing domain-boundary ADR's hexagonal mandate. This is atomic-or-nothing per the
+  relocation-atomicity rule (and source-hygiene forbids pre-landing unused Protocol
+  shells), so it is left for a dedicated pass with full budget rather than rushed across
+  the core-registry + 4-locale shared surfaces.
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
