@@ -808,7 +808,7 @@ def verify_pull_coverage(
     # Metadata identity: registry coordinates must match exactly.
     plan_meta = plan.metadata
     pull_meta = pull.metadata
-    for field_name in ("modelo_id", "revision_id", "filing_year", "period"):
+    for field_name in ("modelo_id", "revision_id", "filing_year", "period", "registry_sha"):
         plan_value = getattr(plan_meta, field_name)
         pull_value = getattr(pull_meta, field_name)
         if pull_value != plan_value:
@@ -894,15 +894,27 @@ def compute_from_pull(
 
 def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> None:
     """Refuse to compute when the workbook metadata doesn't bind to the snapshot."""
-    if pull.metadata_match is MetadataMatchState.MATCHES:
+    metadata = pull.metadata
+    metadata_matches_snapshot = (
+        metadata.modelo_id == snapshot.modelo.id
+        and metadata.revision_id == snapshot.revision.id
+        and metadata.filing_year == snapshot.filing_year
+        and metadata.period == snapshot.period
+        and metadata.registry_sha == registry_sha(snapshot)
+    )
+    if pull.metadata_match is MetadataMatchState.MATCHES and metadata_matches_snapshot:
         return
     raise OutboundStorageConflictError(
         f"refusing to compute: workbook metadata_match={pull.metadata_match!r} does not bind to the supplied snapshot",
         context={
             "spreadsheet_id": pull.spreadsheet_id,
             "metadata_match": pull.metadata_match,
-            "workbook_modelo": pull.metadata.modelo_id,
+            "workbook_modelo": metadata.modelo_id,
             "snapshot_modelo": snapshot.modelo.id,
+            "workbook_revision": metadata.revision_id,
+            "snapshot_revision": snapshot.revision.id,
+            "workbook_registry_sha": metadata.registry_sha,
+            "snapshot_registry_sha": registry_sha(snapshot),
         },
         suggestion=(
             "re-export the workbook against the current snapshot via "

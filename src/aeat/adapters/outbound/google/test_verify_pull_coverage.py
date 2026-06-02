@@ -133,6 +133,17 @@ def test_verify_pull_coverage_detects_metadata_drift() -> None:
     assert flagged.observed == "2023-y-siguientes"
 
 
+def test_verify_pull_coverage_detects_registry_sha_drift() -> None:
+    """Matching modelo coordinates still fail coverage when registry SHA drifts."""
+
+    plan = _populated_plan()
+    pull = _populated_pull(plan, metadata_overrides={"registry_sha": "deadbeef" * 8})
+    discrepancies = verify_pull_coverage(plan, pull)
+    flagged = next(d for d in discrepancies if d.kind == "metadata_mismatch" and "registry_sha" in d.detail)
+    assert flagged.expected == plan.metadata.registry_sha
+    assert flagged.observed == "deadbeef" * 8
+
+
 def test_verify_pull_coverage_detects_missing_row_set() -> None:
     """A row-set declared by the plan but absent from the pull surfaces explicitly."""
 
