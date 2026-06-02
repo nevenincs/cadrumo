@@ -14,12 +14,12 @@ from ...adapters.outbound.aeat.sede._notifications import (
     RemoteNotification,
 )
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._notifications import (
     NotificationsService,
     NotificationsSnapshotNotFoundError,
     notifications_snapshot_object_key,
 )
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -198,9 +198,7 @@ class TestBucketIsolation:
 
 
 class TestSecureStorage:
-    def test_capture_persists_notifications_snapshot_as_secure_object(
-        self, secure_engine: TestRuntimeProfile
-    ) -> None:
+    def test_capture_persists_notifications_snapshot_as_secure_object(self, secure_engine: TestRuntimeProfile) -> None:
         persisted = _service(secure_engine).capture(
             bucket_id=secure_engine.bucket_id,
             snapshot=_snapshot(rows=(_row(),)),
