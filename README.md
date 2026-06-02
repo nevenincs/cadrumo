@@ -59,9 +59,19 @@ Every command carries its own `--help`.
 
 Report bugs and ask questions on the [issue tracker](https://github.com/wgergely/aeat/issues).
 
-## Where to go next
+## Documentation
 
-The [getting started guide](docs/getting-started.md) walks you from install to your first exported filing.
+The full documentation lives under [`docs/`](docs/index.md):
+
+- [Get started](docs/getting-started.md) - install and produce your first exported filing.
+- [Quickstart](docs/how-to/quickstart.md) - the short path from a ready profile and ledger to a modelo file.
+- [Set up your taxpayer profile](docs/how-to/profile-setup.md) - create a profile and switch between several.
+- [Tutorial](docs/tutorials/index.md) - build your first modelo end to end.
+- [How-to recipes](docs/how-to/index.md) - import a statement, file 303 or 390, sync the censo, verify and export, and diagnose problems.
+- [Explanation](docs/explanation/index.md) - how the pipeline works and why `aeat` never files.
+- [Glossary](docs/glossary.md) - the Spanish tax terms these docs use.
+
+Run `just docs` to build the rendered site, which adds the command-line and source-code reference.
 
 ## For contributors
 

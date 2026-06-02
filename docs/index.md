@@ -88,6 +88,8 @@ tutorials/index
 
 how-to/index
 how-to/profile-setup
+how-to/import-bank-statements
+how-to/troubleshooting
 cli/index
 glossary
 ```
