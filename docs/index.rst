@@ -21,6 +21,24 @@ live under :mod:`aeat.adapters`, use cases live under
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorial
+
+   tutorials/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: How-to Guides
+
+   how-to/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Explanation
+
+   explanation/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: Contributing
 
    authoring-guide
