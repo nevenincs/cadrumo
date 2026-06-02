@@ -59,7 +59,47 @@ def validate_source_year_coverage(
     source_periods: Iterable[str],
     filing_year_delta: int,
     fixed_source_year: int | None = None,
+    source_is_observation_history: bool = False,
 ) -> list[str]:
+    """Verify the source modelo covers every required filing year of a relation.
+
+    For *modeled* sources (ledger aggregations, annual-summary roll-ups,
+    cross-model computed outputs) the source value is produced by running the
+    source modelo's engine for that year, so a year-covering modeled revision
+    MUST exist — the strict check below.
+
+    For *observation-history* sources (``source_is_observation_history``), the
+    source value is the operator's HISTORICAL FILING — an observation that
+    exists for any year they actually filed, independent of whether this
+    application models that year's calculation engine. Requiring a
+    year-covering modeled revision for those conflates "we compute year Y" with
+    "the operator filed year Y" and wrongly rejects a legitimate prior-year
+    carry (e.g. a 2024-start revision copying the 2023 filing). For these the
+    coverage check is relaxed: the source modelo must still declare at least one
+    revision covering the required source periods (so the referenced casilla's
+    shape is known — validated by the period/output checks), but the
+    delta-shifted year interval is NOT required to fall within a modeled
+    revision. Value satisfiability becomes a resolution-time concern (the prior
+    observation is present → it resolves; absent → zero-carry, which is correct
+    for a first-year filer with no prior to carry).
+    """
+    source_period_set = set(source_periods)
+    period_matching_revisions = tuple(
+        source_revision
+        for source_revision in source_revisions
+        if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
+    )
+    if source_is_observation_history:
+        # Relaxed: require only that the source shape (a revision covering the
+        # required source periods) exists. The specific delta-shifted years may
+        # predate the earliest modeled revision — the operator's prior filing
+        # is an observation, not a modeled computation.
+        if source_period_set and not period_matching_revisions:
+            return [
+                f"{scope} previous-filing source declares periods {sorted(source_period_set)!r} "
+                f"that no source revision covers"
+            ]
+        return []
     if fixed_source_year is None:
         required_intervals = tuple(
             (start + filing_year_delta, None if end is None else end + filing_year_delta)
@@ -67,11 +107,9 @@ def validate_source_year_coverage(
         )
     else:
         required_intervals = ((fixed_source_year, fixed_source_year),)
-    source_period_set = set(source_periods)
     covered_intervals = tuple(
         interval
-        for source_revision in source_revisions
-        if not source_period_set or source_period_set.issubset(set(source_revision.period_selector.periods))
+        for source_revision in period_matching_revisions
         for interval in _selector_year_intervals(source_revision.period_selector)
     )
     failures: list[str] = []

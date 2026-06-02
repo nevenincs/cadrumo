@@ -92,6 +92,17 @@ def _validate_single_relation(
                 relation_scope=relation_scope,
             )
         )
+    # A relation that carries a PRIOR-YEAR copy of the operator's historical
+    # filing (a previous_filing binding fed by a strictly-negative
+    # filing_year_delta) references an observation that exists for any filed
+    # year, independent of whether this app models that year's engine. Such
+    # relations relax the year-coverage check (see
+    # ``validate_source_year_coverage``). Same-year periodic→annual roll-ups
+    # (annual_summary, filing_year_delta 0 / fixed year_from) stay strict: they
+    # aggregate the same ejercicio's filings, which the source modelo must
+    # model. The strictly-negative-delta gate is what separates a genuine
+    # cross-year prior carry from a same-year aggregation.
+    source_is_observation_history = _relation_is_prior_year_filing_carry(relation, revision)
     failures.extend(
         validate_source_year_coverage(
             relation_scope,
@@ -100,9 +111,40 @@ def _validate_single_relation(
             source_periods=source_periods,
             filing_year_delta=relation_filing_year_delta(relation.source_revision_selector),
             fixed_source_year=relation_fixed_source_year(relation.source_revision_selector),
+            source_is_observation_history=source_is_observation_history,
         )
     )
     return failures
+
+
+def _relation_is_prior_year_filing_carry(
+    relation: RelationDefinition, revision: ModeloRevision
+) -> bool:
+    """Return whether the relation is a prior-year carry of a historical filing.
+
+    Two conditions, both required:
+
+    - The relation's target binding has ``source = "previous_filing"`` — the
+      value is the operator's historical filing (an observation), not a
+      modeled/derived computation.
+    - The relation references a STRICTLY-PRIOR ejercicio, i.e. its
+      ``source_revision_selector`` carries a strictly-negative
+      ``filing_year_delta``. This is what distinguishes a genuine cross-year
+      prior carry (M200 BIN N-1 -> N, M202 40.2 1P/2P) — which may legitimately
+      reference a year before the earliest modeled revision — from a same-year
+      periodic→annual roll-up (the 180/190/193 ←115/111/123 annual_summary
+      relations use a fixed ``year_from`` with delta 0, aggregate the same
+      ejercicio's filings, and MUST stay under the strict modeled-coverage
+      check so a widened target revision still demands matching source years).
+    """
+    targets_previous_filing = any(
+        binding.id == relation.target_binding and binding.source == "previous_filing"
+        for binding in revision.bindings
+    )
+    if not targets_previous_filing:
+        return False
+    delta = relation.source_revision_selector.get("filing_year_delta")
+    return isinstance(delta, int) and delta < 0
 
 
 def _validate_relation_source_revision(
