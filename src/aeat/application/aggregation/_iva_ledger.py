@@ -582,7 +582,10 @@ def _validate_intracom_export_counterparty(
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
-                detail=f"counterparty EU member state {eu_member_state.value!r} is Spain — not a valid intra-community counterparty",
+                detail=(
+                    f"counterparty EU member state {eu_member_state.value!r} is Spain — "
+                    "not a valid intra-community counterparty"
+                ),
             )
     if category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED and eu_member_state is not None:
         return IvaLedgerAggregationIssue(
