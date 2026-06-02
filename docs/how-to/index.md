@@ -9,6 +9,8 @@ These recipes assume a working setup. For the setup itself and the fast path, se
 - [Set up your taxpayer profile](profile-setup.md) - create a profile and switch between several.
 - [Import and classify a bank statement](import-bank-statements.md) - load your ledger so a modelo can calculate from it.
 - [Quickstart](quickstart.md) - the four-command path to a modelo file.
+- [Plan your filing calendar](filing-calendar.md) - see which modelos are due and when.
+- [Reconcile a filing against its justificante](reconcile.md) - check a filed return against the AEAT receipt.
 - [Diagnose and repair your local setup](troubleshooting.md) - when a command refuses or data looks wrong.
 
 ## How to read a recipe
