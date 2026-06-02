@@ -11,9 +11,7 @@ if TYPE_CHECKING:
     from ....domain.categories import CategoryProfile, SpendingCategory
 
 
-class CategoryProfileRepository(
-    ResourceCacheRepository[Mapping["SpendingCategory", "CategoryProfile"], int]
-):
+class CategoryProfileRepository(ResourceCacheRepository[Mapping["SpendingCategory", "CategoryProfile"], int]):
     """Year-keyed repository for spending-category profile registries.
 
     Wraps :func:`aeat.domain.categories.resolve_category_profiles`.
