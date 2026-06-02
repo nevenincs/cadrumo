@@ -147,14 +147,18 @@ async def _live_expedientes_source(session: object, modelo: str | None) -> tuple
     # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol
     # (Callable[[object, str | None], ...]); the concrete value at this call
     # site is always an ``AeatSession`` supplied by ``default_engine``.
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
+    # Protocol introduction would create a cross-module circular dependency.
+    # Successor epic required.
     return await walk_expedientes_tree(session, modelo=modelo)  # type: ignore[arg-type]
 
 
 async def _live_notifications_source(session: object) -> WorkflowNotificationsSnapshotProtocol:
     from ...adapters.outbound.aeat.sede import fetch_notifications_query
 
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR: Protocol introduction would create cross-module circular dependency. Successor epic required.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PROTOCOL-CIRCULAR:
+    # Protocol introduction would create a cross-module circular dependency.
+    # Successor epic required.
     return await fetch_notifications_query(session)  # type: ignore[arg-type]
 
 
