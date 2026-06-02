@@ -275,7 +275,7 @@ Restore the hexagonal import-linter gate to green: clean the 93 stale ignore_imp
 
 Remove every ignore_imports entry import-linter flags as unmatched (edges since refactored away); each confirmed gone from source before removal
 
-- [ ] `W09.P26.S93` - Add fresh precisely-pinned ignore_imports for the ~54 sanctioned test-file roundtrip/fixture edges whose prior ignores went stale on test rename; `each verified as a real-adapter roundtrip per the roundtrip discipline; `.importlinter`.
+- [x] `W09.P26.S93` - Add fresh precisely-pinned ignore_imports for the ~54 sanctioned test-file roundtrip/fixture edges whose prior ignores went stale on test rename; `each verified as a real-adapter roundtrip per the roundtrip discipline; `.importlinter`.
 
 ### Phase `W09.P27` - Triage and resolve real layer violations
 
