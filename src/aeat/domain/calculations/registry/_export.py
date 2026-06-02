@@ -330,9 +330,7 @@ def _reject_overlapping_ranges(record_id: str, sorted_ranges: list[tuple[int, in
         for other in sorted_ranges[index + 1 :]:
             if current[1] <= other[0]:
                 break
-            raise RegistryValidationError(
-                f"export record {record_id!r} fields {current[2]!r} and {other[2]!r} overlap"
-            )
+            raise RegistryValidationError(f"export record {record_id!r} fields {current[2]!r} and {other[2]!r} overlap")
 
 
 __all__ = [

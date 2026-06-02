@@ -184,7 +184,9 @@ def _root(
             # closes. Skip importing workflow and overview so bare
             # invocation remains registry-free.
             typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
-            _emit_envelope(ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing))
+            _emit_envelope(
+                ctx, command="root.status", result=typed_landing, lines=render_cli_root_landing_lines(landing)
+            )
             raise typer.Exit()
         # An active profile exists: import and render the full overview.
         # These imports pull the registry, but are now deferred until

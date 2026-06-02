@@ -99,8 +99,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         / lookup_parameter_by_entity_type / lookup_bracket_by_entity_type).
         """
         return cls(
-            f"{op} dispatch_table is missing key {dispatch_key!r} "
-            f"(declared keys: {sorted(available_keys)})",
+            f"{op} dispatch_table is missing key {dispatch_key!r} (declared keys: {sorted(available_keys)})",
             translated_message="errors.calc.dispatch_key_unknown",
             context={
                 "op": op,

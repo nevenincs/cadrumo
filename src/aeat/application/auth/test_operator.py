@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.outbound.aeat.auth import _session_store
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
-from ...core.config import Settings, override_settings
+from ...core.config import Settings, load_settings, override_settings
+from ...core.time import now as utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.filing import ModeloDraft, ModeloDraftRepository
 from ...domain.submission import ModeloDraftStatus
@@ -24,6 +26,7 @@ from ._operator import test_operator_auth as run_operator_auth_test
 from ._sessions import (
     AuthProfileIdentityMismatchError,
     _assert_active_profile_identity_matches_provider,
+    storage_state_paths,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -549,6 +552,37 @@ def test_configure_clave_movil_match_carries_no_alignment_detail() -> None:
 
     assert result.identity_alignment == "matches"
     assert result.identity_alignment_detail == ""
+
+
+def test_operator_auth_test_reports_profile_scoped_clave_session() -> None:
+    """`auth test` must inspect the encrypted session in the active profile store."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "TEST-IDENTITY"},
+        )
+    )
+    with override_settings(aeat_clave_movil_dni_nie=SecretStr("TEST-IDENTITY")):
+        configure_operator_auth("clave_movil")
+        captured_at = utc_now()
+        path = storage_state_paths(load_settings(), AuthProviderKind.CLAVE_MOVIL).storage_state
+        _session_store.save(
+            path,
+            storage_state={"cookies": [], "origins": []},
+            metadata={
+                "provider_kind": AuthProviderKind.CLAVE_MOVIL.value,
+                "identity_nif": "TEST-IDENTITY",
+                "authenticated_at": captured_at.isoformat(),
+                "idle_deadline": (captured_at + timedelta(minutes=18)).isoformat(),
+            },
+        )
+
+        result = run_operator_auth_test("clave_movil")
+
+    assert result.persisted_session_present is True
+    assert result.persisted_session_expired is False
 
 
 def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> None:

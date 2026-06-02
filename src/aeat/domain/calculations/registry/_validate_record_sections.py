@@ -236,5 +236,3 @@ def validate_extraction_profile_section(
         if corpus_root is not None:
             failures.extend(validate_declaracion_pdf_specimen_gate(prefix, modelo_id, profile, corpus_root))
             failures.extend(validate_declaracion_pdf_round_trip_gate(prefix, modelo_id, profile, corpus_root))
-
-

@@ -28,7 +28,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
@@ -77,7 +76,10 @@ def test_config_set_tax_id_is_case_insensitive(cli_runner: CliRunner) -> None:
     # resolution is proven by both invocations producing the same hash.
     assert "identity.tax_id\t" in upper.output
     assert "identity.tax_id\t" in lower.output
-    assert upper.output.split("identity.tax_id\t", 1)[1].split("\n", 1)[0] == lower.output.split("identity.tax_id\t", 1)[1].split("\n", 1)[0]
+    assert (
+        upper.output.split("identity.tax_id\t", 1)[1].split("\n", 1)[0]
+        == lower.output.split("identity.tax_id\t", 1)[1].split("\n", 1)[0]
+    )
 
 
 def test_profile_help_lists_field_verbs(cli_runner: CliRunner) -> None:

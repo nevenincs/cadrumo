@@ -30,9 +30,7 @@ LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 # of truth lives in ``_first_slice_routing.py`` so the validator path
 # (this module) and any future snapshot-time integrity gate consult
 # the same Mapping without risk of divergence.
-RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str] = (
-    FIRST_SLICE_EXPENSE_CASILLAS
-)
+RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str] = FIRST_SLICE_EXPENSE_CASILLAS
 
 
 class RentaExpenseDirection(StrEnum):

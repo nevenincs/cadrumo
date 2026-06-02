@@ -203,10 +203,7 @@ def _relation_source_offence(relation, *, modelo_id: str, registry) -> str | Non
         return None
     source_modelo = registry.get(relation.source_modelo)
     if source_modelo is None:
-        return (
-            f"modelo {modelo_id} relation {relation.id!r} cites unknown "
-            f"source modelo {relation.source_modelo!r}"
-        )
+        return f"modelo {modelo_id} relation {relation.id!r} cites unknown source modelo {relation.source_modelo!r}"
     source_casilla_ids = {
         c.id for source_revision in source_modelo.revisions.values() for c in source_revision.casillas
     }

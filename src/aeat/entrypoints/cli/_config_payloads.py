@@ -244,7 +244,7 @@ class AuthProvidersResult(OutputSchema):
 
 
 @register_schema("config.auth.configure")
-class AuthConfigureResult(OutputSchema):
+class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
     Field set mirrors :class:`AuthConfigureReport` from the application layer.
@@ -266,7 +266,7 @@ class AuthConfigureResult(OutputSchema):
 
 
 @register_schema("config.auth.status")
-class AuthStatusResult(OutputSchema):
+class AuthStatusPayload(OutputSchema):
     """JSON envelope for ``aeat config auth status``.
 
     The application ``AuthStatusResult`` model evolves independently;
@@ -279,7 +279,7 @@ class AuthStatusResult(OutputSchema):
 
 
 @register_schema("config.auth.test")
-class AuthTestResult(OutputSchema):
+class AuthTestPayload(OutputSchema):
     """JSON envelope for ``aeat config auth test``.
 
     Thin envelope; the application model carries all provider-specific
@@ -291,7 +291,7 @@ class AuthTestResult(OutputSchema):
 
 
 @register_schema("config.auth.login")
-class AuthLoginResult(OutputSchema):
+class AuthLoginPayload(OutputSchema):
     """JSON envelope for ``aeat config auth login``.
 
     Thin envelope; the application model carries provider-specific
@@ -303,7 +303,7 @@ class AuthLoginResult(OutputSchema):
 
 
 @register_schema("config.auth.clear")
-class AuthClearResult(OutputSchema):
+class AuthClearPayload(OutputSchema):
     """JSON envelope for ``aeat config auth clear``."""
 
     removed_sessions: int

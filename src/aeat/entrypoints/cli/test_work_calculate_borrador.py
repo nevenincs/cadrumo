@@ -9,8 +9,6 @@ from ...tests.cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
-
 def test_work_calculate_help_exposes_borrador_snapshot_id_flag() -> None:
     """The `--borrador` flag is part of the command's advertised surface
     so operators can discover it via `--help`. The canonical option

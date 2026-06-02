@@ -112,9 +112,7 @@ class TestArt2311aCap:
         assert rollup.capped_categories_applied == ingresos
         assert rollup.capped_categories_excess == excess
         assert rollup.total_deductible == ingresos + ibi
-        assert rollup.carry_forward_after == (
-            CarryForwardEntry(origination_year=2025, remaining_amount=excess),
-        )
+        assert rollup.carry_forward_after == (CarryForwardEntry(origination_year=2025, remaining_amount=excess),)
 
 
 class TestCarryForwardConsumption:

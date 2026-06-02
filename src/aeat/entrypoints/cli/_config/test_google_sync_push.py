@@ -20,8 +20,25 @@ from ....adapters.outbound.storage._local import LocalFileSystemProvider
 from ....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 from ....tests.secure_sql import isolated_runtime_profile
 from ._google import _push_secure_object_mirror_rows
+from ._google_payloads import GoogleSyncProbeResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+
+def test_google_sync_probe_payload_accepts_unknown_root_folder_presence() -> None:
+    result = GoogleSyncProbeResult(
+        profile="profile-id",
+        provider_kind="local_filesystem",
+        reachable=True,
+        writable=False,
+        read_only=True,
+        root_folder_present=None,
+        root_folder_id="",
+        detail="probe reached backend; root folder presence is not applicable",
+    )
+
+    assert result.root_folder_present is None
+    assert result.model_dump()["root_folder_present"] is None
 
 
 def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects(tmp_path: Path) -> None:

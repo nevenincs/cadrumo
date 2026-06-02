@@ -177,8 +177,7 @@ def test_m123_casilla_06_base_resto_only() -> None:
     casilla_06 = result.values["06"]
     assert casilla_03 == Decimal("1"), f"precondition: casilla 03 should be 1, got {casilla_03}"
     assert casilla_06 == Decimal("5000.00"), (
-        f"casilla 06 must be 5000.00, got {casilla_06}; "
-        f"if 5001 then perceptor count is leaking into casilla 06"
+        f"casilla 06 must be 5000.00, got {casilla_06}; if 5001 then perceptor count is leaking into casilla 06"
     )
 
 

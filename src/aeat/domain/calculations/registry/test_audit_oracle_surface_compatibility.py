@@ -81,9 +81,7 @@ def test_compatible_pair_passes_audit() -> None:
 
 
 def test_static_official_documentation_surface_rejects_every_oracle() -> None:
-    modelo = _bind_first_cross_reference(
-        _modelo_130(), oracle_id=ORACLE_ID, surface="static_official_documentation"
-    )
+    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=ORACLE_ID, surface="static_official_documentation")
 
     failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 

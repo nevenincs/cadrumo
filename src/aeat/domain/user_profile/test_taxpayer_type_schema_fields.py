@@ -75,9 +75,7 @@ def test_iva_regime_enum_includes_reagp(schema: ProfileSchemaDefinition) -> None
     field = schema.field("iva.regime")
     assert "REAGP" in field.enum_values
     # The pre-existing members are preserved.
-    assert {"GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"}.issubset(
-        set(field.enum_values)
-    )
+    assert {"GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"}.issubset(set(field.enum_values))
 
 
 def test_sii_and_redeme_enrolment_fields_are_present_and_grounded(

@@ -226,7 +226,9 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert frozenset({IvaFlowDirection.INVERSION_SUJETO_PASIVO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
+    assert (
+        frozenset({IvaFlowDirection.INVERSION_SUJETO_PASIVO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
+    )
 
 
 def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:

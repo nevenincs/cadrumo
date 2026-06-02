@@ -59,9 +59,7 @@ def build_iva_wallet_balance_report(
 
     next_expiry_year: int | None = None
     if non_expired_lots_with_balance:
-        next_expiry_year = min(
-            lot.source_filing_year + _FOUR_YEAR_WINDOW for lot in non_expired_lots_with_balance
-        )
+        next_expiry_year = min(lot.source_filing_year + _FOUR_YEAR_WINDOW for lot in non_expired_lots_with_balance)
 
     total_balance = sum(
         (lot.remaining_amount for lot in carry_forward.lots if lot.remaining_amount > Decimal("0")),

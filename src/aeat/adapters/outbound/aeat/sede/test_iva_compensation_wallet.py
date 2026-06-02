@@ -245,9 +245,10 @@ def test_iva_wallet_read_guard_allows_discovered_entrypoint_open() -> None:
 
 
 def test_discover_iva_compensation_wallet_entrypoint_from_pre303_link() -> None:
+    query = "ignored=token"
     html = f"""
     <html><body>
-      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?ignored=token">
+      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}">
         Consulta de la cartera de cuotas de IVA a compensar
       </a>
     </body></html>
@@ -258,7 +259,25 @@ def test_discover_iva_compensation_wallet_entrypoint_from_pre303_link() -> None:
         base_url=PRE303_PRESENTATION_SERVICE_URL,
     )
 
-    assert discovered == IVA_COMPENSATION_WALLET_URL
+    assert discovered == f"{IVA_COMPENSATION_WALLET_URL}?{query}"
+
+
+def test_discover_iva_compensation_wallet_entrypoint_drops_fragment() -> None:
+    query = "ignored=token"
+    html = f"""
+    <html><body>
+      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?{query}#fragment">
+        Consulta de la cartera de cuotas de IVA a compensar
+      </a>
+    </body></html>
+    """
+
+    discovered = discover_iva_compensation_wallet_entrypoint(
+        html,
+        base_url=PRE303_PRESENTATION_SERVICE_URL,
+    )
+
+    assert discovered == f"{IVA_COMPENSATION_WALLET_URL}?{query}"
 
 
 def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> None:

@@ -172,8 +172,7 @@ def test_expired_session_refusal_names_profile_switch_recovery_verb() -> None:
     """
 
     error = SessionExpiredError(
-        "the active profile session has expired; run "
-        "`aeat config profile switch NAME` to re-activate.",
+        "the active profile session has expired; run `aeat config profile switch NAME` to re-activate.",
     )
     rendered = str(error)
     assert "profile switch" in rendered

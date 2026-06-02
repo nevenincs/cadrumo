@@ -149,5 +149,3 @@ def _validate_export_field(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
                 f"declared length {field.length}"
             )
-
-

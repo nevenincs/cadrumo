@@ -66,10 +66,7 @@ def test_object_key_helpers_compose_canonical_keys() -> None:
     assert user_profile_value_object_key(profile_id) == f"user-profile:{profile_id}"
     # The snapshot key keeps the snapshot discriminator: a profile owns
     # many filing snapshots.
-    assert (
-        user_profile_snapshot_object_key(profile_id, "snap:2026")
-        == f"user-profile-snapshot:{profile_id}:snap:2026"
-    )
+    assert user_profile_snapshot_object_key(profile_id, "snap:2026") == f"user-profile-snapshot:{profile_id}:snap:2026"
 
 
 def test_lifecycle_round_trip_carries_record(secure_objects: SecureObjectRepository) -> None:

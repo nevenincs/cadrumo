@@ -31,8 +31,10 @@ from ...core.resources import bundled_path as _bundled_path
 
 _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 
+
 class TopicNotFoundError(_AeatError):
     """Raised when a requested slug is not registered in the catalogue."""
+
 
 class Topic(BaseModel):
     """One conceptual topic.
@@ -55,6 +57,7 @@ class Topic(BaseModel):
     body_key: str = Field(min_length=1, max_length=128)
     see_also: tuple[str, ...] = Field(default=())
     legal_refs: tuple[str, ...] = Field(default=())
+
 
 class TopicCatalogue(BaseModel):
     """Closed catalogue of registered conceptual topics."""
@@ -84,6 +87,7 @@ class TopicCatalogue(BaseModel):
         """Return every registered slug sorted alphabetically."""
         return tuple(sorted(topic.slug for topic in self.topics))
 
+
 def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     """Load every ``registry/aeat/topics/<slug>.toml`` into one catalogue.
 
@@ -99,6 +103,7 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     paths = tuple(sorted(resolved.glob("*.toml")))
     fingerprint = tuple(_file_stat_fingerprint(path) for path in paths)
     return _load_topic_catalogue_cached(str(resolved), fingerprint)
+
 
 @lru_cache(maxsize=16)
 def _load_topic_catalogue_cached(
@@ -123,6 +128,7 @@ def _load_topic_catalogue_cached(
     if not topics:
         raise TopicNotFoundError(f"topic catalogue at {target} is empty")
     return TopicCatalogue(topics=tuple(topics))
+
 
 __all__ = [
     "Topic",

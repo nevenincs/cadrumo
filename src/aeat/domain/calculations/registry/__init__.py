@@ -9,7 +9,6 @@ validates, and caches registry material), and :class:`CasillaObservation`
 (one typed casilla value carrying full legal and source provenance).
 """
 
-
 from __future__ import annotations
 
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation

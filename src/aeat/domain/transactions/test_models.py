@@ -377,9 +377,7 @@ def test_movement_day_key_groups_same_date_and_amount() -> None:
     b = _sample_raw(description="Pago cliente nota 4471")
 
     assert derive_movement_day_key(a) == derive_movement_day_key(b)
-    assert derive_movement_day_key(a) != derive_movement_day_key(
-        _sample_raw(amount=Decimal("1.00"))
-    )
+    assert derive_movement_day_key(a) != derive_movement_day_key(_sample_raw(amount=Decimal("1.00")))
 
 
 def test_normalise_movement_reference_strips_accents_case_and_noise() -> None:

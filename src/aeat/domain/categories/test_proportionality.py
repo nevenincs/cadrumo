@@ -150,7 +150,8 @@ def test_statutory_multiplier_rejected_on_non_usage_ratio_kind() -> None:
     Backs the LIRPF legal-grounding contract for usage-ratio rules."""
 
     with pytest.raises(
-        ValidationError, match=r"statutory_multiplier is only valid for usage_ratio rules",
+        ValidationError,
+        match=r"statutory_multiplier is only valid for usage_ratio rules",
     ):
         ProportionalityRule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,

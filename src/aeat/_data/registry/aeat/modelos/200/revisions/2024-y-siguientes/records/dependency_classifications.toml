@@ -6,3 +6,15 @@ target_constructs = ["modelo-200-2024-foundation"]
 relation_refs = ["modelo-200-2024-rel-202-pagos-fraccionados"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-modelo-200-manual-2024"]
+
+# Cross-year BIN self-dependency: M200 of year N depends on M200 of year N-1's
+# casilla 00671 (BIN pendiente futuros) as factual evidence for the opening
+# pending balance (00670). LIS art. 26 unlimited carry-forward.
+[[revisions."2024-y-siguientes".dependency_classifications]]
+id = "modelo-200-2024-dep-self-bin-pendiente"
+source_modelo = "200"
+treatment = "factual_evidence"
+target_constructs = ["modelo-200-2024-foundation"]
+relation_refs = ["modelo-200-2024-rel-self-bin-pendiente-anterior"]
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
+source_refs = ["aeat-modelo-200-manual-2024"]

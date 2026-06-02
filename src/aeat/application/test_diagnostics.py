@@ -772,10 +772,7 @@ def _assert_validation_error_caused_by_diagnostic_model_error(exc_info: pytest.E
     val_err = exc_info.value
     causes = [e["ctx"]["error"] for e in val_err.errors() if "error" in e.get("ctx", {})]
     matching = [c for c in causes if isinstance(c, DiagnosticModelError) and match in str(c)]
-    assert matching, (
-        f"Expected a DiagnosticModelError cause matching {match!r}; "
-        f"got causes: {causes!r}"
-    )
+    assert matching, f"Expected a DiagnosticModelError cause matching {match!r}; got causes: {causes!r}"
 
 
 def test_diagnostic_check_both_recovery_fields_raises_diagnostic_model_error() -> None:

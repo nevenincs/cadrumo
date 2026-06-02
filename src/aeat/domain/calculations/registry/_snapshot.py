@@ -35,9 +35,7 @@ _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
 # Protocol declares. ``_install_cross_domain_snapshot_checks`` imports them by
 # name so the registration is deterministic at snapshot build, independent of
 # whatever else the importing process happened to load first.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
-    "aeat.domain.renta._first_slice_routing_integrity",
-)
+_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = ("aeat.domain.renta._first_slice_routing_integrity",)
 
 _cross_domain_checks_installed = False
 

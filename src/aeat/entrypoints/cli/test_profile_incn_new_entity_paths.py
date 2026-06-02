@@ -153,9 +153,7 @@ def _load_active_taxpayer_profile():
     # That projection carries ``new_entity_first_two_profit_periods`` and
     # ``incn_prior_12_months`` through to the corporate-tax record, unlike
     # the narrower wizard-status ``TaxpayerProfile`` projection.
-    return taxpayer_profile_from_mapping(
-        canonical, tax_id_default=canonical.get("identity.tax_id", "")
-    )
+    return taxpayer_profile_from_mapping(canonical, tax_id_default=canonical.get("identity.tax_id", ""))
 
 
 def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:

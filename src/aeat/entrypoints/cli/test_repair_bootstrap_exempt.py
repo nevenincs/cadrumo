@@ -60,9 +60,7 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
 
 
 @pytest.mark.parametrize("verb", _FAST_REPAIR_VERBS, ids=lambda v: " ".join(v))
-def test_repair_verb_runs_clean_without_session_on_fresh_root(
-    verb: tuple[str, ...], _fresh_storage_root: Path
-) -> None:
+def test_repair_verb_runs_clean_without_session_on_fresh_root(verb: tuple[str, ...], _fresh_storage_root: Path) -> None:
     """Each fast repair verb exits 0 on a fresh root with no active session."""
 
     assert not has_active_bucket_session(), "fixture must leave no session active"

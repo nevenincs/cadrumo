@@ -144,8 +144,7 @@ def test_corpus_root_derived_from_bundled_path() -> None:
     _modelo, catalogues = _committed_130()
     validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
     assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation from bundled_path() returned None; "
-        "the round-trip gate is disabled in production"
+        "corpus root derivation from bundled_path() returned None; the round-trip gate is disabled in production"
     )
     assert validator._justificante_corpus_root.is_dir(), (
         f"derived corpus root {validator._justificante_corpus_root} is not a directory"

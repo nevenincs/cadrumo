@@ -7,19 +7,19 @@ session renewal is reflected in the audit trail.
 
 from __future__ import annotations
 
+from contextlib import nullcontext
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.time import now
-
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings, unwrap_optional_secret
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ...core.time import now
 from . import AuthProviderKind
 from ._acquisition_lock import AuthAcquisitionLockState, clear_auth_acquisition_lock
 from ._actions import update_auth
@@ -39,8 +39,21 @@ if TYPE_CHECKING:
     from ..workflow._models import WorkflowState
     from ..workflow._persistence import WorkflowStateRepository
 
+
+def _active_profile_storage_span():
+    """Return a storage context for the active profile, or a no-op when absent."""
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ..user_profile._orchestration import profile_storage_session
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return nullcontext()
+    return profile_storage_session(bucket_id)
+
+
 class AuthProviderReservedError(AeatError, ValueError):
     """Raised when a known provider slot is reserved but not implemented."""
+
 
 class AuthProvidersReport(BaseModel):
     """Auth provider catalogue projected for operator output."""
@@ -48,6 +61,7 @@ class AuthProvidersReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     providers: tuple[AuthProviderListing, ...]
+
 
 class AuthConfigureResult(BaseModel):
     """Result of configuring an auth provider in workflow state.
@@ -73,6 +87,7 @@ class AuthConfigureResult(BaseModel):
     identity_alignment_detail: str = ""
     next_action: str = ""
 
+
 class AuthStatusResult(BaseModel):
     """Current local auth readiness state."""
 
@@ -92,6 +107,7 @@ class AuthStatusResult(BaseModel):
     certificate_path: str = ""
     health_severity: str = ""
     health_summary: str = ""
+
 
 class AuthTestResult(AuthStatusResult):
     """Auth readiness plus a deeper local readiness probe.
@@ -131,6 +147,7 @@ class AuthTestResult(AuthStatusResult):
     probe_summary: str = ""
     probe_result: str = ""
 
+
 class LiveAuthPreflightReport(BaseModel):
     """Redacted live-auth readiness report rendered before operator approval waits."""
 
@@ -159,6 +176,7 @@ class LiveAuthPreflightReport(BaseModel):
     persisted_session_expired: bool | None = None
     probe_result: str = ""
 
+
 class AuthLoginResult(BaseModel):
     """Result of an operator-triggered live authentication attempt."""
 
@@ -173,6 +191,7 @@ class AuthLoginResult(BaseModel):
     reset_lock_state: str = ""
     verification_status: str = ""
 
+
 class AuthClearResult(BaseModel):
     """Result of clearing local auth metadata and persisted state."""
 
@@ -182,9 +201,11 @@ class AuthClearResult(BaseModel):
     cleared_workflow_state: bool
     cleared_locks: int
 
+
 def list_operator_auth_providers() -> AuthProvidersReport:
     """Return the :class:`AuthProvidersReport` enumerating implemented and reserved auth provider slots."""
     return AuthProvidersReport(providers=list_auth_providers())
+
 
 class AuthConfigureNoActiveBucketError(AeatError):
     """Raised when ``configure_operator_auth`` runs before an active profile bucket exists.
@@ -197,8 +218,10 @@ class AuthConfigureNoActiveBucketError(AeatError):
     keeps the bootstrap contract explicit at the CLI surface.
     """
 
+
 class AuthConfigureDanglingActiveProfileError(AeatError, ValueError):
     """Raised when the active-profile pointer does not resolve to a registered bucket."""
+
 
 def configure_operator_auth(provider: str, *, certificate_path: Path | None = None) -> AuthConfigureResult:
     """Configure the active auth provider in workflow state.
@@ -322,6 +345,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         certificate_path=certificate_path,
     )
 
+
 def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     """Return current local auth state, optionally scoped to a known provider slot.
 
@@ -343,6 +367,7 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
         include_pending_obligations=False,
     )
     return _auth_status_from_projection(projection)
+
 
 def _auth_status_from_projection(projection: OperatorStateProjection) -> AuthStatusResult:
     """Project the canonical state projection into the ``AuthStatusResult`` emit shape.
@@ -371,6 +396,7 @@ def _auth_status_from_projection(projection: OperatorStateProjection) -> AuthSta
         health_severity=auth.health_severity,
         health_summary=auth.health_summary,
     )
+
 
 def _auth_configure_result(
     *,
@@ -438,6 +464,7 @@ def _auth_configure_result(
         next_action=next_action,
     )
 
+
 def _identity_alignment_next_action(alignment: str) -> str:
     """Return the concrete command that resolves a Cl@ve alignment fault.
 
@@ -456,6 +483,7 @@ def _identity_alignment_next_action(alignment: str) -> str:
     # mismatch: the two identities differ; switch to the matching
     # profile or correct whichever value is wrong.
     return tr("application.auth.operator.alignment.mismatch_next_action")
+
 
 def _identity_alignment_detail(
     alignment: str,
@@ -487,6 +515,7 @@ def _identity_alignment_detail(
         return tr("application.auth.operator.alignment.both_missing_detail")
     return ""
 
+
 def _certificate_completeness(
     provider: str,
     certificate_path: Path | None,
@@ -513,6 +542,7 @@ def _certificate_completeness(
             certificate_path=str(certificate_path),
         )
     return True, ""
+
 
 def test_operator_auth(provider: str | None = None) -> AuthTestResult:
     """Return auth readiness plus a deeper local session-token probe.
@@ -561,6 +591,7 @@ def test_operator_auth(provider: str | None = None) -> AuthTestResult:
         probe_summary=provider_probe.summary or session_probe.summary,
         probe_result=provider_probe.result,
     )
+
 
 def build_live_auth_preflight_report(
     provider: str | None = None,
@@ -611,14 +642,14 @@ def build_live_auth_preflight_report(
         else None,
         certificate_path_configured=resolved_settings.aeat_certificate_path is not None,
         certificate_file_present=bool(
-            resolved_settings.aeat_certificate_path is not None
-            and resolved_settings.aeat_certificate_path.is_file()
+            resolved_settings.aeat_certificate_path is not None and resolved_settings.aeat_certificate_path.is_file()
         ),
         certificate_backend=resolved_settings.aeat_certificate_backend.value,
         persisted_session_present=probe.persisted_session_present,
         persisted_session_expired=probe.persisted_session_expired,
         probe_result=probe.probe_result,
     )
+
 
 def _live_auth_identity_state(
     provider_kind: AuthProviderKind | None,
@@ -650,6 +681,7 @@ def _live_auth_identity_state(
         alignment = "mismatch"
     return bool(profile_tax_id), bool(provider_identity), alignment
 
+
 def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
@@ -664,12 +696,14 @@ def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings
     except ClaveMovilConfigurationError:
         return "invalid_or_missing"
 
+
 def _live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
     if provider_kind is AuthProviderKind.CLAVE_MOVIL:
         return "non_qr" if settings.aeat_clave_prefer_non_qr else "qr"
     if provider_kind is AuthProviderKind.CERTIFICATE:
         return "certificate"
     return ""
+
 
 class _LocalSessionProbe(BaseModel):
     """Outcome of the on-disk persisted-session probe run by ``auth test``."""
@@ -679,6 +713,7 @@ class _LocalSessionProbe(BaseModel):
     present: bool = False
     expired: bool | None = None
     summary: str = ""
+
 
 def _probe_local_session(provider: str) -> _LocalSessionProbe:
     """Inspect the persisted AEAT session token for ``provider`` on disk.
@@ -702,7 +737,8 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
             summary=tr("application.auth.operator.probe.no_provider"),
         )
 
-    session = load_persisted_session(load_settings(), kind)
+    with _active_profile_storage_span():
+        session = load_persisted_session(load_settings(), kind)
     if session is None:
         return _LocalSessionProbe(
             present=False,
@@ -720,6 +756,7 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
         summary=summary,
     )
 
+
 class ProviderProbeResult(StrEnum):
     """Canonical result codes returned by the per-provider local probe."""
 
@@ -734,6 +771,7 @@ class ProviderProbeResult(StrEnum):
     IDENTITY_UNSET = "identity_unset"
     INVALID_IDENTITY = "invalid_identity"
 
+
 class _ProviderProbeOutcome(BaseModel):
     """Verdict of the per-provider local probe run by ``auth test``."""
 
@@ -741,6 +779,7 @@ class _ProviderProbeOutcome(BaseModel):
 
     result: ProviderProbeResult | str = ""
     summary: str = ""
+
 
 def _probe_configured_provider(provider: str, certificate_path: str) -> _ProviderProbeOutcome:
     """Run a real per-provider local probe and return a typed verdict.
@@ -769,6 +808,7 @@ def _probe_configured_provider(provider: str, certificate_path: str) -> _Provide
     if kind is AuthProviderKind.CLAVE_MOVIL:
         return _probe_clave_movil_identity()
     return _ProviderProbeOutcome()
+
 
 def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
     """Open the configured ``.p12`` and classify the certificate's health.
@@ -863,6 +903,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         ),
     )
 
+
 def _try_load_certificate_metadata(
     path: Path,
     bundle_bytes: bytes,
@@ -892,6 +933,7 @@ def _try_load_certificate_metadata(
     except (OSError, ValueError, AeatError):
         _log.warning("certificate load failed; treating bundle as unparseable", exc_info=True)
         return None
+
 
 def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
     """Classify the configured Cl@ve Móvil DNI/NIE through the real classifier.
@@ -926,6 +968,7 @@ def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
         summary=tr("application.auth.operator.probe.clave_movil_identity_ok"),
     )
 
+
 class AuthLoginNotEnabledError(AeatError):
     """Raised when ``auth login`` is invoked without the live-tests safety gate enabled.
 
@@ -936,6 +979,7 @@ class AuthLoginNotEnabledError(AeatError):
     from the certificate-bundle precondition (round-5 B2).
     """
 
+
 class AuthLoginPreconditionError(AeatError):
     """Raised when ``auth login`` cannot proceed because the configured provider is unusable.
 
@@ -944,6 +988,7 @@ class AuthLoginPreconditionError(AeatError):
     certificate path that is unset, points at a missing file, or
     cannot be read at all.
     """
+
 
 async def login_operator_auth(
     provider: str | None = None,
@@ -981,14 +1026,15 @@ async def login_operator_auth(
     # the raw bundle-load exception escape.
     _assert_login_precondition(resolved_settings, provider_kind)
 
-    result = await ensure_authenticated_aeat_session(
-        resolved_settings,
-        kind=provider_kind,
-        fresh=fresh,
-        reset_lock=reset_lock,
-        operation="operator-auth-login",
-        target_url=target_url,
-    )
+    with _active_profile_storage_span():
+        result = await ensure_authenticated_aeat_session(
+            resolved_settings,
+            kind=provider_kind,
+            fresh=fresh,
+            reset_lock=reset_lock,
+            operation="operator-auth-login",
+            target_url=target_url,
+        )
 
     from ..workflow._persistence import workflow_state_repository
 
@@ -1016,6 +1062,7 @@ async def login_operator_auth(
         verification_status=getattr(result.assertion, "status", "") or "",
     )
 
+
 def clear_operator_auth(
     *,
     provider: str | None = None,
@@ -1030,7 +1077,11 @@ def clear_operator_auth(
     removed_sessions: list[Path] = []
     session_event_count = 0
     if sessions or all_providers:
-        removed_sessions = delete_persisted_session(resolved_settings, kind=None if all_providers else provider_kind)
+        with _active_profile_storage_span():
+            removed_sessions = delete_persisted_session(
+                resolved_settings,
+                kind=None if all_providers else provider_kind,
+            )
         session_event_count = len(removed_sessions)
 
     cleared_locks = _clear_acquisition_locks(
@@ -1060,6 +1111,7 @@ def clear_operator_auth(
         cleared_locks=cleared_locks,
     )
 
+
 def _clear_acquisition_locks(
     settings: Settings,
     *,
@@ -1084,6 +1136,7 @@ def _clear_acquisition_locks(
         if status.state is not AuthAcquisitionLockState.ABSENT:
             cleared += 1
     return cleared
+
 
 def _apply_auth_clear_to_repository(
     *,
@@ -1119,6 +1172,7 @@ def _apply_auth_clear_to_repository(
     events = _optional_clear_events(event_object, session_event_count, cleared_locks)
     repository.update(lambda current: _append_bucket_events(current, events))
 
+
 def _optional_clear_events(
     event_object: str,
     session_event_count: int,
@@ -1131,6 +1185,7 @@ def _optional_clear_events(
     if cleared_locks:
         events.append(("auth.lock.cleared", event_object))
     return tuple(events)
+
 
 def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKind) -> None:
     """Refuse login when a provider's local readiness is unmet.
@@ -1157,12 +1212,14 @@ def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKi
                 translated_message="application.auth.operator.login.refused_certificate_file_missing",
                 context={"path": str(cert_path)},
             )
-    if provider_kind is AuthProviderKind.CLAVE_MOVIL and not unwrap_optional_secret(
-        settings.aeat_clave_movil_dni_nie
-    ).strip():
+    if (
+        provider_kind is AuthProviderKind.CLAVE_MOVIL
+        and not unwrap_optional_secret(settings.aeat_clave_movil_dni_nie).strip()
+    ):
         raise AuthLoginPreconditionError(
             translated_message="application.auth.operator.login.refused_clave_movil_identity_unset",
         )
+
 
 def _implemented_provider(provider: str) -> AuthProviderListing:
     listing = get_auth_provider(provider)
@@ -1173,11 +1230,13 @@ def _implemented_provider(provider: str) -> AuthProviderListing:
         )
     return listing
 
+
 def _provider_kind_or_none(provider: str | None) -> AuthProviderKind | None:
     if provider is None:
         return None
     listing = _implemented_provider(provider)
     return AuthProviderKind(listing.id)
+
 
 def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
     from ..workflow._persistence import workflow_state_repository
@@ -1188,6 +1247,7 @@ def _configured_or_default_provider(settings: Settings) -> AuthProviderKind:
     if settings.aeat_auth_provider is not None:
         return AuthProviderKind(settings.aeat_auth_provider.value)
     return AuthProviderKind.CERTIFICATE
+
 
 def _append_bucket_event(
     state: WorkflowState,
@@ -1206,6 +1266,7 @@ def _append_bucket_event(
     bucket_id = state.active_profile_bucket_id() or "__unbound_session__"
     event = WorkflowEvent(action=action, bucket_id=bucket_id, object_id=object_id)
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event)})
+
 
 def _append_bucket_events(
     state: WorkflowState,

@@ -50,7 +50,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
 _INCN_ABOVE_THRESHOLD = Decimal("6_000_001.00")
 _INCN_AT_THRESHOLD = Decimal("6_000_000.00")
 _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
@@ -240,7 +239,6 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
     """A legal-entity profile with declared INCN can provision a Modelo 202
     work unit. The outer applicability guard must not block a legal entity.
     """
-
 
     from ...tests.cli_runner import invoke_cached_cli
 

@@ -141,9 +141,7 @@ def link_transaction(
     """
     invoice = _require_invoice(catalogue, invoice_id)
     normalized_tx = transaction_id.strip().lower()
-    if len(normalized_tx) != 64 or any(
-        char not in "0123456789abcdef" for char in normalized_tx
-    ):
+    if len(normalized_tx) != 64 or any(char not in "0123456789abcdef" for char in normalized_tx):
         raise InvoiceLinkError(f"transaction_id must be a 64-character lowercase hex digest: {transaction_id!r}")
     if normalized_tx in invoice.linked_transaction_ids:
         _LOGGER.debug(

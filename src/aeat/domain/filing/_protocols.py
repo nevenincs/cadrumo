@@ -212,9 +212,7 @@ dates (``text`` data type). ``build_draft`` parses and range-checks
 every scalar against the registry casilla / binding schema.
 """
 
-type ModeloInputValue = (
-    ModeloInputScalar | Sequence[ModeloInputScalar] | Mapping[str, ModeloInputScalar]
-)
+type ModeloInputValue = ModeloInputScalar | Sequence[ModeloInputScalar] | Mapping[str, ModeloInputScalar]
 """A filing-input value.
 
 Most casilla and binding inputs are a single :data:`ModeloInputScalar`.

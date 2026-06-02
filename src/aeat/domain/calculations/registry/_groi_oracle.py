@@ -314,7 +314,9 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         if self._driver is not None:
             return self._driver.planned_operations(payload, expected=expected)
         operations: list[RemoteOperation] = [
-            RemoteOperation(kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check)),
+            RemoteOperation(
+                kind="http", method="GET", url=AnyUrl(Settings.external_constants().aeat.oracles.groi_check)
+            ),
             RemoteOperation(kind="browser_action", action="open-groi-form"),
         ]
         for nif in sorted(expected_values):

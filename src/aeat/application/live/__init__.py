@@ -332,6 +332,8 @@ class IvaCompensationHistoryCaptureReport(BaseModel):
     calculation_observation_keys: tuple[str, ...]
     reloaded_history_count: int
     reloaded_rows: tuple[IvaCompensationHistoryRow, ...]
+    failed_declaration_count: int = 0
+    failed_declarations: tuple[str, ...] = ()
 
 
 class LiveIvaReadSurface(StrEnum):
@@ -459,9 +461,7 @@ class IvaRemoteStateAcquisitionManifest(BaseModel):
     surfaces: tuple[IvaRemoteStateAcquisitionSurfaceManifest, ...]
 
 
-class IvaRemoteStateAcquisitionManifestRepository(
-    _SecureBoundRepository[IvaRemoteStateAcquisitionManifest]
-):
+class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemoteStateAcquisitionManifest]):
     """Repository for encrypted live IVA acquisition manifests."""
 
     namespace: ClassVar[str] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.namespace
@@ -766,9 +766,7 @@ def persist_filed_calculation_observation(
         captured_at=observation.presented_at,
     )
     if observation.modelo == "303":
-        _IvaCompensationHistoryRepository().save_period(
-            _iva_compensation_state_from_filed_observation(observation)
-        )
+        _IvaCompensationHistoryRepository().save_period(_iva_compensation_state_from_filed_observation(observation))
     return _observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
 
 
@@ -868,6 +866,7 @@ async def _capture_iva_compensation_history_with_session(
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
     observations_for_calculation: list[_FiledDeclaracionObservation] = []
+    failed_declarations: list[str] = []
     casilla_count = 0
 
     async with (
@@ -898,10 +897,26 @@ async def _capture_iva_compensation_history_with_session(
                             "period": declaration.period,
                         }
                     )
-                observation = await register.capture_observation(
-                    declaration,
-                    artefact_sink=store.persist_artefact,
-                )
+                try:
+                    observation = await asyncio.wait_for(
+                        register.capture_observation(
+                            declaration,
+                            artefact_sink=store.persist_artefact,
+                        ),
+                        timeout=settings.aeat_live_iva_declaration_capture_timeout_ms / 1000,
+                    )
+                except (TimeoutError, _AeatError, OSError) as exc:
+                    failed_declarations.append(_failed_declaration_ref(declaration, exc))
+                    return _iva_compensation_history_capture_report(
+                        output_root=output_root,
+                        year_from=year_from,
+                        year_to=year_to,
+                        observation_paths=tuple(observation_paths),
+                        artefact_refs=tuple(artefact_refs),
+                        casilla_count=casilla_count,
+                        observations_for_calculation=tuple(observations_for_calculation),
+                        failed_declarations=tuple(failed_declarations),
+                    )
                 manifest_path = store.persist_observation(observation)
                 observation_paths.append(_capture_report_path(manifest_path, output_root=output_root))
                 artefact_refs.extend(
@@ -913,9 +928,30 @@ async def _capture_iva_compensation_history_with_session(
                 casilla_count += len(observation.casillas)
                 observations_for_calculation.append(observation)
 
-    calculation_observation_keys = _persist_iva_compensation_history_observations_strict(
-        tuple(observations_for_calculation)
+    return _iva_compensation_history_capture_report(
+        output_root=output_root,
+        year_from=year_from,
+        year_to=year_to,
+        observation_paths=tuple(observation_paths),
+        artefact_refs=tuple(artefact_refs),
+        casilla_count=casilla_count,
+        observations_for_calculation=tuple(observations_for_calculation),
+        failed_declarations=tuple(failed_declarations),
     )
+
+
+def _iva_compensation_history_capture_report(
+    *,
+    output_root: Path,
+    year_from: int,
+    year_to: int,
+    observation_paths: tuple[str, ...],
+    artefact_refs: tuple[str, ...],
+    casilla_count: int,
+    observations_for_calculation: tuple[_FiledDeclaracionObservation, ...],
+    failed_declarations: tuple[str, ...],
+) -> IvaCompensationHistoryCaptureReport:
+    calculation_observation_keys = _persist_iva_compensation_history_observations_strict(observations_for_calculation)
     reloaded = list_iva_compensation_history()
 
     return IvaCompensationHistoryCaptureReport(
@@ -923,13 +959,22 @@ async def _capture_iva_compensation_history_with_session(
         year_from=year_from,
         year_to=year_to,
         captured_count=len(observation_paths),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
+        observation_paths=observation_paths,
+        artefact_refs=artefact_refs,
         casilla_count=casilla_count,
         calculation_observation_count=len(calculation_observation_keys),
         calculation_observation_keys=tuple(calculation_observation_keys),
         reloaded_history_count=reloaded.row_count,
         reloaded_rows=reloaded.rows,
+        failed_declaration_count=len(failed_declarations),
+        failed_declarations=failed_declarations,
+    )
+
+
+def _failed_declaration_ref(declaration: _Declaracion, exc: BaseException) -> str:
+    return (
+        f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
+        f"period={declaration.period};failure_type={type(exc).__name__}"
     )
 
 
@@ -1777,6 +1822,26 @@ def _surface_outcome(
             failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
             failure_type="MissingSurfaceReport",
         )
+    failed_declaration_count = getattr(report, "failed_declaration_count", 0)
+    if (
+        surface is LiveIvaReadSurface.FILED_HISTORY
+        and isinstance(failed_declaration_count, int)
+        and failed_declaration_count
+    ):
+        return LiveIvaReadOutcome(
+            surface=surface,
+            status=LiveIvaReadStatus.FAILED,
+            outcome_mode=LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED,
+            failure_mode=LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED,
+            failure_type="FiledHistoryPartialFailure",
+            failure_context={
+                "captured_count": getattr(report, "captured_count", None),
+                "failed_declaration_count": failed_declaration_count,
+                "failed_declarations": getattr(report, "failed_declarations", ()),
+            },
+            captured_count=getattr(report, "captured_count", None),
+            calculation_observation_count=getattr(report, "calculation_observation_count", None),
+        )
     return LiveIvaReadOutcome(
         surface=surface,
         status=LiveIvaReadStatus.SUCCEEDED,
@@ -1816,9 +1881,7 @@ def _redacted_context_value(value: object, *, key: str) -> object | None:
         return _redacted_context_mapping(value)
     if isinstance(value, tuple | list):
         items = tuple(
-            item
-            for item in (_redacted_context_value(entry, key=key) for entry in value[:8])
-            if item is not None
+            item for item in (_redacted_context_value(entry, key=key) for entry in value[:8]) if item is not None
         )
         return items
     return _bounded_context_text(value)

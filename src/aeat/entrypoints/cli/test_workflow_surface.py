@@ -203,9 +203,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     provider = get_master_key_provider()
     with activate_master_key_provider(provider):
         workflow_state_repository().update(
-            lambda current: set_active_field(
-                current, UserProfileFact(path="preferences.output_language", value="en")
-            )
+            lambda current: set_active_field(current, UserProfileFact(path="preferences.output_language", value="en"))
         )
 
         refreshed = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)

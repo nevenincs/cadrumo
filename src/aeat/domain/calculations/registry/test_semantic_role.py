@@ -22,7 +22,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path
-
 from . import load_modelo_path
 from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition
 from ._validate_semantic_roles import (
@@ -44,20 +43,22 @@ def _casilla(
     aliases: Iterable[CasillaAlias] = (),
     constraints: CasillaConstraints | None = None,
 ) -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
-        "id": cid,
-        "number": "01",
-        "label": "Test casilla",
-        "section": ("test",),
-        "data_type": data_type,
-        "semantic_role": semantic_role,
-        "semantic_role_cardinality": semantic_role_cardinality,
-        "semantic_role_cardinality_reason": semantic_role_cardinality_reason,
-        "aliases": tuple(aliases),
-        "constraints": constraints,
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-    })
+    return CasillaDefinition.model_validate(
+        {
+            "id": cid,
+            "number": "01",
+            "label": "Test casilla",
+            "section": ("test",),
+            "data_type": data_type,
+            "semantic_role": semantic_role,
+            "semantic_role_cardinality": semantic_role_cardinality,
+            "semantic_role_cardinality_reason": semantic_role_cardinality_reason,
+            "aliases": tuple(aliases),
+            "constraints": constraints,
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+        }
+    )
 
 
 def _modelo(modelo_id: str, revision_id: str, casillas: Iterable[CasillaDefinition]) -> Any:
@@ -173,12 +174,8 @@ class TestValidateSemanticRoleConsistency:
     def test_diverging_constraints_rejected(self) -> None:
         common_legal = ("ley-58-2003:art-29",)
         common_source = ("aeat-manual",)
-        constrained = CasillaConstraints(
-            sign="non_negative", legal_refs=common_legal, source_refs=common_source
-        )
-        unconstrained = CasillaConstraints(
-            sign="any", legal_refs=common_legal, source_refs=common_source
-        )
+        constrained = CasillaConstraints(sign="non_negative", legal_refs=common_legal, source_refs=common_source)
+        unconstrained = CasillaConstraints(sign="any", legal_refs=common_legal, source_refs=common_source)
         a = _casilla(cid="a", semantic_role="retenciones", data_type="money", constraints=constrained)
         b = _casilla(cid="b", semantic_role="retenciones", data_type="money", constraints=unconstrained)
         m1 = _modelo("180", "2023", [a])
@@ -490,6 +487,45 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
+
+
+class TestSignedCuotaResultadoRoles:
+    def test_irpf_and_is_signed_result_roles_are_bound_to_committed_casillas(self) -> None:
+        modelos = {
+            modelo.id: modelo
+            for modelo in (
+                _bundled_modelo("100"),
+                _bundled_modelo("200"),
+            )
+        }
+
+        signed_roles = {
+            (
+                modelo.id,
+                revision.id,
+                casilla.id,
+                casilla.semantic_role,
+                casilla.data_type,
+            )
+            for modelo in modelos.values()
+            for revision in modelo.revisions.values()
+            for casilla in revision.casillas
+            if casilla.semantic_role
+            in {
+                "resultado_ingresar_o_devolver_irpf",
+                "is_resultado_ingresar_o_devolver",
+                "resultado_ingresar_o_devolver_is",
+            }
+        }
+
+        assert signed_roles == {
+            ("100", "2024", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
+            ("100", "2025", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
+            ("200", "2024-y-siguientes", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
+        }
+
+        stale_is_role_members = [item for item in signed_roles if item[3] == "resultado_ingresar_o_devolver_is"]
+        assert stale_is_role_members == []
 
 
 class TestModelo347QuarterlyContraparteRolesAreIntentionalSingletons:

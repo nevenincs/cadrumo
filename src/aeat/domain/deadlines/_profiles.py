@@ -165,9 +165,7 @@ def taxpayer_profile_from_mapping(
         representante_fiscal_nif=canonical.get("taxpayer_type.representante_fiscal_nif") or None,
         representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
         irpf_pagadores_count=_parse_optional_int(canonical.get("irpf.pagadores_count")),
-        irpf_pagadores_secondary_income=_parse_decimal(
-            canonical.get("irpf.pagadores_secondary_income")
-        ),
+        irpf_pagadores_secondary_income=_parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
         days_in_spain=_parse_days_in_spain(canonical),
     )
 
@@ -228,7 +226,7 @@ def _parse_days_in_spain(canonical: dict[str, str]) -> dict[int, int]:
     prefix = "taxpayer_type.days_in_spain_"
     for key, raw in canonical.items():
         if key.startswith(prefix):
-            year_part = key[len(prefix):]
+            year_part = key[len(prefix) :]
             if len(year_part) == 4 and year_part.isdigit():
                 days = _parse_optional_int(raw)
                 if days is not None:

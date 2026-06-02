@@ -65,8 +65,7 @@ def materialize_m232_related_party_rows(
             registry_casilla = casillas_by_id.get(casilla_id)
             if registry_casilla is None:
                 raise RegistryValidationError(
-                    f"M232 casilla {casilla_id!r} ({row_slot}.{field_name}) "
-                    f"not found in revision casillas"
+                    f"M232 casilla {casilla_id!r} ({row_slot}.{field_name}) not found in revision casillas"
                 )
             observations.append(
                 CasillaObservation(

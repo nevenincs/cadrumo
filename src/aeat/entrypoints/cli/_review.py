@@ -35,6 +35,7 @@ def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
         legal_refs=tuple(row.legal_refs),
     )
 
+
 app = typer.Typer(
     name="review",
     help=tr("cli.review.app_help"),
@@ -112,10 +113,7 @@ def review_show(
         f"{tr('cli.review.labels.next')}\t{row.canonical_next_command}",
     ]
     if explain and row.legal_refs:
-        lines.append(
-            f"{tr('cli.review.labels.legal_refs', default='legal_refs')}\t"
-            f"{', '.join(row.legal_refs)}"
-        )
+        lines.append(f"{tr('cli.review.labels.legal_refs', default='legal_refs')}\t{', '.join(row.legal_refs)}")
     _emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 

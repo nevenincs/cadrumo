@@ -287,7 +287,9 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
         operations: list[RemoteOperation] = [
             # Navigate to the sede entry point first so the session cookies the
             # servlet requires are acquired; then GET the form servlet itself.
-            RemoteOperation(kind="http", method="GET", url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}")),
+            RemoteOperation(
+                kind="http", method="GET", url=AnyUrl(f"{_ext.aeat.domains.sede}{_ext.aeat.help_pages.nif_iva_landing}")
+            ),
             RemoteOperation(kind="http", method="GET", url=AnyUrl(_ext.aeat.oracles.nif_iva_verification)),
             RemoteOperation(kind="browser_action", action="open-nif-iva-form"),
         ]

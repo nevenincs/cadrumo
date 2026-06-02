@@ -207,11 +207,7 @@ def _dotted_literal_value(node: ast.expr | None) -> str | None:
     must be a Constant, its value must be a string, and the string must
     match the dotted-literal shape.
     """
-    if (
-        isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and _is_dotted_literal(node.value)
-    ):
+    if isinstance(node, ast.Constant) and isinstance(node.value, str) and _is_dotted_literal(node.value):
         return node.value
     return None
 

@@ -69,7 +69,9 @@ class RentaWebOpenLivePayload(RentaWebOpenModel):
     profile: RentaWebOpenSyntheticProfile = Field(default_factory=RentaWebOpenSyntheticProfile)
     app_url: AnyUrl = Field(
         default_factory=lambda: AnyUrl(
-            Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(year=_RENTA_WEB_OPEN_DEFAULT_YEAR)
+            Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(
+                year=_RENTA_WEB_OPEN_DEFAULT_YEAR
+            )
         )
     )
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)

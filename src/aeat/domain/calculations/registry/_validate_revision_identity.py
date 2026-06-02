@@ -149,9 +149,7 @@ def _emit_casilla_identity_failures(
         if segmento is None:
             failures.append(f"{prefix}: duplicate casilla number {number!r}")
         else:
-            failures.append(
-                f"{prefix}: duplicate casilla number {number!r} within segmento {segmento!r}"
-            )
+            failures.append(f"{prefix}: duplicate casilla number {number!r} within segmento {segmento!r}")
 
 
 def _emit_revision_payload_failures(

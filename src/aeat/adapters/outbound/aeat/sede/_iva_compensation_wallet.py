@@ -654,7 +654,8 @@ def _absolute_audited_wallet_url(raw_url: str, *, base_url: str) -> str | None:
         return None
     if not _is_allowed_wallet_host(parsed.netloc):
         return None
-    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    query = f"?{parsed.query}" if parsed.query else ""
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}{query}"
 
 
 def _wallet_entrypoint_path(raw_url: str) -> str | None:
