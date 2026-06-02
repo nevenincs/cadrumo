@@ -65,9 +65,7 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset({"root.status", "root.app"
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
 #: in :mod:`aeat.entrypoints.cli.test_json_schema_conformance`.
-_APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset(
-    {"ledger", "modelo", "overview", "registry", "review"}
-)
+_APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset({"ledger", "modelo", "overview", "registry", "review"})
 _APP_NAMESPACE_PASSTHROUGH: frozenset[str] = frozenset({"live"})
 
 
@@ -119,11 +117,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
         RuntimeError: When any subtree carries the fallback marker text.
     """
     all_nodes = _collect_commands(root)
-    degraded = [
-        " ".join(path)
-        for path, cmd in all_nodes.items()
-        if _FALLBACK_MARKER in (cmd.help or "").lower()
-    ]
+    degraded = [" ".join(path) for path, cmd in all_nodes.items() if _FALLBACK_MARKER in (cmd.help or "").lower()]
     if degraded:
         paths = ", ".join(degraded)
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
@@ -473,10 +467,7 @@ def _render_index_page(
     # Global flags
     parts.append(_rst_heading("Global flags", "-"))
     parts.append("\n")
-    parts.append(
-        "These flags are accepted by the ``aeat`` root command and apply to every"
-        " invocation.\n\n"
-    )
+    parts.append("These flags are accepted by the ``aeat`` root command and apply to every invocation.\n\n")
     global_flags = [
         ("``--language`` / ``--lang``", "Override the output language (``es``, ``en``, ``ca``, ``hu``)."),
         ("``--profile``", "Activate a named profile for this invocation."),
@@ -543,9 +534,7 @@ def _render_index_page(
     for key in envelope_keys:
         schema_cls = schema_registry[key]
         schema_name = (
-            f"{schema_cls.__module__}.{schema_cls.__name__}"
-            if isinstance(schema_cls, type)
-            else repr(schema_cls)
+            f"{schema_cls.__module__}.{schema_cls.__name__}" if isinstance(schema_cls, type) else repr(schema_cls)
         )
         parts.append(f"* ``{key}`` → ``{schema_name}``\n")
     parts.append("\n")
@@ -716,10 +705,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
     )
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
-        raise RuntimeError(
-            f"CLI reference generation subprocess failed (exit {result.returncode}):\n"
-            f"{result.stderr}"
-        )
+        raise RuntimeError(f"CLI reference generation subprocess failed (exit {result.returncode}):\n{result.stderr}")
 
     # Read back what the subprocess wrote.
     output_dir = docs_root / "cli"
@@ -778,10 +764,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     )
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD: subprocess invocation failure surfaced as RuntimeError for operator diagnostics; not on the operator-facing AeatError contract.
-        raise RuntimeError(
-            f"CLI leaf-path collection subprocess failed (exit {result.returncode}):\n"
-            f"{result.stderr}"
-        )
+        raise RuntimeError(f"CLI leaf-path collection subprocess failed (exit {result.returncode}):\n{result.stderr}")
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 
