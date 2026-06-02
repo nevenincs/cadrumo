@@ -41,6 +41,7 @@ _MAX_TIME_COST = 16
 _MIN_PARALLELISM = 1
 _MAX_PARALLELISM = 8
 
+
 class KdfParams(BaseModel):
     """OWASP-baseline Argon2id parameters with strict validation.
 
@@ -100,5 +101,6 @@ class KdfParams(BaseModel):
         from ..bucket._manifest import ManifestKdfParams
 
         return ManifestKdfParams.model_validate(self.model_dump())
+
 
 __all__ = ["KdfParams"]
