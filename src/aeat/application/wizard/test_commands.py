@@ -61,9 +61,7 @@ _EXPECTED_CREATED = tr("wizard.commands.status.created")
 _EXPECTED_UPDATED = tr("wizard.commands.status.updated")
 
 
-def test_wizard_create_status_verb_is_localized(
-    runner: CliRunner, _isolated_backend: Path
-) -> None:
+def test_wizard_create_status_verb_is_localized(runner: CliRunner, _isolated_backend: Path) -> None:
     """Wizard create emits the locale-resolved tab-key and verb, not raw English."""
     app = _wizard_app("create")
     result = runner.invoke(
@@ -78,9 +76,7 @@ def test_wizard_create_status_verb_is_localized(
         assert "status\tcreated" not in result.output
 
 
-def test_wizard_edit_status_verb_is_localized(
-    runner: CliRunner, _isolated_backend: Path
-) -> None:
+def test_wizard_edit_status_verb_is_localized(runner: CliRunner, _isolated_backend: Path) -> None:
     """Wizard edit emits the locale-resolved tab-key and updated verb."""
     # Seed a profile first via create so edit has a target.
     create_app = _wizard_app("create")
