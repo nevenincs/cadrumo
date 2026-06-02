@@ -144,9 +144,11 @@ class TestReplayRun:
             # Simulate the env var set during a replay — the canonical
             # Settings field is consulted by ``run_context`` via
             # ``load_settings()`` at re-entry.
-            with override_settings(aeat_runs_dir=tmp_path, aeat_replay_active=original.run_id):
-                with run_context(entrypoint="aeat test replay-child", arguments=()) as info:
-                    child_run_id = info.run_id
+            with (
+                override_settings(aeat_runs_dir=tmp_path, aeat_replay_active=original.run_id),
+                run_context(entrypoint="aeat test replay-child", arguments=()) as info,
+            ):
+                child_run_id = info.run_id
 
             child_trace = load_trace(child_run_id)
             assert child_trace.replay_of == original.run_id, "replay-originated traces must carry the original run id"
@@ -391,13 +393,10 @@ class TestReplayActiveEnvVarCanonicity:
         # Exactly one hit, and it must be the assignment in _replay.py:26.
         assert len(hits) == 1, (
             f"Expected exactly one occurrence of the literal across non-test package files; "
-            f"found {len(hits)}:\n"
-            + "\n".join(f"  {f.name}:{ln}  {src}" for f, ln, src in hits)
+            f"found {len(hits)}:\n" + "\n".join(f"  {f.name}:{ln}  {src}" for f, ln, src in hits)
         )
         canonical_file, canonical_line, _ = hits[0]
         assert canonical_file.name == "_replay.py", (
             f"Canonical definition must be in _replay.py, found in {canonical_file.name}"
         )
-        assert canonical_line == 26, (
-            f"Canonical definition must be at line 26, found at line {canonical_line}"
-        )
+        assert canonical_line == 26, f"Canonical definition must be at line 26, found at line {canonical_line}"
