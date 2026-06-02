@@ -12,6 +12,15 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `modelo-036-census-sync` plan
 
@@ -42,34 +51,34 @@ Land the comprehensive census-field delta with primary-source legal grounding fo
 
 Mirror the Borrador100 snapshot pattern as the census-data persistence layer.
 
-- [ ] `P02.S19` - add CensusSnapshot pydantic v2 model with content-addressed snapshot_id and state machine; `src/aeat/application/live/_census.py`.
-- [ ] `P02.S20` - add CensusSnapshotState closed StrEnum with ACTIVE SUPERSEDED DISCARDED members; `src/aeat/application/live/_census.py`.
-- [ ] `P02.S21` - add derive_census_snapshot_id helper hashing profile_id captured_at source_url and canonical-json census_facts; `src/aeat/application/live/_census.py`.
-- [ ] `P02.S22` - add CensusSnapshotRepository over SecureObjectRepository under namespace aeat.application.live.census_snapshot; `src/aeat/application/live/_census.py`.
-- [ ] `P02.S23` - add CensusSnapshotService.capture with auto-supersession of any prior ACTIVE for the same profile; `src/aeat/application/live/_census.py`.
-- [ ] `P02.S24` - add CensusSnapshotService.latest_active and discard; `src/aeat/application/live/_census.py`.
-- [ ] `P02.S25` - real-behavior tests for id derivation supersession and encrypted round-trip; `src/aeat/application/live/test_census_snapshot.py`.
+- [x] `P02.S19` - add CensusSnapshot pydantic v2 model with content-addressed snapshot_id and state machine; `src/aeat/application/live/_census.py`.
+- [x] `P02.S20` - add CensusSnapshotState closed StrEnum with ACTIVE SUPERSEDED DISCARDED members; `src/aeat/application/live/_census.py`.
+- [x] `P02.S21` - add derive_census_snapshot_id helper hashing profile_id captured_at source_url and canonical-json census_facts; `src/aeat/application/live/_census.py`.
+- [x] `P02.S22` - add CensusSnapshotRepository over SecureObjectRepository under namespace aeat.application.live.census_snapshot; `src/aeat/application/live/_census.py`.
+- [x] `P02.S23` - add CensusSnapshotService.capture with auto-supersession of any prior ACTIVE for the same profile; `src/aeat/application/live/_census.py`.
+- [x] `P02.S24` - add CensusSnapshotService.latest_active and discard; `src/aeat/application/live/_census.py`.
+- [x] `P02.S25` - real-behavior tests for id derivation supersession and encrypted round-trip; `src/aeat/application/live/test_census_snapshot.py`.
 
 ### Phase `P03` - sede G313 adapter and provenance wiring
 
 Land the live-gated census read against the Mis Datos Censales endpoint.
 
-- [ ] `P03.S26` - add CensusFactSet strict pydantic envelope carrying every census field from the schema delta; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
-- [ ] `P03.S27` - add CensusSedeDriver mirroring the _renta_web_open driver structure; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
-- [ ] `P03.S28` - parse the G313 result page into a CensusFactSet refusing on unknown fields; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
-- [ ] `P03.S29` - persist the raw G313 HTML to the observation store for the audit trail; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
-- [ ] `P03.S30` - wire UserProfileFact.source aeat_census_read as the provenance tag for captured facts; `src/aeat/application/profile/_census_sync.py`.
-- [ ] `P03.S31` - real-behavior adapter test against a saved-HTML G313 fixture; `src/aeat/adapters/outbound/aeat/sede/test_census_driver.py`.
+- [x] `P03.S26` - add CensusFactSet strict pydantic envelope carrying every census field from the schema delta; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
+- [x] `P03.S27` - add CensusSedeDriver mirroring the _renta_web_open driver structure; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
+- [x] `P03.S28` - parse the G313 result page into a CensusFactSet refusing on unknown fields; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
+- [x] `P03.S29` - persist the raw G313 HTML to the observation store for the audit trail; `src/aeat/adapters/outbound/aeat/sede/_census.py`.
+- [x] `P03.S30` - wire UserProfileFact.source aeat_census_read as the provenance tag for captured facts; `src/aeat/application/profile/_census_sync.py`.
+- [x] `P03.S31` - real-behavior adapter test against a saved-HTML G313 fixture; `src/aeat/adapters/outbound/aeat/sede/test_census_driver.py`.
 
 ### Phase `P04` - CensusSyncService, new events, error hierarchy
 
 Mint the operator-facing service plus the bucket-event and error machinery.
 
-- [ ] `P04.S32` - add CENSUS_REFRESHED profile.census.refreshed to BucketEventType; `src/aeat/domain/buckets/_event.py`.
-- [ ] `P04.S33` - add CENSUS_APPLIED profile.census.applied to BucketEventType; `src/aeat/domain/buckets/_event.py`.
-- [ ] `P04.S34` - add CENSUS_DEPENDENT_STAMPED_STALE modelo.census.dependent_stamped_stale to BucketEventType; `src/aeat/domain/buckets/_event.py`.
-- [ ] `P04.S35` - add CensusSyncError base plus CensusNotAvailableError CensusFieldValidationError CensusApplyConflictError; `src/aeat/application/profile/_census_errors.py`.
-- [ ] `P04.S36` - register every new error in the application error registry; `src/aeat/core/errors/registry/_application.py`.
+- [x] `P04.S32` - add CENSUS_REFRESHED profile.census.refreshed to BucketEventType; `src/aeat/domain/buckets/_event.py`.
+- [x] `P04.S33` - add CENSUS_APPLIED profile.census.applied to BucketEventType; `src/aeat/domain/buckets/_event.py`.
+- [x] `P04.S34` - add CENSUS_DEPENDENT_STAMPED_STALE modelo.census.dependent_stamped_stale to BucketEventType; `src/aeat/domain/buckets/_event.py`.
+- [x] `P04.S35` - add CensusSyncError base plus CensusNotAvailableError CensusFieldValidationError CensusApplyConflictError; `src/aeat/application/profile/_census_errors.py`.
+- [x] `P04.S36` - register every new error in the application error registry; `src/aeat/core/errors/registry/_application.py`.
 - [x] `P04.S37` - add CensusProfileComparison pydantic envelope carrying the field-by-field comparison in operator-readable form; `src/aeat/application/profile/_census_sync.py`.
 - [x] `P04.S38` - add CensusSyncService.refresh_census; `src/aeat/application/profile/_census_sync.py`.
 - [x] `P04.S39` - add CensusSyncService.show_census; `src/aeat/application/profile/_census_sync.py`.
@@ -99,19 +108,19 @@ Wire the CENSUS_STALE flag and refusal contract through every service that consu
 
 Operator-facing CLI surface in plain English with no programmer jargon.
 
-- [ ] `P06.S56` - mount the aeat config profile census refresh verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `P06.S57` - mount the aeat config profile census show verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `P06.S58` - mount the aeat config profile census compare verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `P06.S59` - mount the aeat config profile census apply verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `P06.S60` - scaffold locale entries via python -m aeat.locales scaffold; `src/aeat/locales/`.
-- [ ] `P06.S61` - translate English help strings into operator-readable prose; `src/aeat/locales/en.yml`.
-- [ ] `P06.S62` - translate the four sets into Spanish; `src/aeat/locales/es.yml`.
-- [ ] `P06.S63` - translate the four sets into Catalan; `src/aeat/locales/ca.yml`.
-- [ ] `P06.S64` - translate the four sets into Hungarian; `src/aeat/locales/hu.yml`.
-- [ ] `P06.S65` - CLI surface tests for the refresh verb; `src/aeat/entrypoints/cli/test_profile_census_refresh_verb.py`.
-- [ ] `P06.S66` - CLI surface tests for the show verb; `src/aeat/entrypoints/cli/test_profile_census_show_verb.py`.
-- [ ] `P06.S67` - CLI surface tests for the compare verb; `src/aeat/entrypoints/cli/test_profile_census_compare_verb.py`.
-- [ ] `P06.S68` - CLI surface tests for the apply verb covering walker stale events and refusal cascade; `src/aeat/entrypoints/cli/test_profile_census_apply_verb.py`.
+- [x] `P06.S56` - mount the aeat config profile census refresh verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `P06.S57` - mount the aeat config profile census show verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `P06.S58` - mount the aeat config profile census compare verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `P06.S59` - mount the aeat config profile census apply verb; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `P06.S60` - scaffold locale entries via python -m aeat.locales scaffold; `src/aeat/locales/`.
+- [x] `P06.S61` - translate English help strings into operator-readable prose; `src/aeat/locales/en.yml`.
+- [x] `P06.S62` - translate the four sets into Spanish; `src/aeat/locales/es.yml`.
+- [x] `P06.S63` - translate the four sets into Catalan; `src/aeat/locales/ca.yml`.
+- [x] `P06.S64` - translate the four sets into Hungarian; `src/aeat/locales/hu.yml`.
+- [x] `P06.S65` - CLI surface tests for the refresh verb; `src/aeat/entrypoints/cli/test_profile_census_refresh_verb.py`.
+- [x] `P06.S66` - CLI surface tests for the show verb; `src/aeat/entrypoints/cli/test_profile_census_show_verb.py`.
+- [x] `P06.S67` - CLI surface tests for the compare verb; `src/aeat/entrypoints/cli/test_profile_census_compare_verb.py`.
+- [x] `P06.S68` - CLI surface tests for the apply verb covering walker stale events and refusal cascade; `src/aeat/entrypoints/cli/test_profile_census_apply_verb.py`.
 
 ### Phase `P07` - boundary regression and legal-binding validator
 
