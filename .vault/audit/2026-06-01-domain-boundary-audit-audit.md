@@ -1371,6 +1371,28 @@ remediation is currently HELD at audit-only per the active action policy.
   needs per-twin verify-before-action: confirm 1:1 vs adapter, and preserve the CLI
   JSON output contract (user-facing). Deferred to focused execution.
 
+- 2026-06-02 (cont.): **DB-26 / W04.P13 S49+S50 EXECUTED.** The two 1:1 collapses
+  landed via the boundary-safe projection pattern (a `from_result` classmethod on the
+  CLI payload that projects the application result; CLI→application direction, no
+  inversion): `AuthConfigurePayload.from_result(AuthConfigureResult)` plus a
+  nullability reconciliation of its seven app-mirroring fields from `X | None = None`
+  to the application model's non-nullable `str = ""` / `bool = False` (S50, commits
+  `5b6b21593` + `c69a64506`, S50 closed); and `AuthClearPayload.from_result(
+  AuthClearResult)` (S49 T5, 1:1, no nullability gap, commit `c3c17e495`). Each was
+  verified behaviour-neutral against the 10-test auth surface + 14-test
+  json-schema-conformance/common-output gates (output unchanged; the conformance gate
+  pins schema registration + envelope round-trip, not per-field nullability, so the
+  tightening carried no contract risk). The three pass-throughs T2/T3/T4
+  (`AuthStatusPayload`/`AuthTestPayload`/`AuthLoginPayload`) are CONFIRMED
+  boundary-correct and NOT collapsed: their `extra="allow"` envelope is the canonical
+  CLI adapter over an independently-evolving application model, and "emit the
+  application result directly" would require a CLI `@register_schema` decorator on the
+  application-layer `BaseModel` — a hexagonal inversion. Their actionable smell (shared
+  class name) was already resolved by the earlier `*Result`→`*Payload` rename. S49 is
+  therefore complete on its actionable surface (T5 collapsed; T2/T3/T4 dispositioned
+  wontfix-boundary-correct); the remaining open W04.P13 work is S51/S52
+  (Ledger/Modelo/Censo/Inventory projections).
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
