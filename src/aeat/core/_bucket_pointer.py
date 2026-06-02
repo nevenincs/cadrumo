@@ -56,4 +56,5 @@ class BucketPointer(BaseModel):
         payload = tomllib.loads(text)
         return cls.model_validate(payload)
 
+
 __all__ = ["BucketPointer"]
