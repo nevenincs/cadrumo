@@ -153,9 +153,9 @@ Remove the M347_THRESHOLD_EUR re-export chain and relocate the M184/M347 validat
 
 Move the DT-12 and SAL reserva formulas (and PensionReduccionError) out of the CLI into grounded domain modules with oracle tests.
 
-- [ ] `W02.P05.S25` - Relocate PensionReduccionError from application/calculations/_errors.py to domain/modelos/_errors.py; `update the error-registry string at core/errors/registry/_application.py:958 and all import sites (prereq: domain cannot import application); `src/aeat/domain/modelos/_errors.py`.
-- [ ] `W02.P05.S26` - Relocate _compute_dt12_reduccion_plan_pensiones to a new domain/modelos/_dt12_reduccion.py with an oracle-cited test (LIRPF DT 12 worked example); `repoint the cli/_modelo:3145 call site; `src/aeat/domain/modelos/_dt12_reduccion.py`.
-- [ ] `W02.P05.S27` - Relocate _compute_sal_reserva_especial_dotacion to a new domain/modelos/_sal_reserva_especial.py with an oracle-cited test (Ley 44/2015 art. 14 worked example); `repoint the cli/_modelo:3186 call site; `src/aeat/domain/modelos/_sal_reserva_especial.py`.
+- [x] `W02.P05.S25` - Relocate PensionReduccionError from application/calculations/_errors.py to domain/modelos/_errors.py; `update the error-registry string at core/errors/registry/_application.py:958 and all import sites (prereq: domain cannot import application); `src/aeat/domain/modelos/_errors.py`.
+- [x] `W02.P05.S26` - Relocate _compute_dt12_reduccion_plan_pensiones to a new domain/modelos/_dt12_reduccion.py with an oracle-cited test (LIRPF DT 12 worked example); `repoint the cli/_modelo:3145 call site; `src/aeat/domain/modelos/_dt12_reduccion.py`.
+- [x] `W02.P05.S27` - Relocate _compute_sal_reserva_especial_dotacion to a new domain/modelos/_sal_reserva_especial.py with an oracle-cited test (Ley 44/2015 art. 14 worked example); `repoint the cli/_modelo:3186 call site; `src/aeat/domain/modelos/_sal_reserva_especial.py`.
 
 ### Phase `W02.P06` - Aggregation regulatory enums to core and rounding-code unification
 
