@@ -29,9 +29,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
     bundled registry only loads when actually needed.
     """
 
-    def __init__(
-        self, root: Path | None = None, source_root: Path | None = None
-    ) -> None:
+    def __init__(self, root: Path | None = None, source_root: Path | None = None) -> None:
         super().__init__()
         self._root = root
         self._source_root = source_root
@@ -47,9 +45,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
 
         root = self._root or bundled_path("registry", "aeat")
         source_root = self._source_root or bundled_path()
-        self._authority = _ValidatedRegistryAuthority.load(
-            root, source_root=source_root
-        )
+        self._authority = _ValidatedRegistryAuthority.load(root, source_root=source_root)
         return self._authority
 
     @property
@@ -64,9 +60,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
         try:
             return authority.modelo(key)
         except RegistrySnapshotError as exc:
-            raise ResourceNotFoundError(
-                f"no modelo definition registered for {key!r}"
-            ) from exc
+            raise ResourceNotFoundError(f"no modelo definition registered for {key!r}") from exc
 
     def all(self) -> tuple[ModeloDefinition, ...]:
         """Return every modelo definition in the bundled registry.

@@ -48,8 +48,8 @@ def profile_resolvable_binding_ids(
     binding as missing, which is the correct conservative answer.
     """
     authority = _resources_authority()
-    resolved_period = period if period is not None else _annual_period_for_year(
-        authority, modelo=modelo, filing_year=filing_year
+    resolved_period = (
+        period if period is not None else _annual_period_for_year(authority, modelo=modelo, filing_year=filing_year)
     )
     if resolved_period is None:
         return frozenset()
@@ -75,9 +75,7 @@ def _resources_authority() -> ValidatedRegistryAuthority:
     return resources().modelos.authority
 
 
-def _annual_period_for_year(
-    authority: ValidatedRegistryAuthority, *, modelo: str, filing_year: int
-) -> str | None:
+def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: str, filing_year: int) -> str | None:
     """Return a registry period token a snapshot for ``filing_year`` accepts.
 
     With no ``--period`` the operator wants the revision covering the
@@ -91,9 +89,7 @@ def _annual_period_for_year(
     except (RegistrySnapshotError, RegistryValidationError):
         return None
     covering = [
-        revision
-        for revision in definition.revisions.values()
-        if revision.period_selector.includes_year(filing_year)
+        revision for revision in definition.revisions.values() if revision.period_selector.includes_year(filing_year)
     ]
     if not covering:
         return None
