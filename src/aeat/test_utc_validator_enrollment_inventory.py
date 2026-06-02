@@ -54,7 +54,7 @@ def _file_has_inline_tzinfo_guard(
         if not isinstance(node, ast.Compare):
             continue
         # Look for ``<expr>.tzinfo is None``
-        for op, comparator in zip(node.ops, node.comparators):
+        for op, comparator in zip(node.ops, node.comparators, strict=False):
             if not isinstance(op, ast.Is):
                 continue
             if not (isinstance(comparator, ast.Constant) and comparator.value is None):
@@ -63,7 +63,7 @@ def _file_has_inline_tzinfo_guard(
             left = node.left if comparator is node.comparators[0] else None
             if left is None:
                 # Handle chained comparisons — check all pairs
-                for i, (op2, comp2) in enumerate(zip(node.ops, node.comparators)):
+                for i, (op2, comp2) in enumerate(zip(node.ops, node.comparators, strict=False)):
                     if isinstance(op2, ast.Is) and isinstance(comp2, ast.Constant) and comp2.value is None:
                         lhs = node.left if i == 0 else node.comparators[i - 1]
                         if isinstance(lhs, ast.Attribute) and lhs.attr == "tzinfo":
