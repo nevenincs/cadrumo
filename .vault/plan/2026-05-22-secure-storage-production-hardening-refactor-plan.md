@@ -626,7 +626,7 @@ Replace ad hoc database-route sandboxing with a sanctioned real runtime profile 
 Classify bucket-local plaintext stores and remote provider surfaces so the runtime rollout does not leave sensitive data in parallel backends.
 
 - [x] `W12.P24.S96` - Classify evidence, inventory, ledger evidence, business-operation invoice, live notification, live verification, expedientes, and snapshot file stores as secure-object migration, export-only, rebuildable cache, or accepted plaintext exception; `src/aeat/application`.
-- [ ] `W12.P24.S97` - Migrate sensitive bucket-local side stores to runtime-created secure-object repositories or persist accepted exception ADR coverage before retaining them; `src/aeat/application`.
+- [x] `W12.P24.S97` - Migrate sensitive bucket-local side stores to runtime-created secure-object repositories or persist accepted exception ADR coverage before retaining them; `src/aeat/application`.
 - [ ] `W12.P24.S98` - Bind outbound storage providers to encrypted mirror semantics with runtime-derived profile identity and namespace policy; `src/aeat/adapters/outbound/storage`.
 - [ ] `W12.P24.S99` - Add real-behavior tests proving retained file stores do not become alternate sensitive persistence backends; `src/aeat`.
 
