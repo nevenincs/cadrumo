@@ -364,9 +364,7 @@ def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str,
             try:
                 parsed = _parse_iso8601_date(value)
             except ValueError as exc:
-                raise ModeloBuilderError(
-                    f"date binding {binding_id!r} has a non-ISO date value {value!r}"
-                ) from exc
+                raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}") from exc
             if parsed is None:
                 raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}")
             date_inputs[binding_id] = parsed
@@ -478,9 +476,7 @@ def _binding_row_index(binding_id: str, row_key: object) -> int:
 
 def _binding_input(binding_id: str, value: object, binding: object) -> ModeloScalar:
     selector = getattr(binding, "selector", None)
-    raw_data_type = (
-        selector.get("data_type") if isinstance(selector, Mapping) else getattr(selector, "data_type", None)
-    )
+    raw_data_type = selector.get("data_type") if isinstance(selector, Mapping) else getattr(selector, "data_type", None)
     data_type = str(raw_data_type or "decimal")
     if data_type == "text":
         return str(value)

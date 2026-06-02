@@ -77,13 +77,9 @@ def test_export_format_error_registry_has_no_name_collision() -> None:
     from ...core.errors.registry import _ALL_DECLARED_ERROR_CODES
 
     qualnames_named_export_format_error = [
-        qualname
-        for qualname, _ in _ALL_DECLARED_ERROR_CODES
-        if qualname.split(".")[-1] == "ExportFormatError"
+        qualname for qualname, _ in _ALL_DECLARED_ERROR_CODES if qualname.split(".")[-1] == "ExportFormatError"
     ]
-    assert qualnames_named_export_format_error == [
-        "aeat.application.export._errors.ExportFormatError"
-    ], (
+    assert qualnames_named_export_format_error == ["aeat.application.export._errors.ExportFormatError"], (
         f"Expected exactly one ExportFormatError in the registry "
         f"(application canonical), got: {qualnames_named_export_format_error}"
     )

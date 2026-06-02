@@ -22,6 +22,7 @@ class StorageWritePolicyCode(StrEnum):
     REFUSED_ROOT_FALLBACK = "refused_root_fallback"
     REFUSED_EXPLICIT_DATABASE_URL = "refused_explicit_database_url"
 
+
 class StorageWritePolicyDecision(BaseModel):
     """Decision returned by the backend storage write-policy query."""
 
@@ -42,6 +43,7 @@ class StorageWritePolicyDecision(BaseModel):
         if self.detail_message_key:
             return tr(self.message_key, details=tr(self.detail_message_key, locale=locale), locale=locale)
         return tr(self.message_key, locale=locale)
+
 
 PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger add",
@@ -113,6 +115,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config reset",
 )
 
+
 def inspect_storage_write_policy(
     verb_path: str | None,
     *,
@@ -174,13 +177,14 @@ def inspect_storage_write_policy(
         route_kind=route.kind,
     )
 
+
 def is_profile_bound_write_verb_path(verb_path: str) -> bool:
     """Return whether ``verb_path`` names a profile-bound mutation surface."""
     normalised = verb_path.strip()
     return any(
-        normalised == guarded or normalised.startswith(f"{guarded} ")
-        for guarded in PROFILE_BOUND_WRITE_VERB_PATHS
+        normalised == guarded or normalised.startswith(f"{guarded} ") for guarded in PROFILE_BOUND_WRITE_VERB_PATHS
     )
+
 
 __all__ = [
     "PROFILE_BOUND_WRITE_VERB_PATHS",
