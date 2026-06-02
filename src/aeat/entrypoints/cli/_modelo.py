@@ -5873,11 +5873,12 @@ def _maritime_facts_from_active_profile():
             return False
         return raw.strip().lower() in {"true", "1", "yes"}
 
+    # CAST-RATIONALE-MARITIME-LITERAL-FIELD:
+    # _enum returns str|None from raw profile fact; Literal field type is
+    # validated by MaritimeWorkerFacts dataclass at construction.
     return MaritimeWorkerFacts(
         worker_class=_enum("maritime_worker.worker_class"),
-        vessel_flag=_enum(
-            "maritime_worker.vessel_flag"
-        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: _enum returns str|None from raw profile fact; Literal field type is validated by MaritimeWorkerFacts dataclass at construction  # type: ignore[arg-type]
+        vessel_flag=_enum("maritime_worker.vessel_flag"),  # type: ignore[arg-type]
         waters_type=_enum(
             "maritime_worker.waters_type"
         ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]

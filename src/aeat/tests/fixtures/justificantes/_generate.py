@@ -2058,7 +2058,9 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
         y -= 6 * mm
 
         # iva.compensacion-pendiente-periodos-posteriores (box 87) — zero
-        # Profile: 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+previos\s+pendientes\s+para\s+periodos\s+posteriores\s+\(110\s*-\s*78\)'
+        # Profile (regex):
+        # 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+previos\s+pendientes\s+'
+        # 'para\s+periodos\s+posteriores\s+\(110\s*-\s*78\)'
         c.drawString(
             20 * mm,
             y,
