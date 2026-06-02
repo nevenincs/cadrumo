@@ -37,6 +37,26 @@ class ProfilePreflightService:
         filing_year: int,
         period: str,
     ) -> ProfilePreflightReport:
+        """Compute missing required profile fields for the given filing context.
+
+        Walks every section and field in the schema.  A field is considered
+        required for this filing when ``field.required`` is true and at
+        least one of its ``model_selectors`` has the prefix
+        ``modelo_<modelo>``.  Facts already present on ``record`` are
+        excluded from the missing list.
+
+        Args:
+            record: The caller's current :class:`UserProfileRecord`.
+            modelo: Numeric modelo identifier (e.g. ``"303"``).
+            revision_id: Revision tag from the registry (e.g. ``"2024-0A"``).
+            filing_year: Four-digit filing year.
+            period: Period code (e.g. ``"1T"``, ``"1P"``).
+
+        Returns:
+            A :class:`ProfilePreflightReport` with ``ready=True`` when all
+            required fields are present, or ``ready=False`` with the
+            ``missing`` list populated.
+        """
         present_paths = {fact.path for fact in record.facts}
         missing: list[ProfilePreflightRequirement] = []
         target = self._selector_prefix(modelo)

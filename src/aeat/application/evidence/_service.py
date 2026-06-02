@@ -42,6 +42,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
     payload_type: ClassVar[type[EvidenceBundle]] = EvidenceBundle
 
     def extract_identifier(self, payload: EvidenceBundle) -> str:
+        """Return the stable storage key for an :class:`EvidenceBundle`."""
         return payload.bundle_id
 
 
@@ -141,6 +142,12 @@ class EvidenceBundleService:
         return bundle
 
     def show(self, *, bucket_id: str, bundle_id: str) -> EvidenceBundle:
+        """Load a bundle by exact or prefix match of ``bundle_id``.
+
+        Tries an exact ``repository.load`` first; falls back to a prefix
+        scan over all records in the bucket. Raises
+        :class:`EvidenceBundleNotFoundError` when nothing matches.
+        """
         repository = self._repository_for(bucket_id)
         if bundle_id.strip():
             exact = repository.load(bundle_id)

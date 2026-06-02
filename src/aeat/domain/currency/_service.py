@@ -1,3 +1,15 @@
+"""Currency normalization service: convert foreign amounts to EUR.
+
+Provides :class:`ExchangeRateProvider` — the protocol an exchange-rate
+backend must implement — and :class:`CurrencyNormalizationService`, which
+applies a provider-supplied rate to produce a :class:`NormalizedAmount`
+(from ``._models``).  When no provider is configured or no rate is
+available the service returns a ``NormalizedAmount`` with
+``status = CurrencyNormalizationStatus.MISSING_RATE`` so callers can
+surface a human-readable warning rather than silently propagating a zero
+amount into a filing (modelo = an AEAT tax form).
+"""
+
 from __future__ import annotations
 
 from datetime import date
