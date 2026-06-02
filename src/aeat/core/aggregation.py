@@ -46,3 +46,25 @@ class RowSetGroupingKind(StrEnum):
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
     REFUND = "refund"
+
+
+class RetencionScheme(StrEnum):
+    """Closed catalogue of retenciones schemes across the retenciones family.
+
+    Each scheme maps to one of the casillas (or grouped casillas) on a
+    retenciones modelo form. The mapping from scheme to modelo lives in the
+    per-modelo entry-point functions; this enum is the union. Declared in
+    :mod:`aeat.core` as a closed value set per the architecture contract.
+    """
+
+    # Modelo 111 schemes (quarterly retenciones IRPF on labor + activities)
+    WORK_INCOME = "rendimientos_trabajo"  # clave A
+    ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
+    PROFESSIONAL = "actividades_profesionales"  # clave H (subset of G)
+    PRIZE = "premios"  # clave I (lottery, prize)
+    # Modelo 115 schemes (urban rental withholding)
+    URBAN_RENTAL = "arrendamiento_urbano"  # locales de negocio
+    # Modelo 123 schemes (capital mobiliario, dividends, interest)
+    CAPITAL_INTEREST = "intereses"  # clave I (interest income)
+    CAPITAL_DIVIDEND = "dividendos"  # clave A (dividend income)
+    CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)

@@ -1068,7 +1068,8 @@ def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
     """A valid JSON object is parsed into the typed model with all fields preserved."""
     import typer as _typer
 
-    from ...application.aggregation._retenciones import RetencionObservation, RetencionScheme
+    from ...application.aggregation._retenciones import RetencionObservation
+    from ...core.aggregation import RetencionScheme
     from ._modelo import _parse_typed_cli_observations
 
     raw = (
