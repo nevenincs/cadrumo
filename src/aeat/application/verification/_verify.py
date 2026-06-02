@@ -175,8 +175,6 @@ def verify_declaracion(
     )
 
 
-
-
 def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path | None) -> RegistrySnapshot:
     try:
         from ...core.resources import resources
