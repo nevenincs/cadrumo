@@ -126,6 +126,7 @@ def sanitize_pdf(
     if refuse_if_already_sanitized and source_sha in _fixtures.SANITIZED_SHAS:
         raise AlreadySanitizedError(source_sha256=source_sha)
 
+    source_parse_error: SanitizerSourceParseError | None = None
     try:
         # Path inputs feed pikepdf directly so QPDF's memory-mapping
         # path can avoid a full in-memory copy of the source bytes.
@@ -133,8 +134,13 @@ def sanitize_pdf(
         # with the bytes already in hand) take the BytesIO path.
         pdf = pikepdf.Pdf.open(io.BytesIO(source) if isinstance(source, bytes) else source)
     except PikepdfError as exc:
-        _LOG.error("sanitize_pdf: pikepdf failed to open source sha=%s", source_sha[:16], exc_info=True)
-        raise SanitizerSourceParseError(f"pikepdf could not parse source bytes: {exc}") from exc
+        _LOG.debug(
+            "sanitize_pdf: source=<input-pdf> failure=%s",
+            type(exc).__name__,
+        )
+        source_parse_error = SanitizerSourceParseError(failure=type(exc).__name__)
+    if source_parse_error is not None:
+        raise source_parse_error
 
     _refuse_if_signed(pdf)
 
@@ -216,13 +222,23 @@ def _digest_source(source: bytes | Path) -> tuple[str, int]:
         return hashlib.sha256(source).hexdigest(), len(source)
     digest = hashlib.sha256()
     size = 0
-    with source.open("rb") as fh:
-        while True:
-            chunk = fh.read(1 << 20)  # 1 MiB
-            if not chunk:
-                break
-            digest.update(chunk)
-            size += len(chunk)
+    source_parse_error: SanitizerSourceParseError | None = None
+    try:
+        with source.open("rb") as fh:
+            while True:
+                chunk = fh.read(1 << 20)  # 1 MiB
+                if not chunk:
+                    break
+                digest.update(chunk)
+                size += len(chunk)
+    except OSError as exc:
+        _LOG.debug(
+            "sanitize_pdf: source=<input-pdf> failure=%s",
+            type(exc).__name__,
+        )
+        source_parse_error = SanitizerSourceParseError(failure=type(exc).__name__)
+    if source_parse_error is not None:
+        raise source_parse_error
     return digest.hexdigest(), size
 
 

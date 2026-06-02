@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import logging
 from importlib import import_module
 
 import pikepdf
@@ -23,7 +24,7 @@ from pydantic import SecretStr
 
 from ....tests import FIXTURES_DIR
 from . import fixtures, sanitize_pdf
-from ._errors import AlreadySanitizedError, SignaturePresentError
+from ._errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
 from ._records import NameReplacement, NifReplacement, TokenMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
@@ -36,6 +37,7 @@ _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0000001S"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
+_SENSITIVE_SOURCE_BASENAME = "12345678Z-sanitizer-source.pdf"
 
 
 def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
@@ -156,6 +158,59 @@ class TestSanitizePdfHappyPath:
         # The output round-trips through pikepdf.
         re_opened = pikepdf.Pdf.open(io.BytesIO(result_a.output_bytes))
         assert len(re_opened.pages) == 1
+
+
+class TestSourceParseErrorHygiene:
+    """Source-open failures do not expose paths or raw parser diagnostics."""
+
+    def test_missing_path_uses_redacted_source_label(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        tmp_path,
+    ) -> None:
+        missing_pdf = tmp_path / _SENSITIVE_SOURCE_BASENAME
+
+        caplog.set_level(logging.DEBUG, logger=sanitize_pdf.__module__)
+        with pytest.raises(SanitizerSourceParseError) as exc_info:
+            sanitize_pdf(missing_pdf, TokenMap())
+
+        rendered = str(exc_info.value)
+        assert _SENSITIVE_SOURCE_BASENAME not in rendered
+        assert str(missing_pdf) not in rendered
+        assert rendered == "source PDF could not be opened for sanitization: <input-pdf>"
+        assert exc_info.value.context == {"source": "<input-pdf>", "failure": "FileNotFoundError"}
+        assert exc_info.value.__cause__ is None
+        assert exc_info.value.__context__ is None
+
+        log_text = "\n".join(record.getMessage() for record in caplog.records)
+        assert _SENSITIVE_SOURCE_BASENAME not in log_text
+        assert str(missing_pdf) not in log_text
+        assert "source=<input-pdf>" in log_text
+        assert "failure=FileNotFoundError" in log_text
+
+    def test_invalid_pdf_bytes_do_not_render_parser_payload(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        parser_payload = b"not a pdf for 12345678Z-sanitizer-source.pdf"
+
+        caplog.set_level(logging.DEBUG, logger=sanitize_pdf.__module__)
+        with pytest.raises(SanitizerSourceParseError) as exc_info:
+            sanitize_pdf(parser_payload, TokenMap())
+
+        rendered = str(exc_info.value)
+        assert parser_payload.decode("utf-8") not in rendered
+        assert "12345678Z" not in rendered
+        assert rendered == "source PDF could not be opened for sanitization: <input-pdf>"
+        assert exc_info.value.context == {"source": "<input-pdf>", "failure": "PdfError"}
+        assert exc_info.value.__cause__ is None
+        assert exc_info.value.__context__ is None
+
+        log_text = "\n".join(record.getMessage() for record in caplog.records)
+        assert parser_payload.decode("utf-8") not in log_text
+        assert "12345678Z" not in log_text
+        assert "source=<input-pdf>" in log_text
+        assert "failure=PdfError" in log_text
 
 
 class TestRefuseIfSigned:
