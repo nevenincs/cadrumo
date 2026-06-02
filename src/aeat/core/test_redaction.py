@@ -31,6 +31,8 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
         " ".join(
             (
                 f"profile_id={_PROFILE_ID}",
+                f"target_profile_id\t{_PROFILE_ID}",
+                "source_profile_id\toperator",
                 "active_profile=operator",
                 "bucket_id=bucket-alpha",
                 f"nif={_NIF}",
@@ -47,6 +49,8 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
     assert _URL not in rendered
     assert _OBJECT_KEY not in rendered
     assert f"profile_id={CLI_PROFILE_ID_PLACEHOLDER}" in rendered
+    assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in rendered
+    assert f"source_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in rendered
     assert "active_profile=operator" in rendered
     assert f"bucket_id={CLI_BUCKET_ID_PLACEHOLDER}" in rendered
     assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered
