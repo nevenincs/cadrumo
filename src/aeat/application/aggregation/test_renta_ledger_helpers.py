@@ -80,8 +80,7 @@ def test_renta_direction_for_outgoing_maps_to_outgoing_expense() -> None:
     """OUTGOING flows out — always an expense."""
     assert _renta_direction_for(TransactionDirection.OUTGOING, None) is RentaExpenseDirection.OUTGOING_EXPENSE
     assert (
-        _renta_direction_for(TransactionDirection.OUTGOING, "invoice-id-here")
-        is RentaExpenseDirection.OUTGOING_EXPENSE
+        _renta_direction_for(TransactionDirection.OUTGOING, "invoice-id-here") is RentaExpenseDirection.OUTGOING_EXPENSE
     )
 
 
