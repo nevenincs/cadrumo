@@ -41,7 +41,7 @@ Plan the next registry-hardening substrate after continuity conformance reached
 - [x] `P01.S06` - Split M100 2020 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020`.
 - [x] `P01.S07` - Audit M200 export fragments near the reviewability ceiling; `.vault/audit`.
 - [x] `P01.S08` - Split the largest M200 export fragment if audit confirms safe boundaries; `src/aeat/_data/registry/aeat/modelos/200`.
-- [ ] `P01.S09` - Audit M303 casilla and export fragments near the reviewability ceiling; `.vault/audit`.
+- [x] `P01.S09` - Audit M303 casilla and export fragments near the reviewability ceiling; `.vault/audit`.
 
 ### Phase `P02` - continuity rollout
 
@@ -75,6 +75,14 @@ Treat every large registry production module as an explicit refactor target, wit
 - [ ] `P04.S25` - Assess formula runtime extraction boundaries; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `P04.S26` - Audit oversized registry test module decomposition; `src/aeat/domain/calculations/registry`.
 - [ ] `P04.S27` - Audit M123 revision file for directory-mode fragmentation need; `src/aeat/_data/registry/aeat/modelos/123`.
+
+### Phase `P05` - fragment pressure follow-ups
+
+Track residual TOML fragment pressure discovered during P01 audits after the first stabilization pass completes.
+
+- [ ] `P05.S28` - Split remaining M200 export fragments that stay near the reviewability ceiling; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export`.
+- [ ] `P05.S29` - Split M303 casilla and export fragments if P01 audit confirms safe boundaries; `src/aeat/_data/registry/aeat/modelos/303`.
+- [ ] `P05.S30` - Re-run corpus fragment headroom audit after residual pressure splits; `.vault/audit`.
 
 ## Description
 
