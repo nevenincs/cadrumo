@@ -184,9 +184,7 @@ def test_lifecycle_status_enums_stay_value_synced() -> None:
     that mapping — this guard fails the moment the two diverge.
     """
 
-    assert {member.value for member in UserProfileStatus} == {
-        member.value for member in BucketLifecycleStatus
-    }
+    assert {member.value for member in UserProfileStatus} == {member.value for member in BucketLifecycleStatus}
 
 
 def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
