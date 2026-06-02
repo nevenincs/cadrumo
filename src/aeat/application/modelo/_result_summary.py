@@ -30,6 +30,7 @@ from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
 
 _log = get_logger(__name__)
 
+
 class ResultSummaryRow(BaseModel):
     """One headline casilla in a calculation result summary."""
 
@@ -46,6 +47,7 @@ class ResultSummaryRow(BaseModel):
     computed casilla the modelo's verification expectation tracks.
     """
 
+
 class CalculationResultSummary(BaseModel):
     """Distilled headline figures for a persisted calculation revision."""
 
@@ -55,6 +57,7 @@ class CalculationResultSummary(BaseModel):
     filing_year: int
     period: str
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
+
 
 def calculation_result_summary(revision: CalculationRevision) -> CalculationResultSummary | None:
     """Return the headline :class:`CalculationResultSummary` for a persisted :class:`CalculationRevision`.
@@ -138,6 +141,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
         period=work_unit.period,
         rows=tuple(rows),
     )
+
 
 __all__ = [
     "CalculationResultSummary",
