@@ -206,6 +206,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
+            casilla_inputs={},
             binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=loaded_decision,
             filing_period_date=date(2026, 6, 30),
@@ -318,6 +319,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
+            casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
@@ -424,6 +426,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
+            casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
