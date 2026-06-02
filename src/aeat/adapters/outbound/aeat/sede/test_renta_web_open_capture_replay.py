@@ -211,6 +211,3 @@ def _parse_spanish_decimal(value: str) -> str:
     """Convert a Spanish-formatted decimal ("5.956,65") to plain form ("5956.65")."""
 
     return value.replace(".", "").replace(",", ".")
-
-
-
