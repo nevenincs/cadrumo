@@ -395,9 +395,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
 # immediately rather than as a runtime KeyError buried inside a Typer
 # command factory call.
 _SETUP_CATALOGUE_IDS: frozenset[str] = frozenset(
-    question.id
-    for section in SETUP_FLOW.sections
-    for question in section.questions
+    question.id for section in SETUP_FLOW.sections for question in section.questions
 )
 _missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(_SETUP_OPTION_INFOS)
 assert not _missing_option_infos, (
@@ -715,9 +713,7 @@ def _run_full_flow(
     # `create` writes the full answer set. An interactive `edit`
     # re-walks every visible question, so the full answer set is the
     # operator's confirmed intent.
-    supplied_question_ids = frozenset(
-        question.id for section in flow.sections for question in section.questions
-    )
+    supplied_question_ids = frozenset(question.id for section in flow.sections for question in section.questions)
 
     span = profile_create_storage_span(profile_id) if mode == "create" else profile_storage_session(profile_id)
     with span as routing_profile_id:
@@ -772,9 +768,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             # default. The override unwinds when the command returns.
             requested_language = kwargs.get("output_language")
             if isinstance(requested_language, str) and requested_language in SUPPORTED_OUTPUT_LANGUAGES:
-                _language_stack.enter_context(
-                    override_settings(aeat_output_language=requested_language)
-                )
+                _language_stack.enter_context(override_settings(aeat_output_language=requested_language))
             try:
                 _command_body(_prompter=_prompter, **kwargs)
             except AeatError as exc:
@@ -876,11 +870,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         from ...core.click_context import json_output_requested
         from ...core.json_contract import emit_json_success
 
-        verb = tr(
-            "wizard.commands.status.created"
-            if mode == "create"
-            else "wizard.commands.status.updated"
-        )
+        verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
         # `next_label` is the operator-facing localised label for the
         # next-step tab; `next` is the machine-parseable command hint
         # scripted consumers parse on the lowercase key column. The two
@@ -898,9 +888,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         if mode == "create":
             payload["active_profile"] = profile_name
         if json_output_requested():
-            command_path = (
-                "config.profile.create" if mode == "create" else "config.profile.edit"
-            )
+            command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
             emit_json_success(command_path, payload)
         else:
             # Machine-parseable KV: lowercase snake_case keys + machine
