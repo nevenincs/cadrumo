@@ -230,9 +230,7 @@ def test_iva_compensation_modelo_error_is_registered_in_error_registry() -> None
 
 
 def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope() -> None:
-    exc = IvaCompensationModeloError(
-        "IVA compensation history only accepts Modelo 303 observations"
-    )
+    exc = IvaCompensationModeloError("IVA compensation history only accepts Modelo 303 observations")
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_IVA_COMPENSATION_MODELO"
     assert envelope.retryable is False
