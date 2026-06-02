@@ -78,6 +78,20 @@ forbidden_modules =
 # test imports core.resources, which lazily loads core.resources._repos.topics).
 # Pinned individually (no wildcard) so a new non-deferred edge is still caught.
 ignore_imports =
+    # ── DB-16: per-domain repositories wrap the secure-storage substrate ──
+    # Sanctioned by the secure-persistence-foundation ADR series
+    # (2026-04-30-secure-persistence-foundation-adr, Wave-3/4 per-domain
+    # repository pattern; e.g. domain.justificante._repository is Phase 4).
+    # SecureBoundRepository is SQL/crypto-coupled so its base cannot move to
+    # core; the repositories are deliberately co-located with their domain.
+    aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage.runtime_repository
+    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.envelope
+    aeat.domain.filing._runtime_repository -> aeat.adapters.persistence.storage.runtime_repository
+    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.envelope
+    aeat.domain.modelos._runtime_repository -> aeat.adapters.persistence.storage.runtime_repository
+    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.envelope
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.runtime_repository
     aeat.domain.profile._keys -> aeat.application.wizard._compiler
     aeat.core.resources._repos.topics -> aeat.application.topics
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
@@ -192,6 +206,20 @@ layers =
     aeat.core
 exhaustive = false
 ignore_imports =
+    # ── DB-16: per-domain repositories wrap the secure-storage substrate ──
+    # Sanctioned by the secure-persistence-foundation ADR series
+    # (2026-04-30-secure-persistence-foundation-adr, Wave-3/4 per-domain
+    # repository pattern; e.g. domain.justificante._repository is Phase 4).
+    # SecureBoundRepository is SQL/crypto-coupled so its base cannot move to
+    # core; the repositories are deliberately co-located with their domain.
+    aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage.runtime_repository
+    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.envelope
+    aeat.domain.filing._runtime_repository -> aeat.adapters.persistence.storage.runtime_repository
+    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.envelope
+    aeat.domain.modelos._runtime_repository -> aeat.adapters.persistence.storage.runtime_repository
+    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.envelope
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.runtime_repository
     # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
     aeat.application.aggregation.test_fx_conversion -> aeat.tests.secure_sql
     aeat.application.setup.test_atomic_create_roundtrip -> aeat.tests.cli_runner
