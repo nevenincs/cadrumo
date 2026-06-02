@@ -55,4 +55,3 @@ def validate_algorithm_binding_section(
         for constant in alg_binding.constants:
             if constant not in parameters:
                 failures.append(f"{prefix}: {owner} references unknown constant {constant!r}")
-

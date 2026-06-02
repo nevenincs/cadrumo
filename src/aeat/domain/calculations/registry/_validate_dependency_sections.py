@@ -175,5 +175,3 @@ def validate_filing_schedule_section(
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
-
-
