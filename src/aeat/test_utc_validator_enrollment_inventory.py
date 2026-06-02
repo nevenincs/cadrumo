@@ -102,6 +102,5 @@ def test_no_inline_tzinfo_guards_in_production_code(
 
     assert not violations, (
         f"Found {len(violations)} production file(s) with inline ``tzinfo is None`` guards "
-        f"that must be migrated to validate_utc_aware:\n"
-        + "\n".join(f"  {v}" for v in sorted(violations))
+        f"that must be migrated to validate_utc_aware:\n" + "\n".join(f"  {v}" for v in sorted(violations))
     )
