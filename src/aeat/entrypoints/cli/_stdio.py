@@ -158,6 +158,7 @@ def _set_windows_console_utf8() -> None:
             exc,
         )
 
+
 # ``aeat.core.logging`` cannot be imported at this layer without
 # pulling the project's configuration eagerly; this module runs at
 # the top of CLI startup, before settings are loaded. The stdlib
