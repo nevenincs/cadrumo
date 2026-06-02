@@ -72,11 +72,16 @@ def test_diagnostics_record_read_rationale_marker_present() -> None:
 def test_diagnostics_record_read_pragma_preserved() -> None:
     """The pragma: no cover comment is preserved alongside the rationale token."""
     src = _source(_DIAGNOSTICS_REL)
-    for line in src.splitlines():
+    lines = src.splitlines()
+    # The pragma belongs on the ``except`` line and the rationale on a comment
+    # line beside it; a formatter may place them on adjacent lines rather than
+    # one. Verify the pragma is preserved within two lines of the rationale.
+    for idx, line in enumerate(lines):
         if _RECORD_TOKEN in line:
-            assert "pragma: no cover" in line, (
+            window = lines[max(0, idx - 2) : idx + 3]
+            assert any("pragma: no cover" in ln for ln in window), (
                 "RECORD-READ except clause must preserve 'pragma: no cover' "
-                f"but it was missing from: {line!r}"
+                f"adjacent to the rationale, but none was found near: {line!r}"
             )
             break
     else:
