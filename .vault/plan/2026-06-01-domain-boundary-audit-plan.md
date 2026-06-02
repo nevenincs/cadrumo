@@ -163,8 +163,8 @@ Relocate RetencionScheme, OperationKind347/349, ForeignAssetClass to core; intro
 
 - [ ] `W02.P06.S28` - Introduce RegistryRoundingCode StrEnum (money-2, integer) in registry/_schema.py; `retype FormulaDefinition.rounding; update _formula_runtime _apply_rounding and calc_sheets/_engine _rounding_rule_for to compare enum members (DB-25); `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `W02.P06.S29` - Relocate RetencionScheme from application/aggregation/_retenciones.py to core (core/retencion.py or core/aggregation.py); `update all in-aggregation consumers and the package re-export (DB-14a); `src/aeat/core/aggregation.py`.
-- [ ] `W02.P06.S30` - Relocate OperationKind347 and OperationKind349 from application/aggregation/_counterpart.py to core; `update _counterpart, _registry_provider and the package re-export (DB-14b); `src/aeat/core/aggregation.py`.
-- [ ] `W02.P06.S31` - Relocate ForeignAssetClass from application/aggregation/_foreign_assets.py to core, leaving ForeignAssetClassRollup in aggregation; `update all field references and the re-export (DB-14c); `src/aeat/core/aggregation.py`.
+- [x] `W02.P06.S30` - Relocate OperationKind347 and OperationKind349 from application/aggregation/_counterpart.py to core; `update _counterpart, _registry_provider and the package re-export (DB-14b); `src/aeat/core/aggregation.py`.
+- [x] `W02.P06.S31` - Relocate ForeignAssetClass from application/aggregation/_foreign_assets.py to core, leaving ForeignAssetClassRollup in aggregation; `update all field references and the re-export (DB-14c); `src/aeat/core/aggregation.py`.
 - [ ] `W02.P06.S32` - Expose a RegistrySnapshot.verification_policy() typed accessor in domain and move _classify_discrepancy/_verification_policy logic beside VerificationExpectation; `repoint application/verification/_verify to consume it (DB-22); `src/aeat/domain/calculations/registry/_schema.py`.
 
 ## Wave `W03` - IVA-compensation domain (D2 marquee)
