@@ -9,7 +9,7 @@ import typer
 
 from ..core.i18n import tr
 
-from .manager import LocaleError, LocaleManager
+from .manager import LocaleError, LocaleManager, _covered_by_namespace
 
 app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
 
@@ -107,10 +107,6 @@ def remove_value(
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo(tr("locales.cli.remove.removed", locale_file=path.name, key=key))
-
-
-def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
-    return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
 
 
 __all__ = ["app"]
