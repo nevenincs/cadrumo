@@ -34,6 +34,7 @@ from ._base import (
 )
 
 _logger = get_logger(__name__)
+_INPUT_OFX_SOURCE_LABEL = "<input-ofx>"
 
 
 class _OfxTransactionLike(Protocol):
@@ -99,20 +100,16 @@ class OfxProvider(FinancialProvider):
                 is_valid=False,
                 warnings=("OFX statement contains no transactions",),
             )
-        account_ids = [
-            (getattr(account, "account_id", "") or getattr(account, "number", "") or "unknown").strip() or "unknown"
-            for account, _ in statements
-        ]
         return ProviderValidation(
             is_valid=True,
             warnings=(),
             detected_encoding="ofxparse",
-            detected_dialect=f"accounts={','.join(account_ids)}",
+            detected_dialect=f"account_count={len(statements)}",
         )
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
         """Yield strict :class:`RawTransaction` records from every OFX account statement."""
-        _logger.debug("ofx_provider ingest: loading %s", path.name)
+        _logger.debug("ofx_provider ingest: loading source=<input-ofx>")
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
@@ -138,9 +135,8 @@ class OfxProvider(FinancialProvider):
                     booked_date = parse_date_value(posted_at, day_first=False)
                 except (ValueError, FinancialValidationError) as exc:
                     _logger.warning(
-                        "ofx_provider: parse error transaction=%d file=%s",
+                        "ofx_provider: parse error transaction=%d source=<input-ofx>",
                         source_row_index,
-                        path.name,
                         exc_info=True,
                     )
                     raise InvalidFinancialSourceError(
@@ -175,9 +171,17 @@ class OfxProvider(FinancialProvider):
         try:
             with path.open("rb") as handle:
                 parsed = OfxParser.parse(handle)
-        except Exception as exc:  # BROAD-EXCEPT-RATIONALE-OFX-TEARDOWN: ofxparse raises Exception (base), ValueError (malformed date/amount fields), and TypeError (unexpected field types) from its parsing surface; the library does not expose a typed exception hierarchy, so broad catch is required to guarantee conversion to InvalidFinancialSourceError.  # pragma: no cover - validated in tests through error path
-            _logger.error("ofx_provider: failed to parse OFX file %s", path.name, exc_info=True)
-            raise InvalidFinancialSourceError(f"could not parse OFX file: {path}") from exc
+        # BROAD-EXCEPT-RATIONALE-OFX-TEARDOWN: ofxparse raises base
+        # Exception, ValueError, and TypeError from its parsing surface.
+        # The library does not expose a typed exception hierarchy, so a
+        # broad catch is required to guarantee conversion.
+        except Exception as exc:
+            _logger.error(
+                "ofx_provider: failed to parse OFX file <input-ofx>: %s",
+                type(exc).__name__,
+                exc_info=True,
+            )
+            raise InvalidFinancialSourceError(f"could not parse OFX file: {_INPUT_OFX_SOURCE_LABEL}") from exc
         accounts = []
         if getattr(parsed, "accounts", None):
             accounts.extend(parsed.accounts)
