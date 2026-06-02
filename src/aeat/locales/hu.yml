@@ -758,7 +758,6 @@ cli:
         list_help: Portálkatalógus-bejegyzések listázása.
         modelo_help: Szűrés egy nyomtatványhoz kapcsolt portálokra.
         portal_id_help: Portál azonosítója.
-        unknown_category: 'Ismeretlen portálkategória: {category}.'
         view_help: Portálkatalógus-bejegyzés megjelenítése.
       registry_root_help: Nyilvántartás gyökere.
       source_root_help: Projekt forráskódjának gyökere.
