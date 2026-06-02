@@ -36,8 +36,13 @@ Spanish terms used throughout these docs.
 Pick the route that matches what you want to do:
 
 - **Install and produce your first export.** [Get started](getting-started.md)
-  takes you from install to a first exported modelo file in a few commands. It's
-  the fastest route to one real result.
+  takes you from install to a first exported modelo file in a few commands.
+- **Set up your taxpayer profile.** [Set up a profile](how-to/profile-setup.md)
+  creates your taxpayer identity and shows how to keep several. Do this first -
+  every `aeat app` command needs an active profile.
+- **Already set up - just produce a file.** The
+  [quickstart](how-to/quickstart.md) is the four-command path from a ready
+  profile and ledger to an exported modelo file.
 - **Learn the whole workflow.** The [tutorial](tutorials/index.md) is a guided,
   end-to-end lesson. It loads a sample set of transactions, classifies them, and
   builds, checks, and exports a modelo from start to finish.
@@ -73,6 +78,7 @@ its own `--help`. The [full disclaimer](disclaimer.md) covers the limits of what
 :caption: Where to start
 
 getting-started
+how-to/quickstart
 tutorials/index
 ```
 
@@ -81,6 +87,7 @@ tutorials/index
 :caption: Everyday use
 
 how-to/index
+how-to/profile-setup
 cli/index
 glossary
 ```
