@@ -141,9 +141,7 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
             if not isinstance(key, str):
                 continue
             kws = frozenset(
-                kw.arg
-                for kw in node.keywords
-                if kw.arg not in {"locale", "default"} and kw.arg is not None
+                kw.arg for kw in node.keywords if kw.arg not in {"locale", "default"} and kw.arg is not None
             )
             calls[key].append(kws)
     return dict(calls)
@@ -194,10 +192,7 @@ def test_no_orphan_placeholder_tokens(
             continue
         all_supplied = frozenset().union(*call_kwargs_list)
         for token in sorted(required - all_supplied):
-            findings.append(
-                f"ORPHAN  key={key!r}  token={token!r}  "
-                f"locale={locale_val[:80]!r}"
-            )
+            findings.append(f"ORPHAN  key={key!r}  token={token!r}  locale={locale_val[:80]!r}")
     if findings:
         formatted = "\n  ".join(findings)
         pytest.fail(
@@ -227,10 +222,7 @@ def test_no_surplus_kwargs(
         required = _locale_placeholders(locale_val)
         all_supplied = frozenset().union(*call_kwargs_list)
         for kwarg in sorted(all_supplied - required):
-            findings.append(
-                f"SURPLUS  key={key!r}  kwarg={kwarg!r}  "
-                f"locale={locale_val[:80]!r}"
-            )
+            findings.append(f"SURPLUS  key={key!r}  kwarg={kwarg!r}  locale={locale_val[:80]!r}")
     if findings:
         formatted = "\n  ".join(findings)
         pytest.fail(
@@ -259,9 +251,7 @@ def test_no_shadow_kwarg_variants(
         distinct = {frozenset(s) for s in non_empty}
         if len(distinct) > 1:
             variants = [sorted(s) for s in sorted(distinct, key=sorted)]
-            findings.append(
-                f"SHADOW  key={key!r}  variants={variants!r}"
-            )
+            findings.append(f"SHADOW  key={key!r}  variants={variants!r}")
     if findings:
         formatted = "\n  ".join(findings)
         pytest.fail(

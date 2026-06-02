@@ -100,15 +100,11 @@ def _has_any_annotation(annotation: ast.expr | None) -> bool:
     if isinstance(annotation, ast.Name) and annotation.id == "Any":
         return True
     if isinstance(annotation, ast.Subscript):
-        return _has_any_annotation(annotation.value) or _has_any_annotation(
-            annotation.slice
-        )
+        return _has_any_annotation(annotation.value) or _has_any_annotation(annotation.slice)
     if isinstance(annotation, ast.Tuple):
         return any(_has_any_annotation(e) for e in annotation.elts)
     if isinstance(annotation, ast.BinOp):
-        return _has_any_annotation(annotation.left) or _has_any_annotation(
-            annotation.right
-        )
+        return _has_any_annotation(annotation.left) or _has_any_annotation(annotation.right)
     return False
 
 
@@ -122,9 +118,7 @@ def _params_have_any(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     return any(_has_any_annotation(a.annotation) for a in all_args)
 
 
-def _preceding_lines_have_marker(
-    source_lines: list[str], func_lineno: int
-) -> bool:
+def _preceding_lines_have_marker(source_lines: list[str], func_lineno: int) -> bool:
     """Return True if any of _CONTEXT_LINES before *func_lineno* contain a marker."""
     start = max(0, func_lineno - 1 - _CONTEXT_LINES)
     end = func_lineno - 1
@@ -190,11 +184,7 @@ def test_no_new_any_param_without_rationale(
       ADAPTER-INTERNAL-ALIAS-RATIONALE-<LABEL>
     """
     all_violations = _collect_violations(source_tree_ast)
-    new_violations = [
-        (rel, lineno)
-        for rel, lineno in all_violations
-        if (rel, lineno) not in _KNOWN_VIOLATING_LINES
-    ]
+    new_violations = [(rel, lineno) for rel, lineno in all_violations if (rel, lineno) not in _KNOWN_VIOLATING_LINES]
 
     if new_violations:
         lines = "\n  ".join(f"{rel}:{lineno}" for rel, lineno in new_violations)

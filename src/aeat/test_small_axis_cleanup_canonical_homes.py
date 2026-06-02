@@ -50,8 +50,7 @@ def test_setup_answers_canonical_home_is_core_profile() -> None:
     from .core.profile import SetupAnswers
 
     assert SetupAnswers.__module__ == "aeat.core.profile", (
-        f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; "
-        "expected 'aeat.core.profile'"
+        f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; expected 'aeat.core.profile'"
     )
 
 
@@ -62,9 +61,7 @@ def test_counterpart_source_kind_canonical_in_domain() -> None:
     """CounterpartSourceKind must be defined in the domain bindings module."""
     from .domain.calculations.registry import _bindings as bindings_mod
 
-    assert hasattr(bindings_mod, "CounterpartSourceKind"), (
-        "CounterpartSourceKind not found in domain._bindings"
-    )
+    assert hasattr(bindings_mod, "CounterpartSourceKind"), "CounterpartSourceKind not found in domain._bindings"
 
 
 def test_counterpart_source_kind_application_imports_from_domain() -> None:
@@ -97,9 +94,7 @@ def test_notifications_parse_date_delegates_to_canonical() -> None:
     )
     # Behavioral check: a valid date parses correctly.
     result = notif_mod._parse_date_local("15-03-2024")
-    assert result == date(2024, 3, 15), (
-        f"_parse_date_local('15-03-2024') returned {result!r}; expected 2024-03-15"
-    )
+    assert result == date(2024, 3, 15), f"_parse_date_local('15-03-2024') returned {result!r}; expected 2024-03-15"
     # Error-policy: 'none' — invalid input returns None.
     assert notif_mod._parse_date_local("not-a-date") is None, (
         "_parse_date_local must return None on invalid input (on_error='none')"
@@ -113,8 +108,7 @@ def test_censo_parse_date_delegates_to_canonical() -> None:
     # Source-code inspection: the function body must reference _parse_date_canonical.
     src = inspect.getsource(censo_mod._parse_date)
     assert "_parse_date_canonical" in src, (
-        "_censo._parse_date must call _parse_date_canonical (the core helper); "
-        "found unexpected implementation."
+        "_censo._parse_date must call _parse_date_canonical (the core helper); found unexpected implementation."
     )
     # Behavioral check: a valid date parses correctly.
     result = censo_mod._parse_date("15-03-2024", field="activity_start_date")
@@ -127,8 +121,7 @@ def test_profiles_parse_date_delegates_to_canonical() -> None:
 
     src = inspect.getsource(profiles_mod._parse_date)
     assert "_parse_date_canonical" in src, (
-        "_profiles._parse_date must call _parse_date_canonical; "
-        "found unexpected implementation."
+        "_profiles._parse_date must call _parse_date_canonical; found unexpected implementation."
     )
     # Behavioral check: ISO-8601 date parses correctly.
     result = profiles_mod._parse_date("2024-03-15")

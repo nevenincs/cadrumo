@@ -101,11 +101,7 @@ _BEHAVIOUR_KEYWORDS: frozenset[str] = frozenset(
 
 def _collect_test_files() -> list[Path]:
     """Return all test_*.py files under src/aeat/ sorted for determinism."""
-    return sorted(
-        p
-        for p in _SRC_ROOT.rglob("test_*.py")
-        if "__pycache__" not in p.parts
-    )
+    return sorted(p for p in _SRC_ROOT.rglob("test_*.py") if "__pycache__" not in p.parts)
 
 
 def _extract_test_function_names(path: Path) -> list[str]:
@@ -117,8 +113,7 @@ def _extract_test_function_names(path: Path) -> list[str]:
     return [
         node.name
         for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name.startswith("test_")
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
     ]
 
 
@@ -150,8 +145,7 @@ def test_sampler_produces_stable_deterministic_sample() -> None:
     """
     all_files = _collect_test_files()
     assert len(all_files) >= _SAMPLE_SIZE, (
-        f"Test corpus has only {len(all_files)} test files; "
-        f"expected at least {_SAMPLE_SIZE} for the sampler to work."
+        f"Test corpus has only {len(all_files)} test files; expected at least {_SAMPLE_SIZE} for the sampler to work."
     )
 
     sample_a = _sample_test_files(_SAMPLE_SEED, _SAMPLE_SIZE)
@@ -172,10 +166,7 @@ def test_sampler_output_covers_multiple_packages() -> None:
     """
     sample = _sample_test_files(_SAMPLE_SEED, _SAMPLE_SIZE)
     # Subpackage = first segment after 'aeat' in the path.
-    subpackages = {
-        p.relative_to(_SRC_ROOT).parts[0] if p.relative_to(_SRC_ROOT).parts else "root"
-        for p in sample
-    }
+    subpackages = {p.relative_to(_SRC_ROOT).parts[0] if p.relative_to(_SRC_ROOT).parts else "root" for p in sample}
     assert len(subpackages) >= 2, (
         f"Sample only covers {len(subpackages)} top-level subpackage(s): "
         f"{sorted(subpackages)}.  The sampler is not providing breadth coverage."
