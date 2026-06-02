@@ -290,7 +290,7 @@ Current register count: `293` production candidate files.
 | ID | Path | Signals | Target type | Owning row | Status |
 | --- | --- | --- | --- | --- | --- |
 | `AFR-001` | `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-002` | `src/aeat/adapters/inbound/borrador/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-002` | `src/aeat/adapters/inbound/borrador/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-003` | `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-004` | `src/aeat/adapters/inbound/declaracion/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-005` | `src/aeat/adapters/inbound/financial/providers/_ofx.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -643,7 +643,7 @@ Close the runtime rollout only after mechanical checks prove the application no 
 These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-core vault plan status`, `vaultspec-core vault plan check`, and `vaultspec-core vault plan step check` can track file-level closure mechanically. Do not close a step until the matching `AFR-*` table row has a final disposition and the owning implementation row has either migrated, retained, or explicitly rejected the file.
 
 - [x] `W12.P26.S103` - Close `AFR-001` for `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`.
-- [ ] `W12.P26.S104` - Close `AFR-002` for `src/aeat/adapters/inbound/borrador/_parser.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_parser.py`.
+- [x] `W12.P26.S104` - Close `AFR-002` for `src/aeat/adapters/inbound/borrador/_parser.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_parser.py`.
 - [ ] `W12.P26.S105` - Close `AFR-003` for `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
 - [ ] `W12.P26.S106` - Close `AFR-004` for `src/aeat/adapters/inbound/declaracion/_parser.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/declaracion/_parser.py`.
 - [ ] `W12.P26.S107` - Close `AFR-005` for `src/aeat/adapters/inbound/financial/providers/_ofx.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/financial/providers/_ofx.py`.

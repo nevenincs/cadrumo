@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from .errors import SecureStorageError
 from ....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
 from ....core.paths import PROJECT_ROOT
 from ....locales.manager import LocaleManager
+from .errors import SecureStorageError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -43,10 +43,7 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers()
     assert "# noqa" not in segment
     assert "pragma: no cover" not in segment
     assert "pass" not in {node.__class__.__name__.lower() for node in ast.walk(function)}
-    assert any(
-        _is_logger_call(node, "debug") or _is_logger_call(node, "warning")
-        for node in ast.walk(function)
-    )
+    assert any(_is_logger_call(node, "debug") or _is_logger_call(node, "warning") for node in ast.walk(function))
     assert not any(_call_has_keyword(node, "exc_info") for node in ast.walk(function) if isinstance(node, ast.Call))
 
 
@@ -190,9 +187,7 @@ def _secure_object_repository_module_aliases(tree: ast.AST) -> set[str]:
             "aeat.adapters.persistence.storage.sql.secure_objects",
         }:
             aliases.update(
-                alias.asname or alias.name
-                for alias in node.names
-                if alias.name in {"sql", "secure_objects"}
+                alias.asname or alias.name for alias in node.names if alias.name in {"sql", "secure_objects"}
             )
     return aliases
 
@@ -219,9 +214,7 @@ def test_secure_storage_error_registry_bindings_have_locale_keys() -> None:
             offences.append(f"{error_type.__module__}.{error_type.__name__}: unregistered code {code.code}")
         missing = [locale_name for locale_name, keys in locale_keys.items() if code.message_key not in keys]
         if missing:
-            offences.append(
-                f"{error_type.__module__}.{error_type.__name__}: {code.message_key} missing from {missing}"
-            )
+            offences.append(f"{error_type.__module__}.{error_type.__name__}: {code.message_key} missing from {missing}")
 
     assert offences == []
 
