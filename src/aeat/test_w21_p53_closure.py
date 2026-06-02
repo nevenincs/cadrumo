@@ -141,11 +141,7 @@ def test_prior_wave_cast_rationale_inventory() -> None:
     """Cast-rationale ratchet must remain green."""
     mod = importlib.import_module("aeat.test_cast_rationale_inventory")
     # Find the single test function — name may vary across campaigns.
-    test_fns = [
-        v
-        for k, v in vars(mod).items()
-        if k.startswith("test_") and callable(v)
-    ]
+    test_fns = [v for k, v in vars(mod).items() if k.startswith("test_") and callable(v)]
     assert test_fns, "No test_ function found in test_cast_rationale_inventory"
     for fn in test_fns:
         _invoke_test_fn(fn)
@@ -154,11 +150,7 @@ def test_prior_wave_cast_rationale_inventory() -> None:
 def test_prior_wave_latin1_encoding_constant_enrollment() -> None:
     """Latin-1 encoding constant enrollment ratchet must remain green."""
     mod = importlib.import_module("aeat.test_latin1_encoding_constant_enrollment")
-    test_fns = [
-        v
-        for k, v in vars(mod).items()
-        if k.startswith("test_") and callable(v)
-    ]
+    test_fns = [v for k, v in vars(mod).items() if k.startswith("test_") and callable(v)]
     assert test_fns, "No test_ function found in test_latin1_encoding_constant_enrollment"
     for fn in test_fns:
         _invoke_test_fn(fn)
@@ -167,11 +159,7 @@ def test_prior_wave_latin1_encoding_constant_enrollment() -> None:
 def test_prior_wave_enum_constant_extraction_inventory() -> None:
     """Enum constant extraction ratchet must remain green."""
     mod = importlib.import_module("aeat.test_enum_constant_extraction_inventory")
-    test_fns = [
-        v
-        for k, v in vars(mod).items()
-        if k.startswith("test_") and callable(v)
-    ]
+    test_fns = [v for k, v in vars(mod).items() if k.startswith("test_") and callable(v)]
     assert test_fns, "No test_ function found in test_enum_constant_extraction_inventory"
     for fn in test_fns:
         _invoke_test_fn(fn)
@@ -180,11 +168,7 @@ def test_prior_wave_enum_constant_extraction_inventory() -> None:
 def test_prior_wave_mock_inventory() -> None:
     """Mock inventory ratchet must remain green."""
     mod = importlib.import_module("aeat.test_mock_inventory")
-    test_fns = [
-        v
-        for k, v in vars(mod).items()
-        if k.startswith("test_") and callable(v)
-    ]
+    test_fns = [v for k, v in vars(mod).items() if k.startswith("test_") and callable(v)]
     assert test_fns, "No test_ function found in test_mock_inventory"
     for fn in test_fns:
         _invoke_test_fn(fn)
@@ -193,11 +177,7 @@ def test_prior_wave_mock_inventory() -> None:
 def test_prior_wave_no_skip_xfail() -> None:
     """No-skip/xfail ratchet must remain green."""
     mod = importlib.import_module("aeat.test_no_skip_xfail")
-    test_fns = [
-        v
-        for k, v in vars(mod).items()
-        if k.startswith("test_") and callable(v)
-    ]
+    test_fns = [v for k, v in vars(mod).items() if k.startswith("test_") and callable(v)]
     assert test_fns, "No test_ function found in test_no_skip_xfail"
     for fn in test_fns:
         _invoke_test_fn(fn)
