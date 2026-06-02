@@ -276,10 +276,16 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         period="0A",
     )
 
+    # The base imponible 00552 is now COMPUTED from the base-determination
+    # chain, so it is no longer supplied directly. Feeding the resultado
+    # contable 00501 = 1.000.000 with zero correcciones, zero reserva de
+    # capitalización and zero compensación BIN makes the chain compute
+    #00550 = 1.000.000 and 00552 = 1.000.000, reproducing the manual
+    # worked-example base that the post-nivelación and cuota chain consume.
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            "DP200014:00552": Decimal("1000000"),
+            "00501": Decimal("1000000"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
             "DP200014B:00592": Decimal("0"),
@@ -297,8 +303,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
     )
 
     assert result.values["DP200014:00558"] == Decimal("25"), (
-        "tipo de gravamen 00558 must be dispatched to the LIS Art. 29 general "
-        "rate (25) for a sociedad limitada"
+        "tipo de gravamen 00558 must be dispatched to the LIS Art. 29 general rate (25) for a sociedad limitada"
     )
     assert result.values["DP200014:01330"] == Decimal("1000000.00"), (
         "base imponible después de la reserva de nivelación 01330 must equal "
