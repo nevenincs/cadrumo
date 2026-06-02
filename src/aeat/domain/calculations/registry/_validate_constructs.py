@@ -111,5 +111,3 @@ def validate_support_removal_decisions(
                 f"{decision.subject_type} {decision.subject_id!r} but it is still present"
             )
     return failures
-
-

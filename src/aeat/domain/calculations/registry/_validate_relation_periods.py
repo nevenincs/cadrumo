@@ -211,8 +211,7 @@ def _revision_intersects_year_range(
 ) -> bool:
     if revision.period_selector.years:
         return any(
-            year >= year_from and (year_to is None or year <= year_to)
-            for year in revision.period_selector.years
+            year >= year_from and (year_to is None or year <= year_to) for year in revision.period_selector.years
         )
     revision_from = revision.period_selector.year_from
     if revision_from is None:

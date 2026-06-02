@@ -66,8 +66,5 @@ def _validate_binding_selector_shapes(modelos: Iterable[ModeloDefinition]) -> tu
         for revision in modelo.revisions.values():
             prefix = f"modelo {modelo.id} revision {revision.id}"
             for binding in revision.bindings:
-                failures.extend(
-                    f"{prefix}: {fail}"
-                    for fail in validate_binding_selector_shape(binding)
-                )
+                failures.extend(f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding))
     return tuple(failures)

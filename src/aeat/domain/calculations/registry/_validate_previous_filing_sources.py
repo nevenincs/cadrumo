@@ -58,8 +58,7 @@ def _validate_previous_filing_binding(
     )
     if not matching_revisions:
         failures.append(
-            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
-            f"for periods {source_periods!r}"
+            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} for periods {source_periods!r}"
         )
         return failures
 
