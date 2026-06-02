@@ -22,6 +22,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S13]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S14]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S49]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S50]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -193,3 +194,25 @@ No HIGH/CRITICAL findings in the scoped S49 implementation.
 ### Execution Evidence
 
 - Executed `uv run pytest -q src/aeat/entrypoints/cli/test_repair_privacy_contract.py::test_config_repair_profile_cli_redacts_profile_identifiers src/aeat/entrypoints/cli/test_repair_privacy_contract.py::test_config_repair_cli_redacts_active_profile_identifier src/aeat/core/test_redaction.py::test_cli_output_structured_redacts_keyed_values_and_string_leaves`
+
+## W03.P09.S50 Review
+
+No HIGH findings in the scoped S50 implementation. CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/core/redaction/__init__.py`
+- `src/aeat/core/test_redaction.py`
+- `src/aeat/entrypoints/cli/test_output_redaction_contract.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S50.md`
+
+### Findings
+
+- `W03.P09.S50` is aligned with the plan: the canary matrix now lives on real `_emit` transport paths in `test_output_redaction_contract.py`, and the redaction policy now maps additional canonical assignment labels in `src/aeat/core/redaction/__init__.py` so text paths cover profile/bucket/object-key assignment semantics (lines around `95`–`113`, `355`–`363`).
+- `test_cli_output_text_redacts_sensitive_canaries` in `src/aeat/core/test_redaction.py` was updated to include a profile-id and bucket-id canonical assignment form (`profile_id=...`, `bucket_id=...`), and continues to validate that URL path/query, tokens, tax identifiers, and object keys are masked while the output still contains a usable host.
+
+### Residual risk
+
+- `_CLI_IDENTIFIER_ASSIGNMENT_PATTERN` now only catches `[:=]`-style assignments and a bounded key vocabulary. It does not cover camelCase or alternate label forms for profile/bucket identifiers. This is acceptable for S50 if command outputs stay snake/hyphen style, but it is a low-risk regression surface for future command-output variants and should be covered by explicit matrix expansion in later W03.P10 steps.
+- Tests do not assert schema-preserving behavior when non-canonical assignment labels are present in text or JSON, so this regex drift risk is not guarded until broader command-surface tests in S51+ run.
