@@ -232,6 +232,8 @@ class GoogleDriveProvider:
         self._vault_folder_id = str(created["id"])
         return self._vault_folder_id
 
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
+    # resource (untyped googleapiclient dict); narrowed via explicit key access.
     def _verify_ownership_or_adopt(self, entry: dict[str, Any], *, kind: str) -> None:
         """Refuse to adopt a foreign Drive folder; auto-stamp our own.
 
@@ -798,6 +800,8 @@ def _build_media_body(payload: bytes) -> Any:
     return MediaIoBaseUpload(io.BytesIO(payload), mimetype=_BINARY_MIME_TYPE, resumable=False)
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
+# resource (untyped googleapiclient dict); narrowed via explicit key access.
 def _metadata_from_drive_entry(
     entry: dict[str, Any],
     *,
