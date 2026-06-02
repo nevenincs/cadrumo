@@ -125,9 +125,7 @@ async def test_verify_csv_parse_contract(body: str, expected: bool) -> None:
 
     result = await verify_csv(" abcd1234 ", browser=session)
 
-    assert result is expected, (
-        f"body {body!r} → expected {expected}, got {result}"
-    )
+    assert result is expected, f"body {body!r} → expected {expected}, got {result}"
 
 
 @pytest.mark.asyncio
@@ -147,8 +145,8 @@ async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
 
     # Session-lifetime contract.
     assert session.create_context_calls == 1
-    assert session.context.close_calls == 1    # context is always closed
-    assert session.close_calls == 0            # borrowed → caller keeps ownership
+    assert session.context.close_calls == 1  # context is always closed
+    assert session.close_calls == 0  # borrowed → caller keeps ownership
     assert session.page.goto_calls == [verify_module._VERIFY_URL]
     # Confirm parse result is coherent with the body (covered in detail
     # by test_verify_csv_parse_contract).
@@ -180,7 +178,7 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     # Session-lifetime contract: self-owned session AND context are closed.
     assert session.create_context_calls == 1
     assert session.context.close_calls == 1
-    assert session.close_calls == 1            # self-owned → must close
+    assert session.close_calls == 1  # self-owned → must close
     # Parse result matches the body (no confirmation token → False).
     assert result is False
 

@@ -49,6 +49,7 @@ from ._source_mesh import (
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
+
 class ModeloLedgerBindingAggregation(BaseModel):
     """Ledger-derived binding values for one modelo calculation window."""
 
@@ -126,6 +127,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
     ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
         return tuple(value)
 
+
 class LedgerIvaAggregationSourceResolver:
     """Source mesh resolver for repository-backed IVA ledger bindings."""
 
@@ -189,6 +191,7 @@ class LedgerIvaAggregationSourceResolver:
             ),
         )
 
+
 class LedgerRentaExpenseAggregationSourceResolver:
     """Source mesh resolver for repository-backed Renta expense bindings."""
 
@@ -250,6 +253,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
             ),
         )
 
+
 class LedgerRentaIncomeAggregationSourceResolver:
     """Source mesh resolver for repository-backed M130 actividad-económica income bindings."""
 
@@ -304,6 +308,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 for observation in aggregation.observations
             ),
         )
+
 
 def resolve_modelo_ledger_binding_values_from_repositories(
     *,
@@ -386,6 +391,7 @@ def resolve_modelo_ledger_binding_values_from_repositories(
         renta_income_issues=renta_income_issues,
     )
 
+
 def aggregation_period_for_modelo(*, filing_year: int, period: str) -> str:
     """Translate registry/modelo period tokens to aggregation period tokens."""
     normalized = period.strip().upper()
@@ -405,11 +411,14 @@ def aggregation_period_for_modelo(*, filing_year: int, period: str) -> str:
         context={"filing_year": str(filing_year), "period": period},
     )
 
+
 def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
     return any(binding.source == source for binding in revision.bindings)
 
+
 def _empty_source_resolution(resolver_id: str, owned_sources: tuple[str, ...]) -> CalculationSourceResolution:
     return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)
+
 
 def _renta_observation_provenance(
     observation: RentaDeductibleExpenseObservation,
@@ -428,6 +437,7 @@ def _renta_observation_provenance(
             )
         )
     return tuple(provenance)
+
 
 __all__ = [
     "LedgerIvaAggregationSourceResolver",
