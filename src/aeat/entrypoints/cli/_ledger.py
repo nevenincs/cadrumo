@@ -2308,17 +2308,13 @@ def ratios_set(
     ),
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
-    from ...application.ledger._ratios import censo_override_warning
+    from ...application.ledger._ratios import censo_override_warning, set_usage_ratio
     from ...application.user_profile import CensoSyncService
-    from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
     category_enum = _resolve_category(category)
     parsed = _parse_required_decimal(ratio, label="ratio")
     bucket_id, profile_id = _ratios_bucket_and_profile()
-    profile = load_usage_ratios(bucket_id=bucket_id)
-    prior = profile.ratios.get(category_enum)
-    updated = profile.with_ratio(category_enum, parsed)
-    save_usage_ratios(updated, bucket_id=bucket_id)
+    prior = set_usage_ratio(bucket_id=bucket_id, category=category_enum, ratio=parsed)
     _emit_ratios_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_SET,
@@ -2362,12 +2358,14 @@ def ratios_unset(
     ),
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
-    from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
+    from ...application.ledger._ratios import unset_usage_ratio
+    from ...domain.usage_ratios import UsageRatioValidationError
 
     category_enum = _resolve_category(category)
     bucket_id = _ratios_bucket_id()
-    profile = load_usage_ratios(bucket_id=bucket_id)
-    if category_enum not in profile.ratios:
+    try:
+        prior = unset_usage_ratio(bucket_id=bucket_id, category=category_enum)
+    except UsageRatioValidationError as exc:
         raise _bad(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
@@ -2375,10 +2373,7 @@ def ratios_unset(
                 category=category_enum.value,
                 bucket_id=bucket_id,
             )
-        )
-    prior = profile.ratios.get(category_enum)
-    updated = profile.without_ratio(category_enum)
-    save_usage_ratios(updated, bucket_id=bucket_id)
+        ) from exc
     _emit_ratios_event(
         bucket_id=bucket_id,
         event_type=BucketEventType.LEDGER_RATIOS_UNSET,
