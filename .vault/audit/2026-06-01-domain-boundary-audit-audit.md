@@ -1433,6 +1433,31 @@ remediation is currently HELD at audit-only per the active action policy.
   (S45, S55, S76, S84/S85); the remainder is high-stakes (tax-calc period dates),
   relocation-in-churn, or contract-sensitive work for a settled tree + fresh context.
 
+- 2026-06-02 (cont.): **S71/DB-06 CONFIRMED non-dedup — convention divergence (verify-
+  before-action prevented a tax-calc regression).** Read both implementations:
+  `domain.period.period_end_date` returns the FIRST day of the month for monthly
+  tokens (documented "monthly-as-first-of-month convention"), whereas
+  `application.aggregation._models.Period.end` returns the LAST day
+  (`calendar.monthrange(...)[1]`). Delegating Period.end to domain.period would
+  silently flip every monthly period's end date from last-of-month to
+  first-of-month — a subtle period-boundary regression in a path feeding tax
+  calculations. Quarters happen to agree; months do NOT. Additionally the formats
+  diverge (aggregation accepts the dash form `YYYY-Q1`; domain.period is the no-dash
+  `YYYYQ1` canonical and its own docstring says "do not unify dialects"). So the
+  aggregation Period is a deliberately-distinct dialect with distinct end-date
+  semantics; S71 requires an explicit convention RECONCILIATION decision (which
+  month-end semantics is correct for aggregation's consumers?), not a mechanical
+  substitution. EXCLUDED as written; needs an ADR-level convention ruling.
+- **Meta-observation (codification candidate):** across this campaign the rigorous
+  verify-before-action + substitutability pre-filter has reclassified a large share
+  of audit "drifts" as deliberate constraints / dialects / conventions, NOT
+  actionable duplication: DB-16 (ADR-sanctioned repo pattern), DB-24 (operator-surface
+  constraint subset), DB-26 (legitimate CLI adapters), DB-33 (flaky-test artifact),
+  DB-06/S71 (convention divergence). This mirrors the `aeat-swarm-audit-cadence` rule's
+  documented high false-positive rate — the genuine remaining actionable surface is
+  materially smaller than the raw open-step count, and each remaining step needs the
+  same per-item verification before it is executed (never bulk-"completed").
+
 ## Codification candidates
 
 
