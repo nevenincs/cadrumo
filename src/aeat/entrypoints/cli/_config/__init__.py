@@ -47,7 +47,12 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUA
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
 from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
-from ....core.redaction import redact_for_cli_output
+from ....core.redaction import (
+    CLI_BUCKET_ID_PLACEHOLDER,
+    CLI_PROFILE_ID_PLACEHOLDER,
+    redact_for_cli_output,
+    redact_structured_for_cli_output,
+)
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -407,7 +412,7 @@ def repair_profile(
         lines = [
             f"dry_run\t{result.dry_run}",
             f"repaired\t{result.repaired}",
-            f"active_profile\t{_redacted_profile_identifier(health.active_profile)}",
+            f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
             f"status\t{health.status}",
             f"manifest_status\t{result.status or ''}",
             f"reason\t{result.reason}",
@@ -427,7 +432,7 @@ def repair_profile(
     lines = [
         f"dry_run\t{result.dry_run}",
         f"cleared_pointer\t{result.cleared_pointer}",
-        f"active_profile\t{_redacted_profile_identifier(health.active_profile)}",
+        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
         f"source\t{health.source}",
         f"status\t{health.status}",
         f"registered_bucket\t{health.registered_bucket}",
@@ -442,24 +447,11 @@ def repair_profile(
     _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
-def _redacted_profile_identifier(value: str | None) -> str:
-    return "<profile-id>" if value else ""
-
-
 def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     """Return a paste-safe repair payload with internal profile ids removed."""
-    redacted = dict(payload)
-    for key in ("before", "after"):
-        nested = redacted.get(key)
-        if isinstance(nested, dict):
-            redacted[key] = _redact_profile_health_payload(nested)
-    return redacted
-
-
-def _redact_profile_health_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
-    redacted = dict(payload)
-    if redacted.get("active_profile"):
-        redacted["active_profile"] = "<profile-id>"
+    redacted = redact_structured_for_cli_output(payload)
+    if not isinstance(redacted, dict):
+        return {}
     return redacted
 
 
@@ -484,22 +476,23 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         record = _read_profile_record(profile_id=profile_id, bucket_id=profile_id)
     except ProfileNotFoundError:
         payload = {
-            "profile_id": "<profile-id>",
-            "bucket_id": "<profile-id>",
+            "profile_id": profile_id,
+            "bucket_id": profile_id,
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
             "status": "missing_profile_record",
             "next_action": _profile_record_missing_next_action(profile_id, label=pointer.label),
         }
+        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
             ctx,
             command="config.repair.profile",
-            result=RepairProfileResult.model_validate(payload),
+            result=repair_payload,
             lines=(
                 "readiness\tmissing_profile_record",
-                "profile_id\t<profile-id>",
-                "bucket_id\t<profile-id>",
+                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tmissing",
@@ -509,8 +502,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         raise typer.Exit(code=2) from None
     except _AeatError as exc:
         payload = {
-            "profile_id": "<profile-id>",
-            "bucket_id": "<profile-id>",
+            "profile_id": profile_id,
+            "bucket_id": profile_id,
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
@@ -518,14 +511,15 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
             "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
+        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
             ctx,
             command="config.repair.profile",
-            result=RepairProfileResult.model_validate(payload),
+            result=repair_payload,
             lines=(
                 "readiness\tprofile_record_unreadable",
-                "profile_id\t<profile-id>",
-                "bucket_id\t<profile-id>",
+                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tunreadable",
@@ -536,8 +530,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
     except Exception as exc:
         boundary = _ConfigBoundaryError(exc)
         payload = {
-            "profile_id": "<profile-id>",
-            "bucket_id": "<profile-id>",
+            "profile_id": profile_id,
+            "bucket_id": profile_id,
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
@@ -545,14 +539,15 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
             "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
+        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
             ctx,
             command="config.repair.profile",
-            result=RepairProfileResult.model_validate(payload),
+            result=repair_payload,
             lines=(
                 "readiness\tprofile_record_unreadable",
-                "profile_id\t<profile-id>",
-                "bucket_id\t<profile-id>",
+                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tunreadable",
@@ -561,23 +556,24 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         )
         raise typer.Exit(code=2) from boundary
     payload = {
-        "profile_id": "<profile-id>",
-        "bucket_id": "<profile-id>",
+        "profile_id": profile_id,
+        "bucket_id": profile_id,
         "display_name": record.display_name,
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
         "next_action": f"aeat config profile switch {pointer.label}",
     }
+    repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(
         ctx,
         command="config.repair.profile",
-        result=RepairProfileResult.model_validate(payload),
+        result=repair_payload,
         lines=(
             "readiness\tready",
             f"display_name\t{record.display_name}",
-            "profile_id\t<profile-id>",
-            "bucket_id\t<profile-id>",
+            f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+            f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
             "registered_bucket\tpresent",
             "profile_record\tpresent",
             f"status\t{record.status.value}",

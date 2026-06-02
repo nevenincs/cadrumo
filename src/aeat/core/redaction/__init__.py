@@ -103,6 +103,7 @@ _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
 _CLI_PROFILE_ID_KEYS = frozenset(
     {
         "active_profile_id",
+        "active_profile",
         "bucket_profile_id",
         "profile_bucket_id",
         "profile_id",
