@@ -176,10 +176,10 @@ Drive the live CLI via agent personas, persist testimonials, and absorb findings
 
 Agent personas drive the live CLI end-to-end and persist vault testimonials.
 
-- [ ] `W03.P09.S23` - Persona: freelance autonoma quarterly-close testimonial; `.vault/audit/`.
-- [ ] `W03.P09.S24` - Persona: asesor fiscal multi-client review testimonial; `.vault/audit/`.
-- [ ] `W03.P09.S25` - Persona: multi-currency consultant testimonial; `.vault/audit/`.
-- [ ] `W03.P09.S26` - Persona: year-end M100 reviewer testimonial; `.vault/audit/`.
+- [x] `W03.P09.S23` - Persona: freelance autonoma quarterly-close testimonial; `.vault/audit/`.
+- [x] `W03.P09.S24` - Persona: asesor fiscal multi-client review testimonial; `.vault/audit/`.
+- [x] `W03.P09.S25` - Persona: multi-currency consultant testimonial; `.vault/audit/`.
+- [x] `W03.P09.S26` - Persona: year-end M100 reviewer testimonial; `.vault/audit/`.
 
 ### Phase `W03.P10` - Honesty review and finding absorption
 
@@ -190,6 +190,12 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 - [ ] `W03.P10.S31` - Harden bulk classify --from-csv to load-once/save-once (O(n) re-encryption: 270 rows = 404s); `perf gate 270 rows under 30s; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W03.P10.S32` - Add an XLSX/Google-Sheets export path for the Drive goal (export surface is csv/jsonl only, no xlsx verb); `src/aeat/adapters/outbound/google/`.
 - [ ] `W03.P10.S33` - Provide a transfer-reclassification helper/journey (import never emits INTERNAL_TRANSFER; `transfers land OUTGOING/INCOMING NOT_YET_PROCESSED); `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W03.P10.S60` - HIGH: wire CurrencyNormalizationService into the CLI import path so GBP/USD rows convert (value_in_eur/fx_rate) at import instead of silently gating at aggregation; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W03.P10.S61` - HIGH: project value_in_eur and fx_rate (and rate source) on TransactionPayload so list/review/export surface the EUR-equivalent and FX provenance; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
+- [ ] `W03.P10.S62` - Add ledger export --period and a period-scoped JSON row list so an operator can hand a gestor just the quarter; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W03.P10.S63` - HIGH: give check/preflight an anomaly channel separate from missing-fact reasons, and a 'non-classification' filtered view, so real anomalies (recargo, gated, foreign) surface without first hand-classifying every row; `src/aeat/application/ledger/_preflight.py`.
+- [ ] `W03.P10.S64` - Add review --filter classification=business|personal and a readiness dashboard consolidating check + preflight for sign-off; `src/aeat/application/review/_filter.py`.
+- [ ] `W03.P10.S65` - Add an annual roll-up / M100-readiness surface (full-year ingresos/gastos/net activity totals) and a devengo-vs-caja cross-year reconciliation view; `src/aeat/application/ledger/_preflight.py`.
 
 ## Wave `W04` - Deferred live Google export
 
@@ -281,7 +287,7 @@ Typed LedgerFilingSnapshot record, deterministic fingerprint, optional revision 
 Pure drift evaluator + stale event + work-unit marker.
 
 - [x] `W10.P18.S54` - Implement evaluate_ledger_filing_staleness classifying each contributor unchanged/changed/removed against the live catalogue; `src/aeat/domain/modelos/_ledger_filing_snapshot.py`.
-- [ ] `W10.P18.S55` - Add BucketEventType.MODELO_LEDGER_DEPENDENT_STAMPED_STALE and a work-unit stale marker mirroring the censo pattern; `src/aeat/domain/buckets/_event.py`.
+- [x] `W10.P18.S55` - Add BucketEventType.MODELO_LEDGER_DEPENDENT_STAMPED_STALE and a work-unit stale marker mirroring the censo pattern; `src/aeat/domain/buckets/_event.py`.
 - [x] `W10.P18.S56` - Tests: mutate a contributing row -> stale detected; `empty-set (non-ledger) snapshot trivially stable; `src/aeat/domain/modelos/test_ledger_filing_snapshot.py`.
 
 ### Phase `W10.P19` - Verify/file wiring and uniform modelo coverage
@@ -289,8 +295,22 @@ Pure drift evaluator + stale event + work-unit marker.
 Capture at verify/file, surface drift, prove every-modelo uniformity.
 
 - [x] `W10.P19.S57` - Capture the snapshot at VERIFICADO_COMPLETO and re-affirm at PRESENTADO in the calculate/verify/file flow; `src/aeat/application/modelos/`.
-- [ ] `W10.P19.S58` - Surface staleness in ledger/modelo status, verify, and check outputs; `src/aeat/entrypoints/cli/`.
-- [ ] `W10.P19.S59` - Every-modelo coverage test: ledger-fed (303/130/100) and a non-ledger modelo each carry a uniform snapshot; `filed snapshot is immutable; `src/aeat/application/modelos/test_modelo_filing_snapshot_coverage.py`.
+- [x] `W10.P19.S58` - Surface staleness in ledger/modelo status, verify, and check outputs; `src/aeat/entrypoints/cli/`.
+- [x] `W10.P19.S59` - Every-modelo coverage test: ledger-fed (303/130/100) and a non-ledger modelo each carry a uniform snapshot; `filed snapshot is immutable; `src/aeat/application/modelos/test_modelo_filing_snapshot_coverage.py`.
+
+## Wave `W11` - ECB FX provider implementation (ADR-driven)
+
+Implement the ECB euro reference-rate provider and wire it into the CLI import path so foreign rows convert at the legally-official rate.
+
+### Phase `W11.P20` - ECB reference-rate provider
+
+Bundled eurofxref history + provider with date fallback and EUR-base inversion.
+
+- [x] `W11.P20.S66` - Bundle a versioned snapshot of ECB eurofxref-hist.xml under the data tree (offline, deterministic, refreshed on release); `src/aeat/_data/fx/`.
+- [x] `W11.P20.S67` - Implement EcbReferenceRateProvider(ExchangeRateProvider): parse history, get_eur_rate with most-recent-prior-working-day fallback; `strict tests (determinism, weekend fallback, EUR-base inversion direction); `src/aeat/adapters/outbound/fx/_ecb_provider.py`.
+- [x] `W11.P20.S68` - Wire the normalizer into the CLI import path so foreign rows persist fx_rate+value_in_eur; `corpus-fidelity + journey assert Revolut GBP/USD convert (no UNSUPPORTED_CURRENCY); `src/aeat/application/ledger/_actions.py`.
+- [ ] `W11.P20.S69` - Record rate source + rate-date provenance on the conversion, dovetailing with the filing snapshot; `src/aeat/domain/transactions/_models.py`.
+- [x] `W11.P20.S70` - Add an ECB-history refresh utility (re-acquire eurofxref-hist.xml on release; `runtime stays offline); `src/aeat/adapters/outbound/fx/_ecb_refresh.py`.
 
 ## Description
 

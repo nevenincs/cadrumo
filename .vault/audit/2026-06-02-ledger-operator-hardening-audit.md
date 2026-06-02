@@ -129,6 +129,109 @@ green in ~1m48s.
 - Run the live persona testimonials (P09) once F2 lands, so the personas
   experience the hardened bulk path rather than the 404s one.
 
+## Persona testimonials (W03 P09)
+
+Two fresh-context persona agents drove the real CLI over the corpus end-to-end,
+each landing a green persona journey test and reporting an operator testimonial.
+
+### Persona A — autónoma, first 1T-2025 quarterly close
+
+Test `src/aeat/entrypoints/cli/test_ledger_persona_autonoma_close.py` (green).
+Findings: (1) MED no bulk/folder import — `import` is one-verb-per-CSV with a
+repeated `--provider`; (2) MED `review --filter period=...` renders only a human
+table, no machine output, so building a classify CSV forces a fallback to
+`list --format json` + client-side date filtering; (3) MED `export` has no
+`--period`, so a quarterly hand-off dumps the whole bucket; (4) LOW/known
+bulk-classify is the slow path (per-row re-persist); (5) LOW `--from-csv` cannot
+carry `--business-pct`, so every MIXED row (the bulk of an autónoma's
+deductibles) must be classified one-by-one. Worked well: `preflight`/`check`
+emit explicit per-transaction issue lists; the `MIXED` path demands
+`--business-pct` rather than silently dropping it; the export envelope carries
+`row_count` + `sha256`. No crashes.
+
+### Persona B — multi-currency consultant (GBP/USD via Revolut)
+
+Test `src/aeat/entrypoints/cli/test_ledger_persona_multicurrency.py` (8 green).
+Findings (both HIGH, both silent-omission — no crash): (1) the CLI `import` path
+calls `import_ledger_transactions` without a `currency_normalizer`, so every
+GBP/USD row persists `fx_rate=None` / `value_in_eur=None` and will silently gate
+as `UNSUPPORTED_CURRENCY` at aggregation — the conversion machinery exists
+(`_apply_fx_conversion`) but is never wired, and the operator gets no import-time
+signal; (2) `value_in_eur` / `fx_rate` are projected on no read surface
+(`TransactionPayload` omits them), so a GBP invoice shows only its native amount
+with no EUR figure and no auditable rate/source anywhere in list/review/export.
+Worked well: native currency is honest end to end (GBP/USD/EUR preserved on
+import and surfaced; export classification applies cleanly).
+
+### Persona C — asesor fiscal, client review before sign-off
+
+Test `src/aeat/entrypoints/cli/test_ledger_persona_asesor_review.py` (10 green).
+Findings: (1) HIGH `check`/`preflight` are swamped by `missing_business_classification`
+— a fresh import yields one issue per row (217/217 on BBVA), burying the signals
+an asesor wants (the recargo anomaly, gated/erroneous rows, foreign currency);
+no "anomalies except unclassified" mode and no severity ranking; (2) HIGH the
+recargo-equivalencia anomaly is corpus ground-truth but there is no CLI anomaly
+channel — `check`/`preflight` only emit the seven missing-fact reasons, so a
+semantically-wrong-but-complete row passes clean; (3) MED `track` shows
+`Created bucket event = -` for imported rows, so the import-batch lineage is not
+legible from `track` alone; (4) MED no business/personal/gated lens in
+`list`/`review` (filter keys limited to status/period/issue/import); (5) LOW
+`preflight` requires a period while `check` aggregates all years — no single
+readiness dashboard. Positive: classifying a row PERSONAL correctly drops it from
+preflight and lowers the check count; the gate never silently green-lights an
+incomplete business row (consistent with no-silent-under-declaration). No crashes.
+Absorbed as P10 hardening Steps (anomaly channel + classification filter +
+readiness dashboard).
+
+### Persona D — year-end reviewer assembling the annual Renta (M100) picture
+
+Test `src/aeat/entrypoints/cli/test_ledger_persona_yearend_m100.py` (9 green).
+Findings: (1) HIGH no annual money roll-up / M100-readiness surface — `status`
+and `check` emit counts and a boolean `ready`, never income/expense/net totals;
+the full-year picture must be hand-summed from `list --format json`; (2) MED the
+annual `period=2025` filter is accepted by `review` but renders a row dump, not
+an aggregate; (3) MED cross-year (devengo-vs-caja) reconciliation is fully manual
+— F-2025-024 (raised Dec 2025, paid Jan 2026) is date-stamped 2026, so a
+`period=2025` filter under-counts 2025 accrual income and nothing links the
+prior-year invoice reference to its next-year settlement; (4) LOW `check` does
+expose `periods: ["2025","2026"]` (a period inventory, the closest cross-year
+hint); (5) LOW no M100-shaped readiness gate. No crashes. Absorbed as a P10
+hardening Step (annual roll-up / M100-readiness surface + devengo-vs-caja view).
+
+All four personas landed green tests and zero new crashes; every HIGH finding is
+a silent-omission or missing-surface gap, now tracked. The multicurrency import
+defect is the most material and is resolved at the decision level by the sibling
+`[[2026-06-02-ledger-fx-conversion-adr]]` (ECB euro reference rates as the
+canonical, legally-official FX source), with implementation tracked in plan wave
+W11.
+
+Both multicurrency findings are absorbed as hardening Steps in this campaign's plan (P10):
+import-time normalizer wiring and payload FX projection (both HIGH), plus the
+`export --period` / period-scoped JSON affordances from Persona A. The
+multicurrency HIGH findings are material to the project's multicurrency goal:
+the corpus's foreign income will not reach M303/M130 through the CLI path until
+the import normalizer is wired.
+
+## Implementation outcomes (post-testimonial)
+
+- **Multicurrency HIGH #1 RESOLVED.** The ECB euro reference-rate provider
+  (`EcbReferenceRateProvider` over a bundled `eurofxref` snapshot, with
+  most-recent-prior-working-day fallback and EUR-base inversion) is implemented
+  and wired into the CLI import composition root, grounded by the
+  `[[2026-06-02-ledger-fx-conversion-adr]]`. Imported GBP/USD rows now persist
+  `fx_rate` + `value_in_eur` instead of silently gating at aggregation. Covered
+  by the fx adapter suite (10 tests) + a CLI import-conversion test, plus a
+  refresh utility for offline snapshot updates. Plan wave W11.
+- **New latent bug found and fixed (F6).** Wiring the normalizer surfaced that
+  `_apply_fx_conversion` returned the *signed* `eur_amount`, which violates
+  `Transaction.value_in_eur`'s non-negative invariant — so importing any
+  negative-amount foreign row would have crashed the moment a normalizer was
+  supplied. Fixed to store the magnitude (sign carried by `raw.amount` +
+  direction). This had never fired only because the CLI never wired a normalizer.
+- Multicurrency HIGH #2 (project `value_in_eur`/`fx_rate` on read surfaces) and
+  the asesor/year-end findings remain tracked P10/W11 Steps; #2 is now meaningful
+  to land since import populates the values.
+
 ## Codification candidates
 
 - **Source:** F1 (`ledger track` crashed on imported rows).
