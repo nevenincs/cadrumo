@@ -46,6 +46,7 @@ class PerModeloAggregationProvider(StrEnum):
     COUNTERPART = "counterpart"
     FOREIGN_ASSETS = "foreign_assets"
 
+
 ACCEPTED_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
     AggregationSourceKind.LEDGER_TRANSACTION,
     AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -62,6 +63,7 @@ AggregationErrorCodes: tuple[str, ...] = (
 _RETENCIONES_MODELOS: tuple[str, ...] = ("111", "115", "123", "180", "190", "193")
 _COUNTERPART_MODELOS: tuple[str, ...] = ("347", "349")
 _FOREIGN_ASSET_MODELOS: tuple[str, ...] = ("720",)
+
 
 class PerModeloAggregationProviderContract(BaseModel):
     """Backend-owned contract for one aggregation provider family."""
@@ -82,6 +84,7 @@ class PerModeloAggregationProviderContract(BaseModel):
                 translated_message="aggregation.service.errors.provider_modelos_not_unique",
             )
         return value
+
 
 class PerModeloAggregationLogFields(BaseModel):
     """Stable, non-secret log fields emitted by the aggregation service."""
@@ -107,6 +110,7 @@ class PerModeloAggregationLogFields(BaseModel):
             "source_kind_count": self.source_kind_count,
             "result_row_count": self.result_row_count,
         }
+
 
 class PerModeloAggregationContract(BaseModel):
     """Complete backend contract consumed by current and future adapters."""
@@ -148,6 +152,7 @@ class PerModeloAggregationContract(BaseModel):
             )
         return value
 
+
 class PerModeloAggregationCommand(BaseModel):
     """Command payload for a per-modelo aggregation run."""
 
@@ -188,7 +193,9 @@ class PerModeloAggregationCommand(BaseModel):
         """
         return provider_for_modelo(self.modelo)
 
+
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
+
 
 class PerModeloAggregationResult(BaseModel):
     """Result envelope returned by the central per-modelo aggregation service."""
@@ -244,6 +251,7 @@ class PerModeloAggregationResult(BaseModel):
             )
         return self
 
+
 def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Build the immutable backend-owned aggregation contract.
 
@@ -285,10 +293,12 @@ def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     )
     return contract
 
+
 @lru_cache(maxsize=1)
 def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Return the cached backend-owned :class:`PerModeloAggregationContract`."""
     return build_per_modelo_aggregation_contract()
+
 
 def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
     """Return the provider family for a supported modelo.
@@ -313,6 +323,7 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
         context={"modelo": modelo},
         suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
     )
+
 
 def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
     """Run the central application aggregation service for one modelo.
@@ -345,6 +356,7 @@ def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggre
     LOGGER.debug("ran per-modelo aggregation", extra=result.log_fields.as_extra())
     return result
 
+
 def _aggregate_retenciones(
     modelo: str,
     period: str,
@@ -360,6 +372,7 @@ def _aggregate_retenciones(
     }
     return dispatch[modelo](observations, period=period)
 
+
 def _aggregate_counterpart(
     modelo: str,
     period: str,
@@ -369,9 +382,11 @@ def _aggregate_counterpart(
         return aggregate_counterpart_347(observations, period=period)
     return aggregate_counterpart_349(observations, period=period)
 
+
 def _source_kinds_for_payload(payload: PerModeloAggregationPayload) -> tuple[AggregationSourceKind, ...]:
     source_kind_values = sorted({row.source_kind for row in payload.rollups})
     return tuple(AggregationSourceKind(value) for value in source_kind_values)
+
 
 def _observation_count_for_command(
     command: PerModeloAggregationCommand,
@@ -382,6 +397,7 @@ def _observation_count_for_command(
     if provider is PerModeloAggregationProvider.COUNTERPART:
         return len(command.counterpart_observations)
     return len(command.foreign_asset_observations)
+
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
