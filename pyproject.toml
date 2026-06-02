@@ -360,22 +360,23 @@ convention = "google"
 # Module-walking test fixtures use file paths and rationale tokens as constants
 # that ruff misreads as hardcoded secret strings.
 "src/aeat/test_diagnostics_and_sidecar_rationale.py" = ["S105"]
-"src/aeat/test_semantic_intent_sampler.py" = ["S105"]
-"src/aeat/test_w17_p49_closure.py" = ["S105"]
-"src/aeat/test_w18_p50_closure.py" = ["S105"]
-"src/aeat/test_w20_p52_closure.py" = ["S105"]
+"src/aeat/test_semantic_intent_sampler.py" = ["S105", "S311"]
 # Token catalogue test fixture identifiers (e.g. "BTC") are not passwords.
 "src/aeat/application/calculations/test_modelo_721_cripto_exterior_fidelity.py" = ["S105"]
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
-"src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S607"]
+"src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+# Wave-closure inventory ratchets shell out to `sys.executable -m pytest` with
+# vetted file paths from the repo. S603's "untrusted input" warning does not
+# apply to internally-controlled paths in build-internal harnesses.
+"src/aeat/test_w17_p49_closure.py" = ["S105", "S603"]
+"src/aeat/test_w18_p50_closure.py" = ["S105", "S603"]
+"src/aeat/test_w20_p52_closure.py" = ["S105", "S603"]
+"src/aeat/test_w27_p61_closure.py" = ["S105", "S106", "S603"]
+"src/aeat/test_w28_p62_closure.py" = ["S105", "S106", "S603"]
 # `aeat_secret_store_backend="file"` names the backend enum value, not a
 # password literal.
 "src/aeat/tests/secure_sql.py" = ["S106"]
-# Deterministic-sampler test uses random.Random for reproducible sampling, not
-# cryptographic use.
-"src/aeat/test_semantic_intent_sampler.py" = ["S311"]
-
 # ── Group G structural / domain-justified per-file-ignores ────────────────
 
 # Package __init__ files defer submodule imports below module-level helpers
@@ -443,8 +444,6 @@ convention = "google"
 "src/aeat/test_w22_p54_closure.py" = ["S105", "S106"]
 "src/aeat/test_w26_p59_closure.py" = ["S105", "S106"]
 "src/aeat/test_w26_p60_closure.py" = ["S105", "S106"]
-"src/aeat/test_w27_p61_closure.py" = ["S105", "S106"]
-"src/aeat/test_w28_p62_closure.py" = ["S105", "S106"]
 # Same pattern for the rationale-marker ratchets and their broad-except /
 # any-return / narrowed-except cousins under src/aeat/.
 "src/aeat/test_any_return_rationale_markers.py" = ["S105", "S106"]
