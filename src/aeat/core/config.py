@@ -58,9 +58,9 @@ class SecretStoreBackend(StrEnum):
 # Project root: four levels up from src/aeat/core/config.py
 # (file → core/ → aeat/ → src/ → REPO_ROOT).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
+DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"  # noqa: S105
 """Shared development/test password for database-backed secure-storage tests."""
-DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"  # noqa: S105
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
 
 
@@ -254,6 +254,16 @@ class Settings(BaseSettings):
             "Outer timeout (ms) for each live IVA read surface inside a combined remote-state "
             "acquisition. Individual browser stages have their own shorter timeouts; this bounds "
             "the whole filed-history or wallet/cartera surface."
+        ),
+    )
+    aeat_live_iva_declaration_capture_timeout_ms: int = Field(
+        default=120_000,
+        gt=0,
+        description=(
+            "Timeout (ms) for one Modelo 303 filed-declaration observation inside a combined "
+            "live IVA filed-history read. Must be lower than the outer live IVA surface timeout "
+            "so partial filed-history failures can return a structured report before the whole "
+            "surface is cancelled."
         ),
     )
     aeat_live_iva_cancellation_drain_ms: int = Field(
@@ -987,6 +997,15 @@ class Settings(BaseSettings):
     # ── Introspection ───────────────────────────────────────────────────────
 
     @model_validator(mode="after")
+    def _validate_live_iva_timeout_hierarchy(self) -> Settings:
+        if self.aeat_live_iva_declaration_capture_timeout_ms >= self.aeat_live_iva_surface_timeout_ms:
+            raise ValueError(
+                "aeat_live_iva_declaration_capture_timeout_ms must be lower than "
+                "aeat_live_iva_surface_timeout_ms"
+            )
+        return self
+
+    @model_validator(mode="after")
     def _resolve_database_url_for_active_profile(self) -> Settings:
         """Resolve ``aeat_database_url`` through the active-profile chain.
 
@@ -1042,9 +1061,7 @@ class Settings(BaseSettings):
                 f"sqlite:///{fallback_db_path.as_posix()}",
             )
             return self
-        bucket_db_path = (
-            self.aeat_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"
-        )
+        bucket_db_path = self.aeat_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"
         object.__setattr__(
             self,
             "aeat_database_url",

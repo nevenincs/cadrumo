@@ -369,6 +369,18 @@ def test_browser_timeouts_belong_to_settings_not_registry() -> None:
     assert settings.aeat_browser_ver_click_timeout_ms == 15_000
     assert settings.aeat_browser_buscar_settle_ms == 3_000
     assert settings.aeat_browser_selector_probe_timeout_ms == 2_500
+    assert settings.aeat_live_iva_declaration_capture_timeout_ms == 120_000
+    assert settings.aeat_live_iva_declaration_capture_timeout_ms < settings.aeat_live_iva_surface_timeout_ms
+
+
+def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> None:
+    """One declaration timeout must fire before the whole filed-history surface timeout."""
+
+    with pytest.raises(ValueError, match="aeat_live_iva_declaration_capture_timeout_ms"):
+        Settings(
+            aeat_live_iva_declaration_capture_timeout_ms=180_000,
+            aeat_live_iva_surface_timeout_ms=180_000,
+        )
 
 
 def test_llm_endpoints_belong_to_settings_not_registry() -> None:
