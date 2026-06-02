@@ -34,11 +34,12 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.errors import SessionExpiredError
+from ...adapters.persistence.storage.errors import SessionExpiredError, StorageValidationError
 from ...adapters.persistence.storage.master_key._active_session import _active_session
 from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql.secure_objects import SensitivityClass
+from ...core.config import override_settings
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -179,20 +180,25 @@ def test_expired_session_refusal_names_profile_switch_recovery_verb() -> None:
     assert "expired" in rendered
 
 
-def test_no_active_session_makes_freshness_poll_a_clean_noop(
+def test_profile_bound_repository_without_active_session_fails_closed(
     _inactive_repository: SecureObjectRepository,
 ) -> None:
-    """With no session bound, the idle-freshness poll is a no-op, not a crash.
+    """A runtime-bound repository refuses once its active bucket session closes.
 
-    Bootstrap-exempt verbs run without a session; the repository's
-    idle-freshness check must skip cleanly rather than raise, leaving
-    the active-gate at the CLI root as the sole refusal surface. The
-    poll is exercised directly here because every key-touching
-    repository call would otherwise fail on the missing master key
-    before the poll's no-op branch could be observed.
+    The repository returned by ``isolated_runtime_profile`` is bound to
+    that profile's active bucket session. After the context exits there
+    is no active session, so the freshness poll must fail closed with
+    the translated storage-runtime readiness error instead of silently
+    accepting a stale repository handle.
     """
 
     assert _active_session.get() is None
-    # The freshness poll must return without raising SessionExpiredError
-    # (or any other exception) when no session is bound.
-    _inactive_repository._check_session_freshness()
+    with (
+        override_settings(aeat_output_language="en"),
+        pytest.raises(StorageValidationError, match="no active bucket session") as raised,
+    ):
+        _inactive_repository._check_session_freshness()
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert raised.value.context is not None
+    assert "No active bucket session" in str(raised.value.context["details"])
