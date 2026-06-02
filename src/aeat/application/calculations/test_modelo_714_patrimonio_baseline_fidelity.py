@@ -66,7 +66,7 @@ _FILING_OBLIGATION_EUR = Decimal("2000000.00")
 # Year-N wealth figures (above the €2.000.000 filing obligation).
 _BASE_IMPONIBLE_N = Decimal("2100000.00")     # patrimonio neto
 _BASE_LIQUIDABLE_N = Decimal("1400000.00")    # tras €700.000 mínimo exento (art. 28)
-_CUOTA_INTEGRA_N = Decimal("8523.36")         # arbitrary non-default manual Phase-A figure (no calc; NOT escala-derived)
+_CUOTA_INTEGRA_N = Decimal("8523.36")  # arbitrary manual Phase-A figure (no calc; NOT escala-derived)
 
 # Year-N+1 wealth figures (distinct ejercicio; grown base).
 _BASE_IMPONIBLE_N1 = Decimal("2300000.00")
