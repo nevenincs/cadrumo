@@ -13,13 +13,12 @@ from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
-from .....core.time import now as _utc_now
-
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
 from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
 from ..errors import (
@@ -198,10 +197,14 @@ class SecureObjectRepository:
         *,
         engine: Engine | None = None,
         namespace_registry: StorageHierarchyRegistry | None = None,
+        active_session_bucket_id: str | None = None,
+        require_secure_active_session: bool = False,
     ) -> None:
         """Bind the repository to ``engine`` and ensure the secure_objects table exists."""
         self._engine = engine or get_engine()
         self._namespace_registry = namespace_registry
+        self._active_session_bucket_id = active_session_bucket_id
+        self._require_secure_active_session = require_secure_active_session
         # `inspect(mapped_class).local_table` is a `Table` at runtime, but the
         # SQLAlchemy stubs widen its declared type to `FromClause` (which lacks
         # `.create`). Cast through `Table` so pyrefly resolves the method.
@@ -362,7 +365,7 @@ class SecureObjectRepository:
         )
 
     def _check_session_freshness(self) -> None:
-        """Refuse the operation when the active session has crossed its idle deadline.
+        """Refuse the operation when the active profile session is no longer valid.
 
         Polls :func:`evaluate_idle` against the live
         :class:`BucketSession` registered in the active-session
@@ -375,16 +378,23 @@ class SecureObjectRepository:
         active session remains usable for the next window's
         duration without re-authentication.
 
-        No-op when no session is bound (bootstrap-exempt verbs);
-        the active-gate at the CLI root callback already refused
-        non-exempt verbs that lack a session.
+        Runtime-bound repositories also refuse stale handles whose active
+        session changed bucket or fell back to the unsecured backend after
+        construction. No-op when no session is bound and this repository is
+        not runtime-bound; bootstrap-exempt verbs rely on that direct mode.
         """
         from ..errors import SessionExpiredError
         from ..master_key._active_session import _active_session
         from ..master_key._idle_timeout import evaluate_idle
+        from ..runtime import _runtime_not_ready_error
 
         session = _active_session.get()
         if session is None:
+            if self._require_secure_active_session:
+                raise _runtime_not_ready_error(
+                    "storage runtime is not ready for profile-bound storage: no active bucket session.",
+                    message_key="errors.storage.runtime.no_active_session",
+                )
             return
         now = _utc_now()
         outcome = evaluate_idle(session=session, now=now)
@@ -393,10 +403,24 @@ class SecureObjectRepository:
                 "the active profile session has expired; run "
                 "`aeat config profile switch NAME` to re-activate.",
             )
+        if self._require_secure_active_session and session.unsecured_backend:
+            raise _runtime_not_ready_error(
+                "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
+                message_key="errors.storage.runtime.unsecured_backend",
+            )
+        if (
+            self._active_session_bucket_id is not None
+            and session.bucket_id != self._active_session_bucket_id
+        ):
+            raise _runtime_not_ready_error(
+                "storage runtime is not ready for profile-bound storage: active bucket session changed.",
+                message_key="errors.storage.runtime.session_changed",
+            )
         session.touch(now)
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             row_id = session.execute(
                 select(_orm.SecureObjectRow.id).where(
@@ -413,6 +437,7 @@ class SecureObjectRepository:
         not present in the source bundle. Same
         master-key constraint as :meth:`save_with_raw_key`.
         """
+        self._check_session_freshness()
         if len(hashed_object_key) != 32:
             raise StorageValidationError(
                 f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
@@ -447,6 +472,7 @@ class SecureObjectRepository:
             `(namespace ASC, object_key ASC)` so consumers can
             checkpoint progress deterministically.
         """
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             stmt = text(
                 "SELECT id, namespace, object_key, classification, schema_version, "
@@ -507,6 +533,7 @@ class SecureObjectRepository:
         hardcode the namespace list (which drifts as new domain
         repositories register their own namespaces).
         """
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             rows = (
                 session.execute(
@@ -538,6 +565,7 @@ class SecureObjectRepository:
             A tuple of :class:`SecureObjectNamespaceIntegrity` records describing
             how many rows were quarantined per namespace.
         """
+        self._check_session_freshness()
         self._ensure_quarantine_table()
         with session_scope(self._engine) as session:
             quarantined_at = _utc_now().isoformat()
@@ -626,7 +654,7 @@ class SecureObjectRepository:
         return tuple(per_namespace)
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        """Count decryptable vs undecryptable rows in ``namespace`` and return a :class:`SecureObjectNamespaceIntegrity`.
+        """Count decryptable vs undecryptable rows in ``namespace``.
 
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key
@@ -635,6 +663,7 @@ class SecureObjectRepository:
         ``aeat config repair`` to surface namespaces holding rows from a
         prior keychain master-key generation.
         """
+        self._check_session_freshness()
         readable = 0
         unreadable = 0
         with session_scope(self._engine) as session:
@@ -668,6 +697,7 @@ class SecureObjectRepository:
         exposes the HMAC lookup digest plus storage metadata needed by repair
         diagnostics.
         """
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             stmt = (
                 text(
@@ -732,6 +762,7 @@ class SecureObjectRepository:
         should iterate :meth:`list_records` and read IDs from decrypted
         payloads.
         """
+        self._check_session_freshness()
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(_orm.SecureObjectRow.object_key)
@@ -820,6 +851,7 @@ class SecureObjectRepository:
         Raises:
             StorageValidationError: When ``batch_size`` is less than 1.
         """
+        self._check_session_freshness()
         if batch_size < 1:
             raise StorageValidationError(f"batch_size must be at least 1; got {batch_size}")
         namespace_definition = self._enforce_registered_read_policy(
@@ -1082,6 +1114,7 @@ class SecureObjectRepository:
             StorageValidationError: When ``hashed_object_key`` is not exactly 32 bytes.
             :exc:`RepositoryError`: On underlying SQL integrity errors.
         """
+        self._check_session_freshness()
         if len(hashed_object_key) != 32:
             raise StorageValidationError(
                 f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
@@ -1332,6 +1365,7 @@ class SecureObjectRepository:
         column; callers use this to fingerprint an envelope they intend
         to discard (e.g. the workflow-state reset recovery path).
         """
+        self._check_session_freshness()
         # Resolve the row id through the ORM so the HashedLookup column
         # binding hashes ``object_key`` consistently with the rest of
         # the repository, then read the raw row through ``text()`` so
