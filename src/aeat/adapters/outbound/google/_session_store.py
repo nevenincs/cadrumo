@@ -18,12 +18,11 @@ Each function is keyed on the resolved AEAT profile name (per
 
 from __future__ import annotations
 
-from ....core.time import now
-
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification import SensitivityClass
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.time import now
 from ._records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 _NAMESPACE_CLIENT = "aeat.google.oauth.client"
