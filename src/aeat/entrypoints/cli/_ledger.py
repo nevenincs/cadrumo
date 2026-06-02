@@ -1554,14 +1554,12 @@ def ledger_export(
         ),
         transaction_repository=transaction_repository,
     )
-    export_payload = result.model_dump(mode="json", exclude={"payload"})
-    export_payload["output_path"] = str(output)
-    from ._ledger_payloads import LedgerExportResult as LedgerExportResultSchema
+    from ._ledger_payloads import LedgerExportPayload
 
     _emit_envelope(
         ctx,
         command="ledger.export",
-        result=LedgerExportResultSchema.model_validate(export_payload),
+        result=LedgerExportPayload.from_result(result, output_path=str(output)),
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
             f"{tr('cli.ledger.labels.export_id')}\t{result.export_id}",
@@ -1834,23 +1832,22 @@ def ledger_import(
         ),
         transaction_repository=transaction_repository,
     )
-    import_payload = result.model_dump(mode="json")
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
         f"{tr('cli.ledger.labels.skipped')}\t{result.skipped}",
     ]
+    dry_run_notice: str | None = None
+    likely_duplicate_notice: str | None = None
     if result.dry_run:
         lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
         # A dry run reports what *would* happen; make that explicit so
         # the imported/skipped counts above are not read as a no-op.
         dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
         lines.append(dry_run_notice)
-        import_payload["dry_run_notice"] = dry_run_notice
     empty_import_notice = _empty_import_notice(result)
     if empty_import_notice is not None:
         lines.append(empty_import_notice)
-        import_payload["empty_import_notice"] = empty_import_notice
     if result.likely_duplicates > 0:
         # Cross-format duplicate suspicion: same date and amount as an
         # existing row but a divergent narrative. The row is imported;
@@ -1861,15 +1858,19 @@ def ledger_import(
             f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
         )
         lines.append(likely_duplicate_notice)
-        import_payload["likely_duplicate_notice"] = likely_duplicate_notice
     if verbose or verify:
         lines.extend(_validation_lines(result.validation, result.source))
-    from ._ledger_payloads import LedgerImportResult as LedgerImportResultSchema
+    from ._ledger_payloads import LedgerImportPayload
 
     _emit_envelope(
         ctx,
         command="ledger.import",
-        result=LedgerImportResultSchema.model_validate(import_payload),
+        result=LedgerImportPayload.from_result(
+            result,
+            dry_run_notice=dry_run_notice,
+            empty_import_notice=empty_import_notice,
+            likely_duplicate_notice=likely_duplicate_notice,
+        ),
         lines=lines,
     )
 
