@@ -18,12 +18,14 @@ from ...adapters.outbound.aeat.sede import (
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ...tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ..calculations import (
     CalculationObservationRepository,
-    IvaCompensationAuthoritySource,
     IvaCompensationHistoryRepository,
-    IvaCompensationReconciliationDecision,
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
