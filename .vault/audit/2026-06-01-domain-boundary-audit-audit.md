@@ -1272,6 +1272,29 @@ remediation is currently HELD at audit-only per the active action policy.
   gated on it. A unilateral refactor of the secure-storage base (consumed by every
   typed repository) is high-blast-radius and must be ADR-bound first.
 
+- 2026-06-02 (cont.): **import-linter PRODUCTION hexagonal drift driven to ZERO.**
+  Every production layer violation the restored gate surfaced is now resolved:
+  - DB-18 `core.resources._repos.apoderamientos -> domain.auth` — fixed by
+    repointing to the canonical submodule so the sanctioned deferred-loader ignore
+    matches (`d690ac919`); core-not-outer GREEN.
+  - DB-16 (8 domain repositories -> adapters.persistence.storage) — verified as the
+    secure-persistence-foundation ADR's deliberate per-domain repository pattern,
+    NOT drift; sanctioned with ADR-referencing ignores (`31320b726`). S92 closed as
+    reconciled-not-inverted (the audit's HIGH grade was a false positive — the base
+    SecureBoundRepository is SQL/crypto-coupled and cannot move to core, and the
+    persistence ADR deliberately co-locates the repositories with their domain).
+  - S90 `calculations.registry._scenarios -> domain.renta` — the production parity
+    harness's side-effect renta import (the F7 coupling the no-renta contract
+    forbids) relocated to its three test consumers, matching the established M100
+    registry-test pattern (`6b3790049`). The production registry is now renta-free.
+  All remaining contract red (no-renta, domain-not-application, layered) is
+  sanctioned test-infrastructure edges — direct + transitive roundtrip/fixture/
+  oracle imports mandated by the roundtrip-discipline rule. Residual W09 work:
+  P26 enumerate the full ~50 sanctioned roundtrip-test edges (or a name-scoped
+  wildcard), then P28 restore `unmatched_ignore_imports_alerting = error` so the
+  gate reds loudly on any NEW drift. The gate's production-drift signal is already
+  clean today.
+
 ## Codification candidates
 
 
