@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import ClassVar
 
 from .....core.time import now
-
 from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
 from .._errors import BorradorParseError

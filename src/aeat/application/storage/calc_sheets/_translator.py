@@ -374,7 +374,6 @@ def _parameter_reference(parameter: ParameterId, *, layout: SheetLayout) -> str:
     return cell.anchor.qualified()
 
 
-
 def _expect_arg_count(op: str, args: list[str], expected: int) -> None:
     if len(args) != expected:
         raise TranslationError(

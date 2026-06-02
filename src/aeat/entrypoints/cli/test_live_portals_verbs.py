@@ -15,7 +15,6 @@ from ._app_live import portals_app
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
 def test_portals_list_emits_every_registered_entry(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(portals_app, ["list"])
     assert result.exit_code == 0, result.output

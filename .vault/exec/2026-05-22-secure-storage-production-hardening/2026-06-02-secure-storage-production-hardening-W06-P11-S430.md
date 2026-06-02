@@ -38,5 +38,9 @@ Evidence:
 - `aeat config google sync probe --read-only` refused at the typed Google auth boundary with `no Google OAuth token persisted for profile '<profile-id>'; run `aeat config google login` first`.
 - A bounded background retry of `aeat config google login` was launched, but no session was persisted and no CLI output was emitted before cleanup.
 - Multiple stale `aeat config google login` processes were found from earlier attempts; only exact `config google login` processes were stopped to clear loopback listeners before continuing.
+- Final continuation rerun confirmed the command surface still only supports loopback browser login plus `--refresh-only`; no device-code or connector-token import path exists.
+- `aeat config google login` was attempted with the active profile and timed out after approximately 180 seconds without persisting a token.
+- Follow-up `aeat config google status` still reported `client_registered=True` and `session_present=False`.
+- The leftover `config google login` process family from that timed-out attempt was stopped by exact PID; unrelated concurrent pytest, docs, and live-app processes were left untouched.
 
 No Drive files were created, moved, or deleted while investigating this blocker.

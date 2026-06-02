@@ -478,7 +478,6 @@ def test_registry_modelo_349_has_no_bare_invoice_source_kind() -> None:
     kind was a pre-taxonomy conflation; this test pins the migrated
     state so a regression surfaces immediately at registry load."""
 
-
     modelo = resources().modelos.get("349")
 
     bare_invoice_bindings = []

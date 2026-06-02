@@ -43,7 +43,6 @@ def _isolate(tmp_path: Path) -> None:
     _ = tmp_path  # reserved for future per-test isolation hooks
 
 
-
 def test_config_profile_create_writes_profile_output_language(
     tmp_path: Path,
 ) -> None:
