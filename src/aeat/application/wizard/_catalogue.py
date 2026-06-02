@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
-from ...core.profile import SetupAnswers
 from ...core.profile_catalogue import register_wizard_catalogue
+from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines._models import (
     EntityType,
     FiscalResidency,

@@ -389,7 +389,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.profile.ProfileRegistrationError",
+        "aeat.core.setup_answers.ProfileRegistrationError",
         ErrorCode(
             code="INTERNAL_PROFILE_REGISTRATION",
             category=ErrorCategory.INTERNAL,
@@ -400,7 +400,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.core.profile.ProjectAnswersNotRegisteredError",
+        "aeat.core.setup_answers.ProjectAnswersNotRegisteredError",
         ErrorCode(
             code="INTERNAL_PROFILE_PROJECT_ANSWERS_NOT_REGISTERED",
             category=ErrorCategory.INTERNAL,

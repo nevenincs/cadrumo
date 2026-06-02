@@ -1,11 +1,11 @@
 """Real-behavior tests asserting canonical home and import purity for
-aeat.core.profile.SetupAnswers and the project_answers registration slot.
+aeat.core.setup_answers.SetupAnswers and the project_answers registration slot.
 
 These tests verify:
-- SetupAnswers is defined in aeat.core.profile (not aeat.application.wizard).
+- SetupAnswers is defined in aeat.core.setup_answers (not aeat.application.wizard).
 - aeat.application.wizard._setup_answers.SetupAnswers is the same class object.
 - aeat.domain.deadlines._profiles imports SetupAnswers and project_answers from
-  aeat.core.profile — no deferred upward application imports survive.
+  aeat.core.setup_answers — no deferred upward application imports survive.
 - The project_answers registration slot raises before registration and
   dispatches correctly after.
 - SetupAnswers field validation exercises real enum coercion (not mocks).
@@ -28,16 +28,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 
 def test_setup_answers_canonical_module() -> None:
-    """SetupAnswers.__module__ must be aeat.core.profile."""
-    from .profile import SetupAnswers
+    """SetupAnswers.__module__ must be aeat.core.setup_answers."""
+    from .setup_answers import SetupAnswers
 
-    assert SetupAnswers.__module__ == "aeat.core.profile", (
-        f"SetupAnswers is defined in {SetupAnswers.__module__!r}; expected 'aeat.core.profile'"
+    assert SetupAnswers.__module__ == "aeat.core.setup_answers", (
+        f"SetupAnswers is defined in {SetupAnswers.__module__!r}; expected 'aeat.core.setup_answers'"
     )
 
 
 def test_setup_answers_catalogue_uses_core_class() -> None:
-    """SETUP_FLOW.answers_model must be aeat.core.profile.SetupAnswers.
+    """SETUP_FLOW.answers_model must be aeat.core.setup_answers.SetupAnswers.
 
     The wizard catalogue is the authoritative binding between the flow descriptor
     and the typed-answers class.  It must reference the core class so that
@@ -46,10 +46,10 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     core class.
     """
     from ..application.wizard._catalogue import SETUP_FLOW
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     assert SETUP_FLOW.answers_model is SetupAnswers, (
-        f"SETUP_FLOW.answers_model is {SETUP_FLOW.answers_model!r}; expected aeat.core.profile.SetupAnswers"
+        f"SETUP_FLOW.answers_model is {SETUP_FLOW.answers_model!r}; expected aeat.core.setup_answers.SetupAnswers"
     )
 
 
@@ -59,15 +59,15 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
 
 
 def test_profiles_imports_setup_answers_from_core() -> None:
-    """aeat.domain.deadlines._profiles must import SetupAnswers from aeat.core.profile."""
+    """aeat.domain.deadlines._profiles must import SetupAnswers from aeat.core.setup_answers."""
     from ..domain.deadlines import _profiles as profiles_mod
 
     # SetupAnswers in the profiles module namespace should be the core class.
     sa = getattr(profiles_mod, "SetupAnswers", None)
     assert sa is not None, "_profiles module does not expose SetupAnswers"
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
-    assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not aeat.core.profile.SetupAnswers"
+    assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not aeat.core.setup_answers.SetupAnswers"
 
 
 def test_profiles_no_deferred_application_imports() -> None:
@@ -115,7 +115,7 @@ def test_project_answers_raises_before_registration() -> None:
     import textwrap
 
     script = textwrap.dedent("""\
-        from aeat.core.profile import get_project_answers, ProjectAnswersNotRegisteredError
+        from aeat.core.setup_answers import get_project_answers, ProjectAnswersNotRegisteredError
         raised = False
         try:
             get_project_answers()
@@ -139,7 +139,7 @@ def test_project_answers_registered_after_persistence_import() -> None:
     # Importing _persistence triggers the module-level registration call.
     importlib.import_module("aeat.application.wizard._persistence")
 
-    from .profile import _PROJECT_ANSWERS_SLOT, get_project_answers
+    from .setup_answers import _PROJECT_ANSWERS_SLOT, get_project_answers
 
     assert _PROJECT_ANSWERS_SLOT, "project_answers was not registered after _persistence import"
 
@@ -154,7 +154,7 @@ def test_project_answers_registered_after_persistence_import() -> None:
 
 def test_setup_answers_minimal_valid() -> None:
     """SetupAnswers accepts a minimal valid input without error."""
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     sa = SetupAnswers(tax_id="12345678A")
     assert sa.tax_id == "12345678A"
@@ -163,7 +163,7 @@ def test_setup_answers_minimal_valid() -> None:
 
 def test_setup_answers_iva_regime_string_coercion() -> None:
     """SetupAnswers coerces a string IVA regime token to the enum."""
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     sa = SetupAnswers(tax_id="12345678A", iva_regime="GENERAL")
     # iva_regime should be the enum member, not the raw string.
@@ -176,7 +176,7 @@ def test_setup_answers_invalid_iva_regime_raises() -> None:
     """SetupAnswers raises on an unrecognised IVA regime token."""
     import pydantic
 
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     with pytest.raises(pydantic.ValidationError):
         SetupAnswers(tax_id="12345678A", iva_regime="NOT_A_REGIME")
@@ -185,7 +185,7 @@ def test_setup_answers_invalid_iva_regime_raises() -> None:
 def test_setup_answers_entity_type_coercion() -> None:
     """SetupAnswers coerces a string entity type token to the enum."""
     from ..domain.deadlines._models import EntityType
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     sa = SetupAnswers(tax_id="12345678A", entity_type="natural_person")
     assert sa.entity_type == EntityType.NATURAL_PERSON
@@ -195,7 +195,7 @@ def test_setup_answers_invalid_date_raises() -> None:
     """SetupAnswers raises on a non-ISO activity_start_date."""
     import pydantic
 
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     with pytest.raises(pydantic.ValidationError):
         SetupAnswers(tax_id="12345678A", activity_start_date="31-12-2024")
@@ -203,7 +203,7 @@ def test_setup_answers_invalid_date_raises() -> None:
 
 def test_setup_answers_valid_date_accepted() -> None:
     """SetupAnswers accepts a valid ISO-8601 activity_start_date."""
-    from .profile import SetupAnswers
+    from .setup_answers import SetupAnswers
 
     sa = SetupAnswers(tax_id="12345678A", activity_start_date="2024-01-01")
     assert sa.activity_start_date == "2024-01-01"

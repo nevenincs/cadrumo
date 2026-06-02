@@ -13,7 +13,7 @@ from collections import deque
 
 import pytest
 
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines._models import LegalEntityForm
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardScriptOverflowError
