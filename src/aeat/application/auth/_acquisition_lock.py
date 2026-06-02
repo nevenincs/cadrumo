@@ -86,7 +86,10 @@ def inspect_auth_acquisition_lock(
     *,
     now: datetime | None = None,
 ) -> AuthAcquisitionLockStatus:
-    """Return the :class:`AuthAcquisitionLockStatus` describing the current acquisition-lock health without mutating it."""
+    """Describe the current acquisition-lock health without mutating it.
+
+    Returns an :class:`AuthAcquisitionLockStatus`.
+    """
     path = auth_acquisition_lock_path(settings, kind)
     reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     if not path.exists():
