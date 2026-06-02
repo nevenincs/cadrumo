@@ -8,6 +8,7 @@ files and real pdfplumber.
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -15,7 +16,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from . import parse_justificante
 from ....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -25,6 +25,7 @@ from ....domain.justificante import (
 )
 from ....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
+from . import parse_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -115,9 +116,31 @@ class TestParseJustificante:
         )
         assert record.modelo == "130"
 
-    def test_missing_file_raises(self) -> None:
-        with pytest.raises(JustificanteParseError, match="not found"):
-            parse_justificante(FIXTURES_DIR / "does_not_exist.pdf")
+    def test_missing_file_raises_redacted_error(self, tmp_path: Path) -> None:
+        source = tmp_path / "12345678Z-private-justificante.pdf"
+        with pytest.raises(JustificanteParseError, match="not found") as exc_info:
+            parse_justificante(source)
+
+        rendered = str(exc_info.value)
+        assert source.name not in rendered
+        assert str(source) not in rendered
+        assert "<input-pdf>" in rendered
+        assert exc_info.value.context == {"path": "<input-pdf>"}
+        assert exc_info.value.translated_message == "adapters.inbound.justificante.errors.parse_failed"
+        assert exc_info.value.missing == ("source_pdf",)
+
+    def test_parse_debug_log_redacts_pdf_path(
+        self,
+        modelo_130_pdf: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.justificante._parser"):
+            parse_justificante(modelo_130_pdf)
+
+        rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+        assert modelo_130_pdf.name not in rendered_logs
+        assert str(modelo_130_pdf) not in rendered_logs
+        assert "<input-pdf>" in rendered_logs
 
 
 def _real_corpus_pdfs() -> list[Path]:
@@ -256,8 +279,14 @@ class TestCsvDetection:
     ) -> None:
         target = tmp_path / "not_a_justificante.pdf"
         target.write_bytes(non_justificante_pdf_bytes)
-        with pytest.raises(JustificanteCsvNotFoundError):
+        with pytest.raises(JustificanteCsvNotFoundError) as exc_info:
             parse_justificante(target)
+        rendered = str(exc_info.value)
+        assert target.name not in rendered
+        assert str(target) not in rendered
+        assert "<input-pdf>" in rendered
+        assert exc_info.value.context == {"path": "<input-pdf>"}
+        assert exc_info.value.translated_message == "adapters.inbound.justificante.errors.parse_failed"
 
 
 class TestJustificanteParseErrorStructuredAttributes:
@@ -343,7 +372,7 @@ class TestJustificanteModel:
     def test_model_is_frozen(self, tmp_path: Path) -> None:
         record = self._build(tmp_path)
         with pytest.raises(ValidationError):
-            setattr(record, "csv", "OTHER")
+            record.csv = "OTHER"
 
     def test_extra_fields_rejected(self, tmp_path: Path) -> None:
         record = self._build(tmp_path)

@@ -129,6 +129,9 @@ adapters:
           errors:
             parse_failed: Could not parse the N26 PDF statement. The source path has
               been redacted from diagnostics.
+    justificante:
+      errors:
+        parse_failed: 'Could not parse the justificante PDF. The source path has been redacted from diagnostics.'
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have

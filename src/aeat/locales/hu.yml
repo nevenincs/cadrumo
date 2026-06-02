@@ -133,6 +133,9 @@ adapters:
           errors:
             parse_failed: Nem sikerült elemezni az N26 PDF-kivonatot. A forrás elérési
               útja ki lett takarva a diagnosztikából.
+    justificante:
+      errors:
+        parse_failed: 'Nem sikerült elemezni az igazolás PDF-et. A forrás elérési útja ki lett takarva a diagnosztikából.'
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a

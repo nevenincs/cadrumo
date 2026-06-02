@@ -20,6 +20,7 @@ from ._extract import extract_justificante
 from ._parsers import extract_text
 
 _logger = get_logger(__name__)
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def parse_justificante(
@@ -46,7 +47,12 @@ def parse_justificante(
     """
     pdf_path = Path(pdf_path)
     if not pdf_path.is_file():
-        raise JustificanteParseError(f"justificante PDF not found: {pdf_path}")
+        raise JustificanteParseError(
+            f"justificante PDF not found: {_INPUT_PDF_SOURCE_LABEL}",
+            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            translated_message="adapters.inbound.justificante.errors.parse_failed",
+            missing=("source_pdf",),
+        )
 
     resolved_backend = backend
     if resolved_backend is None:
@@ -58,6 +64,44 @@ def parse_justificante(
         settings = load_settings()
         resolved_backend = JustificanteParserBackend(settings.aeat_justificante_parser_backend.name)
 
-    _logger.debug("parsing justificante %s with backend %s", pdf_path, resolved_backend)
-    text = extract_text(pdf_path.resolve(), resolved_backend)
-    return extract_justificante(text, pdf_path.resolve())
+    _logger.debug("parse_justificante: source=<input-pdf> backend=%s", resolved_backend)
+    resolved_pdf_path = pdf_path.resolve()
+    try:
+        text = extract_text(resolved_pdf_path, resolved_backend)
+        return extract_justificante(text, resolved_pdf_path)
+    except JustificanteParseError as exc:
+        if _mentions_source_path(exc, pdf_path, resolved_pdf_path):
+            _logger.debug(
+                "parse_justificante: redacted path-bearing %s for source=<input-pdf>",
+                type(exc).__name__,
+            )
+            raise _redacted_parse_error(exc) from exc
+        raise
+
+
+def _mentions_source_path(
+    exc: JustificanteParseError,
+    original_path: Path,
+    resolved_path: Path,
+) -> bool:
+    """Return whether ``exc`` rendered a caller-controlled filesystem path."""
+    message = str(exc)
+    candidates = {
+        original_path.name,
+        str(original_path),
+        str(resolved_path),
+    }
+    return any(candidate and candidate in message for candidate in candidates)
+
+
+def _redacted_parse_error(exc: JustificanteParseError) -> JustificanteParseError:
+    """Return a redacted copy of ``exc`` preserving its structured attributes."""
+    return type(exc)(
+        f"justificante PDF parse failed: {_INPUT_PDF_SOURCE_LABEL}",
+        context={"path": _INPUT_PDF_SOURCE_LABEL},
+        translated_message="adapters.inbound.justificante.errors.parse_failed",
+        missing=exc.missing,
+        malformed=exc.malformed,
+        ambiguous=exc.ambiguous,
+        coverage=exc.coverage,
+    )
