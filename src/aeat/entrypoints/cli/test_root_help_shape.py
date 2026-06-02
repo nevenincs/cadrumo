@@ -41,9 +41,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
     env.update(
         {
             setting_env("aeat_secret_store_backend"): SecretStoreBackend.FILE.value,
-            setting_env("aeat_secret_passphrase"): (
-                base_settings.aeat_dev_test_database_password.get_secret_value()
-            ),
+            setting_env("aeat_secret_passphrase"): (base_settings.aeat_dev_test_database_password.get_secret_value()),
             setting_env("aeat_local_storage_root"): str(tmp_path / "storage"),
             setting_env("aeat_token_dir"): str(tmp_path / "tokens"),
             setting_env("aeat_runs_dir"): str(tmp_path / "runs"),
