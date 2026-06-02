@@ -252,22 +252,23 @@ class AuthProvidersResult(OutputSchema):
 class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
-    Field set mirrors :class:`AuthConfigureReport` from the application layer.
-    All optional fields accommodate conditional display branches (e.g.
-    clave_movil identity alignment fields).
+    Field set mirrors :class:`AuthConfigureResult` from the application layer,
+    whose fields are non-nullable with empty/false defaults; this envelope
+    reconciles to the same nullability (DB-26 S50). ``status`` is the one
+    CLI-only display field with no application counterpart.
     """
 
     provider: str
     file: str
     status: str | None = None
     complete: bool
-    incomplete_reason: str | None = None
-    active_profile: str | None = None
-    profile_tax_id_present: bool | None = None
-    provider_identity_present: bool | None = None
-    identity_alignment: str | None = None
-    identity_alignment_detail: str | None = None
-    next_action: str | None = None
+    incomplete_reason: str = ""
+    active_profile: str = ""
+    profile_tax_id_present: bool = False
+    provider_identity_present: bool = False
+    identity_alignment: str = ""
+    identity_alignment_detail: str = ""
+    next_action: str = ""
 
     @classmethod
     def from_result(cls, result: AuthConfigureResult) -> AuthConfigurePayload:
