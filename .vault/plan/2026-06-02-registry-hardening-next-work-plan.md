@@ -33,7 +33,7 @@ Make the existing file-size and row-size gate boring by splitting near-threshold
 Plan the next registry-hardening substrate after continuity conformance reached
 100 percent completion.
 
-- [ ] `P01.S01` - Audit current TOML fragment and row-size headroom; `.vault/audit`.
+- [x] `P01.S01` - Audit current TOML fragment and row-size headroom; `.vault/audit`.
 - [ ] `P01.S02` - Split M100 2024 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024`.
 - [ ] `P01.S03` - Split M100 2023 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2023`.
 - [ ] `P01.S04` - Split M100 2022 completeness manifest into fragments; `src/aeat/_data/registry/aeat/modelos/100/revisions/2022`.
@@ -74,6 +74,7 @@ Treat every large registry production module as an explicit refactor target, wit
 - [ ] `P04.S24` - Assess workbook parity extraction boundaries; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
 - [ ] `P04.S25` - Assess formula runtime extraction boundaries; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `P04.S26` - Audit oversized registry test module decomposition; `src/aeat/domain/calculations/registry`.
+- [ ] `P04.S27` - Audit M123 revision file for directory-mode fragmentation need; `src/aeat/_data/registry/aeat/modelos/123`.
 
 ## Description
 
