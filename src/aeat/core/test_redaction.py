@@ -31,6 +31,7 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
         " ".join(
             (
                 f"profile_id={_PROFILE_ID}",
+                "active_profile=operator",
                 "bucket_id=bucket-alpha",
                 f"nif={_NIF}",
                 f"bearer {_JWT}",
@@ -46,6 +47,7 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
     assert _URL not in rendered
     assert _OBJECT_KEY not in rendered
     assert f"profile_id={CLI_PROFILE_ID_PLACEHOLDER}" in rendered
+    assert "active_profile=operator" in rendered
     assert f"bucket_id={CLI_BUCKET_ID_PLACEHOLDER}" in rendered
     assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered
     assert "https://example.test" in rendered
@@ -61,6 +63,7 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
         "bucket_id": "bucket-alpha",
         "object_key": _OBJECT_KEY,
         "label": "operator",
+        "display": {"active_profile": "operator"},
         "nested": {
             _PROFILE_ID: "profile keyed",
             _NIF: "tax keyed",
@@ -83,6 +86,7 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
         "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
         "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
         "label": "operator",
+        "display": {"active_profile": "operator"},
         "nested": {
             CLI_PROFILE_ID_PLACEHOLDER: "profile keyed",
             "sha256:1c9f9632": "tax keyed",

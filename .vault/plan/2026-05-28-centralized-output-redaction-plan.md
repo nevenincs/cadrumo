@@ -137,7 +137,7 @@ Add operator-facing canary tests across text and JSON output.
 
 - [x] `W03.P09.S49` - extend repair privacy coverage to assert central redaction rather than local helper behavior; `src/aeat/entrypoints/cli/test_repair_privacy_contract.py`.
 - [x] `W03.P09.S50` - add a command-output canary matrix for profile id, bucket id, tax id, URL, token, and object key; `src/aeat/entrypoints/cli/test_output_redaction_contract.py`.
-- [ ] `W03.P09.S51` - update apex workflow output tests where raw ids become placeholders or digests; `src/aeat/entrypoints/cli/test_apex_workflow_verification.py`.
+- [x] `W03.P09.S51` - update workflow-verification output tests where raw ids become placeholders or digests; `src/aeat/entrypoints/cli/test_cli_workflow_verification.py`.
 - [ ] `W03.P09.S52` - update CLI surface tests where raw ids become placeholders or digests; `src/aeat/entrypoints/cli/test_cli_surface.py`.
 - [ ] `W03.P09.S53` - update workflow surface tests where raw ids become placeholders or digests; `src/aeat/entrypoints/cli/test_workflow_surface.py`.
 - [ ] `W03.P09.S54` - update profile lifecycle tests where raw ids become placeholders or digests; `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`.
