@@ -235,9 +235,7 @@ class TestRunSinkScrubbing:
             with run_context(entrypoint="aeat test scrub nif", arguments=()) as info:
                 record_event(
                     RunEventKind.ASSERTION,
-                    payload=RunEventPayload(
-                        generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
-                    ),
+                    payload=RunEventPayload(generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))),
                 )
                 run_id = info.run_id
 
@@ -282,9 +280,7 @@ class TestRunSinkScrubbing:
             with run_context(entrypoint="aeat test scrub json", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,
-                    payload=RunEventPayload(
-                        generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
-                    ),
+                    payload=RunEventPayload(generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))),
                 )
                 run_id = info.run_id
 
