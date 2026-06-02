@@ -24,7 +24,6 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
 from ......core.money import round_to_cents as _round_to_cents
-
 from .._errors import AeatExportFormatError
 from ._record_spec import (
     DateFmt,

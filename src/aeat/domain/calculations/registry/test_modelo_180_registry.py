@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -17,8 +16,9 @@ from . import (
     build_snapshot,
     calculate_registry_snapshot,
     load_registry_tree,
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
 )
-from . import relation_source_requirements, resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

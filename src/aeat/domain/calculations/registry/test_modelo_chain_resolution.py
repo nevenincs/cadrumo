@@ -7,7 +7,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._loader import load_registry_tree
 from ._relations import resolve_relation_values_from_observations

@@ -14,9 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from .....tests import FIXTURES_DIR
-
 from .....domain.transactions import RawTransaction, SourceFormat
+from .....tests import FIXTURES_DIR
 from .. import (
     BankStatementParseError,
     ProviderValidation,

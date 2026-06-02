@@ -57,9 +57,9 @@ from ...domain.calculations.registry import (
     resolve_bound_casilla_inputs,
 )
 from ...tests.secure_sql import isolated_runtime_profile
+from ._binding_prefill import resolve_bindings_from_local_store
 from ._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ._observations_repository import CalculationObservationRepository
-from ._binding_prefill import resolve_bindings_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -10,7 +10,6 @@ from __future__ import annotations
 import pytest
 
 from .....tests import FIXTURES_DIR
-
 from ._notifications import (
     parse_notifications_query,
     parse_notifications_summary,

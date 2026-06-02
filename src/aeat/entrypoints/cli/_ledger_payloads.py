@@ -22,9 +22,9 @@ from typing import TYPE_CHECKING
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
+    from ...application.inventory._service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
     from ...application.ledger._models import LedgerExportResult as _AppLedgerExportResult
     from ...application.ledger._models import LedgerSourceImportResult as _AppLedgerSourceImportResult
-    from ...application.inventory._service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)

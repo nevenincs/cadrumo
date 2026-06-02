@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._filed_state import compare_calculation_to_filed_observation

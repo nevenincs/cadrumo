@@ -34,12 +34,11 @@ from typing import TYPE_CHECKING, Final, Literal
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
-from .....core.time import now
-
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.parsing._dates import _parse_date
+from .....core.time import now
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session

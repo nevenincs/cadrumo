@@ -13,13 +13,12 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import load_external_constants
+from ...core.time import now
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace

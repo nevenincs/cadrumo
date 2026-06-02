@@ -39,7 +39,6 @@ from pathlib import Path
 import pytest
 
 from ......core.external_constants import LATIN_1_ENCODING
-
 from .._errors import AeatExportFormatError
 from ._deserialise import deserialise
 from ._record_spec import (

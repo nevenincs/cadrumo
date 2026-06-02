@@ -11,7 +11,6 @@ from __future__ import annotations
 import pytest
 
 from .....core.config import load_settings
-
 from ._browser_constants import default_viewport, selector_probe_timeout_ms
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]

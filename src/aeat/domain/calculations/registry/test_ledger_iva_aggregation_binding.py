@@ -16,6 +16,11 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import resources
+from ...iva import (
+    IvaCategory,
+    IvaFlowDirection,
+    IvaRateKind,
+)
 from . import (
     CasillaObservation,
     DataBindingDefinition,
@@ -30,11 +35,6 @@ from . import (
     resolve_previous_filing_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
-)
-from ...iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    IvaRateKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

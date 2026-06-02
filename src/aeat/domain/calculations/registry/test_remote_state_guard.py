@@ -6,7 +6,6 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from ....core.resources import bundled_path
-
 from . import build_snapshot, load_registry_tree
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._remote_state_guard import (

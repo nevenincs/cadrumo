@@ -6,7 +6,6 @@ import pytest
 
 from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
-
 from . import build_snapshot, discover_modelo_sources, load_registry_tree
 from ._coverage import build_model_law_coverage_ledger
 from ._errors import RegistrySnapshotError

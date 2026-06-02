@@ -14,7 +14,6 @@ from functools import lru_cache
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from ...core.aggregation import AggregationSourceKind
-
 from ...core.logging import get_logger
 from ._counterpart import (
     CounterpartAggregation,

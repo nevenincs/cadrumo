@@ -16,10 +16,6 @@ from decimal import Decimal
 
 import pytest
 
-from ._maritime_exemption_service import (
-    MaritimeExemptionResult,
-    resolve_maritime_exemption,
-)
 from ...domain.renta._errors import RentaValidationError
 from ...domain.renta._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
@@ -27,6 +23,10 @@ from ...domain.renta._maritime_exemption import (
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
+)
+from ._maritime_exemption_service import (
+    MaritimeExemptionResult,
+    resolve_maritime_exemption,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

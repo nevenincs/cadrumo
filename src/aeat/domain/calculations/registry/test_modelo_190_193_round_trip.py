@@ -33,7 +33,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._formula_runtime import calculate_registry_snapshot
 from ._loader import load_registry_tree
 from ._snapshot import build_snapshot

@@ -23,8 +23,8 @@ from ...application.review import LedgerReviewFilterKey
 from ...core.paths import PROJECT_ROOT
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import discover_modelo_sources
-from . import _ledger
 from ...tests.cli_runner import invoke_cached_cli
+from . import _ledger
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

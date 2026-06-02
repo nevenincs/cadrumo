@@ -25,13 +25,13 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ..user_profile._orchestration import ProfileAlreadyRegisteredError
-from ._catalogue import SETUP_FLOW
-from ._commands import _run_full_flow
 from ...core._bucket_pointer_io import read_pointer
 from ...core.config import SecretStoreBackend, load_settings, override_settings
 from ...domain.user_profile import new_profile_id
 from ...tests.secure_sql import dev_test_database_password
+from ..user_profile._orchestration import ProfileAlreadyRegisteredError
+from ._catalogue import SETUP_FLOW
+from ._commands import _run_full_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

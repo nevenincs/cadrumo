@@ -15,7 +15,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import RegistryValidationError, read_parameter
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

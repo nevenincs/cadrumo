@@ -15,17 +15,17 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import SecretStoreBackend, override_settings
+from ...tests.secure_sql import dev_test_database_password
 from ..user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ..user_profile._testing import register_minimal_profile
+from ..workflow._models import WorkflowState
 from ._status import (
     WizardStatusError,
     WizardStatusReport,
     build_wizard_status,
     load_active_taxpayer_profile,
 )
-from ..workflow._models import WorkflowState
-from ...core.config import SecretStoreBackend, override_settings
-from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

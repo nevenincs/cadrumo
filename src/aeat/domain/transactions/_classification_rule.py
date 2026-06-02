@@ -16,9 +16,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.time import now
-
 from ...core.logging import get_logger
+from ...core.time import now
 from ._enums import BusinessClassification
 from ._errors import ClassificationRuleError
 

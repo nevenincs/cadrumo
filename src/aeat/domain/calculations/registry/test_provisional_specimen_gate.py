@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import RegistryCatalogues, RegistryValidationError
 from ._loader import load_registry_tree
 from ._schema import ExtractionProfileDefinition, ModeloDefinition

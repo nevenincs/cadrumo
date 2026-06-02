@@ -12,7 +12,6 @@ from __future__ import annotations
 import pytest
 
 from .....core.i18n import tr
-
 from ._declarations import _parse_listbox
 from ._errors import SedeNavigationError, SedeParseError
 

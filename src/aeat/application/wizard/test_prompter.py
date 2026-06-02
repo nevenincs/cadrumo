@@ -8,13 +8,13 @@ from collections import deque
 
 import pytest
 
+from ...core.i18n import Translatable as tr
 from ._errors import (
     WizardScriptOverflowError,
     WizardScriptUnderflowError,
 )
 from ._models import WizardQuestion, WizardWidget
 from ._prompter import Prompter, ScriptedPrompter
-from ...core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

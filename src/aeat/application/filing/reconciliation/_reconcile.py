@@ -23,10 +23,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Protocol
 
-from ....core.time import now as _utc_now
-
 from ....core.decimal import format_decimal
 from ....core.logging import get_logger
+from ....core.time import now as _utc_now
 from ....domain.filing import ModeloBuilderError
 from ._kind import ModeloDivergenceKind
 from ._schema import (

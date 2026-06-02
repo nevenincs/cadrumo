@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import StorageValidationError
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..categories import SpendingCategory
 from . import (
     UsageRatioPersistenceError,
@@ -25,7 +26,6 @@ from . import (
     save_usage_ratios,
     usage_ratios_object_key,
 )
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

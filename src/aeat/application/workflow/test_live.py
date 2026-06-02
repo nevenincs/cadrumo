@@ -18,8 +18,8 @@ from datetime import date
 
 import pytest
 
-from . import WorkflowError, default_engine
 from ...tests.live_gate import requires_live_enabled
+from . import WorkflowError, default_engine
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 

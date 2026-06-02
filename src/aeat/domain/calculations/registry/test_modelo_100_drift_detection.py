@@ -23,7 +23,6 @@ import pytest
 
 from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
-
 from . import load_registry_tree
 from ._runtime_graph import expression_binding_refs, expression_parameter_refs
 

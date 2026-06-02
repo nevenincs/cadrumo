@@ -125,7 +125,6 @@ from ....domain.calculations.registry import (
     resolve_relation_values_from_observations,
 )
 from ....tests import FIXTURES_DIR
-
 from . import DeclaracionParseError, parse_declaracion
 
 pytestmark = [

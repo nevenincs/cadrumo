@@ -17,12 +17,12 @@ from pydantic import SecretStr
 from typer.testing import CliRunner
 
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ._catalogue import SETUP_FLOW
-from ._commands import build_wizard_command
-from ._persistence import WizardPersistMode
 from ...core.config import SecretStoreBackend, override_settings
 from ...core.i18n import tr
 from ...tests.secure_sql import dev_test_database_password
+from ._catalogue import SETUP_FLOW
+from ._commands import build_wizard_command
+from ._persistence import WizardPersistMode
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

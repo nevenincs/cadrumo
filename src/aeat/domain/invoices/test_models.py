@@ -153,13 +153,13 @@ def test_invoice_iva_classification_for_line_returns_substrate_typed_record() ->
     substrate-grounded triple (IvaCategory + IvaRateKind +
     IvaFlowDirection) bundled in IvaInvoiceClassification — the typed
     record downstream filing surfaces consume."""
-    from . import IvaInvoiceClassification
     from ..iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,
         IvaSettlementSide,
     )
+    from . import IvaInvoiceClassification
 
     line = _valid_line(iva_rate=IvaRate.RATE_21)
     invoice = _valid_invoice(lines=(line,))
@@ -271,8 +271,8 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     numeric slot is resolved against :func:`aeat.domain.iva.lookup_rate`
     for Spain at a given date.
     """
-    from ._enums import iva_rate_percentage
     from ..iva import EUMemberState, IvaRateKind, lookup_rate
+    from ._enums import iva_rate_percentage
 
     sample_date = date(2025, 6, 15)
 

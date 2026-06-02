@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path, resources
-
 from . import RegistrySnapshotError, ValidatedRegistryAuthority, calculate_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

@@ -24,11 +24,11 @@ from pathlib import Path
 
 import pytest
 
+from .....core.i18n import tr
 from ..auth._authenticator import AeatSession, CertificateSessionDetail, HandshakeResult
 from ..auth._providers import AuthProviderKind
 from ._auth_state import storage_state_for_session
 from ._errors import SedeNavigationError
-from .....core.i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

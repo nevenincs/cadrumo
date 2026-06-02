@@ -12,7 +12,6 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import bundled_path, resources
-
 from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._live_parity import (
     LiveParityCatalogue,

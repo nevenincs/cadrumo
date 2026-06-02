@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import pytest
 
+from .....tests.live_gate import requires_live_enabled
 from ._declarations import Declaracion, capture_declaration, walk_declarations_register
 from ._errors import SedeError
 from ._schema import SedeCapture
-from .....tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

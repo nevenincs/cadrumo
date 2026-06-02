@@ -40,7 +40,6 @@ import pytest
 
 from ......core.resources import resources
 from ......domain.calculations.registry import ValidatedRegistryAuthority
-
 from . import RecordFieldSpec, validate_record_specs
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]

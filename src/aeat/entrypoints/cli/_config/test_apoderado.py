@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app as root_app
 from .._errors import CliRefusedBoundaryError
@@ -25,12 +24,8 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     Each profile bucket resolves its own SQLite file from the
     active-profile pointer chain — the production cold-start path.
     """
-    dispose_engine()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        try:
-            yield storage_root
-        finally:
-            dispose_engine()
+        yield storage_root
 
 
 def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:

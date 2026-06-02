@@ -9,11 +9,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ...core.resources import resources
-
 from ...core.config import override_settings
 from ...core.errors import build_error_envelope
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ...core.resources import resources
 from ...core.topics import Topic, TopicCatalogue
 from ...domain.manuals import ManualId, ManualPart
 from ...domain.normatives import NormativeNotFoundError

@@ -7,7 +7,6 @@ from datetime import date
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import load_registry_tree
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from ._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts

@@ -16,8 +16,8 @@ def _isolated_workflow(tmp_path: Path) -> Iterator[None]:
     """Isolate workflow state behind a real active profile custody span."""
 
     from ..adapters.persistence.storage.sql import dispose_engine
-    from .user_profile._orchestration import profile_create_storage_span
     from ..tests.secure_sql import isolated_profile_storage_root
+    from .user_profile._orchestration import profile_create_storage_span
 
     dispose_engine()
     with (

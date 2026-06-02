@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core.i18n import Translatable as tr
 from ._errors import WizardValidationError
 from ._models import (
     WizardChoice,
@@ -22,7 +23,6 @@ from ._models import (
     WizardWidget,
 )
 from ._widgets import validate_widget_answer
-from ...core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

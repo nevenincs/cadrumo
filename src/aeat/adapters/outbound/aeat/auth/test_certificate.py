@@ -20,7 +20,6 @@ from pydantic import SecretStr
 
 from .....core.config import CertificateBackend
 from .....tests.env_scope import isolated_aeat_env
-
 from . import (
     CertificateBundle,
     CertificateExpiredError,

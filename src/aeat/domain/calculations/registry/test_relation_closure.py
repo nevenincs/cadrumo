@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._loader import load_modelo_directory, load_registry_tree

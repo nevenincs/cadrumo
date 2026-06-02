@@ -26,7 +26,6 @@ from collections.abc import Iterator
 import pytest
 
 from ....core.resources import resources
-
 from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ._live_parity import (
