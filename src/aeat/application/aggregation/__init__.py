@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...core.aggregation import RetencionScheme
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -83,7 +84,6 @@ from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
     RetencionPerceptorRollup,
-    RetencionScheme,
     aggregate_retenciones_111,
     aggregate_retenciones_115,
     aggregate_retenciones_123,
