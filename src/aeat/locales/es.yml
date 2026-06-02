@@ -145,6 +145,9 @@ adapters:
     justificante:
       errors:
         parse_failed: 'No se pudo analizar el PDF del justificante. La ruta de origen se ha ocultado en los diagnósticos.'
+    pdf:
+      errors:
+        hash_failed: 'No se pudo calcular la huella del PDF.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión

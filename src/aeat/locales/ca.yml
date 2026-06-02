@@ -142,6 +142,9 @@ adapters:
     justificante:
       errors:
         parse_failed: 'No s''ha pogut analitzar el PDF del justificant. La ruta d''origen s''ha ocultat als diagnòstics.'
+    pdf:
+      errors:
+        hash_failed: 'No s''ha pogut calcular l''empremta del PDF.'
   sede:
     errors:
       cotejo_nav_failed: La navegació a la pàgina de cotejo d'AEAT ha fallat; la sessió
