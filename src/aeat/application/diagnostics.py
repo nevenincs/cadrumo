@@ -203,10 +203,10 @@ def _ensure_models_rebuilt() -> None:
     global _models_rebuilt
     if _models_rebuilt:
         return
-    from ..adapters.persistence.storage.sql.secure_objects import (  # noqa: F401
+    from ..adapters.persistence.storage.sql.secure_objects import (
         SecureObjectNamespaceIntegrity,
     )
-    from .wizard._status import WizardStatusReport  # noqa: F401
+    from .wizard._status import WizardStatusReport
 
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})

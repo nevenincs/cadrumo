@@ -42,7 +42,7 @@ def _sample_code(code: str) -> ErrorCode:
 def test_error_code_model_is_frozen() -> None:
     code = _sample_code("ERROR_TEST_SAMPLE")
     with pytest.raises((ValidationError, TypeError), match=r"frozen|Instance is frozen|attribute"):
-        setattr(code, "code", "ERROR_TEST_MUTATED")  # noqa: B010 — exercise frozen-model __setattr__
+        setattr(code, "code", "ERROR_TEST_MUTATED")
 
 
 def test_duplicate_registration_raises_clear_error() -> None:

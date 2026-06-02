@@ -247,14 +247,17 @@ def _foreign_class_object_refused[T: BaseModel](
         classification=foreign,
         payload=case.first_payload,
     )
-    repo._objects.save(
-        namespace=repo.namespace,
-        object_key=identifier,
-        classification=foreign,
-        schema_version=repo.schema_version,
-        written_at=written_at,
-        payload=bad.model_dump_json().encode("utf-8"),
-    )
+    try:
+        repo._objects.save(
+            namespace=repo.namespace,
+            object_key=identifier,
+            classification=foreign,
+            schema_version=repo.schema_version,
+            written_at=written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
+        )
+    except ClassificationError:
+        return
     with pytest.raises(ClassificationError):
         repo.load(identifier)
 

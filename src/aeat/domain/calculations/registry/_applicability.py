@@ -1,4 +1,3 @@
-# ruff: noqa: S105
 """Registry-grounded modelo-applicability derivation from the taxpayer model.
 
 The overview surfaces (``explain`` / ``calendar`` / ``agenda`` /

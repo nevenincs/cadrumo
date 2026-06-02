@@ -99,7 +99,7 @@ from ....application.storage.calc_sheets import (
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
-from ....domain import renta as _renta_snapshot_checks  # noqa: F401
+from ....domain import renta as _renta_snapshot_checks
 from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,

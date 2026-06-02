@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl
 
-from ... import renta as _renta_snapshot_checks  # noqa: F401
+from ... import renta as _renta_snapshot_checks
 from ....core.resources import bundled_path
 from ...profile import PROFILE_KEYS, TaxResidenceProfile
 from ...profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile

@@ -81,7 +81,7 @@ class TestArticulo:
     def test_frozen(self) -> None:
         articulo = _articulo()
         with pytest.raises(ValidationError, match=r"frozen"):
-            setattr(articulo, "notes", "mutated")  # noqa: B010 — exercise frozen-model __setattr__
+            setattr(articulo, "notes", "mutated")
 
 
 class TestNormativeReference:

@@ -242,6 +242,21 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "sidecar_path.write_text",
     ): "local-filesystem storage adapter writes the non-sensitive object-metadata sidecar",
     (
+        "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
+        "_observed_casillas_from_declaration_pdf",
+        "tempfile.NamedTemporaryFile",
+    ): "short-lived declaration-PDF parser bridge for bbox extraction; file is unlinked immediately after parsing",
+    (
+        "src/aeat/apidocs/manager.py",
+        "scaffold",
+        "write_text",
+    ): "API documentation stub generation",
+    (
+        "src/aeat/entrypoints/cli/_doc_reference.py",
+        "generate_cli_reference",
+        "write_text",
+    ): "CLI reference documentation page generation",
+    (
         "src/aeat/domain/calculations/registry/_workbook_parity.py",
         "_converted_binary_xls_path",
         "cached_path.write_bytes",
@@ -266,6 +281,16 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_save",
         "path.write_text",
     ): "per-bucket business-operation-invoice record store; typed pydantic JSONL in the bucket directory",
+    (
+        "src/aeat/tests/fixtures/borrador/_generate.py",
+        "generate_corpus",
+        "out_path.write_bytes",
+    ): "synthetic fixture generator writes generated PDF corpus artefacts",
+    (
+        "src/aeat/tests/fixtures/justificantes/_generate.py",
+        "_write_sidecar",
+        "sidecar_path.write_text",
+    ): "synthetic fixture generator writes sanitiser-manifest sidecars",
 }
 
 

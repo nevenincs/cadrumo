@@ -26,7 +26,7 @@ from ...core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
-from . import (  # noqa: F401  (side-effect import)
+from . import (
     _app_live_payloads,
     _config_payloads,
     _ledger_payloads,
@@ -37,7 +37,7 @@ from . import (  # noqa: F401  (side-effect import)
     _review_payloads,
     _root_payloads,
 )
-from ._config import _google_payloads, _profile_censo_payloads  # noqa: F401
+from ._config import _google_payloads, _profile_censo_payloads
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

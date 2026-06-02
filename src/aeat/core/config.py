@@ -58,9 +58,9 @@ class SecretStoreBackend(StrEnum):
 # Project root: four levels up from src/aeat/core/config.py
 # (file → core/ → aeat/ → src/ → REPO_ROOT).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"  # noqa: S105 - published dev/test-only value.
+DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
-DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"  # noqa: S105 - env var name, not a secret.
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
 
 

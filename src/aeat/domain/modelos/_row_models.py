@@ -32,7 +32,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
-from ...core.external_constants import M347_THRESHOLD_EUR
+from ...core.external_constants import M347_THRESHOLD_EUR as M347_THRESHOLD_EUR  # re-export
 
 # ---------------------------------------------------------------------------
 # Shared type aliases

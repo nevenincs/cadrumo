@@ -83,7 +83,7 @@ log = get_logger(__name__)
 
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
-_CERT_PASSWORD_SECRET_ENV: Final[str] = "AEAT_CERTIFICATE_PASSWORD_SECRET"  # noqa: S105
+_CERT_PASSWORD_SECRET_ENV: Final[str] = "AEAT_CERTIFICATE_PASSWORD_SECRET"
 
 
 AEAT_SESSION_IDLE_TTL: Final[timedelta] = timedelta(minutes=18)

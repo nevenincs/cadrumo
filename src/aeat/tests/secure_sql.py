@@ -110,7 +110,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     with override_settings(
         aeat_local_storage_root=storage_root,
         aeat_active_profile=None,
-        aeat_secret_store_backend="file",  # noqa: S106
+        aeat_secret_store_backend="file",
         aeat_secret_store_dir=secret_store_dir,
         aeat_secret_passphrase=passphrase,
     ) as settings:

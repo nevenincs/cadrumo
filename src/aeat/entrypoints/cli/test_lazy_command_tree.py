@@ -64,7 +64,7 @@ _FORBIDDEN_COMMAND_MODULES = (
 def _run_python(code: str) -> subprocess.CompletedProcess[str]:
     """Execute ``code`` in a fresh interpreter and return the result."""
 
-    return subprocess.run(  # noqa: S603 - trusted: own interpreter, literal test code
+    return subprocess.run(
         [sys.executable, "-c", textwrap.dedent(code)],
         capture_output=True,
         text=True,

@@ -894,7 +894,7 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloIvaWalletReconciliationBlocked(ModeloError):  # noqa: N818
+class ModeloIvaWalletReconciliationBlocked(ModeloError):
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
 
