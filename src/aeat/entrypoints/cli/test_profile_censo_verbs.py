@@ -17,11 +17,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.live._censo import CensoSnapshotService
 from ...application.user_profile._orchestration import profile_create_storage_span
-from ._config import profile_app
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._config import profile_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -31,15 +30,11 @@ _G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("default"),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 def _seed_active_profile() -> None:
