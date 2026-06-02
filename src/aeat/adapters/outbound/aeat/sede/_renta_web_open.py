@@ -75,9 +75,7 @@ class RentaWebOpenSedeDriver:
         ]
         for casilla_number in sorted(live_payload.casilla_overrides):
             operations.append(RemoteOperation(kind="browser_action", action=f"navigate-to-casilla:{casilla_number}"))
-            operations.append(
-                RemoteOperation(kind="browser_action", action=f"apply-casilla-override:{casilla_number}")
-            )
+            operations.append(RemoteOperation(kind="browser_action", action=f"apply-casilla-override:{casilla_number}"))
         if live_payload.casilla_overrides:
             operations.append(RemoteOperation(kind="browser_action", action="navigate-to-resumen"))
         for label in sorted(expected):
