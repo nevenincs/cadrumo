@@ -23,7 +23,15 @@ _DOCS = _REPO_ROOT / "docs"
 
 
 def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
-    """The nitpicky, warnings-as-errors HTML build must succeed.
+    """The nitpicky, warnings-as-errors build must succeed.
+
+    Uses the ``dummy`` builder, not ``html``: the gate only asserts that the
+    full parse and cross-reference resolution (where ``-n`` nitpicky warnings
+    fire) raise no warnings under ``-W``; it does not need rendered HTML, so the
+    write phase is skipped. ``-j auto`` parallelises the autodoc read across
+    every core, since the cost is dominated by importing and introspecting the
+    several-hundred ``automodule`` stubs. Together these cut the build from tens
+    of minutes to a fraction without weakening the check.
 
     Args:
         tmp_path: Pytest-provided isolated output directory.
@@ -35,11 +43,13 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
             "-m",
             "sphinx",
             "-b",
-            "html",
+            "dummy",
             "-n",
             "-W",
+            "-j",
+            "auto",
             str(_DOCS),
-            str(tmp_path / "html"),
+            str(tmp_path / "out"),
         ],
         cwd=_REPO_ROOT,
         capture_output=True,
