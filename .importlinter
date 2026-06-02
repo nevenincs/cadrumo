@@ -40,6 +40,11 @@ ignore_imports =
     aeat.domain.calculations.registry.test_minimo_contribuyente_age_increment -> aeat.domain.renta
     aeat.domain.calculations.registry.test_modelo_100_registry -> aeat.domain.renta
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
+    # W09.S90: parity-scenario test consumers trigger the renta first-slice
+    # registration directly (relocated out of the production _scenarios harness)
+    aeat.domain.calculations.registry.test_registry_scenarios -> aeat.domain.renta
+    aeat.domain.calculations.registry.test_reduccion_art_84_conjunta -> aeat.domain.renta
+    aeat.domain.calculations.registry.test_renta_chain_behaviour -> aeat.domain.renta
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
 
 # ── S21: Domain must not import application ───────────────────────────────────
