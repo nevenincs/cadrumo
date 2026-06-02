@@ -20,11 +20,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ....core.time import now
-
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.i18n import tr
+from ....core.time import now
 from ....domain.user_profile import ProfileNotFoundError
 from ._errors import (
     GoogleAuthBrowserOpenError,
