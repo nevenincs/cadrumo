@@ -1,0 +1,30 @@
+# Multi-year-renta modelo authorization manifest.
+#
+# This file is the SINGLE SOURCE OF TRUTH for which modelo calculation
+# backends are authorized as functional. It is governed by the
+# `modelo-multiyear-renta` ADR.
+#
+# DEFAULT-DENY-BY-ABSENCE. A modelo is UNAUTHORIZED unless it appears
+# below. This file currently authorizes ZERO modelos: every entry is
+# added only by the enrolling end-to-end persona test that proves the
+# modelo's backend across at least two distinct renta (annual) years.
+# The per-revision capability the runtime consults is DERIVED from this
+# manifest at the registry boundary -- never authored independently --
+# so the two cannot drift.
+#
+# To enroll a modelo, append one array-of-tables entry:
+#
+#   [[modelo]]
+#   modelo = "130"                         # the modelo id
+#   renta_years = [2025, 2026]             # >= 2 DISTINCT renta years (enforced)
+#   evidence_class = "calculation"         # calculation | reconciliation
+#                                          #   | data_fidelity | threshold_continuity
+#   enrolling_test = "src/aeat/application/calculations/test_modelo_130_carry_forward_continuity.py"
+#
+# The CI meta-test (`test_modelo_authorization_gate.py`) cross-checks
+# every entry: the enrolling test must exist, and the year-set its
+# recorder observes must equal `renta_years` and span >= 2 distinct
+# years. A fake, single-year, or stub enrollment turns the gate RED.
+#
+# Do NOT enroll a modelo here by hand without its enrolling test landing
+# in the same commit; the manifest is a claim the test must verify.
