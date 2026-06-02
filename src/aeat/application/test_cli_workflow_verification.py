@@ -7,20 +7,19 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage.sql import dispose_engine
+from ..tests.secure_sql import isolated_profile_storage_root
 from .auth import clear_operator_auth, configure_operator_auth
 from .operator_surface import require_accepted_root, retired_surface_suggestion
 from .operator_surface._errors import OperatorSurfaceContractError
 from .user_profile._orchestration import profile_create_storage_span
 from .user_profile._testing import register_minimal_profile
 from .workflow import workflow_state_repository
-from ..tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _isolated_workflow_backend(tmp_path: Path):
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),

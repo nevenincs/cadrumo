@@ -28,15 +28,17 @@ _NIF_ADAPTER: TypeAdapter[str] = TypeAdapter(NifString)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
-        "id": "nif_test_casilla",
-        "number": "01",
-        "label": "NIF declarante",
-        "section": ("identificacion",),
-        "data_type": data_type,
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual-nif",),
-    })
+    return CasillaDefinition.model_validate(
+        {
+            "id": "nif_test_casilla",
+            "number": "01",
+            "label": "NIF declarante",
+            "section": ("identificacion",),
+            "data_type": data_type,
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual-nif",),
+        }
+    )
 
 
 class TestNifStringAccepts:

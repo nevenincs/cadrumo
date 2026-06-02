@@ -18,15 +18,14 @@ from __future__ import annotations
 
 import typer
 
-from ....core.time import now
-
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
+from ....core.time import now
 from ....domain.profile._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._profile_censo_payloads import (
-    CensoApplyResult,
+    CensoApplyPayload,
     CensoCompareResult,
     CensoRefreshResult,
     CensoShowResult,
@@ -230,8 +229,7 @@ def register(profile_app: typer.Typer) -> None:
         ]
         for row in comparison.rows:
             lines.append(
-                f"{row.status.value}\t{row.path}\t"
-                f"censo={row.censo_value or ''}\tprofile={row.profile_value or ''}"
+                f"{row.status.value}\t{row.path}\tcenso={row.censo_value or ''}\tprofile={row.profile_value or ''}"
             )
         _emit_envelope(ctx, command="config.profile.censo.compare", result=typed_compare, lines=lines)
 
@@ -276,7 +274,7 @@ def register(profile_app: typer.Typer) -> None:
             profile_id=profile_id,
             snapshot_id=result.snapshot_id,
         )
-        typed_apply = CensoApplyResult.model_validate(result.model_dump(mode="json"))
+        typed_apply = CensoApplyPayload.from_result(result)
         lines = [
             f"snapshot_id\t{result.snapshot_id}",
             f"written\t{len(result.written_paths)}",

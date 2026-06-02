@@ -146,9 +146,7 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
-    assert result.casilla_aggregation.casilla_values["01"] == sum(
-        (tx.raw.amount for tx in (jan, may)), Decimal("0")
-    )
+    assert result.casilla_aggregation.casilla_values["01"] == sum((tx.raw.amount for tx in (jan, may)), Decimal("0"))
 
 
 def test_mixed_classification_applies_business_pct() -> None:
@@ -476,8 +474,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     casilla_b = result_b.casilla_aggregation.casilla_values.get("01", Decimal("0"))
 
     assert casilla_a != casilla_b, (
-        f"Anti-tautology failure: both scenarios produced casilla_01={casilla_a}; "
-        "irpf_category filter has no effect"
+        f"Anti-tautology failure: both scenarios produced casilla_01={casilla_a}; irpf_category filter has no effect"
     )
     # Scenario A: only actividad flows
     assert casilla_a == amount

@@ -25,11 +25,13 @@ _FULL_YEAR_CUTOFF_DAY = 1
 _MAX_AGE_ORDINARY = 25
 _MAX_AGE_MENOR_TRES = 3
 
+
 def _coerce_iso_date_field(value: object) -> object:
     """Delegate for @field_validator date fields: parse ISO strings, pass through everything else."""
     if isinstance(value, str):
         return _parse_iso8601_date(value)
     return value
+
 
 class DescendantInfo(BaseModel):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
@@ -155,6 +157,7 @@ class DescendantInfo(BaseModel):
             return False
         return (entry.month, entry.day) < (_FULL_YEAR_CUTOFF_MONTH, _FULL_YEAR_CUTOFF_DAY)
 
+
 class RentaDescendantProfile(BaseModel):
     """One descendant row from the official Modelo 100 family section."""
 
@@ -180,6 +183,7 @@ class RentaDescendantProfile(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
+
 
 class RentaAscendantProfile(BaseModel):
     """One ascendant row from the official Modelo 100 family section."""
@@ -207,6 +211,7 @@ class RentaAscendantProfile(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
+
 
 class RentaFamilyProfile(BaseModel):
     """Typed repeated family-member facts consumed by Modelo 100 bindings."""
@@ -284,11 +289,7 @@ class RentaFamilyProfile(BaseModel):
         min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
         cotizaciones_ss_madre_2024).
         """
-        return sum(
-            d.gastos_guarderia_euros
-            for d in self.descendientes
-            if d.is_eligible_menor_tres(2024)
-        )
+        return sum(d.gastos_guarderia_euros for d in self.descendientes if d.is_eligible_menor_tres(2024))
 
     def descendientes_eligible_minimum(self, filing_year: int) -> int:
         """Count of descendientes eligible for the ordinary Art. 58.1 mínimo.
@@ -317,11 +318,7 @@ class RentaFamilyProfile(BaseModel):
         Only eligible (Art. 58.1) and cohabiting descendants are counted;
         non-eligible ones carry no mínimo, so the prorrata has no effect.
         """
-        return sum(
-            1
-            for d in self.descendientes
-            if d.custodia_compartida and d.is_eligible_ordinary(filing_year)
-        )
+        return sum(1 for d in self.descendientes if d.custodia_compartida and d.is_eligible_ordinary(filing_year))
 
     def custodia_compartida_prorrata_factor(self, descendant: DescendantInfo, filing_year: int) -> Decimal:
         """Return the Art. 59 LIRPF prorrata factor for one descendant.
@@ -432,6 +429,7 @@ class RentaFamilyProfile(BaseModel):
                 amount=amount,
             )
         return None
+
 
 __all__ = [
     "DescendantInfo",

@@ -18,12 +18,8 @@ def _emit_completeness_gate_failures(
     manifest = revision.completeness_manifest
     if manifest is None:
         return
-    declared_by_identity = {
-        (casilla.segmento, casilla.number): casilla for casilla in revision.casillas
-    }
-    for manifest_casilla in sorted(
-        manifest.casillas, key=lambda item: (item.segmento or "", item.number)
-    ):
+    declared_by_identity = {(casilla.segmento, casilla.number): casilla for casilla in revision.casillas}
+    for manifest_casilla in sorted(manifest.casillas, key=lambda item: (item.segmento or "", item.number)):
         identity = manifest_casilla.identity()
         segmento, number = identity
         declared = declared_by_identity.get(identity)
@@ -47,8 +43,7 @@ def _emit_completeness_gate_failures(
         )
         if not declared.legal_refs:
             failures.append(
-                f"{prefix}: calculation-completeness manifest {identity_label} "
-                "is declared without legal_refs grounding"
+                f"{prefix}: calculation-completeness manifest {identity_label} is declared without legal_refs grounding"
             )
         if not declared.source_refs:
             failures.append(

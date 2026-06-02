@@ -7,12 +7,12 @@ fixture and the multi-account dispatch path that drives every
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
 
 from .....tests import FIXTURES_DIR
-
 from .. import OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -121,7 +121,31 @@ NEWFILEUID:NONE
     provider = OfxProvider()
     validation = provider.validate_source(source)
     assert validation.is_valid, validation.warnings
+    assert validation.detected_dialect == "account_count=2"
+    assert "ACC-1" not in validation.detected_dialect
+    assert "ACC-2" not in validation.detected_dialect
     transactions = tuple(provider.ingest(source))
     assert [transaction.transaction_id for transaction in transactions] == ["ONE", "TWO"]
     assert [transaction.provenance.source_row_index for transaction in transactions] == [1, 2]
     assert transactions[1].raw_fields["ACCTID"] == "ACC-2"
+
+
+def test_ofx_provider_invalid_source_does_not_expose_filename(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    source = tmp_path / "12345678Z-private-account.ofx"
+    source.write_text("not an OFX document", encoding="utf-8")
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.financial.providers._ofx"):
+        validation = OfxProvider().validate_source(source)
+
+    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+    rendered_warnings = "\n".join(validation.warnings)
+    assert not validation.is_valid
+    assert source.name not in rendered_logs
+    assert source.name not in rendered_warnings
+    assert str(source) not in rendered_logs
+    assert str(source) not in rendered_warnings
+    assert "<input-ofx>" in rendered_logs
+    assert "<input-ofx>" in rendered_warnings

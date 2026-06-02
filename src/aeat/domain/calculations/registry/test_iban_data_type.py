@@ -20,15 +20,17 @@ _IBAN_ADAPTER: TypeAdapter[str] = TypeAdapter(IbanString)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
-        "id": "iban_test_casilla",
-        "number": "01",
-        "label": "IBAN cuenta de cargo",
-        "section": ("declarante", "pago"),
-        "data_type": data_type,
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-modelo-303-instructions",),
-    })
+    return CasillaDefinition.model_validate(
+        {
+            "id": "iban_test_casilla",
+            "number": "01",
+            "label": "IBAN cuenta de cargo",
+            "section": ("declarante", "pago"),
+            "data_type": data_type,
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-modelo-303-instructions",),
+        }
+    )
 
 
 class TestIbanStringAccepts:
@@ -64,8 +66,8 @@ class TestIbanStringRejects:
             "ES",
             "ES91",
             "1234567890",
-            "es9121000418450200051333",   # wrong checksum
-            "ES9921000418450200051332",   # wrong check digits
+            "es9121000418450200051333",  # wrong checksum
+            "ES9921000418450200051332",  # wrong check digits
             "@@@@@@@@@@@@@@@@",
             "ES9121000418450200051332EXTRA",  # too long
         ],

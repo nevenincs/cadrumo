@@ -33,14 +33,10 @@ def _assert_registered_and_roundtrip(cls: type) -> None:
     """Assert cls is AeatError-derived, registered, and produces a valid envelope."""
     assert issubclass(cls, AeatError), f"{cls.__qualname__} must inherit from AeatError"
     code_obj = get_registered_error_code(cls)
-    assert code_obj.code in ERROR_REGISTRY, (
-        f"{cls.__qualname__} error code {code_obj.code!r} not in ERROR_REGISTRY"
-    )
+    assert code_obj.code in ERROR_REGISTRY, f"{cls.__qualname__} error code {code_obj.code!r} not in ERROR_REGISTRY"
     instance = cls("survivor-test sentinel")
     envelope = build_error_envelope(instance)
-    assert envelope.code, (
-        f"build_error_envelope({cls.__qualname__}) returned an empty code"
-    )
+    assert envelope.code, f"build_error_envelope({cls.__qualname__}) returned an empty code"
 
 
 # ---------------------------------------------------------------------------
@@ -214,6 +210,7 @@ def test_try_load_certificate_metadata_does_not_swallow_unrelated_exceptions() -
     # The real certificate load path requires a PKCS#12 file; we exercise the guard via
     # the password=None early-exit path (returns None without exception).
     from .auth._operator import _try_load_certificate_metadata
+
     result = _try_load_certificate_metadata.__doc__
     assert result is not None  # function exists and has a docstring
 

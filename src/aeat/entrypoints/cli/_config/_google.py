@@ -842,13 +842,9 @@ def google_sync_push(
         manifest_degraded_total=len(manifest_degraded),
         pushed_by_namespace=dict(pushed_by_ns),
         skipped_by_namespace=dict(skipped_by_ns),
-        failed_objects=[
-            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed
-        ],
+        failed_objects=[GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in failed],
         manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
-        failed_manifests=[
-            GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed
-        ],
+        failed_manifests=[GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed],
         degraded_manifests=[
             GoogleSyncDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
         ],

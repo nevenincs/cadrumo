@@ -12,10 +12,10 @@ from ....core.time import now
 
 from ....core.errors import AeatError
 from ....core.logging import get_logger
-from ....domain.profile._errors import InventoryLedgerError
 from ....domain.profile.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
+    InventoryLedgerError,
     MovementRecord,
     compute_inventory_valuation,
 )

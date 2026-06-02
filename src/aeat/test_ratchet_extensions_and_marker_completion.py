@@ -54,8 +54,7 @@ def test_scripts_ratchet_exists_in_utf8_inventory() -> None:
         "test_utf8_enrollment_inventory.py: scripts/ ratchet function not found"
     )
     assert "_SCRIPTS_ROOT" in src, (
-        "test_utf8_enrollment_inventory.py: _SCRIPTS_ROOT constant not found — "
-        "scripts/ tree scope not defined"
+        "test_utf8_enrollment_inventory.py: _SCRIPTS_ROOT constant not found — scripts/ tree scope not defined"
     )
     assert "_SCRIPTS_KNOWN_VIOLATING" in src, (
         "test_utf8_enrollment_inventory.py: _SCRIPTS_KNOWN_VIOLATING ratchet set not found"
@@ -65,18 +64,11 @@ def test_scripts_ratchet_exists_in_utf8_inventory() -> None:
 def test_check_relative_imports_uses_local_utf8_constant() -> None:
     """check_relative_imports.py must define _UTF_8 constant and not use bare encoding="utf-8"."""
     src = _source(_CHECK_REL_IMPORTS)
-    assert '_UTF_8: Final[str] = "utf-8"' in src, (
-        "scripts/check_relative_imports.py: _UTF_8 constant not found"
-    )
+    assert '_UTF_8: Final[str] = "utf-8"' in src, "scripts/check_relative_imports.py: _UTF_8 constant not found"
     # The bare literal must not survive outside the constant definition line itself.
-    lines_with_bare = [
-        (i + 1, ln)
-        for i, ln in enumerate(src.splitlines())
-        if 'encoding="utf-8"' in ln
-    ]
-    assert not lines_with_bare, (
-        "scripts/check_relative_imports.py: bare encoding=\"utf-8\" survived at "
-        + ", ".join(f"line {i}: {ln.strip()!r}" for i, ln in lines_with_bare)
+    lines_with_bare = [(i + 1, ln) for i, ln in enumerate(src.splitlines()) if 'encoding="utf-8"' in ln]
+    assert not lines_with_bare, 'scripts/check_relative_imports.py: bare encoding="utf-8" survived at ' + ", ".join(
+        f"line {i}: {ln.strip()!r}" for i, ln in lines_with_bare
     )
 
 
@@ -98,11 +90,7 @@ _GOOGLE_DRIVE_FUNCS = (
 def test_google_drive_any_return_markers_present(func_name: str) -> None:
     """Each -> Any site in _google_drive.py must carry the build-factory rationale marker."""
     lines = _source(_GOOGLE_DRIVE).splitlines()
-    matching = [
-        (i + 1, ln)
-        for i, ln in enumerate(lines)
-        if f"def {func_name}(" in ln
-    ]
+    matching = [(i + 1, ln) for i, ln in enumerate(lines) if f"def {func_name}(" in ln]
     assert matching, f"_google_drive.py: def {func_name} not found"
     lineno, def_line = matching[0]
     assert _GOOGLE_DRIVE_TOKEN in def_line, (
@@ -126,8 +114,7 @@ def test_sha256_allowlist_sites_documented_in_utf8_inventory() -> None:
     )
     for filename in exempt_files:
         assert filename in src, (
-            f"test_utf8_enrollment_inventory.py: sha256 allowlist commentary missing "
-            f"reference to {filename!r}"
+            f"test_utf8_enrollment_inventory.py: sha256 allowlist commentary missing reference to {filename!r}"
         )
 
 
@@ -144,9 +131,7 @@ def test_stdio_logger_rationale_enrolled_in_inventory() -> None:
     assert "test_stdio_stdlib_logger_rationale_present" in src, (
         "test_any_return_rationale_markers.py: _stdio.py logger rationale test not found"
     )
-    assert "_STDIO_MODULE" in src, (
-        "test_any_return_rationale_markers.py: _STDIO_MODULE path constant not found"
-    )
+    assert "_STDIO_MODULE" in src, "test_any_return_rationale_markers.py: _STDIO_MODULE path constant not found"
 
 
 # ---------------------------------------------------------------------------
@@ -161,19 +146,13 @@ def test_secure_objects_machine_format_rationale_present() -> None:
     """diagnostics/secure_objects.py:53 tab-pair echo must carry the machine-format rationale marker."""
     src = _source(_SECURE_OBJECTS)
     assert _MACHINE_FORMAT_TOKEN in src, (
-        f"diagnostics/secure_objects.py: missing {_MACHINE_FORMAT_TOKEN!r} "
-        "on the tab-separated row echo"
+        f"diagnostics/secure_objects.py: missing {_MACHINE_FORMAT_TOKEN!r} on the tab-separated row echo"
     )
     # Verify the marker is on the row-format line specifically.
-    lines_with_token = [
-        (i + 1, ln.strip())
-        for i, ln in enumerate(src.splitlines())
-        if _MACHINE_FORMAT_TOKEN in ln
-    ]
+    lines_with_token = [(i + 1, ln.strip()) for i, ln in enumerate(src.splitlines()) if _MACHINE_FORMAT_TOKEN in ln]
     assert lines_with_token, f"Token {_MACHINE_FORMAT_TOKEN!r} present in source but no matching line found"
     # The line must also contain the tab-pair format.
     row_line_no, row_line = lines_with_token[0]
     assert "object_key_digest" in row_line or "namespace" in row_line, (
-        f"diagnostics/secure_objects.py:{row_line_no}: rationale token found but not on the "
-        "expected tab-pair echo line"
+        f"diagnostics/secure_objects.py:{row_line_no}: rationale token found but not on the expected tab-pair echo line"
     )

@@ -35,6 +35,7 @@ from . import (
 _DEFAULT_LOOKBACK_DAYS = 365
 """Default lookback window when neither --from nor --to is supplied."""
 
+
 class OverviewBacklog(BaseModel):
     """Outcome of ``build_overview_backlog``.
 
@@ -71,6 +72,7 @@ class OverviewBacklog(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+
 
 def build_overview_backlog(
     profile: TaxpayerProfile,
@@ -119,10 +121,7 @@ def build_overview_backlog(
 
     items: list[OverviewCalendarEntry] = []
     for entry in calendar.entries:
-        if (
-            entry.adjusted_closes_on < resolved_as_of
-            and entry.user_state is OverviewPeriodState.LATE
-        ):
+        if entry.adjusted_closes_on < resolved_as_of and entry.user_state is OverviewPeriodState.LATE:
             items.append(entry)
     items.sort(key=lambda entry: (entry.adjusted_closes_on, entry.modelo, entry.period))
 
@@ -137,6 +136,7 @@ def build_overview_backlog(
         taxpayer_model_declared=calendar.taxpayer_model_declared,
         incomplete_reason=calendar.incomplete_reason,
     )
+
 
 __all__ = [
     "OverviewBacklog",

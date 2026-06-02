@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,8 +14,8 @@ from ....core.errors import AeatError
 from ....core.resources import resources
 from ....domain.justificante._errors import PdfModeloImportError
 from ....tests import FIXTURES_DIR
-
 from . import DeclaracionParseError, TemplateNotDetectedError, parse_declaracion
+from ._parser import _extract_pages_words
 
 pytestmark = [
     pytest.mark.unit,
@@ -114,6 +115,47 @@ def test_parser_extracts_legal_entity_nif_from_pdf() -> None:
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
     filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
     assert filing.tax_id == "Y0000001S"
+
+
+def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCaptureFixture) -> None:
+    pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.declaracion._parser"):
+        parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
+
+    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+    assert pdf_path.name not in rendered_logs
+    assert "source=<input-pdf>" in rendered_logs
+
+
+def test_template_not_detected_context_does_not_expose_source_filename(tmp_path: Path) -> None:
+    pdf_path = tmp_path / "12345678Z-private-declaracion.pdf"
+    pdf = canvas.Canvas(str(pdf_path), pagesize=A4)
+    pdf.drawString(50, 750, "PDF text without declaration template markers")
+    pdf.save()
+
+    with pytest.raises(TemplateNotDetectedError) as excinfo:
+        parse_declaracion(pdf_path)
+
+    assert excinfo.value.context is not None
+    assert excinfo.value.context.get("path") == "<input-pdf>"
+
+
+def test_word_extraction_debug_log_does_not_expose_source_filename(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    pdf_path = tmp_path / "12345678Z-private-words.pdf"
+    pdf_path.write_text("not a PDF", encoding="utf-8")
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.declaracion._parser"):
+        words = _extract_pages_words(pdf_path)
+
+    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+    assert words == ()
+    assert pdf_path.name not in rendered_logs
+    assert str(pdf_path) not in rendered_logs
+    assert "<input-pdf>" in rendered_logs
 
 
 def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
@@ -676,14 +718,70 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     """
     # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py
     _expected: dict[str, dict[str, Decimal]] = {
-        "2023-1T": {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "37": Decimal("0.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00"), "c69": Decimal("4500.00")},
-        "2023-2T": {"27": Decimal("13800.00"), "29": Decimal("8700.00"), "37": Decimal("0.00"), "45": Decimal("8700.00"), "c46": Decimal("5100.00"), "c69": Decimal("5100.00")},
-        "2023-3T": {"27": Decimal("15000.00"), "29": Decimal("9300.00"), "37": Decimal("0.00"), "45": Decimal("9300.00"), "c46": Decimal("5700.00"), "c69": Decimal("5700.00")},
-        "2023-4T": {"27": Decimal("16800.00"), "29": Decimal("10500.00"), "37": Decimal("0.00"), "45": Decimal("10500.00"), "c46": Decimal("6300.00"), "c69": Decimal("6300.00")},
-        "2024-1T": {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "37": Decimal("0.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00"), "c69": Decimal("4800.00")},
-        "2024-2T": {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "37": Decimal("0.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00"), "c69": Decimal("5400.00")},
-        "2024-3T": {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "37": Decimal("0.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00"), "c69": Decimal("6000.00")},
-        "2024-4T": {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "37": Decimal("0.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00"), "c69": Decimal("6600.00")},
+        "2023-1T": {
+            "27": Decimal("12600.00"),
+            "29": Decimal("8100.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("8100.00"),
+            "c46": Decimal("4500.00"),
+            "c69": Decimal("4500.00"),
+        },
+        "2023-2T": {
+            "27": Decimal("13800.00"),
+            "29": Decimal("8700.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("8700.00"),
+            "c46": Decimal("5100.00"),
+            "c69": Decimal("5100.00"),
+        },
+        "2023-3T": {
+            "27": Decimal("15000.00"),
+            "29": Decimal("9300.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("9300.00"),
+            "c46": Decimal("5700.00"),
+            "c69": Decimal("5700.00"),
+        },
+        "2023-4T": {
+            "27": Decimal("16800.00"),
+            "29": Decimal("10500.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("10500.00"),
+            "c46": Decimal("6300.00"),
+            "c69": Decimal("6300.00"),
+        },
+        "2024-1T": {
+            "27": Decimal("13200.00"),
+            "29": Decimal("8400.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("8400.00"),
+            "c46": Decimal("4800.00"),
+            "c69": Decimal("4800.00"),
+        },
+        "2024-2T": {
+            "27": Decimal("14400.00"),
+            "29": Decimal("9000.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("9000.00"),
+            "c46": Decimal("5400.00"),
+            "c69": Decimal("5400.00"),
+        },
+        "2024-3T": {
+            "27": Decimal("16200.00"),
+            "29": Decimal("10200.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("10200.00"),
+            "c46": Decimal("6000.00"),
+            "c69": Decimal("6000.00"),
+        },
+        "2024-4T": {
+            "27": Decimal("18000.00"),
+            "29": Decimal("11400.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("11400.00"),
+            "c46": Decimal("6600.00"),
+            "c69": Decimal("6600.00"),
+        },
     }
     exp = _expected[pdf_stem]
 
@@ -725,16 +823,24 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     assert values["29"] == exp["29"], f"{pdf_stem}: casilla '29' got {values['29']!r}"
     assert values["37"] == exp["37"], f"{pdf_stem}: casilla '37' got {values['37']!r}"
     assert values["45"] == exp["45"], f"{pdf_stem}: casilla '45' got {values['45']!r}"
-    assert values["iva.resultado-regimen-general"] == exp["c46"], f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
+    assert values["iva.resultado-regimen-general"] == exp["c46"], (
+        f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
+    )
     assert values["64"] == exp["c46"], f"{pdf_stem}: casilla '64' got {values['64']!r}"
     assert values["66"] == exp["c46"], f"{pdf_stem}: casilla '66' got {values['66']!r}"
     assert values["iva.resultado"] == exp["c69"], f"{pdf_stem}: iva.resultado got {values['iva.resultado']!r}"
     assert values["71"] == exp["c69"], f"{pdf_stem}: casilla '71' got {values['71']!r}"
 
     # Compensation boxes are all 0.00 in synthetic fixtures
-    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00"), f"{pdf_stem}: comp-ant got {values['iva.compensacion-pendiente-periodos-anteriores']!r}"
-    assert values["iva.compensacion-aplicada-periodo"] == Decimal("0.00"), f"{pdf_stem}: comp-ap got {values['iva.compensacion-aplicada-periodo']!r}"
-    assert values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("0.00"), f"{pdf_stem}: comp-post got {values['iva.compensacion-pendiente-periodos-posteriores']!r}"
+    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00"), (
+        f"{pdf_stem}: comp-ant got {values['iva.compensacion-pendiente-periodos-anteriores']!r}"
+    )
+    assert values["iva.compensacion-aplicada-periodo"] == Decimal("0.00"), (
+        f"{pdf_stem}: comp-ap got {values['iva.compensacion-aplicada-periodo']!r}"
+    )
+    assert values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("0.00"), (
+        f"{pdf_stem}: comp-post got {values['iva.compensacion-pendiente-periodos-posteriores']!r}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -759,13 +865,48 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
     """
     # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py
     _expected: dict[str, dict[str, Decimal]] = {
-        "2021-2T": {"27": Decimal("12000.00"), "29": Decimal("7800.00"), "45": Decimal("7800.00"), "c46": Decimal("4200.00")},
-        "2021-3T": {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00")},
-        "2021-4T": {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00")},
-        "2022-1T": {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00")},
-        "2022-2T": {"27": Decimal("15000.00"), "29": Decimal("9600.00"), "45": Decimal("9600.00"), "c46": Decimal("5400.00")},
-        "2022-3T": {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00")},
-        "2022-4T": {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00")},
+        "2021-2T": {
+            "27": Decimal("12000.00"),
+            "29": Decimal("7800.00"),
+            "45": Decimal("7800.00"),
+            "c46": Decimal("4200.00"),
+        },
+        "2021-3T": {
+            "27": Decimal("13200.00"),
+            "29": Decimal("8400.00"),
+            "45": Decimal("8400.00"),
+            "c46": Decimal("4800.00"),
+        },
+        "2021-4T": {
+            "27": Decimal("14400.00"),
+            "29": Decimal("9000.00"),
+            "45": Decimal("9000.00"),
+            "c46": Decimal("5400.00"),
+        },
+        "2022-1T": {
+            "27": Decimal("12600.00"),
+            "29": Decimal("8100.00"),
+            "45": Decimal("8100.00"),
+            "c46": Decimal("4500.00"),
+        },
+        "2022-2T": {
+            "27": Decimal("15000.00"),
+            "29": Decimal("9600.00"),
+            "45": Decimal("9600.00"),
+            "c46": Decimal("5400.00"),
+        },
+        "2022-3T": {
+            "27": Decimal("16200.00"),
+            "29": Decimal("10200.00"),
+            "45": Decimal("10200.00"),
+            "c46": Decimal("6000.00"),
+        },
+        "2022-4T": {
+            "27": Decimal("18000.00"),
+            "29": Decimal("11400.00"),
+            "45": Decimal("11400.00"),
+            "c46": Decimal("6600.00"),
+        },
     }
     exp = _expected[pdf_stem]
 
@@ -894,15 +1035,12 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     assert set(values.keys()) == set(expected.keys()), (
-        f"{pdf_stem}: extracted casilla set mismatch.\n"
-        f"  expected: {sorted(expected)}\n"
-        f"  got:      {sorted(values)}"
+        f"{pdf_stem}: extracted casilla set mismatch.\n  expected: {sorted(expected)}\n  got:      {sorted(values)}"
     )
 
     for casilla_id, expected_value in expected.items():
         assert values[casilla_id] == expected_value, (
-            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, "
-            f"got {values[casilla_id]!r}"
+            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
         )
 
 
@@ -1021,10 +1159,7 @@ def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
             period_override="1T",
             registry_snapshot=strict_snap,
         )
-    assert (
-        excinfo.value.translated_message
-        == "adapters.inbound.declaracion.errors.extraction_failed"
-    )
+    assert excinfo.value.translated_message == "adapters.inbound.declaracion.errors.extraction_failed"
     assert excinfo.value.context is not None
     details = excinfo.value.context.get("details", "")
     assert isinstance(details, str) and "coverage" in details
@@ -1041,10 +1176,7 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
             año_override=2025,
             period_override="1T",
         )
-    assert (
-        excinfo.value.translated_message
-        == "adapters.inbound.declaracion.errors.registry_snapshot_required"
-    )
+    assert excinfo.value.translated_message == "adapters.inbound.declaracion.errors.registry_snapshot_required"
     assert excinfo.value.context is not None
     assert excinfo.value.context.get("modelo") == "999"
     assert "is not present in the calculation registry" in excinfo.value.context.get("error", "")

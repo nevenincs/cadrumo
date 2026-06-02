@@ -51,11 +51,7 @@ def test_expected_casilla_for_category_round_trips_every_entry() -> None:
 def test_expected_casilla_is_none_outside_first_slice() -> None:
     """A category outside the first slice returns ``None``, not a fallback."""
 
-    outside_slice = next(
-        cat
-        for cat in SpendingCategory
-        if cat not in FIRST_SLICE_EXPENSE_CASILLAS
-    )
+    outside_slice = next(cat for cat in SpendingCategory if cat not in FIRST_SLICE_EXPENSE_CASILLAS)
     assert expected_casilla_for_category(outside_slice) is None
 
 
@@ -93,9 +89,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
         all_casilla_ids.update(casilla.id for casilla in revision.casillas)
 
     missing = first_slice_target_casillas() - all_casilla_ids
-    assert not missing, (
-        f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
-    )
+    assert not missing, f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
 
 
 def test_first_slice_check_is_registered_with_the_registry_validator() -> None:

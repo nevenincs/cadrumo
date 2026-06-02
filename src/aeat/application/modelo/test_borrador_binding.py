@@ -9,18 +9,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ..aggregation import CalculationSourceContext
-from ..live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
-from . import (
-    Modelo100BorradorBindingCommand,
-    Modelo100BorradorBindingError,
-    Modelo100BorradorBindingResult,
-    Modelo100BorradorSourceResolver,
-    calculate_modelo_revision,
-    create_work_unit,
-    resolve_modelo_100_borrador_bindings,
-)
-from ..user_profile import UserProfileLifecycleRepository
 from ...core.errors import ErrorCategory, get_registered_error_code
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -30,6 +18,18 @@ from ...domain.modelos._calculation_revision import derive_calculation_revision_
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
 from ...tests.secure_sql import isolated_runtime_profile
+from ..aggregation import CalculationSourceContext
+from ..live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
+from ..user_profile import UserProfileLifecycleRepository
+from . import (
+    Modelo100BorradorBindingCommand,
+    Modelo100BorradorBindingError,
+    Modelo100BorradorBindingResult,
+    Modelo100BorradorSourceResolver,
+    calculate_modelo_revision,
+    create_work_unit,
+    resolve_modelo_100_borrador_bindings,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

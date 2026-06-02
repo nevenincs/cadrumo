@@ -54,11 +54,12 @@ def _parse_iso8601_date(raw: str | None) -> date | None:
         return None
     try:
         return date.fromisoformat(cleaned)
-    except ValueError:
+    except ValueError as exc:
         _log.debug("_parse_iso8601_date: %r is not a valid ISO-8601 date", cleaned)
-        raise ValueError(  # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY: function is called exclusively from @field_validator stacks; ValueError propagates into pydantic ValidationError chain.
-            f"date value {cleaned!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)"
-        )
+        # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
+        # Called from @field_validator stacks; ValueError propagates into the
+        # pydantic ValidationError chain.
+        raise ValueError(f"date value {cleaned!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)") from exc
 
 
 def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
@@ -87,14 +88,15 @@ def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
     match = _DATE_DDMMYYYY_RE.match(cleaned)
     if match is None:
         _log.debug("_parse_ddmmyyyy_date: %r does not match dd-mm-yyyy / dd/mm/yyyy", cleaned)
-        raise ValueError(  # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY: function is called exclusively from @field_validator stacks; ValueError propagates into pydantic ValidationError chain.
-            f"date value {cleaned!r} is not a dd-mm-yyyy or dd/mm/yyyy date"
-        )
+        # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
+        # Called from @field_validator stacks; ValueError propagates into the
+        # pydantic ValidationError chain.
+        raise ValueError(f"date value {cleaned!r} is not a dd-mm-yyyy or dd/mm/yyyy date")
     parts = re.split(r"[-/]", match.group(1))
     day, month, year = (int(p) for p in parts)
     try:
         return date(year, month, day)
-    except ValueError:
+    except ValueError as exc:
         _log.debug(
             "_parse_ddmmyyyy_date: %r parsed to (%d, %d, %d) which is not a valid calendar date",
             cleaned,
@@ -102,9 +104,10 @@ def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
             month,
             year,
         )
-        raise ValueError(  # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY: function is called exclusively from @field_validator stacks; ValueError propagates into pydantic ValidationError chain.
-            f"date value {cleaned!r} is not a valid calendar date"
-        )
+        # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
+        # Called from @field_validator stacks; ValueError propagates into the
+        # pydantic ValidationError chain.
+        raise ValueError(f"date value {cleaned!r} is not a valid calendar date") from exc
 
 
 # ── Unified parse-date surface ────────────────────────────────────────────────

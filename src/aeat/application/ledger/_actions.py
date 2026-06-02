@@ -251,7 +251,10 @@ def attach_manual_transaction_evidence(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Attach purchase evidence or supplementary attachments to one ledger transaction and return a :class:`ManualLedgerTransactionResult`."""
+    """Attach purchase evidence or supplementary attachments to one ledger transaction.
+
+    Returns a :class:`ManualLedgerTransactionResult`.
+    """
     trimmed_actor = _require_actor(actor, operation="ledger evidence attachment")
     trimmed_source_command = _require_source_command(source_command, operation="ledger evidence attachment")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
@@ -787,7 +790,10 @@ def reset_ledger_catalogue(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> LedgerCatalogueResetReport:
-    """Reset one bucket's ledger catalogue after finalized-modelo checks and return a :class:`LedgerCatalogueResetReport`."""
+    """Reset one bucket's ledger catalogue after finalized-modelo checks.
+
+    Returns a :class:`LedgerCatalogueResetReport`.
+    """
     now = _normalise_timestamp(occurred_at)
     trimmed_actor = _require_actor(actor, operation="ledger reset")
     trimmed_source_command = _require_source_command(source_command, operation="ledger reset")
@@ -1772,7 +1778,9 @@ def merge_transactions(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
 ) -> MergeTransactionsResult:
-    """Re-merge a complete cohort of split children into a fresh transaction and return a :class:`MergeTransactionsResult`.
+    """Re-merge a complete cohort of split children into a fresh transaction.
+
+    Returns a :class:`MergeTransactionsResult`.
 
     Pre-conditions:
 
@@ -2310,7 +2318,9 @@ def _required_patched[T](
     value = getattr(patch, field)
     if value is None:
         raise TransactionValidationError(f"manual ledger patch {field} must not be null")
-    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED: getattr returns Any but the caller binds the result to a generic T via the fallback parameter.
+    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED:
+    # getattr returns Any but the caller binds the result to a generic T
+    # via the fallback parameter.
     return value  # type: ignore[no-any-return]
 
 
@@ -2326,7 +2336,9 @@ def _optional_patched[T](
     """
     if field not in patch_fields:
         return fallback
-    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED: getattr returns Any but the caller binds the result to a generic T via the fallback parameter.
+    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED:
+    # getattr returns Any but the caller binds the result to a generic T
+    # via the fallback parameter.
     return getattr(patch, field)  # type: ignore[no-any-return]
 
 

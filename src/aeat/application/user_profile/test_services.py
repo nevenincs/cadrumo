@@ -65,9 +65,7 @@ def test_validation_rejects_non_iso_date_value(schema, garbage: str) -> None:
         [UserProfileFact(path="renta_taxpayer.birth_date", value=garbage)],
     )
     date_errors = [
-        issue
-        for issue in report.issues
-        if issue.code == "invalid_date_value" and issue.severity is BaseSeverity.ERROR
+        issue for issue in report.issues if issue.code == "invalid_date_value" and issue.severity is BaseSeverity.ERROR
     ]
     assert len(date_errors) == 1
     assert "YYYY-MM-DD" in date_errors[0].message
@@ -96,9 +94,9 @@ def test_validation_covers_every_date_typed_field(schema) -> None:
     svc = ProfileValidationService(schema=schema)
     for path in date_paths:
         report = svc.validate_facts("operator", [UserProfileFact(path=path, value="2024-13-99")])
-        assert any(
-            issue.code == "invalid_date_value" and issue.path == path for issue in report.issues
-        ), f"date field {path!r} did not reject a garbage value"
+        assert any(issue.code == "invalid_date_value" and issue.path == path for issue in report.issues), (
+            f"date field {path!r} did not reject a garbage value"
+        )
 
 
 def test_preflight_returns_ready_when_no_modelo_selectors_match(schema) -> None:

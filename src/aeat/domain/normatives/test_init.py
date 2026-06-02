@@ -22,9 +22,5 @@ def test_normatives_import_silent(tmp_path: pytest.TempPathFactory) -> None:
         text=True,
         timeout=30,
     )
-    assert result.returncode == 0, (
-        f"Import failed with returncode {result.returncode}:\n{result.stderr}"
-    )
-    assert result.stdout == "", (
-        f"Import produced unexpected stdout output:\n{result.stdout!r}"
-    )
+    assert result.returncode == 0, f"Import failed with returncode {result.returncode}:\n{result.stderr}"
+    assert result.stdout == "", f"Import produced unexpected stdout output:\n{result.stdout!r}"

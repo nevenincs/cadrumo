@@ -47,9 +47,7 @@ class TestCoerceUtcAware:
             (_MINUS5_AWARE, datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)),
         ],
     )
-    def test_offset_aware_converted_to_utc(
-        self, aware_dt: datetime, expected_utc: datetime
-    ) -> None:
+    def test_offset_aware_converted_to_utc(self, aware_dt: datetime, expected_utc: datetime) -> None:
         result = coerce_utc_aware(aware_dt)
         assert result == expected_utc
         assert result.tzinfo is UTC
@@ -78,9 +76,7 @@ class TestValidateUtcAware:
         [_PLUS2_AWARE, _MINUS5_AWARE],
         ids=["plus2", "minus5"],
     )
-    def test_non_utc_aware_raises_core_validation_error(
-        self, non_utc_dt: datetime
-    ) -> None:
+    def test_non_utc_aware_raises_core_validation_error(self, non_utc_dt: datetime) -> None:
         with pytest.raises(CoreValidationError, match="UTC"):
             validate_utc_aware(non_utc_dt)
 

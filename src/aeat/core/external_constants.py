@@ -226,7 +226,10 @@ class AeatSection(_Frozen):
     domains: AeatDomains
     sede_paths: AeatSedePaths
     clave_movil: AeatClaveMovilSurface
-    pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")  # ANY-RETURN-RATIONALE-PRE303-RAW-STAGING: raw TOML parse staging slot; cached_property converts to typed AeatPre303Surface boundary model.
+    # ANY-RETURN-RATIONALE-PRE303-RAW-STAGING:
+    # Raw TOML parse staging slot; cached_property converts to typed
+    # AeatPre303Surface boundary model.
+    pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")
     help_pages: AeatHelpPages
     oracles: AeatOracles
     live_safety: AeatLiveSafety
@@ -326,6 +329,7 @@ OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "AEAT_OUTPUT_LANGUAGE"
 #: POSIX / Windows environment variable that Rich uses to determine console column width.
 COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
 
+
 class OutputLanguage(StrEnum):
     """Closed enumeration of CLI / API output language BCP-47 tags.
 
@@ -383,7 +387,5 @@ def load_external_constants(path: Path | None = None) -> ExternalConstants:
         with path.open("rb") as handle:
             payload = tomllib.load(handle)
     else:
-        payload = tomllib.loads(
-            files(__package__).joinpath("external_constants.toml").read_text(encoding="utf-8")
-        )
+        payload = tomllib.loads(files(__package__).joinpath("external_constants.toml").read_text(encoding="utf-8"))
     return ExternalConstants.model_validate(payload)

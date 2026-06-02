@@ -146,8 +146,6 @@ _CCAA = "madrid"
 # ---------------------------------------------------------------------------
 
 
-
-
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
@@ -187,9 +185,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="tax_residence.ccaa", value=_CCAA),
-            UserProfileFact(
-                path="tax_residence.jurisdiction_scope", value="common_regime"
-            ),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="provenance.source", value="manual_cli"),
             # Declaration type (person vs entity) — required by binding validation
             # in modelo-100 formulas.
@@ -278,9 +274,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
                 "--binding", "modelo-130-resultados-negativos-anteriores=0",
             ]
         )  # fmt: skip
-        assert calc_result.exit_code == 0, (
-            f"M130 calculate failed for period {period}: {calc_result.output}"
-        )
+        assert calc_result.exit_code == 0, f"M130 calculate failed for period {period}: {calc_result.output}"
         quarter_payload = _payload(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
         # Verify oracle inputs produce expected per-quarter values.

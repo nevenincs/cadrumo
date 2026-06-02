@@ -27,21 +27,19 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
-from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core._bucket_pointer_io import read_pointer
+from ...core.config import load_settings
+from ...domain.user_profile import ProfileSchemaValidationError, UserProfileFact
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..user_profile._orchestration import (
     profile_create_storage_span,
     register_active_profile,
 )
 from ..workflow._persistence import workflow_state_repository
 from ..workflow._profile_bucket_scan import read_profile_bucket
-from ...core._bucket_pointer_io import read_pointer
-from ...core.config import SecretStoreBackend, load_settings, override_settings
-from ...domain.user_profile import ProfileSchemaValidationError, UserProfileFact
-from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -64,17 +62,8 @@ _INCOMPLETE_FACTS: Mapping[str, str] = {key: value for key, value in _VALID_FACT
 def _backend(tmp_path: Path) -> Iterator[Path]:
     """Per-bucket storage root with file-backed custody."""
 
-    with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine(settings)
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:

@@ -20,11 +20,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core.time import now
-
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
 from ...core.identity import BucketId
+from ...core.time import now
 from ...domain.modelos._ids import WorkUnitId
 from ._actions import WorkUnitNotFoundError
 
@@ -34,6 +33,7 @@ class ModeloReconciliationSourceKind(StrEnum):
 
     JUSTIFICANTE = "justificante"
     DECLARATION = "declaration"
+
 
 class ModeloReconciliationVerdict(StrEnum):
     """Closed verdict catalogue for :class:`ModeloReconciliationReport`.
@@ -46,6 +46,7 @@ class ModeloReconciliationVerdict(StrEnum):
     MISMATCHES = "mismatches"
     EVIDENCE_INVALID = "evidence_invalid"
 
+
 class ModeloReconciliationDiff(BaseModel):
     """One per-casilla disagreement between work unit and evidence."""
 
@@ -55,6 +56,7 @@ class ModeloReconciliationDiff(BaseModel):
     work_unit_value: str = ""
     evidence_value: str = ""
     kind: str = Field(min_length=1)
+
 
 class ModeloReconciliationCommand(BaseModel):
     """Strict input contract for ``modelo_reconcile``.
@@ -70,6 +72,7 @@ class ModeloReconciliationCommand(BaseModel):
     source_kind: ModeloReconciliationSourceKind
     source_path: Path
     actor: str = Field(default="operator", min_length=1, max_length=64)
+
 
 class ModeloReconciliationReport(BaseModel):
     """Outcome of ``modelo_reconcile``.
@@ -92,6 +95,7 @@ class ModeloReconciliationReport(BaseModel):
     reconciled_at: datetime
     narrative: str = ""
 
+
 class ReconciliationEvidenceInvalidError(AeatError):
     """Raised when the supplied external evidence cannot be parsed.
 
@@ -99,6 +103,7 @@ class ReconciliationEvidenceInvalidError(AeatError):
     with the canonical recovery hint; downstream consumers branch on it
     without string-matching the message.
     """
+
 
 class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """Raised when ``from_declaration`` is requested before the declaration parser ships.
@@ -108,6 +113,7 @@ class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     silently degrading.
     """
 
+
 class ReconciliationCrossBucketRefusedError(AeatError):
     """Raised when the addressed work unit belongs to a different bucket than the active profile bucket.
 
@@ -116,6 +122,7 @@ class ReconciliationCrossBucketRefusedError(AeatError):
     operators' history. The check is enforced at the application service
     so neither the CLI nor any future caller can bypass it.
     """
+
 
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
     """Reconcile a modelo work unit against external evidence and return a :class:`ModeloReconciliationReport`.
@@ -140,7 +147,6 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
         )
-
 
     from ...adapters.inbound.justificante import parse_justificante
     from ...domain.buckets import (
@@ -201,9 +207,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
             ),
         )
 
-    verdict = (
-        ModeloReconciliationVerdict.MATCHES if not diffs else ModeloReconciliationVerdict.MISMATCHES
-    )
+    verdict = ModeloReconciliationVerdict.MATCHES if not diffs else ModeloReconciliationVerdict.MISMATCHES
     narrative = (
         f"reconciled modelo {justificante.modelo} for ejercicio {justificante.ejercicio or '?'} "
         f"against work unit {command.work_unit_id}; verdict={verdict.value}; diffs={len(diffs)}"
@@ -255,6 +259,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     catalogue_repo.save(next_catalogue)
 
     return report
+
 
 __all__ = [
     "ModeloReconciliationCommand",

@@ -96,7 +96,7 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot) -> 
         f"casilla 0597 = {result.values['0597']!r}; expected {m123_retenciones!r} "
         f"from binding renta-2024-modelo-123-retenciones-periodicas. "
         "Check 2024/casillas/0579-0597.toml: must have "
-        "input_kind = \"bound\" and binding = \"renta-2024-modelo-123-retenciones-periodicas\"."
+        'input_kind = "bound" and binding = "renta-2024-modelo-123-retenciones-periodicas".'
     )
 
 
@@ -122,7 +122,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot) -> 
         f"casilla 0596 = {result.values['0596']!r}; expected {m111_retenciones!r} "
         f"from binding renta-2024-modelo-111-retenciones-periodicas. "
         "Check 2024/casillas/0578-0596.toml: must have "
-        "input_kind = \"bound\" and binding = \"renta-2024-modelo-111-retenciones-periodicas\"."
+        'input_kind = "bound" and binding = "renta-2024-modelo-111-retenciones-periodicas".'
     )
 
 
@@ -172,8 +172,7 @@ def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot) -> None:
     )
 
     assert result.values["0597"] == Decimal("0"), (
-        f"casilla 0597 = {result.values['0597']!r}; expected 0.00 "
-        "when M123 binding is zero."
+        f"casilla 0597 = {result.values['0597']!r}; expected 0.00 when M123 binding is zero."
     )
 
 
@@ -208,13 +207,11 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
     delta_0610 = result_low.values["0610"] - result_high.values["0610"]
 
     assert delta_0597 == Decimal("1000.00"), (
-        f"expected 0597 to increase by 1000 when M123 binding increases by 1000, "
-        f"got delta={delta_0597!r}"
+        f"expected 0597 to increase by 1000 when M123 binding increases by 1000, got delta={delta_0597!r}"
     )
     assert delta_0609 == Decimal("1000.00"), (
         f"0609 should increase by the same 1000 delta as 0597, got delta={delta_0609!r}"
     )
     assert delta_0610 == Decimal("1000.00"), (
-        f"0610 (cuota diferencial) should decrease by 1000 when retenciones increase by 1000, "
-        f"got delta={delta_0610!r}"
+        f"0610 (cuota diferencial) should decrease by 1000 when retenciones increase by 1000, got delta={delta_0610!r}"
     )

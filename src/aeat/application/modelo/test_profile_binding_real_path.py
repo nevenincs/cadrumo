@@ -35,17 +35,17 @@ from typing import Any
 
 import pytest
 
-from ._profile_binding import (
-    _inject_derived_marriage_facts,  # pyright: ignore[reportPrivateUsage]
-    _profile_fact_index,  # pyright: ignore[reportPrivateUsage]
-    _resolve_one,  # pyright: ignore[reportPrivateUsage]
-)
 from ...core.resources import resources
 from ...domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,
     profile_binding_selectors,
+)
+from ._profile_binding import (
+    _inject_derived_marriage_facts,  # pyright: ignore[reportPrivateUsage]
+    _profile_fact_index,  # pyright: ignore[reportPrivateUsage]
+    _resolve_one,  # pyright: ignore[reportPrivateUsage]
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

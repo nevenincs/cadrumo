@@ -76,9 +76,7 @@ _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 
 @pytest.mark.parametrize("locale", _SUPPORTED_LOCALES)
 @pytest.mark.parametrize("key", sorted(_OPERATOR_ERROR_LOCALE_KEYS))
-def test_operator_error_locale_key_resolves_in_catalogue(
-    key: str, locale: str
-) -> None:
+def test_operator_error_locale_key_resolves_in_catalogue(key: str, locale: str) -> None:
     """Assert that every operator-error locale key resolves to a non-trivial string.
 
     A "trivial" resolution is one where the returned value equals the
@@ -92,6 +90,4 @@ def test_operator_error_locale_key_resolves_in_catalogue(
         f"(got self-referencing placeholder {resolved!r}). "
         f"Add a real translation via `python -m aeat.locales set {locale} {key!r} <value>`."
     )
-    assert resolved, (
-        f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue."
-    )
+    assert resolved, f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue."

@@ -15,8 +15,17 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core.errors import AeatError
 from ....core.money import round_to_cents as _quantize
-from .._errors import AssetValidationError as _AssetValidationError
+
+
+class AssetRecordError(AeatError):
+    """Raised when an asset record is structurally invalid."""
+
+
+class AssetValidationError(AssetRecordError, ValueError):
+    """Raised when an asset record fails Pydantic validation."""
+
 
 ASSETS_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
@@ -141,7 +150,7 @@ class AssetRecord(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`ASSETS_SCHEMA_VERSION`."""
         if value != ASSETS_SCHEMA_VERSION:
-            raise _AssetValidationError(f"unsupported AssetRecord schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AssetRecord schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
@@ -150,15 +159,15 @@ class AssetRecord(BaseModel):
         base = self.taxable_base or self.cost_basis
         computed_iva = _quantize(base * self.iva_rate / _HUNDRED)
         if self.iva_amount is not None and self.iva_amount != computed_iva:
-            raise _AssetValidationError("iva_amount must equal taxable_base * iva_rate")
+            raise AssetValidationError("iva_amount must equal taxable_base * iva_rate")
         computed_gross = _quantize(base + computed_iva)
         if self.gross_total is not None and self.gross_total != computed_gross:
-            raise _AssetValidationError("gross_total must equal taxable_base + iva_amount")
+            raise AssetValidationError("gross_total must equal taxable_base + iva_amount")
         if self.taxable_base is not None:
             non_deductible_iva = computed_iva * (_ONE - self.deductible_iva_ratio)
             expected_basis = _quantize(self.taxable_base + non_deductible_iva)
             if self.cost_basis != expected_basis:
-                raise _AssetValidationError("cost_basis must equal taxable_base plus non-deductible IVA")
+                raise AssetValidationError("cost_basis must equal taxable_base plus non-deductible IVA")
         return self
 
     @property
@@ -211,7 +220,7 @@ class AmortizacionLedger(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`ASSETS_SCHEMA_VERSION`."""
         if value != ASSETS_SCHEMA_VERSION:
-            raise _AssetValidationError(f"unsupported AmortizacionLedger schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AmortizacionLedger schema_version {value!r}")
         return value
 
 
@@ -233,7 +242,7 @@ class AssetsLedgerDocument(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`ASSETS_SCHEMA_VERSION`."""
         if value != ASSETS_SCHEMA_VERSION:
-            raise _AssetValidationError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
         return value
 
 
@@ -242,5 +251,7 @@ __all__ = [
     "AmortizacionLedger",
     "AssetClass",
     "AssetRecord",
+    "AssetRecordError",
+    "AssetValidationError",
     "LibertadAmortizacionElection",
 ]

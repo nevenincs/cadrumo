@@ -41,8 +41,10 @@ from ..live import (
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
+
 class Modelo100BorradorBindingError(ModeloError):
     """Raised when borrador values cannot be consumed for a calculation."""
+
 
 class Modelo100BorradorBindingCommand(BaseModel):
     """Command contract for resolving one optional borrador snapshot."""
@@ -66,6 +68,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
                 translated_message="application.modelo.borrador_binding.errors.caller_binding_keys_blank",
             )
         return self
+
 
 class Modelo100BorradorBindingResult(BaseModel):
     """Values from a borrador snapshot that survived precedence checks."""
@@ -92,6 +95,7 @@ class Modelo100BorradorBindingResult(BaseModel):
                 translated_message="application.modelo.borrador_binding.errors.source_trace_mismatch",
             )
         return self
+
 
 def resolve_modelo_100_borrador_bindings(
     command: Modelo100BorradorBindingCommand,
@@ -172,6 +176,7 @@ def resolve_modelo_100_borrador_bindings(
         bindings_sourced_from_borrador=sourced,
     )
 
+
 class Modelo100BorradorSourceResolver:
     """Source mesh adapter for explicitly selected Modelo 100 borrador snapshots."""
 
@@ -245,6 +250,7 @@ class Modelo100BorradorSourceResolver:
             ),
         )
 
+
 def _assert_same_axis(
     *,
     bucket_id: str,
@@ -265,6 +271,7 @@ def _assert_same_axis(
             f"calculation year={filing_year} period={expected_period!r}"
         )
 
+
 def _assert_registry_snapshot_axis(
     *,
     command: Modelo100BorradorBindingCommand,
@@ -282,10 +289,12 @@ def _assert_registry_snapshot_axis(
             f"command year={command.filing_year} period={command.period.strip()!r}"
         )
 
+
 def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[str, DataBindingDefinition]:
     return {
         str(binding.id): binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True
     }
+
 
 def _decimal_value(binding_id: str, value: Decimal | str) -> Decimal:
     if isinstance(value, Decimal):
@@ -296,6 +305,7 @@ def _decimal_value(binding_id: str, value: Decimal | str) -> Decimal:
         raise Modelo100BorradorBindingError(
             f"borrador value for numeric binding {binding_id!r} must be decimal-compatible; got {value!r}"
         ) from exc
+
 
 __all__ = [
     "Modelo100BorradorBindingCommand",

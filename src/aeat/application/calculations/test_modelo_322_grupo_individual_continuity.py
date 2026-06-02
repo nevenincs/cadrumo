@@ -109,9 +109,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     Returns the result plus its produced-value count (the enrollment evidence).
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
-    binding_values = resolve_ledger_iva_aggregation_binding_values(
-        snapshot.revision, _year_ledger(filing_year)
-    )
+    binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
@@ -158,8 +156,7 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
             result, produced = _calculate_322(filing_year=filing_year)
             # Wiring invariant per year: result == devengada - deducible.
             assert result.values["iva.resultado-regimen-general"] == (
-                result.values["iva.cuota-devengada-total"]
-                - result.values["iva.cuota-deducible-total"]
+                result.values["iva.cuota-devengada-total"] - result.values["iva.cuota-deducible-total"]
             )
             recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
 

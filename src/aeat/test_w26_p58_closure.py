@@ -84,24 +84,14 @@ def _file_has_no_type_ignore_on_def(rel_path: str, func_name: str) -> bool:
 def test_s663_no_type_ignore_on_playwright_functions() -> None:
     """S663: All three Playwright adapter functions carry proper annotations, no type: ignore."""
     rel, _ = _S663_SITES[0]
-    violations = [
-        name
-        for _, name in _S663_SITES
-        if not _file_has_no_type_ignore_on_def(rel, name)
-    ]
+    violations = [name for _, name in _S663_SITES if not _file_has_no_type_ignore_on_def(rel, name)]
     if violations:
-        raise AssertionError(
-            f"S663: type: ignore still present on function defs: {violations}"
-        )
+        raise AssertionError(f"S663: type: ignore still present on function defs: {violations}")
 
 
 def test_s664_session_store_cast_present() -> None:
     """S664: cast(SessionStoreProtocol, _impl) and assert present; no type: ignore on those lines."""
-    missing = [
-        token
-        for _, token in _S664_SITES
-        if not _file_has_token(_S664_SITES[0][0], token)
-    ]
+    missing = [token for _, token in _S664_SITES if not _file_has_token(_S664_SITES[0][0], token)]
     if missing:
         raise AssertionError(f"S664: expected tokens missing: {missing}")
 
@@ -111,40 +101,27 @@ def test_s664_session_store_cast_present() -> None:
     for line in source.splitlines():
         if "type: ignore[arg-type]" in line or "type: ignore[return-value]" in line:
             if "configure_session_store" in line or "_session_store_impl" in line:
-                raise AssertionError(
-                    f"S664: type: ignore still present on session-store line: {line!r}"
-                )
+                raise AssertionError(f"S664: type: ignore still present on session-store line: {line!r}")
 
 
 def test_s665_invoice_import_cast_present() -> None:
     """S665: cast(InvoiceRowPayload, ...) used at all three decode sites; no type: ignore[misc]."""
-    missing = [
-        token
-        for _, token in _S665_SITES
-        if not _file_has_token(_S665_SITES[0][0], token)
-    ]
+    missing = [token for _, token in _S665_SITES if not _file_has_token(_S665_SITES[0][0], token)]
     if missing:
         raise AssertionError(f"S665: expected cast tokens missing: {missing}")
 
     path = _SRC_ROOT / pathlib.Path("application", "invoices", "_importing.py")
     source = path.read_text(encoding="utf-8", errors="replace")
     misc_ignores = [
-        line for line in source.splitlines()
-        if "type: ignore[misc]" in line and "InvoiceRowPayload" in line
+        line for line in source.splitlines() if "type: ignore[misc]" in line and "InvoiceRowPayload" in line
     ]
     if misc_ignores:
-        raise AssertionError(
-            f"S665: type: ignore[misc] still present on InvoiceRowPayload lines: {misc_ignores}"
-        )
+        raise AssertionError(f"S665: type: ignore[misc] still present on InvoiceRowPayload lines: {misc_ignores}")
 
 
 def test_s666_actions_helpers_annotated() -> None:
     """S666: Both private helpers carry proper WorkUnit / RegistrySnapshot annotations."""
-    missing = [
-        token
-        for _, token in _S666_SITES
-        if not _file_has_token(_S666_SITES[0][0], token)
-    ]
+    missing = [token for _, token in _S666_SITES if not _file_has_token(_S666_SITES[0][0], token)]
     if missing:
         raise AssertionError(f"S666: annotation signatures missing: {missing}")
 
@@ -184,9 +161,7 @@ def test_ratchet_passes() -> None:
         cwd=_SRC_ROOT.parent.parent,
     )
     if result.returncode != 0:
-        raise AssertionError(
-            f"Ratchet test failed:\n{result.stdout}\n{result.stderr}"
-        )
+        raise AssertionError(f"Ratchet test failed:\n{result.stdout}\n{result.stderr}")
 
 
 def test_prior_wave_cast_rationale_inventory_green() -> None:
@@ -215,6 +190,4 @@ def test_prior_wave_cast_rationale_inventory_green() -> None:
         cwd=_SRC_ROOT.parent.parent,
     )
     if result.returncode != 0:
-        raise AssertionError(
-            f"Cast-rationale inventory failed:\n{result.stdout}\n{result.stderr}"
-        )
+        raise AssertionError(f"Cast-rationale inventory failed:\n{result.stdout}\n{result.stderr}")

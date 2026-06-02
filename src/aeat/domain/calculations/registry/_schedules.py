@@ -38,11 +38,14 @@ def applicable_filing_schedules(
     for schedule in revision.filing_schedules:
         if period is not None and period not in schedule.periods:
             continue
-        if evaluate_profile_conditions(
-            schedule.profile_conditions,
-            profile_facts,
-            mode=schedule.profile_condition_mode,
-        ) is not None:
+        if (
+            evaluate_profile_conditions(
+                schedule.profile_conditions,
+                profile_facts,
+                mode=schedule.profile_condition_mode,
+            )
+            is not None
+        ):
             matched.append(schedule)
     return tuple(matched)
 

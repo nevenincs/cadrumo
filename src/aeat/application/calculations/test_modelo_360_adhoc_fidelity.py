@@ -47,7 +47,7 @@ _CLOCK_N_PLUS_1 = datetime(2025, 9, 30, 10, 0, 0, tzinfo=UTC)
 
 # estado-miembro codes: 276 = DE (Germany), 250 = FR (France)
 # Using integer Decimal so the casilla_values dict returns a comparable value
-_ESTADO_MIEMBRO_N = Decimal("276")     # claimant established in Germany in year N
+_ESTADO_MIEMBRO_N = Decimal("276")  # claimant established in Germany in year N
 _ESTADO_MIEMBRO_N_PLUS_1 = Decimal("250")  # claimant moves to France for year N+1
 
 
@@ -83,9 +83,7 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
         period="AD-HOC",
         observations=(
             CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(
-                casilla_id="decl.estado-miembro", value=_ESTADO_MIEMBRO_N_PLUS_1
-            ),
+            CasillaObservation(casilla_id="decl.estado-miembro", value=_ESTADO_MIEMBRO_N_PLUS_1),
         ),
     )
 
@@ -146,9 +144,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="AD-HOC",
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != "decl.estado-miembro"
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != "decl.estado-miembro"),
     )
     assert obs_n != obs_n_missing
 

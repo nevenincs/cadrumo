@@ -65,7 +65,10 @@ class ProfileValidationService:
         return self._build_report(record.profile_id, record.facts)
 
     def validate_facts(self, profile_id: str, facts: Iterable[UserProfileFact]) -> ProfileValidationReport:
-        """Validate a free-standing collection of facts (e.g. a registration command) and return a :class:`ProfileValidationReport`."""
+        """Validate a free-standing collection of facts.
+
+        Returns a :class:`ProfileValidationReport`.
+        """
         return self._build_report(profile_id, tuple(facts))
 
     def _build_report(
@@ -140,10 +143,7 @@ class ProfileValidationService:
             severity=BaseSeverity.ERROR,
             code="invalid_date_value",
             path=fact.path,
-            message=(
-                f"field {fact.path!r} must be a valid ISO-8601 calendar date "
-                f"(YYYY-MM-DD); got {fact.value!r}"
-            ),
+            message=(f"field {fact.path!r} must be a valid ISO-8601 calendar date (YYYY-MM-DD); got {fact.value!r}"),
         )
 
     def _validate_effective_window(

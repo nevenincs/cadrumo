@@ -47,7 +47,16 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
     assert snapshot.revision.id == "2019-y-siguientes"
     assert snapshot.revision.period_selector.year_from == 2019
     assert {entry.target for entry in result.entries} == {
-        "03", "04", "07", "09", "11", "12", "13", "14", "17", "19",
+        "03",
+        "04",
+        "07",
+        "09",
+        "11",
+        "12",
+        "13",
+        "14",
+        "17",
+        "19",
         "saldo-negativo-fin-periodo",
     }
     assert "rd-439-2007:art-110" in snapshot.legal
@@ -208,7 +217,13 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert snapshot.revision.id == revision_id
     entries = {entry.target: entry for entry in result.entries}
     assert set(entries) == {
-        "04", "06", "07", "10", "13", "15", "saldo-negativo-fin-periodo",
+        "04",
+        "06",
+        "07",
+        "10",
+        "13",
+        "15",
+        "saldo-negativo-fin-periodo",
     }
     assert entries["04"].operand_refs == ("03", "irpf.objective_no_base_fractional_payment_rate")
     assert entries["06"].operand_refs == ("05", "irpf.objective_agriculture_fractional_payment_rate")
@@ -360,11 +375,7 @@ def _modelo_180_parsed_casillas(
     declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
     perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)
     parsed = parse_export_payload(layout, (declarante + perceptor).encode("latin-1"))
-    return {
-        field.casilla_id: field.value
-        for field in parsed.casillas
-        if field.casilla_id is not None
-    }
+    return {field.casilla_id: field.value for field in parsed.casillas if field.casilla_id is not None}
 
 
 @pytest.mark.parametrize(("casilla_id", "expected_value"), _MODELO_180_EXPECTED_CASILLAS)

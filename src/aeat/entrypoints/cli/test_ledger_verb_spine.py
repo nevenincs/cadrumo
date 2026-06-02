@@ -52,7 +52,6 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
 LINK_CHECK_PREFLIGHT: frozenset[str] = frozenset({"link", "check", "preflight"})
 
 
-
 def test_ledger_verb_roster_matches_canonical_spine() -> None:
     """The set of mounted ledger verbs equals the canonical roster.
 
@@ -80,7 +79,8 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 
 @pytest.mark.parametrize("verb", ["link", "check", "preflight"])
 def test_ledger_orthogonal_verb_help_states_local_only(
-    cli_runner: CliRunner, verb: str,
+    cli_runner: CliRunner,
+    verb: str,
 ) -> None:
     """Every orthogonal-axis verb's help text must signal `local-only`
     so the operator cannot mistake it for an AEAT-contacting call.
@@ -91,7 +91,6 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     result = cli_runner.invoke(app, ["app", "ledger", verb, "--help"])
     assert result.exit_code == 0, result.output
     haystack = result.output.lower()
-    assert any(
-        token in haystack
-        for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
-    ), result.output
+    assert any(token in haystack for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")), (
+        result.output
+    )

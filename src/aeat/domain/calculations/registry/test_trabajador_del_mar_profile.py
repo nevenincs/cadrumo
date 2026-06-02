@@ -121,12 +121,8 @@ def test_no_da24_reference_in_maritime_worker_section() -> None:
     section = schema.section("maritime_worker")
     for field in section.fields:
         for ref in field.legal_refs:
-            assert "DA 24" not in ref, (
-                f"field {field.key!r} references DA 24 LIRPF which has no maritime content"
-            )
-        assert "DA 24" not in field.description, (
-            f"field {field.key!r} description mentions DA 24 LIRPF"
-        )
+            assert "DA 24" not in ref, f"field {field.key!r} references DA 24 LIRPF which has no maritime content"
+        assert "DA 24" not in field.description, f"field {field.key!r} description mentions DA 24 LIRPF"
 
 
 # --- S07: binding-entry integrity tests ---
@@ -200,9 +196,7 @@ def test_no_da24_reference_in_trabajador_del_mar_toml() -> None:
             assert "DA 24" not in str(ref.get("reference", "")), (
                 f"binding {bid!r} legal_ref references DA 24 LIRPF which has no maritime content"
             )
-            assert "DA 24" not in str(ref.get("notes", "")), (
-                f"binding {bid!r} legal_ref notes mention DA 24 LIRPF"
-            )
+            assert "DA 24" not in str(ref.get("notes", "")), f"binding {bid!r} legal_ref notes mention DA 24 LIRPF"
 
 
 def test_all_binding_entries_carry_nonempty_legal_refs() -> None:

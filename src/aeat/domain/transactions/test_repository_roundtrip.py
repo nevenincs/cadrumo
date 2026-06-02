@@ -167,8 +167,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         envelope = _json.loads(record.payload.decode("utf-8"))
         txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
         assert "business_pct" in txn_dict, (
-            "fixture must serialise business_pct into the envelope "
-            "for this proof test to be meaningful"
+            "fixture must serialise business_pct into the envelope for this proof test to be meaningful"
         )
         del txn_dict["business_pct"]
         profile.repository.save(
@@ -263,8 +262,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
         envelope = _json.loads(record.payload.decode("utf-8"))
         txn_dict = envelope["payload"]["transactions"][spanish_txn.transaction_id]
         assert txn_dict.get("source_jurisdiction") == "ES", (
-            "fixture must serialise source_jurisdiction into the envelope "
-            "for the grandfather proof to be meaningful"
+            "fixture must serialise source_jurisdiction into the envelope for the grandfather proof to be meaningful"
         )
         del txn_dict["source_jurisdiction"]
         profile.repository.save(

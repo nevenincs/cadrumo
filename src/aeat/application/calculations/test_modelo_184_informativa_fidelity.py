@@ -161,9 +161,7 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
-        assert loaded is not None, (
-            f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
-        )
+        assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
         assert loaded.observation == obs_n, (
             "year-N 184 observation did not survive the encrypted-SQL roundtrip; "
             "at least one casilla was silently dropped, coerced, or defaulted away"
@@ -247,9 +245,7 @@ def test_member_nif_identity_persists_across_both_exercises(tmp_path: Path) -> N
         assert nif_n1 is not None, "year-N+1 observation missing tipo2.miembro-nif casilla"
         assert nif_n == Decimal("11111111"), f"NIF round-trip failed in year N: got {nif_n}"
         assert nif_n1 == Decimal("11111111"), f"NIF round-trip failed in year N+1: got {nif_n1}"
-        assert nif_n == nif_n1, (
-            f"miembro NIF drifted between year N ({nif_n}) and year N+1 ({nif_n1})"
-        )
+        assert nif_n == nif_n1, f"miembro NIF drifted between year N ({nif_n}) and year N+1 ({nif_n1})"
 
 
 def test_renta_atribuible_casilla_is_present_and_non_zero_in_both_years(tmp_path: Path) -> None:
@@ -263,9 +259,7 @@ def test_renta_atribuible_casilla_is_present_and_non_zero_in_both_years(tmp_path
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save_observation(_year_n_observation(), source_kind="app_filing", captured_at=_CLOCK_N)
-        repo.save_observation(
-            _year_n_plus_1_observation(), source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1
-        )
+        repo.save_observation(_year_n_plus_1_observation(), source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="0A")
         loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="0A")
 
@@ -293,9 +287,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != "tipo2.renta-atribuible-importe"
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != "tipo2.renta-atribuible-importe"),
     )
 
     assert obs_n != obs_n_no_importe, (
@@ -362,8 +354,7 @@ def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_mani
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; "
-        f"got {evidence.distinct_renta_years!r}"
+        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
     )
 
     assert_enrollment_matches_manifest(evidence)

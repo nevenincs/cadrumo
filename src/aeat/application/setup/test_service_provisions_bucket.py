@@ -17,16 +17,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
-from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import load_settings
+from ...tests.secure_sql import isolated_profile_storage_root
+from ..user_profile._orchestration import ProfileAlreadyRegisteredError
 from ._contracts import InitializeWorkspaceCommand
 from ._service import initialize_workspace
-from ..user_profile._orchestration import ProfileAlreadyRegisteredError
-from ...core.config import SecretStoreBackend, load_settings, override_settings
-from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -35,17 +33,8 @@ _UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12
 
 @pytest.fixture
 def profile_storage_root(tmp_path: Path) -> Iterator[Path]:
-    with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine(settings)
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def test_initialize_workspace_provisions_bucket_directory_and_manifest(

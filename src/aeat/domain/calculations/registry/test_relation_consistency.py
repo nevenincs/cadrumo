@@ -26,10 +26,7 @@ def _registry_relation_cases() -> tuple[
     """
     modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
     by_id = {modelo.id: modelo for modelo in modelos}
-    return tuple(
-        (modelo, revision, relation, by_id)
-        for modelo, revision, relation in _relations(modelos)
-    )
+    return tuple((modelo, revision, relation, by_id) for modelo, revision, relation in _relations(modelos))
 
 
 def _relation_consistency_errors(
@@ -49,18 +46,14 @@ def _relation_consistency_errors(
     errors.extend(_target_binding_errors(modelo, revision, relation))
     source_modelo = by_id.get(relation.source_modelo)
     if source_modelo is None:
-        errors.append(
-            f"{modelo.id}/{revision.id}/{relation.id}: unknown source modelo {relation.source_modelo}"
-        )
+        errors.append(f"{modelo.id}/{revision.id}/{relation.id}: unknown source modelo {relation.source_modelo}")
         return errors
     matching_revisions = tuple(_matching_source_revisions(source_modelo, relation))
     if not matching_revisions:
         errors.append(f"{modelo.id}/{revision.id}/{relation.id}: no source revision matches selector")
         return errors
     for source_revision in matching_revisions:
-        errors.extend(
-            _source_revision_consistency_errors(modelo, revision, relation, source_modelo, source_revision)
-        )
+        errors.extend(_source_revision_consistency_errors(modelo, revision, relation, source_modelo, source_revision))
     return errors
 
 
@@ -72,9 +65,7 @@ def _target_binding_errors(
     target_bindings = {binding.id for binding in revision.bindings}
     if relation.target_binding in target_bindings:
         return []
-    return [
-        f"{modelo.id}/{revision.id}/{relation.id}: unknown target binding {relation.target_binding}"
-    ]
+    return [f"{modelo.id}/{revision.id}/{relation.id}: unknown target binding {relation.target_binding}"]
 
 
 def _source_revision_consistency_errors(

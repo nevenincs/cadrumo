@@ -293,19 +293,44 @@ def resolve_previous_filing_binding_values(
                 and observation.filing_year == expected_year
                 and observation.period == required_period
             )
-            if len(matches) != 1:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} expected one observed filing "
-                    f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
-                )
-            for casilla_id in _previous_filing_source_ids(selector):
-                casilla_value = matches[0].casilla_values.get(casilla_id)
-                if casilla_value is None:
+            if selector.grouping == "per_grupo_member":
+                # Cross-member fan-in (A2 ADR): one observed filing per grupo
+                # member shares this (modelo, filing_year, period); sum each
+                # requested source casilla across ALL members. The uniqueness
+                # guard is intentionally relaxed ONLY on this opt-in branch — at
+                # least one member must have filed.
+                if not matches:
                     raise RegistryValidationError(
-                        f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
-                        f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                        f"binding {binding.id!r} (per_grupo_member) expected at least one observed filing "
+                        f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0"
                     )
-                values.append(casilla_value)
+                for member_match in matches:
+                    for casilla_id in _previous_filing_source_ids(selector):
+                        casilla_value = member_match.casilla_values.get(casilla_id)
+                        if casilla_value is None:
+                            raise RegistryValidationError(
+                                f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                                f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                            )
+                        values.append(casilla_value)
+            else:
+                # Single-filer path (default): the load-bearing uniqueness guard
+                # that catches a missing or duplicated prior filing — unchanged
+                # for 390<-303, 184, M200 BIN, and every other previous_filing
+                # binding.
+                if len(matches) != 1:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} expected one observed filing "
+                        f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}"
+                    )
+                for casilla_id in _previous_filing_source_ids(selector):
+                    casilla_value = matches[0].casilla_values.get(casilla_id)
+                    if casilla_value is None:
+                        raise RegistryValidationError(
+                            f"binding {binding.id!r} requires observed casilla {casilla_id!r} "
+                            f"from {selector.source_modelo!r}/{expected_year}/{required_period!r}"
+                        )
+                    values.append(casilla_value)
         resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
     return resolved
 
@@ -349,6 +374,16 @@ class _PreviousModeloSelector(BaseModel):
     # within the same ejercicio and must produce no observation
     # requirement. ``None`` preserves the unbounded behaviour.
     max_year_delta: int | None = None
+    # Cross-filer aggregation axis. When ``grouping = "per_grupo_member"`` the
+    # resolver enumerates EVERY observation matching the source
+    # (modelo, filing_year, period) — each a distinct grupo-de-entidades member's
+    # filing — and sums the requested source casillas across them: the
+    # cross-member fan-in the 353<-322 aggregation needs (A2 ADR). The default
+    # ``None`` is the single-filer shape: the resolver keeps its
+    # ``len(matches) == 1`` uniqueness guard untouched, so every existing
+    # previous_filing binding (390<-303, 184, M200 BIN carryforward) stays
+    # byte-identical. This is the campaign's sole schema extension; it is opt-in.
+    grouping: Literal["per_grupo_member"] | None = None
 
     @field_validator("max_year_delta")
     @classmethod
@@ -405,16 +440,31 @@ class _PreviousModeloSelector(BaseModel):
                     "previous-filing selector cannot declare period/source_periods together with "
                     "source_period_offset_from_target"
                 )
-            if self.source_period_offset_from_target == 0:
+            if self.source_period_offset_from_target == 0 and self.grouping != "per_grupo_member":
+                # offset 0 = the SAME period. For single-filer carries that is a
+                # no-op (the filing referencing itself) and is rejected. The
+                # 353<-322 cross-member aggregation legitimately needs the same
+                # period of the target (353[mes M] sums member-322[mes M]), so
+                # offset 0 is permitted exclusively on the per_grupo_member branch.
                 raise RegistryValidationError("previous-filing source_period_offset_from_target must be non-zero")
         if self.period is not None and self.source_periods:
             raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
-        if self.period is None and not self.source_periods and self.source_casillas:
+        if (
+            self.period is None
+            and not self.source_periods
+            and self.source_period_offset_from_target is None
+            and self.source_casillas
+        ):
             # Direct-value-copy bindings (singular source_output)
             # frequently omit the period anchor because the relation
             # carries the period contract; only enforce period on the
-            # plural source_casillas shape.
-            raise RegistryValidationError("previous-filing selector must declare period or source_periods")
+            # plural source_casillas shape. A source_period_offset_from_target
+            # (incl. the offset-0 same-period anchor used by the
+            # per_grupo_member cross-member aggregation) is an equally valid
+            # period anchor, so it satisfies this requirement.
+            raise RegistryValidationError(
+                "previous-filing selector must declare period, source_periods, or source_period_offset_from_target"
+            )
         return self
 
     @model_validator(mode="after")

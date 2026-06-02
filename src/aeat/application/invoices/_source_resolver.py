@@ -66,13 +66,7 @@ class InvoiceCatalogueSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=resolve_invoice_binding_values(context.revision, observations),
             source_transaction_ids=tuple(
-                sorted(
-                    {
-                        transaction_id
-                        for invoice, _ in observed
-                        for transaction_id in invoice.linked_transaction_ids
-                    }
-                )
+                sorted({transaction_id for invoice, _ in observed for transaction_id in invoice.linked_transaction_ids})
             ),
             provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in observed),
         )

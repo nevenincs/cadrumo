@@ -59,8 +59,7 @@ def test_registry_toml_fragments_stay_reviewable() -> None:
     ]
 
     assert oversize == [], "\n".join(
-        f"{size.path}: {size.line_count} lines, longest line {size.max_line_chars} chars"
-        for size in oversize[:20]
+        f"{size.path}: {size.line_count} lines, longest line {size.max_line_chars} chars" for size in oversize[:20]
     )
 
 
@@ -70,12 +69,10 @@ def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
     widest = max(sizes, key=lambda size: size.max_line_chars)
 
     assert largest.line_count < 3_500, (
-        f"largest registry TOML grew beyond review baseline: {largest.path} "
-        f"has {largest.line_count} lines"
+        f"largest registry TOML grew beyond review baseline: {largest.path} has {largest.line_count} lines"
     )
     assert widest.max_line_chars < 1_000, (
-        f"widest registry TOML row grew beyond review baseline: {widest.path} "
-        f"has a {widest.max_line_chars}-char line"
+        f"widest registry TOML row grew beyond review baseline: {widest.path} has a {widest.max_line_chars}-char line"
     )
 
 

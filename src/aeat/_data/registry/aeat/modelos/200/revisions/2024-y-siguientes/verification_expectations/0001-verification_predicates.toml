@@ -12,3 +12,24 @@ predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
 expression = 'implies_nonzero(["00501", "DP200014:00552"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-30"]
+
+# Elective-cap BLOCKING gate (LIS art. 26.1): the operator-elective applied BIN
+# compensation (DP200014:00547) must NOT exceed the computed art.26.1 ceiling
+# (DP200014:bin-aplicada-maxima = min(stock, max(1M, 70%·base previa))). When the
+# ceiling is positive, an applied amount above it is an over-compensation the
+# verify gate refuses; electing LESS than the ceiling is permitted (compensation
+# is a right, not a mandate). cap_le_when_positive holds when the ceiling <= 0.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-200-compensacion-bin-no-excede-limite-art-26"
+expression = 'cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-27-2014:art-26"]
+
+# Stock BLOCKING gate (LIS art. 26): the applied BIN compensation cannot exceed
+# the BIN stock available at the start of the period (casilla 00670). You cannot
+# compensate more negative bases than you hold.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
+expression = 'cap_le_when_positive(["DP200014:00547", "00670"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-27-2014:art-26"]

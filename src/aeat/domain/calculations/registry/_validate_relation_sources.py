@@ -117,9 +117,7 @@ def _validate_single_relation(
     return failures
 
 
-def _relation_is_prior_year_filing_carry(
-    relation: RelationDefinition, revision: ModeloRevision
-) -> bool:
+def _relation_is_prior_year_filing_carry(relation: RelationDefinition, revision: ModeloRevision) -> bool:
     """Return whether the relation is a prior-year carry of a historical filing.
 
     Two conditions, both required:
@@ -138,8 +136,7 @@ def _relation_is_prior_year_filing_carry(
       check so a widened target revision still demands matching source years).
     """
     targets_previous_filing = any(
-        binding.id == relation.target_binding and binding.source == "previous_filing"
-        for binding in revision.bindings
+        binding.id == relation.target_binding and binding.source == "previous_filing" for binding in revision.bindings
     )
     if not targets_previous_filing:
         return False

@@ -30,6 +30,7 @@ RATIONALE-* markers.
 
 No mocks, no skips, no tautological assertions.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -84,9 +85,7 @@ def _find_def_line(lines: list[str], func_name: str) -> int | None:
     """Return 1-based line number of the first matching def or None."""
     for i, line in enumerate(lines, start=1):
         stripped = line.strip()
-        if stripped.startswith(f"def {func_name}(") or stripped.startswith(
-            f"async def {func_name}("
-        ):
+        if stripped.startswith(f"def {func_name}(") or stripped.startswith(f"async def {func_name}("):
             return i
     return None
 
@@ -119,9 +118,7 @@ def test_profile_catalogue_slots_carry_rationale(func_name: str) -> None:
     lineno = _find_def_line(lines, func_name)
     assert lineno is not None, f"profile_catalogue.py: could not locate def {func_name}"
     def_line = lines[lineno - 1]
-    assert _CATALOGUE_TOKEN in def_line, (
-        f"profile_catalogue.py:{lineno} def {func_name}: missing {_CATALOGUE_TOKEN!r}"
-    )
+    assert _CATALOGUE_TOKEN in def_line, f"profile_catalogue.py:{lineno} def {func_name}: missing {_CATALOGUE_TOKEN!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -138,9 +135,7 @@ def test_calc_sheets_build_factories_carry_rationale(func_name: str) -> None:
     """_drive_service and _sheets_service must carry ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY."""
     lines = _lines(_CALC_SHEETS_MODULE)
     lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, (
-        f"_calc_sheets_apply.py: could not locate def {func_name}"
-    )
+    assert lineno is not None, f"_calc_sheets_apply.py: could not locate def {func_name}"
     def_line = lines[lineno - 1]
     assert _GOOGLE_BUILD_TOKEN in def_line, (
         f"_calc_sheets_apply.py:{lineno} def {func_name}: missing {_GOOGLE_BUILD_TOKEN!r}"
@@ -180,14 +175,8 @@ def test_scrub_value_overload_impl_carries_rationale() -> None:
     """_scrub_value implementation overload in core/logging.py must carry ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL."""
     lines = _lines(_LOGGING_MODULE)
     # Find all occurrences of _scrub_value def lines; the impl has -> Any.
-    impl_lines = [
-        (i, ln)
-        for i, ln in enumerate(lines, start=1)
-        if f"def {_SCRUB_FUNC}(" in ln and "-> Any" in ln
-    ]
-    assert impl_lines, (
-        f"core/logging.py: could not locate implementation overload of {_SCRUB_FUNC} returning Any"
-    )
+    impl_lines = [(i, ln) for i, ln in enumerate(lines, start=1) if f"def {_SCRUB_FUNC}(" in ln and "-> Any" in ln]
+    assert impl_lines, f"core/logging.py: could not locate implementation overload of {_SCRUB_FUNC} returning Any"
     failures = [
         f"core/logging.py:{lineno} def {_SCRUB_FUNC}: missing {_SCRUB_OVERLOAD_TOKEN!r}"
         for lineno, ln in impl_lines
@@ -221,9 +210,7 @@ def test_google_drive_any_return_sites_carry_rationale(func_name: str) -> None:
     """
     lines = _lines(_GOOGLE_DRIVE_MODULE)
     lineno = _find_def_line(lines, func_name)
-    assert lineno is not None, (
-        f"_google_drive.py: could not locate def {func_name}"
-    )
+    assert lineno is not None, f"_google_drive.py: could not locate def {func_name}"
     def_line = lines[lineno - 1]
     assert _GOOGLE_DRIVE_TOKEN in def_line, (
         f"_google_drive.py:{lineno} def {func_name}: missing {_GOOGLE_DRIVE_TOKEN!r}"

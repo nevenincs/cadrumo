@@ -32,8 +32,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
@@ -49,10 +47,13 @@ from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import load_settings
 from ...core.errors import AeatError
+from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
+from ...core.time import now
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -71,11 +72,9 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-
 _TAX_ID_FACT_PATH = "identity.tax_id"
 """Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
+
 
 def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
     """Return the canonical (upper-cased, trimmed) tax id from ``facts``.
@@ -90,6 +89,7 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
                 return text
     return None
 
+
 def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
     """Map the encrypted-record lifecycle status to its manifest mirror.
 
@@ -100,6 +100,7 @@ def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
     """
     return BucketLifecycleStatus(status.value)
 
+
 def _default_kdf_params() -> ManifestKdfParams:
     """Return the OWASP-baseline Argon2id parameters for a fresh bucket.
 
@@ -109,6 +110,7 @@ def _default_kdf_params() -> ManifestKdfParams:
     non-breaking. The salt is freshly minted per bucket.
     """
     return KdfParams.default().to_manifest_params()
+
 
 class ProfileSummary(BaseModel):
     """A typed one-row summary of a registered profile.
@@ -123,6 +125,7 @@ class ProfileSummary(BaseModel):
     profile_id: ProfileId
     label: str = Field(min_length=1, max_length=160)
     status: UserProfileStatus
+
 
 class ProfileRepository:
     """The sole writer of a logical profile's cross-store physical state.
@@ -790,5 +793,6 @@ class ProfileRepository:
         target = pointer_path(self._root)
         if target.is_file():
             target.unlink()
+
 
 __all__ = ["ProfileRepository", "ProfileSummary"]

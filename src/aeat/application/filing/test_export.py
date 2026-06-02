@@ -512,9 +512,7 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 
     payload = output.read_bytes()
     parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {
-        entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None
-    }
+    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None}
     draft_values = {entry.casilla_id: entry.value for entry in draft.values}
 
     assert receipt.byte_size == len(payload)
@@ -530,10 +528,7 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
     exported_provenance = {entry.casilla_id: entry for entry in receipt.casilla_provenance}
     draft_provenance = {entry.casilla_id: entry for entry in draft.casilla_provenance}
     assert set(exported_values).issubset(exported_provenance)
-    assert all(
-        exported_provenance[casilla_id] == draft_provenance[casilla_id]
-        for casilla_id in exported_values
-    )
+    assert all(exported_provenance[casilla_id] == draft_provenance[casilla_id] for casilla_id in exported_values)
 
 
 def test_export_and_verify_build_model_scoped_provider_when_omitted(tmp_path: Path) -> None:

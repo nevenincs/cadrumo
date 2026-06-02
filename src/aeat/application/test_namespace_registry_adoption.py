@@ -36,9 +36,12 @@ def test_application_production_secure_object_namespaces_use_registry_definition
                 offences.append(f"{relative}:{node.lineno}: namespace literal assigned outside registry")
             if isinstance(node, ast.Call) and _passes_namespace_literal(node):
                 offences.append(f"{relative}:{node.lineno}: namespace literal passed to secure-object call")
-            if isinstance(node, ast.Call) and (
-                namespace_name := _secure_object_namespace_name(node)
-            ) is not None and namespace_name in local_namespaces and namespace_name not in registry_namespaces:
+            if (
+                isinstance(node, ast.Call)
+                and (namespace_name := _secure_object_namespace_name(node)) is not None
+                and namespace_name in local_namespaces
+                and namespace_name not in registry_namespaces
+            ):
                 offences.append(
                     f"{relative}:{node.lineno}: secure-object namespace constant must come from storage registry"
                 )
@@ -48,11 +51,7 @@ def test_application_production_secure_object_namespaces_use_registry_definition
 
 def _iter_application_production_sources() -> tuple[Path, ...]:
     return tuple(
-        sorted(
-            path
-            for path in (PROJECT_ROOT / "src/aeat/application").rglob("*.py")
-            if not _is_test_surface(path)
-        )
+        sorted(path for path in (PROJECT_ROOT / "src/aeat/application").rglob("*.py") if not _is_test_surface(path))
     )
 
 

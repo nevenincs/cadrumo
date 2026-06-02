@@ -92,9 +92,7 @@ class TestWizardPersistenceRoundTrip:
     def test_canonical_dict_carries_taxpayer_axis_profile_keys(self) -> None:
         canonical = serialise_answers(SETUP_FLOW, _fully_populated_answers())
         assert canonical["taxpayer_type.entity_type"] == "natural_person"
-        assert canonical["taxpayer_type.irpf_income_categories"] == (
-            "trabajo,capital_inmobiliario,pension"
-        )
+        assert canonical["taxpayer_type.irpf_income_categories"] == ("trabajo,capital_inmobiliario,pension")
         assert canonical["irpf.estimation_regime"] == "directa_simplificada"
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
@@ -319,9 +317,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         # Serialise; the canonical dict drops the undeclared field at
         # the ``if value`` persistence filter ⇒ blank canonical token.
         serialised = serialise_answers(SETUP_FLOW, answers)
-        assert serialised.get(
-            "taxpayer_type.new_entity_first_two_profit_periods"
-        ) == ""
+        assert serialised.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
 
         # Filter blanks the way ``persist_answers`` does for create,
         # then project the deadline-layer TaxpayerProfile.

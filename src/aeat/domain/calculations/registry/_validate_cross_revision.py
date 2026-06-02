@@ -116,10 +116,7 @@ def _validate_strict_cross_revision_casilla_continuity(
                 continue
             left_revision = modelo.revisions[divergence.left_revision_id]
             right_revision = modelo.revisions[divergence.right_revision_id]
-            if (
-                left_revision.continuidad_validation != "strict"
-                and right_revision.continuidad_validation != "strict"
-            ):
+            if left_revision.continuidad_validation != "strict" and right_revision.continuidad_validation != "strict":
                 continue
             if not _has_declared_continuity_surface(divergence):
                 continue
@@ -215,11 +212,7 @@ def _validate_strict_retired_continuity_surfaces(modelo: ModeloDefinition) -> tu
 
 def _continuidad_ids_by_revision(modelo: ModeloDefinition) -> dict[str, set[str]]:
     return {
-        revision.id: {
-            casilla.continuidad_id
-            for casilla in revision.casillas
-            if casilla.continuidad_id is not None
-        }
+        revision.id: {casilla.continuidad_id for casilla in revision.casillas if casilla.continuidad_id is not None}
         for revision in modelo.revisions.values()
     }
 
@@ -260,8 +253,7 @@ def _is_strict_non_overlapping_revision_pair(
     right_revision: ModeloRevision,
 ) -> bool:
     return (
-        left_revision.continuidad_validation == "strict"
-        or right_revision.continuidad_validation == "strict"
+        left_revision.continuidad_validation == "strict" or right_revision.continuidad_validation == "strict"
     ) and not _revisions_overlap(left_revision, right_revision)
 
 
@@ -335,8 +327,7 @@ def _format_cross_revision_failure(
     divergences: Iterable[CrossRevisionCasillaDivergence],
 ) -> str:
     divergence_tuples = tuple(
-        (item.right_revision_id, item.field, (item.left_value, item.right_value))
-        for item in divergences
+        (item.right_revision_id, item.field, (item.left_value, item.right_value)) for item in divergences
     )
     return (
         f"cross-revision drift: modelo {modelo_id} casilla "
@@ -398,13 +389,7 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
             )
         )
         evolution_kinds = tuple(
-            sorted(
-                {
-                    divergence.evolution_kind
-                    for divergence in divergences
-                    if divergence.evolution_kind is not None
-                }
-            )
+            sorted({divergence.evolution_kind for divergence in divergences if divergence.evolution_kind is not None})
         )
         covered_by_evolution_count = sum(1 for divergence in divergences if divergence.evolution_covers_field)
         summaries.append(

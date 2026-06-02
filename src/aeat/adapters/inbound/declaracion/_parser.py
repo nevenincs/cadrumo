@@ -45,6 +45,7 @@ from ._schema import DeclaracionObservation, TemplateRevision
 _PdfWord = dict[str, Any]
 
 _logger = get_logger(__name__)
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 _TAX_ID_RE = re.compile(
     r"\bNIF(?:\s+Presentador)?\s*[:\-]\s*(?P<tax_id>(?:[A-Z][0-9]{7}[0-9A-Z]|[0-9]{8}[A-Z]))\b",
@@ -210,8 +211,7 @@ def _parse_declaracion_pages(
     tax_id = _extract_tax_id(text)
     values = _extract_profile_values(pages, profile, source_pdf_path=source_path)
     _logger.debug(
-        "parse_declaracion: path=%s modelo=%s año=%s period=%s revision=%s profile=%s",
-        source_path.name,
+        "parse_declaracion: source=<input-pdf> modelo=%s año=%s period=%s revision=%s profile=%s",
         template.modelo,
         template.año,
         period,
@@ -283,7 +283,7 @@ def _resolve_template(
     if detected is None and not (modelo_override and año_override):
         raise TemplateNotDetectedError(
             translated_message="adapters.inbound.declaracion.errors.template_not_detected",
-            context={"path": path},
+            context={"path": _INPUT_PDF_SOURCE_LABEL},
         )
 
     if detected is None:
@@ -499,8 +499,12 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
     try:
         with pdfplumber.open(pdf_path) as pdf:
             return tuple(page.extract_words() or [] for page in pdf.pages)
-    except Exception:  # pragma: no cover — defensive; pdfplumber surface
-        _logger.debug("pdfplumber word extraction failed for %s", pdf_path, exc_info=True)
+    except Exception as exc:
+        _logger.debug(
+            "pdfplumber word extraction failed for <input-pdf>: %s",
+            type(exc).__name__,
+            exc_info=True,
+        )
         return ()
 
 

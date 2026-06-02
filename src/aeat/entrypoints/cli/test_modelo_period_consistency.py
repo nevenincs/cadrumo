@@ -25,8 +25,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
-
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -83,8 +81,15 @@ def test_work_verify_accepts_modelo_202_pago_fraccionado_periods(period: str) ->
     # not the calculated amounts.
     calc_result = invoke_cached_cli(
         [
-            "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
-            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            "--binding",
+            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
         ],
     )
     assert calc_result.exit_code == 0, calc_result.output
@@ -118,8 +123,15 @@ def test_create_calculate_verify_agree_on_period_token(period: str) -> None:
 
     calc_result = invoke_cached_cli(
         [
-            "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
-            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            "--binding",
+            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
         ],
     )
     assert calc_result.exit_code == 0, calc_result.output

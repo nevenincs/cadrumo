@@ -115,9 +115,7 @@ def _collect_violations() -> list[tuple[str, int]]:
                 continue
             # Check up to _CONTEXT_LINES preceding lines.
             start = max(0, i - _CONTEXT_LINES)
-            if any(
-                any(m in prev for m in _MARKER_TOKENS) for prev in lines[start:i]
-            ):
+            if any(any(m in prev for m in _MARKER_TOKENS) for prev in lines[start:i]):
                 continue
             rel = path.relative_to(_SRC_ROOT).as_posix()
             violations.append((rel, lineno))
@@ -154,9 +152,7 @@ def test_no_new_type_ignore_without_rationale() -> None:
     new_violations = current_violations - _KNOWN_VIOLATING_LINES
 
     if new_violations:
-        lines = "\n  ".join(
-            f"{rel}:{lineno}" for rel, lineno in sorted(new_violations)
-        )
+        lines = "\n  ".join(f"{rel}:{lineno}" for rel, lineno in sorted(new_violations))
         raise AssertionError(
             f"{len(new_violations)} new type-ignore drift site(s) found without a rationale marker:\n"
             f"  {lines}\n\n"

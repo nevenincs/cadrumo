@@ -28,6 +28,7 @@ from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _RULE_ID_LENGTH: int = 64
 
+
 def _compute_rule_id(
     description_pattern: str,
     classification: BusinessClassification,
@@ -36,6 +37,7 @@ def _compute_rule_id(
     """Return the SHA-256 content-addressed rule id."""
     raw = f"{description_pattern}|{classification.value}|{category_id or ''}"
     return hashlib.sha256(raw.encode()).hexdigest()
+
 
 class LedgerClassificationRule(BaseModel):
     """A persisted ledger classification rule.
@@ -61,9 +63,7 @@ class LedgerClassificationRule(BaseModel):
         try:
             re.compile(value)
         except re.error as exc:
-            raise ClassificationRuleError(
-                f"description_pattern is not a valid regex: {exc}"
-            ) from exc
+            raise ClassificationRuleError(f"description_pattern is not a valid regex: {exc}") from exc
         return value
 
     @classmethod
@@ -92,6 +92,7 @@ class LedgerClassificationRule(BaseModel):
     def matches(self, description: str) -> bool:
         """Return ``True`` when this rule's pattern matches ``description`` (case-insensitive)."""
         return bool(re.search(self.description_pattern, description, re.IGNORECASE))
+
 
 __all__ = [
     "LedgerClassificationRule",

@@ -31,12 +31,7 @@ _SEMANTIC_ROLE_AXIS_SUFFIXES: tuple[tuple[str, ...], ...] = (
 def semantic_roles_are_axis_siblings(left: str, right: str) -> bool:
     left_stem, left_axis = _split_semantic_role_axis_suffix(left)
     right_stem, right_axis = _split_semantic_role_axis_suffix(right)
-    if (
-        left_stem is not None
-        and right_stem is not None
-        and left_stem == right_stem
-        and left_axis != right_axis
-    ):
+    if left_stem is not None and right_stem is not None and left_stem == right_stem and left_axis != right_axis:
         return True
     if _semantic_roles_are_legal_reference_siblings(left, right):
         return True
@@ -50,7 +45,7 @@ def _split_semantic_role_axis_suffix(role: str) -> tuple[tuple[str, ...] | None,
     for suffix in _SEMANTIC_ROLE_AXIS_SUFFIXES:
         if len(parts) <= len(suffix):
             continue
-        if parts[-len(suffix):] == suffix:
+        if parts[-len(suffix) :] == suffix:
             return parts[: -len(suffix)], suffix
     return None, None
 
@@ -102,11 +97,7 @@ def _semantic_role_optional_axis_token_siblings(left: tuple[str, ...], right: tu
 
 
 def _strip_semantic_role_optional_axis_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
-    return tuple(
-        part
-        for part in parts
-        if part not in _SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS and not part.isdigit()
-    )
+    return tuple(part for part in parts if part not in _SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS and not part.isdigit())
 
 
 _SEMANTIC_ROLE_CCAA_TOKENS: frozenset[str] = frozenset(

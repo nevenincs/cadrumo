@@ -42,7 +42,7 @@ def _sample_code(code: str) -> ErrorCode:
 def test_error_code_model_is_frozen() -> None:
     code = _sample_code("ERROR_TEST_SAMPLE")
     with pytest.raises((ValidationError, TypeError), match=r"frozen|Instance is frozen|attribute"):
-        setattr(code, "code", "ERROR_TEST_MUTATED")
+        code.code = "ERROR_TEST_MUTATED"
 
 
 def test_duplicate_registration_raises_clear_error() -> None:
@@ -130,12 +130,8 @@ def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
     try:
         # _flush_deferred_binds should rebind the class without raising.
         _flush_deferred_binds()
-        assert UnmatchedPlaceholderError not in _DEFERRED_BIND, (
-            "class should have been flushed out of _DEFERRED_BIND"
-        )
-        assert UnmatchedPlaceholderError in _CLASS_CODE_REGISTRY, (
-            "class should have been added to _CLASS_CODE_REGISTRY"
-        )
+        assert UnmatchedPlaceholderError not in _DEFERRED_BIND, "class should have been flushed out of _DEFERRED_BIND"
+        assert UnmatchedPlaceholderError in _CLASS_CODE_REGISTRY, "class should have been added to _CLASS_CODE_REGISTRY"
         rebound = get_registered_error_code(UnmatchedPlaceholderError)
         assert rebound.code == "INTERNAL_I18N_UNMATCHED_PLACEHOLDER"
     finally:
@@ -170,11 +166,9 @@ def test_error_registry_logger_is_module_level() -> None:
     """_registry.logger is a module-level Logger, not created inline."""
 
     assert isinstance(_registry_logger, logging.Logger), (
-        "Expected a logging.Logger instance; got %r" % type(_registry_logger)
+        f"Expected a logging.Logger instance; got {type(_registry_logger)!r}"
     )
-    assert _registry_logger.name == "aeat.core.errors._registry", (
-        "Logger name mismatch: %r" % _registry_logger.name
-    )
+    assert _registry_logger.name == "aeat.core.errors._registry", f"Logger name mismatch: {_registry_logger.name!r}"
 
 
 def test_error_registry_debug_log_scrubs_sensitive_context(
@@ -207,9 +201,7 @@ def test_error_registry_debug_log_scrubs_sensitive_context(
     assert "abc-secret-xyz" not in rendered, (
         f"Sensitive token fragment survived scrubbing in debug record; got: {rendered!r}"
     )
-    assert "<redacted>" in rendered, (
-        f"Expected '<redacted>' marker in scrubbed record; got: {rendered!r}"
-    )
+    assert "<redacted>" in rendered, f"Expected '<redacted>' marker in scrubbed record; got: {rendered!r}"
 
 
 def test_error_registry_debug_log_scrubs_nif_in_context(
@@ -233,9 +225,5 @@ def test_error_registry_debug_log_scrubs_nif_in_context(
 
     record = caplog.records[-1]
     rendered = record.getMessage()
-    assert nif not in rendered, (
-        f"NIF {nif!r} was not scrubbed in debug record; got: {rendered!r}"
-    )
-    assert "<redacted>" in rendered, (
-        f"Expected '<redacted>' in scrubbed debug record; got: {rendered!r}"
-    )
+    assert nif not in rendered, f"NIF {nif!r} was not scrubbed in debug record; got: {rendered!r}"
+    assert "<redacted>" in rendered, f"Expected '<redacted>' in scrubbed debug record; got: {rendered!r}"

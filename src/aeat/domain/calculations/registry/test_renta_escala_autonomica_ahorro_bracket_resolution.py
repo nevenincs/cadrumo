@@ -189,17 +189,11 @@ def test_ahorro_escala_matches_estatal_scale(year: int) -> None:
     work: art.76 does not legislate a CCAA-specific savings scale.
     """
     revision = _revision(year)
-    autonomica = next(
-        p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro"
-    )
-    estatal = next(
-        p for p in revision.parameters if p.id == f"renta-{year}-escala-estatal-base-ahorro"
-    )
+    autonomica = next(p for p in revision.parameters if p.id == f"renta-{year}-escala-autonomica-base-ahorro")
+    estatal = next(p for p in revision.parameters if p.id == f"renta-{year}-escala-estatal-base-ahorro")
     autonomica_brackets = sorted(autonomica.brackets, key=lambda b: b.lower_bound)
     estatal_brackets = sorted(estatal.brackets, key=lambda b: b.lower_bound)
-    assert [
-        (b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in autonomica_brackets
-    ] == [
+    assert [(b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in autonomica_brackets] == [
         (b.lower_bound, b.upper_bound, b.fixed_addition, b.marginal_rate) for b in estatal_brackets
     ]
 
@@ -211,9 +205,7 @@ def test_cuota_base_liquidable_ahorro_autonomica_formula_subtracts_minimo(year: 
     from the gross autonomica savings cuota, per art.76.2 Ley IRPF.
     """
     revision = _revision(year)
-    formula = next(
-        f for f in revision.formulas if f.id == f"renta-{year}-cuota-base-liquidable-ahorro-autonomica"
-    )
+    formula = next(f for f in revision.formulas if f.id == f"renta-{year}-cuota-base-liquidable-ahorro-autonomica")
     assert formula.target == "0541"
     assert formula.expression.op == "subtract"
     operand_casillas = [arg.casilla for arg in formula.expression.args]
@@ -228,9 +220,7 @@ def test_escala_autonomica_formulas_target_savings_casillas(year: int) -> None:
     """
     revision = _revision(year)
     base_formula = next(
-        f
-        for f in revision.formulas
-        if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
+        f for f in revision.formulas if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
     )
     minimo_formula = next(
         f

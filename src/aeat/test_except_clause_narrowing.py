@@ -21,6 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 # _site_health.py: TypeError -> ValueError in pydantic field_validator
 # ---------------------------------------------------------------------------
 
+
 class TestSiteHealthValidatorUsesValueError:
     """Pydantic field_validator must raise ValueError (or subclass), not TypeError.
 
@@ -47,8 +48,7 @@ class TestSiteHealthValidatorUsesValueError:
 
         errors = exc_info.value.errors(include_url=False)
         assert any(
-            "detected_markers entries must be str" in str(e.get("msg", ""))
-            or "str" in str(e.get("msg", "")).lower()
+            "detected_markers entries must be str" in str(e.get("msg", "")) or "str" in str(e.get("msg", "")).lower()
             for e in errors
         ), f"expected str-type error in {errors}"
 
@@ -69,14 +69,13 @@ class TestSiteHealthValidatorUsesValueError:
         except ValidationError:
             pass  # expected — Pydantic wraps the ValueError
         except TypeError as exc:
-            pytest.fail(
-                f"TypeError escaped the pydantic validator; expected ValidationError. Got: {exc}"
-            )
+            pytest.fail(f"TypeError escaped the pydantic validator; expected ValidationError. Got: {exc}")
 
 
 # ---------------------------------------------------------------------------
 # _workbook_parity.py: narrowed scan except catches InvalidFileException
 # ---------------------------------------------------------------------------
+
 
 class TestWorkbookParityScanNarrowing:
     """scan_workbook absorbs InvalidFileException/BadZipFile/OSError; unexpected errors raise RegistryValidationError."""
@@ -99,6 +98,7 @@ class TestWorkbookParityScanNarrowing:
 # ---------------------------------------------------------------------------
 # _workbook_parity.py: TokenizerError-only for tokenizer fallback
 # ---------------------------------------------------------------------------
+
 
 class TestTokenizerFallbackNarrowing:
     """_formula_references falls back to regex on TokenizerError; other errors propagate."""
@@ -124,6 +124,7 @@ class TestTokenizerFallbackNarrowing:
 # _site_health.py: valid markers still pass through
 # ---------------------------------------------------------------------------
 
+
 class TestSiteHealthValidatorHappyPath:
     def test_valid_str_markers_accepted(self) -> None:
         from pydantic import AnyHttpUrl as _AnyHttpUrl
@@ -142,6 +143,7 @@ class TestSiteHealthValidatorHappyPath:
 # ---------------------------------------------------------------------------
 # declaracion/_pdfplumber_backend.py: ImportError / OSError absorbed
 # ---------------------------------------------------------------------------
+
 
 class TestPdfplumberBackendNarrowing:
     """Fast-path extractor pdfium_cached swallows expected errors; unexpected ones propagate."""
@@ -172,6 +174,7 @@ class TestPdfplumberBackendNarrowing:
 # ---------------------------------------------------------------------------
 # _clave_movil.py: cleanup in nested try/except preserves the original exception
 # ---------------------------------------------------------------------------
+
 
 class TestInvalidatePersistedCleanupIsolated:
     """The cleanup call in the persist-failure handler must not mask the original exception."""
@@ -232,6 +235,7 @@ class TestInvalidatePersistedCleanupIsolated:
 # _clave_movil.py: persist failure absorbed as (OSError, AuthError)
 # ---------------------------------------------------------------------------
 
+
 class TestPersistDeadlineNarrowing:
     """Verify that OSError and AuthError are caught; unexpected types propagate."""
 
@@ -257,6 +261,7 @@ class TestPersistDeadlineNarrowing:
 # ---------------------------------------------------------------------------
 # _authenticator.py: describe path narrowed to CertificateError + OSError
 # ---------------------------------------------------------------------------
+
 
 class TestAuthenticatorDescribeNarrowing:
     """Verify the describe-path handler only catches CertificateError and OSError."""
@@ -326,6 +331,7 @@ class TestAuthenticatorDescribeNarrowing:
 # ---------------------------------------------------------------------------
 # _clave_movil.py: diagnostic context narrows to domain errors
 # ---------------------------------------------------------------------------
+
 
 class TestDiagnosticContextNarrowing:
     """_active_profile_diagnostic_context catches (ImportError, KeyError, AttributeError, UserProfileError)."""

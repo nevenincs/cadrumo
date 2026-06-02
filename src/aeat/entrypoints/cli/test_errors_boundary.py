@@ -107,9 +107,7 @@ def _corrupt_stored_profile(profile_id: str, runtime_profile: TestRuntimeProfile
     assert stored is not None, "profile record must exist before corruption"
     envelope = json.loads(stored.payload.decode("utf-8"))
     payload = envelope["payload"]
-    assert payload.get("status") == "active", (
-        f"fixture must persist ACTIVE status; got {payload.get('status')!r}"
-    )
+    assert payload.get("status") == "active", f"fixture must persist ACTIVE status; got {payload.get('status')!r}"
     # Stamp removed_at while keeping ACTIVE — this violates the lifecycle
     # invariant and is the canonical drift scenario.
     payload["removed_at"] = "2024-12-15T10:00:00+00:00"
@@ -158,9 +156,7 @@ def test_drifted_stored_profile_surfaces_stored_data_boundary_message(
     assert result.exit_code != 0, result.output
     combined = result.output or ""
     # The stored-data boundary message mentions repair.
-    assert "config repair" in combined, (
-        f"expected 'config repair' in boundary output;\ngot: {combined!r}"
-    )
+    assert "config repair" in combined, f"expected 'config repair' in boundary output;\ngot: {combined!r}"
     # Must NOT be the input-time validation boundary message.
     assert "command input failed validation" not in combined, (
         f"stored-data drift triggered input-time boundary instead;\ngot: {combined!r}"
@@ -217,11 +213,17 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
     result = _RUNNER.invoke(
         app,
         [
-            "app", "ledger", "add",
-            "--date", "not-a-date",
-            "--amount", "-50.00",
-            "--direction", "OUTGOING",
-            "--description", "test entry",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "not-a-date",
+            "--amount",
+            "-50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "test entry",
         ],
     )
 

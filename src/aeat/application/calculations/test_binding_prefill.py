@@ -119,9 +119,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                     iva=Decimal("30.00"),
                 ),
             ),
-            "3T": (
-                _observation(ledger_id="q3-output", txn_date=date(2025, 8, 12), iva=Decimal("50.00")),
-            ),
+            "3T": (_observation(ledger_id="q3-output", txn_date=date(2025, 8, 12), iva=Decimal("50.00")),),
             "4T": (
                 _observation(ledger_id="q4-output", txn_date=date(2025, 11, 4), iva=Decimal("15.00")),
                 _observation(
@@ -194,15 +192,16 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             ("4T",),
             ("1T", "2T", "3T"),
         }
-        assert result.values["iva.anual.cuota-devengada-total"] == result.values[
-            "iva.anual.reconciliacion.devengada-303"
-        ]
-        assert result.values["iva.anual.cuota-deducible-total"] == result.values[
-            "iva.anual.reconciliacion.deducible-303"
-        ]
-        assert result.values["iva.anual.resultado-regimen-general"] == result.values[
-            "iva.anual.reconciliacion.resultado-303"
-        ]
+        assert (
+            result.values["iva.anual.cuota-devengada-total"] == result.values["iva.anual.reconciliacion.devengada-303"]
+        )
+        assert (
+            result.values["iva.anual.cuota-deducible-total"] == result.values["iva.anual.reconciliacion.deducible-303"]
+        )
+        assert (
+            result.values["iva.anual.resultado-regimen-general"]
+            == result.values["iva.anual.reconciliacion.resultado-303"]
+        )
 
 
 def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
@@ -252,9 +251,7 @@ def test_binding_prefill_type_error_is_registered_in_error_registry() -> None:
 
 
 def test_binding_prefill_type_error_round_trips_through_build_error_envelope() -> None:
-    exc = BindingPrefillTypeError(
-        "binding selector 'filing_year_delta' must be int|str, got list"
-    )
+    exc = BindingPrefillTypeError("binding selector 'filing_year_delta' must be int|str, got list")
     envelope = build_error_envelope(exc, trace_id=None)
     assert envelope.code == "REFUSED_BINDING_PREFILL_TYPE"
     assert envelope.retryable is False

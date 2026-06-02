@@ -25,8 +25,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import (
     LIVE_CENSO_SNAPSHOT_NAMESPACE as CENSO_SNAPSHOT_STORAGE_NAMESPACE,
 )
@@ -36,7 +34,9 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
+from ...core.time import now
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SnapshotLifecycleState,
@@ -55,7 +55,6 @@ class CensoSnapshotNotFoundError(SnapshotNotFoundError):
     ``AeatError`` explicitly here would violate C3 linearization.
     """
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 CENSO_SNAPSHOT_NAMESPACE = CENSO_SNAPSHOT_STORAGE_NAMESPACE.namespace
 _CENSO_SNAPSHOT_VERSION = CENSO_SNAPSHOT_STORAGE_NAMESPACE.schema_version
@@ -70,6 +69,7 @@ _CENSO_SNAPSHOT_SENSITIVITY = CENSO_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 # strings; the engine that consumes the snapshot parses the m2 strings
 # back to Decimal at calculation time.
 type _CensoFactValue = str
+
 
 class CensoSnapshot(BaseModel):
     """Captured 036 censo facts available to application consumers.
@@ -131,6 +131,7 @@ class CensoSnapshot(BaseModel):
             raise LiveApplicationInputError("censo fact keys must not be blank")
         return self
 
+
 def censo_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     """Return the secure-object key for one bucket's censo snapshot."""
     trimmed_bucket = bucket_id.strip()
@@ -140,6 +141,7 @@ def censo_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     if not trimmed_snapshot:
         raise LiveApplicationInputError("snapshot_id must not be blank")
     return f"censo-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
+
 
 def derive_censo_snapshot_id(
     *,
@@ -163,6 +165,7 @@ def derive_censo_snapshot_id(
         }
     )
 
+
 def _snapshot_from_record(
     record: SecureObjectRecord,
     requested_snapshot_id: str | None = None,
@@ -181,6 +184,7 @@ def _snapshot_from_record(
             f"consumer supports up to {_CENSO_SNAPSHOT_VERSION}",
         )
     return envelope.payload
+
 
 class CensoSnapshotRepository:
     """Secure-DB repository for captured 036 censo snapshots."""
@@ -272,8 +276,7 @@ class CensoSnapshotRepository:
             )
         if snapshot.snapshot_id != snapshot_id:
             raise LiveApplicationInputError(
-                f"censo snapshot payload id={snapshot.snapshot_id!r} "
-                f"does not match requested snapshot {snapshot_id!r}",
+                f"censo snapshot payload id={snapshot.snapshot_id!r} does not match requested snapshot {snapshot_id!r}",
             )
         return snapshot
 
@@ -325,8 +328,7 @@ class CensoSnapshotRepository:
         matches = [
             snapshot
             for snapshot in self.list_snapshots()
-            if snapshot.snapshot_id == trimmed_snapshot_id
-            or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
+            if snapshot.snapshot_id == trimmed_snapshot_id or snapshot.snapshot_id.startswith(trimmed_snapshot_id)
         ]
         if not matches:
             raise CensoSnapshotNotFoundError(
@@ -358,8 +360,7 @@ class CensoSnapshotRepository:
         """
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
-                f"censo snapshot bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}",
+                f"censo snapshot bucket_id={snapshot.bucket_id!r} does not match repository bucket {self._bucket_id!r}",
             )
         envelope = Envelope[CensoSnapshot](
             schema_version=_CENSO_SNAPSHOT_VERSION,
@@ -375,6 +376,7 @@ class CensoSnapshotRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+
 
 class CensoSnapshotService(SnapshotService[CensoSnapshot]):
     """Canonical backend service for bucket-scoped 036 censo snapshots.
@@ -424,7 +426,9 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=censo_facts,
         )
 
-    # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN: subclass returns narrower snapshot type and adds optional filter params; base-class signature widening would ripple to N subclasses.
+    # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN:
+    # Subclass returns a narrower snapshot type and adds optional filter params;
+    # base-class signature widening would ripple to N subclasses.
     def list_snapshots(  # type: ignore[override]
         self,
         *,
@@ -510,7 +514,10 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
 
     # ---- SnapshotService[CensoSnapshot] hooks ---------------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required by the SnapshotService[T] abstract hook contract whose base signature uses **kwargs to allow concrete subclasses to accept caller-specific keyword arguments without a shared typed parameter set.  Narrowing is done via direct key access inside the body; the abstract boundary cannot be tightened without breaking the polymorphic dispatch chain.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
+    # **kwargs: Any is required by the SnapshotService[T] abstract hook contract.
+    # Concrete subclasses accept caller-specific keyword arguments without a
+    # shared typed parameter set; narrowing is done by direct key access.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_censo_snapshot_id(
             profile_id=kwargs["profile_id"],
@@ -519,7 +526,10 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=kwargs["censo_facts"],
         )
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: **kwargs: Any is required by the SnapshotService[T] abstract _build_active_payload hook whose base signature uses **kwargs so concrete subclasses accept caller-specific keyword arguments without a shared typed parameter set.  Narrowing is done via direct key access inside the body; the abstract boundary cannot be tightened without breaking the polymorphic dispatch chain.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD:
+    # **kwargs: Any is required by the SnapshotService[T] abstract
+    # _build_active_payload hook; concrete subclasses accept caller-specific
+    # keyword arguments without a shared typed parameter set.
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensoSnapshot:
         return CensoSnapshot(
             snapshot_id=snapshot_id,
@@ -543,15 +553,14 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
     def _payload_state(self, payload: CensoSnapshot) -> SnapshotLifecycleState:
         return payload.state
 
-    def _demote_to_superseded(
-        self, payload: CensoSnapshot, *, superseded_by: str
-    ) -> CensoSnapshot:
+    def _demote_to_superseded(self, payload: CensoSnapshot, *, superseded_by: str) -> CensoSnapshot:
         return payload.model_copy(
             update={
                 "state": SnapshotLifecycleState.SUPERSEDED,
                 "superseded_by_snapshot_id": superseded_by,
             }
         )
+
 
 __all__ = [
     "CENSO_SNAPSHOT_NAMESPACE",

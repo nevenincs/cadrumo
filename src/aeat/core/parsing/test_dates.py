@@ -54,10 +54,10 @@ def test_iso8601_absent_returns_none(raw: str | None) -> None:
 @pytest.mark.parametrize(
     "foreign",
     [
-        "31/12/2024",   # dd/mm/yyyy with slash separator — the canonical ddmmyyyy format
-        "31-12-2024",   # dd-mm-yyyy with dash separator
+        "31/12/2024",  # dd/mm/yyyy with slash separator — the canonical ddmmyyyy format
+        "31-12-2024",  # dd-mm-yyyy with dash separator
         "not-a-date",
-        "2024/12/31",   # slash separator is not ISO-8601 extended
+        "2024/12/31",  # slash separator is not ISO-8601 extended
     ],
 )
 def test_iso8601_rejects_foreign_format(foreign: str) -> None:
@@ -99,11 +99,11 @@ def test_ddmmyyyy_absent_returns_none(raw: str | None) -> None:
 @pytest.mark.parametrize(
     "foreign",
     [
-        "2024-12-31",   # ISO-8601 with dash separator
-        "2024/12/31",   # ISO-8601 with slash separator
+        "2024-12-31",  # ISO-8601 with dash separator
+        "2024/12/31",  # ISO-8601 with slash separator
         "not-a-date",
-        "20241231",     # no separator at all
-        "31.12.2024",   # dot separator not supported
+        "20241231",  # no separator at all
+        "31.12.2024",  # dot separator not supported
     ],
 )
 def test_ddmmyyyy_rejects_foreign_format(foreign: str) -> None:
@@ -120,9 +120,9 @@ def test_ddmmyyyy_rejects_foreign_format(foreign: str) -> None:
 @pytest.mark.parametrize(
     "invalid_calendar",
     [
-        "32-01-2024",   # day 32 does not exist
-        "00-01-2024",   # day 0 does not exist
-        "31-02-2024",   # Feb 31 does not exist
+        "32-01-2024",  # day 32 does not exist
+        "00-01-2024",  # day 0 does not exist
+        "31-02-2024",  # Feb 31 does not exist
     ],
 )
 def test_ddmmyyyy_rejects_invalid_calendar_date(invalid_calendar: str) -> None:

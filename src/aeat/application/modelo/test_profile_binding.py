@@ -19,13 +19,6 @@ from pathlib import Path
 
 import pytest
 
-from . import calculate_modelo_revision, create_work_unit
-from ._actions import ModeloError
-from ._profile_binding import (
-    ProfileSourcedBindingResult,
-    resolve_profile_sourced_bindings,
-)
-from ..user_profile import UserProfileLifecycleRepository
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.calculations.registry import (
@@ -38,6 +31,13 @@ from ...domain.modelos._calculation_repository import CalculationRevisionCatalog
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
 from ...tests.secure_sql import isolated_runtime_profile
+from ..user_profile import UserProfileLifecycleRepository
+from . import calculate_modelo_revision, create_work_unit
+from ._actions import ModeloError
+from ._profile_binding import (
+    ProfileSourcedBindingResult,
+    resolve_profile_sourced_bindings,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -162,10 +162,7 @@ def test_profile_resolution_routes_two_ccaa_values_distinctly() -> None:
     )
     assert cataluna.enum_binding_values[_CCAA_BINDING] == "cataluna"
     assert madrid.enum_binding_values[_CCAA_BINDING] == "madrid"
-    assert (
-        cataluna.enum_binding_values[_CCAA_BINDING]
-        != madrid.enum_binding_values[_CCAA_BINDING]
-    )
+    assert cataluna.enum_binding_values[_CCAA_BINDING] != madrid.enum_binding_values[_CCAA_BINDING]
 
 
 def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> None:
@@ -436,9 +433,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             repository=work_repo,
             clock=_CLOCK,
         )
-        decimal_bindings = {
-            str(binding.id): Decimal("0") for binding in snapshot.revision.bindings
-        }
+        decimal_bindings = {str(binding.id): Decimal("0") for binding in snapshot.revision.bindings}
         with pytest.raises(ModeloError, match="enum dispatch keys"):
             calculate_modelo_revision(
                 work_unit.work_unit_id,

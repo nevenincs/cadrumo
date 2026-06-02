@@ -189,9 +189,7 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     assert stored is not None
     envelope = json.loads(stored.payload.decode("utf-8"))
     payload = envelope["payload"]
-    assert payload["status"] == "active", (
-        "fixture must persist ACTIVE status for this proof test to be meaningful"
-    )
+    assert payload["status"] == "active", "fixture must persist ACTIVE status for this proof test to be meaningful"
     # Stamp removed_at while keeping ACTIVE status. The lifecycle invariant must trip on load.
     payload["removed_at"] = "2024-12-15T10:00:00+00:00"
     runtime_profile.repository.save(
@@ -204,9 +202,7 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     )
 
     with pytest.raises(StoredProfileDriftError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository).load(
-            record.profile_id
-        )
+        UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository).load(record.profile_id)
     assert excinfo.value.profile_id == record.profile_id
     assert isinstance(excinfo.value.original_exception, ValidationError)
 
@@ -258,9 +254,7 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
     first_fact = payload["facts"][0]
     original_value = first_fact.get("value")
     mutated_value = (
-        "tampered-string"
-        if isinstance(original_value, str) and original_value != "tampered-string"
-        else "drift-canary"
+        "tampered-string" if isinstance(original_value, str) and original_value != "tampered-string" else "drift-canary"
     )
     first_fact["value"] = mutated_value
     runtime_profile.repository.save(

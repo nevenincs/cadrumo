@@ -7,12 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from . import (
-    WorkUnitNotFoundError,
-    assemble_work_unit_history,
-    create_work_unit,
-    discard_work_unit,
-)
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -26,6 +20,12 @@ from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from ...tests.secure_sql import isolated_runtime_profile
+from . import (
+    WorkUnitNotFoundError,
+    assemble_work_unit_history,
+    create_work_unit,
+    discard_work_unit,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

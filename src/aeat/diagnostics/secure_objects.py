@@ -31,9 +31,7 @@ def register(app: typer.Typer) -> None:
     @sub.command("list", help=tr("cli.diagnostics.secure_objects.list_help"))
     def _list(
         namespace: str = typer.Argument(..., help=tr("cli.diagnostics.secure_objects.namespace_help")),
-        include_all: bool = typer.Option(
-            False, "--all", help=tr("cli.diagnostics.secure_objects.all_help")
-        ),
+        include_all: bool = typer.Option(False, "--all", help=tr("cli.diagnostics.secure_objects.all_help")),
         only_unreadable: bool = typer.Option(
             False, "--unreadable", help=tr("cli.diagnostics.secure_objects.unreadable_help")
         ),
@@ -50,6 +48,8 @@ def register(app: typer.Typer) -> None:
         typer.echo(redact_for_cli_output(f"{tr('cli.diagnostics.secure_objects.labels.namespace')}\t{namespace}"))
         typer.echo(f"{tr('cli.diagnostics.secure_objects.labels.count')}\t{len(report.rows)}")
         for row in report.rows:
-            typer.echo(redact_for_cli_output(f"{row.namespace}\t{row.object_key_digest}"))  # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW: structured machine output; secure-object digests route through central redaction so any drift in digest shape is captured at the boundary.
+            typer.echo(
+                redact_for_cli_output(f"{row.namespace}\t{row.object_key_digest}")
+            )  # MACHINE-FORMAT-RATIONALE-SECURE-OBJECTS-ROW: structured machine output; secure-object digests route through central redaction so any drift in digest shape is captured at the boundary.
 
     app.add_typer(sub)

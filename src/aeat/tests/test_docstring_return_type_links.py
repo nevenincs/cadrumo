@@ -39,12 +39,7 @@ _ROLE = re.compile(r":(?:class|obj|meth|func|data|attr|exc):`[^`]*?([A-Za-z_][A-
 
 def _is_in_scope(path: Path) -> bool:
     posix = path.as_posix()
-    return not (
-        path.name.startswith("test_")
-        or path.name == "conftest.py"
-        or "/tests/" in posix
-        or "/_data/" in posix
-    )
+    return not (path.name.startswith("test_") or path.name == "conftest.py" or "/tests/" in posix or "/_data/" in posix)
 
 
 def _module_name(path: Path) -> str:

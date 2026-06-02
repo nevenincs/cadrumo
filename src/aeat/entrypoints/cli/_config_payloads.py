@@ -16,9 +16,14 @@ All sequence fields use ``list`` rather than ``tuple`` because
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import ConfigDict
 
 from ._schemas import OutputSchema, register_schema
+
+if TYPE_CHECKING:
+    from ...application.auth._operator import AuthClearResult, AuthConfigureResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -247,22 +252,44 @@ class AuthProvidersResult(OutputSchema):
 class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
-    Field set mirrors :class:`AuthConfigureReport` from the application layer.
-    All optional fields accommodate conditional display branches (e.g.
-    clave_movil identity alignment fields).
+    Field set mirrors :class:`AuthConfigureResult` from the application layer,
+    whose fields are non-nullable with empty/false defaults; this envelope
+    reconciles to the same nullability (DB-26 S50). ``status`` is the one
+    CLI-only display field with no application counterpart.
     """
 
     provider: str
     file: str
     status: str | None = None
     complete: bool
-    incomplete_reason: str | None = None
-    active_profile: str | None = None
-    profile_tax_id_present: bool | None = None
-    provider_identity_present: bool | None = None
-    identity_alignment: str | None = None
-    identity_alignment_detail: str | None = None
-    next_action: str | None = None
+    incomplete_reason: str = ""
+    active_profile: str = ""
+    profile_tax_id_present: bool = False
+    provider_identity_present: bool = False
+    identity_alignment: str = ""
+    identity_alignment_detail: str = ""
+    next_action: str = ""
+
+    @classmethod
+    def from_result(cls, result: AuthConfigureResult) -> AuthConfigurePayload:
+        """Project the application :class:`AuthConfigureResult` into this CLI envelope.
+
+        Explicit field projection (DB-26 S50): the envelope derives its values from
+        the application result instead of the command handler re-declaring the field
+        map inline. ``status`` is a CLI-only display field left to its default.
+        """
+        return cls(
+            provider=result.provider,
+            file=result.file,
+            complete=result.complete,
+            incomplete_reason=result.incomplete_reason,
+            active_profile=result.active_profile,
+            profile_tax_id_present=result.profile_tax_id_present,
+            provider_identity_present=result.provider_identity_present,
+            identity_alignment=result.identity_alignment,
+            identity_alignment_detail=result.identity_alignment_detail,
+            next_action=result.next_action,
+        )
 
 
 @register_schema("config.auth.status")
@@ -304,11 +331,25 @@ class AuthLoginPayload(OutputSchema):
 
 @register_schema("config.auth.clear")
 class AuthClearPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth clear``."""
+    """JSON envelope for ``aeat config auth clear``.
+
+    Field set is 1:1 with the application :class:`AuthClearResult`; the
+    envelope derives its values via :meth:`from_result` rather than the
+    command handler re-declaring the field map inline (DB-26 S49).
+    """
 
     removed_sessions: int
     cleared_workflow_state: bool
     cleared_locks: int
+
+    @classmethod
+    def from_result(cls, result: AuthClearResult) -> AuthClearPayload:
+        """Project the application :class:`AuthClearResult` (1:1) into this CLI envelope."""
+        return cls(
+            removed_sessions=result.removed_sessions,
+            cleared_workflow_state=result.cleared_workflow_state,
+            cleared_locks=result.cleared_locks,
+        )
 
 
 @register_schema("config.auth.apoderado.check")

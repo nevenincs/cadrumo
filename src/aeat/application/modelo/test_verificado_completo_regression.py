@@ -25,12 +25,6 @@ from decimal import Decimal
 
 import pytest
 
-from . import (
-    StoredCalculationDriftError,
-    calculate_modelo_revision,
-    create_work_unit,
-    verify_modelo_revision,
-)
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.calculations.registry import InputKind
@@ -43,6 +37,12 @@ from ...domain.modelos._verification_report import (
 )
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ...tests.secure_sql import isolated_runtime_profile
+from . import (
+    StoredCalculationDriftError,
+    calculate_modelo_revision,
+    create_work_unit,
+    verify_modelo_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -57,12 +57,8 @@ _M130_PERIOD = "1T"
 
 def _required_manual_casillas_for_m130() -> tuple[str, ...]:
     """Read required manual casillas from the real registry — no duplication."""
-    snap = resources().modelos.authority.snapshot(
-        _M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD
-    )
-    return tuple(
-        str(c.id) for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL
-    )
+    snap = resources().modelos.authority.snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    return tuple(str(c.id) for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
 def _workflow_profile() -> TaxpayerProfile:
@@ -156,15 +152,12 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
     assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
 
     missing_finding_casillas = {
-        f.casilla_id
-        for f in report.findings
-        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+        f.casilla_id for f in report.findings if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     }
     # Every casilla in the missing finding set must be registry-required
     assert missing_finding_casillas, "Expected at least one MISSING_REQUIRED_CASILLA finding"
     assert missing_finding_casillas <= set(required), (
-        f"Findings reference casillas not declared required in registry: "
-        f"{missing_finding_casillas - set(required)}"
+        f"Findings reference casillas not declared required in registry: {missing_finding_casillas - set(required)}"
     )
     # The required casillas we omitted must appear in missing_required_casillas
     for casilla_id in required:

@@ -90,9 +90,7 @@ def read_profile_bucket(
     needle = label.strip().casefold()
     matches = [
         pointer
-        for pointer in list_profile_buckets(
-            root=root, include_tombstoned=include_tombstoned
-        ).values()
+        for pointer in list_profile_buckets(root=root, include_tombstoned=include_tombstoned).values()
         if pointer.label.casefold() == needle
     ]
     if not matches:
@@ -132,9 +130,7 @@ def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> P
     if not target.is_file():
         return None
     manifest = read_manifest(paths)
-    return ProfileBucketPointer(
-        bucket_id=manifest.bucket_id, label=manifest.label, status=manifest.status
-    )
+    return ProfileBucketPointer(bucket_id=manifest.bucket_id, label=manifest.label, status=manifest.status)
 
 
 def list_profile_buckets(

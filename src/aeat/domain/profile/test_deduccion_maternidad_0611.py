@@ -35,6 +35,7 @@ from .family import DescendantInfo, RentaFamilyProfile
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 def _hijo_menor_3(meses: int) -> DescendantInfo:
     """Child born 2022-06-01 → age 2 at 2024-12-31, eligible menor-3."""
     return DescendantInfo(
@@ -54,6 +55,7 @@ def _hijo_no_menor_3() -> DescendantInfo:
 # ---------------------------------------------------------------------------
 # RentaFamilyProfile.deduccion_maternidad_0611 — oracle tests
 # ---------------------------------------------------------------------------
+
 
 class TestDeduccionMaternidad0611Oracle:
     """Oracle values derived from Art. 81 LIRPF: sum(min(meses×100, 1200)) per hijo menor 3."""
@@ -98,6 +100,7 @@ class TestDeduccionMaternidad0611Oracle:
 # Anti-tautology: incrementing meses must change the result non-trivially
 # ---------------------------------------------------------------------------
 
+
 class TestDeduccionMaternidadAntiTautology:
     """Verify the formula is actually exercised, not trivially returning a constant."""
 
@@ -118,9 +121,7 @@ class TestDeduccionMaternidadAntiTautology:
         assert profile_with_older.deduccion_maternidad_0611(2024) == 0
         assert profile_empty.deduccion_maternidad_0611(2024) == 0
         # Anti-tautology proof: adding a qualified younger child makes it non-zero.
-        profile_mixed = RentaFamilyProfile(
-            descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6))
-        )
+        profile_mixed = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
         assert profile_mixed.deduccion_maternidad_0611(2024) == 600
 
     def test_non_cohabiting_hijo_excluded(self) -> None:
@@ -137,6 +138,7 @@ class TestDeduccionMaternidadAntiTautology:
 # ---------------------------------------------------------------------------
 # Roundtrip: meses_madre_trabajo stored and reloaded from facts
 # ---------------------------------------------------------------------------
+
 
 class TestMesesTornoFacts:
     """Verify meses_madre_trabajo_2024 survives descendant_facts roundtrip."""
@@ -178,6 +180,7 @@ class TestMesesTornoFacts:
 # parse_descendiente_flag: MESES_TRABAJO= key acceptance
 # ---------------------------------------------------------------------------
 
+
 class TestParseDescendienteFlagMesesTrabajo:
     """parse_descendiente_flag must accept MESES_TRABAJO= and validate 0–12 range."""
 
@@ -209,6 +212,7 @@ class TestParseDescendienteFlagMesesTrabajo:
 # ---------------------------------------------------------------------------
 # CLI helper functions
 # ---------------------------------------------------------------------------
+
 
 class TestCLIHelpers:
     """Unit tests for compute_deduccion_maternidad_0611 (domain arithmetic)."""

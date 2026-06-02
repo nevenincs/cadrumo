@@ -35,6 +35,7 @@ _CLASSIFIED_TAX_STATES = frozenset(
     }
 )
 
+
 class LedgerPreflightIssueReason(StrEnum):
     """Machine-readable ledger facts missing before modelo calculation."""
 
@@ -46,6 +47,7 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
 
+
 class LedgerPreflightIssue(BaseModel):
     """One model-readiness issue attached to a bucket-local transaction."""
 
@@ -54,6 +56,7 @@ class LedgerPreflightIssue(BaseModel):
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: LedgerPreflightIssueReason
     detail: str = Field(min_length=1, max_length=512)
+
 
 class LedgerPreflightReport(BaseModel):
     """Readiness report for ledger facts consumed by modelo calculation."""
@@ -79,6 +82,7 @@ class LedgerPreflightReport(BaseModel):
     def ready(self) -> bool:
         return not self.issues
 
+
 def preflight_ledger_tax_readiness(
     *,
     bucket_id: str,
@@ -101,6 +105,7 @@ def preflight_ledger_tax_readiness(
         period=period,
         transactions=repository.load(),
     )
+
 
 def preflight_transaction_catalogue(
     *,
@@ -135,6 +140,7 @@ def preflight_transaction_catalogue(
         issues=tuple(issues),
     )
 
+
 def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
     return tuple(
         sorted(
@@ -145,6 +151,7 @@ def _sorted_transactions(transactions: TransactionCatalogue) -> tuple[Transactio
             ),
         )
     )
+
 
 def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     """Return whether the transaction feeds the deductible-expense pipeline.
@@ -161,9 +168,9 @@ def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     if transaction.direction is TransactionDirection.OUTGOING:
         return True
     return (
-        transaction.direction is TransactionDirection.INCOMING
-        and transaction.purchase_invoice_evidence_id is not None
+        transaction.direction is TransactionDirection.INCOMING and transaction.purchase_invoice_evidence_id is not None
     )
+
 
 def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
     issues: list[LedgerPreflightIssue] = []
@@ -221,6 +228,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
         )
     return tuple(issues)
 
+
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
     return {
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
@@ -228,12 +236,14 @@ def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
     }[reason]
 
+
 def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
     return {
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
     }[reason]
+
 
 __all__ = [
     "LedgerPreflightIssue",

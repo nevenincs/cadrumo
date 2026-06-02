@@ -18,7 +18,14 @@ from pathlib import Path
 
 import pytest
 
-from .logging import SecretScrubbingFilter, default_log_file_path, get_logger
+from .logging import (
+    SecretScrubbingFilter,
+    _scrub_value,
+    attach_run_sink,
+    default_log_file_path,
+    detach_run_sink,
+    get_logger,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -299,13 +306,10 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
         _logging_mod._CONFIGURED = original_configured or True
 
     # Trigger module imports — side-effects would show up as level mutations.
-    from ..adapters.inbound.pdf import _pdfplumber  # side-effect: module import for level-mutation check
-    from ..domain.calculations.registry import _record_design
 
     pdfminer_logger = logging.getLogger("pdfminer")
     assert pdfminer_logger.level == logging.WARNING, (
-        f"pdfminer logger level should remain WARNING after importing both "
-        f"pdf modules; got {pdfminer_logger.level}"
+        f"pdfminer logger level should remain WARNING after importing both pdf modules; got {pdfminer_logger.level}"
     )
 
     # Confirm the per-module silencer has been deleted from _pdfplumber's
@@ -373,13 +377,6 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 # ---------------------------------------------------------------------------
 # S204 — _scrub_value overload contract: type preserved per input shape
 # ---------------------------------------------------------------------------
-
-
-from .logging import (
-    _scrub_value,
-    attach_run_sink,
-    detach_run_sink,
-)
 
 
 def test_scrub_value_str_overload_returns_str() -> None:
@@ -498,9 +495,7 @@ def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
     assert handlers_after == handlers_before, "root logger handlers must be restored after detach"
     # SecretScrubbingFilter must be removed from the sink's filter list on detach.
     remaining_scrubbing = [f for f in sink.filters if isinstance(f, SecretScrubbingFilter)]
-    assert remaining_scrubbing == [], (
-        "detach_run_sink must remove SecretScrubbingFilter instances from the sink"
-    )
+    assert remaining_scrubbing == [], "detach_run_sink must remove SecretScrubbingFilter instances from the sink"
 
     sink.close()
 
@@ -536,9 +531,7 @@ def test_attach_run_sink_does_not_double_install_scrubbing_filter(tmp_path: Path
         attach_run_sink(sink)  # second call — must be idempotent
 
         scrubbing_filters = [f for f in sink.filters if isinstance(f, SecretScrubbingFilter)]
-        assert len(scrubbing_filters) == 1, (
-            "SecretScrubbingFilter must appear exactly once even after two attach calls"
-        )
+        assert len(scrubbing_filters) == 1, "SecretScrubbingFilter must appear exactly once even after two attach calls"
     finally:
         root_logger.removeHandler(sink)
         sink.close()

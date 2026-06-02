@@ -150,8 +150,7 @@ def test_s371_2024_1812_anti_tautology_different_gain(m100_2024_snapshot) -> Non
         "Formula must propagate the actual 1811 value, not a cached constant."
     )
     assert result.values["1812"] == result.values["1811"], (
-        f"1812 ({result.values['1812']!r}) != 1811 ({result.values['1811']!r}). "
-        "Identity copy must hold for any input."
+        f"1812 ({result.values['1812']!r}) != 1811 ({result.values['1811']!r}). Identity copy must hold for any input."
     )
 
 
@@ -219,6 +218,4 @@ def test_s371_2025_1812_zero_when_no_crypto_gain(m100_2025_snapshot) -> None:
     """2025 revision: no spurious 1812 when 1804 = 0."""
     result = _run_2025(m100_2025_snapshot, Decimal("0"))
 
-    assert result.values["1812"] == Decimal("0.00"), (
-        f"2025: casilla 1812 = {result.values['1812']!r}; expected 0.00."
-    )
+    assert result.values["1812"] == Decimal("0.00"), f"2025: casilla 1812 = {result.values['1812']!r}; expected 0.00."

@@ -124,16 +124,12 @@ class TestRetmarMandatoryFilingWarningSurface:
     def test_da41_inactive_error_is_registered_with_refused_category(self) -> None:
         code = get_registered_error_code(MaritimeExemptionInactiveError)
         assert code.code == "REFUSED_RENTA_MARITIME_EXEMPTION_INACTIVE"
-        assert code.message_key == (
-            "errors.refused.refused_renta_maritime_exemption_inactive"
-        )
+        assert code.message_key == ("errors.refused.refused_renta_maritime_exemption_inactive")
 
     def test_retmar_profile_completeness_error_is_registered(self) -> None:
         code = get_registered_error_code(ProfileCompletenessError)
         assert code.code == "ERROR_RENTA_PROFILE_COMPLETENESS_WARNING"
-        assert code.message_key == (
-            "errors.error.error_renta_profile_completeness_warning"
-        )
+        assert code.message_key == ("errors.error.error_renta_profile_completeness_warning")
 
     def test_retmar_translated_message_carries_retmar_and_boe_anchor(self) -> None:
         # The CLI error boundary calls ``tr(code.message_key)`` to render

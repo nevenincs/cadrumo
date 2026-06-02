@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from decimal import Decimal
 from pathlib import Path
 
@@ -138,6 +139,22 @@ class TestObservedValues:
         assert extracted == {casilla_id: Decimal(raw) for casilla_id, raw in _OBSERVED_VALUES.items()}
         assert filing.registry_extraction_profile_id is None
         assert filing.extraction_coverage is None
+
+    def test_parse_logs_do_not_expose_source_filename(
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        pdf = _generate_pdf(tmp_path)
+        sensitive_pdf = tmp_path / "12345678Z-renta-borrador.pdf"
+        pdf.rename(sensitive_pdf)
+
+        with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.borrador._parser"):
+            parse_borrador(sensitive_pdf)
+
+        rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+        assert "12345678Z-renta-borrador.pdf" not in rendered_logs
+        assert "source=<input-pdf>" in rendered_logs
 
     def test_registry_profile_filters_targets_and_records_coverage(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path)

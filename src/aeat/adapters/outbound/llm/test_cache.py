@@ -143,9 +143,7 @@ def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
         b'{"logical_root": "/some/path", "entry": {"response": {}}}',
     ],
 )
-def test_entry_from_payload_rejects_malformed_bytes(
-    tmp_path: Path, corrupted_payload: bytes
-) -> None:
+def test_entry_from_payload_rejects_malformed_bytes(tmp_path: Path, corrupted_payload: bytes) -> None:
     # ``_entry_from_payload`` calls ``CachedEntry.model_validate_json``
     # before consuming any field; malformed or structurally invalid
     # payloads must raise rather than silently producing a corrupt entry.
@@ -170,8 +168,6 @@ def test_entry_from_payload_rejects_wrong_logical_root(tmp_path: Path) -> None:
 
     # Build a syntactically valid payload whose logical_root points
     # at a different partition so the guard fires.
-    foreign_payload = _json.dumps(
-        {"logical_root": "/entirely/different/partition", "entry": {}}
-    ).encode("utf-8")
+    foreign_payload = _json.dumps({"logical_root": "/entirely/different/partition", "entry": {}}).encode("utf-8")
     with pytest.raises(LLMCacheError, match="different logical partition"):
         cache._entry_from_payload(foreign_payload)

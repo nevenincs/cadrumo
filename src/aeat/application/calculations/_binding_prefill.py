@@ -140,13 +140,38 @@ def _gather_observations(
     repository: CalculationObservationRepository,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
 ) -> tuple[_GatheredObservation, ...]:
-    """Walk every previous_filing binding in the revision and pull matching observations from the local store."""
-    needed: dict[tuple[str, int, str], _GatheredObservation] = {}
+    """Walk every previous_filing binding in the revision and pull matching observations from the local store.
+
+    For ordinary single-filer requirements one observation per
+    ``(modelo, filing_year, period)`` is loaded by key. For a requirement whose
+    binding declares ``grouping = "per_grupo_member"`` (the 353<-322 cross-member
+    aggregation), EVERY member's filing for that ``(modelo, filing_year, period)``
+    must be gathered, so the resolver can sum across members; those are
+    enumerated via ``iter_modelo`` (which yields every stored row for the modelo,
+    including the member-NIF-widened keys) and kept member-distinct.
+    """
+    grouped_keys = _per_grupo_member_requirement_keys(snapshot.revision, snapshot)
+    needed: dict[tuple[str, int, str, int], _GatheredObservation] = {}
+    seen_member: dict[tuple[str, int, str], int] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
+        req_key = (requirement.modelo, requirement.filing_year, requirement.period)
+        if req_key in grouped_keys:
+            # Cross-member fan-in: enumerate every member's filing for this
+            # (modelo, filing_year, period) rather than loading one by key.
+            for payload in repository.iter_modelo(requirement.modelo):
+                obs = payload.observation
+                if (obs.modelo, obs.filing_year, obs.period) != req_key:
+                    continue
+                member_idx = seen_member.get(req_key, 0)
+                seen_member[req_key] = member_idx + 1
+                needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _GatheredObservation(
+                    observation=obs, source_kind=payload.source_kind
+                )
+            continue
         payload = repository.load_observation(requirement.modelo, requirement.filing_year, requirement.period)
         if payload is not None:
             obs = payload.observation
@@ -159,9 +184,43 @@ def _gather_observations(
             source_kind = _IVA_COMPENSATION_HISTORY_SOURCE_KIND
         else:
             continue
-        key = (obs.modelo, obs.filing_year, obs.period)
-        needed.setdefault(key, _GatheredObservation(observation=obs, source_kind=source_kind))
+        needed.setdefault(
+            (obs.modelo, obs.filing_year, obs.period, 0),
+            _GatheredObservation(observation=obs, source_kind=source_kind),
+        )
     return tuple(needed.values())
+
+
+def _per_grupo_member_requirement_keys(
+    revision: object, snapshot: RegistrySnapshot
+) -> set[tuple[str, int, str]]:
+    """Return the (modelo, filing_year, period) requirement keys whose binding declares per_grupo_member.
+
+    These keys must be gathered by enumeration (every member's filing), not by
+    single-key load — the cross-member fan-in for the 353<-322 aggregation.
+    """
+    def _is_per_grupo_member(binding: object) -> bool:
+        if getattr(binding, "source", None) != "previous_filing":
+            return False
+        selector = getattr(binding, "selector", None)
+        if isinstance(selector, dict):
+            return selector.get("grouping") == "per_grupo_member"
+        return getattr(selector, "grouping", None) == "per_grupo_member"
+
+    grouped_binding_ids = {
+        binding.id for binding in snapshot.revision.bindings if _is_per_grupo_member(binding)
+    }
+    if not grouped_binding_ids:
+        return set()
+    keys: set[tuple[str, int, str]] = set()
+    for requirement in previous_filing_observation_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    ):
+        if any(bid in grouped_binding_ids for bid in requirement.binding_ids):
+            keys.add((requirement.modelo, requirement.filing_year, requirement.period))
+    return keys
 
 
 def _observation_from_iva_compensation_history(

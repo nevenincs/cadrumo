@@ -12,32 +12,23 @@ import re
 import pytest
 
 from ...core.paths import PROJECT_ROOT
-
 from ._actions import LedgerProviderID
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # Literals that were previously bare-string dispatch targets in _actions.py
-_KNOWN_PROVIDER_LITERALS: frozenset[str] = frozenset(
-    [p.value for p in LedgerProviderID]
-)
+_KNOWN_PROVIDER_LITERALS: frozenset[str] = frozenset([p.value for p in LedgerProviderID])
 
-_ACTIONS_MODULE = (
-    PROJECT_ROOT / "src" / "aeat" / "application" / "ledger" / "_actions.py"
-)
+_ACTIONS_MODULE = PROJECT_ROOT / "src" / "aeat" / "application" / "ledger" / "_actions.py"
 
-_DISPATCH_BARE_STRING_RE = re.compile(
-    r'provider_id\s*==\s*"([^"]+)"|provider_id\s+in\s+\{([^}]+)\}'
-)
+_DISPATCH_BARE_STRING_RE = re.compile(r'provider_id\s*==\s*"([^"]+)"|provider_id\s+in\s+\{([^}]+)\}')
 
 
 def test_ledger_provider_id_enum_round_trip() -> None:
     """Every LedgerProviderID value round-trips through StrEnum construction."""
     for member in LedgerProviderID:
         reconstructed = LedgerProviderID(member.value)
-        assert reconstructed is member, (
-            f"LedgerProviderID({member.value!r}) did not return the canonical member"
-        )
+        assert reconstructed is member, f"LedgerProviderID({member.value!r}) did not return the canonical member"
 
 
 def test_ledger_provider_id_covers_all_known_values() -> None:
@@ -68,7 +59,6 @@ def test_no_bare_string_dispatch_survivors_in_actions() -> None:
         if re.search(r'provider_id\s*(?:==|in)\s*["\']', line):
             lines_with_bare_dispatch.append(f"_actions.py:{i}: {stripped!r}")
 
-    assert not lines_with_bare_dispatch, (
-        "Bare provider_id string comparison(s) survived migration:\n"
-        + "\n".join(f"  {l}" for l in lines_with_bare_dispatch)
+    assert not lines_with_bare_dispatch, "Bare provider_id string comparison(s) survived migration:\n" + "\n".join(
+        f"  {line}" for line in lines_with_bare_dispatch
     )

@@ -66,9 +66,6 @@ def test_refused_cli_non_tty_locale_key_resolves() -> None:
 
     resolved = tr(_NON_TTY_LOCALE_KEY)
     assert _NON_TTY_LOCALE_KEY not in resolved, (
-        f"Key {_NON_TTY_LOCALE_KEY!r} was not substituted in the locale catalogue; "
-        f"got {resolved!r}"
+        f"Key {_NON_TTY_LOCALE_KEY!r} was not substituted in the locale catalogue; got {resolved!r}"
     )
-    assert len(resolved) > 10, (
-        f"Key {_NON_TTY_LOCALE_KEY!r} resolved to suspiciously short string: {resolved!r}"
-    )
+    assert len(resolved) > 10, f"Key {_NON_TTY_LOCALE_KEY!r} resolved to suspiciously short string: {resolved!r}"

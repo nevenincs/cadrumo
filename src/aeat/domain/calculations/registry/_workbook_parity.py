@@ -45,6 +45,7 @@ _PARITY_DEFAULTS = _Settings()
 
 _log = get_logger(__name__)
 
+
 class WorkbookKind(StrEnum):
     """Observable classification for a single discovered workbook artefact."""
 
@@ -442,9 +443,7 @@ def _scan_worksheet_cells(
             ref = WorkbookCellRef(sheet=worksheet.title, coordinate=cell.coordinate, formula=value)
             formulas.append(ref)
             if len(references) < opts.max_formula_refs:
-                references.extend(
-                    _formula_references(worksheet.title, value, opts.max_formula_refs - len(references))
-                )
+                references.extend(_formula_references(worksheet.title, value, opts.max_formula_refs - len(references)))
 
 
 def inventory_workbook_coverage(
@@ -980,9 +979,7 @@ def verify_workbook_backend(
         root=root.resolve().as_posix(),
         workbook_count=len(discover_workbooks(root)) if root.exists() else 0,
         scanned_count=sum(1 for report in reports if report.scan_status == WorkbookScanStatus.SCANNED),
-        formula_workbook_count=sum(
-            1 for report in reports if report.workbook_kind == WorkbookKind.FORMULA_FORM
-        ),
+        formula_workbook_count=sum(1 for report in reports if report.workbook_kind == WorkbookKind.FORMULA_FORM),
         unsupported_xls_count=sum(
             1 for report in reports if report.workbook_kind == WorkbookKind.UNSUPPORTED_BINARY_XLS
         ),
@@ -1042,7 +1039,8 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
                 1 for report in modelo_reports if report.workbook_kind == WorkbookKind.UNSUPPORTED_BINARY_XLS
             ),
             failed_count=sum(
-                1 for report in modelo_reports
+                1
+                for report in modelo_reports
                 if report.scan_status in {WorkbookScanStatus.FAILED, WorkbookScanStatus.TIMEOUT}
             ),
         )
@@ -1269,9 +1267,7 @@ def _record_cell_if_formula(
     value = cell.value
     if not (isinstance(value, str) and value.startswith("=")):
         return
-    formulas.append(
-        WorkbookCellRef(sheet=sheet_title, coordinate=cell.coordinate, formula=value)
-    )
+    formulas.append(WorkbookCellRef(sheet=sheet_title, coordinate=cell.coordinate, formula=value))
     remaining = _REFERENCE_HARVEST_LIMIT - len(references)
     if remaining > 0:
         references.extend(_formula_references(sheet_title, value, remaining))

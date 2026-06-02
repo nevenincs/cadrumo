@@ -39,8 +39,6 @@ from ...tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
-
 # ---------------------------------------------------------------------------
 # Fixture helpers
 # ---------------------------------------------------------------------------
@@ -305,8 +303,7 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
     cuota = payload["casilla_values"]["03"]
     # Oracle: 18 % x 10.000,00 = 1.800,00 EUR (LIS Art. 40.2)
     assert Decimal(cuota) == Decimal("1800.00"), (
-        f"Modelo 202 Art. 40.2 cuota: expected 1800.00 EUR "
-        f"(LIS Art. 40.2, 18% of 10000), got {cuota!r}"
+        f"Modelo 202 Art. 40.2 cuota: expected 1800.00 EUR (LIS Art. 40.2, 18% of 10000), got {cuota!r}"
     )
 
 
@@ -379,8 +376,7 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
     # Oracle: 20 % x (12.000 - 4.000) = 1.600,00 EUR (IRPF Art. 99,
     # RD 439/2007 Art. 110, AEAT DR 130 Instrucciones Casilla 07)
     assert Decimal(casilla_07) == Decimal("1600.00"), (
-        f"Modelo 130 casilla 07: expected 1600.00 EUR "
-        f"(20% x (12000 - 4000), IRPF Art. 99), got {casilla_07!r}"
+        f"Modelo 130 casilla 07: expected 1600.00 EUR (20% x (12000 - 4000), IRPF Art. 99), got {casilla_07!r}"
     )
 
 
@@ -434,8 +430,7 @@ def test_modelo_303_calculate_surface_is_reachable(
         assert "casilla_values" in payload, result.output
         # iva.resultado is the regulatory net IVA output casilla.
         assert "iva.resultado" in payload["casilla_values"], (
-            f"iva.resultado must be present in calculate output; "
-            f"got keys: {list(payload['casilla_values'])[:10]}"
+            f"iva.resultado must be present in calculate output; got keys: {list(payload['casilla_values'])[:10]}"
         )
 
 

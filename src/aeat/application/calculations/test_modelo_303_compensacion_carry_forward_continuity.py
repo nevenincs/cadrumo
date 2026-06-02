@@ -177,9 +177,7 @@ def _registry_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period=period,
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()
-        ),
+        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
     )
 
 
@@ -246,15 +244,9 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
             captured_at=_CLOCK,
         )
 
-        snapshot_n1 = resources().modelos.authority.snapshot(
-            _MODELO, filing_year=_YEAR_N_PLUS_1, period="1T"
-        )
+        snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
-        resolved = {
-            item.relation: item.value
-            for item in relation_values.values
-            if item.value is not None
-        }
+        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
 
     assert resolved.get(_CARRY_RELATION) == carried_saldo
     assert carried_saldo > Decimal("0")
@@ -291,15 +283,9 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
 
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta
         # wrap), lands in casilla 110, and a real calculation runs with it.
-        snapshot_n1 = resources().modelos.authority.snapshot(
-            _MODELO, filing_year=_YEAR_N_PLUS_1, period="1T"
-        )
+        snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
-        resolved = {
-            item.relation: item.value
-            for item in relation_values.values
-            if item.value is not None
-        }
+        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
         result_n1, produced_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",

@@ -614,16 +614,11 @@ class RegistryQueryService:
             if revision.period_selector.includes_year(filing_year)
             and (
                 as_of is None
-                or (
-                    revision.valid_from <= as_of
-                    and (revision.valid_to is None or revision.valid_to >= as_of)
-                )
+                or (revision.valid_from <= as_of and (revision.valid_to is None or revision.valid_to >= as_of))
             )
         ]
         if not covering:
-            raise RegistryValidationError(
-                f"modelo {definition.id} has no revision covering filing year {filing_year}"
-            )
+            raise RegistryValidationError(f"modelo {definition.id} has no revision covering filing year {filing_year}")
         revision = max(covering, key=lambda item: (item.valid_from, str(item.id)))
         return ModeloBindingsReport(
             code=str(definition.id),
@@ -742,9 +737,7 @@ class RegistryQueryService:
         # declared periods, so a censo token is accepted on the same
         # path as a quarterly time-code.
         declared_by_revision = {
-            token
-            for revision in definition.revisions.values()
-            for token in revision.period_selector.periods
+            token for revision in definition.revisions.values() for token in revision.period_selector.periods
         }
         token_is_declared = any(token.upper() == bare_upper for token in declared_by_revision)
         if _BARE_PERIOD_RE.fullmatch(bare_upper) or token_is_declared:
@@ -761,9 +754,7 @@ class RegistryQueryService:
                 )
             revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
             # Return the registry's own casing for the period token.
-            registry_token = next(
-                token for token in revision.period_selector.periods if token.upper() == bare_upper
-            )
+            registry_token = next(token for token in revision.period_selector.periods if token.upper() == bare_upper)
             return definition, revision, None, registry_token
         filing_year, registry_period = parse_modelo_period(period)
         snapshot = self._authority.snapshot(

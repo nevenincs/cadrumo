@@ -73,12 +73,8 @@ def _year_n_observation() -> RegistryModeloObservation:
         observations=(
             CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
             CasillaObservation(casilla_id="decl.tipo-trigger", value=Decimal("1")),
-            CasillaObservation(
-                casilla_id="iva.autorepercutido.intracomunitaria", value=Decimal("4200.00")
-            ),
-            CasillaObservation(
-                casilla_id="iva.soportado.recargo-equivalencia", value=Decimal("0")
-            ),
+            CasillaObservation(casilla_id="iva.autorepercutido.intracomunitaria", value=Decimal("4200.00")),
+            CasillaObservation(casilla_id="iva.soportado.recargo-equivalencia", value=Decimal("0")),
             CasillaObservation(casilla_id="iva.cuota-no-periodica-total", value=Decimal("4200.00")),
         ),
     )
@@ -97,12 +93,8 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
         observations=(
             CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
             CasillaObservation(casilla_id="decl.tipo-trigger", value=Decimal("3")),
-            CasillaObservation(
-                casilla_id="iva.autorepercutido.intracomunitaria", value=Decimal("0")
-            ),
-            CasillaObservation(
-                casilla_id="iva.soportado.recargo-equivalencia", value=Decimal("315.00")
-            ),
+            CasillaObservation(casilla_id="iva.autorepercutido.intracomunitaria", value=Decimal("0")),
+            CasillaObservation(casilla_id="iva.soportado.recargo-equivalencia", value=Decimal("315.00")),
             CasillaObservation(casilla_id="iva.cuota-no-periodica-total", value=Decimal("315.00")),
         ),
     )
@@ -164,9 +156,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="AD-HOC",
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != "iva.cuota-no-periodica-total"
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != "iva.cuota-no-periodica-total"),
     )
     assert obs_n != obs_n_missing
 

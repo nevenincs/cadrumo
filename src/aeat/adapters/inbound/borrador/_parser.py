@@ -60,13 +60,12 @@ def parse_borrador(
 
     artefact_kind = artefact_kind_override or detect_artefact_kind(path)
     año = año_override or 2025
-    _logger.debug("parse_borrador: path=%s kind=%s año=%d", path.name, artefact_kind, año)
+    _logger.debug("parse_borrador: source=<input-pdf> kind=%s año=%d", artefact_kind, año)
 
     extractor = get_extractor(año)
     result = extractor.extract(path, artefact_kind, extraction_profile=extraction_profile)
     _logger.info(
-        "parse_borrador: parsed %s kind=%s año=%d",
-        path.name,
+        "parse_borrador: parsed source=<input-pdf> kind=%s año=%d",
         artefact_kind,
         año,
     )

@@ -208,10 +208,12 @@ def test_base_liquidable_general_applies_reductions() -> None:
     declaration_type = 2 (conjunta) + minor_children_in_unit = 0 (tipo-1 matrimonio) → 0461 = €3,400.
     """
     base_inputs = _base_2025_inputs()
-    base_inputs.update({
-        "0003": Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
-        "0501": Decimal("1000.00"),  # compensación bases liquidables negativas
-    })
+    base_inputs.update(
+        {
+            "0003": Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
+            "0501": Decimal("1000.00"),  # compensación bases liquidables negativas
+        }
+    )
     scenario = RegistryCalculationScenario(
         id="base-liquidable-with-reductions",
         modelo="100",
@@ -261,8 +263,8 @@ def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
     scenario = _scenario_2025(
         "plan-empleo-reduccion-below-caps",
         overrides={
-            "0003": Decimal("56500.00"),   # trabajo → 0432 = 56,500
-            "0426": Decimal("4200.00"),    # plan de empleo aportación → 0467 = 4,200
+            "0003": Decimal("56500.00"),  # trabajo → 0432 = 56,500
+            "0426": Decimal("4200.00"),  # plan de empleo aportación → 0467 = 4,200
         },
         expected=(
             RegistryScenarioExpectedOutput(target="0467", value=Decimal("4200.00")),
@@ -287,8 +289,8 @@ def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
     scenario = _scenario_2025(
         "plan-empleo-reduccion-capped-10k",
         overrides={
-            "0003": Decimal("80000.00"),   # trabajo → 0432 = 80,000
-            "0426": Decimal("15000.00"),   # plan de empleo aportación → 0467 = 15,000
+            "0003": Decimal("80000.00"),  # trabajo → 0432 = 80,000
+            "0426": Decimal("15000.00"),  # plan de empleo aportación → 0467 = 15,000
         },
         expected=(
             RegistryScenarioExpectedOutput(target="0467", value=Decimal("15000.00")),

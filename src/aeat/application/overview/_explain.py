@@ -90,6 +90,7 @@ class OverviewExplain(BaseModel):
     profile_facts: dict[str, _ProfileFactValue] = Field(default_factory=dict)
     generated_at: datetime
 
+
 _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "tax_id",
     "entity_type",
@@ -106,6 +107,7 @@ _DEADLINE_RELEVANT_FIELDS: tuple[str, ...] = (
     "third_party_transactions_above_347_threshold",
     "bienes_extranjero_above_threshold",
 )
+
 
 def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactValue]:
     """Return the applicability-relevant profile fields as a plain dict.
@@ -129,18 +131,15 @@ def _extract_profile_facts(profile: TaxpayerProfile) -> dict[str, _ProfileFactVa
         facts[field_name] = "" if value is None else value
     # The IRPF income-category set is the gate for natural persons;
     # surface it as a stable comma-joined token.
-    facts["irpf_income_categories"] = ",".join(
-        sorted(category.value for category in profile.irpf_income_categories)
-    )
+    facts["irpf_income_categories"] = ",".join(sorted(category.value for category in profile.irpf_income_categories))
     # The nested IVA + enrolment sub-models also gate applicability.
     iva = getattr(profile, "iva", None)
     if iva is not None:
         facts["iva.roi_enrolled"] = iva.roi_enrolled
         facts["iva.oss_enrolled"] = iva.oss_enrolled
-        facts["iva.intracommunity_operations_exceed_50000_eur"] = (
-            iva.intracommunity_operations_exceed_50000_eur
-        )
+        facts["iva.intracommunity_operations_exceed_50000_eur"] = iva.intracommunity_operations_exceed_50000_eur
     return facts
+
 
 def _modelo_is_registered(modelo: str) -> bool:
     """Return whether ``modelo`` is a known modelo in the calculation registry.
@@ -159,6 +158,7 @@ def _modelo_is_registered(modelo: str) -> bool:
     except ResourceNotFoundError:
         return False
     return True
+
 
 def build_overview_explain(
     profile: TaxpayerProfile,
@@ -224,8 +224,7 @@ def build_overview_explain(
         # historic refusal so a typo does not masquerade as "declare
         # your taxpayer type first".
         raise OverviewExplainError(
-            f"could not evaluate modelo {modelo!r} for year {resolved_year}: "
-            f"modelo is not registered",
+            f"could not evaluate modelo {modelo!r} for year {resolved_year}: modelo is not registered",
         )
 
     return OverviewExplain(
@@ -239,6 +238,7 @@ def build_overview_explain(
         profile_facts=_extract_profile_facts(profile),
         generated_at=now(),
     )
+
 
 def _scheduling_rationale(
     profile: TaxpayerProfile,
@@ -269,6 +269,7 @@ def _scheduling_rationale(
         raise OverviewExplainError(
             f"could not evaluate modelo {modelo!r} for year {year}: {exc}",
         ) from exc
+
 
 __all__ = [
     "OverviewExplain",

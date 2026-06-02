@@ -40,6 +40,7 @@ _DEFAULT_HORIZON_DAYS = 14
 _OVERDUE_LOOKBACK_DAYS = 90
 """How far back the overdue cohort is computed against."""
 
+
 class OverviewAgenda(BaseModel):
     """Outcome of ``build_overview_agenda``.
 
@@ -82,6 +83,7 @@ class OverviewAgenda(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+
 
 def build_overview_agenda(
     profile: TaxpayerProfile,
@@ -137,9 +139,7 @@ def build_overview_agenda(
         elif deadline < as_of and entry.user_state is OverviewPeriodState.LATE:
             overdue.append(entry)
 
-    future_or_today = [
-        entry for entry in calendar.entries if entry.adjusted_closes_on >= as_of
-    ]
+    future_or_today = [entry for entry in calendar.entries if entry.adjusted_closes_on >= as_of]
     if future_or_today:
         next_due = min(
             future_or_today,
@@ -159,6 +159,7 @@ def build_overview_agenda(
         taxpayer_model_declared=calendar.taxpayer_model_declared,
         incomplete_reason=calendar.incomplete_reason,
     )
+
 
 __all__ = [
     "OverviewAgenda",

@@ -13,10 +13,10 @@ from pathlib import Path
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....core.time import now
-from ....domain.profile._errors import AssetRecordError
 from ....domain.profile.assets import (
     AmortizacionLedger,
     AssetRecord,
+    AssetRecordError,
     AssetsLedgerDocument,
 )
 from ..storage import (

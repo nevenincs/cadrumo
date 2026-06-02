@@ -101,9 +101,8 @@ def test_no_bare_xls_extension_literals() -> None:
     """Runtime .xls usage must go through XLS_EXTENSION constant."""
     files = _production_py_files()
     hits = _scan(files, _RE_XLS_BARE)
-    assert not hits, (
-        f"Found {len(hits)} bare '.xls' literal(s) outside canonical definition:\n"
-        + "\n".join(f"  {h}" for h in hits)
+    assert not hits, f"Found {len(hits)} bare '.xls' literal(s) outside canonical definition:\n" + "\n".join(
+        f"  {h}" for h in hits
     )
 
 
@@ -111,13 +110,9 @@ def test_no_bare_xls_extension_literals() -> None:
 # No duplicate SEDE_BODY_ENCODING = "latin-1" outside _browser_constants
 # ---------------------------------------------------------------------------
 
-_BROWSER_CONSTANTS = (
-    _SRC_ROOT / "adapters" / "outbound" / "aeat" / "sede" / "_browser_constants.py"
-)
+_BROWSER_CONSTANTS = _SRC_ROOT / "adapters" / "outbound" / "aeat" / "sede" / "_browser_constants.py"
 
-_RE_SEDE_BODY_ENCODING_DEF = re.compile(
-    r'SEDE_BODY_ENCODING\s*:\s*Final\[str\]\s*=\s*"latin-1"'
-)
+_RE_SEDE_BODY_ENCODING_DEF = re.compile(r'SEDE_BODY_ENCODING\s*:\s*Final\[str\]\s*=\s*"latin-1"')
 
 
 def test_no_duplicate_sede_body_encoding_definition() -> None:
@@ -126,16 +121,14 @@ def test_no_duplicate_sede_body_encoding_definition() -> None:
     if _BROWSER_CONSTANTS.is_file():
         canonical_text = _BROWSER_CONSTANTS.read_text(encoding="utf-8", errors="replace")
         assert "SEDE_BODY_ENCODING" in canonical_text, (
-            "_browser_constants.py no longer exports SEDE_BODY_ENCODING; "
-            "update callers and this test."
+            "_browser_constants.py no longer exports SEDE_BODY_ENCODING; update callers and this test."
         )
 
     # Verify no other production file re-defines SEDE_BODY_ENCODING as a bare "latin-1"
     non_canonical = [p for p in _production_py_files() if p != _BROWSER_CONSTANTS]
     hits = _scan(non_canonical, _RE_SEDE_BODY_ENCODING_DEF)
-    assert not hits, (
-        f"Found {len(hits)} duplicate SEDE_BODY_ENCODING = 'latin-1' definition(s):\n"
-        + "\n".join(f"  {h}" for h in hits)
+    assert not hits, f"Found {len(hits)} duplicate SEDE_BODY_ENCODING = 'latin-1' definition(s):\n" + "\n".join(
+        f"  {h}" for h in hits
     )
 
 
@@ -147,9 +140,7 @@ def test_no_duplicate_sede_body_encoding_definition() -> None:
 # Matches environment="production" or environment == "production" call patterns
 # but NOT: StrEnum PRODUCTION = "production", docstrings, or the match validator
 # case arm.
-_RE_PRODUCTION_ENV_BYPASS = re.compile(
-    r'environment\s*=\s*"production"'
-)
+_RE_PRODUCTION_ENV_BYPASS = re.compile(r'environment\s*=\s*"production"')
 
 
 def test_no_bare_production_oracle_environment_bypass() -> None:
@@ -158,8 +149,7 @@ def test_no_bare_production_oracle_environment_bypass() -> None:
     hits = _scan(files, _RE_PRODUCTION_ENV_BYPASS)
     assert not hits, (
         f"Found {len(hits)} bare environment='production' literal(s); "
-        "use OracleEnvironment.PRODUCTION:\n"
-        + "\n".join(f"  {h}" for h in hits)
+        "use OracleEnvironment.PRODUCTION:\n" + "\n".join(f"  {h}" for h in hits)
     )
 
 
@@ -171,9 +161,7 @@ def test_no_bare_production_oracle_environment_bypass() -> None:
 # assignments (``== "invoice"``, ``source="invoice"``, ``source_kind == "invoice"``).
 # Does NOT match scope="invoice", name="invoice", or StrEnum INVOICE = "invoice"
 # value assignments.
-_RE_INVOICE_SOURCE_KIND = re.compile(
-    r'(?:==\s*"invoice"|source_kind\s*==\s*"invoice"|source\s*=\s*"invoice")'
-)
+_RE_INVOICE_SOURCE_KIND = re.compile(r'(?:==\s*"invoice"|source_kind\s*==\s*"invoice"|source\s*=\s*"invoice")')
 
 
 def test_no_bare_invoice_source_kind_literals() -> None:
@@ -182,6 +170,5 @@ def test_no_bare_invoice_source_kind_literals() -> None:
     hits = _scan(files, _RE_INVOICE_SOURCE_KIND)
     assert not hits, (
         f"Found {len(hits)} bare 'invoice' literal(s) in source-kind context; "
-        "use AggregationSourceKind.INVOICE:\n"
-        + "\n".join(f"  {h}" for h in hits)
+        "use AggregationSourceKind.INVOICE:\n" + "\n".join(f"  {h}" for h in hits)
     )

@@ -64,12 +64,8 @@ def test_overview_logger_scrubs_nif_in_log_record(caplog: pytest.LogCaptureFixtu
 
     record = caplog.records[-1]
     rendered = record.getMessage()
-    assert nif not in rendered, (
-        f"NIF {nif!r} was not scrubbed; got: {rendered!r}"
-    )
-    assert redacted_marker in rendered, (
-        f"Expected '<redacted>' in rendered message; got: {rendered!r}"
-    )
+    assert nif not in rendered, f"NIF {nif!r} was not scrubbed; got: {rendered!r}"
+    assert redacted_marker in rendered, f"Expected '<redacted>' in rendered message; got: {rendered!r}"
 
 
 def test_overview_logger_scrubs_nif_in_message_body(caplog: pytest.LogCaptureFixture) -> None:
@@ -86,6 +82,4 @@ def test_overview_logger_scrubs_nif_in_message_body(caplog: pytest.LogCaptureFix
 
     record = caplog.records[-1]
     rendered = record.getMessage()
-    assert nif not in rendered, (
-        f"NIF {nif!r} survived scrubbing in message body; got: {rendered!r}"
-    )
+    assert nif not in rendered, f"NIF {nif!r} survived scrubbing in message body; got: {rendered!r}"

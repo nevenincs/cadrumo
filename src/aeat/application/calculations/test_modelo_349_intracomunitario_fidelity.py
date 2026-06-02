@@ -80,9 +80,7 @@ def _year_n_observation() -> RegistryModeloObservation:
         period=_PERIOD,
         observations=(
             CasillaObservation(casilla_id="decl.numero-operadores", value=Decimal("1")),
-            CasillaObservation(
-                casilla_id="decl.importe-operaciones", value=Decimal("85000.00")
-            ),
+            CasillaObservation(casilla_id="decl.importe-operaciones", value=Decimal("85000.00")),
             CasillaObservation(casilla_id="decl.numero-rectificaciones", value=Decimal("0")),
             CasillaObservation(casilla_id="decl.importe-rectificaciones", value=Decimal("0")),
             CasillaObservation(casilla_id="op.codigo-pais", value=Decimal("276")),  # DE
@@ -106,9 +104,7 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
         period=_PERIOD,
         observations=(
             CasillaObservation(casilla_id="decl.numero-operadores", value=Decimal("1")),
-            CasillaObservation(
-                casilla_id="decl.importe-operaciones", value=Decimal("112000.00")
-            ),
+            CasillaObservation(casilla_id="decl.importe-operaciones", value=Decimal("112000.00")),
             CasillaObservation(casilla_id="decl.numero-rectificaciones", value=Decimal("0")),
             CasillaObservation(casilla_id="decl.importe-rectificaciones", value=Decimal("0")),
             CasillaObservation(casilla_id="op.codigo-pais", value=Decimal("276")),  # DE
@@ -168,9 +164,7 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
         # NIF identity continuity: the same counterparty appears in both years
         nif_n = loaded_n.observation.casilla_values["op.nif-comunitario"]
         nif_n1 = loaded_n1.observation.casilla_values["op.nif-comunitario"]
-        assert nif_n == nif_n1 == Decimal("123456789"), (
-            "counterparty NIF must be identical in both years"
-        )
+        assert nif_n == nif_n1 == Decimal("123456789"), "counterparty NIF must be identical in both years"
 
         assert loaded_n.captured_at != loaded_n1.captured_at
 
@@ -182,9 +176,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period=_PERIOD,
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != "op.base-imponible"
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != "op.base-imponible"),
     )
     assert obs_n != obs_n_missing
 

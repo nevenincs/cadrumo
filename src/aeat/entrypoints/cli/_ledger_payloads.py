@@ -17,7 +17,14 @@ re-validation.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._schemas import OutputSchema, register_schema
+
+if TYPE_CHECKING:
+    from ...application.ledger._models import LedgerExportResult as _AppLedgerExportResult
+    from ...application.ledger._models import LedgerSourceImportResult as _AppLedgerSourceImportResult
+    from ...application.inventory._service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -326,11 +333,14 @@ class LedgerCategoriesResult(OutputSchema):
 
 
 @register_schema("ledger.export")
-class LedgerExportResult(OutputSchema):
+class LedgerExportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger export``.
 
-    Mirrors ``LedgerExportResult.model_dump(mode='json', exclude={'payload'})``
-    plus the ``output_path`` string appended at the emit site.
+    Distinct from the application :class:`LedgerExportResult` (DB-26 S51): the
+    backend result carries the raw ``payload`` bytes and typed members
+    (``BucketId``, ``ExportSerializationFormat``, ``LedgerExportRow``); this
+    envelope projects the JSON-coerced metadata + row view and appends the
+    operator-facing ``output_path``. Derive instances via :meth:`from_result`.
     """
 
     bucket_id: str
@@ -346,13 +356,30 @@ class LedgerExportResult(OutputSchema):
     bucket_event_ids: list[str] = []
     output_path: str
 
+    @classmethod
+    def from_result(cls, result: _AppLedgerExportResult, *, output_path: str) -> LedgerExportPayload:
+        """Project the application export result into this CLI envelope.
+
+        The raw ``payload`` bytes are excluded — the JSON envelope carries
+        export metadata and the row projection, not the binary artefact (that
+        is written to ``output_path``). ``model_dump(mode="json")`` performs the
+        typed-id/enum/nested-row coercion so the envelope's loosened field types
+        stay exactly consistent with the backend contract.
+        """
+        data = result.model_dump(mode="json", exclude={"payload"})
+        data["output_path"] = output_path
+        return cls.model_validate(data)
+
 
 @register_schema("ledger.import")
-class LedgerImportResult(OutputSchema):
+class LedgerImportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger import``.
 
-    Mirrors ``LedgerSourceImportResult.model_dump(mode='json')`` with
-    the optional notice fields appended by the emit site.
+    Distinct from the application :class:`LedgerSourceImportResult` (DB-26 S51):
+    this envelope projects that result's JSON-coerced fields (the nested
+    validation/source/diagnostic reports become the CLI ``*Payload`` shapes) and
+    appends the optional operator-facing notice strings. Derive instances via
+    :meth:`from_result`.
     """
 
     rows: int
@@ -375,6 +402,32 @@ class LedgerImportResult(OutputSchema):
     dry_run_notice: str | None = None
     empty_import_notice: str | None = None
     likely_duplicate_notice: str | None = None
+
+    @classmethod
+    def from_result(
+        cls,
+        result: _AppLedgerSourceImportResult,
+        *,
+        dry_run_notice: str | None = None,
+        empty_import_notice: str | None = None,
+        likely_duplicate_notice: str | None = None,
+    ) -> LedgerImportPayload:
+        """Project the application import result into this CLI envelope.
+
+        ``model_dump(mode="json")`` coerces the typed members (typed-ids, nested
+        validation/source/diagnostic reports) to the JSON shape this envelope
+        declares. The three notices are operator-facing display strings computed
+        at the emit site and threaded through so this stays the single
+        construction point; each is attached only when present.
+        """
+        data = result.model_dump(mode="json")
+        if dry_run_notice is not None:
+            data["dry_run_notice"] = dry_run_notice
+        if empty_import_notice is not None:
+            data["empty_import_notice"] = empty_import_notice
+        if likely_duplicate_notice is not None:
+            data["likely_duplicate_notice"] = likely_duplicate_notice
+        return cls.model_validate(data)
 
 
 @register_schema("ledger.track")
@@ -666,11 +719,13 @@ class InventoryMovementAddResult(InventoryLedgerPayload):
 
 
 @register_schema("ledger.inventory.valuation.preview")
-class InventoryValuationPreviewResult(OutputSchema):
+class InventoryValuationPreviewPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory valuation preview``.
 
-    Mirrors ``InventoryValuationPreview.model_dump(mode='json')`` plus
-    the ``bucket_event_ids`` field the CLI appends at the emit site.
+    Distinct from the application wrapper :class:`InventoryValuationPreviewResult`
+    (DB-26 S52): this envelope *flattens* that wrapper, projecting its inner
+    ``preview`` (:class:`InventoryValuationPreview`) fields and lifting the
+    wrapper's ``bucket_event_ids`` to the top level. Derive via :meth:`from_result`.
     """
 
     actividad_id: str
@@ -679,6 +734,18 @@ class InventoryValuationPreviewResult(OutputSchema):
     closing_stock: str
     cogs: str
     bucket_event_ids: list[str] = []
+
+    @classmethod
+    def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
+        """Flatten the application preview wrapper into this CLI envelope.
+
+        The wrapper carries an inner ``preview`` plus ``bucket_event_ids``;
+        ``model_dump(mode="json")`` on the inner preview performs the
+        enum/Decimal coercion, and the event ids are lifted onto the same level.
+        """
+        data = result.preview.model_dump(mode="json")
+        data["bucket_event_ids"] = list(result.bucket_event_ids)
+        return cls.model_validate(data)
 
 
 # ---------------------------------------------------------------------------

@@ -88,9 +88,8 @@ def test_no_bare_networkidle_literals() -> None:
     """All networkidle usage must go through PLAYWRIGHT_WAIT_NETWORKIDLE."""
     files = _production_py_files()
     hits = _scan(files, _RE_NETWORKIDLE)
-    assert not hits, (
-        f"Found {len(hits)} bare 'networkidle' literal(s) outside canonical definition:\n"
-        + "\n".join(f"  {h}" for h in hits)
+    assert not hits, f"Found {len(hits)} bare 'networkidle' literal(s) outside canonical definition:\n" + "\n".join(
+        f"  {h}" for h in hits
     )
 
 
@@ -106,9 +105,8 @@ def test_no_bare_application_pdf_mime_literals() -> None:
     """All application/pdf usage must go through PDF_MIME_TYPE."""
     files = _production_py_files()
     hits = _scan(files, _RE_PDF_MIME)
-    assert not hits, (
-        f"Found {len(hits)} bare 'application/pdf' literal(s) outside canonical definition:\n"
-        + "\n".join(f"  {h}" for h in hits)
+    assert not hits, f"Found {len(hits)} bare 'application/pdf' literal(s) outside canonical definition:\n" + "\n".join(
+        f"  {h}" for h in hits
     )
 
 
@@ -117,16 +115,15 @@ def test_no_bare_application_pdf_mime_literals() -> None:
 # ---------------------------------------------------------------------------
 
 
-_RE_PLAYWRIGHT_TIMEOUT_SHORT = re.compile(r'timeout\s*=\s*2[_]?000\b')
+_RE_PLAYWRIGHT_TIMEOUT_SHORT = re.compile(r"timeout\s*=\s*2[_]?000\b")
 
 
 def test_no_bare_playwright_timeout_short_literals() -> None:
     """Short Playwright timeout 2_000 must go through PLAYWRIGHT_TIMEOUT_SHORT_MS."""
     files = _production_py_files()
     hits = _scan(files, _RE_PLAYWRIGHT_TIMEOUT_SHORT)
-    assert not hits, (
-        f"Found {len(hits)} bare timeout=2_000 literal(s) outside canonical definition:\n"
-        + "\n".join(f"  {h}" for h in hits)
+    assert not hits, f"Found {len(hits)} bare timeout=2_000 literal(s) outside canonical definition:\n" + "\n".join(
+        f"  {h}" for h in hits
     )
 
 

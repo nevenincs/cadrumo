@@ -17,21 +17,6 @@ from decimal import Decimal
 
 import pytest
 
-from . import (
-    AmendmentEvidenceMissingError,
-    ExternalModeloImportError,
-    WorkUnitMutationRefusedError,
-    WorkUnitNotFoundError,
-    amend_modelo_revision,
-    calculate_modelo_revision,
-    create_work_unit,
-    discard_work_unit,
-    get_calculation_revision,
-    get_filing_record,
-    get_work_unit,
-    import_external_filing_evidence,
-    mark_revision_verificado_completo,
-)
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -58,7 +43,21 @@ from ...domain.modelos._verification_repository import (
 )
 from ...domain.modelos._work_unit import WorkUnit
 from ...tests.secure_sql import isolated_runtime_profile
-
+from . import (
+    AmendmentEvidenceMissingError,
+    ExternalModeloImportError,
+    WorkUnitMutationRefusedError,
+    WorkUnitNotFoundError,
+    amend_modelo_revision,
+    calculate_modelo_revision,
+    create_work_unit,
+    discard_work_unit,
+    get_calculation_revision,
+    get_filing_record,
+    get_work_unit,
+    import_external_filing_evidence,
+    mark_revision_verificado_completo,
+)
 from .test_file_flow import _file_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

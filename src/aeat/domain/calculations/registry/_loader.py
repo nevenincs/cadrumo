@@ -307,9 +307,7 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     """Merge a ``revisions/{id}/`` fragment tree into ``merged_revisions``."""
     revision_id = path.name
     if revision_id in merged_revisions:
-        raise RegistryLoadError(
-            f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
-        )
+        raise RegistryLoadError(f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file")
     revision_manifest = path / "revision.toml"
     if not revision_manifest.is_file():
         raise RegistryLoadError(f"{path}: revision fragment directory must contain revision.toml")
@@ -422,9 +420,7 @@ def _merge_singleton_table_fragment(
     for key, value in incoming_table.items():
         if key in append_array_fields:
             if not isinstance(value, tuple):
-                raise RegistryLoadError(
-                    f"{path}: revision fragment field {field_name!r}.{key!r} must be an array"
-                )
+                raise RegistryLoadError(f"{path}: revision fragment field {field_name!r}.{key!r} must be an array")
             existing_values = merged.get(key, ())
             if not isinstance(existing_values, tuple):
                 raise RegistryLoadError(
@@ -580,12 +576,8 @@ def _reject_duplicate_appended_table_ids(
     item_id: str,
     field: str,
 ) -> None:
-    existing_ids = {
-        item_id for item in existing if (item_id := _toml_table_id(item)) is not None
-    }
-    incoming_ids = {
-        item_id for item in incoming if (item_id := _toml_table_id(item)) is not None
-    }
+    existing_ids = {item_id for item in existing if (item_id := _toml_table_id(item)) is not None}
+    incoming_ids = {item_id for item in incoming if (item_id := _toml_table_id(item)) is not None}
     duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
     if duplicate_ids:
         raise RegistryLoadError(

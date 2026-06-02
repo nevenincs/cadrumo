@@ -6,14 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from ._ratios import (
-    eligible_ratio_categories,
-    validate_ratios_profile,
-)
 from ...domain.categories import SpendingCategory
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
+)
+from ._ratios import (
+    eligible_ratio_categories,
+    validate_ratios_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

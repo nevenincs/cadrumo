@@ -217,9 +217,7 @@ def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
         )
         failure_lines.extend(f"  + {entry}" for entry in sorted(regressions))
     if silent_fixes:
-        failure_lines.append(
-            "Allow-list entries are now resolvable (trim _BASELINE_BROKEN_IMPORTS):"
-        )
+        failure_lines.append("Allow-list entries are now resolvable (trim _BASELINE_BROKEN_IMPORTS):")
         failure_lines.extend(f"  - {entry}" for entry in sorted(silent_fixes))
     assert not failure_lines, "\n" + "\n".join(failure_lines)
 
@@ -363,13 +361,11 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
         cap = _INIT_MISSING_FROM_ALL_BASELINE.get(path)
         if cap is None:
             failure_lines.append(
-                f"  + {path!r}: new __init__.py with {live_count} public "
-                f"sibling import(s) missing from __all__"
+                f"  + {path!r}: new __init__.py with {live_count} public sibling import(s) missing from __all__"
             )
         elif live_count > cap:
             failure_lines.append(
-                f"  + {path!r}: grew from {cap} to {live_count} "
-                f"public-import-without-__all__ findings"
+                f"  + {path!r}: grew from {cap} to {live_count} public-import-without-__all__ findings"
             )
         elif live_count < cap:
             failure_lines.append(
@@ -382,8 +378,7 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
     for path, cap in sorted(_INIT_MISSING_FROM_ALL_BASELINE.items()):
         if path not in live_counts and cap > 0:
             failure_lines.append(
-                f"  - {path!r}: all {cap} finding(s) resolved — "
-                f"remove the entry from _INIT_MISSING_FROM_ALL_BASELINE"
+                f"  - {path!r}: all {cap} finding(s) resolved — remove the entry from _INIT_MISSING_FROM_ALL_BASELINE"
             )
 
     if failure_lines:

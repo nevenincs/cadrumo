@@ -9,6 +9,9 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.config import Settings
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...tests.secure_sql import isolated_runtime_profile
 from ._business_operation_invoice import (
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoiceNotFoundError,
@@ -19,9 +22,6 @@ from ._business_operation_invoice import (
     PayableInvoiceService,
     validate_eu_iva_id,
 )
-from ...core.config import Settings
-from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -338,7 +338,7 @@ class TestRecordImmutability:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            setattr(result.record, "notes", "mutated")
+            result.record.notes = "mutated"
 
 
 class TestRoundTripPersistence:
@@ -476,7 +476,6 @@ class TestIntracomFieldsPersistence:
         assert record.country_code == "DE"
         assert record.eu_iva_id == "DE345678901"
         assert record.operation_type is IntracomOperationType.E
-
 
     def test_existing_record_without_intracom_fields_loads_as_none(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path

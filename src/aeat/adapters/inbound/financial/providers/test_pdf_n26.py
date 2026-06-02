@@ -25,13 +25,13 @@ replace them, at which point ``verification_source`` is upgraded to
 from __future__ import annotations
 
 import json
+import logging
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from .....tests import FIXTURES_DIR
-
 from .. import PdfN26Provider
 from ._detection import detect_provider
 
@@ -89,6 +89,29 @@ def test_pdf_n26_provider_rejects_non_n26_pdf(tmp_path: Path) -> None:
     validation = PdfN26Provider().validate_source(source)
     assert not validation.is_valid
     assert "n26" in validation.warnings[0].lower()
+
+
+def test_pdf_n26_provider_invalid_pdf_does_not_expose_filename(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Parser teardown diagnostics must redact the caller-provided PDF path."""
+    source = tmp_path / "12345678Z-private-account-statement.pdf"
+    source.write_bytes(b"not a valid PDF document")
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.adapters.inbound.financial.providers._pdf_n26"):
+        validation = PdfN26Provider().validate_source(source)
+
+    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+    rendered_warnings = "\n".join(validation.warnings)
+    assert not validation.is_valid
+    assert source.name not in rendered_logs
+    assert source.name not in rendered_warnings
+    assert str(source) not in rendered_logs
+    assert str(source) not in rendered_warnings
+    assert "<input-pdf>" in rendered_logs
+    assert "<input-pdf>" in rendered_warnings
+    assert all(record.exc_info is None for record in caplog.records)
 
 
 # ---------------------------------------------------------------------------
@@ -153,17 +176,12 @@ def test_extract_statement_currency_uses_default_currency() -> None:
     DEFAULT_CURRENCY so that the authoritative constant governs all currency logic.
     """
     from .....core.external_constants import DEFAULT_CURRENCY
-
     from ._pdf_n26 import _extract_statement_currency
 
     # A page with a EUR marker must yield DEFAULT_CURRENCY.
     pages = (("Umsatz 100,00 EUR Kontostand",),)
     result = _extract_statement_currency(pages)
     assert result == DEFAULT_CURRENCY
-
-    # The return value must match the canonical constant, not a hard-coded string.
-    assert result == "EUR"  # sanity: DEFAULT_CURRENCY itself is EUR
-    assert result is not object()  # trivially true shape-check guard
 
 
 def test_extract_statement_currency_raises_on_missing_currency() -> None:

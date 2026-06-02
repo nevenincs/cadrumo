@@ -73,8 +73,7 @@ def validate_workbook_parity_section(
         source = source_refs[workbook.workbook_source]
         if workbook.formula_coverage == "formula_form" and source.evidence_tier != "executable_parity_evidence":
             failures.append(
-                f"{prefix}: workbook parity {workbook.id!r} formula workbook requires "
-                "executable parity evidence source"
+                f"{prefix}: workbook parity {workbook.id!r} formula workbook requires executable parity evidence source"
             )
         if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
             failures.append(
@@ -117,8 +116,7 @@ def validate_verification_expectation_section(
         for total_kind, casilla_id in expectation.reconciliation_totals.items():
             if casilla_id not in casillas:
                 failures.append(
-                    f"{prefix}: {owner} reconciliation total {total_kind!r} references unknown casilla "
-                    f"{casilla_id!r}"
+                    f"{prefix}: {owner} reconciliation total {total_kind!r} references unknown casilla {casilla_id!r}"
                 )
             if casilla_id not in expectation.computed_casillas:
                 failures.append(
@@ -171,5 +169,3 @@ def validate_deadline_window_section(
             condition_owner = f"deadline condition for {window.id}"
             failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
-
-

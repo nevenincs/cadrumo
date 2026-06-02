@@ -1030,9 +1030,7 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
             if revision_source.layout == "revision_file":
                 assert revision_source.fragment_paths == (revision_source.path,)
             else:
-                expected_revision_paths = tuple(
-                    sorted(path.resolve() for path in revision_source.path.rglob("*.toml"))
-                )
+                expected_revision_paths = tuple(sorted(path.resolve() for path in revision_source.path.rglob("*.toml")))
                 assert tuple(sorted(revision_source.fragment_paths)) == expected_revision_paths
             discovered_paths.update(path.resolve() for path in revision_source.fragment_paths)
             checked.append(f"{source.modelo_id}/{revision_source.revision_id}")
@@ -1061,9 +1059,7 @@ def test_committed_registry_toml_files_stay_reviewable() -> None:
         for line_number, line in enumerate(lines, start=1):
             if len(line) <= _MAX_TOML_ROW_CHARS:
                 continue
-            oversized_rows.append(
-                f"{relative_path}:{line_number}: {len(line)} chars > {_MAX_TOML_ROW_CHARS}"
-            )
+            oversized_rows.append(f"{relative_path}:{line_number}: {len(line)} chars > {_MAX_TOML_ROW_CHARS}")
 
     assert oversized_single_file_modelos == []
     assert oversized_fragments == []

@@ -65,9 +65,7 @@ RENTA_EXENTA_CASILLA: CasillaId = "0525"
 
 # Legal references carried through every observation — sourced from the
 # trabajador_del_mar.toml binding entries.
-_ART_7P_LEGAL_REFS: tuple[str, ...] = (
-    "Ley 35/2006 Art. 7.p) BOE-A-2006-20764",
-)
+_ART_7P_LEGAL_REFS: tuple[str, ...] = ("Ley 35/2006 Art. 7.p) BOE-A-2006-20764",)
 _REBECA_LEGAL_REFS: tuple[str, ...] = (
     "Ley 19/1994 Art. 73.2 BOE-A-1994-16100",
     "Ley 19/1994 Art. 73.3 BOE-A-1994-16100",
@@ -78,9 +76,7 @@ _DA41_LEGAL_REFS: tuple[str, ...] = (
     "Ley 35/2006 DA 41 BOE-A-2006-20764",
     "Ley 6/2018 BOE-A-2018-9268",
 )
-_RETMAR_LEGAL_REFS: tuple[str, ...] = (
-    "Ley 47/2015 BOE-A-2015-11346",
-)
+_RETMAR_LEGAL_REFS: tuple[str, ...] = ("Ley 47/2015 BOE-A-2015-11346",)
 
 _ART_7P_SOURCE_REFS: tuple[str, ...] = ("art-7p-foreign-work",)
 _REBECA_SOURCE_REFS: tuple[str, ...] = ("rebeca-50pct",)
@@ -253,9 +249,7 @@ def calculate_art_7p_exemption(
             or when input values are out of range.
     """
     if not art_7p_eligible(facts):
-        raise RentaValidationError(
-            "art_7p_eligible predicate is False; cannot calculate Art. 7.p) exemption"
-        )
+        raise RentaValidationError("art_7p_eligible predicate is False; cannot calculate Art. 7.p) exemption")
     if not isinstance(annual_salary, Decimal) or isinstance(annual_salary, bool):
         raise RentaValidationError("annual_salary must be a Decimal")
     if not annual_salary.is_finite() or annual_salary <= Decimal("0"):
@@ -308,9 +302,7 @@ def calculate_rebeca_exemption(
             or when input values are out of range.
     """
     if not rebeca_eligible(facts):
-        raise RentaValidationError(
-            "rebeca_eligible predicate is False; cannot calculate REBECA exemption"
-        )
+        raise RentaValidationError("rebeca_eligible predicate is False; cannot calculate REBECA exemption")
     if not isinstance(gross_navigation_income, Decimal) or isinstance(gross_navigation_income, bool):
         raise RentaValidationError("gross_navigation_income must be a Decimal")
     if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):

@@ -1276,9 +1276,7 @@ class DerivedDisenoCasilla:
     number: str
 
 
-def _selector_is_cross_modelo(
-    selector: Mapping[str, object], modelo_id: str
-) -> bool:
+def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) -> bool:
     """Return whether a binding / relation selector names a foreign modelo.
 
     A binding ``selector`` (or a relation's ``source_modelo``) is
@@ -1296,9 +1294,7 @@ def _selector_is_cross_modelo(
     return str(source_modelo) != modelo_id
 
 
-def calculation_closure_numbers(
-    revision: ModeloRevision, modelo_id: str
-) -> frozenset[str]:
+def calculation_closure_numbers(revision: ModeloRevision, modelo_id: str) -> frozenset[str]:
     """Return the bare casilla numbers in a revision's calculation closure.
 
     The *calculation closure* is the set of casillas the cross-connecting
@@ -1384,9 +1380,7 @@ def calculation_closure_numbers(
     return frozenset(closure)
 
 
-def calculation_closure_identities(
-    revision: ModeloRevision, modelo_id: str
-) -> frozenset[tuple[str | None, str]]:
+def calculation_closure_identities(revision: ModeloRevision, modelo_id: str) -> frozenset[tuple[str | None, str]]:
     """Return the ``(segmento, number)`` identities in a revision's calculation closure.
 
     Identity-preserving counterpart of :func:`calculation_closure_numbers`.
@@ -1533,9 +1527,7 @@ def derive_calculation_completeness_casillas(
     Returns:
         Tuple of :class:`DerivedDisenoCasilla` representing the calculation-completeness manifest.
     """
-    declared_identities = {
-        (casilla.segmento, casilla.number) for casilla in revision.casillas
-    }
+    declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
 
     diseno_pairs: frozenset[tuple[str, str]] | None = None
     if diseno_path is not None:
@@ -1558,11 +1550,7 @@ def derive_calculation_completeness_casillas(
         if not multi_segment:
             ordered.append(DerivedDisenoCasilla(segmento=None, number=number))
             continue
-        if (
-            diseno_pairs is not None
-            and segmento is not None
-            and (segmento, number) not in diseno_pairs
-        ):
+        if diseno_pairs is not None and segmento is not None and (segmento, number) not in diseno_pairs:
             raise RegistryValidationError(
                 f"calculation-completeness derivation: casilla {number!r} is "
                 f"declared under segmento {segmento!r} but the AEAT Diseño de "

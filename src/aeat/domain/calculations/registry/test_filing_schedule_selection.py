@@ -89,23 +89,15 @@ def test_filing_schedule_predicate_with_unknown_field_is_reported_as_contract_er
     modelo = registry_authority.modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     schedule = next(s for s in revision.filing_schedules if s.profile_conditions)
-    bad_condition = schedule.profile_conditions[0].model_copy(
-        update={"field": "unknown_predicate_field"}
-    )
+    bad_condition = schedule.profile_conditions[0].model_copy(update={"field": "unknown_predicate_field"})
     bad_schedule = schedule.model_copy(update={"profile_conditions": (bad_condition,)})
-    mutated_revision = revision.model_copy(
-        update={"filing_schedules": (bad_schedule, *revision.filing_schedules[1:])}
-    )
+    mutated_revision = revision.model_copy(update={"filing_schedules": (bad_schedule, *revision.filing_schedules[1:])})
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
     schema = load_user_profile_schema()
 
     report = validate_user_profile_registry_contract([mutated_modelo], schema)
 
-    matching = [
-        i
-        for i in report.issues
-        if i.surface == "filing_schedule" and i.selector == "unknown_predicate_field"
-    ]
+    matching = [i for i in report.issues if i.surface == "filing_schedule" and i.selector == "unknown_predicate_field"]
     assert matching, f"expected a filing_schedule issue for unknown_predicate_field; issues={report.issues}"
     assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR
 
@@ -116,22 +108,14 @@ def test_deadline_window_predicate_with_unknown_field_is_reported_as_contract_er
     modelo = registry_authority.modelo("111")
     revision = modelo.revisions["2019-y-siguientes"]
     window = next(w for w in revision.deadline_windows if w.applicability_conditions)
-    bad_condition = window.applicability_conditions[0].model_copy(
-        update={"field": "unknown_predicate_field"}
-    )
+    bad_condition = window.applicability_conditions[0].model_copy(update={"field": "unknown_predicate_field"})
     bad_window = window.model_copy(update={"applicability_conditions": (bad_condition,)})
-    mutated_revision = revision.model_copy(
-        update={"deadline_windows": (bad_window, *revision.deadline_windows[1:])}
-    )
+    mutated_revision = revision.model_copy(update={"deadline_windows": (bad_window, *revision.deadline_windows[1:])})
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
     schema = load_user_profile_schema()
 
     report = validate_user_profile_registry_contract([mutated_modelo], schema)
 
-    matching = [
-        i
-        for i in report.issues
-        if i.surface == "deadline_window" and i.selector == "unknown_predicate_field"
-    ]
+    matching = [i for i in report.issues if i.surface == "deadline_window" and i.selector == "unknown_predicate_field"]
     assert matching, f"expected a deadline_window issue for unknown_predicate_field; issues={report.issues}"
     assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR

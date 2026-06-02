@@ -317,8 +317,7 @@ def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
             return _OracleEnvironment.BOTH
         case _:
             raise RegistryApplicationInputError(
-                f"environment must be one of {sorted(get_args(_OracleEnvironment))!r}; "
-                f"got {environment!r}"
+                f"environment must be one of {sorted(get_args(_OracleEnvironment))!r}; got {environment!r}"
             )
 
 
@@ -563,7 +562,9 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
 
 
 def _load_filed_observation(path: Path, *, master_key_provider: _MasterKeyProvider | None = None):
-    return _FiledDeclaracionObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
+    return _FiledDeclaracionObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(
+        path
+    )
 
 
 __all__ = [

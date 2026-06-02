@@ -29,9 +29,7 @@ def test_s632_pydantic_parse_proxy_rationale_markers_present() -> None:
     src = (_SRC_ROOT / "core" / "parsing" / "_dates.py").read_text(encoding="utf-8")
     token = "BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY"
     count = src.count(token)
-    assert count >= 3, (
-        f"_dates.py must contain at least 3 occurrences of {token!r}; found {count}"
-    )
+    assert count >= 3, f"_dates.py must contain at least 3 occurrences of {token!r}; found {count}"
 
 
 def test_s632_no_bare_raise_valueerror_without_marker() -> None:
@@ -40,9 +38,7 @@ def test_s632_no_bare_raise_valueerror_without_marker() -> None:
     token = "BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY"
     for lineno, line in enumerate(src.splitlines(), start=1):
         if "raise ValueError(" in line:
-            assert token in line, (
-                f"_dates.py line {lineno}: bare raise ValueError without rationale marker"
-            )
+            assert token in line, f"_dates.py line {lineno}: bare raise ValueError without rationale marker"
 
 
 # ---------------------------------------------------------------------------
@@ -52,14 +48,10 @@ def test_s632_no_bare_raise_valueerror_without_marker() -> None:
 
 def test_s633_google_oauth_staging_rationale_markers_present() -> None:
     """_google.py must carry the rationale marker on both installed: dict[str, Any] fields."""
-    src = (_SRC_ROOT / "entrypoints" / "cli" / "_config" / "_google.py").read_text(
-        encoding="utf-8"
-    )
+    src = (_SRC_ROOT / "entrypoints" / "cli" / "_config" / "_google.py").read_text(encoding="utf-8")
     token = "ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING"
     count = src.count(token)
-    assert count >= 2, (
-        f"_google.py must contain at least 2 occurrences of {token!r}; found {count}"
-    )
+    assert count >= 2, f"_google.py must contain at least 2 occurrences of {token!r}; found {count}"
 
 
 # ---------------------------------------------------------------------------
@@ -126,13 +118,9 @@ def test_s635_prefill_report_type_is_binding_prefill_report() -> None:
 
 def test_s636_no_pytest_skip_in_calc_sheets_pull_typing() -> None:
     """test_calc_sheets_pull_typing.py must not contain pytest.skip() calls."""
-    src = (
-        _SRC_ROOT
-        / "adapters"
-        / "outbound"
-        / "google"
-        / "test_calc_sheets_pull_typing.py"
-    ).read_text(encoding="utf-8")
+    src = (_SRC_ROOT / "adapters" / "outbound" / "google" / "test_calc_sheets_pull_typing.py").read_text(
+        encoding="utf-8"
+    )
     assert "pytest.skip(" not in src, (
         "test_calc_sheets_pull_typing.py still contains pytest.skip(); replace with assert precondition"
     )
@@ -151,8 +139,7 @@ def _run_inventory_ratchet(test_path: Path) -> None:
         timeout=120,
     )
     assert result.returncode == 0, (
-        f"Inventory ratchet {test_path.name} FAILED:\n"
-        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        f"Inventory ratchet {test_path.name} FAILED:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
 
 

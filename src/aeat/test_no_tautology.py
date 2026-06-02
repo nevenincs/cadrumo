@@ -78,18 +78,10 @@ def _is_tautological_assert(node: ast.AST) -> bool:
         left = test.left
         right = test.comparators[0]
         # assert <constant> == <same constant>
-        if (
-            isinstance(left, ast.Constant)
-            and isinstance(right, ast.Constant)
-            and left.value == right.value
-        ):
+        if isinstance(left, ast.Constant) and isinstance(right, ast.Constant) and left.value == right.value:
             return True
         # assert <name> == <name>  (no method call on either side)
-        if (
-            isinstance(left, ast.Name)
-            and isinstance(right, ast.Name)
-            and left.id == right.id
-        ):
+        if isinstance(left, ast.Name) and isinstance(right, ast.Name) and left.id == right.id:
             return True
 
     return False
@@ -154,8 +146,7 @@ def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> 
             violations.append(f"{relative}:{lineno}: {snippet}")
 
     assert not violations, (
-        "Tautological assertions found (replace with real behaviour assertions or remove):\n"
-        + "\n".join(violations)
+        "Tautological assertions found (replace with real behaviour assertions or remove):\n" + "\n".join(violations)
     )
 
 

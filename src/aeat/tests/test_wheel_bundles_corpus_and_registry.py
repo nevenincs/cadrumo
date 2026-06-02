@@ -60,10 +60,8 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
     expected: set[str] = set()
     for path in tracked:
         if not path.startswith(prefix):
-            raise AssertionError(
-                f"git ls-files returned a path outside src/aeat/_data/: {path!r}"
-            )
-        expected.add(f"{_WHEEL_DATA_PREFIX}/{path[len(prefix):]}")
+            raise AssertionError(f"git ls-files returned a path outside src/aeat/_data/: {path!r}")
+        expected.add(f"{_WHEEL_DATA_PREFIX}/{path[len(prefix) :]}")
     return expected
 
 
@@ -73,8 +71,7 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     if shutil.which("uv") is None:
         raise AssertionError(
-            "uv binary not found on PATH; corpus-registry packaging guard cannot run "
-            "without the project's build driver"
+            "uv binary not found on PATH; corpus-registry packaging guard cannot run without the project's build driver"
         )
     out_dir = tmp_path_factory.mktemp("wheel-out")
     subprocess.run(
@@ -86,9 +83,7 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
     )
     wheels = sorted(out_dir.glob("aeat-*.whl"))
     if len(wheels) != 1:
-        raise AssertionError(
-            f"expected exactly one aeat-*.whl in {out_dir}; got {[w.name for w in wheels]!r}"
-        )
+        raise AssertionError(f"expected exactly one aeat-*.whl in {out_dir}; got {[w.name for w in wheels]!r}")
     return wheels[0]
 
 
@@ -114,9 +109,7 @@ def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> No
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}
     missing = sorted(expected - names)
-    assert not missing, (
-        f"wheel is missing {len(missing)} bundled files; first ten: {missing[:10]!r}"
-    )
+    assert not missing, f"wheel is missing {len(missing)} bundled files; first ten: {missing[:10]!r}"
 
 
 def test_wheel_archive_includes_renta_pdf_allow_list(built_wheel: Path) -> None:
@@ -126,9 +119,7 @@ def test_wheel_archive_includes_renta_pdf_allow_list(built_wheel: Path) -> None:
         f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{year}/part1/source.pdf"
         for year in ("2020", "2021", "2022", "2023", "2024", "2025")
     }
-    expected_pdfs.add(
-        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf"
-    )
+    expected_pdfs.add(f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf")
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}
     missing = sorted(expected_pdfs - names)

@@ -200,17 +200,14 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
         modelo="130",
         filing_year=filing_year,
         period=prior_period,
-        observations=(
-            CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),
-        ),
+        observations=(CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),),
     )
     prior_year_income_observation = RegistryModeloObservation(
         modelo="100",
         filing_year=filing_year - 1,
         period="0A",
         observations=tuple(
-            CasillaObservation(casilla_id=cid, value=Decimal("0"))
-            for cid in ("0224", "1479", "1553", "1577")
+            CasillaObservation(casilla_id=cid, value=Decimal("0")) for cid in ("0224", "1479", "1553", "1577")
         ),
     )
 
@@ -314,9 +311,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(mode
         modelo="130",
         filing_year=2026,
         period="1T",
-        observations=(
-            CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),
-        ),
+        observations=(CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),),
     )
     # The M100 income-reduction binding also resolves through the
     # previous-filing pipeline. Supply a zeroed 2025 0A observation
@@ -327,8 +322,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(mode
         filing_year=2025,
         period="0A",
         observations=tuple(
-            CasillaObservation(casilla_id=cid, value=Decimal("0"))
-            for cid in ("0224", "1479", "1553", "1577")
+            CasillaObservation(casilla_id=cid, value=Decimal("0")) for cid in ("0224", "1479", "1553", "1577")
         ),
     )
 

@@ -29,12 +29,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _SRC_AEAT = PROJECT_ROOT / "src" / "aeat"
 
-_SECURE_OBJECTS_PATH = (
-    _SRC_AEAT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
-)
-_WORKBOOK_PARITY_PATH = (
-    _SRC_AEAT / "domain" / "calculations" / "registry" / "_workbook_parity.py"
-)
+_SECURE_OBJECTS_PATH = _SRC_AEAT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
+_WORKBOOK_PARITY_PATH = _SRC_AEAT / "domain" / "calculations" / "registry" / "_workbook_parity.py"
 
 _WORKBOOK_KIND_MEMBERS: frozenset[str] = frozenset(
     {
@@ -60,11 +56,7 @@ def _bare_string_literals_in_file(path: Path, target: str) -> list[int]:
     docstring_nodes: set[int] = _collect_docstring_ids(tree)
     hits: list[int] = []
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Constant)
-            and node.value == target
-            and id(node) not in docstring_nodes
-        ):
+        if isinstance(node, ast.Constant) and node.value == target and id(node) not in docstring_nodes:
             hits.append(node.lineno)
     return hits
 
@@ -138,9 +130,7 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
 
     from .domain.calculations.registry._workbook_parity import WorkbookKind
 
-    assert issubclass(WorkbookKind, StrEnum), (
-        "WorkbookKind must be a StrEnum subclass, not a Literal alias."
-    )
+    assert issubclass(WorkbookKind, StrEnum), "WorkbookKind must be a StrEnum subclass, not a Literal alias."
     enrolled = frozenset(member.value for member in WorkbookKind)
     missing = _WORKBOOK_KIND_MEMBERS - enrolled
     assert not missing, (
@@ -159,6 +149,5 @@ def test_workbook_kind_enum_members_in_ast() -> None:
     enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_PATH)
     missing = _WORKBOOK_KIND_MEMBERS - enrolled
     assert not missing, (
-        f"WorkbookKind class body in {_WORKBOOK_PARITY_PATH.name} is missing "
-        f"member assignments for: {sorted(missing)}."
+        f"WorkbookKind class body in {_WORKBOOK_PARITY_PATH.name} is missing member assignments for: {sorted(missing)}."
     )

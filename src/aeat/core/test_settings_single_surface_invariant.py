@@ -114,11 +114,7 @@ def _aeat_string_binding_pairs(node: ast.AST) -> tuple[tuple[str, str], ...]:
         return tuple((target.id, value) for target in node.targets if isinstance(target, ast.Name))
     if isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.value, ast.Constant):
         value = node.value.value
-        if (
-            isinstance(value, str)
-            and _AEAT_KEY_PATTERN.fullmatch(value)
-            and isinstance(node.target, ast.Name)
-        ):
+        if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value) and isinstance(node.target, ast.Name):
             return ((node.target.id, value),)
     return ()
 
@@ -218,9 +214,7 @@ def _scan_call_environ_read(
     if isinstance(func, ast.Attribute) and func.attr in {"get", "pop", "setdefault"}:
         target = func.value
         if _is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases):
-            _record_call_violation(
-                node, constants, violations, label=f"{_target_label(target)}.{func.attr}"
-            )
+            _record_call_violation(node, constants, violations, label=f"{_target_label(target)}.{func.attr}")
         return
     if isinstance(func, ast.Attribute) and func.attr == "getenv":
         if isinstance(func.value, ast.Name) and func.value.id == "os":

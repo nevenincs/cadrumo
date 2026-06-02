@@ -77,8 +77,8 @@ _INITIAL_THRESHOLD_EUR = Decimal("50000.00")
 _REDECLARATION_DELTA_EUR = Decimal("20000.00")
 
 # Year-N asset valuations (both above €50k initial threshold).
-_CUENTAS_N = Decimal("60000.00")    # cuentas (C-class: bank accounts)
-_VALORES_N = Decimal("55000.00")    # valores (V-class: securities)
+_CUENTAS_N = Decimal("60000.00")  # cuentas (C-class: bank accounts)
+_VALORES_N = Decimal("55000.00")  # valores (V-class: securities)
 
 # Year-N+1 asset valuations.
 # cuentas: +25,000 (> €20k delta → re-declaration required per art. 42-bis.5)
@@ -93,7 +93,7 @@ _CUENTAS_IDENTIFIER = Decimal("12345678901234")  # numeric part of IBAN
 # Asset identifier for valores row (ISIN-style, numeric part).
 _VALORES_IDENTIFIER = Decimal("98765432109876")
 
-_CLOCK_N = datetime(2024, 3, 15, 10, 0, 0, tzinfo=UTC)     # M720 deadline: 1-Mar to 31-Mar
+_CLOCK_N = datetime(2024, 3, 15, 10, 0, 0, tzinfo=UTC)  # M720 deadline: 1-Mar to 31-Mar
 _CLOCK_N_PLUS_1 = datetime(2025, 3, 15, 10, 0, 0, tzinfo=UTC)
 
 
@@ -181,9 +181,7 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
-        assert loaded is not None, (
-            f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
-        )
+        assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
         assert loaded.observation == obs_n, (
             "720 year-N observation did not survive the encrypted-SQL roundtrip; "
             "at least one casilla was silently dropped, coerced, or defaulted away"
@@ -282,9 +280,7 @@ def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: 
             f"cuentas identifier round-trip failed in year N+1: got {ident_cuentas_n1}"
         )
         # Identity continuity: the identifier is the same in both cycles.
-        assert ident_cuentas_n == ident_cuentas_n1, (
-            "cuentas identifier drifted between year N and year N+1"
-        )
+        assert ident_cuentas_n == ident_cuentas_n1, "cuentas identifier drifted between year N and year N+1"
 
 
 def test_both_year_n_valuations_exceed_initial_threshold(tmp_path: Path) -> None:
@@ -355,7 +351,6 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
         )
 
 
-
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: omitting the valoracion casilla produces strict inequality."""
     obs_n = _year_n_observation()
@@ -364,14 +359,11 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         filing_year=_YEAR_N,
         period="0A",
         observations=tuple(
-            o for o in obs_n.observations
-            if o.casilla_id not in ("cuentas.valoracion", "valores.valoracion")
+            o for o in obs_n.observations if o.casilla_id not in ("cuentas.valoracion", "valores.valoracion")
         ),
     )
 
-    assert obs_n != obs_n_no_val, (
-        "the full observation and the valoracion-omitted observation must be strictly unequal"
-    )
+    assert obs_n != obs_n_no_val, "the full observation and the valoracion-omitted observation must be strictly unequal"
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -432,8 +424,7 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; "
-        f"got {evidence.distinct_renta_years!r}"
+        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
     )
 
     assert_enrollment_matches_manifest(evidence)

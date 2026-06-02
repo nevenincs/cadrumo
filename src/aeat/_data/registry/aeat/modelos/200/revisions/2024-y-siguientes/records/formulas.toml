@@ -320,3 +320,28 @@ required_text = [
     "cuota diferencial (casillas 00611 y 00612)",
     "[00611] = [00599] - ([00601] + [00603] + [00605])",
 ]
+
+# BIN compensation MÁXIMA (LIS art. 26.1): the maximum BIN compensable this
+# period = min(BIN stock held at period start, max(EUR 1.000.000, 70% of base
+# imponible previa)). The 70% / EUR 1M límite is on the base imponible previa a
+# la reserva de capitalización y a su compensación — casilla 00550, BEFORE the
+# reserva de capitalización (01032) and the applied compensación (00547). This
+# internal ceiling bounds the operator-elective applied amount 00547 via a
+# BLOCKING cap_le_when_positive predicate; it never forces 00547 to the cap.
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-2024-bin-aplicada-maxima"
+target = "DP200014:bin-aplicada-maxima"
+expression = { op = "min", args = [
+    { casilla = "00670" },
+    { op = "max", args = [
+        { literal = "1000000" },
+        { op = "percent", args = [{ casilla = "DP200014:00550" }, { literal = "70" }] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["bases imponibles negativas"]

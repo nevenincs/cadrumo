@@ -64,9 +64,7 @@ def test_s676_any_param_ratchet_passes() -> None:
 def test_s677_logging_rationale_marker_precedes_import() -> None:
     """LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK must appear within 3 lines
     preceding ``import logging`` in entrypoints/cli/_stdio.py."""
-    stdio_path = (
-        _SRC_ROOT / "entrypoints" / "cli" / "_stdio.py"
-    )
+    stdio_path = _SRC_ROOT / "entrypoints" / "cli" / "_stdio.py"
     assert stdio_path.exists(), f"_stdio.py not found at {stdio_path}"
 
     lines = stdio_path.read_text(encoding="utf-8").splitlines()
@@ -78,9 +76,7 @@ def test_s677_logging_rationale_marker_precedes_import() -> None:
             import_logging_lineno = idx
             break
 
-    assert import_logging_lineno is not None, (
-        "Could not find 'import logging' in _stdio.py"
-    )
+    assert import_logging_lineno is not None, "Could not find 'import logging' in _stdio.py"
 
     window_start = max(0, import_logging_lineno - 3)
     window = lines[window_start:import_logging_lineno]
@@ -124,6 +120,5 @@ def test_standing_inventory_ratchet_green(module_name: str) -> None:
         text=True,
     )
     assert result.returncode == 0, (
-        f"Inventory ratchet {module_name!r} failed.\n"
-        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        f"Inventory ratchet {module_name!r} failed.\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )

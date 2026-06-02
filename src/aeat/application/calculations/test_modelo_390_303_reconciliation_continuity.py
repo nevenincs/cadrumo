@@ -191,9 +191,7 @@ def _registry_observation(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()
-        ),
+        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
     )
 
 
@@ -242,9 +240,7 @@ def _file_year_quarters_and_reconcile(
     for period in _QUARTERS:
         ledger = _quarter_ledger(filing_year, period)
         annual_ledger.extend(ledger)
-        q_result = _calculate_303_quarter(
-            filing_year=filing_year, period=period, observations=ledger
-        )
+        q_result = _calculate_303_quarter(filing_year=filing_year, period=period, observations=ledger)
         quarter_devengada[period] = q_result.values["iva.cuota-devengada-total"]
         repository.save_observation(
             _registry_observation(modelo="303", filing_year=filing_year, period=period, result=q_result),
@@ -298,12 +294,8 @@ def test_390_reconciliation_isolates_renta_years(tmp_path: Path) -> None:
             filing_year=_RENTA_YEARS[1], repository=repository
         )
 
-    assert annual_2025.values["iva.anual.reconciliacion.devengada-303"] == sum(
-        devengada_2025.values(), Decimal("0")
-    )
-    assert annual_2026.values["iva.anual.reconciliacion.devengada-303"] == sum(
-        devengada_2026.values(), Decimal("0")
-    )
+    assert annual_2025.values["iva.anual.reconciliacion.devengada-303"] == sum(devengada_2025.values(), Decimal("0"))
+    assert annual_2026.values["iva.anual.reconciliacion.devengada-303"] == sum(devengada_2026.values(), Decimal("0"))
 
 
 def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -324,9 +316,10 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
                 filing_year=filing_year, repository=repository
             )
             # Wiring invariant per year: annual computed total == 303-quarter sum.
-            assert annual_result.values["iva.anual.cuota-devengada-total"] == annual_result.values[
-                "iva.anual.reconciliacion.devengada-303"
-            ]
+            assert (
+                annual_result.values["iva.anual.cuota-devengada-total"]
+                == annual_result.values["iva.anual.reconciliacion.devengada-303"]
+            )
             assert annual_result.values["iva.anual.reconciliacion.devengada-303"] == sum(
                 quarter_devengada.values(), Decimal("0")
             )

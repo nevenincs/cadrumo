@@ -57,6 +57,7 @@ from ...domain.user_profile import (
 class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation."""
 
+
 class ProfileSourcedBindingResult(BaseModel):
     """Profile facts projected into engine binding channels.
 
@@ -82,6 +83,7 @@ class ProfileSourcedBindingResult(BaseModel):
                 "profile-sourced binding trace does not match the resolved binding keys"
             )
         return self
+
 
 def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
     """Build a selector -> typed-value index covering both selector forms.
@@ -112,6 +114,7 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
         for selector in selector_index.get(fact.path, ()):
             index[selector] = fact.value
     return index
+
 
 def _inject_derived_marriage_facts(
     fact_index: dict[str, UserProfileFactValue],
@@ -147,6 +150,7 @@ def _inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_start"] = Decimal(month_start)
     if "renta_taxpayer.marriage_month_end" not in fact_index:
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
+
 
 def _inject_derived_family_facts(
     fact_index: dict[str, UserProfileFactValue],
@@ -194,6 +198,7 @@ def _inject_derived_family_facts(
 
     fact_index[menores_key] = Decimal(count_menores)
 
+
 def _inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
 ) -> None:
@@ -224,6 +229,7 @@ def _inject_derived_state_attribution_facts(
     # No scope on the profile yet: leave the synthetic key absent so the
     # engine's missing-binding refusal surfaces the gap operator-side
     # rather than silently defaulting.
+
 
 def _decimal_value(binding_id: str, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
@@ -257,6 +263,7 @@ def _decimal_value(binding_id: str, value: object) -> Decimal:
         f"got {value!r} (type {type(value).__name__}). The registry consumes this binding as a "
         f"numeric operand; the profile fact must carry a numeric value"
     )
+
 
 def resolve_profile_sourced_bindings(
     snapshot: RegistrySnapshot,
@@ -344,8 +351,7 @@ def resolve_profile_sourced_bindings(
                 continue
             if not isinstance(value, date):
                 raise ProfileBindingResolutionError(
-                    f"profile fact for date-channel binding {binding_id!r} must be a date, "
-                    f"got {type(value).__name__!r}"
+                    f"profile fact for date-channel binding {binding_id!r} must be a date, got {type(value).__name__!r}"
                 )
             date_values[binding_id] = value
         elif binding_id in enum_bindings:
@@ -390,6 +396,7 @@ def resolve_profile_sourced_bindings(
         bindings_sourced_from_profile=sourced,
     )
 
+
 def _resolve_one(
     binding: DataBindingDefinition, fact_index: Mapping[str, UserProfileFactValue]
 ) -> UserProfileFactValue | None:
@@ -404,6 +411,7 @@ def _resolve_one(
             continue
         return value.strip() if isinstance(value, str) else value
     return None
+
 
 __all__ = [
     "ProfileBindingResolutionError",

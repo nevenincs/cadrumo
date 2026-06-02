@@ -440,9 +440,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
     pendiente_anteriores = result.values["iva.compensacion-pendiente-periodos-anteriores"]
     aplicada = result.values["iva.compensacion-aplicada-periodo"]
     pendiente_posteriores = result.values["iva.compensacion-pendiente-periodos-posteriores"]
-    assert aplicada + pendiente_posteriores == pendiente_anteriores, (
-        "applied + remainder must equal incoming balance"
-    )
+    assert aplicada + pendiente_posteriores == pendiente_anteriores, "applied + remainder must equal incoming balance"
 
     # When compensation exceeds IVA output, resultado must be zero (no tax due).
     # The binding carries compensacion_pendiente_anteriores=1200 > repercutido=1000,
@@ -475,9 +473,7 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
         )
         assert snapshot.revision.id == "2023-y-siguientes"
         schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
-        assert "modelo-303-mensual-sii" in schedule_ids, (
-            f"monthly SII schedule absent for period {period}"
-        )
+        assert "modelo-303-mensual-sii" in schedule_ids, f"monthly SII schedule absent for period {period}"
 
 
 def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:

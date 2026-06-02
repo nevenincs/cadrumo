@@ -129,9 +129,7 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
 
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or load_settings()
-        super().__init__(
-            repository_factory=lambda bucket_id: _notifications_repository(self._settings, bucket_id)
-        )
+        super().__init__(repository_factory=lambda bucket_id: _notifications_repository(self._settings, bucket_id))
 
     def capture(
         self,
@@ -172,13 +170,14 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
             return None
         return max(snapshots, key=lambda s: s.captured_at)
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required by the SnapshotService[T] abstract hook contract whose base signature uses **kwargs to allow concrete subclasses to accept caller-specific keyword arguments without a shared typed parameter set.  Narrowing is done via direct key access inside the body; the abstract boundary cannot be tightened without breaking the polymorphic dispatch chain.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
+    # **kwargs: Any is required by the SnapshotService[T] abstract hook contract.
+    # Concrete subclasses accept caller-specific keyword arguments without a
+    # shared typed parameter set; narrowing is done by direct key access.
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return _derive_snapshot_id(kwargs["snapshot"])
 
-    def _build_payload(
-        self, *, snapshot_id: str, bucket_id: str, **kwargs: Any
-    ) -> PersistedNotificationsSnapshot:
+    def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> PersistedNotificationsSnapshot:
         snapshot: NotificationsSnapshot = kwargs["snapshot"]
         return PersistedNotificationsSnapshot(
             snapshot_id=snapshot_id,

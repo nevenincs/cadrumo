@@ -118,8 +118,7 @@ def _observation_from_revision(revision, *, period) -> RegistryModeloObservation
         filing_year=2026,
         period=period,
         observations=tuple(
-            CasillaObservation(casilla_id=cid, value=Decimal(value))
-            for cid, value in revision.casilla_values.items()
+            CasillaObservation(casilla_id=cid, value=Decimal(value)) for cid, value in revision.casilla_values.items()
         ),
     )
 
@@ -161,9 +160,7 @@ def test_q1_loss_produces_carry_forward_saldo(repos) -> None:
     20% pago fraccionado, with a minoración that cannot be absorbed),
     never hand-computed against the formula under test.
     """
-    revision = _calculate_quarter(
-        repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS
-    )
+    revision = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
     assert Decimal(revision.casilla_values["17"]) == Decimal("-100.00")
     assert Decimal(revision.casilla_values["saldo-negativo-fin-periodo"]) == _EXPECTED_Q1_SALDO
 
@@ -177,9 +174,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos) -> None:
     the operator does not re-key the prior-quarter loss by hand.
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
-    q1 = _calculate_quarter(
-        repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS
-    )
+    q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
     obs_repo.save_observation(
         _observation_from_revision(q1, period="1T"),
         source_kind="app_filing",
@@ -206,9 +201,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos) -> None:
     resultados negativos de trimestres anteriores").
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo = repos
-    q1 = _calculate_quarter(
-        repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS
-    )
+    q1 = _calculate_quarter(repos, period="1T", casilla_inputs=_Q1_INPUTS, binding_values=_Q1_BINDINGS)
     obs_repo.save_observation(
         _observation_from_revision(q1, period="1T"),
         source_kind="app_filing",

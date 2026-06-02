@@ -254,9 +254,7 @@ def _coerce_raw_transaction(raw: object) -> RawTransaction:
     try:
         return RawTransaction.model_validate(raw)
     except ValidationError:
-        return RawTransaction.model_validate_json(
-            json.dumps(raw, default=_json_default, ensure_ascii=True)
-        )
+        return RawTransaction.model_validate_json(json.dumps(raw, default=_json_default, ensure_ascii=True))
 
 
 _TRANSACTION_DECIMAL_KEYS: tuple[str, ...] = (
@@ -929,13 +927,9 @@ class Transaction(BaseModel):
         fx_set = self.fx_rate is not None
         eur_set = self.value_in_eur is not None
         if fx_set != eur_set:
-            raise TransactionValidationError(
-                "fx_rate and value_in_eur must both be set or both be absent"
-            )
+            raise TransactionValidationError("fx_rate and value_in_eur must both be set or both be absent")
         if self.raw.currency == DEFAULT_CURRENCY and (fx_set or eur_set):
-            raise TransactionValidationError(
-                "fx_rate and value_in_eur must be absent for EUR-native transactions"
-            )
+            raise TransactionValidationError("fx_rate and value_in_eur must be absent for EUR-native transactions")
         return self
 
 

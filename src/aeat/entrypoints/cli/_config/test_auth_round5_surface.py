@@ -95,9 +95,7 @@ def test_configure_then_status_agree_on_configured_with_resolvable_file(
     cannot disagree.
     """
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID)
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
     cert = tmp_path / "operator.p12"
     cert.write_bytes(b"placeholder cert")
 
@@ -110,14 +108,10 @@ def test_configure_then_status_agree_on_configured_with_resolvable_file(
     assert "not configured" not in status.health_summary.lower()
 
 
-def test_status_distinguishes_no_path_from_file_missing(
-    _isolated_application_layer: None, tmp_path: Path
-) -> None:
+def test_status_distinguishes_no_path_from_file_missing(_isolated_application_layer: None, tmp_path: Path) -> None:
     """Round-5 minor: three certificate states must produce distinct summaries."""
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID)
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
 
     configure_operator_auth("certificate")
     no_path = inspect_operator_auth()
@@ -148,9 +142,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
 
     import asyncio
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID)
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
     # ``AEAT_LIVE_TESTS_ENABLED`` is not set in the test environment,
     # so the gate must refuse with a localised user-prose message.
     with pytest.raises(AuthLoginNotEnabledError) as exc_info:
@@ -164,12 +156,8 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
     from ....core.i18n import tr
 
     message = tr(exc_info.value.translated_message, **(exc_info.value.context or {}))
-    assert "AEAT_LIVE_TESTS_ENABLED" not in message, (
-        f"refusal must not echo the env-var name — got {message!r}"
-    )
-    assert "CertificateBundle" not in message, (
-        f"refusal must not echo Python class names — got {message!r}"
-    )
+    assert "AEAT_LIVE_TESTS_ENABLED" not in message, f"refusal must not echo the env-var name — got {message!r}"
+    assert "CertificateBundle" not in message, f"refusal must not echo Python class names — got {message!r}"
     # The refusal is intended user prose, not just an absence of leaks —
     # assert positively against the safety-gate language so a regression
     # that silences the message can't pass the negative-only checks above.
@@ -185,9 +173,7 @@ def test_login_refuses_when_certificate_path_unset(
 
     import asyncio
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID)
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
     configure_operator_auth("certificate")  # no --file persisted
 
     # Enable the live-tests gate via the canonical Settings override.
@@ -236,9 +222,7 @@ def test_login_accepts_output_language_flag(runner: CliRunner) -> None:
 # ── M4: auth test runs a real per-provider probe ───────────────────────────
 
 
-def test_auth_test_runs_real_certificate_probe(
-    _isolated_application_layer: None, tmp_path: Path
-) -> None:
+def test_auth_test_runs_real_certificate_probe(_isolated_application_layer: None, tmp_path: Path) -> None:
     """Round-5 M4: ``auth test`` must execute a real per-provider probe.
 
     For the certificate provider the probe opens the configured ``.p12``
@@ -246,9 +230,7 @@ def test_auth_test_runs_real_certificate_probe(
     distinct from a pure status read.
     """
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID)
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID))
 
     # No path configured: probe must report a typed result rather than
     # silently mirroring status.

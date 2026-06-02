@@ -403,12 +403,9 @@ async def _continue_own_name_representation(
     """Continue only through AEAT's own-name acting-capacity selector."""
     _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
-        await page.wait_for_selector(
-            _PRE303.representation_own_name_label_selector,
-            timeout=settings.aeat_browser_selector_probe_timeout_ms,
-        )
+        selected_own_name = await _wait_for_own_name_representation_selector(page, settings=settings)
         await _dismiss_pre303_alert_modal_if_present(page)
-        await page.click(_PRE303.representation_own_name_label_selector)
+        await page.click(selected_own_name)
         await page.click(_PRE303.representation_submit_selector)
         await page.wait_for_url(
             lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
@@ -428,6 +425,34 @@ async def _continue_own_name_representation(
             },
             suggestion="Do not provide represented-third-party data through this driver.",
         ) from exc
+
+
+async def _wait_for_own_name_representation_selector(page: Page, *, settings: Settings) -> str:
+    last_error: PlaywrightError | None = None
+    for selector in _own_name_representation_selectors(
+        _PRE303.representation_own_name_label_selector,
+        _PRE303.representation_own_name_selector,
+    ):
+        try:
+            await page.wait_for_selector(selector, timeout=settings.aeat_browser_selector_probe_timeout_ms)
+            return selector
+        except PlaywrightError as exc:
+            last_error = exc
+    if last_error is not None:
+        raise last_error
+    raise SedeNavigationError(
+        "AEAT own-name representation selector configuration is empty",
+        failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+    )
+
+
+def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
+    deduped: list[str] = []
+    for selector in selectors:
+        value = selector.strip()
+        if value and value not in deduped:
+            deduped.append(value)
+    return tuple(deduped)
 
 
 async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:

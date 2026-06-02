@@ -174,11 +174,7 @@ _HOME_OFFICE_FAMILIES = (
 
 
 def _home_office_categories() -> frozenset:
-    return frozenset(
-        category
-        for family in _HOME_OFFICE_FAMILIES
-        for category in categories_for_family(family)
-    )
+    return frozenset(category for family in _HOME_OFFICE_FAMILIES for category in categories_for_family(family))
 
 
 def load_usage_ratios_with_censo_guard(
@@ -229,16 +225,13 @@ def load_usage_ratios_with_censo_guard(
     """
     profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
     home_office = _home_office_categories()
-    persisted_home_office = {
-        category: ratio for category, ratio in profile.ratios.items() if category in home_office
-    }
+    persisted_home_office = {category: ratio for category, ratio in profile.ratios.items() if category in home_office}
     if not persisted_home_office:
         return profile
     if raw_afectacion_ratio is None:
         offending = sorted(c.value for c in persisted_home_office)
         raise CensoRatioMismatchError(
-            f"persisted HOME_OFFICE overrides require an applied censo; "
-            f"offending categories: {offending}"
+            f"persisted HOME_OFFICE overrides require an applied censo; offending categories: {offending}"
         )
     derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year)
     mismatches = {
@@ -251,9 +244,7 @@ def load_usage_ratios_with_censo_guard(
             f"{category.value} persisted={persisted} censo={censo}"
             for category, (persisted, censo) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
         )
-        raise CensoRatioMismatchError(
-            f"persisted HOME_OFFICE overrides disagree with the bound censo: {rendered}"
-        )
+        raise CensoRatioMismatchError(f"persisted HOME_OFFICE overrides disagree with the bound censo: {rendered}")
     return profile
 
 

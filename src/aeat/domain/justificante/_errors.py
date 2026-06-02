@@ -9,6 +9,7 @@ filing import callers can catch the whole domain at once.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.errors import AeatError
@@ -45,6 +46,9 @@ class JustificanteParseError(JustificanteError):
         self,
         message: str | None = None,
         *,
+        context: Mapping[str, object] | None = None,
+        suggestion: str | None = None,
+        translated_message: str | None = None,
         missing: tuple[str, ...] = (),
         malformed: tuple[str, ...] = (),
         ambiguous: tuple[str, ...] = (),
@@ -54,13 +58,24 @@ class JustificanteParseError(JustificanteError):
 
         Args:
             message: Human-readable error message.
+            context: Optional structured context forwarded to the
+                :class:`~aeat.core.errors.AeatError` boundary.
+            suggestion: Optional copy-paste recovery hint forwarded to
+                :class:`~aeat.core.errors.AeatError`.
+            translated_message: Optional locale key rendered at the CLI
+                boundary.
             missing: Field names that produced no match in the PDF text.
             malformed: Field names whose captured value could not be coerced.
             ambiguous: Field names that matched more than one region.
             coverage: Fraction of required fields successfully extracted,
                 or ``None`` when the error is not a coverage failure.
         """
-        super().__init__(message)
+        super().__init__(
+            message,
+            context=context,
+            suggestion=suggestion,
+            translated_message=translated_message,
+        )
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed
         self.ambiguous: tuple[str, ...] = ambiguous

@@ -165,8 +165,7 @@ def test_live_cross_reference_decision_oracle_id_is_typed() -> None:
     # OracleId is an Annotated[str, Field(...)] alias declared in _ids.py.
     # The repr must reference the alias, not bare str.
     assert "OracleId" in rendered, (
-        f"LiveCrossReferenceDecision.oracle_id is {rendered!r}; "
-        "expected the OracleId typed alias from _ids.py"
+        f"LiveCrossReferenceDecision.oracle_id is {rendered!r}; expected the OracleId typed alias from _ids.py"
     )
 
 
@@ -181,8 +180,7 @@ def test_filing_draft_carries_typed_subject_identity() -> None:
 
     hints = get_type_hints(ModeloDraft, include_extras=True)
     assert "subject_tax_id" in hints, (
-        "ModeloDraft has no subject_tax_id field. "
-        "Identity propagation through the filing chain is not wired."
+        "ModeloDraft has no subject_tax_id field. Identity propagation through the filing chain is not wired."
     )
 
 
@@ -197,8 +195,7 @@ def test_filing_draft_snapshot_ref_replaces_schema_version() -> None:
 
     hints = get_type_hints(ModeloDraft, include_extras=True)
     assert "snapshot_ref" in hints, (
-        "ModeloDraft has no snapshot_ref field. "
-        "The hash basis still relies on the bare-string schema_version."
+        "ModeloDraft has no snapshot_ref field. The hash basis still relies on the bare-string schema_version."
     )
 
 
@@ -255,17 +252,11 @@ def test_filing_draft_full_roundtrip() -> None:
     roundtripped = ModeloDraft.model_validate_json(original.model_dump_json())
 
     assert roundtripped == original
-    assert tuple(v.casilla_id for v in roundtripped.values) == tuple(
-        v.casilla_id for v in original.values
-    )
-    assert tuple(v.value for v in roundtripped.values) == tuple(
-        v.value for v in original.values
-    )
+    assert tuple(v.casilla_id for v in roundtripped.values) == tuple(v.casilla_id for v in original.values)
+    assert tuple(v.value for v in roundtripped.values) == tuple(v.value for v in original.values)
     # formula_trace MUST survive round-trip: the test fails if any
     # boundary erases the computation provenance.
-    computed = next(
-        v for v in roundtripped.values if v.kind is ModeloValueKind.COMPUTED
-    )
+    computed = next(v for v in roundtripped.values if v.kind is ModeloValueKind.COMPUTED)
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
 
 
