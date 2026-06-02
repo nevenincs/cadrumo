@@ -142,7 +142,10 @@ _FINGERPRINT_TOKEN = "ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE"
 
 
 def test_s618_alt_fingerprint_rationale_present() -> None:
-    """application/filing/runtime.py must carry ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE on _registry_tree_fingerprint."""
+    """application/filing/runtime.py must carry ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE.
+
+    The marker MUST appear on ``_registry_tree_fingerprint``.
+    """
     src = _read("application/filing/runtime.py")
     assert _FINGERPRINT_TOKEN in src, (
         f"application/filing/runtime.py: missing {_FINGERPRINT_TOKEN!r} — S618 not applied"
