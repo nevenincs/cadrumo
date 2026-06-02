@@ -31,7 +31,7 @@ import tempfile
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -173,7 +173,7 @@ class EnvelopeMigrator[PayloadT: BaseModel](Protocol):
         ...
 
 
-def save_envelope(envelope: Envelope[Any], path: Path) -> None:
+def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
 
     Args:
@@ -376,8 +376,8 @@ def _derive_envelope_key(
     )
 
 
-def save_encrypted_envelope(
-    envelope: Envelope[Any],
+def save_encrypted_envelope[T: BaseModel](
+    envelope: Envelope[T],
     path: Path,
     *,
     master_key_provider: MasterKeyProvider,
