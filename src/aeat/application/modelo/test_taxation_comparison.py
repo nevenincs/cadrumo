@@ -240,14 +240,12 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     """
     from ...core.errors import ERROR_REGISTRY, build_error_envelope
     from ...core.errors._registry import get_registered_error_code
-
     from ._taxation_comparison import TaxationComparisonError
 
     # Registry membership: the declared code must be present in ERROR_REGISTRY.
     code_obj = get_registered_error_code(TaxationComparisonError)
     assert code_obj.code in ERROR_REGISTRY, (
-        f"ErrorCode {code_obj.code!r} returned by get_registered_error_code "
-        f"is absent from ERROR_REGISTRY"
+        f"ErrorCode {code_obj.code!r} returned by get_registered_error_code is absent from ERROR_REGISTRY"
     )
     assert ERROR_REGISTRY[code_obj.code] is code_obj
 
