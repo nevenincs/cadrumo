@@ -59,8 +59,8 @@ def reconcile_invoice_catalogues(
     """Build reconciliation suggestions and optionally apply them in memory.
 
     Args:
-        invoices: Invoice catalogue to reconcile.
-        transactions: Transaction catalogue to reconcile against.
+        invoices: The :class:`InvoiceCatalogue` to reconcile.
+        transactions: The :class:`TransactionCatalogue` to reconcile against.
         apply: When ``True``, fold every safe suggestion into both
             catalogues before returning.
 

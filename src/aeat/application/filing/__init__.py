@@ -570,7 +570,7 @@ def iter_findings(
     """Yield findings filtered by minimum severity.
 
     Args:
-        draft: The draft to scan.
+        draft: The :class:`ModeloDraft` to scan for validation findings.
         severity_at_least: Minimum severity to yield, one of
             ``"INFO"``, ``"WARNING"``, ``"ERROR"``. Defaults to
             ``"WARNING"``.

@@ -75,6 +75,15 @@ def build_snapshot(
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot.
 
+    Args:
+        modelo: The :class:`ModeloDefinition` to validate and snapshot.
+        catalogues: Legal and source catalogues for validation.
+        source_root: Filesystem root for resolving source artefacts.
+        filing_year: The filing year to select a revision for.
+        period: The filing period to select a revision for.
+        on: Optional reference date for revision selection.
+        revision_id: Optional explicit revision identifier to select.
+
     Returns:
         The validated :class:`RegistrySnapshot` for the requested filing context.
     """

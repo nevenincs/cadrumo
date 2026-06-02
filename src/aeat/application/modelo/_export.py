@@ -347,6 +347,9 @@ def export_modelo_revision(
 ) -> ModeloExportResult:
     """Export a verified-complete or filed calculation revision to disk.
 
+    ``workflow_profile`` is the :class:`TaxpayerProfile` used to compose the
+    filing draft headers.
+
     Local-only: never contacts AEAT. Re-builds the filing draft from
     the revision's captured ``inputs_snapshot`` and
     ``binding_overrides`` so the exported file reflects the same legal

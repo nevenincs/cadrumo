@@ -74,7 +74,7 @@ def register_minimal_profile(
         overrides: Optional schema-path → string overrides applied on top
             of the placeholder facts (also accepts paths not in the
             required set; they merge in).
-        secure_objects: Optional injected secure-object repository.
+        secure_objects: Optional injected :class:`SecureObjectRepository`.
         enforce_unique_tax_id: When ``False``, skip the cross-bucket
             tax-id uniqueness scan. Use in per-bucket-storage test
             scenarios where each profile's encrypted record lives in its

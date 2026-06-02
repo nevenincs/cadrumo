@@ -228,6 +228,12 @@ def export_draft(
 ) -> DeclaracionExportResult:
     """Write an approved draft to a fichero-BOE file and return a receipt.
 
+    Args:
+        draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
+        output_path: Destination path for the fichero-BOE bytes.
+        headers: Registry header fields (NIF, ejercicio, etc.) embedded in the file.
+        schema_provider: Optional registry schema provider override.
+
     Returns a :class:`DeclaracionExportResult` with the output path and
     casilla provenance for the exported declaration.
     """
@@ -264,7 +270,7 @@ def verify_export(
     file_path: Path,
     schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclaracionVerifyResult:
-    """Verify an exported file against an approved draft and return a :class:`DeclaracionVerifyResult`."""
+    """Verify an exported file against an approved :class:`ModeloDraft` and return a :class:`DeclaracionVerifyResult`."""
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:

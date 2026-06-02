@@ -289,7 +289,14 @@ class DeclaracionesRegisterSession:
         registry_snapshot: RegistrySnapshot | None = None,
         artefact_sink: FiledDeclaracionArtefactSink | None = None,
     ) -> FiledDeclaracionObservation:
-        """Capture a normalized :class:`FiledDeclaracionObservation` using the active page."""
+        """Capture a normalized :class:`FiledDeclaracionObservation` using the active page.
+
+        Args:
+            declaration: The :class:`Declaracion` row to observe.
+            registry_snapshot: Optional pre-built :class:`RegistrySnapshot`. When
+                omitted, the snapshot is resolved from the declaration coordinates.
+            artefact_sink: Optional callable storing each captured artefact.
+        """
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
         if not await _drive_search(
@@ -960,6 +967,17 @@ async def capture_filed_declaration_observation(
     the justificante/declaration PDF and, when exposed by AEAT, the
     submitted file download. Submitted files are parsed through the
     registry export layout selected for the declaration snapshot.
+
+    Args:
+        session: Authenticated AEAT session.
+        declaration: The :class:`Declaracion` row to observe.
+        registry_snapshot: Optional pre-built :class:`RegistrySnapshot`. When
+            omitted, the snapshot is resolved from the declaration's modelo,
+            ejercicio, and period via the bundled registry authority.
+        settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started Playwright instance.
+        artefact_sink: Optional callable that stores each captured artefact
+            and returns the (possibly updated) artefact record.
     """
     authenticated_identity = (session.identity_nif or "").strip()
     if not authenticated_identity:
@@ -1166,7 +1184,18 @@ async def capture_previous_filing_observations(
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
-    """Capture :class:`FiledDeclaracionObservation` records required by registry previous-filing bindings."""
+    """Capture :class:`FiledDeclaracionObservation` records required by registry previous-filing bindings.
+
+    Args:
+        session: Authenticated AEAT session.
+        revision: The :class:`ModeloRevision` whose previous-filing binding
+            requirements determine which declarations are fetched.
+        filing_year: Tax year of the current filing.
+        period: Period code of the current filing.
+        settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started Playwright instance.
+        artefact_sink: Optional callable storing each captured artefact.
+    """
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
         for requirement in previous_filing_observation_requirements(revision, filing_year=filing_year, period=period):
@@ -1202,7 +1231,18 @@ async def capture_relation_source_observations(
     playwright: Playwright | None = None,
     artefact_sink: FiledDeclaracionArtefactSink | None = None,
 ) -> tuple[FiledDeclaracionObservation, ...]:
-    """Capture :class:`FiledDeclaracionObservation` records required by registry cross-model relations."""
+    """Capture :class:`FiledDeclaracionObservation` records required by registry cross-model relations.
+
+    Args:
+        session: Authenticated AEAT session.
+        revision: The :class:`ModeloRevision` whose cross-model relation
+            requirements determine which source declarations are fetched.
+        filing_year: Tax year of the current filing.
+        period: Period code of the current filing.
+        settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started Playwright instance.
+        artefact_sink: Optional callable storing each captured artefact.
+    """
     required_outputs: dict[tuple[str, int, str], set[str]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
         for source_period in requirement.periods:
@@ -1654,7 +1694,15 @@ def resolve_previous_filing_bindings_from_filed_declarations(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve registry previous-filing bindings from filed AEAT observations."""
+    """Resolve registry previous-filing bindings from filed AEAT observations.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose previous-filing binding
+            definitions are evaluated against ``observations``.
+        observations: Tuple of filed declaration observations to resolve from.
+        filing_year: Tax year of the current filing.
+        period: Period code of the current filing.
+    """
     return resolve_previous_filing_binding_values(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),
@@ -1670,7 +1718,15 @@ def resolve_relation_values_from_filed_declarations(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve registry cross-model relation values from filed AEAT observations."""
+    """Resolve registry cross-model relation values from filed AEAT observations.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose cross-model relation
+            definitions are evaluated against ``observations``.
+        observations: Tuple of filed declaration observations to resolve from.
+        filing_year: Tax year of the current filing.
+        period: Period code of the current filing.
+    """
     return resolve_relation_values_from_observations(
         revision,
         (registry_observation_from_filed_declaration(observation) for observation in observations),

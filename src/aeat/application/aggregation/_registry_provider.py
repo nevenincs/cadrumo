@@ -94,6 +94,10 @@ def resolve_per_modelo_registry_binding_values(
     revision declares canonical counterpart binding sources, in which case
     refusing is safer than pretending a provider exists.
 
+    Args:
+        command: The aggregation command that carries the modelo and period axes.
+        revision: The :class:`ModeloRevision` used to discover counterpart binding sources.
+
     Returns a :class:`PerModeloRegistryBindingResolution` with resolved
     binding values, row values, and casilla values.
     """

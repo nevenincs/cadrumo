@@ -32,7 +32,7 @@ def find_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Tr
     """Return one transaction from a catalogue if present.
 
     Args:
-        catalogue: Catalogue to search.
+        catalogue: The :class:`TransactionCatalogue` to search.
         transaction_id: Stable transaction identifier.
 
     Returns:

@@ -232,7 +232,13 @@ def collect_unhandled_source_diagnostics(
     handled_sources: frozenset[str],
     manual_sources: frozenset[str] = frozenset({"manual_input"}),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return :class:`CalculationSourceDiagnostic` entries for revision bindings with no enrolled resolver."""
+    """Return :class:`CalculationSourceDiagnostic` entries for revision bindings with no enrolled resolver.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings are inspected for missing resolvers.
+        handled_sources: Source kind strings already claimed by enrolled resolvers.
+        manual_sources: Source kind strings treated as intentionally unresolved.
+    """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in revision.bindings:
         source = str(binding.source)

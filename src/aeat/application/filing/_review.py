@@ -100,9 +100,9 @@ def compute_current_approval_basis(
             transaction catalogue when no override is supplied.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional override of the persisted
-            transaction catalogue. When ``None``, the catalogue is
-            loaded from the encrypted SecureObjectRepository.
+        transaction_catalogue: Optional :class:`TransactionCatalogue` override.
+            When ``None``, the catalogue is loaded from the encrypted
+            SecureObjectRepository.
         category_profiles: Optional override of the active category
             profile map. Defaults to the bundled 2025 registry.
 
@@ -155,7 +155,7 @@ def approval_stale_reasons(
             :func:`compute_current_approval_basis`.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional catalogue override.
+        transaction_catalogue: Optional :class:`TransactionCatalogue` override.
         category_profiles: Optional category profile map override.
 
     Returns:
@@ -202,8 +202,11 @@ def approve_draft(
     """Stamp approval metadata on ``draft`` and promote it to ``APPROVED``.
 
     Args:
-        draft: The draft to approve. Must be
-            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`.
+        draft: The :class:`ModeloDraft` to approve. Must be
+            :attr:`ModeloDraftStatus.LISTO_PARA_PRESENTAR`. The optional
+            ``transaction_catalogue`` is a :class:`TransactionCatalogue`
+            consulted when computing the approval basis fingerprint; when
+            ``None`` it is loaded from the repository.
         bucket_id: Stable bucket identifier; forwarded to
             :func:`compute_current_approval_basis`.
         approved_by: Operator identifier; rejected when blank after
@@ -312,7 +315,8 @@ def refresh_review_status(
             :func:`approval_stale_reasons`.
         schema_provider: The active
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
-        transaction_catalogue: Optional catalogue override.
+        transaction_catalogue: Optional :class:`TransactionCatalogue` override used
+            when computing the approval basis fingerprint.
         category_profiles: Optional category profile map override.
         refreshed_at: Optional timestamp; defaults to
             the canonical clock helper.

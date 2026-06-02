@@ -83,6 +83,14 @@ def build_overview_backlog(
 ) -> OverviewBacklog:
     """Enumerate the operator's past-due obligations.
 
+    Args:
+        profile: The :class:`TaxpayerProfile` whose filing obligations are evaluated.
+        from_date: Start of the calendar window; defaults to 365 days before ``as_of``.
+        to_date: End of the calendar window; defaults to ``as_of``.
+        as_of: Reference date for past-due classification; defaults to today.
+        engine: Optional deadline engine override.
+        raw_values: Optional raw profile values passed through to the engine.
+
     The default window is the 365 days preceding ``as_of`` (today
     when omitted), which is wide enough to surface every backlog
     item that survived a full annual filing cycle without overflowing

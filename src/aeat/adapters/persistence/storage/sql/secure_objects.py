@@ -755,6 +755,13 @@ class SecureObjectRepository:
         before yielding a readable subset. Use
         :meth:`iter_records_with_failures` for explicit diagnostic
         iteration over mixed readable/unreadable rows.
+
+        Args:
+            namespace: The storage namespace whose rows are listed.
+            expected_class: The :class:`SensitivityClass` all rows in this
+                namespace must carry.
+            max_supported_version: Rows whose ``schema_version`` exceeds
+                this ceiling are treated as unreadable.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(
@@ -932,7 +939,14 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> SecureObjectRecord | None:
-        """Load and decrypt one :class:`SecureObjectRecord`, returning ``None`` when absent."""
+        """Load and decrypt one :class:`SecureObjectRecord`, returning ``None`` when absent.
+
+        Args:
+            namespace: The storage namespace to look in.
+            object_key: The natural string key identifying the record.
+            expected_class: The :class:`SensitivityClass` the consumer expects.
+            max_supported_version: Highest ``schema_version`` the consumer supports.
+        """
         self._check_session_freshness()
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
@@ -973,6 +987,18 @@ class SecureObjectRepository:
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use :meth:`save_with_raw_key` instead.
+
+        Args:
+            namespace: The storage namespace to write into.
+            object_key: Natural string identifier for this record. Digested
+                via HMAC before being stored on disk.
+            classification: The :class:`SensitivityClass` for this record.
+            schema_version: Envelope schema version to stamp on the row.
+            written_at: Timezone-aware write timestamp.
+            payload: Plaintext envelope bytes. Encrypted at the column boundary.
+            write_provenance: Human-readable string identifying the write origin.
+            source_event_id: Optional opaque domain-event identifier for audit trails.
+            expected_revision_id: Optional optimistic-concurrency guard.
         """
         self._check_session_freshness()
         self._save_internal(
@@ -1039,7 +1065,7 @@ class SecureObjectRepository:
             hashed_object_key: 32 raw HMAC-SHA256 bytes (the digest
                 produced by :meth:`HashedLookup.compute` under the
                 same master key the row was originally written with).
-            classification: Sensitivity class to upsert at.
+            classification: :class:`SensitivityClass` to upsert at.
             schema_version: Envelope schema version captured on the row.
             written_at: Timezone-aware datetime captured on the row.
             payload: Plaintext envelope bytes (the column encrypts).

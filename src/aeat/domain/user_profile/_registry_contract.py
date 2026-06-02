@@ -116,6 +116,10 @@ def validate_user_profile_registry_contract(
     non-profile operational headers that will move behind an export-context
     backend rather than a live taxpayer profile fact.
 
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances to validate.
+        schema: The user-profile schema to validate registry references against.
+
     Returns:
         A :class:`UserProfileRegistryContractReport` with all issues found.
     """
