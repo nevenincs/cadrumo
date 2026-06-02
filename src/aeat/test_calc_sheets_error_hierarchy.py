@@ -61,9 +61,7 @@ def test_calc_sheets_parity_error_is_aeat_error() -> None:
         (CalcSheetsParityError, "ERROR_CALC_SHEETS_PARITY"),
     ],
 )
-def test_calc_sheets_error_code_registered(
-    error_cls: type[AeatError], expected_code: str
-) -> None:
+def test_calc_sheets_error_code_registered(error_cls: type[AeatError], expected_code: str) -> None:
     """Each calc_sheets error must be bound to its declared ErrorCode."""
     from .core.errors import get_registered_error_code
 

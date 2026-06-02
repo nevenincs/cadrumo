@@ -197,5 +197,5 @@ def test_no_inline_bool_lower_comparison() -> None:
         joined = "\n  ".join(violations)
         raise AssertionError(
             f"{len(violations)} inline bool-parsing pattern(s) found in production code:\n  {joined}\n\n"
-            'Replace with _parse_bool() from aeat.core.parsing._utils.'
+            "Replace with _parse_bool() from aeat.core.parsing._utils."
         )
