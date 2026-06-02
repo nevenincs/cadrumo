@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ..errors import StorageValidationError
 from ._layout import provision_bucket_directory
 from ._manifest import (
     BucketLifecycleStatus,
@@ -19,7 +20,6 @@ from ._manifest_io import (
     read_manifest,
     write_manifest,
 )
-from ..errors import StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
