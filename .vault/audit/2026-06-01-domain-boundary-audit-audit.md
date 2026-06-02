@@ -1115,6 +1115,20 @@ remediation is currently HELD at audit-only per the active action policy.
   do not re-run the registry-package-import sweep until the invoices/iva cycle is
   order-independent. Verified by `rg` and a direct `import aeat.domain.invoices`
   traceback.
+- 2026-06-02: Execution session 2 (all collection/test-gated, committed + pushed
+  individually). Landed: DB-12 (normatives singleton), DB-13 (auth re-export +
+  consumer repoint), DB-03 (modelos docstring), DB-05 S67 (declaration_key unified to
+  one .upper() definition; 98 workflow tests pass), DB-09 (setup iva_regime typed
+  IVARegime with case-fold validator; subsumed S75), DB-23 (LedgerReviewIssue collapsed
+  into LedgerImportDiagnosticKind; 184 review tests pass), DB-37 G2 (StoredProfileDriftError
+  public import), DB-29 (PdfModeloImportError promoted to justificante public + borrador/
+  declaracion repointed + dead identity shim deleted). Two CROSS-AGENT DEFERRALS recorded:
+  (a) DB-37 G1 (--category enum typing on entrypoints/cli/_app_live.py) — peer mid-edit
+  on that file; (b) DB-29 S41 pdf/_errors.py shim DELETION — HEAD's adapters/inbound/pdf/
+  __init__.py still imports it (peer is repointing __init__ to domain.justificante);
+  shim restored to keep HEAD buildable, deletion deferred until the peer's __init__
+  repoint lands. Pattern reaffirmed: collision-check every file (git status --short)
+  before editing; never delete a module whose HEAD importers haven't been repointed yet.
 
 ## Codification candidates
 

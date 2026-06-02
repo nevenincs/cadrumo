@@ -202,8 +202,8 @@ Collapse the application-result/CLI-payload twin DTOs, delete the re-export shim
 
 Remove pdf/_errors.py and the dead identity/ shim; repoint callers to canonical homes.
 
-- [ ] `W04.P10.S41` - Delete adapters/inbound/pdf/_errors.py shim; `repoint borrador/_errors and declaracion/_errors to import PdfModeloImportError directly from domain/justificante/_errors (DB-29 S1); `src/aeat/adapters/inbound/pdf/_errors.py`.
-- [ ] `W04.P10.S42` - Delete the dead adapters/inbound/identity/ shim package after confirming zero live callers (sanitizer already imports core.identity directly) (DB-29 S2); `src/aeat/adapters/inbound/identity/__init__.py`.
+- [ ] `W04.P10.S41` - Delete adapters/inbound/pdf/_errors.py shim; `repoint borrador/_errors, declaracion/_errors, pdf/__init__, and pdf/_scrub to import PdfModeloImportError directly from domain/justificante/_errors (DB-29 S1). Partial 2026-06-02 live-gate drift repair: live IVA focused tests exposed that pdf/__init__ and pdf/_scrub still imported the removed shim, so those callers were repointed to domain.justificante; `src/aeat/adapters/inbound/pdf/_errors.py src/aeat/adapters/inbound/pdf/__init__.py src/aeat/adapters/inbound/pdf/_scrub.py`.
+- [x] `W04.P10.S42` - Delete the dead adapters/inbound/identity/ shim package after confirming zero live callers (sanitizer already imports core.identity directly) (DB-29 S2); `src/aeat/adapters/inbound/identity/__init__.py`.
 
 ### Phase `W04.P11` - Unify duplicate parser, enums and name collision
 
