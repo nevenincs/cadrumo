@@ -729,7 +729,6 @@ cli:
         list_help: List portal catalogue entries
         modelo_help: Filter by portals linked to a modelo
         portal_id_help: Portal identifier
-        unknown_category: 'Unknown portal category: {category}.'
         view_help: Show a portal catalogue entry
       registry_root_help: Registry root
       source_root_help: Project source root

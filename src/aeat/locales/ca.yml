@@ -783,7 +783,6 @@ cli:
         list_help: Llista entrades del catàleg de portals
         modelo_help: Filtra per portals vinculats a un model
         portal_id_help: Identificador del portal
-        unknown_category: 'Categoria de portal desconeguda: {category}.'
         view_help: Mostra una entrada del catàleg de portals
       registry_root_help: Arrel del registre
       source_root_help: Arrel del projecte
