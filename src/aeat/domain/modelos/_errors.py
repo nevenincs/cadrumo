@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreValidationError
 
 
 class ModeloError(AeatError):
     """Base error for the modelos subpackage."""
+
+
+class PensionReduccionError(CoreValidationError):
+    """Raised when a pension reducción computation pre-condition is violated.
+
+    Covers the numeric guard checks for both the DT 12ª plan-de-pensiones capital
+    rescate reducción and the Ley 44/2015 SAL/SLL reserva especial dotacion
+    computation. Raises instead of a bare :class:`ValueError` so the failure
+    reaches the typed error registry with a stable error code and a structured
+    context envelope.
+    """
 
 
 class ModeloValidationError(ModeloError, ValueError):
