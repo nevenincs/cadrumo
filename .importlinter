@@ -78,6 +78,9 @@ forbidden_modules =
 # test imports core.resources, which lazily loads core.resources._repos.topics).
 # Pinned individually (no wildcard) so a new non-deferred edge is still caught.
 ignore_imports =
+    # ── W09: sanctioned cross-layer test/fixture/oracle edges (roundtrip discipline) ──
+    aeat.domain.deadlines.conftest -> aeat.application.wizard._catalogue
+    aeat.domain.deadlines.conftest -> aeat.application.wizard._persistence
     # ── DB-16: per-domain repositories wrap the secure-storage substrate ──
     # Sanctioned by the secure-persistence-foundation ADR series
     # (2026-04-30-secure-persistence-foundation-adr, Wave-3/4 per-domain
@@ -206,6 +209,27 @@ layers =
     aeat.core
 exhaustive = false
 ignore_imports =
+    # ── W09: sanctioned cross-layer test/fixture/oracle edges (roundtrip discipline) ──
+    aeat.application.aggregation.test_iva_ledger -> aeat.tests.secure_sql
+    aeat.core.resources._repos.test_manuals -> aeat.domain.manuals._errors
+    aeat.core.resources._repos.test_normatives -> aeat.domain.normatives._errors
+    aeat.core.resources._repos.test_singletons -> aeat.application.topics
+    aeat.core.resources._repos.test_singletons -> aeat.domain.calculations.registry._schema
+    aeat.core.test_external_constants -> aeat.adapters.persistence.storage.blob_store._blob_store
+    aeat.core.test_external_constants -> aeat.application.aggregation._currency_predicates
+    aeat.core.test_external_constants -> aeat.application.ledger._models
+    aeat.core.test_external_constants -> aeat.domain.currency._service
+    aeat.core.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
+    aeat.core.test_logging -> aeat.domain.calculations.registry._record_design
+    aeat.core.test_profile -> aeat.application.wizard._catalogue
+    aeat.core.test_profile -> aeat.domain.deadlines._models
+    aeat.core.test_profile -> aeat.domain.deadlines._profiles
+    aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
+    aeat.domain.attachments.test_service -> aeat.tests.secure_sql
+    aeat.domain.calculations.registry.test_inss_maternidad_paternidad_art7h -> aeat.tests.cli_runner
+    aeat.domain.calculations.registry.test_renta_web_open_oracle -> aeat.adapters.outbound.aeat.sede._renta_web_open
+    aeat.domain.deadlines.conftest -> aeat.application.wizard._catalogue
+    aeat.domain.deadlines.conftest -> aeat.application.wizard._persistence
     # ── DB-16: per-domain repositories wrap the secure-storage substrate ──
     # Sanctioned by the secure-persistence-foundation ADR series
     # (2026-04-30-secure-persistence-foundation-adr, Wave-3/4 per-domain
