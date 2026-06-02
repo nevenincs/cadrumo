@@ -155,30 +155,23 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             año_override=year,
         )
     except BorradorParseError as exc:
-        pytest.fail(
-            f"PARSER-GAP [M100-borrador/{year}]: parse_borrador raised BorradorParseError.\n"
-            f"  error: {exc}"
-        )
+        pytest.fail(f"PARSER-GAP [M100-borrador/{year}]: parse_borrador raised BorradorParseError.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in borrador.values}
 
     # Step 2: Verify leaf input 0505 is present and is a Decimal.
     assert "0505" in extracted, (
-        f"PARSER-GAP [M100-borrador/{year}]: leaf casilla '0505' not extracted.\n"
-        f"  got: {sorted(extracted)}"
+        f"PARSER-GAP [M100-borrador/{year}]: leaf casilla '0505' not extracted.\n  got: {sorted(extracted)}"
     )
     assert isinstance(extracted["0505"], Decimal), (
-        f"PARSER-GAP [M100-borrador/{year}]: casilla '0505' is not Decimal: "
-        f"{type(extracted['0505']).__name__!r}"
+        f"PARSER-GAP [M100-borrador/{year}]: casilla '0505' is not Decimal: {type(extracted['0505']).__name__!r}"
     )
 
     # Build engine inputs: supply only the leaf casilla 0505.
     # All computed casillas (0545, 0546, 0585, 0586) are excluded — the engine
     # must derive them from 0505 via the bracket formulas.
     inputs: dict[str, Decimal] = {
-        cid: val
-        for cid, val in extracted.items()
-        if cid not in _COMPUTED_CASILLAS_M100 and isinstance(val, Decimal)
+        cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M100 and isinstance(val, Decimal)
     }
 
     # Step 3: resolve registry snapshot and run engine.
