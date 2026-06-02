@@ -1,0 +1,10 @@
+[revisions."2015-y-siguientes".completeness_manifest]
+source_ref = "aeat-modelo-151-procedure"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "ejercicio"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+number = "periodo"

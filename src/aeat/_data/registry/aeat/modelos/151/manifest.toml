@@ -1,0 +1,17 @@
+[modelo]
+id = "151"
+title = "IRPF régimen especial de trabajadores desplazados (impatriados, Beckham)"
+official_name = "Modelo 151. Declaración del IRPF para contribuyentes del Régimen especial aplicable a los trabajadores desplazados a territorio español."
+tax_domain = "irpf"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+]
+source_refs = [
+    "aeat-modelo-151-procedure",
+    "boe-modelo-151-form",
+    "boe-modelo-151-layout",
+]
