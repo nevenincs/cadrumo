@@ -61,9 +61,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
             continue
         for field in section.fields:
             if field.required:
-                facts.append(
-                    UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder")
-                )
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
     return facts
 
 

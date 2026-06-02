@@ -70,9 +70,7 @@ def _required_facts(schema) -> list[UserProfileFact]:
             continue
         for field in section.fields:
             if field.required:
-                facts.append(
-                    UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder")
-                )
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
     return facts
 
 
@@ -178,7 +176,6 @@ def test_anti_tautology_mutating_regime_changes_projection(
     or always returning IMPATRIADO regardless of the stored value) this
     test would fail on the inequality assertion.
     """
-
 
     def _build_record(regime_value: str) -> UserProfileRecord:
         extra: list[UserProfileFact] = [UserProfileFact(path="irpf.special_regime", value=regime_value)]

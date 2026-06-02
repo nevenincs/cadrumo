@@ -24,7 +24,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    # Distinct bucket_id (not the shared default) so the bucket-scoped master-key
+    # session does not collide with other assets test modules sharing a bucket in
+    # the same run — the cross-module empty-load flake recorded as DB-44.
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-unit-bucket") as profile:
         yield profile
 
 

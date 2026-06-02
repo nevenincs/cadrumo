@@ -193,6 +193,7 @@ class TestRegistryPeriodCodeAntiTautology:
 
 def _validate_test_model(period: str) -> str:
     """Helper to validate a period code through pydantic."""
+
     class TestModel(BaseModel):
         period: RegistryPeriodCode
 

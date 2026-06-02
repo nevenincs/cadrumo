@@ -10,9 +10,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.time import now
-
 from ...core.logging import get_logger
+from ...core.time import now
 from ._errors import ModeloError
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
 from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket

@@ -82,9 +82,7 @@ def _validate_period_against_registry(value: str) -> str:
         return normalized
 
     accepted = _format_accepted_period_set()
-    raise ValueError(
-        f"invalid period code '{value}'; accepted forms: {accepted}"
-    )
+    raise ValueError(f"invalid period code '{value}'; accepted forms: {accepted}")
 
 
 def accepted_period_codes() -> tuple[str, ...]:

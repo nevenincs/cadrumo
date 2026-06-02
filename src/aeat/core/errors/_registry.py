@@ -52,9 +52,7 @@ _SECRET_FIELD_PATTERN = re.compile(
 # refusal names the missing flags inside its own message body
 # (`missing_flags`, also internal once interpolated) instead of leaking
 # a raw `('tax-id', 'activity')` tuple as a stray context line.
-_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
-    {"prompt_key", "question_id", "flow_id", "missing", "missing_flags"}
-)
+_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset({"prompt_key", "question_id", "flow_id", "missing", "missing_flags"})
 
 
 class ErrorCategory(StrEnum):

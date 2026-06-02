@@ -78,9 +78,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
             settings=self._settings(),
         )
 
-    def catalogue(
-        self, specs: Iterable[tuple[ManualId, int, ManualPart]]
-    ) -> ManualCatalogue:
+    def catalogue(self, specs: Iterable[tuple[ManualId, int, ManualPart]]) -> ManualCatalogue:
         """Return a :class:`ManualCatalogue` aggregate for ``specs``."""
         from ....domain.manuals import load_catalogue
 

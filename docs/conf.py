@@ -233,10 +233,12 @@ nitpick_ignore_regex = [
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
         r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
     ),
-    # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) are not
-    # documentable objects; they appear in generic signatures only. Listed
-    # explicitly so the pattern cannot mask a real CamelCase class.
-    (r"py:.*", r"^(T|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation)$"),
+    # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) and the
+    # single-letter PEP 695 type parameters used in ``class Foo[T, K: Hashable]``
+    # generic syntax (``K``, ``V``) are not documentable objects; they appear in
+    # generic signatures only. Listed explicitly so the pattern cannot mask a
+    # real CamelCase class.
+    (r"py:.*", r"^(T|K|V|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation)$"),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
     # fully-qualified name, but written short (or under SQLAlchemy's private

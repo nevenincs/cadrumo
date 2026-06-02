@@ -83,6 +83,50 @@ class ModeloListReport(BaseModel):
 
 
 class ModeloDescribeReport(BaseModel):
+    """Full describe view for one resolved modelo revision.
+
+    A *modelo* is an AEAT tax form or declaration; a *revision* is a dated
+    version of its definition. This report is returned by
+    ``RegistryQueryService.describe_modelo`` and surfaces structural
+    statistics alongside provenance citations for the resolved revision.
+
+    Attributes:
+        code: Short numeric identifier for the modelo (e.g. ``"303"``).
+        title: Human-readable display name from the registry.
+        official_name: Formal name as published in the BOE or AEAT guides.
+        tax_domain: Broad tax category (e.g. ``"IRPF"``, ``"IVA"``).
+        cadence: Filing cadence declared by the registry (e.g. ``"anual"``).
+        jurisdiction: Geographic or administrative jurisdiction.
+        revision: Registry identifier of the revision this report describes.
+        revision_ids: Every declared revision id for the modelo, oldest
+            ``valid_from`` first. ``revision`` names the single revision
+            the describe query resolved against; ``revision_ids`` lists all
+            valid ``--revision`` values an operator can pass to
+            ``modelo work create``, so the id is discoverable up front
+            rather than only after a failed guess.
+        filing_year: Filing year used for revision selection, or ``None``
+            when the query was not scoped to a year.
+        period: Filing-period code (e.g. ``"1T"`` for the first quarter),
+            or ``None`` when the query resolved the latest revision.
+        valid_from: Date from which this revision is effective.
+        valid_to: Date after which this revision is no longer effective,
+            or ``None`` when it has no end date.
+        periods: All period codes declared by this revision's
+            ``period_selector``.
+        casilla_count: Total number of casillas (numbered boxes) in the
+            revision.
+        manual_casilla_count: Number of casillas that require manual input.
+        bound_casilla_count: Number of casillas populated from an external
+            financial-data source (bindings).
+        computed_casilla_count: Number of casillas computed by a formula.
+        binding_count: Number of financial-data bindings declared.
+        formula_count: Number of formulas declared.
+        legal_refs: Regulatory citations (BOE articles, RD references)
+            grounding the revision's definition.
+        source_refs: Internal source references linking to AEAT publications
+            or working documents.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     code: str
@@ -194,6 +238,40 @@ class ModeloCasillasReport(BaseModel):
 
 
 class ModeloBindingRow(BaseModel):
+    """One row in a binding listing for a resolved modelo revision.
+
+    A *binding* maps a financial-data source (such as an aggregated ledger
+    figure) to a casilla or formula input. Each row describes one binding's
+    selector, aggregation rule, and how the formula engine consumes it.
+
+    Attributes:
+        binding_id: Stable registry identifier for this binding.
+        source: Financial-data source namespace the binding pulls from.
+        typed_enum: When non-``None``, the closed set of string values the
+            binding accepts as an enum-typed input.
+        input_channel: Engine channel a ``--binding KEY=VALUE`` override for
+            this binding feeds. ``decimal`` means the registry's formulas
+            consume the binding as a numeric operand: a ``--binding``
+            override must be a Decimal, even when ``typed_enum`` is set.
+            ``enum`` means a dispatch op consumes the binding as a string
+            enum key, so the override is a string. The channel is a
+            property of *how the formula consumes the binding*, not of the
+            ``typed_enum`` annotation -- a binding may carry ``typed_enum``
+            yet still be a ``decimal`` channel binding (the Modelo 100
+            estimación-directa modality binding is compared against a
+            numeric literal).
+        selector: Structured selector mapping the binding applies against
+            the financial-data source to aggregate its input.
+        aggregation: Optional aggregation rule applied after selection, or
+            ``None`` when the selector yields a scalar directly.
+        legal_refs: Regulatory citations grounding this binding's
+            definition.
+        source_refs: Internal source references linking to AEAT
+            publications or working documents.
+        borrador_capable: ``True`` when this binding is eligible for AEAT
+            borrador (pre-filled return) data.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     binding_id: BindingId
@@ -321,6 +399,20 @@ class RegistryQueryService:
         self._authority = authority
 
     def list_modelos(self, *, year: int | None = None) -> ModeloListReport:
+        """Return a catalogue listing of all registered modelos.
+
+        Each entry is a lightweight ``ModeloListRow`` carrying only summary
+        fields — no revision details are resolved. The rows are sorted
+        ascending by modelo code.
+
+        Args:
+            year: When supplied, restricts the listing to modelos that have
+                at least one revision whose ``period_selector`` covers the
+                given filing year. ``None`` returns all registered modelos.
+
+        Returns:
+            A ``ModeloListReport`` containing the matching rows.
+        """
         rows = [
             ModeloListRow(
                 code=str(modelo.id),
@@ -341,6 +433,32 @@ class RegistryQueryService:
         period: str | None = None,
         as_of: date | None = None,
     ) -> ModeloDescribeReport:
+        """Return a full describe report for one modelo and its resolved revision.
+
+        Resolves the revision using the same precedence logic as the other
+        query methods: when ``period`` is a bare registry token (e.g. ``"1T"``,
+        ``"0A"``), the revision that declares it is selected; when ``period``
+        is a year-qualified string (e.g. ``"2025Q1"``), the registry snapshot
+        for that filing year and period is resolved; when ``period`` is
+        ``None``, the latest revision by ``valid_from`` is returned.
+
+        Args:
+            modelo: Short numeric identifier for the modelo (e.g. ``"303"``).
+            period: Optional period narrowing. Accepted forms: bare registry
+                period tokens (``"1T"``, ``"0A"``, ``"01"``-``"12"``), or
+                year-qualified strings (``"2025"``, ``"2025Q1"``,
+                ``"2025-Q1"``, ``"2025-01"``).
+            as_of: Optional calendar date for validity gating. Defaults to
+                today when ``None``.
+
+        Returns:
+            A ``ModeloDescribeReport`` for the resolved revision.
+
+        Raises:
+            ``RegistryValidationError``: When ``modelo`` is not registered,
+                the period is not declared by any revision, or no revision
+                covers the requested scope.
+        """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         return ModeloDescribeReport(
             code=str(definition.id),
@@ -382,6 +500,33 @@ class RegistryQueryService:
         required: bool | None = None,
         form_number: str | None = None,
     ) -> ModeloCasillasReport:
+        """Return the casilla (numbered-box) listing for a resolved modelo revision.
+
+        A *casilla* is a numbered input box on an AEAT tax form. The listing
+        includes every casilla in the resolved revision, optionally filtered to
+        a subset by kind, required flag, or form page number.
+
+        Args:
+            modelo: Short numeric identifier for the modelo (e.g. ``"303"``).
+            period: Optional period narrowing; see ``describe_modelo`` for
+                accepted forms.
+            as_of: Optional calendar date for validity gating.
+            input_kind: When supplied, restricts rows to casillas of the
+                given ``InputKind`` (e.g. ``InputKind.MANUAL``,
+                ``InputKind.COMPUTED``).
+            required: When supplied, restricts rows to casillas whose
+                ``required`` flag matches this value.
+            form_number: When supplied, restricts rows to casillas on the
+                given physical form page or sub-form.
+
+        Returns:
+            A ``ModeloCasillasReport`` for the resolved revision, containing
+            the filtered casilla rows.
+
+        Raises:
+            ``RegistryValidationError``: When the modelo or period is not
+                registered, or no revision covers the requested scope.
+        """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         rows = [
             ModeloCasillaRow(
@@ -495,6 +640,27 @@ class RegistryQueryService:
         period: str | None = None,
         as_of: date | None = None,
     ) -> ModeloBindingsReport:
+        """Return the full binding listing for a resolved modelo revision.
+
+        A *binding* maps a financial-data source to a casilla or formula
+        input. For year-specific binding ids (e.g. when a multi-revision
+        modelo publishes different binding names per renta year) prefer
+        ``bindings_for_year`` or ``bindings_for_scope`` so the resolved
+        revision matches the one the calculation engine will use.
+
+        Args:
+            modelo: Short numeric identifier for the modelo (e.g. ``"130"``).
+            period: Optional period narrowing; see ``describe_modelo`` for
+                accepted forms. When ``None``, the latest revision is used.
+            as_of: Optional calendar date for validity gating.
+
+        Returns:
+            A ``ModeloBindingsReport`` for the resolved revision.
+
+        Raises:
+            ``RegistryValidationError``: When the modelo or period is not
+                registered, or no revision covers the requested scope.
+        """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         return ModeloBindingsReport(
             code=str(definition.id),
@@ -511,6 +677,26 @@ class RegistryQueryService:
         period: str | None = None,
         as_of: date | None = None,
     ) -> ModeloFormulasReport:
+        """Return the full formula listing for a resolved modelo revision.
+
+        Each row exposes one formula's target casilla and its complete input
+        dependency set (casillas, bindings, parameters, and relation
+        references), letting contributors inspect what drives a computed
+        casilla without reading the raw registry TOML.
+
+        Args:
+            modelo: Short numeric identifier for the modelo (e.g. ``"200"``).
+            period: Optional period narrowing; see ``describe_modelo`` for
+                accepted forms. When ``None``, the latest revision is used.
+            as_of: Optional calendar date for validity gating.
+
+        Returns:
+            A ``ModeloFormulasReport`` for the resolved revision.
+
+        Raises:
+            ``RegistryValidationError``: When the modelo or period is not
+                registered, or no revision covers the requested scope.
+        """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         rows = tuple(
             ModeloFormulaRow(
