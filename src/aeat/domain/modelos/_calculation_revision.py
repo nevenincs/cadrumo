@@ -51,6 +51,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from ..calculations.registry import CasillaObservation
 from ._errors import ModeloValidationError
+from ._ids import CalculationRevisionId, WorkUnitId
 from ._row_models import ModeloDetailRow
 
 
@@ -78,9 +79,6 @@ class CalculationRevisionAmendmentKind(StrEnum):
 
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"
-
-
-from ._ids import CalculationRevisionId, WorkUnitId
 
 ModeloActorLabel = Annotated[
     str,
