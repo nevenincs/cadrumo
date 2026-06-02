@@ -35,40 +35,6 @@ from decimal import Decimal
 
 import pytest
 
-from ..auth import AuthProviderDescription, AuthProviderKind
-from ..filing import (
-    approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
-    filing_profile_from_taxpayer,
-)
-from . import (
-    CalculationRevisionNotFoundError,
-    CalculationRevisionStateError,
-    ModeloRecordNotFoundError,
-    ModeloWorkflowGateError,
-    VerificationReportNotFoundError,
-    calculate_modelo_revision,
-    create_work_unit,
-    file_modelo_revision,
-    get_calculation_revision,
-    get_filing_record,
-    get_verification_report,
-    get_work_unit,
-    list_calculation_revisions,
-    list_filing_records,
-    list_verification_reports,
-    mark_revision_verificado_completo,
-    verify_modelo_revision,
-)
-from ..workflow import (
-    DeadlineEngineAdapter,
-    ModeloInputs,
-    WorkflowAbortReason,
-    WorkflowEngine,
-    WorkflowPurpose,
-    WorkflowStage,
-)
 from ...core.config import Settings
 from ...core.resources import resources
 from ...domain.buckets import (
@@ -96,6 +62,40 @@ from ...domain.period import parse_canonical_period
 from ...domain.submission import SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
 from ...tests.secure_sql import isolated_runtime_profile
+from ..auth import AuthProviderDescription, AuthProviderKind
+from ..filing import (
+    approve_draft,
+    build_draft,
+    build_runtime_schema_provider,
+    filing_profile_from_taxpayer,
+)
+from ..workflow import (
+    DeadlineEngineAdapter,
+    ModeloInputs,
+    WorkflowAbortReason,
+    WorkflowEngine,
+    WorkflowPurpose,
+    WorkflowStage,
+)
+from . import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    ModeloRecordNotFoundError,
+    ModeloWorkflowGateError,
+    VerificationReportNotFoundError,
+    calculate_modelo_revision,
+    create_work_unit,
+    file_modelo_revision,
+    get_calculation_revision,
+    get_filing_record,
+    get_verification_report,
+    get_work_unit,
+    list_calculation_revisions,
+    list_filing_records,
+    list_verification_reports,
+    mark_revision_verificado_completo,
+    verify_modelo_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -1145,8 +1145,8 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
     bucket event with actor + reason payload."""
 
-    from . import discard_work_unit
     from ...domain.buckets._event import BucketEventObjectType, BucketEventType
+    from . import discard_work_unit
 
     wu_repo, _, _, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
