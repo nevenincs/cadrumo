@@ -130,7 +130,7 @@ Extend to parameter annotations, remediate via swarm, verify green.
 
 - [x] `W03.P03.S07` - Extend the signature-link gate to parameter annotations, scoped to high-value links; `src/aeat/tests/test_docstring_return_type_links.py`.
 - [x] `W03.P03.S08` - Remediate the parameter-type violations via a partitioned swarm, drive to 0; `src/aeat/domain`.
-- [ ] `W03.P03.S09` - Verify the parameter-type gate and the offline nitpicky build are green; `docs/conf.py`.
+- [x] `W03.P03.S09` - Verify the parameter-type gate and the offline nitpicky build are green; `docs/conf.py`.
 
 ## Description
 
