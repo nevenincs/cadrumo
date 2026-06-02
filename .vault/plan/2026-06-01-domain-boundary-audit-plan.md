@@ -289,6 +289,7 @@ For each broken-contract violation chain, classify as production hexagonal drift
 
 Once stale ignores are cleaned and violations resolved, return unmatched_ignore_imports_alerting to error so a future stale entry or new violation reds the gate loudly
 
+- [x] `W09.P28.S94` - Resolve unmatched-ignore alerting policy: KEEP unmatched_ignore_imports_alerting = warn rather than restoring the implicit error default. error is what blinded the gate originally (one stale ignore aborted the whole run); `under warn a new production violation still reds the gate (broken contract exits non-zero regardless of mode) while stale ignores from test churn degrade gracefully. Gate verified 4 kept / 0 broken / exit 0; `.importlinter`.
 
 ## Description
 
