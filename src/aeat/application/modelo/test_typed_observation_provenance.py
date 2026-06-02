@@ -24,11 +24,6 @@ from decimal import Decimal
 
 import pytest
 
-from ._actions import (
-    CasillaProvenanceMissingError,
-    _amendment_observations,
-    _build_typed_observations,
-)
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     CasillaObservation,
@@ -39,6 +34,11 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
+)
+from ._actions import (
+    CasillaProvenanceMissingError,
+    _amendment_observations,
+    _build_typed_observations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -122,7 +122,8 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     orphan_casilla = "9999999"
     assert orphan_casilla not in casilla_ids
 
-    polluted_observations = engine_result.observations + (
+    polluted_observations = (
+        *engine_result.observations,
         CasillaObservation(casilla_id=orphan_casilla, value=Decimal("123")),
     )
     polluted_result = engine_result.model_copy(update={"observations": polluted_observations})
