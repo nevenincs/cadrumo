@@ -1250,6 +1250,28 @@ remediation is currently HELD at audit-only per the active action policy.
   Remediation tracked as plan Wave **W09** (P26 clean stale ignores, P27 triage +
   resolve violations cross-referencing DB-16/DB-18, P28 restore strict alerting).
 
+- 2026-06-02 (cont.): import-linter gate driven from 0/4 to **1 kept / 3 broken**
+  with the broken signal now isolated to exactly the real drift. core-not-outer is
+  GREEN (commit `d690ac919` repointed apoderamientos to its canonical submodule so
+  its sanctioned-deferred-loader ignore matches; commit `1990c6d01` re-sanctioned
+  29 stale test-file roundtrip/fixture/oracle edges across the three contracts).
+  The three still-broken contracts (no-renta, domain-not-application, layered) all
+  reduce to **9 production root-cause edges**: eight domain repositories importing
+  the secure-storage adapter (`domain.{filing._repository, filing._runtime_repository,
+  buckets._event_repository, transactions._repository, usage_ratios._service,
+  justificante._repository, submission._repository, modelos._runtime_repository} ->
+  adapters.persistence.storage.{envelope,runtime_repository,...}`) — this is DB-16
+  (S92) — plus `calculations.registry._scenarios -> domain.renta` (S90; domain-not-
+  application and layered also red via indirect chains *through* the DB-16 edges, so
+  fixing DB-16 collapses them). DB-16 has two sub-shapes: (a) module-level
+  subclassing — `filing/_repository` subclasses the adapter `SecureBoundRepository`
+  base; (b) function-local lazy imports inside repo methods (buckets, transactions,
+  usage_ratios, the _runtime_repository modules) — structurally identical to the
+  resource-management-api ADR's sanctioned core/resources deferred loaders. The
+  invert-vs-sanction choice IS the queued **R5 persistence-boundary ADR**; S92 is
+  gated on it. A unilateral refactor of the secure-storage base (consumed by every
+  typed repository) is high-blast-radius and must be ADR-bound first.
+
 ## Codification candidates
 
 
