@@ -8,43 +8,22 @@ profile bucket selected by ``WorkflowState``.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
-from ..core.config import SecretStoreBackend, override_settings
 from ..tests.cli_runner import invoke_cached_cli
-from ..tests.secure_sql import dev_test_database_password
+from ..tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-
-@contextmanager
-def _isolate(tmp_path: Path) -> Iterator[None]:
-    from ..adapters.persistence.storage.sql import dispose_engine
-
-    with override_settings(
-        aeat_local_storage_root=tmp_path / "storage",
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
 
 
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
     """Seed an active profile through the profile application service."""
 
+    from ..domain.user_profile import UserProfileFact
     from .user_profile._orchestration import register_active_profile
     from .workflow._persistence import workflow_state_repository
-    from ..domain.user_profile import UserProfileFact
 
     repo = workflow_state_repository()
     facts = (
@@ -71,7 +50,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
 ) -> None:
     """A value written during profile create is readable via profile show."""
 
-    with _isolate(tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path):
         created = invoke_cached_cli(
             [
                 "config",
@@ -94,7 +73,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         _show_payload = json.loads(show_via_config.output)
         # Migrated commands emit a SchemaEnvelope wrapper; pre-migration
         # commands emit the bare payload.
-        _facts_payload = _show_payload["result"] if "result" in _show_payload else _show_payload
+        _facts_payload = _show_payload.get("result", _show_payload)
         facts = {row["path"]: row["value"] for row in _facts_payload["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
@@ -116,7 +95,7 @@ def test_config_create_then_config_status_surfaces_assigned_value(
 ) -> None:
     """A value written during profile create surfaces in profile status."""
 
-    with _isolate(tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path):
         created = invoke_cached_cli(
             [
                 "config",
@@ -144,7 +123,7 @@ def test_retired_config_profile_set_is_not_registered(
 ) -> None:
     """The retired point-mutation command must not re-enter the CLI tree."""
 
-    with _isolate(tmp_path):
+    with isolated_profile_storage_root(tmp_path=tmp_path):
         result = invoke_cached_cli(["config", "profile", "set", "not.a.real.key", "value"])
         assert result.exit_code != 0
         assert "No such command" in result.output
