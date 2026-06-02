@@ -97,9 +97,7 @@ def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
 # ---------------------------------------------------------------------------
 
 _ALL_PROVIDERS = [CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider()]
-_VALID_VERIFICATION_SOURCES = frozenset(
-    {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
-)
+_VALID_VERIFICATION_SOURCES = frozenset({"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"})
 
 
 @pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
@@ -113,8 +111,7 @@ def test_provider_declares_verification_source(provider: object) -> None:
     source = getattr(type(provider), "verification_source", None)
     assert source is not None, f"{type(provider).__name__} is missing verification_source"
     assert source in _VALID_VERIFICATION_SOURCES, (
-        f"{type(provider).__name__}.verification_source={source!r} is not one of "
-        f"{sorted(_VALID_VERIFICATION_SOURCES)}"
+        f"{type(provider).__name__}.verification_source={source!r} is not one of {sorted(_VALID_VERIFICATION_SOURCES)}"
     )
 
 
@@ -126,9 +123,7 @@ def test_provider_declares_provisional_pending_specimen(provider: object) -> Non
     confirmed corpus round-trip sets it False.
     """
     flag = getattr(type(provider), "provisional_pending_specimen", None)
-    assert flag is not None, (
-        f"{type(provider).__name__} is missing provisional_pending_specimen"
-    )
+    assert flag is not None, f"{type(provider).__name__} is missing provisional_pending_specimen"
     assert isinstance(flag, bool), (
         f"{type(provider).__name__}.provisional_pending_specimen must be bool, got {type(flag)}"
     )
