@@ -234,8 +234,7 @@ class TestPreRegistrationObligationGate:
         schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
 
         assert all(o.modelo != "303" for o in schedule.obligations), (
-            "2026 registrant was shown a 2025 IVA quarter that closed "
-            "before their censo alta"
+            "2026 registrant was shown a 2025 IVA quarter that closed before their censo alta"
         )
         assert all(o.closes_on >= date(2026, 3, 1) for o in schedule.obligations), (
             "an obligation window closing before the alta survived the gate"
@@ -349,11 +348,7 @@ class TestAnnualFilingWindows:
     """
 
     def test_modelo_100_window_resolves_for_renta_2025_campaign(self) -> None:
-        windows = [
-            window
-            for code, _revision, window in _engine()._registry.deadline_windows(2025)
-            if code == "100"
-        ]
+        windows = [window for code, _revision, window in _engine()._registry.deadline_windows(2025) if code == "100"]
         assert len(windows) == 1
         window = windows[0]
         assert window.id == "modelo-100-2025-0a"
@@ -364,11 +359,7 @@ class TestAnnualFilingWindows:
         assert "orden-hac-277-2026:art-7" in window.legal_refs
 
     def test_modelo_100_window_resolves_for_renta_2023_campaign(self) -> None:
-        windows = [
-            window
-            for code, _revision, window in _engine()._registry.deadline_windows(2023)
-            if code == "100"
-        ]
+        windows = [window for code, _revision, window in _engine()._registry.deadline_windows(2023) if code == "100"]
         assert len(windows) == 1
         window = windows[0]
         assert window.id == "modelo-100-2023-0a"
@@ -402,9 +393,7 @@ class TestAnnualFilingWindows:
     def test_modelo_347_annual_window_resolves(self) -> None:
         for year in (2025, 2026):
             windows = [
-                window
-                for code, _revision, window in _engine()._registry.deadline_windows(year)
-                if code == "347"
+                window for code, _revision, window in _engine()._registry.deadline_windows(year) if code == "347"
             ]
             assert [window.period for window in windows] == [f"{year}-0A"]
 
