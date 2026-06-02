@@ -266,7 +266,7 @@ class AuthConfigureResult(OutputSchema):
 
 
 @register_schema("config.auth.status")
-class AuthStatusResult(OutputSchema):
+class AuthStatusPayload(OutputSchema):
     """JSON envelope for ``aeat config auth status``.
 
     The application ``AuthStatusResult`` model evolves independently;
@@ -279,7 +279,7 @@ class AuthStatusResult(OutputSchema):
 
 
 @register_schema("config.auth.test")
-class AuthTestResult(OutputSchema):
+class AuthTestPayload(OutputSchema):
     """JSON envelope for ``aeat config auth test``.
 
     Thin envelope; the application model carries all provider-specific
@@ -291,7 +291,7 @@ class AuthTestResult(OutputSchema):
 
 
 @register_schema("config.auth.login")
-class AuthLoginResult(OutputSchema):
+class AuthLoginPayload(OutputSchema):
     """JSON envelope for ``aeat config auth login``.
 
     Thin envelope; the application model carries provider-specific

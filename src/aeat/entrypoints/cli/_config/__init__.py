@@ -170,9 +170,7 @@ def repair_quarantine(
     # cleanly rather than crashing on the absent database URL
     # (disaster ADR Ruling 6).
     if _resolve_active_bucket_id() is None:
-        result = RepairQuarantineResult(
-            dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile"
-        )
+        result = RepairQuarantineResult(dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile")
         _emit_envelope(
             ctx,
             command="config.repair.quarantine",
@@ -208,11 +206,7 @@ def repair_quarantine(
                 "dry_run\ttrue",
                 f"would_quarantine\t{report.unreadable_total}",
                 f"would_retain\t{report.readable_total}",
-                *tuple(
-                    f"{item.namespace}\t{item.unreadable}"
-                    for item in report.namespaces
-                    if item.unreadable > 0
-                ),
+                *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
             ),
         )
         return
@@ -868,9 +862,7 @@ def config_profile_switch(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": name},
         )
-    _assert_profile_record_present(
-        ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
-    )
+    _assert_profile_record_present(ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label)
     from .._config_payloads import ConfigProfileSwitchResult
 
     try:
@@ -889,9 +881,7 @@ def config_profile_switch(
     )
 
 
-def _assert_profile_record_present(
-    ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str
-) -> None:
+def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
     from ....domain.user_profile import ProfileNotFoundError
 
     try:
@@ -1018,20 +1008,20 @@ def config_profile_show(
             pointer = _read_profile_bucket(name, include_tombstoned=True)
         except ValueError as exc:
             raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        ) from exc
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": name},
+            ) from exc
         if pointer is None:
             raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": name},
-        )
+                translated_message="cli.config.profile.unknown_profile",
+                context={"name": name},
+            )
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
             raise _CliRefusedBoundaryError(
-            translated_message="cli.config.errors.no_active_profile",
-        )
+                translated_message="cli.config.errors.no_active_profile",
+            )
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -1072,10 +1062,7 @@ def config_profile_show(
             )
             for issue in report.issues
         ],
-        facts=[
-            ProfileFactPayload(path=path, value=str(value))
-            for path, value in sorted(values.items())
-        ],
+        facts=[ProfileFactPayload(path=path, value=str(value)) for path, value in sorted(values.items())],
     )
     lines: list[str] = []
     if is_tombstoned:
@@ -1254,9 +1241,7 @@ def config_profile_rename(
     source: str = typer.Argument(
         ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
     ),
-    target: str = typer.Argument(
-        ..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")
-    ),
+    target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
 ) -> None:
     """Rename a profile by changing its operator-visible label.
 
@@ -1342,8 +1327,8 @@ def config_profile_export(
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
             raise _CliRefusedBoundaryError(
-            translated_message="cli.config.errors.no_active_profile",
-        )
+                translated_message="cli.config.errors.no_active_profile",
+            )
     try:
         from ....adapters.persistence.storage import has_active_bucket_session
         from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
@@ -1570,9 +1555,7 @@ def config_status(ctx: typer.Context) -> None:
         )
         return
     if profile_health.status == "dangling_pointer":
-        result = ConfigStatusResult(
-            active_profile=active_profile, registered_profile=False, configured=False
-        )
+        result = ConfigStatusResult(active_profile=active_profile, registered_profile=False, configured=False)
         _emit_envelope(
             ctx,
             command="config.profile.status",
@@ -1842,7 +1825,7 @@ def auth_status(
     """Show the configured local authentication state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import inspect_operator_auth
-    from .._config_payloads import AuthStatusResult
+    from .._config_payloads import AuthStatusPayload
 
     try:
         result = inspect_operator_auth(provider)
@@ -1852,7 +1835,7 @@ def auth_status(
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")
-    envelope_result = AuthStatusResult.model_validate(payload)
+    envelope_result = AuthStatusPayload.model_validate(payload)
     _emit_envelope(
         ctx,
         command="config.auth.status",
@@ -1875,7 +1858,7 @@ def auth_test(
     """Render auth readiness through the application-owned auth state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, test_operator_auth
-    from .._config_payloads import AuthTestResult
+    from .._config_payloads import AuthTestPayload
 
     try:
         result = test_operator_auth(provider)
@@ -1890,7 +1873,7 @@ def auth_test(
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")
-    envelope_result = AuthTestResult.model_validate(payload)
+    envelope_result = AuthTestPayload.model_validate(payload)
     _emit_envelope(
         ctx,
         command="config.auth.test",
@@ -1919,7 +1902,7 @@ def auth_login(
         AuthLoginNotEnabledError,
         AuthLoginPreconditionError,
     )
-    from .._config_payloads import AuthLoginResult
+    from .._config_payloads import AuthLoginPayload
 
     try:
         result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
@@ -1936,7 +1919,7 @@ def auth_login(
     except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
-    envelope_result = AuthLoginResult.model_validate(payload)
+    envelope_result = AuthLoginPayload.model_validate(payload)
     _emit_envelope(
         ctx,
         command="config.auth.login",
