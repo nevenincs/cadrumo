@@ -22,6 +22,7 @@ from typing import cast
 
 import pytest
 
+from ...core.redaction import CLI_BUCKET_ID_PLACEHOLDER
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 
@@ -212,7 +213,8 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
             "--idempotency-key", "cash-office-2026-05-02",
         ]
     )
-    assert payload["bucket_id"] == "<bucket-id>"
+    assert bucket_id not in json.dumps(payload, sort_keys=True)
+    assert payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert len(cast(str, payload["transaction_id"])) == 64
     transaction = cast(dict[str, object], payload["transaction"])
     assert transaction["business_classification"] == "BUSINESS"
@@ -225,13 +227,15 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
 def _ledger_list_and_view(transaction_id: str, *, bucket_id: str) -> None:
     """The list verb returns the seed row, the view verb returns its full record."""
     listed = _run_ledger_cli_json(["app", "ledger", "list"])
-    assert listed["bucket_id"] == "<bucket-id>"
+    assert bucket_id not in json.dumps(listed, sort_keys=True)
+    assert listed["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     rows = cast(list[dict[str, object]], listed["rows"])
     assert [row["transaction_id"] for row in rows] == [transaction_id]
     assert rows[0]["review_status"] == "reviewed"
 
     read = _run_ledger_cli_json(["app", "ledger", "view", transaction_id])
-    assert read["bucket_id"] == "<bucket-id>"
+    assert bucket_id not in json.dumps(read, sort_keys=True)
+    assert read["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert read["transaction_id"] == transaction_id
     assert read["review_status"] == "reviewed"
     transaction = cast(dict[str, object], read["transaction"])
@@ -313,7 +317,8 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
 def _assert_ledger_status_one_ready_row(bucket_id: str) -> None:
     """After one reviewed transaction the status verb reports a single ready row."""
     status = _run_ledger_cli_json(["app", "ledger", "status", "--period", "2026-05"])
-    assert status["bucket_id"] == "<bucket-id>"
+    assert bucket_id not in json.dumps(status, sort_keys=True)
+    assert status["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert status["total_count"] == 1
     assert status["active_count"] == 1
     assert status["reviewed_count"] == 1
@@ -331,7 +336,8 @@ def _assert_ledger_track_returns_lineage(
 ) -> None:
     """The track verb returns the transaction body plus its lineage triple."""
     tracked = _run_ledger_cli_json(["app", "ledger", "track", transaction_id])
-    assert tracked["bucket_id"] == "<bucket-id>"
+    assert bucket_id not in json.dumps(tracked, sort_keys=True)
+    assert tracked["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     transaction = cast(dict[str, object], tracked["transaction"])
     assert transaction["transaction_id"] == transaction_id
     tracking = cast(dict[str, object], tracked["tracking"])
@@ -651,7 +657,8 @@ def test_app_ledger_lifecycle_export_targets_active_profile_bucket(
     tmp_path: Path,
 ) -> None:
     outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
-    assert outcome.export_payload["bucket_id"] == "<bucket-id>"
+    assert outcome.bucket_id not in json.dumps(outcome.export_payload, sort_keys=True)
+    assert outcome.export_payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
 
 
 def test_app_ledger_lifecycle_export_records_three_rows(
