@@ -10,17 +10,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.time import now
-
 from ....core.errors import AeatError
 from ....core.logging import get_logger
+from ....core.time import now
 from ....domain.profile._errors import AssetRecordError
 from ....domain.profile.assets import (
     AmortizacionLedger,
     AssetRecord,
     AssetsLedgerDocument,
 )
-from ..storage import SensitivityClass
+from ..storage import (
+    PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
+    PROFILE_ASSETS_LEDGER_NAMESPACE,
+    SensitivityClass,
+)
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
 
@@ -29,8 +32,8 @@ _log = get_logger(__name__)
 ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
 _SECURE_OBJECT_VERSION = 1
-_ASSETS_NAMESPACE = "aeat.persistence.profile.assets"
-_AMORTIZACION_NAMESPACE = "aeat.persistence.profile.assets.amortization"
+_ASSETS_NAMESPACE = PROFILE_ASSETS_LEDGER_NAMESPACE.namespace
+_AMORTIZACION_NAMESPACE = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace
 _LEDGER_OBJECT_KEY = "default"
 
 
