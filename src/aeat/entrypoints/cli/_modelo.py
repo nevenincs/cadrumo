@@ -2360,6 +2360,17 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
         lines.extend(summary_lines)
     for casilla, value in sorted(rev.casilla_values.items()):
         lines.append(f"casilla\t{casilla}\t{value}")
+    # Surface the typed detail rows (repeating Registro-Tipo-2 records of
+    # informativas: M184 comuneros, M347/M349 contrapartes, M232 vinculadas).
+    # These are persisted on the revision but live outside the flat
+    # casilla_values map (the casilla schema carries only the row template),
+    # so without this they were invisible in the revision view — an operator
+    # entering N members saw the empty template casillas and believed the rows
+    # were silently dropped.
+    for index, detail_row in enumerate(rev.detail_rows, start=1):
+        fields = detail_row.model_dump(mode="json", exclude={"row_type"})
+        field_str = " ".join(f"{key}={value}" for key, value in fields.items())
+        lines.append(f"detail_row\t{index}\t{detail_row.row_type}\t{field_str}")
     return lines
 
 
