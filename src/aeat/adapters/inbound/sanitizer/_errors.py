@@ -51,7 +51,10 @@ class SanitizerSourceParseError(SanitizationError):
         """Construct a redacted source-parse error.
 
         Args:
-            message: Optional redacted human-readable message.
+            message: Legacy positional diagnostic text. Accepted for
+                compatibility, but intentionally not rendered or copied
+                into context because historical callers passed raw
+                pikepdf/QPDF diagnostics here.
             failure: Optional underlying parser exception type name,
                 safe for debug envelopes because it excludes operator
                 paths and provider payload text.
@@ -60,7 +63,7 @@ class SanitizerSourceParseError(SanitizationError):
         if failure is not None:
             context["failure"] = failure
         super().__init__(
-            message or f"source PDF could not be opened for sanitization: {_SANITIZER_SOURCE_LABEL}",
+            f"source PDF could not be opened for sanitization: {_SANITIZER_SOURCE_LABEL}",
             context=context,
             translated_message="errors.fail.fail_sanitization_source_parse",
         )

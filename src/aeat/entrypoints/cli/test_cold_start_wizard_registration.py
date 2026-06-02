@@ -36,6 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _REGISTRATION_LEAKS: tuple[str, ...] = (
     "Wizard catalogue has not been registered",
     "project_answers has not been registered",
+    "profile keys are not registered",
 )
 
 
