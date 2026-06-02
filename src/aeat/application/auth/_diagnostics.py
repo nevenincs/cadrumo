@@ -170,9 +170,7 @@ def record_auth_diagnostic_phone_state(
     diagnostic is not found.
     """
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
-        raise AuthDiagnosticPhoneStateError(
-            phone_state, context={"phone_state": phone_state}
-        )
+        raise AuthDiagnosticPhoneStateError(phone_state, context={"phone_state": phone_state})
     objects = _secure_objects()
     record = objects.load(
         _DIAGNOSTIC_NAMESPACE,
