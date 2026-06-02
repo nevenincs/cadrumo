@@ -19,7 +19,6 @@ from functools import lru_cache
 from pathlib import Path
 
 from .....core.logging import get_logger
-
 from ...pdf._pdfplumber import (
     extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl,
 )
@@ -29,6 +28,7 @@ from ...pdf._pdfplumber import (
 from .._errors import DeclaracionParseError
 
 _logger = get_logger(__name__)
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 _TAX_ID_CANARY_RE = re.compile(
     r"\bNIF\s*[:\-]?\s*[A-Z0-9][A-Z0-9 .\-]{3,31}?(?=\s+(?:CSV|Fecha)\b|\s*$)",
     re.IGNORECASE,
@@ -86,8 +86,12 @@ def _extract_pages_text_with_pdfium_cached(
                     page.close()
         finally:
             document.close()
-    except (ImportError, OSError, ValueError, RuntimeError) as _exc:
-        _logger.debug("pypdfium2 failed to extract declaración PDF text from %s: %s", path, _exc, exc_info=True)
+    except (ImportError, OSError, ValueError, RuntimeError) as exc:
+        _logger.debug(
+            "pypdfium2 failed to extract declaración PDF text from <input-pdf>: %s",
+            type(exc).__name__,
+            exc_info=True,
+        )
         return None
     if not any(pages):
         return None
