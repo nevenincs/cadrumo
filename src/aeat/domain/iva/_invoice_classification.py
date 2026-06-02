@@ -44,6 +44,14 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+# Import from the leaf definition modules, not the ``..invoices`` package, to
+# break a circular initialisation: ``aeat.domain.invoices.__init__`` imports from
+# this module, so a package-level ``from ..invoices import IvaRate`` here would
+# require the invoices package to be fully initialised (it is not, mid-import).
+# Importing the leaf ``._enums`` / ``._errors`` modules directly sidesteps the
+# package ``__init__`` entirely and makes the edge order-independent.
+from ..invoices._enums import IvaRate
+from ..invoices._errors import InvoiceValidationError
 from ._classification import InvoiceKind
 from ._flow import (
     IvaFlowDirection,
@@ -53,14 +61,6 @@ from ._flow import (
     settlement_sides_for_flow,
 )
 from ._schema import IvaCategory, IvaRateKind
-
-# The sibling-package import is intentionally placed below local imports to
-# break a circular initialisation: `aeat.domain.invoices.__init__` imports
-# from this module, and importing from `..invoices` here at module load
-# before `._classification`/`._flow` resolves results in a partially
-# initialised invoices package.
-from ..invoices import IvaRate
-from ..invoices._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
