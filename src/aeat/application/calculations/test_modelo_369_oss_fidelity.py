@@ -75,15 +75,9 @@ def _year_n_observation() -> RegistryModeloObservation:
         observations=(
             CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
             CasillaObservation(casilla_id="decl.periodo", value=Decimal("2")),
-            CasillaObservation(
-                casilla_id="iva.union.de.services-cuota", value=Decimal("1890.00")
-            ),
-            CasillaObservation(
-                casilla_id="iva.union.fr.services-cuota", value=Decimal("945.00")
-            ),
-            CasillaObservation(
-                casilla_id="iva.union.de.goods-distance-cuota", value=Decimal("2100.00")
-            ),
+            CasillaObservation(casilla_id="iva.union.de.services-cuota", value=Decimal("1890.00")),
+            CasillaObservation(casilla_id="iva.union.fr.services-cuota", value=Decimal("945.00")),
+            CasillaObservation(casilla_id="iva.union.de.goods-distance-cuota", value=Decimal("2100.00")),
             CasillaObservation(casilla_id="iva.union.cuota-total", value=Decimal("4935.00")),
         ),
     )
@@ -98,15 +92,9 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
         observations=(
             CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
             CasillaObservation(casilla_id="decl.periodo", value=Decimal("2")),
-            CasillaObservation(
-                casilla_id="iva.union.de.services-cuota", value=Decimal("2310.00")
-            ),
-            CasillaObservation(
-                casilla_id="iva.union.fr.services-cuota", value=Decimal("1155.00")
-            ),
-            CasillaObservation(
-                casilla_id="iva.union.de.goods-distance-cuota", value=Decimal("3150.00")
-            ),
+            CasillaObservation(casilla_id="iva.union.de.services-cuota", value=Decimal("2310.00")),
+            CasillaObservation(casilla_id="iva.union.fr.services-cuota", value=Decimal("1155.00")),
+            CasillaObservation(casilla_id="iva.union.de.goods-distance-cuota", value=Decimal("3150.00")),
             CasillaObservation(casilla_id="iva.union.cuota-total", value=Decimal("6615.00")),
         ),
     )
@@ -168,9 +156,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period=_PERIOD,
-        observations=tuple(
-            o for o in obs_n.observations if o.casilla_id != "iva.union.cuota-total"
-        ),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != "iva.union.cuota-total"),
     )
     assert obs_n != obs_n_missing
 
