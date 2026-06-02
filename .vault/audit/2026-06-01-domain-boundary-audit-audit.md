@@ -1405,11 +1405,24 @@ remediation is currently HELD at audit-only per the active action policy.
   **S51 partial** (commit `57ed96989`): CLI `LedgerExportResult`→`LedgerExportPayload`
   (T6, excludes `payload` bytes + appends `output_path`) and
   `LedgerImportResult`→`LedgerImportPayload` (T7, threads the three operator notices);
-  25 ledger export/import + conformance tests green. **T8 (ModeloExport) remains
-  blocked** — `cli/_modelo.py` is peer-WIP; S51 stays unchecked until T8 lands on a
-  clean surface. Also fixed two `TYPE_CHECKING` relative-import depths (`....`→`...`
-  for the two cli/-level payload modules) surfaced by `ty check`; runtime/tests were
-  green regardless since the imports are type-only.
+  25 ledger export/import + conformance tests green. Also fixed two `TYPE_CHECKING`
+  relative-import depths (`....`→`...` for the two cli/-level payload modules) surfaced
+  by `ty check`; runtime/tests were green regardless since the imports are type-only.
+
+- 2026-06-03: **S51 COMPLETED — T8 (ModeloExport) landed; S51 closed.** CLI
+  `ModeloExportResult`→`ModeloExportPayload` with a `from_result` projection that
+  stringifies the application `Path` output_path and excludes the fichero-BOE bytes
+  (`operation` stays the CLI-only default); the export handler calls `from_result` instead
+  of re-declaring the 11-field map (commit `a13133ee5`). Behaviour-neutral:
+  `@register_schema("modelo.export")` preserved. Verified in a registration-complete
+  context — 18 tests green (`test_modelo_export_verb` end-to-end + 17
+  json-schema-conformance / envelope-roundtrip), `ty` clean on the payload module. This
+  was attempted on 2026-06-02 but abandoned then due to a concurrent peer edit on
+  `_modelo.py`; this turn `_modelo.py` was clean and the diff was confirmed mine-only
+  before commit. (The commit moment coincided with a transient peer duplicate-key edit in
+  `pyproject.toml` that briefly blocked `uv`; the file self-resolved and the full
+  registration-complete run then confirmed green.) S51's three twins (T6 LedgerExport,
+  T7 LedgerImport, T8 ModeloExport) are now all collapsed via the projection pattern.
 
 - 2026-06-02 (cont.): **DB-36 / W07.P22 (S82+S83) EXECUTED.** The CLI helper
   `cli/_common.py:_aggregate_renta_filing_inputs` imported the domain function
