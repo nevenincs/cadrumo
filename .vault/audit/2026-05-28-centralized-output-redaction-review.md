@@ -25,6 +25,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S50]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S51]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S52]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S53]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -271,3 +272,26 @@ No HIGH findings in the scoped S52 implementation. CRITICAL findings present: no
 ### Residual risks
 
 - `bucket_id not in json.dumps(payload, sort_keys=True)` is a broad string-scan assertion. It protects against raw UUID leakage in visible outputs, but it is weaker than a structured assertion over identifier-shaped leaves and will not catch encoding/typing anomalies that still pass string serialization.
+
+## W03.P09.S53 Review
+
+No HIGH findings in the scoped S53 implementation. CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/test_workflow_surface.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/adr/2026-05-28-centralized-output-redaction-adr.md`
+- `.vault/research/2026-05-28-centralized-output-redaction-research.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S53.md`
+
+### Findings
+
+- W03.P09.S53 is aligned with plan intent and ADR guidance: workflow-surface expectations now rely on the shared redaction vocabulary (`CLI_PROFILE_ID_PLACEHOLDER`, `CLI_BUCKET_ID_PLACEHOLDER`) rather than local literal placeholders.
+- Test assertions remain real-behavior based: the updated tests execute through `invoke_cached_cli`, parse real CLI envelopes, and assert post-render output values rather than calling redaction helpers directly.
+- The raw-UUID absence check (`operator_profile_id not in json.dumps(status_payload, sort_keys=True)`) is meaningful for this surface because that payload should not expose a routing UUID and the assertion directly guards that absence.
+- Placeholder constants are applied consistently in JSON workflow assertions for profile and bucket IDs, and operator-facing profile label behavior remains explicitly asserted (`active_profile == "operator"`), matching the profile-label-vs-UUID distinction in ADR.
+
+### Residual risks
+
+- The `json.dumps(...)` leak check is useful but broad; a future regression that emits the UUID under a non-string encoding or hidden transport path could evade this guard. A structured deep-walk assertion over identifier-shaped leaves would close that gap.
