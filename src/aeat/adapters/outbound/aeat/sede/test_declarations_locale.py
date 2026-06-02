@@ -72,7 +72,7 @@ class TestParseListboxTranslation:
         # The function may return the default (justificante_index=7) when
         # no header is detected, so check what actually happens.
         try:
-            result = _parse_listbox(html_no_justificante, modelo="303", ejercicio=2023)
+            _parse_listbox(html_no_justificante, modelo="303", ejercicio=2023)
             # If no error was raised the listbox had no items and
             # fell into the empty-tuple return — still valid behaviour.
         except SedeParseError as exc:
