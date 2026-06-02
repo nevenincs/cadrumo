@@ -139,9 +139,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
             "category": category,
             "display_label": tr(str(data.get("display_label"))),
             "proportionality": _parse_rule(raw_rule),
-            "iva_hint": (
-                IvaDeductibilityHint(str(raw_iva_hint)) if raw_iva_hint is not None else None
-            ),
+            "iva_hint": (IvaDeductibilityHint(str(raw_iva_hint)) if raw_iva_hint is not None else None),
         }
     )
 
