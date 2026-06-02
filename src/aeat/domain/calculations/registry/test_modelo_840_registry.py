@@ -7,7 +7,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import (
     InputKind,
     RegistryValidator,

@@ -6,10 +6,9 @@ from typing import ClassVar, cast
 import pytest
 from playwright.async_api import BrowserContext, Page, Playwright
 
-from .....tests import FIXTURES_DIR
-
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
+from .....tests import FIXTURES_DIR
 from ._site_health import SiteHealthState
 from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy

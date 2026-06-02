@@ -21,7 +21,6 @@ from ...domain.deadlines._models import (
     IrpfIncomeCategory,
     IVARegime,
 )
-
 from ._backlog import OverviewBacklog, build_overview_backlog
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

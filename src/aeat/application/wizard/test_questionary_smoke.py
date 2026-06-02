@@ -13,13 +13,13 @@ import pytest
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output import DummyOutput
 
+from ...core.i18n import Translatable as tr
 from ._models import (
     WizardChoice,
     WizardQuestion,
     WizardWidget,
 )
 from ._prompter import QuestionaryPrompter
-from ...core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

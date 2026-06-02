@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import Settings
-
 from ._errors import RegistryValidationError
 from ._live_parity import ParityFieldComparison
 from ._remote_state_guard import (

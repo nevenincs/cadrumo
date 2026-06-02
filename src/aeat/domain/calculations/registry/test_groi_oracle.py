@@ -18,7 +18,6 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from ....core.config import Settings
-
 from ._errors import RegistryValidationError
 from ._groi_oracle import (
     GROI_ORACLE_ID,

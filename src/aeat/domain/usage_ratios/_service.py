@@ -13,9 +13,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from ...core.time import now
-
 from ...core.logging import get_logger
+from ...core.time import now
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ...adapters.persistence.storage.sql import SecureObjectRepository

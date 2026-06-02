@@ -19,7 +19,6 @@ from ...domain.deadlines._models import (
     IrpfIncomeCategory,
     IVARegime,
 )
-
 from ._errors import OverviewExplainError
 from ._explain import OverviewExplain, build_overview_explain
 

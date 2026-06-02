@@ -16,6 +16,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.config import Settings
+from .....domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 from ._groi_check import (
     DEFAULT_GROI_TIMEOUT_MS,
     GroiNifVerdict,
@@ -24,8 +26,6 @@ from ._groi_check import (
     _assert_query_browser_action,
     extract_verdict_from_response_text,
 )
-from .....core.config import Settings
-from .....domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

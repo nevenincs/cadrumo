@@ -12,7 +12,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path
-
 from . import (
     ExtractionProfileDefinition,
     RegistryCatalogues,

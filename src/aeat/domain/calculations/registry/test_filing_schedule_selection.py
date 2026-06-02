@@ -8,7 +8,6 @@ import pytest
 
 from ....core.resources import bundled_path
 from ...deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
-
 from ...user_profile import (
     UserProfileRegistryContractSeverity,
     load_user_profile_schema,

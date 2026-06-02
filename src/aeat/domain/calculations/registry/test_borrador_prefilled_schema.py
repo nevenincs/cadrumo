@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-
 from ._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

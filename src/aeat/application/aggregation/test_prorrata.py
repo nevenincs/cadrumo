@@ -22,6 +22,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...domain.iva import ProrrataKind, ProrrataRegime
 from . import (
     AggregationPeriodError,
     AggregationValidationError,
@@ -32,7 +33,6 @@ from . import (
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
 )
-from ...domain.iva import ProrrataKind, ProrrataRegime
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

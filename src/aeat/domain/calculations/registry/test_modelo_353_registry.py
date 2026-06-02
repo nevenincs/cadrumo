@@ -8,7 +8,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -102,11 +101,11 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
+    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
     from . import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-y-siguientes"]

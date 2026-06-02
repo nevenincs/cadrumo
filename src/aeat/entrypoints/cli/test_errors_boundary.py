@@ -33,8 +33,8 @@ from ...application.user_profile._repository import (
     user_profile_value_object_key,
 )
 from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from . import app
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

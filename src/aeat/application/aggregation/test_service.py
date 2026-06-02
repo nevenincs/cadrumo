@@ -12,6 +12,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 from ._errors import AggregationConfigError
 from ._service import (
     ACCEPTED_SOURCE_KINDS,
@@ -22,7 +23,6 @@ from ._service import (
     PerModeloAggregationProviderContract,
     PerModeloAggregationResult,
 )
-from ...core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

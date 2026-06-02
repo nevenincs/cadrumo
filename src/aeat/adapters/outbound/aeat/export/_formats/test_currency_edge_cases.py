@@ -24,7 +24,6 @@ from decimal import Decimal
 import pytest
 
 from ......core.external_constants import LATIN_1_ENCODING
-
 from ._record_spec import encode_currency
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]

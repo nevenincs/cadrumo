@@ -8,7 +8,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._errors import RegistryValidationError
 from ._loader import load_registry_tree
 from ._relations import relation_source_requirements

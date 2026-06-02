@@ -14,7 +14,6 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.external_constants import LATIN_1_ENCODING
-
 from ._record_spec import (
     DateFmt,
     FieldKind,

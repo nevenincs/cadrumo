@@ -21,12 +21,11 @@ from typing import TYPE_CHECKING, Final
 
 import pytest
 
-from .....tests.live_gate import requires_live_enabled
-
 from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.paths import PROJECT_ROOT
 from .....domain.calculations.registry import RentaWebOpenLivePayload
+from .....tests.live_gate import requires_live_enabled
 from ..browser import default_browser_session_factory
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]

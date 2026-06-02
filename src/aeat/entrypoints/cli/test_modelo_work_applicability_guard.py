@@ -29,9 +29,9 @@ from pathlib import Path
 
 import pytest
 
-from ._test_envelope import unwrap_schema_envelope as _payload
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._test_envelope import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

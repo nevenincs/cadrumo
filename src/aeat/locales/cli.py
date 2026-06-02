@@ -8,7 +8,6 @@ from typing import Annotated
 import typer
 
 from ..core.i18n import tr
-
 from .manager import LocaleError, LocaleManager, _covered_by_namespace
 
 app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)

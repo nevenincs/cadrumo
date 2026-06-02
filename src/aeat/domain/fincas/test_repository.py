@@ -15,6 +15,7 @@ from ...adapters.persistence.storage import (
     session_scope,
 )
 from ...adapters.persistence.storage.sql.engine import get_engine
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     Arrendamiento,
     ArrendamientoRepository,
@@ -29,7 +30,6 @@ from . import (
     FincaRepository,
     UseType,
 )
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

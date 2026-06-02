@@ -40,8 +40,8 @@ from ...core.access_gate import AeatLiveReadNotEnabledError
 from ...core.config import override_settings
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import calculate_registry_snapshot
-from ._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
 from ...tests.cli_runner import invoke_cached_cli
+from ._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...core.errors import get_registered_error_code
 from .. import aggregation
 from . import (
     ACCEPTED_SOURCE_KINDS,
@@ -32,7 +33,6 @@ from . import (
     get_per_modelo_aggregation_contract,
 )
 from ._counterpart import CounterpartSourceKind
-from ...core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

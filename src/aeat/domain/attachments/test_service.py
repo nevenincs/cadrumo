@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...tests.secure_sql import isolated_runtime_profile
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentNotFoundError
 from ._service import (
@@ -16,7 +17,6 @@ from ._service import (
     list_attachments,
     load_attachment,
 )
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

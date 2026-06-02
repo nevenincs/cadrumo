@@ -8,9 +8,8 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import resources
-
 from ....core.errors import get_registered_error_code
+from ....core.resources import resources
 from . import (
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,

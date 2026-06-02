@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

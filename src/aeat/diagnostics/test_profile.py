@@ -17,8 +17,8 @@ from ..application.user_profile._orchestration import (
 from ..application.user_profile._testing import register_minimal_profile
 from ..application.workflow._persistence import workflow_state_repository
 from ..core.i18n import tr
-from .__main__ import app
 from ..tests.secure_sql import isolated_profile_storage_root
+from .__main__ import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

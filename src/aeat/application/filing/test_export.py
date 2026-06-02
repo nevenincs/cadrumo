@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from ...domain.calculations.registry import RegistryValidationError, parse_export_payload
 from ...domain.filing import FilingExportError
 from ...domain.submission import ModeloDraftStatus
-
 from . import (
     DeclaracionExportFormat,
     DeclaracionExportResult,

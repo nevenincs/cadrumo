@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from ..resources import resources
-
 from . import TopicCatalogue, TopicNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]

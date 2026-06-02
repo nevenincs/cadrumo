@@ -13,14 +13,14 @@ from collections import deque
 
 import pytest
 
+from ...core.profile import SetupAnswers
+from ...domain.deadlines._models import LegalEntityForm
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardScriptOverflowError
 from ._models import WizardWidget
 from ._persistence import project_answers, serialise_answers
 from ._prompter import ScriptedPrompter
 from ._runner import run_flow
-from ...core.profile import SetupAnswers
-from ...domain.deadlines._models import LegalEntityForm
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

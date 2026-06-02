@@ -7,9 +7,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from ...core.aggregation import AggregationSourceKind
-
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.aggregation import AggregationSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId

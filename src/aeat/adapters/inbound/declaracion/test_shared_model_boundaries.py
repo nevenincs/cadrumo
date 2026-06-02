@@ -5,9 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ..pdf import ExtractedCasilla
 from ....domain.calculations.registry import RegistrySnapshotRef
-
+from ..pdf import ExtractedCasilla
 from . import DeclaracionObservation, ExtractionWarning, TemplateRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]

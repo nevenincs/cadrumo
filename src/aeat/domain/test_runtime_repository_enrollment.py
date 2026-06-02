@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ..tests.secure_sql import isolated_runtime_profile
 from .invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -26,7 +27,6 @@ from .transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ..tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

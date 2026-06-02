@@ -34,13 +34,13 @@ import os
 
 import pytest
 
+from ...tests.env_scope import scoped_env_var, scoped_sys_argv
 from ._stdio import (
     _COLUMNS_ENV_VAR,
     _MIN_HELP_RENDER_COLUMNS,
     _ensure_help_render_width,
     configure_stdio_for_utf8,
 )
-from ...tests.env_scope import scoped_env_var, scoped_sys_argv
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

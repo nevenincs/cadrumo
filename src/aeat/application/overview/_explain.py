@@ -28,7 +28,6 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
 from ._errors import OverviewExplainError

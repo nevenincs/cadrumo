@@ -14,6 +14,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ConfigDict
 
+from ...core.i18n import Translatable as tr
+from ...domain.profile._keys import ProfileKeyRequirement
 from ._catalogue import WIZARD_FLOWS
 from ._compiler import compile_profile_keys
 from ._errors import WizardCompileError
@@ -26,8 +28,6 @@ from ._models import (
     WizardVisibility,
     WizardWidget,
 )
-from ...core.i18n import Translatable as tr
-from ...domain.profile._keys import ProfileKeyRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

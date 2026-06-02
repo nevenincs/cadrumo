@@ -14,7 +14,6 @@ from __future__ import annotations
 import pytest
 
 from ...core.profile import SetupAnswers
-
 from ...domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

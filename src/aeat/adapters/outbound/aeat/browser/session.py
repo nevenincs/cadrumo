@@ -16,11 +16,10 @@ from playwright.async_api import (
     Response,
 )
 
-from .....core.time import now
-
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
+from .....core.time import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..auth import BrowserContextProvisioner
 from ._errors import BrowserError, BrowserFailureMode

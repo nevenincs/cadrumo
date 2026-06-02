@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from ....core.errors import AeatError
 
+_SANITIZER_SOURCE_LABEL = "<input-pdf>"
+
 
 class SanitizationError(AeatError):
     """Base error for the :mod:`aeat.adapters.inbound.sanitizer` subpackage."""
@@ -34,12 +36,35 @@ class SanitizerValidationError(SanitizationError, ValueError):
 class SanitizerSourceParseError(SanitizationError):
     """Raised when the source PDF cannot be opened by :mod:`pikepdf`.
 
-    The original :class:`pikepdf.PdfError` (or whatever underlying
-    cause QPDF surfaced) is chained as ``__cause__`` so the caller
-    can inspect it via ``raise ... from``.
+    The rendered message and structured context intentionally avoid
+    source paths, provider payloads, and QPDF/pikepdf raw diagnostics.
+    Callers that need to report the underlying parser failure should
+    log only the exception type at the boundary that catches it.
     """
 
-    pass
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        failure: str | None = None,
+    ) -> None:
+        """Construct a redacted source-parse error.
+
+        Args:
+            message: Optional redacted human-readable message.
+            failure: Optional underlying parser exception type name,
+                safe for debug envelopes because it excludes operator
+                paths and provider payload text.
+        """
+        context: dict[str, object] = {"source": _SANITIZER_SOURCE_LABEL}
+        if failure is not None:
+            context["failure"] = failure
+        super().__init__(
+            message or f"source PDF could not be opened for sanitization: {_SANITIZER_SOURCE_LABEL}",
+            context=context,
+            translated_message="errors.fail.fail_sanitization_source_parse",
+        )
+        self.failure: str | None = failure
 
 
 class SignaturePresentError(SanitizationError):
@@ -62,15 +87,17 @@ class AlreadySanitizedError(SanitizationError):
     """
 
     def __init__(self, *, source_sha256: str) -> None:
-        """Construct the error carrying the offending source hash.
+        """Construct the error carrying the offending source hash as a typed attribute.
 
         Args:
             source_sha256: The SHA-256 of the source bytes that
                 matched a known committed fixture.
         """
         super().__init__(
-            f"source PDF sha256={source_sha256!r} is already a committed sanitised fixture; "
-            "pass refuse_if_already_sanitized=False to override"
+            "source PDF is already a committed sanitised fixture; "
+            "pass refuse_if_already_sanitized=False to override",
+            context={"source_sha256_prefix": source_sha256[:16]},
+            translated_message="errors.refused.refused_sanitization_already_sanitized",
         )
         self.source_sha256: str = source_sha256
 

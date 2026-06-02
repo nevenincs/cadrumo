@@ -15,6 +15,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import resources
+from ...iva import (
+    EUMemberState,
+    InvoiceKind,
+    IvaRateKind,
+    OssIossRegime,
+    TransactionKind,
+)
 from . import (
     DataBindingDefinition,
     ModeloRevision,
@@ -22,13 +29,6 @@ from . import (
     RegistryValidationError,
     resolve_ledger_oss_aggregation_binding_values,
     validate_ledger_oss_aggregation_binding_definition,
-)
-from ...iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

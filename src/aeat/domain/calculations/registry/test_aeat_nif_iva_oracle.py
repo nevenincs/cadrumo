@@ -8,7 +8,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import Settings
-
 from ._aeat_nif_iva_oracle import (
     ORACLE_ID,
     AeatNifIvaCheckerOracle,

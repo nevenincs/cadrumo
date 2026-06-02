@@ -19,8 +19,8 @@ from ...application.workflow import (
     save_run,
 )
 from ...domain.deadlines import ModeloDeadline, ObligationStatus
-from ._modelo import work_app
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._modelo import work_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -7,12 +7,6 @@ from datetime import date
 import pytest
 
 from ....core.resources import bundled_path
-from . import ValidatedRegistryAuthority
-from .applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-    iter_modelo_applicability_rules,
-)
 from ...deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -21,6 +15,12 @@ from ...deadlines import (
     IVARegime,
     LegalEntityForm,
     TaxpayerProfile,
+)
+from . import ValidatedRegistryAuthority
+from .applicability import (
+    ApplicabilityVerdict,
+    derive_modelo_applicability,
+    iter_modelo_applicability_rules,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

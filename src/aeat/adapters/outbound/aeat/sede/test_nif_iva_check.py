@@ -14,6 +14,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.config import Settings
+from .....domain.calculations.registry import RegistryValidationError
 from ._nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     NifIvaCheckObservation,
@@ -23,8 +25,6 @@ from ._nif_iva_check import (
     extract_verdict_from_response_text,
     is_aeat_auth_gate_redirect,
 )
-from .....core.config import Settings
-from .....domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._queries import RegistryQueryService, parse_modelo_period

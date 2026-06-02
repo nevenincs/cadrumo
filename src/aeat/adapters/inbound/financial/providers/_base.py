@@ -49,13 +49,12 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel
 
-from .....core.time import now
-
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors import AeatError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
+from .....core.time import now
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)

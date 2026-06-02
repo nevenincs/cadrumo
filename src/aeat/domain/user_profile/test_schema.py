@@ -6,7 +6,6 @@ import pytest
 from pydantic import ValidationError
 
 from ...core.classification import SensitivityClass
-
 from . import (
     ProfileFieldDefinition,
     ProfileFieldType,

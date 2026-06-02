@@ -8,7 +8,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
