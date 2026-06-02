@@ -33,12 +33,16 @@ from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
 
+
 def iva_compensation_period_key(filing_year: int, period: str) -> str:
     """Return the latest-state key for one Modelo 303 period."""
     safe_repository_id(period, context="period")
     if not 2000 <= filing_year <= 2099:
-        raise IvaCompensationYearRangeError(f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]")
+        raise IvaCompensationYearRangeError(
+            f"IVA compensation filing_year {filing_year} out of supported range [2000, 2099]"
+        )
     return f"303:{filing_year}:{period}"
+
 
 class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeriodState]):
     """Encrypted profile-local store of Modelo 303 IVA compensation history."""
@@ -67,9 +71,11 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         """Return all stored states as a tuple of :class:`IvaCompensationPeriodState` in chronological filing order."""
         return tuple(sorted(self.iter_records(), key=lambda item: (item.filing_year, _period_sort_key(item.period))))
 
+
 _SEED_STATUS = "seeded"
 _SEED_EXPEDIENTE_ID = "manual-seed"
 _SEED_SOURCE_OBS_PREFIX = "303:seed"
+
 
 def seed_iva_compensation_period(
     *,
@@ -118,14 +124,13 @@ def seed_iva_compensation_period(
     repo.save_period(state)
     return state
 
+
 def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
 ) -> IvaCompensationPeriodState:
     """Build and return an :class:`IvaCompensationPeriodState` from a filed Modelo 303 observation."""
     if observation.modelo != "303":
-        raise IvaCompensationModeloError(
-            "IVA compensation history only accepts Modelo 303 observations"
-        )
+        raise IvaCompensationModeloError("IVA compensation history only accepts Modelo 303 observations")
     values = _decimal_casilla_values(observation)
     result = _casilla_value(values, "69", "iva.resultado")
     posterior = _casilla_value(values, "87", "iva.compensacion-pendiente-periodos-posteriores")
@@ -155,6 +160,7 @@ def iva_compensation_state_from_filed_observation(
         source_artefact_sha256=source_artefact_sha256,
     )
 
+
 def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[str, Decimal]:
     values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
@@ -163,8 +169,11 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) ->
         try:
             values[casilla.casilla_id] = Decimal(casilla.value)
         except InvalidOperation as exc:
-            raise IvaCompensationDecimalParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
+            raise IvaCompensationDecimalParseError(
+                f"observed casilla {casilla.casilla_id!r} is not decimal-valued"
+            ) from exc
     return values
+
 
 def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
     for casilla_id in casilla_ids:
@@ -172,6 +181,7 @@ def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | N
         if value is not None:
             return value
     return None
+
 
 __all__ = [
     "IvaCompensationHistoryRepository",

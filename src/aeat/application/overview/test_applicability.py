@@ -726,12 +726,8 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
         iva_regime=IVARegime.GENERAL,
         has_employees=True,
     )
-    assert derive_modelo_applicability(paying, "190").verdict is (
-        ApplicabilityVerdict.APPLICABLE
-    )
-    assert derive_modelo_applicability(_autonomo(), "190").verdict is (
-        ApplicabilityVerdict.INCOMPLETE
-    )
+    assert derive_modelo_applicability(paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
+    assert derive_modelo_applicability(_autonomo(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
 def test_modelo_115_applicable_when_taxpayer_pays_rent() -> None:
@@ -769,12 +765,8 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
         iva_regime=IVARegime.GENERAL,
         pays_rent_with_retencion=True,
     )
-    assert derive_modelo_applicability(paying, "180").verdict is (
-        ApplicabilityVerdict.APPLICABLE
-    )
-    assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (
-        ApplicabilityVerdict.INCOMPLETE
-    )
+    assert derive_modelo_applicability(paying, "180").verdict is (ApplicabilityVerdict.APPLICABLE)
+    assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
 def test_modelo_349_applicable_when_taxpayer_trades_intracommunity() -> None:
@@ -864,9 +856,7 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     from ...core.resources import bundled_path
     from ...domain.calculations.registry import ValidatedRegistryAuthority
 
-    authority = ValidatedRegistryAuthority.load(
-        bundled_path("registry", "aeat"), source_root=bundled_path()
-    )
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     registered_legal_ids = set(authority.catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 
