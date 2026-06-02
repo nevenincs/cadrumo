@@ -25,15 +25,17 @@ _PERIOD_ADAPTER: TypeAdapter[str] = TypeAdapter(PeriodCode)
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
-        "id": "period_test_casilla",
-        "number": "01",
-        "label": "Periodo",
-        "section": ("declarante",),
-        "data_type": data_type,
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual-modelo",),
-    })
+    return CasillaDefinition.model_validate(
+        {
+            "id": "period_test_casilla",
+            "number": "01",
+            "label": "Periodo",
+            "section": ("declarante",),
+            "data_type": data_type,
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual-modelo",),
+        }
+    )
 
 
 class TestPeriodCodeAccepts:
@@ -73,24 +75,24 @@ class TestPeriodCodeRejects:
         "raw",
         [
             "",
-            "T1",          # reversed-letter quarter
-            "5T",          # quarter out of range
-            "0T",          # quarter out of range
-            "13",          # month out of range
-            "00",          # month out of range
-            "1Q",          # wrong letter
-            "ext-1t",      # lowercase not accepted
-            "EXT-5T",      # OSS quarter out of range
-            "EXT-1Q",      # wrong OSS letter
-            "Q1",          # wrong letter
-            "FY2024",      # year-style
-            "EVENT-",      # event needs number
-            "AD HOC",      # space variant rejected
-            "^AD-HOC$",    # the raw regex literal must NOT pass — a previous
-                           # bug compared values against this string instead
-                           # of regex-matching against the AD-HOC pattern;
-                           # this anti-tautology guard pins the fix and would
-                           # accept the literal back if the regression returns
+            "T1",  # reversed-letter quarter
+            "5T",  # quarter out of range
+            "0T",  # quarter out of range
+            "13",  # month out of range
+            "00",  # month out of range
+            "1Q",  # wrong letter
+            "ext-1t",  # lowercase not accepted
+            "EXT-5T",  # OSS quarter out of range
+            "EXT-1Q",  # wrong OSS letter
+            "Q1",  # wrong letter
+            "FY2024",  # year-style
+            "EVENT-",  # event needs number
+            "AD HOC",  # space variant rejected
+            "^AD-HOC$",  # the raw regex literal must NOT pass — a previous
+            # bug compared values against this string instead
+            # of regex-matching against the AD-HOC pattern;
+            # this anti-tautology guard pins the fix and would
+            # accept the literal back if the regression returns
         ],
     )
     def test_invalid_inputs_rejected_through_adapter(self, raw: str) -> None:

@@ -32,14 +32,6 @@ from decimal import Decimal
 
 import pytest
 
-from ._actions import (
-    ModeloApplicabilityFilterError,
-    _evaluate_applicability_filter,
-    _evaluate_predicate_expression,
-    _evaluate_verification_predicates,
-    _resolve_m210_rate,
-    _rewrite_m210_sentinels,
-)
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     M210_CONVENIO_MISSING_SENTINEL,
@@ -52,6 +44,14 @@ from ...domain.calculations.registry._schema import VerificationPredicateDefinit
 from ...domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
+)
+from ._actions import (
+    ModeloApplicabilityFilterError,
+    _evaluate_applicability_filter,
+    _evaluate_predicate_expression,
+    _evaluate_verification_predicates,
+    _resolve_m210_rate,
+    _rewrite_m210_sentinels,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -102,9 +102,7 @@ def _snapshot_with_mutated_convenio_row(
     ``model_copy`` at row, parameter, revision, and snapshot levels.
     """
 
-    convenio_param = next(
-        p for p in base.revision.parameters if p.id == "m210-convenio-rates"
-    )
+    convenio_param = next(p for p in base.revision.parameters if p.id == "m210-convenio-rates")
     new_rows = tuple(
         row.model_copy(update={"rate": new_rate})
         if row.country_code == country_code and row.tipo_renta == tipo_renta
@@ -112,10 +110,7 @@ def _snapshot_with_mutated_convenio_row(
         for row in convenio_param.convenio_rates
     )
     new_param = convenio_param.model_copy(update={"convenio_rates": new_rows})
-    new_parameters = tuple(
-        new_param if p.id == "m210-convenio-rates" else p
-        for p in base.revision.parameters
-    )
+    new_parameters = tuple(new_param if p.id == "m210-convenio-rates" else p for p in base.revision.parameters)
     new_revision = base.revision.model_copy(update={"parameters": new_parameters})
     return base.model_copy(update={"revision": new_revision})
 
@@ -124,9 +119,7 @@ def _snapshot_with_mutated_convenio_row(
 def m210_snapshot() -> RegistrySnapshot:
     """Authority-resolved M210 / 2025 / evento snapshot."""
 
-    return resources().modelos.authority.snapshot(
-        "210", filing_year=2025, period="evento"
-    )
+    return resources().modelos.authority.snapshot("210", filing_year=2025, period="evento")
 
 
 def test_olivia_gb_general_resolves_convenio_override_matching_baseline(
@@ -425,9 +418,7 @@ def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
     )
 
 
-_REPRESENTANTE_PREDICATE_EXPRESSION = (
-    'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
-)
+_REPRESENTANTE_PREDICATE_EXPRESSION = 'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
 
 
 def test_representante_predicate_holds_for_eea_resident_without_representante() -> None:
@@ -436,12 +427,7 @@ def test_representante_predicate_holds_for_eea_resident_without_representante() 
     profile = _irnr_profile_without_representante("FR")
     assert profile.ue_eee_status is True
 
-    assert (
-        _evaluate_predicate_expression(
-            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
-        )
-        is True
-    )
+    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
 
 
 def test_representante_predicate_holds_for_eea_resident_with_representante() -> None:
@@ -450,12 +436,7 @@ def test_representante_predicate_holds_for_eea_resident_with_representante() -> 
     profile = _irnr_profile("FR")  # carries representante_fiscal_nif
     assert profile.ue_eee_status is True
 
-    assert (
-        _evaluate_predicate_expression(
-            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
-        )
-        is True
-    )
+    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
 
 
 def test_representante_predicate_violated_for_non_eea_resident_without_representante() -> None:
@@ -470,12 +451,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
     )
     assert profile.ue_eee_status is False
 
-    assert (
-        _evaluate_predicate_expression(
-            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
-        )
-        is False
-    )
+    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is False
 
 
 def test_representante_predicate_holds_for_non_eea_resident_with_representante() -> None:
@@ -485,12 +461,7 @@ def test_representante_predicate_holds_for_non_eea_resident_with_representante()
     assert profile.ue_eee_status is False
     assert profile.representante_fiscal_nif == "12345678Z"
 
-    assert (
-        _evaluate_predicate_expression(
-            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
-        )
-        is True
-    )
+    assert _evaluate_predicate_expression(_REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile) is True
 
 
 def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
