@@ -1186,6 +1186,26 @@ remediation is currently HELD at audit-only per the active action policy.
   de-risked (registry->_bindings->invoices works); a careful full-sweep re-attempt with
   collection gating is the next W01 step.
 
+- 2026-06-02: W01.P02 + P03 S19-S20 LANDED — the DB-21 registry public-surface sweep
+  re-attempted after the DB-41 invoices-first cycle fix; 29 modules repointed off private
+  registry submodules onto `domain.calculations.registry`, collection clean (13043),
+  symbol-verified against `__all__`, `_loader` (cycle-forced) left private. W01 is now
+  complete except S21.
+- DB-11 / W01.P03.S21 DISPOSITION — RE-SCOPED (not actioned as written). The "export
+  asymmetry" (IvaInvoiceClassification defined in `iva/_invoice_classification`, listed
+  in that private module's `__all__`, absent from `iva/__init__`, re-exported by
+  `invoices/__init__`) is INTENTIONAL cycle-avoidance, not a defect. The class is
+  invoice-shaped and consumed only by `invoices`, so `invoices` is its canonical public
+  home; it is defined under `iva` only because it needs the iva substrate enums
+  (IvaCategory/IvaRateKind/IvaFlowDirection). The literal DB-11 fix (add it to
+  `iva/__init__.__all__` + make invoices import from `..iva`) would create a HARD
+  bidirectional package cycle (`iva/__init__ -> _invoice_classification -> invoices` and
+  `invoices/__init__ -> iva`) — the very cycle DB-41's leaf imports avoid. Correct
+  resolution: keep `invoices` as the canonical exporter; the proper structural cleanup
+  (relocate the class fully into `invoices`, eliminating the iva->invoices edge) is
+  gated on the DB-41 full bidirectional-cycle break and is tracked there. S21 left open
+  in the plan, annotated excluded-as-written.
+
 ## Codification candidates
 
 <!-- Findings that satisfy the three durability criteria
