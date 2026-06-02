@@ -1,0 +1,9 @@
+[[revisions."2025".constructs]]
+id = "m210-irnr-calculation"
+title = "Modelo 210 IRNR calculation"
+formulas = [
+    "m210-base-imponible-2025",
+    "m210-tipo-gravamen-2025-resolve",
+    "m210-cuota-integra-2025",
+    "m210-cuota-diferencial-2025",
+]
