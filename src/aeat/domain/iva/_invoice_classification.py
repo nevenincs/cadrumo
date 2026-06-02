@@ -64,6 +64,8 @@ from ._schema import IvaCategory, IvaRateKind
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
     from ..invoices import IvaRate
+else:
+    IvaRate = object
 
 
 def _invoice_validation_error(message: str) -> Exception:
