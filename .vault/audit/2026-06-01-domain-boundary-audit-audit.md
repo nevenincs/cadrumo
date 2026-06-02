@@ -1140,6 +1140,13 @@ remediation is currently HELD at audit-only per the active action policy.
   DB-34 (CLI formulas), DB-36 (CLI bypass). W01.P02 + DB-29-S41 deletion + DB-37-G1
   remain blocked on peer-owned files (re-check each pass).
 
+- 2026-06-02: DB-38 dispositioned. The cli/_modelo consumer now imports
+  `M347_THRESHOLD_EUR` directly from `core.external_constants` (its true home) — landed.
+  The `_row_models`/`modelos` RE-EXPORT removal is EXCLUDED: a peer restored it with the
+  explicit `as X  # re-export` idiom and `test_row_models.py` asserts the value, so the
+  re-export is intentional and tested, not a dead shim. DB-38 closed as partial-landed +
+  excluded-residual; no further action. Collection green (13040).
+
 ## Codification candidates
 
 <!-- Findings that satisfy the three durability criteria
