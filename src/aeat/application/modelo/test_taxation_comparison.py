@@ -229,6 +229,18 @@ def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
     assert len(result.recommendation_reason) > 10
 
 
+# DEFERRED: non-zero BL-negativa-anterior coverage test. Diagnostic 2026-06-03
+# established that the renta-2025-base-liquidable-negativa-general-anterior
+# binding feeds the STOCK casilla 1388 ("Pendiente de aplicación al principio
+# del periodo") only; the amount-applied casilla (analogous to M200's 00547)
+# is a separate operator-input that must be supplied to actually reduce the
+# base liquidable. Authoring a meaningful coverage test requires identifying
+# the elective-application casilla under construct
+# 2026-renta-anexo-c-base-liquidable-negativa-aplicada and supplying it
+# alongside the binding. Tracked under session-honest-followups P02.S10 +
+# task #149.
+
+
 def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     """TaxationComparisonError is bound in ERROR_REGISTRY and envelopes cleanly.
 
