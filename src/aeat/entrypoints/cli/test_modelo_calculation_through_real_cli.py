@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ...application.wizard import _catalogue  # register wizard catalogue at import time
+from ...application.wizard import _catalogue  # noqa: F401  # side-effect: registers wizard catalogue
 from ...application.wizard import _persistence  # noqa: F401  # register project_answers projector at import time
 from ...application.user_profile._repository import UserProfileLifecycleRepository
 from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus

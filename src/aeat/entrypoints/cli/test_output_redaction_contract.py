@@ -5,12 +5,12 @@ import json
 import click
 import pytest
 
-from aeat.core.redaction import (
+from ...core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
 )
-from aeat.entrypoints.cli._common import _emit
+from ._common import _emit
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
