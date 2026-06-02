@@ -82,7 +82,7 @@ Track residual TOML fragment pressure discovered during P01 audits after the fir
 
 - [x] `P05.S28` - Split remaining M200 export fragments that stay near the reviewability ceiling; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export`.
 - [x] `P05.S29` - Split M303 casilla and export fragments if P01 audit confirms safe boundaries; `src/aeat/_data/registry/aeat/modelos/303`.
-- [ ] `P05.S30` - Re-run corpus fragment headroom audit after residual pressure splits; `.vault/audit`.
+- [x] `P05.S30` - Re-run corpus fragment headroom audit after residual pressure splits; `.vault/audit`.
 
 ## Description
 
