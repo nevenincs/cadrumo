@@ -519,6 +519,7 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
             censo_facts=kwargs["censo_facts"],
         )
 
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: **kwargs: Any is required by the SnapshotService[T] abstract _build_active_payload hook whose base signature uses **kwargs so concrete subclasses accept caller-specific keyword arguments without a shared typed parameter set.  Narrowing is done via direct key access inside the body; the abstract boundary cannot be tightened without breaking the polymorphic dispatch chain.
     def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> CensoSnapshot:
         return CensoSnapshot(
             snapshot_id=snapshot_id,
