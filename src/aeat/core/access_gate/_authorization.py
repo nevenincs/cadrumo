@@ -17,9 +17,10 @@ Four collaborating pieces live here:
   one manifest entry. The ``>=2 distinct renta years`` invariant is
   enforced at the type boundary so a malformed (single-year) enrollment
   claim cannot construct.
-- :class:`AuthorizationManifest` — the parsed, validated view of
-  ``authorization.toml``. Default-deny is literal: an absent or empty
-  manifest authorizes zero modelos.
+- :class:`AuthorizationManifest` — the parsed, validated view of the
+  directory-mode manifest (``authorization.d/<modelo>.toml`` fragments,
+  one per enrolled modelo, merged by the loader). Default-deny is literal:
+  an absent directory or one with no fragments authorizes zero modelos.
 - :class:`ModeloAuthorization` — the *derived* per-modelo capability the
   runtime consults. It is computed at the registry boundary (see
   :meth:`aeat.domain.calculations.registry.ValidatedRegistryAuthority.authorization`),
@@ -49,9 +50,14 @@ from ._errors import AuthorizationManifestError
 #: distinct years: a single-period test cannot prove cross-year stability.
 MIN_DISTINCT_RENTA_YEARS: Final[int] = 2
 
-#: Filename of the declarative authorization manifest, resolved relative
-#: to the AEAT registry root (sibling of ``legal/`` and ``modelos/``).
-AUTHORIZATION_MANIFEST_FILENAME: Final[str] = "authorization.toml"
+#: Directory holding the per-modelo authorization manifest fragments,
+#: resolved relative to the AEAT registry root (sibling of ``legal/`` and
+#: ``modelos/``). The manifest is directory-mode: each enrolled modelo owns
+#: one ``authorization.d/<modelo>.toml`` file, mirroring the registry's own
+#: directory-mode layout. The loader merges every fragment. Per-modelo
+#: files mean concurrent enrollment across the campaign swarm writes
+#: disjoint files — zero cross-coder contention on a single manifest.
+AUTHORIZATION_MANIFEST_DIRNAME: Final[str] = "authorization.d"
 
 #: The canonical fleet of modelo ids the gate enrolls. The owner mandate
 #: is non-negotiable: every modelo enrolls, none is out-of-scope. This is
@@ -189,13 +195,13 @@ class ModeloAuthorizationEntry(BaseModel):
 
 
 class AuthorizationManifest(BaseModel):
-    """Parsed, validated view of the declarative ``authorization.toml``.
+    """Parsed, validated view of the directory-mode authorization manifest.
 
-    Default-deny is literal: an absent file, an empty file, or a file with
-    no ``[[modelo]]`` entries all yield an empty :attr:`entries` mapping
-    and therefore authorize zero modelos. A modelo id may appear at most
-    once; a duplicate is a manifest authoring error, not a silent
-    last-wins overwrite.
+    The manifest is the merge of every ``authorization.d/<modelo>.toml``
+    fragment. Default-deny is literal: an absent directory or one with no
+    fragments yields an empty :attr:`entries` tuple and therefore authorizes
+    zero modelos. A modelo id may appear at most once across fragments; a
+    duplicate is an authoring error, not a silent last-wins overwrite.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -278,24 +284,75 @@ class ModeloAuthorization(BaseModel):
         return self.state is AuthorizationState.AUTHORIZED
 
 
-def manifest_path(registry_root: Path) -> Path:
-    """Return the manifest path for an AEAT registry root.
+def manifest_dir(registry_root: Path) -> Path:
+    """Return the ``authorization.d`` directory for an AEAT registry root.
 
-    The manifest is a sibling of ``legal/`` and ``modelos/`` under the
+    The directory is a sibling of ``legal/`` and ``modelos/`` under the
     registry root, so callers that hold the registry root (the authority,
     the fingerprint walker) resolve it the same way.
     """
-    return registry_root / AUTHORIZATION_MANIFEST_FILENAME
+    return registry_root / AUTHORIZATION_MANIFEST_DIRNAME
+
+
+def _load_manifest_fragment(path: Path) -> ModeloAuthorizationEntry:
+    """Parse and validate one ``authorization.d/<modelo>.toml`` fragment.
+
+    A fragment declares exactly one enrolled modelo as a top-level
+    ``[modelo]`` table. The fragment filename stem should match the
+    declared ``modelo`` id (e.g. ``130.toml`` declares ``modelo = "130"``);
+    the loader cross-checks the two so a mis-filed fragment fails loudly.
+
+    Args:
+        path: The fragment file path.
+
+    Returns:
+        The validated :class:`ModeloAuthorizationEntry`.
+
+    Raises:
+        AuthorizationManifestError: When the fragment cannot be parsed,
+            omits or duplicates the ``[modelo]`` table, declares a stem that
+            disagrees with the ``modelo`` id, or violates an entry invariant
+            (single-year claim, unknown field).
+    """
+    raw = read_toml(path, error_factory=AuthorizationManifestError)
+    raw_entry = raw.get("modelo")
+    if not isinstance(raw_entry, dict):
+        raise AuthorizationManifestError(
+            f"{path}: an authorization.d fragment must declare exactly one [modelo] table; "
+            f"got {type(raw_entry).__name__ if raw_entry is not None else 'no [modelo] table'}"
+        )
+    try:
+        # TOML hydration is a boundary coercion: arrays decode to ``list``
+        # and scalars to ``str``, but the entry model is ``strict=True`` for
+        # programmatic construction. Validate non-strictly here so
+        # ``renta_years`` (TOML array -> tuple) and ``evidence_class`` (TOML
+        # string -> StrEnum) hydrate at the boundary; every value invariant
+        # (>=2 distinct years, field bounds) still runs regardless of mode.
+        entry = ModeloAuthorizationEntry.model_validate(raw_entry, strict=False)
+    except ValueError as exc:
+        raise AuthorizationManifestError(f"{path}: invalid authorization fragment: {exc}") from exc
+    if entry.modelo != path.stem:
+        raise AuthorizationManifestError(
+            f"{path}: fragment filename stem {path.stem!r} does not match its declared "
+            f"modelo id {entry.modelo!r}; name the fragment <modelo>.toml"
+        )
+    return entry
 
 
 def load_authorization_manifest(registry_root: Path) -> AuthorizationManifest:
-    """Load and validate the authorization manifest under ``registry_root``.
+    """Load and validate the directory-mode authorization manifest.
 
-    Default-deny-by-absence: when the manifest file does not exist the
-    result is an empty :class:`AuthorizationManifest` (zero authorized
-    modelos), never an error. A present-but-malformed manifest raises
-    :class:`AuthorizationManifestError` so a broken authorization surface
-    fails loudly rather than silently authorizing nothing or everything.
+    The manifest is directory-mode: every enrolled modelo owns one
+    ``authorization.d/<modelo>.toml`` fragment under ``registry_root``. The
+    loader merges every fragment in sorted order into one
+    :class:`AuthorizationManifest`.
+
+    Default-deny-by-absence: when the ``authorization.d`` directory is
+    missing or holds no ``*.toml`` fragments, the result is an empty
+    manifest (zero authorized modelos), never an error. A present-but-
+    malformed fragment raises :class:`AuthorizationManifestError` so a broken
+    authorization surface fails loudly rather than silently authorizing
+    nothing or everything.
 
     Args:
         registry_root: The AEAT registry root directory.
@@ -304,28 +361,19 @@ def load_authorization_manifest(registry_root: Path) -> AuthorizationManifest:
         The validated :class:`AuthorizationManifest`.
 
     Raises:
-        AuthorizationManifestError: When the manifest exists but cannot be
-            parsed, or declares an entry that violates the entry/manifest
-            invariants (single-year claim, duplicate modelo, unknown field).
+        AuthorizationManifestError: When a fragment cannot be parsed or
+            violates an entry/manifest invariant (single-year claim,
+            duplicate modelo across fragments, stem/id mismatch, unknown
+            field).
     """
-    path = manifest_path(registry_root)
-    if not path.is_file():
+    directory = manifest_dir(registry_root)
+    if not directory.is_dir():
         return AuthorizationManifest()
-    raw = read_toml(path, error_factory=AuthorizationManifestError)
-    raw_entries = raw.get("modelo", ())
-    if not isinstance(raw_entries, (list, tuple)):
-        raise AuthorizationManifestError(
-            f"{path}: top-level 'modelo' must be an array of tables ([[modelo]]); "
-            f"got {type(raw_entries).__name__}"
-        )
+    entries = tuple(_load_manifest_fragment(path) for path in sorted(directory.glob("*.toml")))
     try:
-        return AuthorizationManifest(
-            entries=tuple(
-                ModeloAuthorizationEntry.model_validate(entry) for entry in raw_entries
-            )
-        )
+        return AuthorizationManifest(entries=entries)
     except ValueError as exc:
-        raise AuthorizationManifestError(f"{path}: invalid authorization manifest: {exc}") from exc
+        raise AuthorizationManifestError(f"{directory}: invalid authorization manifest: {exc}") from exc
 
 
 def derive_modelo_authorization(
@@ -367,7 +415,7 @@ def derive_modelo_authorization(
 
 
 __all__ = [
-    "AUTHORIZATION_MANIFEST_FILENAME",
+    "AUTHORIZATION_MANIFEST_DIRNAME",
     "CANONICAL_MODELO_FLEET",
     "FLEET_SIZE",
     "MIN_DISTINCT_RENTA_YEARS",
@@ -378,5 +426,5 @@ __all__ = [
     "ModeloAuthorizationEntry",
     "derive_modelo_authorization",
     "load_authorization_manifest",
-    "manifest_path",
+    "manifest_dir",
 ]

@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from ._authorization import (
-    AUTHORIZATION_MANIFEST_FILENAME,
+    AUTHORIZATION_MANIFEST_DIRNAME,
     CANONICAL_MODELO_FLEET,
     FLEET_SIZE,
     MIN_DISTINCT_RENTA_YEARS,
@@ -38,7 +38,7 @@ from ._authorization import (
     ModeloAuthorizationEntry,
     derive_modelo_authorization,
     load_authorization_manifest,
-    manifest_path,
+    manifest_dir,
 )
 from ._errors import (
     AccessGateSubmissionError,
@@ -161,9 +161,7 @@ class AeatAccessGate:
             gate-relevant variables.
         """
         resolved_pytest = (
-            os.environ.get(_PYTEST_CURRENT_TEST_ENV, "")
-            if pytest_current_test is None
-            else pytest_current_test
+            os.environ.get(_PYTEST_CURRENT_TEST_ENV, "") if pytest_current_test is None else pytest_current_test
         )
         return AeatGateEnvSnapshot(
             aeat_live_tests_enabled=self.settings.aeat_live_tests_enabled,
@@ -172,7 +170,7 @@ class AeatAccessGate:
 
 
 __all__ = [
-    "AUTHORIZATION_MANIFEST_FILENAME",
+    "AUTHORIZATION_MANIFEST_DIRNAME",
     "CANONICAL_MODELO_FLEET",
     "FLEET_SIZE",
     "MIN_DISTINCT_RENTA_YEARS",
@@ -190,5 +188,5 @@ __all__ = [
     "ModeloAuthorizationEntry",
     "derive_modelo_authorization",
     "load_authorization_manifest",
-    "manifest_path",
+    "manifest_dir",
 ]
