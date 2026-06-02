@@ -21,11 +21,11 @@ from decimal import Decimal
 
 import pytest
 
-from . import calculate_modelo_revision, create_work_unit
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...tests.secure_sql import isolated_runtime_profile
+from . import calculate_modelo_revision, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -118,8 +118,7 @@ def test_casilla_15_override_accepted_at_3t(repos) -> None:
 
     casilla_15_value = Decimal(revision.casilla_values["15"])
     assert casilla_15_value == override, (
-        f"Casilla 15 must equal the supplied override {override}; "
-        f"got {casilla_15_value}"
+        f"Casilla 15 must equal the supplied override {override}; got {casilla_15_value}"
     )
 
 
