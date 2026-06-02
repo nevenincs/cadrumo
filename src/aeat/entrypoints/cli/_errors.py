@@ -52,7 +52,7 @@ from ...core.errors import (
 )
 from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
-from ...domain.user_profile._errors import StoredProfileDriftError
+from ...domain.user_profile import StoredProfileDriftError
 
 _log = get_logger(__name__)
 
@@ -180,7 +180,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     The wrapper catches four exception families and routes them to
     :func:`_emit_error_and_exit`:
 
-    - :exc:`~aeat.domain.user_profile._errors.StoredProfileDriftError` is
+    - :exc:`~aeat.domain.user_profile.StoredProfileDriftError` is
       wrapped in :exc:`CliStoredDataValidationBoundaryError` so operators see a
       repair-oriented message distinct from input-time validation failures.
       Checked before the broad :class:`AeatError` arm by typed exception, not
