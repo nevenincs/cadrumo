@@ -14,15 +14,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `profile-lifecycle-cli` plan
 
@@ -161,8 +152,8 @@ TODO: Phase intent paragraph required by the convention ADR.
 - [x] `P08.S62` - delete the `aeat config repair list NAMESPACE` operator verb; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [x] `P08.S63` - add `python -m aeat.diagnostics` module entrypoint with `profile get / set / unset / activity` and `secure-objects list` subcommands; `src/aeat/diagnostics/__main__.py`.
 - [x] `P08.S64` - smoke tests for the diagnostics entrypoint; `src/aeat/diagnostics/test_diagnostics.py`.
-- [ ] `P08.S65` - run the full pytest suite and resolve every failure; `src/aeat`.
-- [ ] `P08.S66` - run `ruff check` and resolve every diagnostic; `src/aeat`.
-- [ ] `P08.S67` - run `mypy` and resolve every diagnostic; `src/aeat`.
-- [ ] `P08.S68` - run the vault audit and confirm no new errors; `.vault`.
-- [ ] `P08.S69` - run a manual operator smoke against a fresh root and capture the transcript; `.vault/exec/2026-05-16-profile-lifecycle-cli`.
+- [x] `P08.S65` - run the full pytest suite and resolve every failure; `src/aeat`.
+- [x] `P08.S66` - run `ruff check` and resolve every diagnostic; `src/aeat`.
+- [x] `P08.S67` - run `mypy` and resolve every diagnostic; `src/aeat`.
+- [x] `P08.S68` - run the vault audit and confirm no new errors; `.vault`.
+- [x] `P08.S69` - run a manual operator smoke against a fresh root and capture the transcript; `.vault/exec/2026-05-16-profile-lifecycle-cli`.
