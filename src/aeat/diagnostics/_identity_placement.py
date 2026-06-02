@@ -1090,7 +1090,7 @@ def find_same_name_constant_multi_declarations(
             modules = {s[0] for s in same_value_sites}
             if len(modules) < 2:
                 continue
-            for dotted, _v, path, lineno in same_value_sites:
+            for _dotted, _v, path, lineno in same_value_sites:
                 findings.append(
                     Finding(
                         path,
