@@ -32,13 +32,14 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...entrypoints.cli._common import _aggregate_renta_filing_inputs
+from ...core.resources import resources
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     AggregationValidationError,
     RentaLedgerAggregationIssueReason,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
+    resolve_modelo_ledger_binding_values_from_repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -188,7 +189,9 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     assert result.casilla_aggregation.provenance[0].transaction_ids == (linked.transaction_id,)
 
 
-def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
+def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
+    """The application binding-resolution service resolves the modelo-100 renta-expense
+    ledger bindings from repository-backed transactions, keyed by binding id."""
     transaction = _transaction(
         "row-cli-renta",
         amount=Decimal("-121.00"),
@@ -199,17 +202,22 @@ def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_obje
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
-    inputs = _aggregate_renta_filing_inputs(
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    aggregation = resolve_modelo_ledger_binding_values_from_repositories(
         bucket_id="test",
+        modelo="100",
+        revision=snapshot.revision,
         filing_year=2025,
+        period="0A",
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
     )
+    binding_values = aggregation.binding_values
 
-    assert inputs["0199"] == Decimal("121.00")
-    assert inputs["0186"] == Decimal("0")
-    assert inputs["0192"] == Decimal("0")
-    assert inputs["0203"] == Decimal("0")
+    assert binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("121.00")
+    assert binding_values["renta-2025-ledger-expense-0186-deductible"] == Decimal("0")
+    assert binding_values["renta-2025-ledger-expense-0192-deductible"] == Decimal("0")
+    assert binding_values["renta-2025-ledger-expense-0203-deductible"] == Decimal("0")
 
 
 def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mismatch(
