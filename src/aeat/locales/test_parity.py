@@ -86,9 +86,7 @@ def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: P
     locales_dir.mkdir()
     locale_path = locales_dir / "es.yml"
     locale_path.write_text(
-        "cli:\n"
-        "  locales:\n"
-        "    app_help: Auditar y generar catálogos de traducción\n",
+        "cli:\n  locales:\n    app_help: Auditar y generar catálogos de traducción\n",
         encoding="utf-8",
     )
 
@@ -108,10 +106,7 @@ def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
     locales_dir.mkdir()
     locale_path = locales_dir / "es.yml"
     locale_path.write_text(
-        "cli:\n"
-        "  locales:\n"
-        "    stale: Obsoleto\n"
-        "    app_help: Auditar y generar catálogos de traducción\n",
+        "cli:\n  locales:\n    stale: Obsoleto\n    app_help: Auditar y generar catálogos de traducción\n",
         encoding="utf-8",
     )
 
@@ -167,8 +162,7 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     assert "cli.locales.app_help" in scan_source_tree(tmp_path)
     assert "wizard.errors.*" in scan_namespace_markers(tmp_path)
     assert any(
-        "locale ast scan: parse failure" in record.getMessage()
-        and "broken_surface.py" in record.getMessage()
+        "locale ast scan: parse failure" in record.getMessage() and "broken_surface.py" in record.getMessage()
         for record in caplog.records
     )
 
@@ -177,8 +171,7 @@ def test_ast_scanner_ignores_dynamic_domain_fact_keys(tmp_path: Path) -> None:
     """Dynamic profile fact paths are not locale namespaces."""
 
     (tmp_path / "profile_facts.py").write_text(
-        "def birth_date(fact_index, idx):\n"
-        "    return fact_index.get(f'renta_family.descendiente.{idx}.birth_date')\n",
+        "def birth_date(fact_index, idx):\n    return fact_index.get(f'renta_family.descendiente.{idx}.birth_date')\n",
         encoding="utf-8",
     )
 
@@ -362,8 +355,7 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
             )
     if errors:
         pytest.fail(
-            "\n".join(errors)
-            + "\nRun `python -m aeat.locales scaffold` to insert missing placeholder entries."
+            "\n".join(errors) + "\nRun `python -m aeat.locales scaffold` to insert missing placeholder entries."
         )
 
 
@@ -388,7 +380,6 @@ def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
 
     registered_keys = get_registered_keys()
     missing = registered_keys - yaml_keys
-    assert not missing, (
-        f"scaffold failed to insert {len(missing)} f-string-registered key(s): "
-        + ", ".join(sorted(missing)[:10])
+    assert not missing, f"scaffold failed to insert {len(missing)} f-string-registered key(s): " + ", ".join(
+        sorted(missing)[:10]
     )
