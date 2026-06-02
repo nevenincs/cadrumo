@@ -364,8 +364,10 @@ def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
 
 def _redact_cli_string(text: str) -> str:
     redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(
-        lambda match: f"{match.group('label')}{match.group('sep')}"
-        f"{_cli_placeholder_for_key(match.group('label'), match.group('value')) or match.group('value')}",
+        lambda match: (
+            f"{match.group('label')}{match.group('sep')}"
+            f"{_cli_placeholder_for_key(match.group('label'), match.group('value')) or match.group('value')}"
+        ),
         text,
     )
     redacted = redact_for_log(redacted)
