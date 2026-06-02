@@ -132,16 +132,19 @@ def test_importing_cli_package_does_not_import_registry() -> None:
     assert leaked == [], f"importing the CLI package leaked heavy modules: {leaked}"
 
 
-@pytest.mark.parametrize("flag", ["--version", "--help"])
-def test_state_free_surface_does_not_import_registry(flag: str) -> None:
-    """``aeat --version`` / ``aeat --help`` run without the registry parse.
+@pytest.mark.parametrize("argv", [["--version"], ["--help"], []])
+def test_state_free_surface_does_not_import_registry(argv: list[str]) -> None:
+    """``aeat`` (bare), ``aeat --version``, and ``aeat --help`` run without registry parse.
 
-    The surfaces short-circuit in the root callback before any
-    subcommand is resolved, so no :class:`LazySubcommand` loader fires
-    and no heavy command module is imported.
+    State-free surfaces (version, help, and bare landing) short-circuit in the
+    root callback before any subcommand is resolved, so no :class:`LazySubcommand`
+    loader fires and no heavy command module is imported. The bare invocation
+    surface shows the landing page (profile-creation wizard prompt) without
+    registry access.
     """
 
     forbidden = (*_FORBIDDEN_MODULE_PREFIXES, *_FORBIDDEN_COMMAND_MODULES)
+    args_repr = " ".join(argv) if argv else "(bare invocation)"
     completed = _run_python(
         f"""
         import sys
@@ -149,7 +152,7 @@ def test_state_free_surface_does_not_import_registry(flag: str) -> None:
         from typer.main import get_command
         from aeat.entrypoints.cli import app
 
-        result = CliRunner().invoke(get_command(app), [{flag!r}])
+        result = CliRunner().invoke(get_command(app), {argv!r})
         assert result.exit_code == 0, result.output
 
         forbidden = {forbidden!r}
@@ -164,7 +167,7 @@ def test_state_free_surface_does_not_import_registry(flag: str) -> None:
 
     assert completed.returncode == 0, completed.stderr
     leaked = [line for line in completed.stdout.splitlines() if line.strip()]
-    assert leaked == [], f"`aeat {flag}` imported heavy modules it must avoid: {leaked}"
+    assert leaked == [], f"`aeat {args_repr}` imported heavy modules it must avoid: {leaked}"
 
 
 def test_dispatching_a_subcommand_loads_its_module() -> None:
