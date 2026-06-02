@@ -66,6 +66,7 @@ _RATE_KIND_TO_DOMESTIC_CATEGORY: dict[IvaRateKind, IvaCategory] = {
     IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL_21,
 }
 
+
 class IvaLedgerAggregationIssueReason(StrEnum):
     """Machine-readable reasons why a ledger row did not produce IVA observations.
 
@@ -91,6 +92,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_counterparty_on_intra_community_transaction"
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
 
+
 class IvaLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while projecting IVA ledger observations."""
 
@@ -99,6 +101,7 @@ class IvaLedgerAggregationIssue(BaseModel):
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
     detail: str = Field(min_length=1, max_length=512)
+
 
 class ProrrataLedgerReference(BaseModel):
     """Bucket-local ledger row pointer to a legal IVA prorrata reference."""
@@ -110,6 +113,7 @@ class ProrrataLedgerReference(BaseModel):
     reference: ProrrataReference
     base_amount: Decimal = Field(..., ge=Decimal("0"))
     input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
+
 
 class IvaLedgerInputKind(StrEnum):
     """Business role of a pre-classified IVA ledger candidate.
@@ -123,6 +127,7 @@ class IvaLedgerInputKind(StrEnum):
 
     ORDINARY_OPERATION = "ordinary_operation"
     ADJUSTMENT = "adjustment"
+
 
 class IvaLedgerCandidate(BaseModel):
     """One pre-classified ledger line for generic IVA aggregation.
@@ -147,6 +152,7 @@ class IvaLedgerCandidate(BaseModel):
     iva_amount: Decimal
     input_kind: IvaLedgerInputKind = IvaLedgerInputKind.ORDINARY_OPERATION
     prorrata_reference_id: _LedgerId | None = None
+
 
 class IvaLedgerAggregation(BaseModel):
     """IVA observations produced from one bucket-local transaction catalogue."""
@@ -197,6 +203,7 @@ class IvaLedgerAggregation(BaseModel):
     ) -> tuple[IvaLedgerAggregationIssue, ...]:
         return tuple(value)
 
+
 def aggregate_iva_ledger_observations_from_repositories(
     *,
     bucket_id: str,
@@ -214,6 +221,7 @@ def aggregate_iva_ledger_observations_from_repositories(
             context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
     return aggregate_iva_ledger_observations(repository.load(), period=period)
+
 
 def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerObservation:
     """Validate a pre-classified IVA candidate and return an :class:`IvaLedgerObservation`.
@@ -242,12 +250,14 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
         prorrata_reference_id=candidate.prorrata_reference_id,
     )
 
+
 def validate_iva_ledger_observations(candidates: Iterable[IvaLedgerCandidate]) -> tuple[IvaLedgerObservation, ...]:
     """Validate every pre-classified IVA candidate in input order.
 
     Returns a tuple of :class:`IvaLedgerObservation` instances.
     """
     return tuple(validate_iva_ledger_observation(candidate) for candidate in candidates)
+
 
 def aggregate_iva_ledger_candidates(
     candidates: Iterable[IvaLedgerCandidate],
@@ -275,8 +285,7 @@ def aggregate_iva_ledger_candidates(
                     transaction_id=candidate.ledger_id,
                     reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                     detail=(
-                        f"transaction date {candidate.transaction_date.isoformat()} "
-                        f"is outside {resolved_period.raw}"
+                        f"transaction date {candidate.transaction_date.isoformat()} is outside {resolved_period.raw}"
                     ),
                 )
             )
@@ -287,6 +296,7 @@ def aggregate_iva_ledger_candidates(
         observations=tuple(observations),
         issues=tuple(issues),
     )
+
 
 def aggregate_iva_ledger_candidate_bindings(
     revision: ModeloRevision,
@@ -325,6 +335,7 @@ def aggregate_iva_ledger_candidate_bindings(
         )
     return resolve_ledger_iva_aggregation_binding_values(revision, aggregation.observations)
 
+
 def aggregate_iva_ledger_observations(
     transactions: TransactionCatalogue,
     *,
@@ -360,6 +371,7 @@ def aggregate_iva_ledger_observations(
         issues=tuple(issues),
     )
 
+
 @dataclass(frozen=True)
 class _IvaTransactionOutcome:
     """Per-transaction outcome carrying the typed sinks the orchestrator drains.
@@ -377,6 +389,7 @@ class _IvaTransactionOutcome:
     observation: IvaLedgerObservation | None = None
     prorrata_reference: ProrrataLedgerReference | None = None
     prorrata_issue: IvaLedgerAggregationIssue | None = None
+
 
 def _classify_iva_transaction(
     transaction: Transaction,
@@ -432,8 +445,7 @@ def _classify_iva_transaction(
                 transaction_id=transaction_id,
                 reason=reason,
                 detail=(
-                    f"business classification {transaction.business_classification.value!r} "
-                    "cannot feed IVA aggregation"
+                    f"business classification {transaction.business_classification.value!r} cannot feed IVA aggregation"
                 ),
             )
         )
@@ -499,6 +511,7 @@ def _classify_iva_transaction(
         prorrata_issue=prorrata_issue,
     )
 
+
 def _resolve_iva_prorrata_attachment(
     transaction: Transaction,
     *,
@@ -524,11 +537,15 @@ def _resolve_iva_prorrata_attachment(
     if raw_reference is None:
         return None, None, None
     if flow_direction is not IvaFlowDirection.SOPORTADO:
-        return None, IvaLedgerAggregationIssue(
-            transaction_id=transaction.transaction_id,
-            reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
-            detail="prorrata_reference may only be attached to supported input IVA rows",
-        ), None
+        return (
+            None,
+            IvaLedgerAggregationIssue(
+                transaction_id=transaction.transaction_id,
+                reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
+                detail="prorrata_reference may only be attached to supported input IVA rows",
+            ),
+            None,
+        )
     return (
         ProrrataLedgerReference(
             transaction_id=transaction.transaction_id,
@@ -540,6 +557,7 @@ def _resolve_iva_prorrata_attachment(
         None,
         transaction.transaction_id,
     )
+
 
 def _validate_intracom_export_counterparty(
     *,
@@ -574,12 +592,14 @@ def _validate_intracom_export_counterparty(
         )
     return None
 
+
 def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | None:
     if direction is TransactionDirection.INCOMING:
         return IvaFlowDirection.REPERCUTIDO
     if direction is TransactionDirection.OUTGOING:
         return IvaFlowDirection.SOPORTADO
     return None
+
 
 def _business_proportionality(transaction: Transaction) -> Decimal | None:
     if transaction.business_classification is BusinessClassification.BUSINESS:
@@ -589,9 +609,11 @@ def _business_proportionality(transaction: Transaction) -> Decimal | None:
         return transaction.business_pct
     return None
 
+
 def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIssueReason | None:
     reasons = iva_ledger_missing_fact_reasons(transaction)
     return reasons[0] if reasons else None
+
 
 def iva_ledger_missing_fact_reasons(transaction: Transaction) -> tuple[IvaLedgerAggregationIssueReason, ...]:
     """Return missing IVA fact reasons for a transaction without projecting it.
@@ -608,12 +630,14 @@ def iva_ledger_missing_fact_reasons(transaction: Transaction) -> tuple[IvaLedger
         reasons.append(IvaLedgerAggregationIssueReason.MISSING_IVA_RATE)
     return tuple(reasons)
 
+
 def _missing_tax_fact_detail(reason: IvaLedgerAggregationIssueReason) -> str:
     return {
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
         IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
     }[reason]
+
 
 def _prorrata_reference_for(
     reference_id: str | None,
@@ -631,6 +655,7 @@ def _prorrata_reference_for(
             detail=str(exc),
         )
 
+
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     for kind in _RATE_KIND_TO_DOMESTIC_CATEGORY:
         try:
@@ -640,6 +665,7 @@ def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
         if rate_record.pct / Decimal("100") == rate:
             return kind
     return None
+
 
 def casilla_59_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
     """Return the casilla 59 base imponible from a completed IVA ledger aggregation.
@@ -654,11 +680,11 @@ def casilla_59_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
         (
             obs.base_amount
             for obs in aggregation.observations
-            if obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
-            and obs.flow_direction is IvaFlowDirection.REPERCUTIDO
+            if obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY and obs.flow_direction is IvaFlowDirection.REPERCUTIDO
         ),
         Decimal("0"),
     )
+
 
 def casilla_60_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
     """Return the casilla 60 base imponible from a completed IVA ledger aggregation.
@@ -677,6 +703,7 @@ def casilla_60_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
         ),
         Decimal("0"),
     )
+
 
 __all__ = [
     "IvaLedgerAggregation",
