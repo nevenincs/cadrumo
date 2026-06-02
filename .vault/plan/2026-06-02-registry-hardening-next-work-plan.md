@@ -61,21 +61,28 @@ Resolve the known role-taxonomy edges with focused real-registry checks instead 
 - [ ] `P03.S16` - Verify M349 base_intracomunitaria role coverage; `src/aeat/domain/calculations/registry/test_modelo_349_registry.py`.
 - [ ] `P03.S17` - Verify signed cuota role coverage for IRPF and IS; `src/aeat/domain/calculations/registry/test_semantic_role.py`.
 
-### Phase `P04` - registry module maintainability
+### Phase `P04` - monolithic registry module refactors
 
-Audit oversized registry Python modules and choose extraction slices only where the codebase already exposes stable seams.
+Treat every large registry production module as an explicit refactor target, with audit-first extraction boundaries and no behavioral rewrite until seams are proven by focused tests.
 
 - [ ] `P04.S18` - Audit registry Python module size and ownership boundaries; `.vault/audit`.
 - [ ] `P04.S19` - Assess loader fragment-compiler extraction boundaries; `src/aeat/domain/calculations/registry/_loader.py`.
 - [ ] `P04.S20` - Assess binding resolver extraction boundaries; `src/aeat/domain/calculations/registry/_bindings.py`.
 - [ ] `P04.S21` - Assess schema model extraction boundaries and ADR need; `src/aeat/domain/calculations/registry/_schema.py`.
+- [ ] `P04.S22` - Assess record-design extraction boundaries; `src/aeat/domain/calculations/registry/_record_design.py`.
+- [ ] `P04.S23` - Assess applicability extraction boundaries; `src/aeat/domain/calculations/registry/_applicability.py`.
+- [ ] `P04.S24` - Assess workbook parity extraction boundaries; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
+- [ ] `P04.S25` - Assess formula runtime extraction boundaries; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [ ] `P04.S26` - Audit oversized registry test module decomposition; `src/aeat/domain/calculations/registry`.
 
 ## Description
 
 The next work should protect reviewability first, then extend continuity data
-in small source-grounded slices, then audit semantic-role edges and Python
-module size. No new schema architecture is authorised by this plan. Work uses
-the accepted fragment authoring compiler and continuity contract.
+in small source-grounded slices, then audit semantic-role edges and break down
+monolithic registry modules. Module decomposition is a first-class health
+target, not optional cleanup, but every extraction must be audit-first and
+behavior-preserving. No new schema architecture is authorised by this plan.
+Work uses the accepted fragment authoring compiler and continuity contract.
 
 ## Steps
 
