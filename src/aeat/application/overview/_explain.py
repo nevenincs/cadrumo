@@ -23,6 +23,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time import now
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -42,8 +43,6 @@ coerced via ``.value``), and integers (numeric thresholds). Widening
 this union is a contract change; keep it tight so the boundary
 remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class OverviewExplain(BaseModel):
