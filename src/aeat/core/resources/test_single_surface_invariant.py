@@ -105,10 +105,7 @@ def test_allowlist_only_contains_files_that_actually_offend() -> None:
         text = absolute.read_text(encoding="utf-8")
         if not pattern.search(text):
             stale.append(f"{rel} (no _DEFAULT_*_ROOT remains)")
-    assert not stale, (
-        "the pending-retirement allow-list contains entries that no "
-        f"longer offend; remove them: {stale}"
-    )
+    assert not stale, f"the pending-retirement allow-list contains entries that no longer offend; remove them: {stale}"
 
 
 _PROJECT_ROOT_IMPORT_RE = re.compile(
