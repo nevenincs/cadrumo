@@ -133,7 +133,12 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             row = session.execute(stmt).scalar_one()
             envelope = _json.loads(row.payload.decode("utf-8"))
             manifest = envelope["payload"]
-            assert manifest["sha256"] == manifest["attachment_id"], (
+            # write_manifest drops attachment_id from the persisted payload
+            # (the row's object_key carries it as the content-addressing
+            # key). The fixture invariant is that the persisted sha256
+            # equals the in-memory attachment's attachment_id, which by
+            # construction equals the digest of the bytes (line 124).
+            assert manifest["sha256"] == attachment.attachment_id, (
                 "fixture must persist matching sha256 + attachment_id for this proof test to be meaningful"
             )
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
