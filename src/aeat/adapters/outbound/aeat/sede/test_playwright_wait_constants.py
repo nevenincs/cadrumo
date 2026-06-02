@@ -76,8 +76,7 @@ def test_no_bare_wait_state_literals_in_sede_modules() -> None:
                 offenders.append(f"{module_name}:{lineno}: bare literal {value!r}")
 
     assert offenders == [], (
-        "Bare Playwright wait-state literals found; import from _browser_constants instead:\n"
-        + "\n".join(offenders)
+        "Bare Playwright wait-state literals found; import from _browser_constants instead:\n" + "\n".join(offenders)
     )
 
 
@@ -107,6 +106,5 @@ def test_browser_constants_module_imports_are_present() -> None:
         # The real guard is the literal-scan above; this test just confirms
         # the import block exists at all in each checked module.
         assert imported, (
-            f"{module_name} does not import anything from _browser_constants; "
-            "add the relevant PLAYWRIGHT_WAIT_* import"
+            f"{module_name} does not import anything from _browser_constants; add the relevant PLAYWRIGHT_WAIT_* import"
         )
