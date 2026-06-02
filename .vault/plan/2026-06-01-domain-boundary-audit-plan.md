@@ -185,8 +185,8 @@ Relocate the inventory/asset/amortization errors out of domain/profile, rename t
 
 Move the asset and inventory/amortization error families to their inventory/assets subpackages.
 
-- [ ] `W06.P16.S61` - Relocate AssetRecordError and AssetValidationError out of domain/profile/_errors.py into domain/profile/assets; `update adapters/persistence/profile/assets and tests (DB-01 concern C; tag relocation:AssetRecordError); `src/aeat/domain/profile/assets/__init__.py`.
-- [ ] `W06.P16.S62` - Relocate InventoryLedgerError, InventoryValidationError, AmortizacionLedgerError, LIFOForbiddenError, BasisCapExceededError out of domain/profile/_errors.py into domain/profile/inventory; `update adapters/persistence/profile/inventory and tests (DB-01 concern C); `src/aeat/domain/profile/inventory/__init__.py`.
+- [x] `W06.P16.S61` - Relocate AssetRecordError and AssetValidationError out of domain/profile/_errors.py into domain/profile/assets; `update adapters/persistence/profile/assets and tests (DB-01 concern C; tag relocation:AssetRecordError); `src/aeat/domain/profile/assets/__init__.py`.
+- [x] `W06.P16.S62` - Relocate InventoryLedgerError, InventoryValidationError, AmortizacionLedgerError, LIFOForbiddenError, BasisCapExceededError out of domain/profile/_errors.py into domain/profile/inventory; `update adapters/persistence/profile/inventory and tests (DB-01 concern C); `src/aeat/domain/profile/inventory/__init__.py`.
 
 ### Phase `W06.P17` - Rename the profile package and sweep importers
 

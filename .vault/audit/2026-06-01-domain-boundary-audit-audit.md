@@ -1483,6 +1483,31 @@ remediation is currently HELD at audit-only per the active action policy.
   shells), so it is left for a dedicated pass with full budget rather than rushed across
   the core-registry + 4-locale shared surfaces.
 
+- 2026-06-02 (cont.): **DB-01 concern C / W06.P16 (S61+S62) EXECUTED — ledger error
+  hierarchies relocated out of the catch-all `domain/profile/_errors.py`.** Two atomic
+  explicit-path moves co-locating each ledger's errors with its records:
+  **S61** (commit `b8b7483b6`, tag `relocation:AssetRecordError`) moved `AssetRecordError`
+  + `AssetValidationError` into `domain/profile/assets/__init__.py`; **S62** (commit
+  `e266321f3`, tag `relocation:InventoryLedgerError`) moved `InventoryLedgerError`,
+  `InventoryValidationError`, `LIFOForbiddenError`, `AmortizacionLedgerError`,
+  `BasisCapExceededError` into `domain/profile/inventory/__init__.py` (LIFO keeps its LIS
+  art. 17.1 custom `__init__`). Each move repointed the persistence adapter (+ S62's
+  test_inventory) imports, updated the core error-registry **path strings**
+  (`aeat.domain.profile._errors.* -> .assets.* / .inventory.*` — a path update, not a
+  removal, so no locale/test-pinning cascade like S89's), pruned the `_errors.py`
+  `__all__` + the now-unused `CoreValidationError` import, and refreshed the module
+  docstrings (a stale dotted error anchor downgraded to a bare role per
+  `core-struct-docstring-links`). After both, `_errors.py` holds only the
+  tax-residence-profile + profile-keys errors. Behaviour-neutral — errors keep their
+  registered codes + message keys. Verified each: collect-only clean (203),
+  `test_registry_enforcement` + the relevant asset/inventory unit+roundtrip tests green,
+  `ty` clean, apidocs 0-orphan (the lone "1 missing" is the peer-owned
+  `operator_surface._filing_status_token`, unrelated), and the `Domain must not import
+  application` import-linter contract stays KEPT (the one broken "layered" contract is
+  pre-existing peer test-module->adapter edges). Remaining W06: S63 (the 23+-importer
+  `domain/profile` package rename, sequenced last), S64 (DB-17 lazy-import removal;
+  `_keys.py` peer-WIP), S65/S66 (core/profile.py + profile_catalogue.py renames).
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
