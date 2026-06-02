@@ -212,9 +212,7 @@ def test_load_decision_returns_hashed_key_record(tmp_path) -> None:
 
         loaded = repo.load_decision("87654321B", 2025, "2T")
 
-    assert loaded == decision, (
-        f"Expected decision to be found via hashed key; got {loaded!r}"
-    )
+    assert loaded == decision, f"Expected decision to be found via hashed key; got {loaded!r}"
 
 
 def test_load_decision_falls_back_to_legacy_cleartext_key(tmp_path) -> None:
