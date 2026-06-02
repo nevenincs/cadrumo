@@ -152,7 +152,10 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
 
 
 async def create_browser_session(settings: Settings, profile: Profile) -> DefaultBrowserSession:
-    """Start Playwright and return a :class:`DefaultBrowserSession` wrapping a :class:`BrowserSession` for ``profile``."""
+    """Start Playwright and return a :class:`DefaultBrowserSession`.
+
+    Wraps a :class:`BrowserSession` for ``profile``.
+    """
     playwright = await _start_playwright()
     try:
         session = BrowserSession(
