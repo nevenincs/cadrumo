@@ -80,7 +80,7 @@ _TIPO_GRAVAMEN_CONVENIO = Decimal("0.24")  # GB/general Convenio row = TRLIRNR a
 
 # The rental base for each year — distinct so a cross-year base bleed
 # surfaces as strict inequality in the cuota_integra assertion.
-_BASE_YEAR_N = Decimal("18000.00")      # 2025 rental income
+_BASE_YEAR_N = Decimal("18000.00")  # 2025 rental income
 _BASE_YEAR_N_PLUS_1 = Decimal("19500.00")  # 2026 rental income (slightly higher)
 
 # Profile-binding id for country_of_fiscal_residence (enum/text channel).
@@ -207,12 +207,8 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1: same engine, same treaty rate, distinct base.
-        values_n1, produced_n1 = _calculate_210(
-            filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1
-        )
-        recorder.record_calculation_year(
-            filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1
-        )
+        values_n1, produced_n1 = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
+        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Treaty-rate determinism: GB/general Convenio rate 0.24 in both years.
     assert values_n["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
@@ -220,9 +216,7 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
 
     # Cuota correctness from Convenio registry parameter (not hand-computed formula).
     assert values_n["cuota_integra"] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
-    assert values_n1["cuota_integra"] == (
-        _BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO
-    ).quantize(Decimal("0.01"))
+    assert values_n1["cuota_integra"] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
     # Cross-renta isolation: distinct cuotas from distinct bases.
     assert values_n["cuota_integra"] != values_n1["cuota_integra"]
