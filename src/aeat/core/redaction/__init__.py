@@ -92,8 +92,22 @@ _CLI_UUID_PATTERN = re.compile(
     r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
     r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
 )
-_CLI_OBJECT_KEY_ASSIGNMENT_PATTERN = re.compile(
-    r"(?i)(?P<label>\b(?:object[_-]?key|lookup[_-]?key|secure[_-]?object[_-]?key)\b)"
+_CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)(?P<label>\b(?:"
+    r"active[_-]?profile(?:[_-]?id)?|"
+    r"bucket[_-]?profile[_-]?id|"
+    r"profile[_-]?bucket[_-]?id|"
+    r"profile[_-]?id|"
+    r"repository[_-]?profile[_-]?id|"
+    r"active[_-]?bucket[_-]?id|"
+    r"bucket[_-]?id|"
+    r"repository[_-]?bucket[_-]?id|"
+    r"storage[_-]?bucket[_-]?id|"
+    r"object[_-]?key|"
+    r"lookup[_-]?key|"
+    r"secure[_-]?object[_-]?key|"
+    r"storage[_-]?object[_-]?key"
+    r")\b)"
     r"(?P<sep>\s*[:=]\s*)"
     r"(?P<value>[^\s,;]+)"
 )
@@ -341,10 +355,9 @@ def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
 def _redact_cli_string(text: str) -> str:
     redacted = redact_for_log(text)
     redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
-    redacted = _CLI_OBJECT_KEY_ASSIGNMENT_PATTERN.sub(
-        lambda match: (
-            f"{match.group('label')}{match.group('sep')}{CLI_OBJECT_KEY_PLACEHOLDER}"
-        ),
+    redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(
+        lambda match: f"{match.group('label')}{match.group('sep')}"
+        f"{_cli_placeholder_for_key(match.group('label'), match.group('value')) or match.group('value')}",
         redacted,
     )
     return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
