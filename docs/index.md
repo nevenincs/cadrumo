@@ -89,6 +89,8 @@ tutorials/index
 how-to/index
 how-to/profile-setup
 how-to/import-bank-statements
+how-to/reconcile
+how-to/filing-calendar
 how-to/troubleshooting
 cli/index
 glossary
