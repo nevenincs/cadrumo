@@ -151,10 +151,14 @@ def test_pre303_surface_constants_are_typed() -> None:
     assert "forigen=pre303" in surface.presentation_service_path
     assert "erro4033" in load_external_constants().aeat.sede_paths.auth_gate_4033
     assert "ejercicio" in surface.iva_wallet_header_tokens
-    assert "pend" in surface.iva_wallet_header_tokens
+    assert "disponible" in surface.iva_wallet_header_tokens
+    assert "pendientes" in surface.iva_wallet_total_label_tokens
     assert "cartera" in surface.iva_wallet_empty_page_tokens
     assert surface.wallet_form_selector.startswith("form")
     assert surface.wallet_execute_submit_selector.startswith("input")
+    assert surface.tipo_actuacion_own_name_link_selector.startswith("a")
+    assert surface.wallet_ejercicio_input_selector.startswith("input")
+    assert surface.wallet_periodo_input_selector.startswith("input")
     assert surface.representation_own_name_selector
     assert surface.representation_own_name_label_selector
     assert "clave PIN" in surface.official_access_auth_methods

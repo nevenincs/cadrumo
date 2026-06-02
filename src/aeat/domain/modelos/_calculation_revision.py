@@ -52,6 +52,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from ..calculations.registry import CasillaObservation
 from ._errors import ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
+from ._ledger_filing_snapshot import LedgerFilingSnapshot
 from ._row_models import ModeloDetailRow
 
 
@@ -272,6 +273,13 @@ class CalculationRevision(BaseModel):
     # source_refs trace survives the domain boundary that previously
     # dropped them when only ``casilla_values`` was persisted.
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+    # Immutable content-addressed snapshot of the ledger state this revision was
+    # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
+    # verify/file time over ``source_transaction_ids``; ``None`` for legacy
+    # revisions and for borradores not yet snapshotted. Deliberately NOT threaded
+    # into ``derive_calculation_revision_id`` so the content-addressed id is
+    # unaffected. A non-ledger modelo carries an empty-but-valid snapshot.
+    ledger_filing_snapshot: LedgerFilingSnapshot | None = None
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
     # values (M184 atribución members, M232 operaciones vinculadas,

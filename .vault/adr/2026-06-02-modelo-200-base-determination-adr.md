@@ -109,15 +109,38 @@ This requires either an advisory-capable conditional predicate op or a narrow ne
 op ("nonzero-implies-nonzero-when-positive"); the predicate carries its LIS Art. 10
 legal ref.
 
-**Phase 2 — model the base determination (durable fix).** Introduce computed casillas
-for `base imponible previa` (resultado contable `00501` + Σ correcciones aumentos − Σ
-correcciones disminuciones) and derive `00552` (base imponible) by applying BIN
-compensation and the reserva de capitalización, each summand grounded per LIS article.
-With this, a zero base is a computed consequence of the declared inputs, not a silent
-omission, and the Phase-1 advisory becomes redundant (or upgrades to a BLOCKING
-consistency check between the computed and any operator-entered base). The per-casilla
-correccion→base mapping must be grounded in a companion `{reference}` document extracted
-from the AEAT Manual de Sociedades 2024 and the BOE-published Orden before coding.
+**Phase 2 — model the base determination (durable fix).** Derive the base from the
+form's STORED Liquidación column subtotals, NOT a per-leaf re-sum. The faithful chain,
+grounded against the AEAT Manual de Sociedades 2024 Cap. 5 and confirmed in the companion
+`2026-06-02-modelo-200-base-determination-reference` (which extracts the diseño de
+registro 2024 DP-segment layout):
+
+- `DP200014:00550` (base imponible previa) = `DP200014:00501` (resultado contable) +
+  `DP200013:00417` (total correcciones de aumento) − `DP200013:00418` (total correcciones
+  de disminución) — computed.
+- `DP200014:00552` (base imponible) = `max(00550 − 01032 − 00547, 0)`, the non-negative
+  clamp encoding «si el resultado es cero, consignar cero» (`01032` = reserva de
+  capitalización, Art. 25 LIS; `00547` = compensación de bases imponibles negativas,
+  Art. 26 LIS) — computed.
+
+The leaf correcciones (semantic_role `is_correcciones_aumentos` /
+`is_correcciones_disminuciones`) feed the `00417`/`00418` subtotals — summing the leaves
+*alongside* the subtotals double-counts and is rejected; there is no `sum_by_role`
+evaluator op (only `add`/`subtract`/`max`). Because the bare numbers
+`00550`/`00547`/`00417`/`00418` resolve to UNRELATED Estado-de-Cambios-en-el-Patrimonio-Neto
+records (Prima de emisión, etc.), the implementation creates segmento-qualified
+`DP200013`/`DP200014` calc-only records (no `export_refs`, to avoid the page-014 ECPN
+fichero collision) and flips `DP200014:00552` manual→computed.
+
+`00547` is the layering seam: Phase 2 lands it MANUAL; the A4 BIN hook then makes it
+computed as `00547 = min(bin_disponible, max(€1M, 70%·00550))` — the 70% límite
+(Art. 26.1 LIS) applies to the base imponible previa *before* reserva and compensación,
+i.e. `00550`. The arts.13/16 value-derivations inside the correcciones stay operator-input
+(stateful follow-on sub-engines); the arts.10/11/14 BOE corpus ingest grounds legal_refs
+but does NOT block the calc (the base chain cites the grounded art-15/25/26 set). With
+this, a zero base is a computed consequence of the declared inputs, not a silent omission,
+and the Phase-1 advisory upgrades to a BLOCKING consistency check between the computed and
+any operator-entered base.
 
 ## Rationale
 

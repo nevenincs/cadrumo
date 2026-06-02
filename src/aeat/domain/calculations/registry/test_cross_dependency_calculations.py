@@ -529,6 +529,7 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
         date_context={"filing_period": date(2026, 12, 31)},
         binding_values={
             "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": Decimal("3000"),
+            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": inputs["01"],
         },
     )
 

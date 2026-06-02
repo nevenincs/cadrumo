@@ -177,6 +177,7 @@ def _remote_mirror_object_manifest(row: SecureObjectRawRow) -> RemoteMirrorObjec
         ciphertext_hash=row.ciphertext_hash or hashlib.sha256(row.payload).hexdigest(),
         storage_revision_id=row.revision_id,
         previous_storage_revision_id=row.previous_revision_id,
+        revision_ancestor_ids=row.revision_ancestor_ids,
         row_written_at=row.written_at,
         revision_written_at=row.revision_written_at,
     )
@@ -286,7 +287,10 @@ def _is_stale_remote_entry(
     local_entry: RemoteMirrorObjectManifest,
     remote_entry: RemoteMirrorObjectManifest,
 ) -> bool:
-    return remote_entry.storage_revision_id == local_entry.previous_storage_revision_id
+    return (
+        remote_entry.storage_revision_id == local_entry.previous_storage_revision_id
+        or remote_entry.storage_revision_id in local_entry.revision_ancestor_ids
+    )
 
 
 def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:

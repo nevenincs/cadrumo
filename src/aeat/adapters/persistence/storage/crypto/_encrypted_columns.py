@@ -41,7 +41,7 @@ from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
-from ..errors import StorageValidationError
+from ..errors import DecryptionError, StorageValidationError
 from ..master_key._active_session import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
@@ -59,6 +59,7 @@ class EncryptedPayload(BaseModel):
     model_config = ConfigDict(strict=False)
 
     data: object
+
 
 _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
@@ -85,6 +86,23 @@ def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
     blob = EncryptedBlob.from_wire(wire)
     key = _resolve_master_key()
     return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
+
+
+def decrypt_encrypted_string_column(wire: bytes) -> str:
+    """Decrypt one legacy ``EncryptedString`` on-wire payload.
+
+    New lookup columns should use :class:`HashedLookup`; the
+    secure-object repository uses this helper only to migrate rows
+    written by the old randomized ``object_key`` mapper into
+    deterministic lookup digests.
+    """
+    blob = EncryptedBlob.from_wire(wire)
+    key = _resolve_master_key()
+    plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
+    try:
+        return plaintext.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DecryptionError("legacy EncryptedString payload is not valid UTF-8") from exc
 
 
 _HASHED_LOOKUP_DIGEST_SIZE = 32

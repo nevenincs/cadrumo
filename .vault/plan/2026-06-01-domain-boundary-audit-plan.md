@@ -152,7 +152,7 @@ Make each application result canonical and have the CLI OutputSchema derive from
 
 - [x] `W04.P13.S49` - Collapse the Auth pass-through twins: make AuthClearResult (1:1) a single OutputSchema; `eliminate the extra=allow CLI pass-throughs AuthStatusResult, AuthTestResult, AuthLoginResult by emitting the application result directly (DB-26 T5,T2,T3,T4); `src/aeat/entrypoints/cli/_config_payloads.py`.
 - [x] `W04.P13.S50` - Align AuthConfigureResult: reconcile the nullability differences and derive the CLI payload from the application model rather than redeclaring it (DB-26 T1); `src/aeat/entrypoints/cli/_config_payloads.py`.
-- [ ] `W04.P13.S51` - Derive the CLI LedgerImport, LedgerExport and ModeloExport payloads from their application results (LedgerSourceImportResult, LedgerExportResult, ModeloExportResult) via explicit projection; `stop the bytes/typed-id redeclaration (DB-26 T6,T7,T8); `src/aeat/entrypoints/cli/_ledger_payloads.py`.
+- [x] `W04.P13.S51` - Derive the CLI LedgerImport, LedgerExport and ModeloExport payloads from their application results (LedgerSourceImportResult, LedgerExportResult, ModeloExportResult) via explicit projection; `stop the bytes/typed-id redeclaration (DB-26 T6,T7,T8); `src/aeat/entrypoints/cli/_ledger_payloads.py`.
 - [x] `W04.P13.S52` - Derive the CLI CensoApply and InventoryValuationPreview payloads from their application results via explicit projection/flattening (DB-26 T9,T10); `src/aeat/entrypoints/cli/_ledger_payloads.py`.
 
 ## Wave `W05` - Hexagonal edges and persistence boundary (D1/D4/D5)

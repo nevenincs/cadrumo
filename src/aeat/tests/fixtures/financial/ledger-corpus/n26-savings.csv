@@ -1,0 +1,86 @@
+Date,Value date,Payee,Payment reference,Amount (EUR),Currency,Transaction type
+2025-01-12,2025-01-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-01-17,2025-01-17,BETA SL,Cobro factura F-2025-B01 BETA SL,1210.00,EUR,Transfer
+2025-01-23,2025-01-23,Mutua Profesional,Cuota mutualidad alternativa RETA enero,-95.00,EUR,Direct Debit
+2025-01-26,2025-01-26,Coworking Centro,Alquiler oficina coworking enero,-242.00,EUR,Direct Debit
+2025-02-12,2025-02-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-02-18,2025-02-18,BETA SL,Cobro factura F-2025-B02 BETA SL,847.00,EUR,Transfer
+2025-02-21,2025-02-21,Mutua Profesional,Cuota mutualidad alternativa RETA febrero,-95.00,EUR,Direct Debit
+2025-02-24,2025-02-24,Coworking Centro,Alquiler oficina coworking febrero,-242.00,EUR,Direct Debit
+2025-02-27,2025-02-27,Telefonica,Telefono fijo oficina febrero,-30.25,EUR,Direct Debit
+2025-03-12,2025-03-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-03-15,2025-03-15,Comunidad Vivienda,Comunidad propietarios vivienda afecta marzo,-55.00,EUR,Direct Debit
+2025-03-19,2025-03-19,BETA SL,Cobro factura F-2025-B03 BETA SL,1452.00,EUR,Transfer
+2025-03-24,2025-03-24,Coworking Centro,Alquiler oficina coworking marzo,-242.00,EUR,Direct Debit
+2025-03-28,2025-03-28,Gas Natural,Recibo gas oficina home office marzo,-54.45,EUR,Direct Debit
+2025-03-31,2025-03-31,N26 Bank,Intereses cuenta ahorro 1T 2025,18.40,EUR,Interest
+2025-04-12,2025-04-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-04-17,2025-04-17,BETA SL,Cobro factura F-2025-B04 BETA SL,968.00,EUR,Transfer
+2025-04-19,2025-04-19,Cliente Nacional,Cobro factura F-2025-Z01 entrega nacional tipo cero,500.00,EUR,Transfer
+2025-04-24,2025-04-24,Coworking Centro,Alquiler oficina coworking abril,-242.00,EUR,Direct Debit
+2025-04-28,2025-04-28,Aguas Municipales,Recibo agua oficina home office abril,-21.78,EUR,Direct Debit
+2025-05-12,2025-05-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-05-19,2025-05-19,BETA SL,Cobro factura F-2025-B05 BETA SL,1331.00,EUR,Transfer
+2025-05-22,2025-05-22,Mapfre,Seguro vehiculo afecto anual,-380.00,EUR,Direct Debit
+2025-05-26,2025-05-26,Coworking Centro,Alquiler oficina coworking mayo,-242.00,EUR,Direct Debit
+2025-06-12,2025-06-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-06-16,2025-06-16,Comunidad Vivienda,Comunidad propietarios vivienda afecta junio,-55.00,EUR,Direct Debit
+2025-06-18,2025-06-18,BETA SL,Cobro factura F-2025-B06 BETA SL,726.00,EUR,Transfer
+2025-06-24,2025-06-24,Coworking Centro,Alquiler oficina coworking junio,-242.00,EUR,Direct Debit
+2025-06-27,2025-06-27,Suministros Cliente,Suministros directos proyecto cliente,-302.50,EUR,Direct Debit
+2025-06-30,2025-06-30,N26 Bank,Intereses cuenta ahorro 2T 2025,21.10,EUR,Interest
+2025-07-12,2025-07-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-07-17,2025-07-17,BETA SL,Cobro factura F-2025-B07 BETA SL,1210.00,EUR,Transfer
+2025-07-24,2025-07-24,Coworking Centro,Alquiler oficina coworking julio,-242.00,EUR,Direct Debit
+2025-07-29,2025-07-29,Banco Prestamo,Intereses prestamo actividad julio,-45.00,EUR,Direct Debit
+2025-08-12,2025-08-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-08-18,2025-08-18,BETA SL,Cobro factura F-2025-B08 BETA SL,605.00,EUR,Transfer
+2025-08-25,2025-08-25,Coworking Centro,Alquiler oficina coworking agosto,-242.00,EUR,Direct Debit
+2025-09-12,2025-09-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-09-18,2025-09-18,BETA SL,Cobro factura F-2025-B09 BETA SL,1815.00,EUR,Transfer
+2025-09-19,2025-09-19,Ayuntamiento,IBI vivienda afecta actividad anual,-180.00,EUR,Direct Debit
+2025-09-22,2025-09-22,Asesoria Fiscal SL,Asesoria fiscal declaracion renta,-181.50,EUR,Direct Debit
+2025-09-24,2025-09-24,Coworking Centro,Alquiler oficina coworking septiembre,-242.00,EUR,Direct Debit
+2025-09-26,2025-09-26,Gas Natural,Recibo gas oficina home office septiembre,-48.40,EUR,Direct Debit
+2025-09-30,2025-09-30,N26 Bank,Intereses cuenta ahorro 3T 2025,24.75,EUR,Interest
+2025-10-12,2025-10-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-10-17,2025-10-17,BETA SL,Cobro factura F-2025-B10 BETA SL,1089.00,EUR,Transfer
+2025-10-24,2025-10-24,Coworking Centro,Alquiler oficina coworking octubre,-242.00,EUR,Direct Debit
+2025-10-28,2025-10-28,Ayuntamiento,IBI local afecto actividad anual,-210.00,EUR,Direct Debit
+2025-11-12,2025-11-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-11-18,2025-11-18,BETA SL,Cobro factura F-2025-B11 BETA SL,1452.00,EUR,Transfer
+2025-11-20,2025-11-20,Comunidad Vivienda,Comunidad propietarios vivienda afecta noviembre,-55.00,EUR,Direct Debit
+2025-11-24,2025-11-24,Coworking Centro,Alquiler oficina coworking noviembre,-242.00,EUR,Direct Debit
+2025-11-27,2025-11-27,Arrendador Vivienda,Alquiler vivienda parcial afecta noviembre,-90.75,EUR,Direct Debit
+2025-12-12,2025-12-12,Marta Rios,Traspaso a ahorro N26,500.00,EUR,Transfer
+2025-12-18,2025-12-18,BETA SL,Cobro factura F-2025-B12 BETA SL,968.00,EUR,Transfer
+2025-12-22,2025-12-22,Coworking Centro,Alquiler oficina coworking diciembre,-242.00,EUR,Direct Debit
+2025-12-29,2025-12-29,Marta Rios,Amortizacion vivienda afecta anual,-300.00,EUR,Direct Debit
+2025-12-31,2025-12-31,N26 Bank,Intereses cuenta ahorro 4T 2025,27.30,EUR,Interest
+2026-01-12,2026-01-12,Marta Rios,Traspaso a ahorro N26,550.00,EUR,Transfer
+2026-01-17,2026-01-17,BETA SL,Cobro factura F-2026-B01 BETA SL,1331.00,EUR,Transfer
+2026-01-23,2026-01-23,Mutua Profesional,Cuota mutualidad alternativa RETA enero,-98.00,EUR,Direct Debit
+2026-01-26,2026-01-26,Coworking Centro,Alquiler oficina coworking enero,-250.00,EUR,Direct Debit
+2026-02-12,2026-02-12,Marta Rios,Traspaso a ahorro N26,550.00,EUR,Transfer
+2026-02-18,2026-02-18,BETA SL,Cobro factura F-2026-B02 BETA SL,847.00,EUR,Transfer
+2026-02-24,2026-02-24,Coworking Centro,Alquiler oficina coworking febrero,-250.00,EUR,Direct Debit
+2026-02-27,2026-02-27,Telefonica,Telefono fijo oficina febrero,-31.46,EUR,Direct Debit
+2026-03-12,2026-03-12,Marta Rios,Traspaso a ahorro N26,550.00,EUR,Transfer
+2026-03-19,2026-03-19,BETA SL,Cobro factura F-2026-B03 BETA SL,1452.00,EUR,Transfer
+2026-03-24,2026-03-24,Coworking Centro,Alquiler oficina coworking marzo,-250.00,EUR,Direct Debit
+2026-03-28,2026-03-28,Gas Natural,Recibo gas oficina home office marzo,-56.87,EUR,Direct Debit
+2026-03-31,2026-03-31,N26 Bank,Intereses cuenta ahorro 1T 2026,29.10,EUR,Interest
+2026-04-12,2026-04-12,Marta Rios,Traspaso a ahorro N26,550.00,EUR,Transfer
+2026-04-17,2026-04-17,BETA SL,Cobro factura F-2026-B04 BETA SL,968.00,EUR,Transfer
+2026-04-19,2026-04-19,Comunidad Vivienda,Comunidad propietarios vivienda afecta abril,-57.00,EUR,Direct Debit
+2026-04-24,2026-04-24,Coworking Centro,Alquiler oficina coworking abril,-250.00,EUR,Direct Debit
+2026-04-28,2026-04-28,Aguas Municipales,Recibo agua oficina home office abril,-23.23,EUR,Direct Debit
+2026-05-12,2026-05-12,Marta Rios,Traspaso a ahorro N26,550.00,EUR,Transfer
+2026-05-19,2026-05-19,BETA SL,Cobro factura F-2026-B05 BETA SL,1331.00,EUR,Transfer
+2026-05-24,2026-05-24,Coworking Centro,Alquiler oficina coworking mayo,-250.00,EUR,Direct Debit
+2026-05-27,2026-05-27,Suministros Cliente,Suministros directos proyecto cliente,-314.60,EUR,Direct Debit
+2026-06-12,2026-06-12,Marta Rios,Traspaso a ahorro N26,550.00,EUR,Transfer
+2026-06-18,2026-06-18,BETA SL,Cobro factura F-2026-B06 BETA SL,726.00,EUR,Transfer
+2026-06-24,2026-06-24,Coworking Centro,Alquiler oficina coworking junio,-250.00,EUR,Direct Debit
+2026-06-29,2026-06-29,Banco Prestamo,Intereses prestamo actividad junio,-42.00,EUR,Direct Debit
+2026-06-30,2026-06-30,N26 Bank,Intereses cuenta ahorro 2T 2026,31.50,EUR,Interest

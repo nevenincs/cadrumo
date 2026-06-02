@@ -19,6 +19,7 @@ from ..core.classification import SensitivityClass
 from ..core.config import StorageRouteKind, load_settings, override_settings
 from .secure_sql import (
     dev_test_database_password,
+    isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
     isolated_profile_storage_root,
     isolated_runtime_profile,
@@ -118,6 +119,31 @@ def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: P
 
     assert settings.aeat_secret_passphrase.get_secret_value() == expected
     assert dev_test_database_password(settings) == expected
+
+
+def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to_active_bucket(
+    tmp_path: Path,
+) -> None:
+    from ..application.workflow._persistence import workflow_state_repository
+    from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ..domain.modelos._repository import WorkUnitCatalogueRepository
+
+    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
+        workflow_state_repository().update(lambda state: state)
+        work_units = WorkUnitCatalogueRepository()
+        revisions = CalculationRevisionCatalogueRepository()
+
+        work_units.save(work_units.load())
+        revisions.save(revisions.load())
+
+        active_bucket = workflow_state_repository().load().active_profile_bucket_id()
+        database_path = profile.paths.db_dir / "aeat.db"
+
+    assert active_bucket == _CONTROL_BUCKET_ID
+    assert work_units.bucket_id == _CONTROL_BUCKET_ID
+    assert revisions.bucket_id == _CONTROL_BUCKET_ID
+    assert _secure_object_row_count(database_path) == 3
+    assert not has_active_bucket_session()
 
 
 def _control_session() -> BucketSession:

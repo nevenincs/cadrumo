@@ -372,7 +372,10 @@ class LedgerTransactionTrackingPayload(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: TransactionId
-    created_event_id: str = Field(min_length=1)
+    # Imported transactions carry no creation bucket-event id (it is set only
+    # for rows created via `ledger add`); `ledger track` must render lineage for
+    # imported rows too, so this field is nullable rather than required.
+    created_event_id: str | None = Field(default=None, min_length=1)
     evidence_provenance: tuple[TransactionEvidenceProvenanceEntry, ...]
     edit_lineage: tuple[TransactionEditLineageEntry, ...]
     lifecycle_state: str = Field(min_length=1)

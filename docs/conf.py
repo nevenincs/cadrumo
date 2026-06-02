@@ -238,7 +238,10 @@ nitpick_ignore_regex = [
     # generic syntax (``K``, ``V``) are not documentable objects; they appear in
     # generic signatures only. Listed explicitly so the pattern cannot mask a
     # real CamelCase class.
-    (r"py:.*", r"^(T|K|V|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation)$"),
+    (
+        r"py:.*",
+        r"^(T|K|V|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CheckerObservation)$",
+    ),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
     # fully-qualified name, but written short (or under SQLAlchemy's private

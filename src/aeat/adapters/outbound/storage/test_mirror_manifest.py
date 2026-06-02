@@ -72,6 +72,7 @@ def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermar
             assert entry.ciphertext_hash != hashlib.sha256(b"first-plaintext-payload").hexdigest()
             assert entry.ciphertext_hash != hashlib.sha256(b"second-plaintext-payload").hexdigest()
             assert entry.storage_revision_id == raw.revision_id
+            assert entry.revision_ancestor_ids == raw.revision_ancestor_ids
             assert entry.revision_written_at == raw.revision_written_at
 
         latest_entry = max(
@@ -258,16 +259,16 @@ def test_remote_mirror_comparison_detects_stale_remote_revision(tmp_path: Path) 
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
 
 
-def test_remote_mirror_comparison_keeps_older_root_revision_conflict(tmp_path: Path) -> None:
+def test_remote_mirror_comparison_detects_older_stale_remote_revision(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
 
     inspection = compare_remote_mirror_manifests(local=local_manifest, remote=remote_manifest)
 
     assert inspection.ok is False
-    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
 
 
-def test_remote_mirror_comparison_keeps_naive_older_root_revision_conflict(tmp_path: Path) -> None:
+def test_remote_mirror_comparison_detects_naive_older_stale_remote_revision(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
     remote_object = remote_manifest.objects[0]
     naive_remote_object = remote_object.model_copy(
@@ -278,6 +279,26 @@ def test_remote_mirror_comparison_keeps_naive_older_root_revision_conflict(tmp_p
     naive_remote_manifest = remote_manifest.model_copy(update={"objects": (naive_remote_object,)})
 
     inspection = compare_remote_mirror_manifests(local=local_manifest, remote=naive_remote_manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
+
+
+def test_remote_mirror_comparison_keeps_unknown_older_root_revision_conflict(tmp_path: Path) -> None:
+    _remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
+    local_object = local_manifest.objects[0]
+    unknown_root_object = local_object.model_copy(
+        update={
+            "storage_revision_id": "f" * 64,
+            "previous_storage_revision_id": None,
+            "revision_ancestor_ids": (),
+            "ciphertext_hash": "d" * 64,
+            "revision_written_at": local_object.revision_written_at - timedelta(minutes=5),
+        }
+    )
+    unknown_root_manifest = local_manifest.model_copy(update={"objects": (unknown_root_object,)})
+
+    inspection = compare_remote_mirror_manifests(local=local_manifest, remote=unknown_root_manifest)
 
     assert inspection.ok is False
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}

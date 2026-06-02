@@ -16,11 +16,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
 from ...adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import SecretStoreBackend, Settings, override_settings
+from ...core.config import Settings, override_settings
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.deadlines._models import IVARegime
 from ...domain.filing import ModeloCasillaProvenance
@@ -39,7 +38,7 @@ from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from ...tests.secure_sql import dev_test_database_password
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..calculations import IvaWalletDecisionRepository
 from ..user_profile._orchestration import profile_create_storage_span
 from ..user_profile._testing import register_minimal_profile
@@ -76,21 +75,13 @@ def _profile() -> TaxpayerProfile:
 def isolated_backend(tmp_path: Path) -> Iterator[None]:
     global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
 
-    dispose_engine()
     with ExitStack() as stack:
-        stack.enter_context(
-            override_settings(
-                aeat_local_storage_root=tmp_path,
-                aeat_secret_store_backend=SecretStoreBackend.FILE,
-                aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-            )
-        )
+        stack.enter_context(isolated_profile_storage_root(tmp_path=tmp_path))
         _ACTIVE_STORAGE_STACK = stack
         _PROFILE_SPAN_OPEN = False
         try:
             yield
         finally:
-            dispose_engine()
             _PROFILE_SPAN_OPEN = False
             _ACTIVE_STORAGE_STACK = None
 

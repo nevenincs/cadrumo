@@ -12,6 +12,7 @@ import hashlib
 import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import quote, urljoin, urlsplit
 
@@ -48,6 +49,7 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
+_SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}")
 
 _EXTERNAL = Settings.external_constants()
 _WALLET_URL = f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -112,6 +114,8 @@ async def fetch_iva_compensation_wallet(
                     target_path=_PRE303.presentation_service_path,
                     expected_url=_PRE303_PRESENTATION_URL,
                     surface="pre303_presentation_service",
+                    target_year=target_year,
+                    target_period=target_period,
                 )
                 if is_aeat_wallet_auth_gate_redirect(page.url):
                     raise SedeNavigationError(
@@ -138,6 +142,8 @@ async def fetch_iva_compensation_wallet(
                         browser_session=browser_session,
                         settings=settings,
                         discovered_url=discovered_wallet_url,
+                        target_year=target_year,
+                        target_period=target_period,
                     )
                 else:
                     wallet_execute_submitted = await _open_authenticated_surface(
@@ -148,6 +154,8 @@ async def fetch_iva_compensation_wallet(
                         target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
                         expected_url=_WALLET_URL,
                         surface="iva_compensation_wallet",
+                        target_year=target_year,
+                        target_period=target_period,
                     )
             except PlaywrightError as exc:
                 raise SedeNavigationError(
@@ -168,6 +176,9 @@ async def fetch_iva_compensation_wallet(
                     ),
                 )
             html = await page.content()
+            final_dump_dir = settings.aeat_wallet_diagnostic_dump_dir
+            if final_dump_dir is not None:
+                await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
             try:
                 return parse_iva_compensation_wallet_html(
                     html,
@@ -209,43 +220,44 @@ def parse_iva_compensation_wallet_html(
     captured_at: datetime,
     allow_empty_wallet_shell: bool = False,
 ) -> IvaCompensationWalletObservation:
-    """Parse wallet rows from a captured AEAT wallet HTML page."""
+    """Parse wallet rows and the total from a captured AEAT cartera HTML page.
+
+    The own-name "Cartera de cuotas de IVA a compensar" results view carries an
+    authoritative aggregate — the "Cuotas a compensar pendientes de períodos
+    anteriores" line — plus a detail table (``Ejercicio`` / ``Período`` /
+    ``Cuota Disponible``) itemising the still-available balance per generation
+    period. The aggregate is the contract value surfaced as ``total_pending``;
+    the detail rows are cross-checked against it so a parse drift cannot silently
+    under-declare. A genuinely empty wallet renders the same aggregate line at
+    ``0,00`` with no detail rows.
+    """
     validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
     soup = BeautifulSoup(html, "html.parser")
-    rows: list[IvaCompensationWalletRow] = []
-    matched_wallet_table = False
-    for table in soup.find_all("table"):
-        header = _normalised_text(table.get_text(" "))
-        if not all(token in header for token in _PRE303.iva_wallet_header_tokens):
-            continue
-        matched_wallet_table = True
-        for table_row in table.find_all("tr"):
-            cells = [_normalised_text(cell.get_text(" ")) for cell in table_row.find_all(["td", "th"])]
-            if len(cells) < 5 or _looks_like_header(cells):
-                continue
-            try:
-                rows.append(_wallet_row_from_cells(cells))
-            except SedeParseError:
-                raise
-            except Exception as exc:
-                raise SedeParseError(f"could not parse IVA compensation wallet row {cells!r}: {exc}") from exc
+    summary_total = _parse_wallet_summary_total(soup)
+    rows, matched_wallet_table = _parse_wallet_result_rows(soup)
 
-    if not matched_wallet_table and allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
-        return IvaCompensationWalletObservation(
-            taxpayer_nif=taxpayer_nif,
-            authenticated_identity=authenticated_identity,
-            target_year=target_year,
-            target_period=target_period,
-            rows=(),
-            total_pending=Decimal("0"),
-            source_url=validated_source_url,
-            captured_at=captured_at,
-            raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
-        )
-    if not matched_wallet_table:
+    if summary_total is None and not matched_wallet_table:
+        if allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
+            return IvaCompensationWalletObservation(
+                taxpayer_nif=taxpayer_nif,
+                authenticated_identity=authenticated_identity,
+                target_year=target_year,
+                target_period=target_period,
+                rows=(),
+                total_pending=Decimal("0"),
+                source_url=validated_source_url,
+                captured_at=captured_at,
+                raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
+            )
         raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
 
-    total_pending = sum((row.pending_amount for row in rows), Decimal("0"))
+    row_sum = sum((row.pending_amount for row in rows), Decimal("0"))
+    if summary_total is not None and rows and summary_total != row_sum:
+        raise SedeParseError(
+            f"IVA wallet summary total {summary_total} does not equal the sum of Cuota Disponible rows {row_sum}; "
+            "refusing to persist an inconsistent wallet observation"
+        )
+    total_pending = summary_total if summary_total is not None else row_sum
     return IvaCompensationWalletObservation(
         taxpayer_nif=taxpayer_nif,
         authenticated_identity=authenticated_identity,
@@ -257,6 +269,57 @@ def parse_iva_compensation_wallet_html(
         captured_at=captured_at,
         raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
     )
+
+
+def _parse_wallet_result_rows(soup: BeautifulSoup) -> tuple[list[IvaCompensationWalletRow], bool]:
+    """Parse the cartera detail table rows and whether a wallet table was matched.
+
+    Matches the AEAT results table by its normalised column headers
+    (``Ejercicio`` / ``Período`` / ``Cuota Disponible``) and reads each data row
+    (header ``<th>`` rows are skipped). Returns the parsed rows plus a flag
+    indicating the wallet table was present, so the caller distinguishes an empty
+    wallet (table absent, aggregate ``0,00``) from an unrecognised page.
+    """
+    rows: list[IvaCompensationWalletRow] = []
+    matched_wallet_table = False
+    for table in soup.find_all("table"):
+        header = _normalised_text(table.get_text(" "))
+        if not all(token in header for token in _PRE303.iva_wallet_header_tokens):
+            continue
+        matched_wallet_table = True
+        for table_row in table.find_all("tr"):
+            if table_row.find_all("th"):
+                continue
+            cells = [_normalised_text(cell.get_text(" ")) for cell in table_row.find_all("td")]
+            if len(cells) < 3:
+                continue
+            try:
+                rows.append(_wallet_row_from_cells(cells))
+            except SedeParseError:
+                raise
+            except Exception as exc:
+                raise SedeParseError(f"could not parse IVA compensation wallet row {cells!r}: {exc}") from exc
+    return rows, matched_wallet_table
+
+
+def _parse_wallet_summary_total(soup: BeautifulSoup) -> Decimal | None:
+    """Return AEAT's authoritative "pendientes de períodos anteriores" aggregate, or None.
+
+    The cartera results view prints the binding total on a single labelled line
+    (``Cuotas a compensar pendientes de períodos anteriores: <amount>``). The
+    smallest element carrying both label tokens and a Spanish-decimal amount is
+    used, so the value is read from its own line rather than summed from the
+    detail table.
+    """
+    label_tokens = _PRE303.iva_wallet_total_label_tokens
+    for node in soup.find_all(["li", "p", "span", "div"]):
+        text = node.get_text(" ")
+        if not all(token in _normalised_text(text) for token in label_tokens):
+            continue
+        amount = _extract_spanish_amount(text)
+        if amount is not None:
+            return amount
+    return None
 
 
 def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> str | None:
@@ -294,6 +357,8 @@ async def _open_authenticated_surface(
     target_path: str,
     expected_url: str,
     surface: str,
+    target_year: int,
+    target_period: str,
 ) -> bool:
     """Open an AEAT app through the selector so Cl@ve app-local state is minted."""
     _assert_read_http("GET", selector_url)
@@ -343,6 +408,8 @@ async def _open_authenticated_surface(
             page,
             settings=settings,
             expected_url=expected_url,
+            target_year=target_year,
+            target_period=target_period,
         )
     return False
 
@@ -363,6 +430,8 @@ async def _open_discovered_wallet_entrypoint(
     browser_session: DefaultBrowserSession,
     settings: Settings,
     discovered_url: str,
+    target_year: int,
+    target_period: str,
 ) -> bool:
     """Open a wallet link discovered from the authenticated Pre303 page."""
     _assert_read_http("GET", discovered_url)
@@ -389,6 +458,8 @@ async def _open_discovered_wallet_entrypoint(
         page,
         settings=settings,
         expected_url=_WALLET_URL,
+        target_year=target_year,
+        target_period=target_period,
     )
 
 
@@ -464,13 +535,94 @@ async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
     await page.click(continue_selector)
 
 
+async def _select_own_name_actuacion_if_present(page: Page, *, settings: Settings) -> bool:
+    """Continue in own-name mode on AEAT's CarteraCuotas "tipo de actuación" selector.
+
+    AEAT renders the representation-type choice at the wallet URL itself as two
+    links — own-name (``?np=true``) and representative (``?np=false``) — followed by
+    a detached Ejecutar control. The read-only driver continues only through the
+    own-name link; it never follows the representative option. Returns True when the
+    own-name link was present and followed, False when the page is not the
+    tipo-actuación selector (so the caller proceeds to the execute gate unchanged).
+    """
+    try:
+        link = await page.query_selector(_PRE303.tipo_actuacion_own_name_link_selector)
+    except PlaywrightError:
+        link = None
+    if link is None:
+        return False
+    href = await link.get_attribute("href")
+    if not href:
+        return False
+    target = urljoin(getattr(page, "url", "") or _WALLET_URL, href)
+    parsed = urlsplit(target)
+    if parsed.path != _EXTERNAL.aeat.sede_paths.iva_compensation_wallet or not _is_allowed_wallet_host(parsed.netloc):
+        raise SedeNavigationError(
+            "AEAT cartera own-name option did not resolve to the expected wallet surface",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={
+                "landing_url": _redacted_url(getattr(page, "url", None)),
+                "own_name_target": _redacted_url(target),
+            },
+        )
+    _assert_read_http("GET", target)
+    _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
+    try:
+        await link.click()
+        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
+        try:
+            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+        except PlaywrightError:
+            log.debug(
+                "cartera own-name continuation did not reach networkidle current_url=%s",
+                getattr(page, "url", None),
+                exc_info=True,
+            )
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            "AEAT cartera own-name continuation failed",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={"landing_url": _redacted_url(getattr(page, "url", None))},
+        ) from exc
+    dump_dir = settings.aeat_wallet_diagnostic_dump_dir
+    if dump_dir is not None:
+        await _dump_wallet_diagnostic(page, label="post-own-name", dump_dir=dump_dir)
+    return True
+
+
+async def _fill_wallet_query_form(page: Page, *, target_year: int, target_period: str) -> None:
+    """Fill AEAT's CarteraCuotas ejercicio/período query fields before the Ejecutar read query.
+
+    The own-name CarteraCuotas form requires a target Ejercicio (year) and Período
+    before it returns the prior-period pending-compensation rows; submitting empty
+    fields re-renders the same shell. The taxpayer NIF field is server-prefilled to
+    the authenticated identity and is never written here. The fields are filled only
+    when both are present, so a future server-rendered shape change degrades to the
+    existing execute-gate diagnostics rather than raising a hard selector error.
+    """
+    ejercicio_selector = _PRE303.wallet_ejercicio_input_selector
+    periodo_selector = _PRE303.wallet_periodo_input_selector
+    try:
+        ejercicio_field = await page.query_selector(ejercicio_selector)
+        periodo_field = await page.query_selector(periodo_selector)
+    except PlaywrightError:
+        return
+    if ejercicio_field is None or periodo_field is None:
+        return
+    await page.fill(ejercicio_selector, str(target_year))
+    await page.fill(periodo_selector, str(target_period))
+
+
 async def _submit_wallet_execute_gate_if_present(
     page: Page,
     *,
     settings: Settings,
     expected_url: str,
+    target_year: int,
+    target_period: str,
 ) -> bool:
     expected_path = urlsplit(expected_url).path
+    await _select_own_name_actuacion_if_present(page, settings=settings)
     try:
         await page.wait_for_selector(
             _PRE303.wallet_execute_submit_selector,
@@ -512,6 +664,10 @@ async def _submit_wallet_execute_gate_if_present(
         method = _wallet_execute_form_method(html)
         _assert_read_http(method, submission_url)
         _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
+        await _fill_wallet_query_form(page, target_year=target_year, target_period=target_period)
+        _diag_dump_dir = settings.aeat_wallet_diagnostic_dump_dir
+        if _diag_dump_dir is not None:
+            await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=_diag_dump_dir)
         try:
             await page.click(_PRE303.wallet_execute_submit_selector)
             await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
@@ -529,6 +685,8 @@ async def _submit_wallet_execute_gate_if_present(
                 expected_path=expected_path,
                 timeout_ms=settings.aeat_browser_navigation_timeout_ms,
             )
+            if _diag_dump_dir is not None:
+                await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=_diag_dump_dir)
             if _wallet_execute_gate_status(
                 post_execute_html, expected_path=expected_path
             ) == "wallet-execute-submit-present" and not _has_wallet_table(post_execute_html):
@@ -744,6 +902,12 @@ def _bounded_text(value: object, *, max_length: int = 120) -> str:
 
 
 def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
+    """Build one wallet row from a cartera detail row: Ejercicio, Período, Cuota Disponible.
+
+    The AEAT cartera consultation surface exposes only the still-available balance
+    per generation period, so ``pending_amount`` carries the "Cuota Disponible"
+    cell and the generated/applied movement columns stay ``None``.
+    """
     year = _parse_year(cells[0])
     period = cells[1].strip().upper()
     if not period:
@@ -754,10 +918,8 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     return IvaCompensationWalletRow(
         generation_year=year,
         generation_period=period,
-        generated_amount=_parse_spanish_decimal(cells[2]),
-        applied_amount=_parse_spanish_decimal(cells[3]),
-        pending_amount=_parse_spanish_decimal(cells[4]),
-        raw_label=" | ".join(cells[:5]),
+        pending_amount=_parse_spanish_decimal(cells[2]),
+        raw_label=" | ".join(cells[:3]),
     )
 
 
@@ -786,13 +948,20 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     return amount
 
 
+def _extract_spanish_amount(text: str) -> Decimal | None:
+    """Return the last Spanish-decimal amount embedded in ``text`` (e.g. ``123,45``), or None.
+
+    Used to read AEAT's aggregate "pendientes de períodos anteriores" line, where the
+    amount trails a textual label on the same element.
+    """
+    matches = _SPANISH_AMOUNT_RE.findall(text.replace("\xa0", " "))
+    if not matches:
+        return None
+    return _parse_spanish_decimal(matches[-1])
+
+
 def _normalised_text(value: str) -> str:
     return normalize_response_text(value).casefold()
-
-
-def _looks_like_header(cells: list[str]) -> bool:
-    joined = " ".join(cells)
-    return _PRE303.iva_wallet_header_tokens[0] in joined and _PRE303.iva_wallet_header_tokens[1] in joined
 
 
 def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
@@ -821,6 +990,57 @@ def _is_wallet_execute_submit(input_node: object) -> bool:
         and str(get("name", "")).casefold() == "ejecutar"
         and str(get("type", "")).casefold() == "submit"
     )
+
+
+async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:
+    """Best-effort capture of the whole page tree for offline wallet DOM-drift diagnosis.
+
+    Enabled only when :attr:`Settings.aeat_wallet_diagnostic_dump_dir` is set;
+    callers pass that directory in as ``dump_dir``. Captures every page in the
+    context (the main document and any popup the Ejecutar query may open), each
+    page's child frames, and a full-page screenshot per page. Expected capture
+    failures (Playwright page errors and filesystem errors) are logged at debug
+    and swallowed so the diagnostic does not break the read path.
+    """
+    try:
+        dump_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        log.debug("wallet diagnostic: dump dir create failed: %s", exc, exc_info=True)
+        return
+    context = getattr(page, "context", None)
+    pages = list(getattr(context, "pages", None) or [page])
+    summary: list[str] = [f"label={label}", f"page_count={len(pages)}"]
+    for page_index, candidate in enumerate(pages):
+        prefix = f"{label}-p{page_index}"
+        try:
+            url = getattr(candidate, "url", "") or ""
+            html = await candidate.content()
+            (dump_dir / f"{prefix}.html").write_text(html, encoding="utf-8")
+            table_count = len(BeautifulSoup(html, "html.parser").find_all("table"))
+            summary.append(f"page[{page_index}] url={_redacted_url(url)} tables={table_count} bytes={len(html)}")
+        except (PlaywrightError, OSError) as exc:
+            summary.append(f"page[{page_index}] content_error={type(exc).__name__}")
+            log.debug("wallet diagnostic: page content dump failed idx=%s: %s", page_index, exc, exc_info=True)
+        try:
+            await candidate.screenshot(path=str(dump_dir / f"{prefix}.png"), full_page=True)
+        except (PlaywrightError, OSError) as exc:
+            log.debug("wallet diagnostic: screenshot failed idx=%s: %s", page_index, exc, exc_info=True)
+        for frame_index, frame in enumerate(getattr(candidate, "frames", None) or []):
+            try:
+                frame_url = getattr(frame, "url", "") or ""
+                frame_html = await frame.content()
+                (dump_dir / f"{prefix}-f{frame_index}.html").write_text(frame_html, encoding="utf-8")
+                frame_tables = len(BeautifulSoup(frame_html, "html.parser").find_all("table"))
+                summary.append(
+                    f"page[{page_index}].frame[{frame_index}] url={_redacted_url(frame_url)} tables={frame_tables}"
+                )
+            except (PlaywrightError, OSError) as exc:
+                log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)
+    try:
+        (dump_dir / f"{label}-summary.txt").write_text("\n".join(summary) + "\n", encoding="utf-8")
+    except OSError as exc:
+        log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
+    log.info("wallet diagnostic captured label=%s pages=%s dir=%s", label, len(pages), dump_dir)
 
 
 def _assert_read_http(method: str, url: str) -> None:
