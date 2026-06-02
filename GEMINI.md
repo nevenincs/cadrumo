@@ -7,6 +7,7 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-architecture-boundaries.md
 @.agents/rules/aeat-calculation-grounding.md
 @.agents/rules/aeat-campaign-close-honesty-review.md
+@.agents/rules/aeat-docs-scaffolding-cli.md
 @.agents/rules/aeat-documentation-workflow.md
 @.agents/rules/aeat-git-worktree-safety.md
 @.agents/rules/aeat-local-execution.md
