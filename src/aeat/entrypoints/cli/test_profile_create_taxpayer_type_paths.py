@@ -70,7 +70,7 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
     )
 
     assert result.exit_code == 0, result.output
-    assert "status\tcreated" in result.output
+    assert "Status\tCreated" in result.output
     rows = _profile_rows(runner, "webco")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
 

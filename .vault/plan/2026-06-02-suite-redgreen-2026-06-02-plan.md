@@ -150,7 +150,7 @@ cli_workflow_verification retired-surface suggestions, operator_surface help_doc
 config_custody profile lifecycle, profile-create taxpayer-type paths, google sheets pull/export, fichero BOE golden sha
 
 - [ ] `P07.S21` - Config custody profile lifecycle; `test_profile_create_provisions_file_custody_and_switch_reopens_it — investigate why switch does not reopen`.
-- [ ] `P07.S22` - Legal-entity profile create; `test_legal_entity_profile_creates_non_interactively_without_spouse_flags`.
+- [x] `P07.S22` - Legal-entity profile create; `test_legal_entity_profile_creates_non_interactively_without_spouse_flags`.
 - [ ] `P07.S23` - Google worksheet export-pull roundtrip; `test_workbook_input_values_survive_export_pull_compute_loop`.
 - [ ] `P07.S24` - Pull adapter classify_metadata empty pairs; `test_classify_metadata_returns_missing_for_empty_pairs (post sentinel + M347 fix; verify suite-level cleared)`.
 - [ ] `P07.S25` - Fichero BOE golden sha; `test_modelo_303_golden_sha_fichero_boe — recompute golden sha if peer registry change altered output`.
