@@ -1,7 +1,10 @@
-# Ley 35/2006 art. 49 — base liquidable general negativa carry-forward.
-# The base liquidable general negativa generated in a year and left
-# unapplied may be compensated in the four following ejercicios (art.
-# 49.1.b: "la compensacion ... en los cuatro anios siguientes"). The
+# Ley 35/2006 art. 48 — base imponible general negativa carry-forward.
+# The negative saldo of the base imponible general (art. 48.b) left
+# unapplied is compensated in the four following ejercicios, with the
+# 25% cross-class limit (art. 48 grounds the casilla 1391 -> 1388 Modelo
+# 100 carry per the BOE corpus body). NOTE: art. 49 governs the base
+# imponible del AHORRO (savings base), a distinct mechanism; the
+# general-base carry is art. 48. The
 # prior year's end-of-year generated saldo (casilla 1391, semantic_role
 # irpf_anexo_c_base_liq_neg_generado) becomes, in the following year's
 # declaration, the opening pending balance for the immediately-prior
@@ -18,7 +21,7 @@ id = "renta-2024-base-liquidable-negativa-general-anterior"
 source = "previous_filing"
 selector = { source_modelo = "100", source_output = "1391", filing_year_delta = -1, period = "0A" }
 aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-modelo-100-procedure", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".bindings.source_citations]]
