@@ -26,6 +26,7 @@ from ...application.overview import FilingStatus
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...core.time import now
+from ...domain.portals import PortalCategory
 from ._common import _emit_envelope
 
 if TYPE_CHECKING:
@@ -1042,7 +1043,7 @@ def _portal_row(metadata) -> Mapping[str, object]:
 def portals_list(
     ctx: typer.Context,
     category: Annotated[
-        str | None,
+        PortalCategory | None,
         typer.Option(
             "--category", help=tr("cli.app.live.portals.category_help", default="Filter to one PortalCategory value.")
         ),
@@ -1057,18 +1058,12 @@ def portals_list(
         ),
     ] = None,
 ) -> None:
-    from ...domain.portals import PORTAL_REGISTRY, PortalCategory, portals_by_category, portals_for_modelo
+    from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
     if category and modelo:
         raise typer.BadParameter(tr("cli.app.live.portals.category_modelo_exclusive"))
     if category:
-        try:
-            cat = PortalCategory(category)
-        except ValueError as exc:
-            raise typer.BadParameter(
-                tr("cli.app.live.portals.unknown_category", category=category)
-            ) from exc
-        entries = portals_by_category(cat)
+        entries = portals_by_category(category)
     elif modelo:
         entries = portals_for_modelo(modelo)
     else:
