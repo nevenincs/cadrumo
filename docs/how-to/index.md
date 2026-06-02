@@ -2,6 +2,15 @@
 
 These recipes assume the basics: a working `aeat` command (check with `aeat --version`), an active profile (your saved taxpayer identity and settings — created with `aeat config profile create <name>`, switched with `aeat config profile switch <name>`, inspected with `aeat config profile status`), and ledger data to file against. If you're new to the tool, start with the [Tutorial](../tutorials/index.md) to build your first modelo (a numbered Spanish tax form, such as 303 for quarterly VAT) from start to finish, then read the [pipeline Explanation](../explanation/index.md) for the concepts behind the verbs. These recipes don't re-teach either; they assume you know the lifecycle and want to get a specific job done.
 
+## Related guides
+
+These recipes assume a working setup. For the setup itself and the fast path, see:
+
+- [Set up your taxpayer profile](profile-setup.md) - create a profile and switch between several.
+- [Import and classify a bank statement](import-bank-statements.md) - load your ledger so a modelo can calculate from it.
+- [Quickstart](quickstart.md) - the four-command path to a modelo file.
+- [Diagnose and repair your local setup](troubleshooting.md) - when a command refuses or data looks wrong.
+
 ## How to read a recipe
 
 Each recipe states a goal, then gives ordered, copy-pasteable steps built from stable `aeat` verbs. Use `aeat config ...` for local setup and diagnostics, and `aeat app ...` for the tax workflow over the active profile. Discover specifics live — `aeat app modelo describe <modelo>` for revision IDs, `aeat app modelo casillas <modelo>` for casilla (numbered form box) IDs, and `--help` on any verb — rather than relying on values hard-coded in a recipe that may change between releases.
@@ -22,7 +31,7 @@ These recipes assume an active taxpayer profile and an imported, classified ledg
 
 The filing spine is the same for every modelo: `create`, `calculate`, `verify`, then `export`. Each verb persists state to the active profile's encrypted bucket. No verb in this spine submits to AEAT. `aeat app modelo work file` is an internal lifecycle marker, and `export` writes a local file. You file the exported fichero-BOE file yourself at [sede.agenciatributaria.gob.es](https://sede.agenciatributaria.gob.es).
 
-Period tokens differ by verb. The filing spine composes `--year` and `--period` separately, so pass `--period Q1` (or `annual`, `0A`, a two-digit month, or a modelo-declared token), not `--period 2024`. A bare four-digit period is rejected with the list of accepted tokens.
+Period tokens differ by verb. The filing spine composes `--year` and `--period` separately, so pass `--period 1T` (or `0A` for annual, a two-digit month, or a modelo-declared token), not `--period 2024`. A bare four-digit period is rejected with the list of accepted tokens.
 
 ### Confirm you're ready to file
 
