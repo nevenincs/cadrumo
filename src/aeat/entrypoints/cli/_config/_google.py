@@ -44,8 +44,6 @@ if TYPE_CHECKING:
 # cross-domain snapshot check with the registry validator. build_snapshot
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this CLI path.
-from ....domain import renta as _renta_snapshot_checks  # noqa: F401
-
 from ....adapters.outbound.google import (
     GoogleAuthClientNotRegisteredError,
     GoogleAuthError,
@@ -73,9 +71,17 @@ from ....adapters.outbound.google._session_store import (
 )
 from ....adapters.outbound.storage import (
     OutboundStorageError,
+    OutboundStorageValidationError,
+    RemoteMirrorIssue,
+    RemoteMirrorIssueKind,
+    RemoteMirrorNamespaceManifest,
     StorageProvider,
     build_remote_mirror_namespace_manifest,
+    compare_remote_mirror_manifests,
+    get_remote_mirror_namespace_manifest,
     get_storage_provider,
+    inspect_remote_mirror_download,
+    inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
@@ -93,12 +99,13 @@ from ....application.storage.calc_sheets import (
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
+from ....domain import renta as _renta_snapshot_checks  # noqa: F401
 from ....domain.calculations.registry._authority import bundled_authority as _bundled_authority
 from ....domain.calculations.registry._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from .._common import _emit, _emit_envelope
+from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_payloads import (
     GoogleFolderGetResult,
@@ -111,6 +118,7 @@ from ._google_payloads import (
     GoogleSyncCalcPullResult,
     GoogleSyncCalcVerifyDivergencePayload,
     GoogleSyncCalcVerifyResult,
+    GoogleSyncDegradedManifestPayload,
     GoogleSyncFailedManifestPayload,
     GoogleSyncFailedObjectPayload,
     GoogleSyncProbeResult,
@@ -194,7 +202,9 @@ class OAuthClientPayload(TypedDict):
     ``web`` variant is rejected by :func:`_coerce_client_json`.
     """
 
-    installed: dict[str, Any]  # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use.
+    # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud
+    # Console JSON envelope; narrowed to OAuthClient before production use.
+    installed: dict[str, Any]
 
 
 class _OAuthClientWrapper(BaseModel):
@@ -208,7 +218,9 @@ class _OAuthClientWrapper(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
-    installed: dict[str, Any]  # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud Console JSON envelope; narrowed to OAuthClient by _coerce_client_json before any production use.
+    # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud
+    # Console JSON envelope; narrowed to OAuthClient before production use.
+    installed: dict[str, Any]
 
 
 def _coerce_client_json(path: Path) -> OAuthClient:
@@ -617,13 +629,22 @@ def _push_secure_object_mirror_rows(
     limit: int | None,
     dry_run: bool,
 ) -> dict[str, object]:
+    if limit is not None and not dry_run:
+        raise OutboundStorageValidationError(
+            "non-dry-run Google sync push with --limit cannot produce a complete remote mirror manifest",
+            context={"limit": str(limit)},
+            suggestion="run without --limit, or add --dry-run for bounded inspection",
+        )
     pushed_by_ns: dict[str, int] = {}
     skipped_by_ns: dict[str, int] = {}
     failed: list[tuple[str, str, str]] = []
-    pushed_rows_by_ns: dict[str, list[SecureObjectRawRow]] = {}
+    planned_rows_by_ns: dict[str, list[SecureObjectRawRow]] = {}
     failed_namespaces: set[str] = set()
     manifest_pushed_by_ns: dict[str, int] = {}
     manifest_failed: list[tuple[str, str]] = []
+    manifest_degraded: list[tuple[str, str]] = []
+    manifest_by_ns: dict[str, RemoteMirrorNamespaceManifest] = {}
+    preflight_blocked_namespaces: set[str] = set()
     total_seen = 0
 
     for raw_row in repository.iter_all_records_raw():
@@ -632,36 +653,64 @@ def _push_secure_object_mirror_rows(
         total_seen += 1
         if limit is not None and total_seen > limit:
             break
-        hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
-        label = _label_for(raw_row.namespace)
-        content_hash = f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}"
         if dry_run:
             skipped_by_ns[raw_row.namespace] = skipped_by_ns.get(raw_row.namespace, 0) + 1
             continue
-        try:
-            provider.put(
-                raw_row.namespace,
-                hmac_hex,
-                raw_row.payload,
-                content_hash=content_hash,
-                label=label,
-            )
-        except OutboundStorageError as exc:
-            failed.append((raw_row.namespace, hmac_hex, str(exc)))
-            failed_namespaces.add(raw_row.namespace)
-            continue
-        pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
-        pushed_rows_by_ns.setdefault(raw_row.namespace, []).append(raw_row)
+        planned_rows_by_ns.setdefault(raw_row.namespace, []).append(raw_row)
 
-    if not dry_run and limit is None:
-        for namespace, rows in pushed_rows_by_ns.items():
-            if namespace in failed_namespaces:
-                continue
+    if not dry_run:
+        for namespace, rows in planned_rows_by_ns.items():
             manifest = build_remote_mirror_namespace_manifest(namespace, rows)
             try:
-                put_remote_mirror_namespace_manifest(provider, manifest)
+                blocking_failures, degradations = _inspect_existing_remote_mirror(
+                    provider=provider,
+                    manifest=manifest,
+                )
             except OutboundStorageError as exc:
                 manifest_failed.append((namespace, str(exc)))
+                preflight_blocked_namespaces.add(namespace)
+                continue
+            if degradations:
+                manifest_degraded.append((namespace, "; ".join(degradations)))
+            if blocking_failures:
+                manifest_failed.append((namespace, "; ".join(blocking_failures)))
+                preflight_blocked_namespaces.add(namespace)
+                continue
+            manifest_by_ns[namespace] = manifest
+
+    for namespace, rows in planned_rows_by_ns.items():
+        if namespace in preflight_blocked_namespaces:
+            continue
+        for raw_row in rows:
+            hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
+            label = _label_for(raw_row.namespace)
+            content_hash = f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}"
+            try:
+                provider.put(
+                    raw_row.namespace,
+                    hmac_hex,
+                    raw_row.payload,
+                    content_hash=content_hash,
+                    label=label,
+                )
+            except OutboundStorageError as exc:
+                failed.append((raw_row.namespace, hmac_hex, str(exc)))
+                failed_namespaces.add(raw_row.namespace)
+                continue
+            pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
+
+    if not dry_run:
+        for namespace, manifest in manifest_by_ns.items():
+            if namespace in failed_namespaces:
+                continue
+            try:
+                put_remote_mirror_namespace_manifest(provider, manifest)
+                inspection_failures = _inspect_pushed_remote_mirror(provider=provider, manifest=manifest)
+            except OutboundStorageError as exc:
+                manifest_failed.append((namespace, str(exc)))
+                continue
+            if inspection_failures:
+                manifest_failed.append((namespace, "; ".join(inspection_failures)))
                 continue
             manifest_pushed_by_ns[namespace] = manifest.object_count
 
@@ -671,7 +720,52 @@ def _push_secure_object_mirror_rows(
         "failed_objects": failed,
         "manifest_pushed_by_namespace": manifest_pushed_by_ns,
         "failed_manifests": manifest_failed,
+        "degraded_manifests": manifest_degraded,
     }
+
+
+def _inspect_existing_remote_mirror(
+    *,
+    provider: StorageProvider,
+    manifest: RemoteMirrorNamespaceManifest,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    remote_manifest = get_remote_mirror_namespace_manifest(provider, manifest.namespace)
+    if remote_manifest is None:
+        return (), ()
+
+    blocking_failures: list[str] = []
+    degradations: list[str] = []
+    for inspection in (
+        compare_remote_mirror_manifests(local=manifest, remote=remote_manifest),
+        inspect_remote_mirror_download(provider, remote_manifest),
+    ):
+        for issue in inspection.issues:
+            formatted = _format_remote_mirror_issue(issue)
+            if issue.kind is RemoteMirrorIssueKind.REVISION_CONFLICT:
+                blocking_failures.append(formatted)
+                continue
+            degradations.append(formatted)
+    return tuple(blocking_failures), tuple(degradations)
+
+
+def _format_remote_mirror_issue(issue: RemoteMirrorIssue) -> str:
+    object_key = issue.object_key_hmac[:16] if issue.object_key_hmac is not None else "<namespace>"
+    return f"{issue.kind.value}:{object_key}:{issue.detail}"
+
+
+def _inspect_pushed_remote_mirror(
+    *,
+    provider: StorageProvider,
+    manifest: RemoteMirrorNamespaceManifest,
+) -> tuple[str, ...]:
+    failures: list[str] = []
+    for inspection in (
+        inspect_remote_mirror_upload(provider, manifest),
+        inspect_remote_mirror_download(provider, manifest),
+    ):
+        for issue in inspection.issues:
+            failures.append(_format_remote_mirror_issue(issue))
+    return tuple(failures)
 
 
 @sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
@@ -718,18 +812,22 @@ def google_sync_push(
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
 
     repository = secure_object_repository_for_active_bucket()
-    mirror_result = _push_secure_object_mirror_rows(
-        provider=provider,
-        repository=repository,
-        namespace_filter=namespace_filter,
-        limit=limit,
-        dry_run=dry_run,
-    )
+    try:
+        mirror_result = _push_secure_object_mirror_rows(
+            provider=provider,
+            repository=repository,
+            namespace_filter=namespace_filter,
+            limit=limit,
+            dry_run=dry_run,
+        )
+    except OutboundStorageError as exc:
+        raise _google_refusal(exc) from exc
     pushed_by_ns = mirror_result["pushed_by_namespace"]
     skipped_by_ns = mirror_result["skipped_by_namespace"]
     failed = mirror_result["failed_objects"]
     manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
     manifest_failed = mirror_result["failed_manifests"]
+    manifest_degraded = mirror_result["degraded_manifests"]
 
     push_result = GoogleSyncPushResult(
         profile=active,
@@ -742,6 +840,7 @@ def google_sync_push(
         failed_total=len(failed),
         manifest_pushed_total=len(manifest_pushed_by_ns),
         manifest_failed_total=len(manifest_failed),
+        manifest_degraded_total=len(manifest_degraded),
         pushed_by_namespace=dict(pushed_by_ns),
         skipped_by_namespace=dict(skipped_by_ns),
         failed_objects=[
@@ -750,6 +849,9 @@ def google_sync_push(
         manifest_pushed_by_namespace=dict(manifest_pushed_by_ns),
         failed_manifests=[
             GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed
+        ],
+        degraded_manifests=[
+            GoogleSyncDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
         ],
     )
     lines: list[str] = [
@@ -764,6 +866,7 @@ def google_sync_push(
         f"failed_total\t{len(failed)}",
         f"manifest_pushed_total\t{len(manifest_pushed_by_ns)}",
         f"manifest_failed_total\t{len(manifest_failed)}",
+        f"manifest_degraded_total\t{len(manifest_degraded)}",
     ]
     for ns in sorted(set(pushed_by_ns) | set(skipped_by_ns)):
         pushed = pushed_by_ns.get(ns, 0)
@@ -771,6 +874,8 @@ def google_sync_push(
         lines.append(f"namespace\t{ns}\tpushed={pushed}\tskipped={skipped}")
     for ns, h, err in failed:
         lines.append(f"failed\t{ns}\t{h[:16]}\t{err}")
+    for ns, detail in manifest_degraded:
+        lines.append(f"degraded_manifest\t{ns}\t{detail}")
     _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines))
 
 
