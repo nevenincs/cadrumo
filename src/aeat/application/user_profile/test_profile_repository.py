@@ -488,10 +488,7 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
 
     with pytest.raises(ProfileNotFoundError) as excinfo:
         _select(repository, created.profile_id)
-    assert (
-        excinfo.value.translated_message
-        == "application.user_profile.errors.profile_tombstoned_not_selectable"
-    )
+    assert excinfo.value.translated_message == "application.user_profile.errors.profile_tombstoned_not_selectable"
     assert excinfo.value.context == {"profile": created.profile_id}
 
 
