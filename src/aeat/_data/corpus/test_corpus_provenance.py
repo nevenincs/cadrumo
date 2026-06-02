@@ -66,9 +66,7 @@ def test_modelo_131_corpus_carries_provenance_document() -> None:
     assert "Last-update timestamps" in body or "last-updated" in body.lower(), (
         "PROVENANCE.md missing AEAT page last-updated timestamp"
     )
-    assert "capture" in body.lower() or "Modified" in body, (
-        "PROVENANCE.md missing corpus capture date"
-    )
+    assert "capture" in body.lower() or "Modified" in body, "PROVENANCE.md missing corpus capture date"
 
 
 def test_modelo_131_corpus_provenance_lists_every_committed_file() -> None:
@@ -82,10 +80,7 @@ def test_modelo_131_corpus_provenance_lists_every_committed_file() -> None:
     files_dir = _CORPUS_ROOT / "modelo_131" / "files"
     provenance_body = (_CORPUS_ROOT / "modelo_131" / "PROVENANCE.md").read_text(encoding="utf-8")
 
-    undocumented = [
-        f.name for f in sorted(files_dir.iterdir())
-        if f.is_file() and f.name not in provenance_body
-    ]
+    undocumented = [f.name for f in sorted(files_dir.iterdir()) if f.is_file() and f.name not in provenance_body]
     assert not undocumented, (
         f"modelo_131/files entries not listed in PROVENANCE.md: {undocumented!r}; "
         "add an entry to the Documents section before landing"
