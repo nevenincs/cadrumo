@@ -169,5 +169,3 @@ __all__ = [
     "validate_prorrata_reference",
     "verify_catalogue",
 ]
-
-
