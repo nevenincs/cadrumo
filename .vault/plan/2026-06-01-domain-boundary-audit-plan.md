@@ -224,8 +224,8 @@ Replace the wizard frozenset re-derivation with domain SituacionFamiliar predica
 - [x] `W07.P20.S73` - Rewrite wizard/_verifier.py _check_joint_taxation_situacion_familiar to use not sf.conjunta_eligible() and _check_monoparental_requires_hijos to use sf.monoparental_required(); `delete the _JOINT_INELIGIBLE and _MONOPARENTAL_REQUIRED frozensets (DB-08); `src/aeat/application/wizard/_verifier.py`.
 - [x] `W07.P20.S74` - Type InitializeWorkspaceCommand.iva_regime as IVARegime in setup/_contracts.py:29 (with a case-fold BeforeValidator) and adjust setup/_service.py:23 to emit the enum value (DB-09); `src/aeat/application/setup/_contracts.py`.
 - [x] `W07.P20.S75` - Fix the lowercase iva_regime fixtures in setup/test_contracts_output_language_roundtrip.py:26,37,48,59 to match the IVARegime member value (DB-09); `src/aeat/application/setup/test_contracts_output_language_roundtrip.py`.
-- [ ] `W07.P20.S76` - Replace operator_surface/_models.py:37 SourceKind enum with a Literal/frozenset slice over core AggregationSourceKind and update SourceKindAlias, OperatorSurfaceContract.source_kinds, _contract SOURCE_KINDS and resolve_source_kind_alias (DB-10); `src/aeat/application/operator_surface/_models.py`.
-- [ ] `W07.P20.S77` - Update operator_surface/test_contract.py to assert against AggregationSourceKind members and add a subset-invariant test (DB-10); `src/aeat/application/operator_surface/test_contract.py`.
+- [x] `W07.P20.S76` - Replace operator_surface/_models.py:37 SourceKind enum with a Literal/frozenset slice over core AggregationSourceKind and update SourceKindAlias, OperatorSurfaceContract.source_kinds, _contract SOURCE_KINDS and resolve_source_kind_alias (DB-10); `src/aeat/application/operator_surface/_models.py`.
+- [x] `W07.P20.S77` - Update operator_surface/test_contract.py to assert against AggregationSourceKind members and add a subset-invariant test (DB-10); `src/aeat/application/operator_surface/test_contract.py`.
 
 ### Phase `W07.P21` - Public-surface and docstring gaps (DB-12, DB-13, DB-03)
 
