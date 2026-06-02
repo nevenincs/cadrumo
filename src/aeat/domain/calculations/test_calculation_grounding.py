@@ -30,14 +30,8 @@ from ...core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_TAUTOLOGY_GATE_PATH = (
-    PROJECT_ROOT
-    / "src/aeat/domain/calculations/registry/test_tautology_gate.py"
-)
-_CHAIN_BEHAVIOUR_PATH = (
-    PROJECT_ROOT
-    / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
-)
+_TAUTOLOGY_GATE_PATH = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_tautology_gate.py"
+_CHAIN_BEHAVIOUR_PATH = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
 
 
 def _count_test_functions(path: Path) -> int:
@@ -49,8 +43,7 @@ def _count_test_functions(path: Path) -> int:
     return sum(
         1
         for node in ast.walk(tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name.startswith("test_")
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
     )
 
 
@@ -61,8 +54,7 @@ def test_tautology_gate_file_exists_and_is_non_vacuous() -> None:
     loudly so the audit surface is not silently disabled.
     """
     assert _TAUTOLOGY_GATE_PATH.exists(), (
-        f"Tautology gate missing at {_TAUTOLOGY_GATE_PATH}; "
-        f"calculation grounding is unprotected — restore the file."
+        f"Tautology gate missing at {_TAUTOLOGY_GATE_PATH}; calculation grounding is unprotected — restore the file."
     )
     count = _count_test_functions(_TAUTOLOGY_GATE_PATH)
     assert count >= 2, (
