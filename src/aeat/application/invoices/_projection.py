@@ -187,7 +187,6 @@ def project_invoice_payment_matches(
     return InvoiceMatchProjection(period=period, matched=tuple(matched), unmatched=tuple(unmatched))
 
 
-
 __all__ = [
     "InvoiceMatchProjection",
     "InvoiceMatchRow",
