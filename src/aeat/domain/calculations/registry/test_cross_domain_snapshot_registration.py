@@ -101,9 +101,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
         """
     )
 
-    assert result.returncode == 0, (
-        f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
-    )
+    assert result.returncode == 0, f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
     assert "M100_GATE_REGISTERED" in result.stdout, result.stdout
 
 
@@ -148,9 +146,7 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
         """
     )
 
-    assert result.returncode == 0, (
-        f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
-    )
+    assert result.returncode == 0, f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
     assert "M100_BUILD_OK" in result.stdout, result.stdout
 
 
@@ -200,7 +196,5 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
         """
     )
 
-    assert result.returncode == 0, (
-        f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
-    )
+    assert result.returncode == 0, f"subprocess failed:\nstdout={result.stdout}\nstderr={result.stderr}"
     assert "M303_BUILD_OK" in result.stdout, result.stdout

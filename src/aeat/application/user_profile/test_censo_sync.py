@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 from ..live._censo import CensoSnapshotService, SnapshotLifecycleState
 from . import (
     CENSO_SOURCE_TAG,
@@ -22,8 +24,6 @@ from . import (
     CensoSyncService,
     UserProfileLifecycleRepository,
 )
-from ...domain.user_profile import UserProfileFact, UserProfileRecord
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -197,7 +197,9 @@ def test_apply_seeds_home_office_usage_ratios_from_censo(
         profiles=profiles,
     )
     service.refresh_censo(
-        profile_id="operator", source_url=_G313, fact_source=_facts_clean_ratio,
+        profile_id="operator",
+        source_url=_G313,
+        fact_source=_facts_clean_ratio,
     )
 
     result = service.apply_censo_to_profile(profile_id="operator")
@@ -222,7 +224,9 @@ def test_apply_seeding_idempotent_on_repeat(secure_store: SecureObjectRepository
         profiles=profiles,
     )
     service.refresh_censo(
-        profile_id="operator", source_url=_G313, fact_source=_facts_clean_ratio,
+        profile_id="operator",
+        source_url=_G313,
+        fact_source=_facts_clean_ratio,
     )
     service.apply_censo_to_profile(profile_id="operator")
 
