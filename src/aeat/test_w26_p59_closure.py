@@ -57,32 +57,50 @@ def _has_type_ignore(lines: list[str], lineno: int) -> bool:
 # S668: _app_live.py — 9 wire-payload splat sites
 # ---------------------------------------------------------------------------
 
-_S668_LINES = [1082, 1108, 1196, 1382, 1412, 1476, 1529, 1581, 1657]
+_S668_SITE_COUNT = 9
 
 
-@pytest.mark.parametrize("lineno", _S668_LINES)
-def test_s668_app_live_wire_payload_marker_present(lineno: int) -> None:
-    """Each _app_live.py splat site must carry CAST-RATIONALE-WIRE-PAYLOAD-* marker."""
-    lines = _lines(_APP_LIVE)
-    assert _has_marker(lines, lineno, _WIRE_PAYLOAD_TOKEN), (
-        f"_app_live.py:{lineno}: missing {_WIRE_PAYLOAD_TOKEN!r} marker"
+def test_s668_app_live_wire_payload_markers_present() -> None:
+    """Every _app_live.py wire-payload splat site carries a rationale marker.
+
+    Checked structurally rather than by line number so the test is robust to
+    unrelated line shifts: each marker is inline on its ``**`` splat call, so
+    the invariant is that the expected number of markers exist and each sits on
+    a splat line.
+    """
+    marker_lines = [ln for ln in _lines(_APP_LIVE) if _WIRE_PAYLOAD_TOKEN in ln]
+    assert len(marker_lines) == _S668_SITE_COUNT, (
+        f"_app_live.py: expected {_S668_SITE_COUNT} {_WIRE_PAYLOAD_TOKEN!r} wire-payload "
+        f"markers, found {len(marker_lines)}"
     )
+    for ln in marker_lines:
+        assert "**" in ln, (
+            f"_app_live.py: {_WIRE_PAYLOAD_TOKEN!r} marker is not on a splat (``**``) line: {ln!r}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # S669 Sub-A: _modelo.py — 4 kv_pairs splat sites
 # ---------------------------------------------------------------------------
 
-_S669A_LINES = [902, 904, 906, 925]
+_S669A_SITE_COUNT = 4
 
 
-@pytest.mark.parametrize("lineno", _S669A_LINES)
-def test_s669a_modelo_kv_pairs_marker_present(lineno: int) -> None:
-    """Each _modelo.py kv_pairs splat site must carry CAST-RATIONALE-WIRE-PAYLOAD-* marker."""
-    lines = _lines(_MODELO)
-    assert _has_marker(lines, lineno, _WIRE_PAYLOAD_TOKEN), (
-        f"_modelo.py:{lineno}: missing {_WIRE_PAYLOAD_TOKEN!r} marker"
+def test_s669a_modelo_kv_pairs_markers_present() -> None:
+    """Every _modelo.py kv_pairs splat site carries a rationale marker.
+
+    Line-independent: each marker is inline on its ``**`` splat call, so the
+    invariant is the expected marker count with each on a splat line.
+    """
+    marker_lines = [ln for ln in _lines(_MODELO) if _WIRE_PAYLOAD_TOKEN in ln]
+    assert len(marker_lines) == _S669A_SITE_COUNT, (
+        f"_modelo.py: expected {_S669A_SITE_COUNT} {_WIRE_PAYLOAD_TOKEN!r} kv_pairs "
+        f"markers, found {len(marker_lines)}"
     )
+    for ln in marker_lines:
+        assert "**" in ln, (
+            f"_modelo.py: {_WIRE_PAYLOAD_TOKEN!r} marker is not on a splat (``**``) line: {ln!r}"
+        )
 
 
 # ---------------------------------------------------------------------------
