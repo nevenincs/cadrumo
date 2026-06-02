@@ -18,6 +18,8 @@ from pathlib import Path
 from .....domain.justificante._errors import JustificanteParseError
 from .....domain.justificante._schema import JustificanteParserBackend
 
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+
 
 def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
     """Extract concatenated text from ``pdf_path`` using ``backend``.
@@ -29,8 +31,16 @@ def extract_text(pdf_path: Path, backend: JustificanteParserBackend) -> str:
     Returns:
         The concatenated text of every page in the PDF, joined by newlines.
     """
-    resolved = pdf_path.expanduser().resolve()
-    stat = resolved.stat()
+    try:
+        resolved = pdf_path.expanduser().resolve()
+        stat = resolved.stat()
+    except OSError as exc:
+        raise JustificanteParseError(
+            f"justificante PDF could not be read: {_INPUT_PDF_SOURCE_LABEL}",
+            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            translated_message="adapters.inbound.justificante.errors.parse_failed",
+            missing=("source_pdf",),
+        ) from exc
     backend_value = backend.value if hasattr(backend, "value") else str(backend)
     return _extract_text_cached(str(resolved), backend_value, stat.st_size, stat.st_mtime_ns)
 

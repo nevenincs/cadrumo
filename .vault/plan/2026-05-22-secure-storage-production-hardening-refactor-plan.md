@@ -296,7 +296,7 @@ Current register count: `293` production candidate files.
 | `AFR-005` | `src/aeat/adapters/inbound/financial/providers/_ofx.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-006` | `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-007` | `src/aeat/adapters/inbound/justificante/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-008` | `src/aeat/adapters/inbound/justificante/_parsers/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-008` | `src/aeat/adapters/inbound/justificante/_parsers/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-009` | `src/aeat/adapters/inbound/pdf/_pdfplumber.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-010` | `src/aeat/adapters/inbound/pdf/_utils.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-011` | `src/aeat/adapters/inbound/sanitizer/_errors.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -649,7 +649,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S107` - Close `AFR-005` for `src/aeat/adapters/inbound/financial/providers/_ofx.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/financial/providers/_ofx.py`.
 - [x] `W12.P26.S108` - Close `AFR-006` for `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
 - [x] `W12.P26.S109` - Close `AFR-007` for `src/aeat/adapters/inbound/justificante/_parser.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/justificante/_parser.py`.
-- [ ] `W12.P26.S110` - Close `AFR-008` for `src/aeat/adapters/inbound/justificante/_parsers/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/justificante/_parsers/__init__.py`.
+- [x] `W12.P26.S110` - Close `AFR-008` for `src/aeat/adapters/inbound/justificante/_parsers/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/justificante/_parsers/__init__.py`.
 - [x] `W12.P26.S111` - Close `AFR-009` for `src/aeat/adapters/inbound/pdf/_pdfplumber.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/pdf/_pdfplumber.py`.
 - [ ] `W12.P26.S112` - Close `AFR-010` for `src/aeat/adapters/inbound/pdf/_utils.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/pdf/_utils.py`.
 - [ ] `W12.P26.S113` - Close `AFR-011` for `src/aeat/adapters/inbound/sanitizer/_errors.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/inbound/sanitizer/_errors.py`.
