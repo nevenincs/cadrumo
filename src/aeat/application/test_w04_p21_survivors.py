@@ -103,32 +103,28 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 
 
 def test_iva_compensation_year_range_error_is_registered_and_roundtrips() -> None:
-    from .calculations._iva_compensation_history import IvaCompensationYearRangeError
+    from ..domain.iva_compensation._errors import IvaCompensationYearRangeError
 
     _assert_registered_and_roundtrip(IvaCompensationYearRangeError)
 
 
 def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> None:
-    from .calculations._iva_compensation_history import IvaCompensationDecimalParseError
+    from ..domain.iva_compensation._errors import IvaCompensationDecimalParseError
 
     _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
-    from .calculations._iva_compensation_history import (
-        IvaCompensationYearRangeError,
-        iva_compensation_period_key,
-    )
+    from ..domain.iva_compensation._errors import IvaCompensationYearRangeError
+    from .calculations._iva_compensation_history import iva_compensation_period_key
 
     with pytest.raises(IvaCompensationYearRangeError):
         iva_compensation_period_key(1999, "1T")
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:
-    from .calculations._iva_compensation_history import (
-        IvaCompensationYearRangeError,
-        build_iva_compensation_carry_forward_report,
-    )
+    from ..domain.iva_compensation._errors import IvaCompensationYearRangeError
+    from .calculations._iva_compensation_history import build_iva_compensation_carry_forward_report
 
     with pytest.raises(IvaCompensationYearRangeError):
         build_iva_compensation_carry_forward_report((), as_of_year=2100)

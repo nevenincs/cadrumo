@@ -1010,7 +1010,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._iva_compensation_history.IvaCompensationYearRangeError",
+        "aeat.domain.iva_compensation._errors.IvaCompensationYearRangeError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_YEAR_RANGE",
             category=ErrorCategory.REFUSED,
@@ -1021,7 +1021,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._iva_compensation_history.IvaCompensationDecimalParseError",
+        "aeat.domain.iva_compensation._errors.IvaCompensationDecimalParseError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_DECIMAL_PARSE",
             category=ErrorCategory.REFUSED,
@@ -1032,7 +1032,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._iva_compensation_history.IvaCompensationCarryForwardPolicyError",
+        "aeat.domain.iva_compensation._errors.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
             category=ErrorCategory.REFUSED,
@@ -1043,7 +1043,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._iva_compensation_history.IvaCompensationSeedConflictError",
+        "aeat.domain.iva_compensation._errors.IvaCompensationSeedConflictError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_SEED_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -1054,7 +1054,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.calculations._iva_wallet_reconciliation.IvaCompensationReconciliationInputError",
+        "aeat.domain.iva_compensation._errors.IvaCompensationReconciliationInputError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_RECONCILIATION_INPUT",
             category=ErrorCategory.REFUSED,

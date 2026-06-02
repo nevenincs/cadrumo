@@ -12,25 +12,24 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-# Import the wizard catalogue + persistence so register_wizard_catalogue()
-# and register_project_answers() run before any domain module under
-# ``aeat app modelo work`` queries SETUP_FLOW or projects answers.  The
-# CLI command tree is lazy-loaded, so ``aeat app modelo`` alone does not
-# trigger these imports (only ``aeat config`` does).
-from ...application.wizard import _catalogue  # side-effect import: registers wizard catalogue
-from ...application.wizard import _persistence
 from ...application.calculations._iva_compensation_history import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
     IvaCompensationHistoryRepository,
     IvaCompensationPeriodState,
-    IvaCompensationSeedConflictError,
     seed_iva_compensation_period,
 )
 from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
-from . import app
+
+# Import the wizard catalogue + persistence so register_wizard_catalogue()
+# and register_project_answers() run before any domain module under
+# ``aeat app modelo work`` queries SETUP_FLOW or projects answers.  The
+# CLI command tree is lazy-loaded, so ``aeat app modelo`` alone does not
+# trigger these imports (only ``aeat config`` does).
+from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

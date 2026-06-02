@@ -15,13 +15,13 @@ from ...adapters.outbound.aeat.sede import (
 )
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.resources import resources
+from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
 from ..aggregation import CalculationSourceContext
 from . import _iva_wallet_reconciliation as wallet_reconciliation
 from ._errors import IvaWalletReconciliationError
 from ._iva_wallet_reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationOverride,
-    IvaCompensationReconciliationInputError,
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
 )
