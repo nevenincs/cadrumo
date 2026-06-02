@@ -44,10 +44,10 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....application.storage.calc_sheets import collect_row_sets, registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.decimal import coerce_decimal
 from ....core.time._utc import coerce_utc_aware
 from ....domain.calculations.registry import (
