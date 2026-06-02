@@ -59,32 +59,24 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
 
 
 @pytest.mark.parametrize("verb", _COLD_START_VERBS, ids=lambda v: " ".join(v))
-def test_cold_start_verb_refuses_without_leaking_internals(
-    verb: tuple[str, ...], _fresh_storage_root: Path
-) -> None:
+def test_cold_start_verb_refuses_without_leaking_internals(verb: tuple[str, ...], _fresh_storage_root: Path) -> None:
     """Each cold-start verb refuses without surfacing a raw config error."""
 
     result = invoke_cached_cli(list(verb))
 
     assert result.exit_code != 0, f"{' '.join(verb)} should refuse: {result.output}"
     for marker in _LEAK_MARKERS:
-        assert marker not in result.output, (
-            f"{' '.join(verb)} leaked internal plumbing {marker!r}: {result.output}"
-        )
+        assert marker not in result.output, f"{' '.join(verb)} leaked internal plumbing {marker!r}: {result.output}"
 
 
 @pytest.mark.parametrize("verb", _COLD_START_VERBS, ids=lambda v: " ".join(v))
-def test_cold_start_verb_surfaces_profile_create_guidance(
-    verb: tuple[str, ...], _fresh_storage_root: Path
-) -> None:
+def test_cold_start_verb_surfaces_profile_create_guidance(verb: tuple[str, ...], _fresh_storage_root: Path) -> None:
     """Each cold-start verb names ``profile create`` so the operator can recover."""
 
     result = invoke_cached_cli(list(verb))
 
     flat = result.output.replace("\n", " ")
-    assert "profile create" in flat, (
-        f"{' '.join(verb)} did not point at `profile create`: {result.output}"
-    )
+    assert "profile create" in flat, f"{' '.join(verb)} did not point at `profile create`: {result.output}"
 
 
 def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: Path) -> None:

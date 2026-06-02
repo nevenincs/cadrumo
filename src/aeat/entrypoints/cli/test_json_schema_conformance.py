@@ -75,9 +75,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 # sides in its failure diagnostic.
 
 _APP_NAMESPACE_PASSTHROUGH = frozenset({"live"})
-_APP_NAMESPACE_FLATTEN = frozenset(
-    {"ledger", "modelo", "overview", "registry", "review"}
-)
+_APP_NAMESPACE_FLATTEN = frozenset({"ledger", "modelo", "overview", "registry", "review"})
 
 
 def _normalise_command_path(path: tuple[str, ...]) -> str:
@@ -127,9 +125,7 @@ def _force_load_lazy_subcommands(app: typer.Typer) -> None:
                 pending.append(group.typer_instance)
 
 
-def _click_leaf_paths(
-    command: click.Command, prefix: tuple[str, ...]
-) -> set[tuple[str, ...]]:
+def _click_leaf_paths(command: click.Command, prefix: tuple[str, ...]) -> set[tuple[str, ...]]:
     """Return the set of leaf-command paths reachable from ``command``."""
     leaves: set[tuple[str, ...]] = set()
     name = command.name or ""
@@ -232,14 +228,10 @@ def test_every_cli_leaf_has_a_registered_schema() -> None:
 
     diagnostic_lines: list[str] = []
     if unregistered:
-        diagnostic_lines.append(
-            f"CLI leaves missing a registered OutputSchema ({len(unregistered)}):"
-        )
+        diagnostic_lines.append(f"CLI leaves missing a registered OutputSchema ({len(unregistered)}):")
         diagnostic_lines.extend(f"  - {path}" for path in unregistered)
     if orphans:
-        diagnostic_lines.append(
-            f"Registry keys with no matching CLI leaf ({len(orphans)}):"
-        )
+        diagnostic_lines.append(f"Registry keys with no matching CLI leaf ({len(orphans)}):")
         diagnostic_lines.extend(f"  - {key}" for key in orphans)
 
     assert not diagnostic_lines, "\n".join(diagnostic_lines)
