@@ -19,7 +19,6 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.profile import SetupAnswers
-from ...domain.profile._renta_codes import SituacionFamiliar
 
 
 class WizardCheckSeverity(StrEnum):
@@ -129,21 +128,6 @@ def _check_obligations_consistency(answers: SetupAnswers) -> WizardCheckFinding:
 # not blocked here — the tax engine handles the variant routing, so the
 # verifier issues a WARNING rather than an ERROR when the monoparental path
 # may apply, and only hard-ERRORs for the clearly-ineligible case.
-_JOINT_INELIGIBLE = frozenset(
-    {
-        SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
-    }
-)
-
-# Situations where conjunta is only valid as monoparental (requires hijos a cargo).
-_MONOPARENTAL_REQUIRED = frozenset(
-    {
-        SituacionFamiliar.SOLTERO,
-        SituacionFamiliar.SEPARADO_DIVORCIADO,
-    }
-)
-
-
 def _check_joint_taxation_situacion_familiar(answers: SetupAnswers) -> WizardCheckFinding:
     # Skip when conjunta is not requested or situacion_familiar is undeclared.
     if answers.taxation_type != "2" or not answers.situacion_familiar:
@@ -153,7 +137,7 @@ def _check_joint_taxation_situacion_familiar(answers: SetupAnswers) -> WizardChe
             message_key="wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
         )
     sf = answers.situacion_familiar
-    if sf in _JOINT_INELIGIBLE:
+    if not sf.conjunta_eligible():
         return WizardCheckFinding(
             name="joint_taxation_situacion_familiar",
             severity=WizardCheckSeverity.ERROR,
@@ -178,7 +162,7 @@ def _check_monoparental_requires_hijos(answers: SetupAnswers) -> WizardCheckFind
             message_key="wizard.setup.verifier.monoparental_requires_hijos_ok",
         )
     sf = answers.situacion_familiar
-    if sf in _MONOPARENTAL_REQUIRED and not answers.family_minor_children_in_unit:
+    if sf.monoparental_required() and not answers.family_minor_children_in_unit:
         return WizardCheckFinding(
             name="monoparental_requires_hijos",
             severity=WizardCheckSeverity.WARNING,

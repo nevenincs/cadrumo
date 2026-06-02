@@ -118,6 +118,17 @@ class SituacionFamiliar(StrEnum):
             SituacionFamiliar.PAREJA_HECHO_REGISTRADA,
         )
 
+    def monoparental_required(self) -> bool:
+        """True for the single-parent situations a monoparental unit requires.
+
+        Per Art. 82.1.2 LIRPF the monoparental unidad familiar applies to a
+        non-partnered parent, i.e. soltero or separado/divorciado.
+        """
+        return self in (
+            SituacionFamiliar.SOLTERO,
+            SituacionFamiliar.SEPARADO_DIVORCIADO,
+        )
+
 
 __all__ = [
     "UE_EEA_COUNTRY_CODES",
