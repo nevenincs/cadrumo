@@ -3432,12 +3432,12 @@ This Phase delivers backend implementation for evidence bundle lifecycle as requ
 
 This Phase delivers shadow duplicate removal for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [ ] `W57.P282.S1687` - Audit duplicate implementations that overlap evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P282.S1688` - Delete duplicate backend branches that compete with evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P282.S1689` - Remove stale aliases that bypass the canonical service for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P282.S1690` - Migrate internal callers to the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P282.S1691` - Remove stale fixtures and tests that encode duplicate behavior for evidence bundle lifecycle; `tests/application/evidence`.
-- [ ] `W57.P282.S1692` - Update boundary inventory entries that describe duplicate behavior for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W57.P282.S1687` - Audit duplicate implementations that overlap evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P282.S1688` - Delete duplicate backend branches that compete with evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P282.S1689` - Remove stale aliases that bypass the canonical service for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W57.P282.S1690` - Migrate internal callers to the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P282.S1691` - Remove stale fixtures and tests that encode duplicate behavior for evidence bundle lifecycle; `tests/application/evidence`.
+- [x] `W57.P282.S1692` - Update boundary inventory entries that describe duplicate behavior for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W57.P283` - de-shim and de-stub cleanup
 
@@ -3456,10 +3456,10 @@ This Phase delivers real behavior verification for evidence bundle lifecycle as 
 
 - [x] `W57.P284.S1699` - Add service contract tests for evidence bundle lifecycle; `tests/application/evidence`.
 - [x] `W57.P284.S1700` - Add persistence or registry integration tests for evidence bundle lifecycle; `tests/application/evidence`.
-- [ ] `W57.P284.S1701` - Add negative tests proving rejected aliases do not reach evidence bundle lifecycle; `tests/entrypoints/cli`.
-- [ ] `W57.P284.S1702` - Add command behavior tests that exercise evidence bundle lifecycle through real services; `tests/entrypoints/cli`.
-- [ ] `W57.P284.S1703` - Add end-to-end workflow coverage for evidence bundle lifecycle; `tests`.
-- [ ] `W57.P284.S1704` - Run the targeted test slice for evidence bundle lifecycle without skips or xfails; `tests/application/evidence`.
+- [x] `W57.P284.S1701` - Add negative tests proving rejected aliases do not reach evidence bundle lifecycle; `tests/entrypoints/cli`.
+- [x] `W57.P284.S1702` - Add command behavior tests that exercise evidence bundle lifecycle through real services; `tests/entrypoints/cli`.
+- [x] `W57.P284.S1703` - Add end-to-end workflow coverage for evidence bundle lifecycle; `tests`.
+- [x] `W57.P284.S1704` - Run the targeted test slice for evidence bundle lifecycle without skips or xfails; `tests/application/evidence`.
 
 ### Phase `W57.P285` - thin cli exposure
 
@@ -3470,7 +3470,7 @@ This Phase delivers thin cli exposure for evidence bundle lifecycle as required 
 - [x] `W57.P285.S1707` - Delegate evidence bundle lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
 - [x] `W57.P285.S1708` - Render evidence bundle lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [x] `W57.P285.S1709` - Handle evidence bundle lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P285.S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W57.P285.S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W58` - workflow engine harvest
 
