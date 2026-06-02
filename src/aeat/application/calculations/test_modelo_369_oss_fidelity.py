@@ -1,4 +1,4 @@
-"""E2E data-fidelity: Modelo 369 OSS Esquema Unión year-over-year cadence continuity.
+"""E2E calculation continuity: Modelo 369 OSS Esquema Unión cross-renta cuota.
 
 Modelo 369 (Declaración IVA OSS — Orden HAC/610/2021) is the quarterly
 One-Stop-Shop autoliquidación for the Esquema Unión: operators established in
@@ -7,22 +7,35 @@ declare and pay the destination-state IVA centrally via the OSS portal (LIVA
 arts. 163-unvicies to 163-quatervicies, Directiva 2021/285/UE). The period
 code is ``"1T"``–``"4T"`` (quarterly).
 
-The casilla schema (``esquema-union`` revision) includes:
-- ``decl.ejercicio`` — ejercicio
-- ``decl.periodo`` — quarterly period code
-- ``iva.union.de.services-cuota`` — IVA OSS Unión destination DE, servicios
-- ``iva.union.fr.services-cuota`` — IVA OSS Unión destination FR, servicios
+The casilla schema (``esquema-union`` revision) includes three bound
+destination cuota leaves and one computed total:
+- ``decl.ejercicio`` — ejercicio (informational)
+- ``decl.periodo`` — quarterly period code (informational)
+- ``iva.union.de.services-cuota`` — IVA OSS Unión destination DE, servicios (bound)
+- ``iva.union.fr.services-cuota`` — IVA OSS Unión destination FR, servicios (bound)
 - ``iva.union.de.goods-distance-cuota`` — IVA OSS Unión destination DE, ventas a
-  distancia + interfaces electrónicas
-- ``iva.union.cuota-total`` — total (computed: sum cross-destination)
+  distancia + interfaces electrónicas (bound)
+- ``iva.union.cuota-total`` — total, **computed** by the registry formula
+  ``modelo-369-union-cuota-total`` = ``add`` of the three destination leaves.
 
-There is no cross-year binding resolver. The cross-year invariant is
-data-fidelity and cadence continuity: a quarterly filing for ejercicio N
-survives the encrypted-SQL roundtrip, and the same period in ejercicio N+1
-is independently retrievable with distinct cuota values that do not bleed.
+This module is the multi-year-renta authorization enrollment for Modelo 369.
+The 369 backend carries a real calculation engine (the ``add`` formula above
+plus the three ``ledger_oss_aggregation`` destination bindings), so the
+enrollment is **calculation-mode**: it drives the REAL registry calculation
+engine (``calculate_registry_snapshot`` over the real authority snapshot, real
+binding resolution — no mocks) for two distinct renta years, asserting the
+engine computes ``iva.union.cuota-total`` as the cross-destination sum, and
+records each year through :meth:`EnrollmentRecorder.record_calculation_year`
+with the real produced-value count as un-fakeable evidence.
 
-Both years are recorded through the :class:`EnrollmentRecorder` via
-``record_context_year`` and cross-checked against the authorization manifest.
+Grounding (non-tautological): the per-destination cuota leaves are supplied as
+the ledger-aggregation binding facts (the OSS portal sums each destination
+state's repercutida IVA); the load-bearing assertion is the *wiring* invariant
+— the engine's ``iva.union.cuota-total`` equals the sum of the three supplied
+destination leaves, which Orden HAC/610/2021 art. 1 / LIVA art. 163-unvicies
+define as the total cuota repercutida del Esquema Unión. The total is produced
+by the real engine from the destination inputs, never hand-computed against the
+formula under test.
 
 Legal grounding: LIVA arts. 163-unvicies to 163-quatervicies (OSS regime);
 Orden HAC/610/2021 arts. 1–3 (form mandate, quarterly cadence); Directiva
@@ -31,13 +44,21 @@ Orden HAC/610/2021 arts. 1–3 (form mandate, quarterly cadence); Directiva
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from collections.abc import Mapping
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...core.resources import resources
+from ...domain.calculations.registry import (
+    CasillaObservation,
+    RegistryCalculationResult,
+    RegistryModeloObservation,
+    calculate_registry_snapshot,
+    resolve_bound_casilla_inputs,
+)
 from ...tests.secure_sql import isolated_runtime_profile
 from ._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ._observations_repository import CalculationObservationRepository
@@ -48,9 +69,22 @@ _MODELO = "369"
 _YEAR_N = 2024
 _YEAR_N_PLUS_1 = 2025
 _PERIOD = "2T"
-_CONTEXT_LABEL = "369-oss-esquema-union-quarterly-cadence-year-over-year"
 _CLOCK_N = datetime(2024, 7, 31, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 7, 31, 10, 0, 0, tzinfo=UTC)
+
+#: The computed total casilla and its three bound destination leaves.
+_CASILLA_TOTAL = "iva.union.cuota-total"
+_CASILLA_DE_SERVICES = "iva.union.de.services-cuota"
+_CASILLA_FR_SERVICES = "iva.union.fr.services-cuota"
+_CASILLA_DE_GOODS = "iva.union.de.goods-distance-cuota"
+
+#: The three ``ledger_oss_aggregation`` destination bindings whose facts the OSS
+#: portal sums per destination state. Supplying them as the per-destination
+#: repercutida IVA lets the engine compute the total via the real ``add``
+#: formula ``modelo-369-union-cuota-total``.
+_BINDING_DE_SERVICES = "modelo-369-union-de-services-21pct"
+_BINDING_FR_SERVICES = "modelo-369-union-fr-services-21pct"
+_BINDING_DE_GOODS = "modelo-369-union-de-goods-distance-21pct"
 
 
 def _find_observation(repo, *, filing_year, period):
@@ -61,138 +95,175 @@ def _find_observation(repo, *, filing_year, period):
     return None
 
 
-def _year_n_observation() -> RegistryModeloObservation:
-    """Year-N 369 2T: Spanish OSS operator supplying services to DE and FR.
+def _calculate_369(
+    *,
+    filing_year: int,
+    period: str,
+    destination_cuotas: Mapping[str, Decimal],
+) -> tuple[RegistryCalculationResult, int]:
+    """Run the REAL registry 369 calculation; return result + produced-value count.
 
-    All cuota values are non-zero and distinct so a drop-then-default or
-    cross-destination contamination surfaces as strict inequality.
-    cuota-total = 1890.00 + 945.00 + 2100.00 = 4935.00.
+    ``destination_cuotas`` is keyed by binding id (the per-destination
+    ``ledger_oss_aggregation`` cuota). The bound destination leaves are resolved
+    from those facts and the engine computes ``iva.union.cuota-total`` via the
+    real ``add`` formula.
     """
+    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
+    binding_values = dict(destination_cuotas)
+    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(filing_year, 12, 31)},
+    )
+    return result, len(result.values)
+
+
+def _registry_observation(
+    *, filing_year: int, period: str, result: RegistryCalculationResult
+) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period=_PERIOD,
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="decl.periodo", value=Decimal("2")),
-            CasillaObservation(casilla_id="iva.union.de.services-cuota", value=Decimal("1890.00")),
-            CasillaObservation(casilla_id="iva.union.fr.services-cuota", value=Decimal("945.00")),
-            CasillaObservation(casilla_id="iva.union.de.goods-distance-cuota", value=Decimal("2100.00")),
-            CasillaObservation(casilla_id="iva.union.cuota-total", value=Decimal("4935.00")),
-        ),
+        filing_year=filing_year,
+        period=period,
+        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
     )
 
 
-def _year_n_plus_1_observation() -> RegistryModeloObservation:
-    """Year-N+1 369 2T: distinct cuotas so cross-year bleeding surfaces loudly."""
-    return RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N_PLUS_1,
-        period=_PERIOD,
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="decl.periodo", value=Decimal("2")),
-            CasillaObservation(casilla_id="iva.union.de.services-cuota", value=Decimal("2310.00")),
-            CasillaObservation(casilla_id="iva.union.fr.services-cuota", value=Decimal("1155.00")),
-            CasillaObservation(casilla_id="iva.union.de.goods-distance-cuota", value=Decimal("3150.00")),
-            CasillaObservation(casilla_id="iva.union.cuota-total", value=Decimal("6615.00")),
-        ),
+# Year-N 2T: a Spanish OSS operator supplying services to DE and FR plus
+# distance sales to DE. Per-destination repercutida IVA: DE services 1890.00,
+# FR services 945.00, DE goods 2100.00. The engine derives the total
+# 1890 + 945 + 2100 = 4935.00 — produced by the real ``add`` formula, never
+# hand-computed against it.
+_YEAR_N_CUOTAS = {
+    _BINDING_DE_SERVICES: Decimal("1890.00"),
+    _BINDING_FR_SERVICES: Decimal("945.00"),
+    _BINDING_DE_GOODS: Decimal("2100.00"),
+}
+
+# Year-N+1 2T: distinct per-destination cuotas so a cross-year bleed surfaces as
+# strict inequality. 2310 + 1155 + 3150 = 6615.00.
+_YEAR_N_PLUS_1_CUOTAS = {
+    _BINDING_DE_SERVICES: Decimal("2310.00"),
+    _BINDING_FR_SERVICES: Decimal("1155.00"),
+    _BINDING_DE_GOODS: Decimal("3150.00"),
+}
+
+
+def test_year_n_engine_computes_cuota_total_as_cross_destination_sum(tmp_path: Path) -> None:
+    """Year-N 369 2T: the engine computes the total as the sum of destination leaves.
+
+    The total is produced by the real ``add`` formula from the three supplied
+    destination cuotas, never hand-computed against the formula under test.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        result, produced = _calculate_369(
+            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
+        )
+    assert produced > 0
+    expected_sum = (
+        _YEAR_N_CUOTAS[_BINDING_DE_SERVICES]
+        + _YEAR_N_CUOTAS[_BINDING_FR_SERVICES]
+        + _YEAR_N_CUOTAS[_BINDING_DE_GOODS]
     )
+    assert result.values[_CASILLA_TOTAL] == expected_sum
+    assert result.values[_CASILLA_DE_SERVICES] == _YEAR_N_CUOTAS[_BINDING_DE_SERVICES]
 
 
-def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
-    """Year-N 369 casilla values survive the encrypted-SQL roundtrip unchanged."""
-    obs_n = _year_n_observation()
+def test_computed_total_persists_and_reloads_strictly(tmp_path: Path) -> None:
+    """The engine-produced 369 casilla values survive the encrypted-SQL roundtrip."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
+        result, _ = _calculate_369(
+            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
+        )
+        obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
+        repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
-        assert loaded.observation == obs_n
+        assert loaded.observation == obs
         assert loaded.source_kind == "app_filing"
         assert loaded.captured_at == _CLOCK_N
 
 
-def test_year_n_plus_1_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
-    """Year-N+1 369 casilla values survive the roundtrip with distinct cuotas."""
-    obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
-        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
-        assert loaded is not None
-        assert loaded.observation == obs_n1
-        assert loaded.captured_at == _CLOCK_N_PLUS_1
-
-
-def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path) -> None:
+def test_both_years_independently_retrievable_no_bleed(tmp_path: Path) -> None:
     """Both ejercicios are independently addressable; cuota-total values do not bleed."""
-    obs_n = _year_n_observation()
-    obs_n1 = _year_n_plus_1_observation()
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
+        result_n, _ = _calculate_369(
+            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
+        )
+        result_n1, _ = _calculate_369(
+            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS
+        )
+        obs_n = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result_n)
+        obs_n1 = _registry_observation(filing_year=_YEAR_N_PLUS_1, period=_PERIOD, result=result_n1)
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
         loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
         loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
 
         assert loaded_n is not None and loaded_n1 is not None
-        assert loaded_n.observation == obs_n
-        assert loaded_n1.observation == obs_n1
-
-        total_n = loaded_n.observation.casilla_values["iva.union.cuota-total"]
-        total_n1 = loaded_n1.observation.casilla_values["iva.union.cuota-total"]
+        total_n = loaded_n.observation.casilla_values[_CASILLA_TOTAL]
+        total_n1 = loaded_n1.observation.casilla_values[_CASILLA_TOTAL]
         assert total_n == Decimal("4935.00")
         assert total_n1 == Decimal("6615.00")
         assert total_n != total_n1, "iva.union.cuota-total bled between year-N and year-N+1"
-
         assert loaded_n.captured_at != loaded_n1.captured_at
 
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: a missing casilla in the reloaded observation is detectable."""
-    obs_n = _year_n_observation()
-    obs_n_missing = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period=_PERIOD,
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "iva.union.cuota-total"),
-    )
-    assert obs_n != obs_n_missing
-
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
+        result, _ = _calculate_369(
+            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
+        )
+        obs = _registry_observation(filing_year=_YEAR_N, period=_PERIOD, result=result)
+        obs_missing = RegistryModeloObservation(
+            modelo=_MODELO,
+            filing_year=_YEAR_N,
+            period=_PERIOD,
+            observations=tuple(o for o in obs.observations if o.casilla_id != _CASILLA_TOTAL),
+        )
+        assert obs != obs_missing
+
+        repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
-        assert loaded.observation != obs_n_missing
-        assert loaded.observation == obs_n
+        assert loaded.observation != obs_missing
+        assert loaded.observation == obs
 
 
-def test_modelo_369_oss_fidelity_enrolls_two_renta_years(tmp_path: Path) -> None:
-    """EnrollmentRecorder proves both exercises and matches the authorization manifest.
+def test_modelo_369_oss_calculation_enrolls_two_renta_years(tmp_path: Path) -> None:
+    """End-to-end calculation enrollment: 369 cuota-total across two renta years.
 
-    Drives the real CalculationObservationRepository for both OSS ejercicios
-    (real encrypted-SQLite, no mocks), records each via record_context_year, and
-    calls assert_enrollment_matches_manifest. Manifest must declare
+    Drives the REAL 369 calculation engine for both ejercicios (real authority
+    snapshot, real binding resolution, no mocks), records each through
+    :meth:`EnrollmentRecorder.record_calculation_year` (evidence = produced-value
+    count from a real engine run), and cross-checks the recorded distinct-year
+    set against the authorization manifest via
+    :func:`assert_enrollment_matches_manifest`. Manifest must declare
     renta_years = [2024, 2025] in the same commit.
     """
-    obs_n = _year_n_observation()
-    obs_n1 = _year_n_plus_1_observation()
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_PERIOD)
-        assert loaded_n is not None and loaded_n.observation == obs_n
-
-        repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
-        assert loaded_n1 is not None and loaded_n1.observation == obs_n1
-
     recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(filing_year=_YEAR_N, context_label=_CONTEXT_LABEL)
-    recorder.record_context_year(filing_year=_YEAR_N_PLUS_1, context_label=_CONTEXT_LABEL)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        result_n, produced_n = _calculate_369(
+            filing_year=_YEAR_N, period=_PERIOD, destination_cuotas=_YEAR_N_CUOTAS
+        )
+        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+
+        result_n1, produced_n1 = _calculate_369(
+            filing_year=_YEAR_N_PLUS_1, period=_PERIOD, destination_cuotas=_YEAR_N_PLUS_1_CUOTAS
+        )
+        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
+
+    # Cross-renta wiring invariant: each year's engine total is the sum of that
+    # year's destination leaves, and the two years are distinct.
+    assert result_n.values[_CASILLA_TOTAL] == Decimal("4935.00")
+    assert result_n1.values[_CASILLA_TOTAL] == Decimal("6615.00")
+    assert result_n.values[_CASILLA_TOTAL] != result_n1.values[_CASILLA_TOTAL]
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
