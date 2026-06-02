@@ -16,14 +16,15 @@ date.
 
 from __future__ import annotations
 
-from defusedxml import ElementTree as ET
 from bisect import bisect_right
 from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
-_BUNDLED_RATES = Path(__file__).resolve().parents[4] / "_data" / "fx" / "eurofxref-bundled.xml"
+from defusedxml import ElementTree as ET  # noqa: N817  # ElementTree-as-ET is the conventional alias
+
+_BUNDLED_RATES = Path(__file__).resolve().parents[3] / "_data" / "fx" / "eurofxref-bundled.xml"
 
 
 class EcbReferenceRateProvider:
