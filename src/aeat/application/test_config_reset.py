@@ -15,19 +15,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def _isolated_workflow(tmp_path: Path) -> Iterator[None]:
     """Isolate workflow state behind a real active profile custody span."""
 
-    from ..adapters.persistence.storage.sql import dispose_engine
     from ..tests.secure_sql import isolated_profile_storage_root
     from .user_profile._orchestration import profile_create_storage_span
 
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 def _profile_facts(overrides: Mapping[str, object] | None = None):
