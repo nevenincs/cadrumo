@@ -46,11 +46,10 @@ from ...domain.user_profile import (
     UserProfileStatus,
 )
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+
 # Import side-effect: registers the wizard catalogue with core.profile_catalogue
 # so taxpayer_profile_from_mapping can resolve SETUP_FLOW. Without this import
 # the projection raises WizardCatalogueNotRegisteredError on first call.
-from ..wizard import _catalogue as _wizard_catalogue
-from ..wizard import _persistence as _wizard_persistence  # registers project_answers fn
 from ._projections import projection_for_taxpayer
 from ._repository import (
     USER_PROFILE_VALUE_NAMESPACE,
@@ -182,9 +181,7 @@ def test_corporate_tax_facts_survive_encrypted_sql_roundtrip(
     persisted_incn = _fact_value(loaded, "taxpayer_type.incn_prior_12_months")
     assert isinstance(persisted_incn, Decimal)
     assert persisted_incn == _INCN_VALUE
-    persisted_new_entity = _fact_value(
-        loaded, "taxpayer_type.new_entity_first_two_profit_periods"
-    )
+    persisted_new_entity = _fact_value(loaded, "taxpayer_type.new_entity_first_two_profit_periods")
     assert isinstance(persisted_new_entity, bool)
     assert persisted_new_entity is _NEW_ENTITY_VALUE
 
@@ -267,10 +264,7 @@ def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
     # persisted mutation. A reload that fails this assertion means the
     # save path is the regression, not the load path.
     pre_mutation = lifecycle.load(original.profile_id)
-    assert any(
-        fact.path == "taxpayer_type.incn_prior_12_months"
-        for fact in pre_mutation.facts
-    )
+    assert any(fact.path == "taxpayer_type.incn_prior_12_months" for fact in pre_mutation.facts)
 
     stored = runtime_profile.repository.load(
         USER_PROFILE_VALUE_NAMESPACE,
@@ -282,11 +276,7 @@ def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
     envelope = json.loads(stored.payload.decode("utf-8"))
     payload = envelope["payload"]
     original_fact_count = len(payload["facts"])
-    payload["facts"] = [
-        fact
-        for fact in payload["facts"]
-        if fact.get("path") != "taxpayer_type.incn_prior_12_months"
-    ]
+    payload["facts"] = [fact for fact in payload["facts"] if fact.get("path") != "taxpayer_type.incn_prior_12_months"]
     assert len(payload["facts"]) == original_fact_count - 1, (
         "fixture must persist exactly one INCN fact for this anti-tautology proof to be meaningful"
     )

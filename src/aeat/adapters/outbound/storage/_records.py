@@ -90,6 +90,7 @@ class RemoteMirrorObjectManifest(BaseModel):
     ciphertext_hash: str = Field(min_length=64, max_length=64)
     storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
     previous_storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    revision_ancestor_ids: tuple[str, ...] = ()
     row_written_at: datetime
     revision_written_at: datetime | None = None
 

@@ -78,11 +78,18 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P12-S71]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P12-S72]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P12-S73]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P12-summary]]'
   - '[[2026-05-28-centralized-output-redaction-W04-P13-S74]]'
   - '[[2026-05-28-centralized-output-redaction-W04-P13-S75]]'
   - '[[2026-05-28-centralized-output-redaction-W04-P13-S76]]'
   - '[[2026-05-28-centralized-output-redaction-W04-P13-S77]]'
   - '[[2026-05-28-centralized-output-redaction-W04-P13-S78]]'
+  - '[[2026-05-28-centralized-output-redaction-W04-P13-summary]]'
+  - '[[2026-05-28-centralized-output-redaction-W04-P14-S79]]'
+  - '[[2026-05-28-centralized-output-redaction-W04-P14-S80]]'
+  - '[[2026-05-28-centralized-output-redaction-W04-P14-S81]]'
+  - '[[2026-05-28-centralized-output-redaction-W04-P14-S82]]'
+  - '[[2026-05-28-centralized-output-redaction-W04-P14-summary]]'
   - '[[2026-05-28-centralized-output-redaction-adr]]'
   - '[[2026-05-28-centralized-output-redaction-plan]]'
   - '[[2026-05-28-centralized-output-redaction-research]]'
@@ -180,11 +187,18 @@ Auto-generated index of all documents tagged with `#centralized-output-redaction
 - `2026-05-28-centralized-output-redaction-W03-P12-S71` - update LLM redaction tests for shared redaction vocabulary
 - `2026-05-28-centralized-output-redaction-W03-P12-S72` - update secure-storage sensitivity policy tests for shared redaction vocabulary
 - `2026-05-28-centralized-output-redaction-W03-P12-S73` - update secret-store tests for shared redaction vocabulary where output is inspected
+- `2026-05-28-centralized-output-redaction-W03-P12-summary` - `centralized-output-redaction` `W03.P12` summary
 - `2026-05-28-centralized-output-redaction-W04-P13-S74` - update redaction API reference after central policy consolidation
 - `2026-05-28-centralized-output-redaction-W04-P13-S75` - update output-rendering API reference after rendering-time redaction lands
 - `2026-05-28-centralized-output-redaction-W04-P13-S76` - update observability API reference after rule-source consolidation lands
 - `2026-05-28-centralized-output-redaction-W04-P13-S77` - update JSON-contract API reference after envelope redaction lands
 - `2026-05-28-centralized-output-redaction-W04-P13-S78` - update CLI entrypoint API reference after output-surface enrollment lands
+- `2026-05-28-centralized-output-redaction-W04-P13-summary` - `centralized-output-redaction` `W04.P13` summary
+- `2026-05-28-centralized-output-redaction-W04-P14-S79` - persist before/after output-surface inventory with counts and exceptions
+- `2026-05-28-centralized-output-redaction-W04-P14-S80` - persist code-review findings for the centralized output redaction rollout
+- `2026-05-28-centralized-output-redaction-W04-P14-S81` - update the secure-storage hardening plan with cross-reference to this redaction rollout
+- `2026-05-28-centralized-output-redaction-W04-P14-S82` - update the CLI workflow index with the new output privacy boundary
+- `2026-05-28-centralized-output-redaction-W04-P14-summary` - `centralized-output-redaction` `W04.P14` summary
 
 ### plan
 

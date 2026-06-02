@@ -2,7 +2,6 @@
 tags:
   - '#audit'
   - '#centralized-output-redaction'
-  - '#cli-workflow-redesign'
 date: '2026-06-02'
 related:
   - '[[2026-05-28-centralized-output-redaction-plan]]'
@@ -15,17 +14,17 @@ related:
 
 Covers W04.P14 closeout audits S79 (before/after output-surface
 inventory with counts and exceptions) and S80 (code-review findings
-for the central redaction rollout). The audit was conducted at the
-end of the rollout wave on `chore/eliminate-shims` with 78 of 82
-plan Steps closed; this audit document is the structural evidence
-the remaining four W04.P14 Steps require.
+for the central redaction rollout). The audit was refreshed at the
+end of the rollout wave in the shared restructure-execution
+worktree with 82 of 82 plan Steps closed; this audit document is
+the structural evidence for the W04.P14 closeout.
 
 ## Findings
 
 ### Output-surface inventory (S79)
 
 Production CLI tree (`src/aeat/entrypoints/cli/`), tests and
-`__pycache__` excluded, current state on `chore/eliminate-shims`:
+`__pycache__` excluded, current shared-worktree state:
 
 - `_emit_envelope` typed-envelope sites: 210. This is the canonical
   privacy boundary: every call routes its JSON payload through the
@@ -99,8 +98,7 @@ Production CLI tree (`src/aeat/entrypoints/cli/`), tests and
 - W02 (production CLI + diagnostics enrollment): 29/29 closed.
 - W03 (privacy gates + broad coverage): 25/25 closed (including the
   S58-S73 closure landed this session).
-- W04 (docs + rollout closeout): currently 5 of 9 closed; the four
-  W04.P14 Steps this audit drives are the remaining items.
+- W04 (docs + rollout closeout): 9/9 closed.
 
 ## Recommendations
 

@@ -29,10 +29,6 @@ from pathlib import Path
 import pytest
 
 from ...application.user_profile._repository import UserProfileLifecycleRepository
-from ...application.wizard import (
-    _catalogue,  # side-effect: registers wizard catalogue
-    _persistence,  # register project_answers projector at import time
-)
 from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile

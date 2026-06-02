@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Iterator
 from datetime import datetime
 from typing import Final, cast
@@ -47,6 +48,7 @@ _VARCHAR_64: Final[str] = "VARCHAR(64)"
 _SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (
     ("revision_id", _VARCHAR_64),
     ("previous_revision_id", _VARCHAR_64),
+    ("revision_ancestor_ids", "TEXT"),
     ("previous_payload_hash", _VARCHAR_64),
     ("payload_hash", _VARCHAR_64),
     ("ciphertext_hash", _VARCHAR_64),
@@ -155,6 +157,7 @@ class SecureObjectRawRow(BaseModel):
     payload: bytes
     revision_id: str | None = Field(default=None, min_length=64, max_length=64)
     previous_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    revision_ancestor_ids: tuple[str, ...] = ()
     previous_payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
     payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
     ciphertext_hash: str | None = Field(default=None, min_length=64, max_length=64)
@@ -271,7 +274,8 @@ class SecureObjectRepository:
                 session.execute(
                     text(
                         "SELECT id, namespace, object_key, classification, schema_version, written_at, "
-                        "revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                        "revision_id, previous_revision_id, revision_ancestor_ids, "
+                        "previous_payload_hash, payload_hash, "
                         "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
                         "conflict_policy, payload "
                         "FROM secure_objects ORDER BY namespace, id"
@@ -337,6 +341,34 @@ class SecureObjectRepository:
         return (str(revision_written_at), str(written_at), int(raw["id"]))
 
     @staticmethod
+    def _parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
+        if raw_value in (None, ""):
+            return ()
+        if isinstance(raw_value, bytes | bytearray | memoryview):
+            text_value = bytes(raw_value).decode("utf-8")
+        else:
+            text_value = str(raw_value)
+        try:
+            parsed = json.loads(text_value)
+        except json.JSONDecodeError as exc:
+            raise StorageValidationError("secure object revision ancestry metadata is malformed JSON") from exc
+        if not isinstance(parsed, list) or not all(isinstance(item, str) and len(item) == 64 for item in parsed):
+            raise StorageValidationError("secure object revision ancestry metadata must be a list of revision ids")
+        return tuple(parsed)
+
+    @staticmethod
+    def _build_revision_ancestor_ids(
+        previous_revision_id: str | None,
+        previous_revision_ancestor_ids: tuple[str, ...],
+    ) -> tuple[str, ...]:
+        if previous_revision_id is None:
+            return ()
+        return (
+            previous_revision_id,
+            *tuple(item for item in previous_revision_ancestor_ids if item != previous_revision_id),
+        )
+
+    @staticmethod
     def _copy_row_to_quarantine(
         session: Session,
         raw: RowMapping,
@@ -349,12 +381,12 @@ class SecureObjectRepository:
             text(
                 "INSERT INTO secure_objects_quarantine "
                 "(source_id, namespace, object_key, classification, schema_version, "
-                " written_at, revision_id, previous_revision_id, previous_payload_hash, "
+                " written_at, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
                 " payload_hash, ciphertext_hash, revision_written_at, write_provenance, "
                 " source_event_id, conflict_policy, payload, quarantined_at) "
                 "VALUES (:source_id, :namespace, :object_key, :classification, "
                 "        :schema_version, :written_at, :revision_id, "
-                "        :previous_revision_id, :previous_payload_hash, :payload_hash, "
+                "        :previous_revision_id, :revision_ancestor_ids, :previous_payload_hash, :payload_hash, "
                 "        :ciphertext_hash, :revision_written_at, :write_provenance, "
                 "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
             ),
@@ -367,6 +399,7 @@ class SecureObjectRepository:
                 "written_at": raw["written_at"],
                 "revision_id": raw["revision_id"],
                 "previous_revision_id": raw["previous_revision_id"],
+                "revision_ancestor_ids": raw["revision_ancestor_ids"],
                 "previous_payload_hash": raw["previous_payload_hash"],
                 "payload_hash": raw["payload_hash"],
                 "ciphertext_hash": raw["ciphertext_hash"],
@@ -394,6 +427,7 @@ class SecureObjectRepository:
                     "  written_at DATETIME NOT NULL,"
                     f"  revision_id {_VARCHAR_64},"
                     f"  previous_revision_id {_VARCHAR_64},"
+                    "  revision_ancestor_ids TEXT,"
                     f"  previous_payload_hash {_VARCHAR_64},"
                     f"  payload_hash {_VARCHAR_64},"
                     f"  ciphertext_hash {_VARCHAR_64},"
@@ -600,7 +634,7 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             stmt = text(
                 "SELECT id, namespace, object_key, classification, schema_version, "
-                "written_at, payload, revision_id, previous_revision_id, previous_payload_hash, "
+                "written_at, payload, revision_id, previous_revision_id, revision_ancestor_ids, previous_payload_hash, "
                 "payload_hash, ciphertext_hash, revision_written_at "
                 "FROM secure_objects "
                 "ORDER BY namespace, object_key"
@@ -644,6 +678,7 @@ class SecureObjectRepository:
                     payload=payload_value,
                     revision_id=raw.revision_id,
                     previous_revision_id=raw.previous_revision_id,
+                    revision_ancestor_ids=self._parse_revision_ancestor_ids(raw.revision_ancestor_ids),
                     previous_payload_hash=raw.previous_payload_hash,
                     payload_hash=raw.payload_hash,
                     ciphertext_hash=raw.ciphertext_hash,
@@ -703,7 +738,8 @@ class SecureObjectRepository:
                 rows = session.execute(
                     text(
                         "SELECT id, object_key, classification, schema_version, written_at, "
-                        "revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                        "revision_id, previous_revision_id, revision_ancestor_ids, "
+                        "previous_payload_hash, payload_hash, "
                         "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
                         "conflict_policy, payload "
                         "FROM secure_objects WHERE namespace = :namespace"
@@ -733,11 +769,13 @@ class SecureObjectRepository:
                                 "INSERT INTO secure_objects_quarantine "
                                 "(source_id, namespace, object_key, classification, schema_version, "
                                 " written_at, revision_id, previous_revision_id, previous_payload_hash, "
-                                " payload_hash, ciphertext_hash, revision_written_at, write_provenance, "
+                                " revision_ancestor_ids, payload_hash, ciphertext_hash, "
+                                " revision_written_at, write_provenance, "
                                 " source_event_id, conflict_policy, payload, quarantined_at) "
                                 "VALUES (:source_id, :namespace, :object_key, :classification, "
                                 "        :schema_version, :written_at, :revision_id, "
-                                "        :previous_revision_id, :previous_payload_hash, :payload_hash, "
+                                "        :previous_revision_id, :previous_payload_hash, "
+                                "        :revision_ancestor_ids, :payload_hash, "
                                 "        :ciphertext_hash, :revision_written_at, :write_provenance, "
                                 "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
                             ),
@@ -750,6 +788,7 @@ class SecureObjectRepository:
                                 "written_at": raw.written_at,
                                 "revision_id": raw.revision_id,
                                 "previous_revision_id": raw.previous_revision_id,
+                                "revision_ancestor_ids": raw.revision_ancestor_ids,
                                 "previous_payload_hash": raw.previous_payload_hash,
                                 "payload_hash": raw.payload_hash,
                                 "ciphertext_hash": raw.ciphertext_hash,
@@ -1303,6 +1342,7 @@ class SecureObjectRepository:
     ) -> None:
         previous_revision_id: str | None = None
         previous_payload_hash: str | None = None
+        previous_revision_ancestor_ids: tuple[str, ...] = ()
         row_id = session.execute(
             select(_orm.SecureObjectRow.id).where(
                 _orm.SecureObjectRow.namespace == namespace,
@@ -1313,11 +1353,13 @@ class SecureObjectRepository:
             previous_metadata = session.execute(
                 select(
                     _orm.SecureObjectRow.revision_id,
+                    _orm.SecureObjectRow.revision_ancestor_ids,
                     _orm.SecureObjectRow.payload_hash,
                     _orm.SecureObjectRow.payload,
                 ).where(_orm.SecureObjectRow.id == row_id)
             ).one()
             previous_revision_id = previous_metadata.revision_id
+            previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
             previous_payload_hash = (
                 previous_metadata.payload_hash
                 or hashlib.sha256(
@@ -1380,6 +1422,7 @@ class SecureObjectRepository:
                 written_at=written_at,
                 payload=payload,
                 previous_revision_id=previous_revision_id,
+                previous_revision_ancestor_ids=previous_revision_ancestor_ids,
                 previous_payload_hash=previous_payload_hash,
                 write_provenance=write_provenance,
                 source_event_id=source_event_id,
@@ -1401,6 +1444,7 @@ class SecureObjectRepository:
         written_at: datetime,
         payload: bytes,
         previous_revision_id: str | None,
+        previous_revision_ancestor_ids: tuple[str, ...],
         previous_payload_hash: str | None,
         write_provenance: str,
         source_event_id: str | None,
@@ -1425,12 +1469,17 @@ class SecureObjectRepository:
             previous_revision_id=previous_revision_id,
             previous_payload_hash=previous_payload_hash,
         )
+        revision_ancestor_ids = self._build_revision_ancestor_ids(
+            previous_revision_id,
+            previous_revision_ancestor_ids,
+        )
         session.execute(
             update(_orm.SecureObjectRow)
             .where(_orm.SecureObjectRow.id == row_id)
             .values(
                 revision_id=revision_id,
                 previous_revision_id=previous_revision_id,
+                revision_ancestor_ids=json.dumps(revision_ancestor_ids),
                 previous_payload_hash=previous_payload_hash,
                 payload_hash=payload_hash,
                 ciphertext_hash=ciphertext_hash,

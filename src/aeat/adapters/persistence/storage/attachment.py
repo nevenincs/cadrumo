@@ -19,6 +19,7 @@ addressed substrate and its sensitivity class is irreducibly FINANCIAL.
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
@@ -183,13 +184,17 @@ class AttachmentStore(BaseModel):
             classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
             payload=attachment,
         )
+        envelope_dict = json.loads(envelope.model_dump_json())
+        del envelope_dict["payload"]["attachment_id"]
+        payload_json = json.dumps(envelope_dict)
         self._objects_repo().save(
             namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
             object_key=attachment.attachment_id,
+            # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
             classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=payload_json.encode("utf-8"),
         )
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
@@ -206,10 +211,13 @@ class AttachmentStore(BaseModel):
         if record is None:
             raise AttachmentNotFoundError(f"attachment manifest not found: {digest}")
         try:
-            envelope = Envelope[Attachment].model_validate_json(record.payload.decode("utf-8"))
+            payload_dict = json.loads(record.payload.decode("utf-8"))
+            payload_dict["payload"]["attachment_id"] = digest
+            envelope_json = json.dumps(payload_dict)
+            envelope = Envelope[Attachment].model_validate_json(envelope_json)
         except (ClassificationError, EnvelopeVersionError) as exc:
             raise AttachmentValidationError(f"invalid attachment manifest: {digest}") from exc
-        except ValidationError as exc:
+        except (ValidationError, json.JSONDecodeError, KeyError) as exc:
             raise AttachmentValidationError(f"invalid attachment manifest: {digest}") from exc
         attachment = envelope.payload
         if attachment.attachment_id != digest:
@@ -228,8 +236,12 @@ class AttachmentStore(BaseModel):
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
             try:
-                envelope = Envelope[Attachment].model_validate_json(record.payload.decode("utf-8"))
-            except ValidationError as exc:
+                payload_json = record.payload.decode("utf-8")
+                envelope_dict = json.loads(payload_json)
+                envelope_dict["payload"]["attachment_id"] = record.object_key
+                envelope_json = json.dumps(envelope_dict)
+                envelope = Envelope[Attachment].model_validate_json(envelope_json)
+            except (ValidationError, json.JSONDecodeError, KeyError) as exc:
                 raise AttachmentValidationError("invalid attachment manifest") from exc
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)

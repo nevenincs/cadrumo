@@ -56,19 +56,18 @@ def _wallet_observation(
     pending_text = _spanish_amount(pending)
     return parse_iva_compensation_wallet_html(
         f"""
-        <html>
+        <html><head><title>Cartera de cuotas de IVA a compensar</title></head>
           <body>
-            <table>
+            <h1>Cartera de cuotas de IVA a compensar</h1>
+            <li><strong>Cuotas a compensar pendientes de períodos anteriores:</strong>
+              <span>{pending_text}</span></li>
+            <table id="tablaResultados">
               <thead>
-                <tr>
-                  <th>Ejercicio</th><th>Periodo</th><th>Generado</th>
-                  <th>Aplicado</th><th>Pendiente</th>
-                </tr>
+                <tr><th>Ejercicio</th><th>Período</th><th>Cuota Disponible</th></tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>{generation_year}</td><td>{generation_period}</td>
-                  <td>{pending_text}</td><td>0,00</td><td>{pending_text}</td>
+                  <td>{generation_year}</td><td>{generation_period}</td><td>{pending_text}</td>
                 </tr>
               </tbody>
             </table>
