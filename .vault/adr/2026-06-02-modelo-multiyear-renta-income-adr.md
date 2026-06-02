@@ -1,0 +1,194 @@
+---
+tags:
+  - '#adr'
+  - '#modelo-multiyear-renta-income'
+date: '2026-06-02'
+related:
+  - "[[2026-06-02-modelo-multiyear-renta-income-research]]"
+  - "[[2026-06-02-modelo-multiyear-renta-adr]]"
+---
+
+
+
+# `modelo-multiyear-renta-income` adr: `income-tax prior-year cross-renta binding hooks (M200 BIN / M100 / M202)` | (**status:** `accepted`)
+
+## Problem Statement
+
+The multi-year-renta authorization gate requires that every modelo's calculation backend
+be proven across at least two distinct renta (annual) periods before it can be authorized.
+This ADR is one of several mechanism-specific ADRs co-backing that campaign plan; the
+foundational gate decision (`2026-06-02-modelo-multiyear-renta-adr`) owns the gate spine
+and the un-fakeable enrollment contract, and explicitly defers per-mechanism cross-year
+behaviour to ADRs like this one.
+
+Three income-tax modelos express their genuine cross-year behaviour through prior-year
+data carried forward from a previously filed return:
+
+- **Modelo 200** (Impuesto sobre Sociedades) compensates bases imponibles negativas (BIN)
+  declared in a prior year against the current year's positive base.
+- **Modelo 100** (IRPF) carries forward unused negative balances in the savings base
+  (saldos negativos) across subsequent years.
+- **Modelo 202** (IS instalment payment) modalidad art.40.2 computes the instalment from
+  the cuota of a prior período impositivo.
+
+The problem is to decide how each cross-year hook is expressed so its >=2-renta enrollment
+is real (driving the registry engine across two filing years), grounded in BOE/AEAT
+authority rather than author-invented numbers, and built without new runtime infrastructure
+— while surfacing every legal-grounding gap honestly per the project's
+no-silent-under-declaration and no-tautological-calculation-tests disciplines.
+
+## Considerations
+
+- A proven cross-year binding template already exists. Modelo 130's
+  `revisions/2019-y-siguientes/bindings/0002-bindings.toml` declares a
+  `source = "previous_filing"` binding with selector `{ source_modelo, filing_year_delta,
+  period, source_casillas }` and `aggregation`, and the resolver already consumes it
+  (`_binding_prefill.py`, `_bindings.py`), computing the source year as
+  `filing_year + filing_year_delta + period_year_delta`. Re-using this shape means zero
+  resolver code.
+- The `FormulaOperator` set in `_schema.py` already provides `add / subtract / multiply /
+  percent / min / max / clamp / if_then_else / sum / copy` and comparisons — enough to
+  express the only non-trivial cap (M200's €1M floor / 70% ceiling) without new operators.
+- Per the registry-authority-flow rule, all three bindings are registry-authoring against
+  `ValidatedRegistryAuthority`-owned snapshots; none introduces a new production path that
+  calls raw loaders.
+- Legal grounding strength differs by modelo and must be stated honestly: M200 has reviewed
+  statute plus an AEAT worked manual; M100's 4-year period is grounded only at summary
+  strength in the corpus JSON; M202's 40.2 base and instalment calendar are grounded
+  verbatim in the AEAT instrucciones.
+- The manual→computed footprint is deliberately minimal and pinned to exact casillas. M200
+  `DP200014:00552` stays manual but gains a computed consistency check (the existing advisory
+  upgraded); the new computed quantity is the capped BIN-aplicada. M202 `01` flips manual →
+  prior-year-bound, while `03` and its 18% rate are already computed. M100's three carryforward
+  casillas become binding-fed (copy of the prior-year saldo). No other casilla changes kind.
+
+## Constraints
+
+- **M100 art.49 grounding is summary-strength, not verbatim statute.** The honesty flag
+  carried from research is partially resolved: `ley-35-2006.json` carries article 49 as a
+  structured entry whose `summary.es` states "la compensación en los cuatro años siguientes
+  de los saldos negativos no aplicados, con un límite del 25 por ciento", but the JSON holds
+  no verbatim BOE article body and no literal `art-49` string anchor (article 49 is keyed by
+  `numero`). The 4-year period is therefore confirmed in-repo at AEAT/editorial summary
+  strength only. The plan must ingest the verbatim art.48/49 statute body before any
+  per-casilla numeric oracle is asserted; until then M100 enrollment asserts wiring and
+  provenance, not invented Decimals.
+- **M202 1/P year-offset is `-2`, not `-1`.** The honesty flag is confirmed real against the
+  instrucciones: the 40.2 base is the cuota of the last período whose filing deadline was
+  vencido on the 1st of the payment month, and 1/P falls in April before the prior-year M200
+  (due July) is vencido. So 1/P binds two years back; 2/P (October) and 3/P (December) bind
+  one year back. The per-period delta must be encoded explicitly, not assumed uniform.
+- This ADR depends on the M130 binding template and resolver remaining stable; both are
+  mature, shipped, and tested at the domain and application layers, so the dependency is
+  low-risk.
+
+## Implementation
+
+Each hook is a registry binding (re-using the M130 shape) plus, where a cap is needed, a
+registry formula built from the existing operator set. No resolver, schema, or CLI code
+changes.
+
+**Modelo 200 — BIN compensation.** Add a `previous_filing` binding in
+`modelos/200/revisions/2024-y-siguientes/` whose `bin_disponible` input is a prior-year copy
+of casilla `00671` ("Detalle compensación BIN — Pendiente de aplicación en períodos futuros"):
+selector `{ source_modelo = "200", filing_year_delta = -1, period = "0A", source_output =
+"00671" }`, `aggregation = { op = "copy" }`, `legal_refs = ["ley-27-2014:art-26"]`. The
+unlimited carry self-accumulates through `00671` year over year, so the design uses a single
+prior-year copy rather than a multi-year fan-out.
+
+The base imponible casilla is `DP200014:00552` (semantic_role `is_liquidacion_iii_base_imponible`,
+`intentional_singleton`), `input_kind = "manual"` today, whose `legal_refs` already carry
+`ley-27-2014:art-25` and `ley-27-2014:art-26` (the derivation is anticipated). It is the exact
+casilla guarded by the existing ADVISORY predicate
+`modelo-200-base-imponible-determinada-cuando-resultado-positivo`
+(`implies_nonzero(["00501", "DP200014:00552"])` in
+`verification_expectations/0001-verification_predicates.toml`, `finding_kind = "ADVISORY"`),
+which the `modelo-200-base-determination` ADR tracks for a Phase-2 derivation. This A4 ADR
+**chooses option (b)**: rather than recomputing `00552` and risking conflict with the manual
+entry, keep `00552` manual and add a computed consistency check that upgrades that advisory
+along the documented no-silent-under-declaration advisory→`BLOCKING_RULE` path —
+`00552 == base_previa − min(bin_disponible, max(literal(1000000), percent(70, base_previa)))`,
+i.e. the entered base must equal prior base minus the capped BIN applied. The capped quantity
+itself is the only genuinely-new formula: `if_then_else(greater_equal(base_previa, 0),
+min(bin_disponible, max(literal(1000000), percent(70, base_previa))), literal(0))`, grounding
+both the €1M floor and the 70% ceiling. `00501` (resultado contable) and the per-origin-year
+BIN detail boxes (0174-0182, 00489/00504/.../00700) stay manual. The art.26.1 quitas/esperas
+and extinción exclusions are not modelled; they surface as an ADVISORY note plus a profile
+flag, never a hard refusal.
+
+**Modelo 100 — savings-base loss carryforward.** Add three `previous_filing` bindings on the
+carryforward casillas (0462→0393, 0465→0396, 1390→1391), each a straight
+`aggregation = { op = "copy" }` of the prior-year generated saldo: selector
+`{ source_modelo = "100", filing_year_delta = -1, period = "0A", source_output = <prior saldo
+casilla> }`, `legal_refs = ["ley-35-2006:art-49"]`. No cap formula (copy plus the existing
+integración subtract). The 4-year expiry is modelled as a chain of single-year copies; an
+explicit year-tagged expiry guard is deferred to a Phase-2 step.
+
+**Modelo 202 — modalidad art.40.2 (cleanest of the three; no new formula).** Only casilla
+`01` ("Mod.40.2 base", `required = true`, `input_kind = "manual"` today) flips manual →
+prior-year-bound. Add a `previous_filing` binding in `modelos/202/revisions/2025-y-siguientes/`,
+`id = "modelo-202-2025-cuota-base-ejercicio-anterior"`, that populates `01`: selector
+`{ source_modelo = "200", filing_year_delta = <-2 for 1/P, -1 for 2/P and 3/P>, period = "0A",
+source_output = <prior cuota-líquida casilla> }`, `aggregation = { op = "copy" }`, `legal_refs =
+["ley-27-2014:art-40"]`. Casilla `03` ("Mod.40.2 a ingresar") is **already computed** by the
+existing formula `modelo-202-modalidad-40-2-a-ingresar`
+(`subtract(percent(01, is.modalidad_cuota.percentage), 02)`); the 18% rate is the existing
+parameter `is.modalidad_cuota.percentage` (value `18`, `valid_from 2025-01-01`,
+`required_text` anchor "porcentaje del 18%"). So no new formula is added — feeding `01` from
+the prior year is sufficient, and `03` recomputes automatically. The binding **inherits the
+existing INCN modality gate** `derive_modelo_202_modality` (driven by the
+`modelo-202-2025-y-siguientes-incn-prior-12-months` binding): for an INCN > €6M entity, 40.2
+is not offered (only 40.3 clave 32), so `01` must not be populated for a 40.3-mandatory entity.
+The per-period `filing_year_delta` is the one design subtlety and must be encoded per
+instalment key.
+
+**Enrollment E2E (per modelo).** Each enrollment clones the proven M130 continuity pattern at
+both layers — domain (`test_modelo_130_registry.py` family) and application
+(`test_modelo_130_carry_forward_continuity.py`) — driving the real registry engine across two
+distinct filing years so the gate's recorder observes >=2 distinct renta years. M200 seeds a
+2023 BIN loss into `00671`, calculates 2024 profit, asserts the bound `bin_disponible` equals
+the 2023 `00671`, asserts the capped aplicada equals `min(that, max(1M, 0.70·base_previa_2024))`,
+and asserts the consistency check fires (BLOCKING) when the manually entered `DP200014:00552`
+disagrees with `base_previa − aplicada`. M100 asserts the 2025 carryforward casilla equals the
+2024 generated saldo and that integración reduces the 2025 savings base (wiring/provenance
+oracle only). M202 seeds an M200/2023 cuota, asserts the M202/2024 1/P `01` equals that cuota
+with the `-2` offset (and a 2/P/3/P case with `-1`), and that `03` recomputes as
+`percent(01, 18) − 02` and the same-year 202→200 roll-up still reconciles.
+
+## Rationale
+
+Re-using the M130 `previous_filing` template means the cross-year mechanism for all three
+modelos is expressed in data the resolver already understands, so the campaign adds tax
+semantics without adding runtime surface — consistent with the foundational gate ADR's
+"registry-authoring, not new infra" posture. Grounding each binding in a reviewed legal_ref
+(`ley-27-2014:art-26`, `ley-35-2006:art-49`, `ley-27-2014:art-40`) keeps the calculation
+non-tautological: the M200 cap is checkable against the AEAT 2024 manual, and the M100 and
+M202 hooks assert wiring and reconciliation where no per-casilla numeric oracle exists, per
+the no-tautological-calculation-tests rule. Recording the two grounding gaps as constraints
+rather than silently shipping past them follows the no-silent-under-declaration discipline.
+
+## Consequences
+
+- **Three income-tax modelos gain real >=2-renta enrollment** expressed as registry data,
+  unlocking their authorization in the gate campaign once the E2E tests land.
+- **M200 introduces the only new formula logic** (the €1M/70% cap). It is fully grounded and
+  the highest-value hook of the three.
+- **Honest grounding debt is surfaced, not hidden.** M100's 4-year period rests on a corpus
+  summary until the verbatim statute is ingested; the plan carries that as an explicit
+  follow-up, and M100 enrollment stays at wiring/provenance strength until then.
+- **M202's per-period offset is a correctness trap if missed.** Encoding `1/P → -2` and
+  `2/P,3/P → -1` is mandatory; a uniform `-1` would silently bind the wrong year for the
+  April instalment. The constraint is recorded so the plan and the executor cannot assume it
+  away.
+- **Pitfall — exclusions deferred.** M200 quitas/esperas/extinción and M100 year-tagged
+  expiry are advisory/Phase-2; the advisory surface must fire so a filer is not silently led
+  to over-compensate.
+
+## Codification candidates
+
+- **Rule slug:** `previous-filing-binding-reuse-over-new-infra`.
+  **Rule:** A modelo's prior-year cross-renta hook must be expressed by re-using the proven
+  `previous_filing` binding shape plus existing formula operators against
+  `ValidatedRegistryAuthority` snapshots, never by adding resolver, schema, or CLI code, and
+  any legal-grounding gap (summary-strength statute, period-specific year offsets) must be
+  recorded as an explicit constraint rather than assumed.
