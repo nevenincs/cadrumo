@@ -301,7 +301,9 @@ class AuthStatusPayload(OutputSchema):
     re-declaring every provider-specific key here.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -313,7 +315,9 @@ class AuthTestPayload(OutputSchema):
     fields. ``extra="allow"`` forwards them without re-declaration.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -325,7 +329,9 @@ class AuthLoginPayload(OutputSchema):
     login fields. ``extra="allow"`` forwards them without re-declaration.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -455,7 +461,9 @@ class RepairProfileResult(OutputSchema):
     keeps the envelope shape stable without re-declaring every field.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -478,7 +486,9 @@ class RepairIntegrityObjectsResult(OutputSchema):
     sub-model.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -491,7 +501,9 @@ class RepairIntegrityRegistryResult(OutputSchema):
     the registry / diagnostic-check shapes locally.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -544,7 +556,9 @@ class ApoderadoScopesListResult(OutputSchema):
     Mirrors the apoderado scope catalogue payload.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
@@ -575,7 +589,9 @@ class AuthDiagnosticsShowResult(OutputSchema):
     field without re-declaring the application model locally.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
