@@ -49,6 +49,7 @@ if TYPE_CHECKING:
             timeout_ms: int = ...,
         ) -> Awaitable[None]: ...
 
+
 _DOM_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-dom.html"
 _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-buttons.txt"
 _A11Y_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-a11y-tree.txt"
@@ -149,9 +150,7 @@ def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None
     return lines
 
 
-async def _try_expand_secondary_toolbar(
-    page: Page, assert_click_target_safe: _ClickSafetyAssertion
-) -> None:
+async def _try_expand_secondary_toolbar(page: Page, assert_click_target_safe: _ClickSafetyAssertion) -> None:
     """Click "Mostrar opciones" to reveal the secondary toolbar row.
 
     The button is the secondary-toolbar expander; failing to find or
@@ -386,8 +385,7 @@ async def _capture_input_inventory(page: Page) -> list[str]:
             _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
             title = placeholder = input_type = name = value = "?"
         lines.append(
-            f"  [{idx}] type={input_type!r} title={title!r}"
-            f" placeholder={placeholder!r} name={name!r} value={value!r}"
+            f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"
         )
     return lines
 

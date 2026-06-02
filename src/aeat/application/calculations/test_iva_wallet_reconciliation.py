@@ -106,9 +106,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
         )
     )
 
-    assert resolution.binding_values == {
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("1200")
-    }
+    assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}
     assert resolution.owned_sources == ("iva_wallet_decision",)
     assert {item.source_kind for item in resolution.provenance} == {
         "aeat_wallet",
@@ -355,7 +353,9 @@ def _wallet_for_period(
                 pending_amount=amount,
                 raw_label="2025 4T",
             ),
-        ) if amount > Decimal("0") else (),
+        )
+        if amount > Decimal("0")
+        else (),
         total_pending=amount,
         source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
         captured_at=captured_at,

@@ -20,9 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _SUPPORTED_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 
-_FLOW_DESCRIPTION_KEYS: frozenset[str] = frozenset(
-    f"wizard.{flow.id}.description" for flow in WIZARD_FLOWS
-)
+_FLOW_DESCRIPTION_KEYS: frozenset[str] = frozenset(f"wizard.{flow.id}.description" for flow in WIZARD_FLOWS)
 
 
 @pytest.mark.parametrize("locale", _SUPPORTED_LOCALES)
@@ -40,6 +38,4 @@ def test_wizard_flow_description_key_resolves(key: str, locale: str) -> None:
         f"(resolved to self-referencing placeholder {resolved!r}). "
         f"Add a translation via `python -m aeat.locales set {locale} {key!r} <value>`."
     )
-    assert resolved, (
-        f"Wizard flow description key {key!r} resolved to empty string in {locale!r}."
-    )
+    assert resolved, f"Wizard flow description key {key!r} resolved to empty string in {locale!r}."

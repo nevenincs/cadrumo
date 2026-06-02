@@ -110,9 +110,7 @@ def _section_progress_total(
     excluded; the running total then ticks up as it is revealed.
     """
     remaining = sum(
-        1
-        for question in section.questions
-        if _condition_satisfied(question, canonical, force_visible=force_visible)
+        1 for question in section.questions if _condition_satisfied(question, canonical, force_visible=force_visible)
     )
     # `canonical` already carries every answer up to and including the
     # question currently being asked, so `remaining` counts that
@@ -176,9 +174,7 @@ def run_flow(
                 tr(
                     "wizard.progress.question_prefix",
                     q_n=question_index,
-                    q_total=_section_progress_total(
-                        section, canonical, question_index, force_visible=force_visible
-                    ),
+                    q_total=_section_progress_total(section, canonical, question_index, force_visible=force_visible),
                 ),
             )
             default = defaults_map.get(question.id, question.default)
