@@ -29,6 +29,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S54]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S55]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S56]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P10-S57]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -423,3 +424,35 @@ CRITICAL findings present: no.
 ### Findings
 
 - The prior low fresh-UUID leak blind spot on the mutated `--label` import path is closed. The test now captures the active profile after the mutated import, verifies it is a fresh minted UUID distinct from the bundle mutation, and asserts that minted UUID is absent from public output.
+
+## W03.P10.S57 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/test_modelo.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P10-S57.md`
+
+### Findings
+
+- The modelo CLI test surface does not currently assert raw profile IDs, bucket IDs, or tax IDs in public output. The discovered `bucket_id="default"` occurrences are model-construction inputs, and the `perceptor_nif` strings are typed parser/domain input fixtures.
+- The existing real JSON `modelo describe` output test now guards that central redaction does not inject profile or bucket placeholders into non-sensitive modelo metadata, and that the payload does not contain UUID-shaped raw identifiers.
+- Two real ruff `E741` findings in the touched file were fixed by replacing ambiguous loop variable names. No noqa/pragma was introduced.
+- Focused gates passed after the change.
+
+### Residual risks
+
+- This is a narrow guard for the current `test_modelo.py` describe surface. The next modelo work/source-mesh plan rows still need to inspect command surfaces that create, calculate, and verify work units, where identifiers are more likely to appear.
+
+## W03.P10.S57 Follow-up Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Findings
+
+- The prior low negative-only coverage concern is materially improved. The describe JSON guard now checks both placeholder absence and UUID-shaped raw identifier absence on the rendered payload.
+- Remaining risk is scoped to surface coverage: this row covers `modelo describe`; later modelo work/source-mesh rows still need to audit create/calculate/verify output surfaces.
