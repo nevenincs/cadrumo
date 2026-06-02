@@ -87,9 +87,7 @@ def test_currency_inline_sign_round_trips_negative_value() -> None:
 
     # Byte 0 must be the inline-sign marker for negative values.
     body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
-    assert body[0:1] == b"N", (
-        f"INLINE_SIGN negative value should emit 'N' in byte 0; got {body[0:1]!r}"
-    )
+    assert body[0:1] == b"N", f"INLINE_SIGN negative value should emit 'N' in byte 0; got {body[0:1]!r}"
 
     parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
     assert parsed.casilla_values["01"] == Decimal("-12345.67")
@@ -119,9 +117,7 @@ def test_currency_inline_sign_round_trips_positive_value() -> None:
     )
 
     body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
-    assert body[0:1] == b" ", (
-        f"INLINE_SIGN non-negative value should emit space in byte 0; got {body[0:1]!r}"
-    )
+    assert body[0:1] == b" ", f"INLINE_SIGN non-negative value should emit space in byte 0; got {body[0:1]!r}"
 
     parsed = deserialise(payload, specs=specs, encoding=LATIN_1_ENCODING, total_length=12)
     assert parsed.casilla_values["01"] == Decimal("42.00")
@@ -382,6 +378,7 @@ _M130_GOLDEN_SHA256 = "feaffb81b89ce8b897066ac0383d31e4bfd45a15c526b650f711a89f2
 
 # Envelope header is 328 bytes; page record begins at byte index 328 (0-based).
 _PAGE_START = 328
+
 
 # Money encoding helper: amount (Decimal) → expected bytes in a 17-byte
 # signed field.  Positive: " " + 16 zero-padded digits.  Negative: "N" + …
@@ -712,9 +709,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     assert _did(3, 3) == b"303", "DR DP303DID row 2: modelo in DID tag"
     # Row 3 (offset 6-10): "DID00" — type An in DR (not Num)
     # This field must be the literal string "DID00", NOT a zero-padded number.
-    assert _did(6, 5) == b"DID00", (
-        "DR DP303DID row 3: page identifier must be literal 'DID00' (type An, not Num)"
-    )
+    assert _did(6, 5) == b"DID00", "DR DP303DID row 3: page identifier must be literal 'DID00' (type An, not Num)"
     # Row 4 (offset 11): ">"
     assert _did(11, 1) == b">", "DR DP303DID row 4: close of DID tag"
 
