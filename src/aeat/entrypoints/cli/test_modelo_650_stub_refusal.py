@@ -130,10 +130,9 @@ def test_causante_ccaa_foral_refused_before_stub_guard(
     assert "Traceback" not in result.output
     output = result.output or ""
     # Must name the foral regime or governing statute.
-    assert any(
-        phrase in output
-        for phrase in ("foral", "Concierto", "Ley 12/2002", "Hacienda Foral", "País Vasco")
-    ), f"Expected foral-regime message but got: {output!r}"
+    assert any(phrase in output for phrase in ("foral", "Concierto", "Ley 12/2002", "Hacienda Foral", "País Vasco")), (
+        f"Expected foral-regime message but got: {output!r}"
+    )
 
 
 def test_causante_ccaa_navarra_foral_refused(
@@ -156,7 +155,6 @@ def test_causante_ccaa_navarra_foral_refused(
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     output = result.output or ""
-    assert any(
-        phrase in output
-        for phrase in ("foral", "Convenio", "Ley 28/1990", "Navarra", "Hacienda Foral")
-    ), f"Expected foral-regime message but got: {output!r}"
+    assert any(phrase in output for phrase in ("foral", "Convenio", "Ley 28/1990", "Navarra", "Hacienda Foral")), (
+        f"Expected foral-regime message but got: {output!r}"
+    )

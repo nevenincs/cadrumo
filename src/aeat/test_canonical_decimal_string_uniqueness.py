@@ -79,13 +79,11 @@ def test_canonical_decimal_string_has_exactly_one_definition_site(
     sites = all_defs.get("canonical_decimal_string", [])
     relative_sites = [p.relative_to(_SRC_ROOT) for p in sites]
     assert len(sites) == 1, (
-        f"Expected exactly 1 definition of canonical_decimal_string; "
-        f"found {len(sites)}: {relative_sites}"
+        f"Expected exactly 1 definition of canonical_decimal_string; found {len(sites)}: {relative_sites}"
     )
     canonical_home = sites[0]
     assert "domain" in canonical_home.parts and "_identifiers" in canonical_home.name, (
-        f"canonical_decimal_string must be defined in domain/_identifiers.py; "
-        f"found at {canonical_home}"
+        f"canonical_decimal_string must be defined in domain/_identifiers.py; found at {canonical_home}"
     )
 
 
@@ -96,13 +94,7 @@ def test_canonical_decimal_string_has_exactly_one_definition_site(
 
 def test_financial_decimal_module_is_deleted() -> None:
     """aeat.adapters.inbound.financial._decimal must not exist as a file."""
-    decimal_module_path = (
-        _SRC_ROOT
-        / "adapters"
-        / "inbound"
-        / "financial"
-        / "_decimal.py"
-    )
+    decimal_module_path = _SRC_ROOT / "adapters" / "inbound" / "financial" / "_decimal.py"
     assert not decimal_module_path.exists(), (
         f"Duplicate _decimal.py still present at {decimal_module_path}; "
         "delete the file and migrate callers to aeat.domain._identifiers."
