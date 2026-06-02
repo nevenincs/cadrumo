@@ -201,9 +201,7 @@ def test_committed_snapshot_lists_single_extraction_profile(_modelo_130_snapshot
     assert tuple(_modelo_130_snapshot.extraction_profiles) == ("modelo-130-declaracion-pdf",)
 
 
-_EXPECTED_LIVE_CROSS_REFERENCES = frozenset(
-    {"modelo-130-static-official", "modelo-130-filed-declarations-read"}
-)
+_EXPECTED_LIVE_CROSS_REFERENCES = frozenset({"modelo-130-static-official", "modelo-130-filed-declarations-read"})
 
 
 def test_committed_snapshot_lists_expected_live_cross_references(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
@@ -211,10 +209,7 @@ def test_committed_snapshot_lists_expected_live_cross_references(_modelo_130_sna
 
 
 def test_committed_snapshot_static_cross_reference_carries_layout_tier(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
-    assert (
-        _modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier
-        == "layout_authority"
-    )
+    assert _modelo_130_snapshot.live_cross_references["modelo-130-static-official"].evidence_tier == "layout_authority"
 
 
 def test_committed_snapshot_filed_declarations_read_is_authenticated_read_surface(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
@@ -725,8 +720,7 @@ def test_validator_rejects_literal_export_field_longer_than_declared_length() ->
     oversized = field.model_copy(update={"literal": "X" * (field.length + 1)})
     fields = tuple(oversized if item.id == field.id else item for item in record.fields)
     records = tuple(
-        record.model_copy(update={"fields": fields}) if item.id == record.id else item
-        for item in layout.records
+        record.model_copy(update={"fields": fields}) if item.id == record.id else item for item in layout.records
     )
     layouts = tuple(
         layout.model_copy(update={"records": records}) if item.id == layout.id else item
@@ -1033,9 +1027,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
     # A pure communication-only modelo does not file declarations and
     # therefore has no PDF-extraction surface; strip extraction_profiles
     # and their corpus-PDF requirements from the mutated revision.
-    extractor_link_ids = frozenset(
-        link.id for link in communication.application_links if link.surface == "extractor"
-    )
+    extractor_link_ids = frozenset(link.id for link in communication.application_links if link.surface == "extractor")
     constructs_without_extractor = tuple(
         construct.model_copy(
             update={
@@ -1051,9 +1043,7 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
         update={
             "constructs": constructs_without_extractor,
             "extraction_profiles": (),
-            "application_links": tuple(
-                link for link in communication.application_links if link.surface != "extractor"
-            ),
+            "application_links": tuple(link for link in communication.application_links if link.surface != "extractor"),
         }
     )
     modelo_145 = modelo.model_copy(update={"id": "145"})
@@ -1091,9 +1081,7 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
     )
 
     with pytest.raises(RegistryValidationError, match="unknown operator 'cap_lt_when_positive'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, mutated)
-        )
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
@@ -1104,7 +1092,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
     malformed_predicate = VerificationPredicateDefinition(
         predicate_id="modelo-130-malformed-predicate",
         legal_refs=("rd-439-2007:art-110",),
-        expression='just a string with no call shape',
+        expression="just a string with no call shape",
         finding_kind="BLOCKING_RULE",
     )
     mutated = revision.model_copy(
@@ -1112,9 +1100,7 @@ def test_validator_rejects_verification_predicate_with_malformed_expression() ->
     )
 
     with pytest.raises(RegistryValidationError, match="not a recognised DSL call"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, mutated)
-        )
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
 def test_validator_accepts_known_verification_predicate_operators() -> None:
