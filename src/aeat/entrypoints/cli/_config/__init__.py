@@ -1949,11 +1949,7 @@ def auth_clear(
         ) from exc
     from .._config_payloads import AuthClearPayload
 
-    clear_result = AuthClearPayload(
-        removed_sessions=result.removed_sessions,
-        cleared_workflow_state=result.cleared_workflow_state,
-        cleared_locks=result.cleared_locks,
-    )
+    clear_result = AuthClearPayload.from_result(result)
     _emit_envelope(
         ctx,
         command="config.auth.clear",
