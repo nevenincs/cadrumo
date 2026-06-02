@@ -72,7 +72,7 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
 ) -> None:
     """AssetsLedgerDocument + AmortizacionLedger roundtrip through encrypted SQL."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-survives"):
         assets_repo = AssetsLedgerRepository()
         amortizacion_repo = AmortizacionLedgerRepository()
 
@@ -135,7 +135,7 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
         engine = get_engine(profile.settings)
         assets_repo = AssetsLedgerRepository()
         asset = _populated_asset()
@@ -187,7 +187,7 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:
         engine = get_engine(profile.settings)
         assets_repo = AssetsLedgerRepository()
         assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))
