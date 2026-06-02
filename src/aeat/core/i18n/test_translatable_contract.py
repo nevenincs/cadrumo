@@ -41,9 +41,7 @@ def _is_i18n_tr_import(module: str | None, alias: ast.alias) -> bool:
         return False
     if alias.asname is not None:
         return False
-    return module is not None and (
-        module == "_render" or module == "i18n" or module.endswith(".i18n")
-    )
+    return module is not None and (module == "_render" or module == "i18n" or module.endswith(".i18n"))
 
 
 class _TranslatableContractVisitor(ast.NodeVisitor):
