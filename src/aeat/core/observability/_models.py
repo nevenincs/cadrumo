@@ -69,6 +69,7 @@ class ArgumentSource(StrEnum):
     CONFIG = "CONFIG"
     DEFAULT = "DEFAULT"
 
+
 class RunEventKind(StrEnum):
     """Closed catalogue of run-event kinds emitted by the observability layer.
 
@@ -94,6 +95,7 @@ class RunEventKind(StrEnum):
     WORKFLOW_STARTED = "WORKFLOW_STARTED"
     WORKFLOW_COMPLETED = "WORKFLOW_COMPLETED"
 
+
 class RunOutcome(StrEnum):
     """Terminal outcome recorded on a :class:`RunTrace`.
 
@@ -107,6 +109,7 @@ class RunOutcome(StrEnum):
     OK = "OK"
     FAILED = "FAILED"
     ABORTED = "ABORTED"
+
 
 class ArgumentRecord(BaseModel):
     """A single CLI argument captured for replay.
@@ -133,6 +136,7 @@ class ArgumentRecord(BaseModel):
     source: ArgumentSource
     cli_flag: str | None = None
 
+
 class NavigationPayload(BaseModel):
     """Payload for :attr:`RunEventKind.NAVIGATION`.
 
@@ -145,6 +149,7 @@ class NavigationPayload(BaseModel):
 
     url: str
     description: str = ""
+
 
 class FormFillPayload(BaseModel):
     """Payload for :attr:`RunEventKind.FORM_FILL`.
@@ -162,6 +167,7 @@ class FormFillPayload(BaseModel):
     casilla: str
     value: str
 
+
 class AssertionPayload(BaseModel):
     """Payload for :attr:`RunEventKind.ASSERTION`.
 
@@ -177,6 +183,7 @@ class AssertionPayload(BaseModel):
     passed: bool
     detail: str = ""
 
+
 class CacheHitPayload(BaseModel):
     """Payload for :attr:`RunEventKind.CACHE_HIT`.
 
@@ -189,6 +196,7 @@ class CacheHitPayload(BaseModel):
 
     cache_name: str
     key: str
+
 
 class ErrorPayload(BaseModel):
     """Payload for :attr:`RunEventKind.ERROR`.
@@ -205,6 +213,7 @@ class ErrorPayload(BaseModel):
     error_type: str
     message: str
 
+
 class StepBoundaryPayload(BaseModel):
     """Payload for :attr:`RunEventKind.STEP_START` and :attr:`RunEventKind.STEP_END`.
 
@@ -217,6 +226,7 @@ class StepBoundaryPayload(BaseModel):
 
     step_id: str
     label: str
+
 
 class WorkflowLinkPayload(BaseModel):
     """Payload for :attr:`RunEventKind.WORKFLOW_STARTED` / ``WORKFLOW_COMPLETED``.
@@ -234,6 +244,7 @@ class WorkflowLinkPayload(BaseModel):
 
     workflow_run_id: str
 
+
 class GenericPayload(BaseModel):
     """Structured-but-typed key/value payload for ad-hoc events.
 
@@ -249,6 +260,7 @@ class GenericPayload(BaseModel):
 
     fields: tuple[tuple[str, str], ...] = ()
 
+
 _PAYLOAD_FIELDS: tuple[str, ...] = (
     "navigation",
     "form_fill",
@@ -259,6 +271,7 @@ _PAYLOAD_FIELDS: tuple[str, ...] = (
     "workflow_link",
     "generic",
 )
+
 
 class RunEventPayload(BaseModel):
     """Tagged-union wrapper for the per-event payload variants.
@@ -298,6 +311,7 @@ class RunEventPayload(BaseModel):
             )
         return self
 
+
 def _require_tz_aware(value: datetime) -> datetime:
     """Reject naive or non-UTC datetimes at the pydantic boundary.
 
@@ -316,6 +330,7 @@ def _require_tz_aware(value: datetime) -> datetime:
         The same datetime, unmodified, when it is UTC-aware.
     """
     return validate_utc_aware(value)
+
 
 class RunEvent(BaseModel):
     """A single observability event captured during a run.
@@ -343,6 +358,7 @@ class RunEvent(BaseModel):
         """Reject naive ``timestamp`` values; see :func:`_require_tz_aware`."""
         _require_tz_aware(self.timestamp)
         return self
+
 
 class RunTrace(BaseModel):
     """Metadata header persisted as ``trace.json`` for a CLI invocation.
@@ -392,6 +408,7 @@ class RunTrace(BaseModel):
         if self.finished_at is not None:
             _require_tz_aware(self.finished_at)
         return self
+
 
 __all__ = [
     "ArgumentRecord",
