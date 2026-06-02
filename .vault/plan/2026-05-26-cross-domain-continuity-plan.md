@@ -579,7 +579,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 
 active_bucket_id_or_raise and require_active_bucket_id have identical bodies. Merge to one canonical function.
 
-- [ ] `W09.P42.S165` - merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites; `src/aeat/application/workflow/_models.py`.
+- [x] `W09.P42.S165` - merge active_bucket_id_or_raise and require_active_bucket_id into one canonical function update all call sites; `src/aeat/application/workflow/_models.py`.
 
 ### Phase `W09.P43` - side-effect re-export refactor
 

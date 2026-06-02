@@ -230,10 +230,10 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 
 def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
-    from ...application.workflow import NoActiveProfileError, active_bucket_id_or_raise
+    from ...application.workflow import NoActiveProfileError, require_active_bucket_id
 
     try:
-        return active_bucket_id_or_raise()
+        return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
 
