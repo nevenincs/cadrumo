@@ -24,6 +24,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S49]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S50]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S51]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S52]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -247,3 +248,26 @@ No HIGH findings in the scoped S51 implementation. CRITICAL findings present: no
   - `.vault/exec/...-W03-P51.md` explicitly states the old apex workflow target is removed and current scope is `test_cli_workflow_verification.py`, matching the check list entry in the plan.
 - Broad except/comment movement risk:
   - In this S51 diff, `except` blocks remain behaviorally the same; only comment reflow occurred around existing broad-exception catches. I do not see a new suppression or widened catch-set introduced here.
+
+## W03.P09.S52 Review
+
+No HIGH findings in the scoped S52 implementation. CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/test_cli_surface.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/adr/2026-05-28-centralized-output-redaction-adr.md`
+- `.vault/research/2026-05-28-centralized-output-redaction-research.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S52.md`
+
+### Findings
+
+- The W03.P09.S52 intent is met: hard-coded bucket placeholders and raw bucket-id checks are now tied to the shared redaction vocabulary (`CLI_BUCKET_ID_PLACEHOLDER`) and real CLI JSON payloads.
+- Test assertions remain transport-level (`invoke_cached_cli` + parsed real CLI output) rather than helper-only or mocked output checks, so they exercise real behavior under `render_command_output`/`_emit` boundaries.
+- The raw-UUID absence assertion is meaningful in this context because `bucket_id` is a UUID-style bucket routing identifier while visible row fields (`transaction_id`, `bucket_event_ids`, evidence IDs) are non-UUID domain IDs in this surface, so there is no conflation in these checks.
+- Placeholder-constant usage is consistent: `CLI_BUCKET_ID_PLACEHOLDER` is now imported from the central redaction contract and used across all updated S52 expectations, which is preferred over duplicated literal strings.
+
+### Residual risks
+
+- `bucket_id not in json.dumps(payload, sort_keys=True)` is a broad string-scan assertion. It protects against raw UUID leakage in visible outputs, but it is weaker than a structured assertion over identifier-shaped leaves and will not catch encoding/typing anomalies that still pass string serialization.
