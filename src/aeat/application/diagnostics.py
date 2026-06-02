@@ -15,13 +15,13 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from .. import __version__
-from ..core.time import now
-
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
+from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.resources import bundled_path
+from ..core.time import now
 from ._errors import DiagnosticModelError
 
 # The browser adapter, the registry authority, the secure-object
@@ -314,7 +314,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 
             if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
                 provider_context = get_master_key_provider()
-                # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
+                # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
+                # get_master_key_provider returns a runtime context object;
+                # __enter__/__exit__ are not statically visible here.
                 provider_context.__enter__()  # type: ignore[attr-defined]
             state = workflow_state_repository().load()
             checks.append(
@@ -362,7 +364,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         checks.append(_secure_objects_integrity_check(secure_objects))
     finally:
         if provider_context is not None:
-            # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL: get_master_key_provider returns object; __enter__/__exit__ are correct at runtime but unverifiable without a typed Protocol.
+            # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
+            # get_master_key_provider returns a runtime context object;
+            # __enter__/__exit__ are not statically visible here.
             provider_context.__exit__(None, None, None)  # type: ignore[attr-defined]
 
     checks.append(_registry_cross_domain_integrity_check(root))
@@ -436,11 +440,15 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
         if context is not None:
             try:
                 await context.close()
-            except Exception:  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN: browser context/session close raises heterogeneous async exceptions (TimeoutError, OSError, playwright internals); teardown must complete unconditionally.
+            # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN:
+            # close raises heterogeneous async exceptions; teardown must continue.
+            except Exception:
                 _log.warning("config repair connectivity context close failed", exc_info=True)
         try:
             await session.close()
-        except Exception:  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN: browser context/session close raises heterogeneous async exceptions (TimeoutError, OSError, playwright internals); teardown must complete unconditionally.
+        # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN:
+        # close raises heterogeneous async exceptions; teardown must continue.
+        except Exception:
             _log.warning("config repair connectivity browser close failed", exc_info=True)
 
 
@@ -508,7 +516,7 @@ def _repair_safe_wizard_status(report: WizardStatusReport) -> WizardStatusReport
     """Return a repair-surface copy that does not expose the bucket UUID."""
     if report.active_profile is None:
         return report
-    return report.model_copy(update={"active_profile": "active_profile"})
+    return report.model_copy(update={"active_profile": CLI_PROFILE_ID_PLACEHOLDER})
 
 
 def _finding_tag(finding: DiagnosticFinding) -> str:
@@ -577,7 +585,9 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     for ns in namespaces:
         try:
             integrity_items.append(repo.probe_namespace_integrity(ns))
-        except Exception:  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE: storage probe raises heterogeneous backend errors; per-namespace fallback must not abort the loop.
+        # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE:
+        # storage probes raise heterogeneous backend errors; continue per namespace.
+        except Exception:
             _log.debug("secure objects integrity probe failed for namespace=%s", ns, exc_info=True)
             integrity_items.append(
                 SecureObjectNamespaceIntegrity(
@@ -701,7 +711,7 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
 
 def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     """Render pointer/manifest/profile-record health before semantic readiness."""
-    active_profile = "active_profile" if health.active_profile is not None else "-"
+    active_profile = CLI_PROFILE_ID_PLACEHOLDER if health.active_profile is not None else "-"
     summary = tr(
         "cli.diagnostics.summary.profile_storage",
         active_profile=active_profile,
@@ -763,7 +773,9 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
         return ()
     try:
         record = state.active_profile_record()
-    except Exception:  # pragma: no cover  # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ: record unreadability handled by upstream storage checks; suppression is final-fallback only.
+    except Exception:  # pragma: no cover
+        # BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ:
+        # record unreadability is handled by upstream storage checks.
         _log.debug("config repair profile-key finding probe could not read record", exc_info=True)
         return ()
     if record is None:

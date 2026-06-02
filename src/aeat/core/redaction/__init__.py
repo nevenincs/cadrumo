@@ -117,13 +117,13 @@ _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
 _CLI_PROFILE_ID_KEYS = frozenset(
     {
         "active_profile_id",
-        "active_profile",
         "bucket_profile_id",
         "profile_bucket_id",
         "profile_id",
         "repository_profile_id",
     }
 )
+_CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
 _CLI_BUCKET_ID_KEYS = frozenset(
     {
         "active_bucket_id",
@@ -339,11 +339,17 @@ def _normalise_cli_key(key: object | None) -> str | None:
     return re.sub(r"[^a-z0-9]+", "_", str(key).strip().lower()).strip("_")
 
 
+def _is_cli_profile_reference(value: object) -> bool:
+    return isinstance(value, str) and _CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
+
+
 def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
     if value is None or value == "":
         return None
     normalised = _normalise_cli_key(key)
     if normalised in _CLI_PROFILE_ID_KEYS:
+        return CLI_PROFILE_ID_PLACEHOLDER
+    if normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
         return CLI_PROFILE_ID_PLACEHOLDER
     if normalised in _CLI_BUCKET_ID_KEYS:
         return CLI_BUCKET_ID_PLACEHOLDER

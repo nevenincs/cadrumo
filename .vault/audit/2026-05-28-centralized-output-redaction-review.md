@@ -23,6 +23,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S14]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S49]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S50]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S51]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -216,3 +217,33 @@ No HIGH findings in the scoped S50 implementation. CRITICAL findings present: no
 
 - `_CLI_IDENTIFIER_ASSIGNMENT_PATTERN` now only catches `[:=]`-style assignments and a bounded key vocabulary. It does not cover camelCase or alternate label forms for profile/bucket identifiers. This is acceptable for S50 if command outputs stay snake/hyphen style, but it is a low-risk regression surface for future command-output variants and should be covered by explicit matrix expansion in later W03.P10 steps.
 - Tests do not assert schema-preserving behavior when non-canonical assignment labels are present in text or JSON, so this regex drift risk is not guarded until broader command-surface tests in S51+ run.
+
+## W03.P09.S51 Review
+
+No HIGH findings in the scoped S51 implementation. CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/core/redaction/__init__.py`
+- `src/aeat/core/test_redaction.py`
+- `src/aeat/application/diagnostics.py`
+- `src/aeat/entrypoints/cli/test_cli_workflow_verification.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S51.md`
+- `.vault/audit/2026-05-28-centralized-output-redaction-review.md`
+
+### Findings
+
+- `active_profile` is value-aware in CLI redaction:
+  - `src/aeat/core/redaction/__init__.py` no longer treats `active_profile` as a canonical ID key, and now checks whether its value is UUID-shaped before placeholdering it. This preserves operator-facing labels while masking raw profile UUIDs.
+  - `src/aeat/core/test_redaction.py` exercises both paths (`active_profile=operator` untouched, UUID `active_profile` masked to `CLI_PROFILE_ID_PLACEHOLDER`), so the behavior is covered.
+- Repair diagnostics redacts raw bucket/profile identity in emitted JSON/text:
+  - `src/aeat/application/diagnostics.py::_repair_safe_wizard_status` and `src/aeat/application/diagnostics.py::_active_profile_storage_check` now replace non-empty raw profile identifiers with `CLI_PROFILE_ID_PLACEHOLDER` in repair output shaping.
+  - `src/aeat/entrypoints/cli/test_cli_workflow_verification.py::test_config_app_round_trip_review_row_records_bucket_id` now asserts `active_profile` remains operator-visible (`operator`), while `profile_id` is redacted with `CLI_PROFILE_ID_PLACEHOLDER` and `bucket_id` with `CLI_BUCKET_ID_PLACEHOLDER`.
+- Test quality and scope are not tautological for this change:
+  - assertions remain transport-level and outcome-driven (`invoke_cached_cli`, parsed command payloads, and explicit expected redacted constants), not helper-mirror assertions.
+  - no fake/stubbed command output behavior was introduced in these assertions.
+- Plan path correction is implemented:
+  - `.vault/exec/...-W03-P51.md` explicitly states the old apex workflow target is removed and current scope is `test_cli_workflow_verification.py`, matching the check list entry in the plan.
+- Broad except/comment movement risk:
+  - In this S51 diff, `except` blocks remain behaviorally the same; only comment reflow occurred around existing broad-exception catches. I do not see a new suppression or widened catch-set introduced here.
