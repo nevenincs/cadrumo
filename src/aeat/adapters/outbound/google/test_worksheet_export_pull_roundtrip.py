@@ -26,13 +26,14 @@ from ....application.storage.calc_sheets import (
     OperatorInputs,
     RelationValues,
     build_export_plan,
+    registry_sha,
 )
-from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._records import OperatorInput
 from ....core.resources import resources
 from ....domain.calculations.registry._schema import InputKind
 from ._calc_sheets_pull import (
     BindingEdit,
+    MetadataMatchState,
     OperatorEdit,
     PullMetadata,
     PullResult,
@@ -127,8 +128,7 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
         spreadsheet_id="roundtrip-test-id",
         operator_edits=operator_edits,
         binding_edits=tuple(
-            BindingEdit(binding=binding.id, value=Decimal("0"))
-            for binding in snapshot.revision.bindings
+            BindingEdit(binding=binding.id, value=Decimal("0")) for binding in snapshot.revision.bindings
         ),
         relation_edits=tuple(
             RelationEdit(relation=relation.id, value=Decimal("0"))
@@ -141,9 +141,9 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
             filing_year=snapshot.filing_year,
             period=snapshot.period,
             engine_version="calc-sheets/0.1.0",
-            registry_sha=_registry_sha(snapshot),
+            registry_sha=registry_sha(snapshot),
         ),
-        metadata_match="matches",
+        metadata_match=MetadataMatchState.MATCHES,
         cells_read=2,
     )
 
@@ -159,12 +159,11 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
     assert result.values["01"] == ingresos
     assert result.values["02"] == gastos
 
-    # Casilla 03 (rendimiento neto) is now a bound casilla fed from the
-    # ledger aggregation pipeline, not a computed formula. With zero
-    # binding values the bound result is Decimal("0"). The exported
-    # observation must still be present on the result.
+    # Casilla 03 (rendimiento neto) is computed by the registry from the
+    # two operator inputs above. Keep the expected value literal so this
+    # test remains an oracle instead of duplicating formula logic inline.
     casilla_03_obs = next(obs for obs in result.observations if obs.casilla_id == "03")
-    assert casilla_03_obs.value == Decimal("0")
+    assert casilla_03_obs.value == Decimal("8000.25")
 
 
 def test_workbook_input_count_matches_pulled_edit_count() -> None:
