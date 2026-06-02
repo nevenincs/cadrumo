@@ -1057,12 +1057,11 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
         cuota_bearing=False,
         # Ley 11/2021 DA 10a — obligacion de declarar monedas virtuales en el
-        # extranjero; Orden HFP/887/2023 Art. 3 — umbral de 50.000 EUR;
-        # RD 1065/2007 Art. 42 quater — reglamento base de declaraciones
-        # informativas de bienes y derechos en el extranjero.
+        # extranjero; RD 1065/2007 Art. 42 quater — reglamento base de
+        # declaraciones informativas de bienes y derechos en el extranjero
+        # incluyendo el umbral de 50.000 EUR para monedas virtuales.
         legal_refs=(
             "ley-11-2021:da-10",
-            "orden-hfp-887-2023:art-3",
             "rd-1065-2007:art-42-quater",
         ),
     ),
