@@ -149,32 +149,32 @@ Add operator-facing canary tests across text and JSON output.
 Update command suites whose expected output includes profile, bucket, or tax context.
 
 - [x] `W03.P10.S57` - update modelo CLI tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo.py`.
-- [ ] `W03.P10.S58` - update modelo work UX tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
-- [ ] `W03.P10.S59` - update modelo source-mesh tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`.
-- [ ] `W03.P10.S60` - update ledger allocation tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_allocate_classification.py`.
-- [ ] `W03.P10.S61` - update ledger validation tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
-- [ ] `W03.P10.S62` - update ledger UX defect tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_ux_defect_cluster.py`.
-- [ ] `W03.P10.S63` - update live IVA wallet inspector tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_iva_wallet_inspector.py`.
-- [ ] `W03.P10.S64` - update registry corpus tests to prove non-sensitive rows remain unredacted; `src/aeat/entrypoints/cli/test_registry_corpus.py`.
+- [x] `W03.P10.S58` - update modelo work UX tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
+- [x] `W03.P10.S59` - update modelo source-mesh tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`.
+- [x] `W03.P10.S60` - update ledger allocation tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_allocate_classification.py`.
+- [x] `W03.P10.S61` - update ledger validation tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
+- [x] `W03.P10.S62` - update ledger UX defect tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_ux_defect_cluster.py`.
+- [x] `W03.P10.S63` - update live IVA wallet inspector tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_iva_wallet_inspector.py`.
+- [x] `W03.P10.S64` - update registry corpus tests to prove non-sensitive rows remain unredacted; `src/aeat/entrypoints/cli/test_registry_corpus.py`.
 
 ### Phase `W03.P11` - error and direct-output gates
 
 Prevent bypasses after the central boundary lands.
 
-- [ ] `W03.P11.S65` - add a production output-surface inventory gate for `_emit`, `_emit_envelope`, `typer.echo`, and direct writes; `src/aeat/entrypoints/cli/test_output_surface_inventory.py`.
-- [ ] `W03.P11.S66` - update error-boundary integration tests for shared error redaction behavior; `src/aeat/entrypoints/cli/test_error_boundary_integration.py`.
-- [ ] `W03.P11.S67` - update error-boundary unwrap tests for shared error redaction behavior; `src/aeat/entrypoints/cli/test_error_boundary_unwrap.py`.
-- [ ] `W03.P11.S68` - update error-registry contract tests for shared context redaction behavior; `src/aeat/entrypoints/cli/test_error_registry_contract.py`.
-- [ ] `W03.P11.S69` - update Windows encoding tests to preserve redacted output rendering; `src/aeat/entrypoints/cli/test_windows_encoding.py`.
+- [x] `W03.P11.S65` - add a production output-surface inventory gate for `_emit`, `_emit_envelope`, `typer.echo`, and direct writes; `src/aeat/entrypoints/cli/test_output_surface_inventory.py`.
+- [x] `W03.P11.S66` - update error-boundary integration tests for shared error redaction behavior; `src/aeat/entrypoints/cli/test_error_boundary_integration.py`.
+- [x] `W03.P11.S67` - update error-boundary unwrap tests for shared error redaction behavior; `src/aeat/entrypoints/cli/test_error_boundary_unwrap.py`.
+- [x] `W03.P11.S68` - update error-registry contract tests for shared context redaction behavior; `src/aeat/entrypoints/cli/test_error_registry_contract.py`.
+- [x] `W03.P11.S69` - update Windows encoding tests to preserve redacted output rendering; `src/aeat/entrypoints/cli/test_windows_encoding.py`.
 
 ### Phase `W03.P12` - persistence and provider privacy gates
 
 Keep non-CLI privacy tests aligned with the shared redaction vocabulary.
 
-- [ ] `W03.P12.S70` - update live IVA wallet static privacy guard for shared redaction vocabulary; `src/aeat/application/live/test_iva_wallet_privacy_static_guard.py`.
-- [ ] `W03.P12.S71` - update LLM redaction tests for shared redaction vocabulary; `src/aeat/adapters/outbound/llm/test_redaction.py`.
-- [ ] `W03.P12.S72` - update secure-storage sensitivity policy tests for shared redaction vocabulary; `src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py`.
-- [ ] `W03.P12.S73` - update secret-store tests for shared redaction vocabulary where output is inspected; `src/aeat/adapters/persistence/storage/test_secret_store.py`.
+- [x] `W03.P12.S70` - update live IVA wallet static privacy guard for shared redaction vocabulary; `src/aeat/application/live/test_iva_wallet_privacy_static_guard.py`.
+- [x] `W03.P12.S71` - update LLM redaction tests for shared redaction vocabulary; `src/aeat/adapters/outbound/llm/test_redaction.py`.
+- [x] `W03.P12.S72` - update secure-storage sensitivity policy tests for shared redaction vocabulary; `src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py`.
+- [x] `W03.P12.S73` - update secret-store tests for shared redaction vocabulary where output is inspected; `src/aeat/adapters/persistence/storage/test_secret_store.py`.
 
 ## Wave `W04` - documentation, inventory, and rollout closeout
 
@@ -184,11 +184,11 @@ This Wave records the architecture and leaves durable scanner/audit hooks for fu
 
 Update generated API references and operator-facing architecture notes after the implementation lands.
 
-- [ ] `W04.P13.S74` - update redaction API reference after central policy consolidation; `docs/api/aeat.core.redaction.rst`.
-- [ ] `W04.P13.S75` - update output-rendering API reference after rendering-time redaction lands; `docs/api/aeat.core.output_rendering.rst`.
-- [ ] `W04.P13.S76` - update observability API reference after rule-source consolidation lands; `docs/api/aeat.core.observability.rst`.
-- [ ] `W04.P13.S77` - update JSON-contract API reference after envelope redaction lands; `docs/api/aeat.core.json_contract.rst`.
-- [ ] `W04.P13.S78` - update CLI entrypoint API reference after output-surface enrollment lands; `docs/api/aeat.entrypoints.cli.rst`.
+- [x] `W04.P13.S74` - update redaction API reference after central policy consolidation; `docs/api/aeat.core.redaction.rst`.
+- [x] `W04.P13.S75` - update output-rendering API reference after rendering-time redaction lands; `docs/api/aeat.core.output_rendering.rst`.
+- [x] `W04.P13.S76` - update observability API reference after rule-source consolidation lands; `docs/api/aeat.core.observability.rst`.
+- [x] `W04.P13.S77` - update JSON-contract API reference after envelope redaction lands; `docs/api/aeat.core.json_contract.rst`.
+- [x] `W04.P13.S78` - update CLI entrypoint API reference after output-surface enrollment lands; `docs/api/aeat.entrypoints.cli.rst`.
 
 ### Phase `W04.P14` - vault closeout
 
