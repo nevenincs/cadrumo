@@ -21,10 +21,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core.time import now as _utc_now
-
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
+from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -83,6 +82,7 @@ _DECLARATION_TYPE_ORDINARY = "I"
 _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
 
+
 class ModeloExportCrossBucketRefusedError(ModeloError):
     """Raised when the addressed revision's parent work unit belongs to a bucket other than the active profile bucket.
 
@@ -91,6 +91,7 @@ class ModeloExportCrossBucketRefusedError(ModeloError):
     operator's history.
     """
 
+
 class ModeloExportNoActiveBucketError(ModeloError):
     """Raised when no active profile bucket is configured.
 
@@ -98,6 +99,7 @@ class ModeloExportNoActiveBucketError(ModeloError):
     event is scoped to a bucket id and the work-unit lookup is
     bucket-bound.
     """
+
 
 class ModeloExportCommand(BaseModel):
     """Strict input contract for ``export_modelo_revision``.
@@ -119,6 +121,7 @@ class ModeloExportCommand(BaseModel):
     calculation_revision_id: CalculationRevisionId
     output_path: Path
     actor: str = Field(min_length=1, max_length=128)
+
 
 class ModeloExportResult(BaseModel):
     """Receipt produced by ``export_modelo_revision``.
@@ -165,6 +168,7 @@ class ModeloExportResult(BaseModel):
     bucket_event_id: str = Field(min_length=1, max_length=128)
     casilla_provenance: tuple[filing_domain.ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
 
+
 def _load_revision_for_export(
     calculation_revision_id: str,
     *,
@@ -187,6 +191,7 @@ def _load_revision_for_export(
             f"revisions can be exported",
         )
     return revision
+
 
 def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     """Return ``(surnames, name)`` from the active bucket's persisted profile.
@@ -226,11 +231,7 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     facts = record_to_path_values(record)
     surnames = (facts.get(_PROFILE_SURNAMES_PATH) or "").strip()
     name = (facts.get(_PROFILE_NAME_PATH) or "").strip()
-    missing = [
-        path
-        for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name))
-        if not value
-    ]
+    missing = [path for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name)) if not value]
     if missing:
         raise ModeloExportError(
             f"export requires the operator name on the active profile, but "
@@ -239,9 +240,11 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
         )
     return surnames, name
 
+
 def _ddmmaaaa(value: date) -> str:
     """Render a date as the AEAT ``ddmmaaaa`` fixed-width header token."""
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
+
 
 def _compose_export_headers(
     *,
@@ -296,6 +299,7 @@ def _compose_export_headers(
 
     return headers
 
+
 def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
     """Return ``(filing_year, registry_period, canonical_period)`` for export.
 
@@ -335,6 +339,7 @@ def _resolve_export_period(work_unit: WorkUnit) -> tuple[int, str, str]:
         ) from exc
     return filing_year, registry_period, canonical
 
+
 def export_modelo_revision(
     command: ModeloExportCommand,
     *,
@@ -364,8 +369,7 @@ def export_modelo_revision(
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
-            "no active profile bucket; run `aeat config profile create NAME` "
-            "before exporting a modelo revision",
+            "no active profile bucket; run `aeat config profile create NAME` before exporting a modelo revision",
             translated_message="application.modelo.errors.export_no_active_bucket",
         )
 
@@ -420,8 +424,7 @@ def export_modelo_revision(
         )
     except filing_domain.FilingExportError as exc:
         raise ModeloExportError(
-            f"could not approve draft for calculation_revision_id="
-            f"{command.calculation_revision_id!r}: {exc}",
+            f"could not approve draft for calculation_revision_id={command.calculation_revision_id!r}: {exc}",
         ) from exc
 
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
@@ -501,6 +504,7 @@ def export_modelo_revision(
         bucket_event_id=event.event_id,
         casilla_provenance=receipt.casilla_provenance,
     )
+
 
 __all__ = [
     "ModeloExportCommand",
