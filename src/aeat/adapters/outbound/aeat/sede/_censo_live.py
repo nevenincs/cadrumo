@@ -81,8 +81,7 @@ async def fetch_g313_censo(
     settings = settings or Settings()
     if session.storage_state_path is None:
         raise SedeNavigationError(
-            "AeatSession has no persisted auth session; "
-            "run `aeat config auth configure` to acquire one",
+            "AeatSession has no persisted auth session; run `aeat config auth configure` to acquire one",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
@@ -206,7 +205,6 @@ def _populated_count(fact_set: CensoFactSet) -> int:
         )
         if value is not None
     )
-
 
 
 __all__ = [
