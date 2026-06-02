@@ -1353,6 +1353,24 @@ remediation is currently HELD at audit-only per the active action policy.
   shim. KEEP RegistryManualId; same disposition family as DB-11 / DB-38 / S21
   (constraint-shape divergence, excluded-as-written).
 
+- 2026-06-02 (cont.): **DB-26 / W04.P13 (S49-S52) twin-DTO analysis** (surfaced,
+  not yet executed — contract-sensitive, needs careful per-twin work). The CLI
+  Auth payloads `AuthStatusResult` / `AuthTestResult` / `AuthLoginResult` in
+  `cli/_config_payloads.py` are NOT pure duplicates: they are thin `extra="allow"`
+  OutputSchema envelopes that deliberately forward the independently-evolving
+  application `AuthStatusResult` (application/auth/_operator.py, with
+  `AuthTestResult(AuthStatusResult)` subclassing) without redeclaring
+  provider-specific fields — a legitimate CLI-output adapter pattern. The real
+  DB-26 smell for these three is the SHARED CLASS NAME across layers (confusing),
+  not their existence; the lighter fix is rename-disambiguation (`*Payload`) rather
+  than collapse, since "emit the application result directly" would couple the
+  application model to the CLI OutputSchema contract. The genuinely actionable
+  collapses are the 1:1 cases: `AuthClearResult` (S49, declares removed_sessions/
+  cleared_workflow_state/cleared_locks 1:1), `AuthConfigureResult` (S50, nullability
+  reconcile), and the Ledger/Modelo/Censo/Inventory projections (S51/S52). Each
+  needs per-twin verify-before-action: confirm 1:1 vs adapter, and preserve the CLI
+  JSON output contract (user-facing). Deferred to focused execution.
+
 ## Codification candidates
 
 
