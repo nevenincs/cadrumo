@@ -17,6 +17,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
@@ -27,7 +28,6 @@ from . import (
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
