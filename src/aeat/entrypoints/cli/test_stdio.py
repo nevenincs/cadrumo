@@ -183,7 +183,8 @@ def test_help_invocation_below_floor_widens_columns() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
-        scoped_env_var("COLUMNS", "80"),_ensure_help_render_width()
+        scoped_env_var("COLUMNS", "80"),
+        _ensure_help_render_width(),
     ):
         assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
 
@@ -193,7 +194,8 @@ def test_help_invocation_keeps_wider_columns() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
-        scoped_env_var("COLUMNS", "300"),_ensure_help_render_width()
+        scoped_env_var("COLUMNS", "300"),
+        _ensure_help_render_width(),
     ):
         assert os.environ["COLUMNS"] == "300"
 
@@ -207,7 +209,8 @@ def test_non_help_invocation_leaves_columns_untouched() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "list"]),
-        scoped_env_var("COLUMNS", "80"),_ensure_help_render_width()
+        scoped_env_var("COLUMNS", "80"),
+        _ensure_help_render_width(),
     ):
         assert os.environ["COLUMNS"] == "80"
 
@@ -217,7 +220,8 @@ def test_non_help_invocation_without_columns_set() -> None:
 
     with (
         scoped_sys_argv(["aeat", "config", "profile", "list"]),
-        scoped_env_var("COLUMNS", None),_ensure_help_render_width()
+        scoped_env_var("COLUMNS", None),
+        _ensure_help_render_width(),
     ):
         assert "COLUMNS" not in os.environ
 
@@ -243,10 +247,7 @@ def test_columns_env_var_used_for_env_write() -> None:
     invocation with a narrow terminal os.environ[_COLUMNS_ENV_VAR] must
     hold the floor value.
     """
-    with (
-        scoped_sys_argv(["aeat", "--help"]),
-        scoped_env_var(_COLUMNS_ENV_VAR, "80"),_ensure_help_render_width()
-    ):
+    with scoped_sys_argv(["aeat", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, "80"), _ensure_help_render_width():
         assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
 
@@ -258,10 +259,7 @@ def test_columns_env_var_used_for_env_read() -> None:
     uses the constant rather than an independent literal.
     """
     wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
-    with (
-        scoped_sys_argv(["aeat", "--help"]),
-        scoped_env_var(_COLUMNS_ENV_VAR, wide),_ensure_help_render_width()
-    ):
+    with scoped_sys_argv(["aeat", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, wide), _ensure_help_render_width():
         assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
@@ -285,9 +283,7 @@ def test_columns_write_is_scoped_help_invocation() -> None:
             assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
         after = os.environ[_COLUMNS_ENV_VAR]
 
-        assert after == before, (
-            f"COLUMNS not restored after context-manager exit: before={before!r} after={after!r}"
-        )
+        assert after == before, f"COLUMNS not restored after context-manager exit: before={before!r} after={after!r}"
 
 
 def test_columns_write_is_scoped_unset_env() -> None:
