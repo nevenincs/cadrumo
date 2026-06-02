@@ -232,9 +232,7 @@ def calculate_registry_snapshot(
     # value-coverage invariants stay intact. Reject unknown casilla ids
     # and ids that point at non-text casillas so a caller's typo cannot
     # silently strand the input.
-    text_casilla_ids = {
-        casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"
-    }
+    text_casilla_ids = {casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"}
     unknown_text_inputs = sorted(set(resolved_text_inputs).difference(casillas_by_id))
     if unknown_text_inputs:
         raise RegistryValidationError(
@@ -449,13 +447,10 @@ def _initial_values(
         raise RegistryValidationError(
             "previous-filing bound casilla projection is inconsistent between "
             "inputs and binding_values; the binding_values entry is the source "
-            "of truth and the inputs projection must match it: "
-            + "; ".join(inconsistent_previous_filing_projections),
+            "of truth and the inputs projection must match it: " + "; ".join(inconsistent_previous_filing_projections),
             translated_message="errors.calc.bound_projection_inconsistent",
             context={
-                "casilla_ids": ",".join(
-                    c.split(":")[0].split("'")[1] for c in inconsistent_previous_filing_projections
-                )
+                "casilla_ids": ",".join(c.split(":")[0].split("'")[1] for c in inconsistent_previous_filing_projections)
             },
         )
     values: dict[str, Decimal] = {}
@@ -651,8 +646,7 @@ def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -
         raise RegistryValidationError(f"parameter {bracket_arg.parameter!r} not registered")
     if bracket_param.data_type != "bracket_table":
         raise RegistryValidationError(
-            f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' "
-            f"to be used by lookup_bracket"
+            f"parameter {bracket_arg.parameter!r} must declare data_type='bracket_table' to be used by lookup_bracket"
         )
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(bracket_arg.parameter)
@@ -715,26 +709,16 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
     """
     op = "m210_resolve_rate"
     if len(expression.args) != 4:
-        raise RegistryValidationError(
-            f"formula op {op!r} expects 4 args, got {len(expression.args)}"
-        )
+        raise RegistryValidationError(f"formula op {op!r} expects 4 args, got {len(expression.args)}")
     tipo_arg, baseline_arg, convenio_arg, country_arg = expression.args
     if tipo_arg.casilla is None:
-        raise RegistryValidationError(
-            f"formula op {op!r} requires args[0] to be a casilla leaf"
-        )
+        raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
     if baseline_arg.parameter is None:
-        raise RegistryValidationError(
-            f"formula op {op!r} requires args[1] to be a parameter leaf"
-        )
+        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a parameter leaf")
     if convenio_arg.parameter is None:
-        raise RegistryValidationError(
-            f"formula op {op!r} requires args[2] to be a parameter leaf"
-        )
+        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a parameter leaf")
     if country_arg.binding is None:
-        raise RegistryValidationError(
-            f"formula op {op!r} requires args[3] to be a binding leaf"
-        )
+        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a binding leaf")
 
     tipo_renta = ctx.text_values.get(tipo_arg.casilla, "")
     ctx.operand_refs.append(tipo_arg.casilla)
@@ -832,8 +816,7 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
         )
     if binding_arg.binding not in ctx.enum_binding_values:
         raise RegistryValidationError(
-            f"enum binding {binding_arg.binding!r} has no supplied value;"
-            " required by lookup_parameter_by_entity_type",
+            f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_parameter_by_entity_type",
             translated_message="errors.calc.enum_binding_value_missing",
             context={"binding_id": binding_arg.binding, "op": op},
         )
@@ -909,8 +892,7 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
         )
     if binding_arg.binding not in ctx.enum_binding_values:
         raise RegistryValidationError(
-            f"enum binding {binding_arg.binding!r} has no supplied value;"
-            " required by lookup_bracket_by_entity_type",
+            f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_bracket_by_entity_type",
             translated_message="errors.calc.enum_binding_value_missing",
             context={"binding_id": binding_arg.binding, "op": op},
         )
@@ -981,9 +963,7 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) 
         raise RegistryValidationError("formula op 'age_at_year_end' expects exactly 1 arg")
     arg = expression.args[0]
     if arg.date_binding is None:
-        raise RegistryValidationError(
-            "formula op 'age_at_year_end' requires args[0] to be a date_binding leaf"
-        )
+        raise RegistryValidationError("formula op 'age_at_year_end' requires args[0] to be a date_binding leaf")
     binding_id = str(arg.date_binding)
     if binding_id not in ctx.date_binding_values:
         raise RegistryValidationError(
