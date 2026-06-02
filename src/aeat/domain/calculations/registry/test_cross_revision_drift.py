@@ -19,7 +19,6 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import load_modelo_directory, load_registry_tree
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from ._validate import (
@@ -466,6 +465,166 @@ class TestCrossRevisionConsistency:
         )
 
         assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_validation_accepts_repurposed_decision(self) -> None:
+        a = _casilla(
+            cid="0700",
+            label="Old base",
+            section=("old",),
+            data_type="money",
+            semantic_role="total_tax_due",
+            legal_refs=("ley-58-2003:art-29",),
+            continuidad_id="base",
+        )
+        b = _casilla(
+            cid="0700",
+            label="New base",
+            section=("new",),
+            data_type="decimal",
+            semantic_role="prior_period_tax_due",
+            legal_refs=("ley-58-2003:art-30",),
+            continuidad_id="base",
+        )
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "base-repurposed-2025",
+                        "continuidad_id": "base",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "repurposed",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_validation_requires_retired_decision_for_missing_surface(self) -> None:
+        a = _casilla(cid="0700", label="Old base", continuidad_id="base")
+        b = _casilla(cid="0900", label="Unrelated")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        failures = validate_registry_scope([m])
+
+        assert len(failures) == 1
+        assert "strict continuity retirement missing" in failures[0]
+        assert "base" in failures[0]
+        assert "2024" in failures[0]
+        assert "2025" in failures[0]
+
+    def test_strict_continuity_validation_accepts_retired_decision_for_missing_surface(self) -> None:
+        a = _casilla(cid="0700", label="Old base", continuidad_id="base")
+        b = _casilla(cid="0900", label="Unrelated")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "base-retired-2025",
+                        "continuidad_id": "base",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "retired",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_validation_rejects_unmatched_evolution_continuity_id(self) -> None:
+        a = _casilla(cid="0700", label="Base", continuidad_id="base")
+        b = _casilla(cid="0700", label="Base", continuidad_id="base")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "missing-label-2025",
+                        "continuidad_id": "missing",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "label_evolved",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        failures = validate_registry_scope([m])
+
+        assert len(failures) == 1
+        assert "strict continuity evolution mismatch" in failures[0]
+        assert "missing" in failures[0]
+        assert "no matching casilla continuity id" in failures[0]
+
+    def test_strict_continuity_validation_rejects_retired_decision_when_target_surface_remains(
+        self,
+    ) -> None:
+        a = _casilla(cid="0700", label="Base", continuidad_id="base")
+        b = _casilla(cid="0700", label="Base", continuidad_id="base")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "base-retired-2025",
+                        "continuidad_id": "base",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "retired",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        failures = validate_registry_scope([m])
+
+        assert len(failures) == 1
+        assert "strict continuity evolution mismatch" in failures[0]
+        assert "target revision still declares" in failures[0]
 
     def test_directory_loaded_advisory_continuity_inventory_reports_evolution(self, tmp_path: Path) -> None:
         modelo = load_modelo_directory(

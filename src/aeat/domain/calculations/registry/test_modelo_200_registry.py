@@ -12,7 +12,7 @@ import pytest
 from ....core.resources import bundled_path
 
 from . import RegistryValidator, build_snapshot, load_registry_tree, resolve_export_layout
-from ._formula_runtime import calculate_registry_snapshot
+from . import calculate_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

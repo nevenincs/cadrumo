@@ -43,8 +43,7 @@ from pydantic import BaseModel, Field
 
 from ....core._models import STRICT_FROZEN_CONFIG
 from ....core.time import now
-
-from ._errors import PdfModeloImportError
+from ....domain.justificante import PdfModeloImportError
 from ._utils import sha256_file
 
 SCRUB_VERSION = "1.0.0"

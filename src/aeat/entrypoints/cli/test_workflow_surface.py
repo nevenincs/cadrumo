@@ -14,10 +14,10 @@ from typer.testing import CliRunner
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...application.diagnostics import build_cli_version_report
 from ...core.config import SecretStoreBackend, load_settings, override_settings
+from ...core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.transactions import TransactionCatalogueRepository
 from ...tests.cli_runner import invoke_cached_cli
-
 from . import _import_failure_surface, _startup_import_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -217,7 +217,8 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     assert status_envelope["command"] == "config.profile.status"
     status_payload = status_envelope["result"]
     assert status_payload["active_profile"] == "operator"
-    assert status_payload["profile_id"] == "<profile-id>"
+    assert operator_profile_id not in json.dumps(status_payload, sort_keys=True)
+    assert status_payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert status_payload["iva_regime"] == "GENERAL"
 
     with activate_master_key_provider(get_master_key_provider()):
@@ -357,7 +358,7 @@ def test_startup_import_failure_redacts_sensitive_dependency_name() -> None:
     text = _startup_import_error_text(error)
 
     assert profile_id not in text
-    assert "<profile-id>" in text
+    assert CLI_PROFILE_ID_PLACEHOLDER in text
     assert "aeat config repair" in text
 
 
@@ -612,9 +613,9 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     import_envelope = json.loads(_json_output(imported))
     assert import_envelope["command"] == "ledger.import"
     import_payload = import_envelope["result"]
-    assert import_payload["bucket_id"] == "<bucket-id>"
+    assert import_payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert len(import_payload["bucket_event_ids"]) == 1
-    assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "<bucket-id>"
+    assert import_payload["imported_transaction_refs"][0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
     assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
     _assert_secure_database_payload(tmp_path, canary, transaction_ref)
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -740,7 +741,7 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
     # the UUID-identity cutover; ``profile_id`` carries the immutable
     # bucket identity that ``_seed_profile`` registered as ``default``.
     assert config_payload["active_profile"] == "operator"
-    assert config_payload["profile_id"] == "<profile-id>"
+    assert config_payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert config_payload["tax_id_present"] is True
     assert config_payload["activity_present"] is True
     overview_envelope = json.loads(_json_output(overview))

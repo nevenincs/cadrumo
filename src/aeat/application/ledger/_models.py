@@ -10,7 +10,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY  # noqa: F401  # re-exported for application.ledger consumers via test_external_constants gate
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY  # re-exported for application.ledger consumers via test_external_constants gate
 from ...core.identity import BucketId, TransactionId
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId

@@ -187,6 +187,9 @@ class TransactionCatalogueRepository:
 
         The on-disk database value is an encrypted BLOB at FINANCIAL
         class. No plaintext transaction row lands on disk.
+
+        Args:
+            catalogue: The :class:`TransactionCatalogue` to persist.
         """
         self._objects.save_many((self.to_secure_object_write(catalogue),))
         _log.info(
@@ -197,7 +200,11 @@ class TransactionCatalogueRepository:
         )
 
     def to_secure_object_write(self, catalogue: TransactionCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it.
+
+        Args:
+            catalogue: The :class:`TransactionCatalogue` to serialise.
+        """
         from ...adapters.persistence.storage.envelope._envelope import Envelope
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 
@@ -221,7 +228,12 @@ class TransactionCatalogueRepository:
         catalogue: TransactionCatalogue,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Persist ``catalogue`` plus related secure objects in one unit of work."""
+        """Persist ``catalogue`` plus related secure objects in one unit of work.
+
+        Args:
+            catalogue: The :class:`TransactionCatalogue` to persist.
+            extra_writes: Additional secure object writes to commit atomically.
+        """
         self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
         _log.info(
             "saved transaction catalogue bucket_id=%s object_key=%s entries=%d extra_writes=%d",

@@ -30,7 +30,6 @@ from ...application.aggregation import (
     RetencionObservation,
     aggregate_per_modelo,
 )
-from ...application.calculations._errors import PensionReduccionError
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
@@ -58,24 +57,34 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...core.errors import AeatError, resolve_error_message
-from ...core.external_constants import OutputLanguage
+from ...core.external_constants import M347_THRESHOLD_EUR, OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
-from ...core.money import round_to_cents as _round_to_cents
-from ...domain.calculations.registry import BindingId, CasillaId, InputKind, RegistryQueryService
-from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry._queries import parse_modelo_period
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    InputKind,
+    RegistryQueryService,
+    RegistrySnapshotError,
+    RegistryValidationError,
+    parse_modelo_period,
+)
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
+from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (
-    M347_THRESHOLD_EUR,
     Modelo184MemberRow,
+    Modelo184ShareSumError,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo347ThresholdError,
     Modelo349OperadorRow,
     ModeloDetailRow,
+    validate_m184_member_share_sum,
+    validate_m347_threshold,
     validate_m349_nif_format,
 )
+from ...domain.modelos._sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.profile import parse_tax_region
@@ -88,7 +97,7 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
-    from ...domain.calculations.registry._schema import ModeloDefinition, ModeloRevision
+    from ...domain.calculations.registry import ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
         ModeloRecordPayload,
@@ -945,21 +954,20 @@ def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
     exactly 100% per filing.
     """
     member_rows = [r for r in rows if isinstance(r, Modelo184MemberRow)]
-    if not member_rows:
-        return
-    total = sum(r.porcentaje for r in member_rows)
-    if total != Decimal("100"):
+    try:
+        validate_m184_member_share_sum(member_rows)
+    except Modelo184ShareSumError as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_m184_shares_not_100",
                 default=(
                     f"M184 miembro rows: share percentages must sum to exactly 100%; "
-                    f"got {total} across {len(member_rows)} rows"
+                    f"got {exc.total} across {exc.count} rows"
                 ),
-                total=str(total),
-                count=str(len(member_rows)),
+                total=str(exc.total),
+                count=str(exc.count),
             )
-        )
+        ) from exc
 
 
 def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
@@ -970,22 +978,22 @@ def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
     rows, because each row is one declared counterparty.
     """
     contraparte_rows = [r for r in rows if isinstance(r, Modelo347ContraparteRow)]
-    for row in contraparte_rows:
-        total = row.importe_total
-        if total <= M347_THRESHOLD_EUR:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.row_m347_below_threshold",
-                    default=(
-                        f"M347 contraparte row (nif={row.nif!r}): importe total {total} "
-                        f"does not exceed the €{M347_THRESHOLD_EUR} threshold "
-                        f"required by RD 1065/2007 art. 31.1"
-                    ),
-                    nif=row.nif,
-                    total=str(total),
-                    threshold=str(M347_THRESHOLD_EUR),
-                )
+    try:
+        validate_m347_threshold(contraparte_rows)
+    except Modelo347ThresholdError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_m347_below_threshold",
+                default=(
+                    f"M347 contraparte row (nif={exc.nif!r}): importe total {exc.total} "
+                    f"does not exceed the €{M347_THRESHOLD_EUR} threshold "
+                    f"required by RD 1065/2007 art. 31.1"
+                ),
+                nif=exc.nif,
+                total=str(exc.total),
+                threshold=str(M347_THRESHOLD_EUR),
             )
+        ) from exc
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
@@ -2360,6 +2368,17 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
         lines.extend(summary_lines)
     for casilla, value in sorted(rev.casilla_values.items()):
         lines.append(f"casilla\t{casilla}\t{value}")
+    # Surface the typed detail rows (repeating Registro-Tipo-2 records of
+    # informativas: M184 comuneros, M347/M349 contrapartes, M232 vinculadas).
+    # These are persisted on the revision but live outside the flat
+    # casilla_values map (the casilla schema carries only the row template),
+    # so without this they were invisible in the revision view — an operator
+    # entering N members saw the empty template casillas and believed the rows
+    # were silently dropped.
+    for index, detail_row in enumerate(rev.detail_rows, start=1):
+        fields = detail_row.model_dump(mode="json", exclude={"row_type"})
+        field_str = " ".join(f"{key}={value}" for key, value in fields.items())
+        lines.append(f"detail_row\t{index}\t{detail_row.row_type}\t{field_str}")
     return lines
 
 
@@ -2608,41 +2627,6 @@ def _resolve_reduccion_trabajo_casilla_id(work_unit_id: str) -> str:
     )
 
 
-def _compute_dt12_reduccion_plan_pensiones(
-    *,
-    gross_rescate: Decimal,
-    aportaciones_pre_2007: Decimal,
-    aportaciones_totales: Decimal,
-) -> Decimal:
-    """Compute the DT 12ª LIRPF 40% reducción for a plan-de-pensiones capital rescate.
-
-    Formula (LIRPF DT 12ª): ``pre_2007 / totales * gross_rescate * 40%``.
-    The result is rounded to 2 decimal places (money-2 per registry convention).
-
-    Raises :exc:`ValueError` when ``aportaciones_totales`` is zero or negative
-    (division by zero guard) or when any input is negative.
-    """
-    if aportaciones_totales <= Decimal(0):
-        raise PensionReduccionError(
-            f"aportaciones_totales must be positive; got {aportaciones_totales}",
-            context={"field": "aportaciones_totales", "value": str(aportaciones_totales)},
-        )
-    if gross_rescate < Decimal(0):
-        raise PensionReduccionError(
-            f"gross_rescate must be non-negative; got {gross_rescate}",
-            context={"field": "gross_rescate", "value": str(gross_rescate)},
-        )
-    if aportaciones_pre_2007 < Decimal(0):
-        raise PensionReduccionError(
-            f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}",
-            context={"field": "aportaciones_pre_2007", "value": str(aportaciones_pre_2007)},
-        )
-
-    reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
-    # money-2 rounding matches the registry convention for all M100 casillas.
-    return _round_to_cents(reduccion)
-
-
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 
 
@@ -2673,47 +2657,6 @@ def _resolve_sal_reserva_especial_casilla_id(work_unit_id: str) -> str:
             ),
         )
     )
-
-
-def _compute_sal_reserva_especial_dotacion(
-    *,
-    beneficio_neto: Decimal,
-    reserva_dotada: Decimal,
-    capital_social: Decimal,
-) -> Decimal:
-    """Compute the Ley 44/2015 Art. 14 SAL/SLL reserva especial dotacion.
-
-    Formula: dotacion = min(beneficio_neto * 10%, cap_headroom), where
-    cap_headroom = max(0, capital_social * 50% - reserva_dotada).
-
-    Once the accumulated reserva equals or exceeds 50% of capital social
-    the dotacion is zero (cap reached). The result is rounded to 2
-    decimal places (money-2 per registry convention).
-
-    Raises :exc:`ValueError` when capital_social is zero or negative,
-    or when any input is negative.
-    """
-    if capital_social <= Decimal(0):
-        raise PensionReduccionError(
-            f"capital_social must be positive; got {capital_social}",
-            context={"field": "capital_social", "value": str(capital_social)},
-        )
-    if beneficio_neto < Decimal(0):
-        raise PensionReduccionError(
-            f"beneficio_neto must be non-negative; got {beneficio_neto}",
-            context={"field": "beneficio_neto", "value": str(beneficio_neto)},
-        )
-    if reserva_dotada < Decimal(0):
-        raise PensionReduccionError(
-            f"reserva_dotada must be non-negative; got {reserva_dotada}",
-            context={"field": "reserva_dotada", "value": str(reserva_dotada)},
-        )
-
-    cap = _round_to_cents(capital_social * Decimal("0.50"))
-    headroom = max(Decimal("0.00"), cap - reserva_dotada)
-    dotacion_obligatoria = _round_to_cents(beneficio_neto * Decimal("0.10"))
-    dotacion = min(dotacion_obligatoria, headroom)
-    return _round_to_cents(dotacion)
 
 
 def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
@@ -3141,7 +3084,7 @@ def work_calculate(
                 )
             ) from exc
         try:
-            dt12_reduccion = _compute_dt12_reduccion_plan_pensiones(
+            dt12_reduccion = compute_dt12_reduccion_plan_pensiones(
                 gross_rescate=dt12_gross,
                 aportaciones_pre_2007=dt12_pre_2007,
                 aportaciones_totales=dt12_totales,
@@ -3182,7 +3125,7 @@ def work_calculate(
                 )
             ) from exc
         try:
-            sal_dotacion = _compute_sal_reserva_especial_dotacion(
+            sal_dotacion = compute_sal_reserva_especial_dotacion(
                 beneficio_neto=sal_bn,
                 reserva_dotada=sal_rd,
                 capital_social=sal_cs,
@@ -5761,9 +5704,9 @@ def iva_wallet_seed_cmd(
     from decimal import Decimal, InvalidOperation
 
     from ...application.calculations._iva_compensation_history import (
-        IvaCompensationSeedConflictError,
         seed_iva_compensation_period,
     )
+    from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 
     if not confirm:
         raise typer.BadParameter(

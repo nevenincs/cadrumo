@@ -40,7 +40,11 @@ class TransactionCatalogueRepositoryProtocol(Protocol):
         ...
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Persist ``catalogue`` in the encrypted database object store."""
+        """Persist ``catalogue`` in the encrypted database object store.
+
+        Args:
+            catalogue: The :class:`TransactionCatalogue` to persist.
+        """
         ...
 
 

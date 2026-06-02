@@ -8,6 +8,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....core.classification import SensitivityClass
+from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.paths import PROJECT_ROOT
 from . import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -39,6 +42,7 @@ from . import (
     SECURE_OBJECT_DEFAULT_KEY,
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
     STORAGE_NAMESPACE_REGISTRY,
+    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
     TEST_SESSION_LIFECYCLE_NAMESPACE,
     TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
@@ -49,9 +53,6 @@ from . import (
 )
 from ._namespace_registry import StoragePathDefinition, StoragePathKind
 from .errors import NamespaceRegistryError
-from ....core.classification import SensitivityClass
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -258,6 +259,7 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
         "live_notifications_snapshot",
         "live_verify_observations",
         "test_snapshot_base_probe",
+        "test_secure_bound_contract",
     } <= registered_keys
 
 
@@ -279,6 +281,7 @@ def test_w05_s41_secure_namespaces_default_to_ciphertext_remote_mirror_policy() 
 
 def test_w05_s41_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
     expected_namespaces = {
+        "test_secure_bound_contract": TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
         "test_snapshot_base_probe": TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         "test_session_lifecycle": TEST_SESSION_LIFECYCLE_NAMESPACE,
     }

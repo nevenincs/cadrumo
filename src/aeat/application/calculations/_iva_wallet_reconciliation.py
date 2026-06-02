@@ -18,11 +18,10 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.time import now
-
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
-from ...core.errors import AeatError
-from ...domain.calculations.registry._schema import RegistrySnapshot
+from ...core.time import now
+from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -143,10 +142,6 @@ class IvaCompensationReconciliationReport(BaseModel):
     prefill_report: BindingPrefillReport
 
 
-class IvaCompensationReconciliationInputError(AeatError, ValueError):
-    """Raised when wallet evidence does not match the target Modelo 303 snapshot."""
-
-
 class IvaWalletDecisionSourceResolver:
     """Source mesh adapter for persisted Modelo 303 IVA wallet decisions."""
 
@@ -197,13 +192,16 @@ def reconcile_modelo_303_iva_compensation(
     *,
     taxpayer_nif: str,
     wallet: IvaCompensationWalletObservation | None,
-    repository: "CalculationObservationRepository | None" = None,
+    repository: CalculationObservationRepository | None = None,
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = _DEFAULT_MAX_WALLET_AGE_DAYS,
     persist: bool = True,
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
 
     The local side is not recomputed here. It is read through the same
     previous-filing binding resolver used by the calculation chain.
@@ -634,7 +632,6 @@ __all__ = [
     "IvaCompensationAuthoritySource",
     "IvaCompensationOverride",
     "IvaCompensationReconciliationDecision",
-    "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
     "IvaWalletDecisionSourceResolver",
     "reconcile_iva_compensation_wallet",

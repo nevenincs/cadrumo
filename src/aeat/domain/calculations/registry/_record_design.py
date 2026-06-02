@@ -1342,6 +1342,12 @@ def calculation_closure_numbers(
     reference token that matches no declared casilla is kept verbatim so
     a calculation that names a casilla the registry never declared — the
     Modelo 200 defect class — still surfaces in the closure.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose formula and binding graph
+            is walked to derive the closure.
+        modelo_id: The AEAT modelo identifier used to exclude cross-modelo
+            selector casillas from the closure.
     """
     id_to_number = {casilla.id: casilla.number for casilla in revision.casillas}
 
@@ -1389,6 +1395,9 @@ def calculation_closure_identities(
     needs — this function resolves each reference token to the *declared
     casilla* it names and keeps that casilla's full
     ``(segmento, number)`` identity.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose calculation closure to derive.
 
     The closure spans the same surface (formula targets, transitive
     formula-expression refs, formula/binding endpoint casillas,
@@ -1517,6 +1526,9 @@ def derive_calculation_completeness_casillas(
     This is an off-load-path tool. When ``diseno_path`` is supplied it
     parses the multi-megabyte Diseño corpus and must never run on the
     snapshot-build path.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose calculation closure to derive into a manifest.
 
     Returns:
         Tuple of :class:`DerivedDisenoCasilla` representing the calculation-completeness manifest.
@@ -1695,6 +1707,13 @@ def build_diseno_coverage_report(
     registry declares a casilla at the same ``(S, number)`` identity. For
     a single-segment modelo ``segmento`` is unset on both sides and the
     bare number alone identifies the casilla.
+
+    Args:
+        path: Path to the official AEAT Diseño de Registros source file.
+        modelo_id: The AEAT modelo identifier for the coverage report.
+        revision: The :class:`ModeloRevision` whose declared casillas are
+            compared against the extracted Diseño casilla set.
+        multi_segment: Whether the modelo uses segment-qualified casilla ids.
     """
     diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
     declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}

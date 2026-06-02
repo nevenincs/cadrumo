@@ -34,12 +34,11 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ...core.time import now as _utc_now
-
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
 from ...core.errors._not_found import CoreNotFoundError
 from ...core.i18n import tr
+from ...core.time import now as _utc_now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -894,7 +893,7 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
-class ModeloIvaWalletReconciliationBlocked(ModeloError):  # noqa: N818
+class ModeloIvaWalletReconciliationBlocked(ModeloError):
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
 
@@ -947,6 +946,9 @@ def calculate_modelo_revision(
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Run the registry formula engine, persist a draft revision, and return a :class:`CalculationRevision`.
+
+    ``ledger_preflight_transaction_repository`` is a :class:`TransactionCatalogueRepository`
+    used for the ledger preflight check before calculation.
 
     Pipeline:
 
@@ -1482,6 +1484,11 @@ def calculate_modelo_revision_from_bucket_aggregation(
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation.
+
+    ``transaction_repository`` is a :class:`TransactionCatalogueRepository` used to
+    load the bucket-local ledger transactions for aggregation.
+    ``invoice_repository`` is an :class:`InvoiceCatalogueRepository` used to load
+    invoice data for the aggregation resolvers that require it.
 
     Returns a :class:`CalculationRevision`.
     """
@@ -2891,6 +2898,9 @@ def verify_modelo_revision(
 ) -> VerificationReport:
     """Evaluate a draft revision against the four-layer verified-complete gate.
 
+    ``workflow_profile`` is the :class:`TaxpayerProfile` used to drive the
+    workflow engine and filing deadline checks.
+
     The gate is described fully in the package docstring
     (:mod:`aeat.application.modelo`). This function is the implementation
     entry point.
@@ -3482,7 +3492,7 @@ def file_modelo_revision(
             to file.
         actor: Operator identifier recorded in the filing record and audit
             trail.
-        workflow_profile: The taxpayer profile used to evaluate workflow
+        workflow_profile: The :class:`TaxpayerProfile` used to evaluate workflow
             gate conditions.
         notes: Optional operator-supplied filing notes.
         work_unit_repository: Optional work-unit catalogue repository override.

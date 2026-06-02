@@ -82,6 +82,11 @@ class PortalsService:
     ) -> tuple[PortalRow, ...]:
         """Project the registry to operator-facing rows with optional filters.
 
+        Args:
+            category: When set, restricts rows to portals in that :class:`PortalCategory`.
+            modelo: When set, restricts rows to portals associated with that modelo code.
+            include_retired: When ``True``, includes portals with ``active=False``.
+
         ``category`` and ``modelo`` are independent filters. Retired
         portals (``active=False``) are excluded by default; pass
         ``include_retired=True`` to surface them so the operator can
@@ -98,7 +103,7 @@ class PortalsService:
         return tuple(sorted(rows, key=lambda row: row.portal.value))
 
     def show(self, portal: Portal) -> PortalRow:
-        """Return one portal's row. Raises if the code is not registered."""
+        """Return the :class:`PortalRow` for one :class:`Portal`. Raises if the code is not registered."""
         metadata = self._registry.get(portal)
         if metadata is None:
             raise PortalNotFoundError(

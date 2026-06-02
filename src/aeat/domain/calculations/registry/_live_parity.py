@@ -508,6 +508,9 @@ def audit_oracle_bindings(
 
     The function never raises and never performs any network operation.
     Failure aggregation is the caller's job.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` whose cross-reference bindings to audit.
     """
     failures: list[str] = []
     for revision in modelo.revisions.values():
@@ -559,6 +562,9 @@ def collect_applicability_declarations(
     omitted (the unconditionally-applicable default). Order is
     ``(modelo_id, revision_id, cross_reference_id)`` for deterministic
     audit output.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` entries to scan.
     """
     declarations: list[CrossReferenceApplicabilityDeclaracion] = []
     for modelo in modelos:
@@ -596,6 +602,11 @@ def collect_orphan_oracle_ids(
     The audit surfaces the set so CI / dashboards can flag drift.
     Order is the catalogue's lexicographic order for deterministic
     output.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances whose
+            cross-reference bindings determine which oracle ids are in use.
+        catalogue: The live parity catalogue to check for orphaned entries.
     """
     bound: set[str] = set()
     modelo_tuple = tuple(modelos)
@@ -802,6 +813,11 @@ def audit_registry_oracle_bindings(
     binding-vs-catalogue mismatch in a single report alongside the
     registry-validator's own failures. The function preserves the order
     of the input iterable so the report is deterministic.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances to audit.
+        catalogue: The live parity catalogue to validate against.
+        environment: Target oracle environment classification.
     """
     failures: list[str] = []
     for modelo in modelos:

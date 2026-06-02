@@ -92,9 +92,25 @@ _CLI_UUID_PATTERN = re.compile(
     r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
     r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
 )
-_CLI_OBJECT_KEY_ASSIGNMENT_PATTERN = re.compile(
-    r"(?i)(?P<label>\b(?:object[_-]?key|lookup[_-]?key|secure[_-]?object[_-]?key)\b)"
-    r"(?P<sep>\s*[:=]\s*)"
+_CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)(?P<label>\b(?:"
+    r"active[_-]?profile(?:[_-]?id)?|"
+    r"bucket[_-]?profile[_-]?id|"
+    r"profile[_-]?bucket[_-]?id|"
+    r"profile[_-]?id|"
+    r"repository[_-]?profile[_-]?id|"
+    r"source[_-]?profile[_-]?id|"
+    r"target[_-]?profile[_-]?id|"
+    r"active[_-]?bucket[_-]?id|"
+    r"bucket[_-]?id|"
+    r"repository[_-]?bucket[_-]?id|"
+    r"storage[_-]?bucket[_-]?id|"
+    r"object[_-]?key|"
+    r"lookup[_-]?key|"
+    r"secure[_-]?object[_-]?key|"
+    r"storage[_-]?object[_-]?key"
+    r")\b)"
+    r"(?P<sep>\s*(?::|=|\t)\s*)"
     r"(?P<value>[^\s,;]+)"
 )
 _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
@@ -103,13 +119,15 @@ _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
 _CLI_PROFILE_ID_KEYS = frozenset(
     {
         "active_profile_id",
-        "active_profile",
         "bucket_profile_id",
         "profile_bucket_id",
         "profile_id",
         "repository_profile_id",
+        "source_profile_id",
+        "target_profile_id",
     }
 )
+_CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
 _CLI_BUCKET_ID_KEYS = frozenset(
     {
         "active_bucket_id",
@@ -325,11 +343,17 @@ def _normalise_cli_key(key: object | None) -> str | None:
     return re.sub(r"[^a-z0-9]+", "_", str(key).strip().lower()).strip("_")
 
 
+def _is_cli_profile_reference(value: object) -> bool:
+    return isinstance(value, str) and _CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
+
+
 def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
     if value is None or value == "":
         return None
     normalised = _normalise_cli_key(key)
     if normalised in _CLI_PROFILE_ID_KEYS:
+        return CLI_PROFILE_ID_PLACEHOLDER
+    if normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
         return CLI_PROFILE_ID_PLACEHOLDER
     if normalised in _CLI_BUCKET_ID_KEYS:
         return CLI_BUCKET_ID_PLACEHOLDER
@@ -339,14 +363,13 @@ def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
 
 
 def _redact_cli_string(text: str) -> str:
-    redacted = redact_for_log(text)
-    redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
-    redacted = _CLI_OBJECT_KEY_ASSIGNMENT_PATTERN.sub(
-        lambda match: (
-            f"{match.group('label')}{match.group('sep')}{CLI_OBJECT_KEY_PLACEHOLDER}"
-        ),
-        redacted,
+    redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(
+        lambda match: f"{match.group('label')}{match.group('sep')}"
+        f"{_cli_placeholder_for_key(match.group('label'), match.group('value')) or match.group('value')}",
+        text,
     )
+    redacted = redact_for_log(redacted)
+    redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
     return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
 
 

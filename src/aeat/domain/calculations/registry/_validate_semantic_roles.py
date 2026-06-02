@@ -225,6 +225,10 @@ def collect_casillas_by_semantic_role(
     is immutable and document-order stable per role; the validator
     consumes the same accessor through
     :func:`_collect_role_observations` internally.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances to index
+            by the semantic roles declared on their casillas.
     """
     grouped: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
     for modelo in modelos:

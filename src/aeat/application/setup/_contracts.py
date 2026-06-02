@@ -5,10 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StringConstraints
 
 from ...core.external_constants import OutputLanguage
 from ...core.identity import BucketId, ProfileId
+from ...domain.deadlines import IVARegime
+
+
+def _normalise_iva_regime(value: object) -> object:
+    """Upper-case a string IVA-regime token so ``general`` resolves to ``IVARegime.GENERAL``."""
+    return value.upper() if isinstance(value, str) else value
 
 
 class InitializeWorkspaceCommand(BaseModel):
@@ -26,8 +32,8 @@ class InitializeWorkspaceCommand(BaseModel):
     activity: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(
         description="Description of the primary economic activity.",
     )
-    iva_regime: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] = Field(
-        description="IVA regime (e.g., 'general', 'recargo_equivalencia', 'exento').",
+    iva_regime: Annotated[IVARegime, BeforeValidator(_normalise_iva_regime)] = Field(
+        description="IVA regime; one of the IVARegime members (case-insensitive input).",
     )
     tax_residence_ccaa: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None = Field(
         default=None,

@@ -268,19 +268,23 @@ def resolve_profile_sourced_bindings(
 ) -> ProfileSourcedBindingResult:
     """Resolve every ``source = "profile"`` binding the revision declares.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose revision's profile bindings
+            are resolved against the bucket's user profile facts.
+        bucket_id: Stable bucket identifier used to load the user profile.
+        profile_record: Optional :class:`UserProfileRecord` override for testing.
+        caller_binding_ids: Binding ids already supplied by the caller; these are
+            skipped so caller overrides take precedence over the profile.
+        schema: Optional profile schema definition override.
+
     Walks the registry revision's ``source = "profile"`` bindings,
     matches each against a fact on the bucket's user profile, and routes
     the value into the Decimal channel or the enum channel per
     :func:`enum_consumed_binding_ids`.
 
-    A binding the caller already supplied (``caller_binding_ids``) is
-    skipped -- caller overrides take precedence over the profile. A
-    binding the profile cannot satisfy is skipped silently: the engine
+    A binding the profile cannot satisfy is skipped silently: the engine
     surfaces the missing-binding error only if a formula needs it.
-
-    ``profile_record`` is injectable for testing; production callers
-    leave it ``None`` and the bucket's :class:`UserProfileRecord` is
-    loaded. A bucket with no profile yields an empty result.
+    A bucket with no profile yields an empty result.
 
     Returns a :class:`ProfileSourcedBindingResult` with resolved binding
     values split across Decimal and enum channels.

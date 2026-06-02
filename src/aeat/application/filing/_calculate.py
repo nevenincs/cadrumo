@@ -162,7 +162,7 @@ def summarise_calculation(
     """Build a :class:`DeclaracionCalculateSummary` from a validated draft.
 
     Args:
-        draft: The freshly built draft returned by
+        draft: The :class:`ModeloDraft` returned by
             :func:`aeat.application.filing.build_draft`.
         repair_hints: Translation keys for remediation hints. Required when
             the draft carries any ``ERROR`` finding (the CLI must not

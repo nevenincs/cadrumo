@@ -338,7 +338,7 @@ class TestRecordImmutability:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            setattr(result.record, "notes", "mutated")  # noqa: B010 — exercise frozen-model __setattr__
+            setattr(result.record, "notes", "mutated")
 
 
 class TestRoundTripPersistence:

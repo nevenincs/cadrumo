@@ -13,11 +13,10 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from ...core.time import now
-
 from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
+from ...core.time import now
 
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
@@ -159,7 +158,7 @@ class DeadlineEngine:
         (modulo :attr:`Schedule.generated_at`).
 
         Args:
-            profile: The autónomo profile.
+            profile: The :class:`TaxpayerProfile` to compute obligations for.
             year: The fiscal year to compute for.
             today: Reference date for status classification. Defaults
                 to ``date.today()``.
@@ -262,7 +261,13 @@ class DeadlineEngine:
         )
 
     def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
-        """Return registry-backed deadline applicability text for ``modelo``."""
+        """Return registry-backed deadline applicability text for ``modelo``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+            modelo: The AEAT modelo identifier to look up.
+            year: Optional fiscal year; defaults to the current year.
+        """
         selected_year = year or date.today().year
         windows = [
             window
@@ -283,7 +288,13 @@ class DeadlineEngine:
         return condition_text
 
     def applies_to(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> bool:
-        """Return whether registry deadline conditions match for ``modelo``."""
+        """Return whether registry deadline conditions match for ``modelo``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+            modelo: The AEAT modelo identifier to check.
+            year: Optional fiscal year; defaults to the current year.
+        """
         selected_year = year or date.today().year
         return any(
             code == modelo
@@ -400,7 +411,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
     is already overdue (or the schedule is empty).
 
     Args:
-        schedule: The schedule to scan.
+        schedule: The :class:`Schedule` to scan for upcoming obligations.
         today: Reference date. Defaults to ``date.today()``.
 
     Returns:
@@ -433,7 +444,13 @@ class ScheduleProducer(Protocol):
         *,
         today: date | None = None,
     ) -> Schedule:
-        """Return a :class:`Schedule` for ``profile`` in ``year``."""
+        """Return a :class:`Schedule` for ``profile`` in ``year``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to compute obligations for.
+            year: The fiscal year to compute for.
+            today: Reference date for status classification.
+        """
         ...
 
 
@@ -461,7 +478,7 @@ def compute_obligation_schedule(
             :class:`ScheduleProducer` — a concrete
             :class:`DeadlineEngine` or the workflow engine's
             protocol-typed injected deadline engine.
-        profile: The autónomo profile to schedule obligations for.
+        profile: The :class:`TaxpayerProfile` to schedule obligations for.
         today: Reference date; the fiscal year and obligation status
             classification are both derived from it.
 
@@ -473,10 +490,20 @@ def compute_obligation_schedule(
 
 
 def applies_to(profile: TaxpayerProfile, modelo: str) -> bool:
-    """Return whether registry deadline conditions match for ``modelo``."""
+    """Return whether registry deadline conditions match for ``modelo``.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+        modelo: The AEAT modelo identifier to check.
+    """
     return DeadlineEngine().applies_to(profile, modelo)
 
 
 def explain(profile: TaxpayerProfile, modelo: str) -> str:
-    """Return registry-backed deadline applicability text for ``modelo``."""
+    """Return registry-backed deadline applicability text for ``modelo``.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` to evaluate conditions against.
+        modelo: The AEAT modelo identifier to look up.
+    """
     return DeadlineEngine().explain(profile, modelo)

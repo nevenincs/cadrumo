@@ -16,10 +16,10 @@ from ...adapters.outbound.aeat.sede._schema import (
     IvaCompensationWalletRow,
 )
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
+from ...domain.iva_compensation._errors import IvaCompensationCarryForwardPolicyError
 from ._errors import IvaCompensationModeloError
 from ._iva_compensation_history import (
     IvaCompensationCarryForwardLot,
-    IvaCompensationCarryForwardPolicyError,
     IvaCompensationExpiryReviewState,
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,

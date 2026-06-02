@@ -153,6 +153,7 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
+      modelo_unavailable: 'The AEAT declarations register does not offer the requested modelo.'
 aggregation:
   grouping:
     errors:
@@ -728,7 +729,6 @@ cli:
         list_help: List portal catalogue entries
         modelo_help: Filter by portals linked to a modelo
         portal_id_help: Portal identifier
-        unknown_category: 'Unknown portal category: {category}.'
         view_help: Show a portal catalogue entry
       registry_root_help: Registry root
       source_root_help: Project source root

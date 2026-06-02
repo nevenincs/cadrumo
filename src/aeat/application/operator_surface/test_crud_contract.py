@@ -194,4 +194,4 @@ class TestImmutability:
             cli_path="aeat app ledger payable-invoice",
         )
         with pytest.raises(ValidationError):
-            setattr(contract, "noun", "other")  # noqa: B010 — exercise frozen-model __setattr__
+            setattr(contract, "noun", "other")

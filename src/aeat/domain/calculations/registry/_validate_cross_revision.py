@@ -3,7 +3,8 @@
 Applies two policies over the divergences detected by
 :mod:`aeat.domain.calculations.registry._cross_revision_divergence`: the
 strict hard-fail continuity policy for overlapping revisions and declared
-continuity surfaces, and the advisory non-overlapping drift summary.
+continuity surfaces, and the advisory non-overlapping drift summary. Both
+policies operate over the casillas of each :class:`ModeloRevision`.
 """
 
 from __future__ import annotations
@@ -54,7 +55,11 @@ class CrossRevisionCasillaDriftSummary:
 
 
 def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
-    """Raise when a repeated casilla id drifts across revisions."""
+    """Raise when a repeated casilla id drifts across revisions.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` entries to validate.
+    """
     failures = _validate_cross_revision_casilla_consistency(modelos)
     if failures:
         raise RegistryValidationError(
@@ -353,6 +358,12 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     repeated numeric ids; this inventory keeps that drift visible without
     turning it into a load-time error before the schema has an explicit
     continuity/evolution contract.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances to inspect
+            for cross-revision casilla drift.
+        example_limit: Maximum number of example casilla ids to include in
+            each summary record.
 
     Returns:
         Tuple of :class:`CrossRevisionCasillaDriftSummary` records, one per drifted casilla id.

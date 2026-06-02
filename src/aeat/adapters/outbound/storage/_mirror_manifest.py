@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable
 
+from pydantic import ValidationError
+
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
 from ._errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
 from ._protocol import StorageProvider
@@ -57,11 +59,34 @@ def put_remote_mirror_namespace_manifest(
     )
 
 
+def get_remote_mirror_namespace_manifest(
+    provider: StorageProvider,
+    namespace: str,
+) -> RemoteMirrorNamespaceManifest | None:
+    """Return the remote mirror manifest for ``namespace`` when one exists."""
+    try:
+        payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
+    except OutboundStorageNotFoundError:
+        return None
+    try:
+        return RemoteMirrorNamespaceManifest.model_validate_json(payload)
+    except ValidationError as exc:
+        raise OutboundStorageIntegrityError(
+            f"remote mirror manifest for namespace {namespace!r} is malformed",
+            context={"namespace": namespace},
+        ) from exc
+
+
 def inspect_remote_mirror_upload(
     provider: StorageProvider,
     expected_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Detect remote upload drift and return a :class:`RemoteMirrorInspection` against the expected namespace manifest."""
+    """Detect remote upload drift for the expected namespace manifest.
+
+    Returns:
+        A :class:`RemoteMirrorInspection` describing the drift between the
+        expected manifest and the remote mirror.
+    """
     remote_manifest = _load_remote_manifest(provider, expected_manifest.namespace)
     issues = list(_compare_manifest_objects(local=expected_manifest, remote=remote_manifest))
     for entry in expected_manifest.objects:
@@ -87,7 +112,7 @@ def inspect_remote_mirror_upload(
                 )
             )
             continue
-        if len(payload) != entry.byte_length or metadata.content_hash.split("-", 1)[-1] != entry.ciphertext_hash:
+        if not _provider_payload_matches_manifest_entry(payload, metadata, entry):
             issues.append(
                 RemoteMirrorIssue(
                     kind=RemoteMirrorIssueKind.PARTIAL_UPLOAD,
@@ -107,7 +132,7 @@ def inspect_remote_mirror_download(
     issues: list[RemoteMirrorIssue] = []
     for entry in remote_manifest.objects:
         try:
-            provider.get(entry.namespace, entry.object_key_hmac)
+            payload, metadata = provider.get(entry.namespace, entry.object_key_hmac)
         except (OutboundStorageNotFoundError, OutboundStorageIntegrityError) as exc:
             issues.append(
                 RemoteMirrorIssue(
@@ -115,6 +140,16 @@ def inspect_remote_mirror_download(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail=str(exc),
+                )
+            )
+            continue
+        if not _provider_payload_matches_manifest_entry(payload, metadata, entry):
+            issues.append(
+                RemoteMirrorIssue(
+                    kind=RemoteMirrorIssueKind.PARTIAL_DOWNLOAD,
+                    namespace=entry.namespace,
+                    object_key_hmac=entry.object_key_hmac,
+                    detail="remote ciphertext metadata does not match the manifest entry",
                 )
             )
     return RemoteMirrorInspection(namespace=remote_manifest.namespace, issues=tuple(issues))
@@ -152,16 +187,15 @@ def _manifest_object_key_hmac(namespace: str) -> str:
 
 
 def _load_remote_manifest(provider: StorageProvider, namespace: str) -> RemoteMirrorNamespaceManifest:
-    try:
-        payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
-    except OutboundStorageNotFoundError:
+    remote_manifest = get_remote_mirror_namespace_manifest(provider, namespace)
+    if remote_manifest is None:
         return RemoteMirrorNamespaceManifest(
             manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
             namespace=namespace,
             object_count=0,
             objects=(),
         )
-    return RemoteMirrorNamespaceManifest.model_validate_json(payload)
+    return remote_manifest
 
 
 def _compare_manifest_objects(
@@ -209,7 +243,7 @@ def _compare_manifest_objects(
                     )
                 )
             continue
-        if remote_entry.storage_revision_id == local_entry.previous_storage_revision_id:
+        if _is_stale_remote_entry(local_entry=local_entry, remote_entry=remote_entry):
             issues.append(
                 RemoteMirrorIssue(
                     kind=RemoteMirrorIssueKind.STALE_MIRROR,
@@ -230,6 +264,24 @@ def _compare_manifest_objects(
     return tuple(issues)
 
 
+def _provider_payload_matches_manifest_entry(
+    payload: bytes,
+    metadata: ProviderObjectMetadata,
+    entry: RemoteMirrorObjectManifest,
+) -> bool:
+    content_hash = metadata.content_hash
+    digest = content_hash.split("-", 1)[1] if content_hash.startswith("sha256-") else content_hash
+    return len(payload) == entry.byte_length and digest == entry.ciphertext_hash
+
+
+def _is_stale_remote_entry(
+    *,
+    local_entry: RemoteMirrorObjectManifest,
+    remote_entry: RemoteMirrorObjectManifest,
+) -> bool:
+    return remote_entry.storage_revision_id == local_entry.previous_storage_revision_id
+
+
 def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
     """Compute the provider object key used for mirrored ciphertext rows."""
     hasher = hashlib.sha256()
@@ -248,6 +300,7 @@ __all__ = [
     "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
     "build_remote_mirror_namespace_manifest",
     "compare_remote_mirror_manifests",
+    "get_remote_mirror_namespace_manifest",
     "inspect_remote_mirror_download",
     "inspect_remote_mirror_upload",
     "put_remote_mirror_namespace_manifest",

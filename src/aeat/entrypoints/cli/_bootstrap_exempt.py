@@ -79,10 +79,7 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
     normalised = verb_path.strip()
     if not normalised:
         return False
-    for exempt in BOOTSTRAP_EXEMPT_VERB_PATHS:
-        if normalised == exempt or normalised.startswith(f"{exempt} "):
-            return True
-    return False
+    return any(normalised == exempt or normalised.startswith(f"{exempt} ") for exempt in BOOTSTRAP_EXEMPT_VERB_PATHS)
 
 
 __all__ = ["BOOTSTRAP_EXEMPT_VERB_PATHS", "is_bootstrap_exempt"]

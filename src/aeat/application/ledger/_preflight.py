@@ -85,7 +85,11 @@ def preflight_ledger_tax_readiness(
     period: Period | str,
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> LedgerPreflightReport:
-    """Load a bucket-local catalogue and return a :class:`LedgerPreflightReport` describing modelo-readiness gaps."""
+    """Load a bucket-local catalogue and return a :class:`LedgerPreflightReport` describing modelo-readiness gaps.
+
+    ``transaction_repository`` is the :class:`TransactionCatalogueRepository` used to load
+    the bucket-local catalogue; a default repository is constructed when ``None``.
+    """
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise TransactionValidationError(
@@ -105,6 +109,11 @@ def preflight_transaction_catalogue(
     transactions: TransactionCatalogue,
 ) -> LedgerPreflightReport:
     """Report missing ledger facts without mutating the transaction catalogue.
+
+    Args:
+        bucket_id: Stable bucket identifier for the ledger being checked.
+        period: Filing period; either a :class:`Period` instance or a period code string.
+        transactions: The :class:`TransactionCatalogue` to inspect for missing facts.
 
     Returns a :class:`LedgerPreflightReport`.
     """

@@ -15,6 +15,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-registry-authority-flow.md
 @.claude/rules/aeat-roundtrip-discipline.md
 @.claude/rules/aeat-safety-legal-gates.md
+@.claude/rules/aeat-schema-central-config.md
 @.claude/rules/aeat-source-hygiene.md
 @.claude/rules/aeat-swarm-audit-cadence.md
 @.claude/rules/aeat-swarm-orchestration.md

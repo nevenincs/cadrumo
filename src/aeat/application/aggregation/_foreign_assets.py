@@ -13,11 +13,10 @@ the four canonical source kinds are accepted: ``ledger_transaction``,
 from __future__ import annotations
 
 from decimal import Decimal
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.aggregation import AggregationSourceKind
+from ...core.aggregation import AggregationSourceKind, ForeignAssetClass
 from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
@@ -43,21 +42,6 @@ def _validate_country(value: str) -> str:
     if len(value) != 2 or any(char < "A" or char > "Z" for char in value):
         raise ValueError(f"country must be uppercase ISO-3166 alpha-2, got {value!r}")
     return value
-
-
-class ForeignAssetClass(StrEnum):
-    """Modelo 720 asset classes (clave de tipo de bien).
-
-    Source: AEAT Modelo 720 instrucciones. Each class is declared
-    separately; declarability gate (€50,000 per class) is applied
-    after the aggregator runs.
-    """
-
-    ACCOUNT = "cuenta_entidad_financiera"  # clave C
-    SECURITY = "valor_seguro_renta"  # clave V
-    REAL_ESTATE = "inmueble_extranjero"  # clave I
-    INSURANCE = "seguro_renta_temporal_vitalicia"  # clave S
-    VIRTUAL_CURRENCY = "moneda_virtual"  # clave M
 
 
 class ForeignAssetIngestObservation(BaseModel):

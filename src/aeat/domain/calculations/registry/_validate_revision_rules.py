@@ -32,7 +32,11 @@ def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
 
 
 def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
-    """Enforce that informative modelos carry no filing-grade computation artefacts."""
+    """Enforce that informative modelos carry no filing-grade computation artefacts.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` to validate against the informative-class invariant.
+    """
     if modelo.calculation_class != "informative":
         return []
     failures: list[str] = []
@@ -154,6 +158,11 @@ def validate_bracket_table_temporal_coverage(
     A gap detected here would otherwise surface at runtime as a
     ``bracket_no_window`` error when an operator files for a period in the
     uncovered range — this validator promotes that to a registry-load failure.
+
+    Args:
+        scope: Diagnostic scope string prefixed to each failure message.
+        revision: The :class:`ModeloRevision` whose bracket_table parameters
+            are checked for temporal coverage gaps.
     """
     failures: list[str] = []
     for parameter in revision.parameters:

@@ -41,8 +41,8 @@ def materialize_m232_related_party_rows(
     Rows beyond the form's capacity (>5) are rejected.
 
     Args:
-        revision: M232 ModeloRevision with declared casillas
-        rows: Tuple of Modelo232VinculadaRow objects from CLI input
+        revision: The :class:`ModeloRevision` with declared casillas for M232.
+        rows: Tuple of Modelo232VinculadaRow objects from CLI input.
 
     Returns:
         Tuple of :class:`CasillaObservation` objects for all row fields

@@ -317,6 +317,9 @@ def resolve_modelo_ledger_binding_values_from_repositories(
 ) -> ModeloLedgerBindingAggregation:
     """Resolve ledger-backed registry bindings from the active bucket.
 
+    Args:
+        revision: The :class:`ModeloRevision` used to drive ledger aggregation binding resolution.
+
     Returns a :class:`ModeloLedgerBindingAggregation` containing all
     resolved binding values and per-source issue lists.
     """

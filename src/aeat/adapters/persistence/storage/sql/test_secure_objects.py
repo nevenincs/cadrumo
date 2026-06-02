@@ -1426,6 +1426,75 @@ def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Pa
             engine.dispose()
 
 
+def test_secure_object_save_with_raw_key_stale_expected_revision_refuses_without_overwrite(
+    tmp_path: Path,
+) -> None:
+    """Raw-key CAS writes must not overwrite when the expected revision is stale."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-raw-key-stale.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        raw_key = b"y" * 32
+        namespace = "aeat.revision.cas.raw.stale"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save_with_raw_key(
+                namespace=namespace,
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 22, 0, 0, tzinfo=UTC),
+                payload=b"raw-before",
+            )
+            with sqlite3.connect(db_path) as con:
+                (first_revision_id,) = con.execute(
+                    "SELECT revision_id FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save_with_raw_key(
+                namespace=namespace,
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 22, 5, 0, tzinfo=UTC),
+                payload=b"raw-current",
+            )
+            with sqlite3.connect(db_path) as con:
+                before = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            with pytest.raises(SecureObjectRevisionConflictError) as raised:
+                repo.save_with_raw_key(
+                    namespace=namespace,
+                    hashed_object_key=raw_key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime(2026, 5, 22, 22, 10, 0, tzinfo=UTC),
+                    payload=b"raw-stale-overwrite",
+                    expected_revision_id=first_revision_id,
+                )
+
+            assert raised.value.context == {
+                "namespace": namespace,
+                "expected_revision_id": first_revision_id,
+                "current_revision_id": before[0],
+            }
+            assert raised.value.translated_message == "errors.fail.fail_storage_secure_object_revision_conflict"
+            with sqlite3.connect(db_path) as con:
+                after = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert after == before
+            assert after[1] == hashlib.sha256(b"raw-current").hexdigest()
+        finally:
+            engine.dispose()
+
+
 def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
     """`peek_metadata` reports a row's wire-envelope columns without
     decrypting the payload; the namespace, classification,

@@ -29,8 +29,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
@@ -40,7 +38,8 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
-from ...domain.calculations.registry._bindings import RegistryModeloObservation
+from ...core.time import now
+from ...domain.calculations.registry import RegistryModeloObservation
 from ._errors import ObservationKeyError
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 

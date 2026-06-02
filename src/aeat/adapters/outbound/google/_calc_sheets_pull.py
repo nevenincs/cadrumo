@@ -54,12 +54,17 @@ from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....core.decimal import coerce_decimal
 from ....core.time._utc import coerce_utc_aware
-from ....domain.calculations.registry import BindingId, CasillaId, RelationId, RevisionId
-from ....domain.calculations.registry._formula_runtime import (
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaDefinition,
+    CasillaId,
+    InputKind,
     RegistryCalculationResult,
+    RegistrySnapshot,
+    RelationId,
+    RevisionId,
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
@@ -360,7 +365,7 @@ def pull_operator_edits(
     """Read operator-edited cells back from a workbook into typed records.
 
     Args:
-        snapshot: The registry snapshot the workbook was compiled
+        snapshot: The :class:`RegistrySnapshot` the workbook was compiled
             against. Used to derive the layout (cell addresses for
             every casilla / binding / relation) and to validate the
             workbook's developer-metadata stamps.
@@ -859,6 +864,13 @@ def compute_from_pull(
     match the supplied snapshot (`pull.metadata_match != "matches"`).
     The caller is responsible for handling stale workbooks before
     invoking this helper.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` the workbook was compiled
+            against. Used to derive input casilla identifiers, active
+            relation periods, and the metadata-match gate.
+        pull: The :class:`PullResult` carrying the operator-edited cells
+            to compute from.
     """
     _require_metadata_match(pull=pull, snapshot=snapshot)
     inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)

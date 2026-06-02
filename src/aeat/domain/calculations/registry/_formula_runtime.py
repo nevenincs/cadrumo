@@ -187,6 +187,10 @@ def calculate_registry_snapshot(
     birth_date) consumed by the ``age_at_year_end`` op.  Date facts
     cannot flow through the Decimal ``binding_values`` channel; keeping
     them in a dedicated channel preserves the Decimal-only invariant.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` that supplies the revision,
+            casilla definitions, and formula graph to evaluate.
     """
     _reject_non_decimal(inputs, "input")
     resolved_date_context = dict(date_context)

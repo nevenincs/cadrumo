@@ -2,7 +2,7 @@
 
 Defines the parse-error tree raised by
 :mod:`aeat.adapters.inbound.declaracion`. All exceptions descend from
-:exc:`aeat.adapters.inbound.pdf._errors.PdfModeloImportError` so callers
+:exc:`aeat.domain.justificante.PdfModeloImportError` so callers
 can catch the generic PDF-import boundary without needing declaración
 specifics.
 """
@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ..pdf._errors import PdfModeloImportError
+from ....domain.justificante import PdfModeloImportError
 
 
 class DeclaracionParseError(PdfModeloImportError):

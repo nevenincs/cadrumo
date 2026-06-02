@@ -17,8 +17,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....domain.calculations.registry import CasillaId
-from ....domain.calculations.registry._schema import RegistrySnapshotRef
+from ....domain.calculations.registry import CasillaId, RegistrySnapshotRef
 from ..pdf._shared import ExtractedCasilla
 
 

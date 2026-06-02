@@ -28,7 +28,19 @@ _OTHER_OBJECT_KEY = "wallet:2026-other"
 
 def test_cli_output_text_redacts_sensitive_canaries() -> None:
     rendered = redact_for_cli_output(
-        f"profile={_PROFILE_ID} nif={_NIF} bearer {_JWT} url={_URL} object_key={_OBJECT_KEY}"
+        " ".join(
+            (
+                f"profile_id={_PROFILE_ID}",
+                f"target_profile_id\t{_PROFILE_ID}",
+                "source_profile_id\toperator",
+                "active_profile=operator",
+                "bucket_id=bucket-alpha",
+                f"nif={_NIF}",
+                f"bearer {_JWT}",
+                f"url={_URL}",
+                f"object_key={_OBJECT_KEY}",
+            )
+        )
     )
 
     assert _PROFILE_ID not in rendered
@@ -36,7 +48,11 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
     assert _JWT not in rendered
     assert _URL not in rendered
     assert _OBJECT_KEY not in rendered
-    assert CLI_PROFILE_ID_PLACEHOLDER in rendered
+    assert f"profile_id={CLI_PROFILE_ID_PLACEHOLDER}" in rendered
+    assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in rendered
+    assert f"source_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in rendered
+    assert "active_profile=operator" in rendered
+    assert f"bucket_id={CLI_BUCKET_ID_PLACEHOLDER}" in rendered
     assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered
     assert "https://example.test" in rendered
     assert "private/path" not in rendered
@@ -51,6 +67,7 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
         "bucket_id": "bucket-alpha",
         "object_key": _OBJECT_KEY,
         "label": "operator",
+        "display": {"active_profile": "operator"},
         "nested": {
             _PROFILE_ID: "profile keyed",
             _NIF: "tax keyed",
@@ -73,6 +90,7 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
         "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
         "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
         "label": "operator",
+        "display": {"active_profile": "operator"},
         "nested": {
             CLI_PROFILE_ID_PLACEHOLDER: "profile keyed",
             "sha256:1c9f9632": "tax keyed",

@@ -13,19 +13,19 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from ....core.time import now
-
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
+from ....core.time import now
 from ....domain.calculations.registry import (
+    BboxAnchorSpec,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
     RegistrySnapshot,
     RegistrySnapshotError,
+    RegistrySnapshotRef,
     ValidatedRegistryAuthority,
 )
-from ....domain.calculations.registry._schema import BboxAnchorSpec, RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
 from ..pdf._utils import sha256_file
@@ -90,7 +90,7 @@ def parse_declaracion(
         extraction_profile_id: Registry extraction profile to use when
             the selected snapshot contains more than one declaration-PDF
             profile.
-        registry_snapshot: Pre-built validated registry snapshot. When
+        registry_snapshot: Pre-built validated :class:`RegistrySnapshot`. When
             omitted, the parser loads the committed registry and builds
             one from the detected modelo, tax year, and period.
         registry_root: Optional registry TOML root used when
@@ -134,6 +134,25 @@ def parse_declaracion_bytes(
     source_root: Path | None = None,
 ) -> DeclaracionObservation:
     """Parse declaración PDF bytes without writing them to a plaintext temp file.
+
+    Args:
+        pdf_bytes: Raw PDF bytes to parse.
+        source_label: Label identifying the in-memory source for log messages.
+        modelo_override: Explicit modelo identifier (skips detection).
+        template_revision_override: Explicit revision string (skips detection).
+        año_override: Explicit four-digit tax year (skips detection).
+        period_override: Explicit printed period when the PDF text does
+            not expose a stable period marker.
+        extraction_profile_id: Registry extraction profile to use when
+            the selected snapshot contains more than one declaration-PDF
+            profile.
+        registry_snapshot: Pre-built validated :class:`RegistrySnapshot`. When
+            omitted, the parser loads the committed registry and builds
+            one from the detected modelo, tax year, and period.
+        registry_root: Optional registry TOML root used when
+            ``registry_snapshot`` is omitted.
+        source_root: Optional source root used for source integrity
+            checks while building a snapshot.
 
     Returns:
         A :class:`DeclaracionObservation` populated with the extracted casillas,

@@ -24,6 +24,11 @@ import pytest
 
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._test_privacy import (
+    assert_public_profile_id_not_leaked,
+    assert_public_profile_id_redacted,
+    assert_public_profile_payload_redacted,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -60,7 +65,9 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
     assert bundle_path.is_file()
 
     raw = json.loads(bundle_path.read_text(encoding="utf-8"))
-    return raw["profile"]["profile_id"]
+    exported_id = raw["profile"]["profile_id"]
+    assert_public_profile_id_redacted(r_export.output, exported_id)
+    return exported_id
 
 
 # ---------------------------------------------------------------------------
@@ -85,18 +92,22 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
     # lives must fail — profile_id UUID collision.
     r_first = _invoke(["config", "profile", "import", str(bundle_path)])
     assert r_first.exit_code != 0, r_first.output
+    assert_public_profile_id_not_leaked(r_first.output, exported_id)
     assert "already registered" in r_first.output or "profile" in r_first.output.lower()
     assert "Traceback" not in r_first.output
 
     # Import into a fresh root succeeds once.
     fresh_root = tmp_path / "fresh"
     with isolated_profile_storage_root(tmp_path=fresh_root):
-        r_ok = _invoke(["config", "profile", "import", str(bundle_path)])
+        r_ok = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
         assert r_ok.exit_code == 0, r_ok.output
+        ok_payload = assert_public_profile_payload_redacted(r_ok.output, exported_id)
+        assert ok_payload["display_name"] == "idempotency-test"
 
         # Second import into the same fresh root must be refused (UUID taken).
         r_second = _invoke(["config", "profile", "import", str(bundle_path)])
         assert r_second.exit_code != 0, r_second.output
+        assert_public_profile_id_not_leaked(r_second.output, exported_id)
         assert "already registered" in r_second.output or "profile" in r_second.output.lower()
         assert "Traceback" not in r_second.output
 
@@ -130,7 +141,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
     """
 
     bundle_path = tmp_path / "label-collision.json"
-    _create_minimal_profile_and_export(tmp_path, bundle_path)
+    exported_id = _create_minimal_profile_and_export(tmp_path, bundle_path)
 
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
@@ -148,6 +159,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         # which is already taken by the locally-minted profile → refused.
         r_import = _invoke(["config", "profile", "import", str(bundle_path)])
         assert r_import.exit_code != 0, r_import.output
+        assert_public_profile_id_not_leaked(r_import.output, exported_id)
         assert "Traceback" not in r_import.output
 
         # Passing --label with the SAME taken name is also refused.
@@ -155,13 +167,20 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
             ["config", "profile", "import", str(bundle_path), "--label", "idempotency-test"]
         )
         assert r_explicit.exit_code != 0, r_explicit.output
+        assert_public_profile_id_not_leaked(r_explicit.output, exported_id)
         assert "Traceback" not in r_explicit.output
 
         # Passing --label with a FREE name succeeds.
         r_free = _invoke(
-            ["config", "profile", "import", str(bundle_path), "--label", "idempotency-test-imported"]
+            [
+                "--format", "json",
+                "config", "profile", "import", str(bundle_path),
+                "--label", "idempotency-test-imported",
+            ]
         )
         assert r_free.exit_code == 0, r_free.output
+        free_payload = assert_public_profile_payload_redacted(r_free.output, exported_id)
+        assert free_payload["display_name"] == "idempotency-test-imported"
 
 
 # ---------------------------------------------------------------------------
@@ -197,18 +216,29 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
         # Import the original bundle — succeeds.
-        r_orig = _invoke(["config", "profile", "import", str(bundle_path)])
+        r_orig = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
         assert r_orig.exit_code == 0, r_orig.output
+        orig_payload = assert_public_profile_payload_redacted(r_orig.output, exported_id)
+        assert orig_payload["display_name"] == "idempotency-test"
 
         # Import the UUID-mutated bundle under a distinct label — succeeds
         # (different UUID, different label).
         r_mut = _invoke(
             [
+                "--format", "json",
                 "config", "profile", "import", str(mutated_bundle_path),
                 "--label", "idempotency-test-mutated",
             ]
         )
         assert r_mut.exit_code == 0, r_mut.output
+        mut_payload = assert_public_profile_payload_redacted(r_mut.output, mutated_id)
+        assert mut_payload["display_name"] == "idempotency-test-mutated"
+        from ...core._bucket_pointer_io import resolve_active_bucket_id
+
+        minted_label_import_id = resolve_active_bucket_id()
+        assert minted_label_import_id is not None
+        assert minted_label_import_id != mutated_id
+        assert_public_profile_id_not_leaked(r_mut.output, minted_label_import_id)
 
         # Both labels must appear in the list output — two distinct profiles.
         r_list = _invoke(["config", "profile", "list"])
@@ -233,5 +263,7 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         # Both display names must still be reachable via the operator surface.
         r_show = _invoke(["config", "profile", "show", "idempotency-test"])
         assert r_show.exit_code == 0, r_show.output
+        assert_public_profile_id_redacted(r_show.output, exported_id)
         r_show_mut = _invoke(["config", "profile", "show", "idempotency-test-mutated"])
         assert r_show_mut.exit_code == 0, r_show_mut.output
+        assert_public_profile_id_not_leaked(r_show_mut.output, mutated_id)

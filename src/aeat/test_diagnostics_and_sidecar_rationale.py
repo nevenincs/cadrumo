@@ -42,9 +42,9 @@ def _source(rel: str) -> str:
 # ---------------------------------------------------------------------------
 
 _DIAGNOSTICS_REL = "application/diagnostics.py"
-_TEARDOWN_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN"  # noqa: S105
-_INTEGRITY_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE"  # noqa: S105
-_RECORD_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ"  # noqa: S105
+_TEARDOWN_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN"
+_INTEGRITY_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE"
+_RECORD_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ"
 
 
 def test_diagnostics_teardown_rationale_markers_present() -> None:
@@ -72,11 +72,16 @@ def test_diagnostics_record_read_rationale_marker_present() -> None:
 def test_diagnostics_record_read_pragma_preserved() -> None:
     """The pragma: no cover comment is preserved alongside the rationale token."""
     src = _source(_DIAGNOSTICS_REL)
-    for line in src.splitlines():
+    lines = src.splitlines()
+    # The pragma belongs on the ``except`` line and the rationale on a comment
+    # line beside it; a formatter may place them on adjacent lines rather than
+    # one. Verify the pragma is preserved within two lines of the rationale.
+    for idx, line in enumerate(lines):
         if _RECORD_TOKEN in line:
-            assert "pragma: no cover" in line, (
+            window = lines[max(0, idx - 2) : idx + 3]
+            assert any("pragma: no cover" in ln for ln in window), (
                 "RECORD-READ except clause must preserve 'pragma: no cover' "
-                f"but it was missing from: {line!r}"
+                f"adjacent to the rationale, but none was found near: {line!r}"
             )
             break
     else:
@@ -137,7 +142,7 @@ def test_wizard_next_locale_key_in_hu() -> None:
 # ---------------------------------------------------------------------------
 
 _PARSER_REL = "adapters/inbound/declaracion/_parser.py"
-_PDFWORD_RATIONALE_TOKEN = "ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD"  # noqa: S105
+_PDFWORD_RATIONALE_TOKEN = "ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD"
 
 
 def test_pdfword_alias_rationale_comment_present() -> None:
@@ -168,7 +173,7 @@ def test_pdfword_alias_is_dict_str_any() -> None:
 # ---------------------------------------------------------------------------
 
 _LOCAL_REL = "adapters/outbound/storage/_local.py"
-_SIDECAR_CAST_TOKEN = "CAST-RATIONALE-SIDECAR-MAPPING"  # noqa: S105
+_SIDECAR_CAST_TOKEN = "CAST-RATIONALE-SIDECAR-MAPPING"
 
 
 def test_local_sidecar_cast_rationale_present() -> None:

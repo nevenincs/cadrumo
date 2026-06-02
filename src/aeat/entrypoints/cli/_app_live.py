@@ -13,8 +13,6 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from ...core.time import now
-
 from ...application.live import (
     FiledDataListingRow,
     IvaCompensationHistoryReport,
@@ -27,6 +25,8 @@ from ...application.live import (
 from ...application.overview import FilingStatus
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
+from ...core.time import now
+from ...domain.portals import PortalCategory
 from ._common import _emit_envelope
 
 if TYPE_CHECKING:
@@ -563,6 +563,7 @@ def iva_wallet_capture_remote_state_cmd(
                 outcome_mode=outcome.outcome_mode.value,
                 failure_mode=outcome.failure_mode.value if outcome.failure_mode else None,
                 failure_type=outcome.failure_type,
+                failure_context=outcome.failure_context,
                 captured_count=outcome.captured_count,
                 calculation_observation_count=outcome.calculation_observation_count,
             )
@@ -612,6 +613,7 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
                         f"outcome_label={_live_iva_outcome_label(outcome.outcome_mode)}",
                         f"failure_mode={outcome.failure_mode.value if outcome.failure_mode else ''}",
                         f"failure_type={outcome.failure_type or ''}",
+                        f"failure_context={_compact_failure_context(outcome.failure_context)}",
                         f"captured_count={outcome.captured_count if outcome.captured_count is not None else ''}",
                         f"calculation_observation_count={calculation_count}",
                     )
@@ -619,6 +621,20 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
             )
         )
     return tuple(lines)
+
+
+def _compact_failure_context(context: dict[str, object] | None) -> str:
+    if not context:
+        return ""
+    parts: list[str] = []
+    for key in sorted(context):
+        value = context[key]
+        if isinstance(value, dict):
+            nested = ",".join(f"{nested_key}:{nested_value}" for nested_key, nested_value in sorted(value.items()))
+            parts.append(f"{key}={{" + nested + "}")
+            continue
+        parts.append(f"{key}={value}")
+    return ";".join(parts)
 
 
 @filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
@@ -1027,7 +1043,7 @@ def _portal_row(metadata) -> Mapping[str, object]:
 def portals_list(
     ctx: typer.Context,
     category: Annotated[
-        str | None,
+        PortalCategory | None,
         typer.Option(
             "--category", help=tr("cli.app.live.portals.category_help", default="Filter to one PortalCategory value.")
         ),
@@ -1042,18 +1058,12 @@ def portals_list(
         ),
     ] = None,
 ) -> None:
-    from ...domain.portals import PORTAL_REGISTRY, PortalCategory, portals_by_category, portals_for_modelo
+    from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
     if category and modelo:
         raise typer.BadParameter(tr("cli.app.live.portals.category_modelo_exclusive"))
     if category:
-        try:
-            cat = PortalCategory(category)
-        except ValueError as exc:
-            raise typer.BadParameter(
-                tr("cli.app.live.portals.unknown_category", category=category)
-            ) from exc
-        entries = portals_by_category(cat)
+        entries = portals_by_category(category)
     elif modelo:
         entries = portals_for_modelo(modelo)
     else:

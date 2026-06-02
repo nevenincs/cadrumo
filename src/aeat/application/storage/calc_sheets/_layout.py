@@ -43,18 +43,16 @@ from pydantic import BaseModel, Field
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....domain.calculations.registry import (
     BindingId,
-    CasillaId,
-    ParameterId,
-    RelationId,
-    RevisionId,
-)
-from ....domain.calculations.registry._schema import (
     BracketEntry,
     CasillaDefinition,
+    CasillaId,
     FormulaExpression,
     InputKind,
     ModeloRevision,
     ParameterDefinition,
+    ParameterId,
+    RelationId,
+    RevisionId,
 )
 from ._records import (
     ParameterCell,
@@ -231,7 +229,7 @@ def plan_layout(
     """Plan tab + row + column addresses for every casilla and parameter.
 
     Args:
-        revision: The validated revision to lay out.
+        revision: The validated :class:`ModeloRevision` to lay out.
         bracket_filter_date: When supplied, bracket-table parameters
             are filtered to entries temporally valid on this date so
             the `Tarifas` rows the engine emits match the registry

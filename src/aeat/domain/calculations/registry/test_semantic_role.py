@@ -490,3 +490,36 @@ class TestTypoTwinWarning:
             warnings.simplefilter("always")
             _emit_semantic_role_typo_twin_warnings([m])
         assert captured == []
+
+
+class TestModelo347QuarterlyContraparteRolesAreIntentionalSingletons:
+    """M347 per-quarter contraparte importe roles must not trip the typo-twin warning.
+
+    Modelo 347 desglosa el importe de operaciones con la contraparte por
+    trimestre (Q1-Q4) into four distinct casillas (RD 1065/2007 art. 31). Each
+    ``contraparte_importe_qN`` role therefore appears on exactly one casilla and
+    looks like a typo of its siblings, so without an ``intentional_singleton``
+    cardinality marker the typo-twin validator emits a ``UserWarning`` on every
+    registry load and pollutes the operator's stderr (round-29/30 finding).
+    """
+
+    def test_quarterly_contraparte_importe_roles_marked_intentional_singleton(self) -> None:
+        modelo = _bundled_modelo("347")
+        quarterly_ids = {
+            "contraparte.importe-Q1",
+            "contraparte.importe-Q2",
+            "contraparte.importe-Q3",
+            "contraparte.importe-Q4",
+        }
+        found = {
+            casilla.id: casilla
+            for revision in modelo.revisions.values()
+            for casilla in revision.casillas
+            if casilla.id in quarterly_ids
+        }
+        assert quarterly_ids <= set(found), f"missing quarterly casillas: {sorted(quarterly_ids - set(found))}"
+        for casilla_id, casilla in found.items():
+            assert casilla.semantic_role_cardinality == "intentional_singleton", (
+                f"{casilla_id} is not marked intentional_singleton; the typo-twin validator will warn on it"
+            )
+            assert casilla.semantic_role_cardinality_reason, f"{casilla_id} lacks the required cardinality reason"

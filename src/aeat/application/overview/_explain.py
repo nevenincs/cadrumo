@@ -185,7 +185,7 @@ def build_overview_explain(
     :class:`OverviewExplainError`.
 
     Args:
-        profile: The taxpayer profile whose attributes determine
+        profile: The :class:`TaxpayerProfile` whose attributes determine
             applicability.
         modelo: Modelo identifier to explain (e.g. ``"130"``).
         year: Optional calendar year. Defaults to the current year.

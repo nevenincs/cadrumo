@@ -741,7 +741,11 @@ def run_registry_workbook_parity(
     tolerance: Decimal = Decimal("0"),
     executable: str | None = None,
 ) -> WorkbookParityRunReport:
-    """Execute one registry-vs-workbook parity comparison and return a :class:`WorkbookParityRunReport`."""
+    """Execute one registry-vs-workbook parity comparison and return a :class:`WorkbookParityRunReport`.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` providing the registry formulas to compare.
+    """
     if workbook.workbook_kind != WorkbookKind.FORMULA_FORM:
         raise RegistryValidationError(
             f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle"

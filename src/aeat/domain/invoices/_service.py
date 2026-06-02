@@ -102,7 +102,7 @@ def find_unmatched(
     """Return the invoices that have no linked transactions yet.
 
     Args:
-        catalogue: Source catalogue to filter.
+        catalogue: Source :class:`InvoiceCatalogue` to filter.
         kind: Optional filter on :class:`InvoiceKind`.
 
     Returns:
@@ -178,8 +178,8 @@ def suggest_reconciliations(
     own.
 
     Args:
-        invoices: Source invoice catalogue.
-        transactions: Source transaction catalogue.
+        invoices: The :class:`InvoiceCatalogue` to match invoices from.
+        transactions: Source :class:`TransactionCatalogue` to match transactions from.
         amount_tolerance: Absolute tolerance applied to sign-aware amount
             comparisons; defaults to one cent.
 
@@ -236,8 +236,8 @@ def verify_link_consistency(
     cites an invoice that does not cite it back.
 
     Args:
-        invoices: Source invoice catalogue.
-        transactions: Source transaction catalogue.
+        invoices: The :class:`InvoiceCatalogue` to check links from.
+        transactions: The :class:`TransactionCatalogue` to check links from.
 
     Returns:
         Deterministic tuple of :class:`LinkInconsistency` items sorted by

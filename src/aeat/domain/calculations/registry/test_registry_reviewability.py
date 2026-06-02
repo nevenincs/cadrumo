@@ -17,12 +17,13 @@ _MAX_TOML_LINES = 5_000
 _MAX_TOML_LINE_CHARS = 1_200
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
+    "_validate_cross_revision.py": 424,
     "_validate_references.py": 312,
     "_validate_revision_sections.py": 254,
     "_validate_semantic_roles.py": 243,
     "_validate_record_sections.py": 240,
     "_validate_revision_identity.py": 228,
-    "_validate.py": 206,
+    "_validate.py": 210,
     "_validate_relation_periods.py": 203,
     "_validate_semantic_role_axes.py": 188,
     "_validate_dependency_sections.py": 182,

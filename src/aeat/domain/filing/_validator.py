@@ -62,7 +62,7 @@ class ModeloValidator:
         """Run every validation rule against ``draft``.
 
         Args:
-            draft: The draft to validate.
+            draft: The :class:`ModeloDraft` to validate.
 
         Returns:
             A tuple of :class:`ModeloValidationFinding` items, possibly empty.

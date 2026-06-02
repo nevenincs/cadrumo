@@ -42,7 +42,7 @@ from ._command_suggestions import (
 from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
-from ._common import _FORMAT_TEXT, _emit, _emit_envelope
+from ._common import _FORMAT_TEXT, _emit_envelope
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._errors import write_stderr as _write_stderr
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger

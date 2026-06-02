@@ -50,7 +50,7 @@ def import_ledger_with_diagnostics(
     Args:
         source_path: Path of the file being imported.
         raw_transactions: Unmerged raw transactions emitted by the provider.
-        existing_catalogue: The current ledger catalogue.
+        existing_catalogue: The current :class:`TransactionCatalogue` used for duplicate detection.
         original_source_path: Optional original file to verify against.
 
     Returns:

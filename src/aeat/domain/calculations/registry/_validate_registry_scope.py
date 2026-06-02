@@ -28,7 +28,11 @@ from ._validate_semantic_roles import (
 
 
 def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-    """Validate cross-model and corpus-wide registry invariants."""
+    """Validate cross-model and corpus-wide registry invariants.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` entries to validate.
+    """
     modelo_tuple = tuple(modelos)
     failures: list[str] = []
     modelo_ids = [modelo.id for modelo in modelo_tuple]

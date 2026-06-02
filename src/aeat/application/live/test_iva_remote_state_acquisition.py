@@ -8,15 +8,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from playwright._impl._errors import Error as PlaywrightError
 from playwright._impl._errors import TargetClosedError
 
 from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ...adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ...adapters.persistence.storage.errors import StorageValidationError
-from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from ...tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
-
+from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from . import (
     IvaCompensationHistoryCaptureReport,
     IvaRemoteStateAcquisitionManifest,
@@ -224,6 +224,7 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
         "filed-history read did not finish",
         surface=LiveIvaReadSurface.FILED_HISTORY.value,
         timeout_ms=1,
+        progress_context={"phase": "walk_declarations_register", "modelo": "303", "ejercicio": 2026},
     )
 
     report = build_iva_remote_state_acquisition_report(
@@ -241,6 +242,30 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
     assert filed_outcome.failure_type == "LiveIvaSurfaceTimeoutError"
     assert filed_outcome.captured_count is None
     assert wallet_outcome.status is LiveIvaReadStatus.FAILED
+    assert timeout.context["progress"] == {
+        "phase": "walk_declarations_register",
+        "modelo": "303",
+        "ejercicio": 2026,
+    }
+
+
+def test_surface_timeout_context_preserves_wallet_progress() -> None:
+    timeout = LiveIvaSurfaceTimeoutError(
+        "wallet read did not finish",
+        surface=LiveIvaReadSurface.WALLET_CARTERA.value,
+        timeout_ms=30_000,
+        progress_context={
+            "phase": "fetch_iva_compensation_wallet",
+            "target_year": 2026,
+            "target_period": "1T",
+        },
+    )
+
+    assert timeout.context["progress"] == {
+        "phase": "fetch_iva_compensation_wallet",
+        "target_year": 2026,
+        "target_period": "1T",
+    }
 
 
 def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -> None:
@@ -254,7 +279,7 @@ def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -
         original_handler = loop.get_exception_handler()
         loop.set_exception_handler(previous_handler)
         try:
-            async with _suppress_live_iva_playwright_cancellation_noise():
+            async with _suppress_live_iva_playwright_cancellation_noise(drain_ms=0):
                 loop.call_exception_handler(
                     {
                         "exception": TargetClosedError(
@@ -262,7 +287,46 @@ def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -
                         )
                     }
                 )
+                loop.call_exception_handler(
+                    {
+                        "exception": PlaywrightError(
+                            "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating"
+                        )
+                    }
+                )
                 loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
+        finally:
+            loop.set_exception_handler(original_handler)
+        return delegated
+
+    delegated = asyncio.run(run())
+
+    assert len(delegated) == 1
+    assert isinstance(delegated[0]["exception"], RuntimeError)
+
+
+def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown() -> None:
+    async def run() -> list[dict[str, object]]:
+        loop = asyncio.get_running_loop()
+        delegated: list[dict[str, object]] = []
+
+        def previous_handler(_loop: asyncio.AbstractEventLoop, context: dict[str, object]) -> None:
+            delegated.append(context)
+
+        original_handler = loop.get_exception_handler()
+        loop.set_exception_handler(previous_handler)
+        try:
+            async with _suppress_live_iva_playwright_cancellation_noise(drain_ms=0, restore_on_exit=False):
+                pass
+
+            loop.call_exception_handler(
+                {
+                    "exception": PlaywrightError(
+                        "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating"
+                    )
+                }
+            )
+            loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
         finally:
             loop.set_exception_handler(original_handler)
         return delegated

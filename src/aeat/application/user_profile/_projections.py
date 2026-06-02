@@ -91,7 +91,12 @@ def record_to_values(
     *,
     schema: ProfileSchemaDefinition | None = None,
 ) -> dict[str, str]:
-    """Project a live profile record into the legacy flat values mapping."""
+    """Project a live profile record into the legacy flat values mapping.
+
+    Args:
+        record: The :class:`UserProfileRecord` to project.
+        schema: Optional profile schema definition override.
+    """
     return facts_to_values(record.facts, schema=schema)
 
 
@@ -105,7 +110,7 @@ def snapshot_to_values(
 
 
 def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
-    """Project facts into a schema-path-keyed string mapping.
+    """Project a :class:`UserProfileRecord` (or snapshot) into a schema-path-keyed string mapping.
 
     Unlike :func:`record_to_values` (which projects via the schema's
     ``model_selectors`` aliases), this keeps the canonical schema
@@ -126,10 +131,15 @@ def projection_for_taxpayer(
 ) -> TaxpayerProfile:
     """Return the deadline-engine :class:`TaxpayerProfile` for the supplied profile facts.
 
-    Accepts either a live record, an immutable snapshot, or a
-    pre-projected flat mapping. The single coercion path goes through
-    :func:`taxpayer_profile_from_mapping` so canonical-token semantics
-    stay in lockstep with the wizard descriptor.
+    Args:
+        facts: Either a :class:`UserProfileRecord`, an immutable
+            :class:`UserProfileSnapshot`, or a pre-projected flat mapping.
+        tax_id_default: Fallback NIF when the profile carries none.
+        iva_regime_default: Fallback IVA regime when the profile carries none.
+        schema: Optional profile schema definition override.
+
+    The single coercion path goes through :func:`taxpayer_profile_from_mapping`
+    so canonical-token semantics stay in lockstep with the wizard descriptor.
     """
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = record_to_path_values(facts)

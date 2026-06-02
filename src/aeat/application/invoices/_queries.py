@@ -43,7 +43,7 @@ class InvoiceListRow(BaseModel):
 
 
 def list_invoice_rows(catalogue: InvoiceCatalogue, *, kind: InvoiceKind | None = None) -> tuple[InvoiceListRow, ...]:
-    """Return sorted :class:`InvoiceListRow` summary rows from a catalogue."""
+    """Return sorted :class:`InvoiceListRow` summary rows from an :class:`InvoiceCatalogue`."""
     rows = (_row_from_invoice(invoice) for invoice in catalogue.values() if kind is None or invoice.kind is kind)
     return tuple(sorted(rows, key=lambda item: (item.issued_at, item.invoice_id)))
 
@@ -67,7 +67,12 @@ def list_unmatched_invoice_rows(
     *,
     kind: InvoiceKind | None = None,
 ) -> tuple[InvoiceListRow, ...]:
-    """Return sorted :class:`InvoiceListRow` summaries for invoices that are not linked to transactions."""
+    """Return sorted :class:`InvoiceListRow` summaries for invoices that are not linked to transactions.
+
+    Args:
+        catalogue: The :class:`InvoiceCatalogue` to query for unlinked invoices.
+        kind: When set, restricts results to invoices of that kind.
+    """
     rows = tuple(_row_from_invoice(invoice) for invoice in find_unmatched(catalogue, kind=kind))
     return tuple(sorted(rows, key=lambda item: (item.issued_at, item.invoice_id)))
 

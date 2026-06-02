@@ -92,7 +92,14 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
 
 
 def check_binding_selector_shapes(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
-    """Validate selectors for sources with a registered discriminated shape."""
+    """Validate selectors for sources with a registered discriminated shape.
+
+    Args:
+        checker: The reference checker whose failures list accumulates
+            any selector-shape validation errors found.
+        revision: The :class:`ModeloRevision` whose binding selectors are
+            validated.
+    """
     from ._bindings import validate_binding_selector_shape
 
     for binding in revision.bindings:

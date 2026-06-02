@@ -302,9 +302,8 @@ def _extract_shape_from_annotated_value(
     else:
         elements = [slice_node]
     for element in elements:
-        if isinstance(element, ast.Call):
-            if _call_name(element) in _CONSTRAINT_CALL_NAMES:
-                return _extract_constraint_shape_from_call(element, literals)
+        if isinstance(element, ast.Call) and _call_name(element) in _CONSTRAINT_CALL_NAMES:
+            return _extract_constraint_shape_from_call(element, literals)
     return ConstraintShape()
 
 

@@ -25,8 +25,7 @@ from typing import Final
 
 from ....core.decimal import format_decimal
 from ....core.errors import AeatError
-from ....domain.calculations.registry import BindingId, CasillaId, ParameterId, RelationId
-from ....domain.calculations.registry._schema import FormulaExpression
+from ....domain.calculations.registry import BindingId, CasillaId, FormulaExpression, ParameterId, RelationId
 from ._layout import SheetLayout
 
 

@@ -55,7 +55,12 @@ def usage_ratios_object_key(bucket_id: str) -> str:
 
 
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
-    """Load one bucket's persisted :class:`UsageRatioProfile`, or return an empty one."""
+    """Load one bucket's persisted :class:`UsageRatioProfile`, or return an empty one.
+
+    Args:
+        bucket_id: Profile bucket identifier.
+        objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
+    """
     from ...adapters.persistence.storage import Envelope, SensitivityClass
     from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -127,7 +132,13 @@ def save_usage_ratios(
     bucket_id: str,
     objects: SecureObjectRepository | None = None,
 ) -> None:
-    """Persist one bucket's usage-ratio profile in the encrypted database."""
+    """Persist one bucket's usage-ratio profile in the encrypted database.
+
+    Args:
+        profile: The usage-ratio profile to persist.
+        bucket_id: Profile bucket identifier.
+        objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
+    """
     from ...adapters.persistence.storage import Envelope, SensitivityClass
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -203,7 +214,8 @@ def load_usage_ratios_with_censo_guard(
             applied a censo.
         year: Registry year whose proportionality rules drive the
             derivation.
-        objects: Optional injected repository (testing seam).
+        objects: Optional injected :class:`SecureObjectRepository`
+            (testing seam).
 
     Returns:
         The persisted :class:`UsageRatioProfile` when no HOME_OFFICE

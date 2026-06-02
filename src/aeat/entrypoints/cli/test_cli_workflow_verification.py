@@ -14,6 +14,7 @@ import pytest
 from ...application.operator_surface import get_operator_surface_contract
 from ...application.wizard._catalogue import SETUP_FLOW
 from ...core.config import override_settings
+from ...core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ...tests.cli_runner import aeat_click_command, invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
 
@@ -295,16 +296,17 @@ def test_config_app_round_trip_review_row_records_field(
 
 
 def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backend: Path) -> None:
-    """The review row carries the profile bucket id, a generated UUID.
+    """The review row carries a redacted profile bucket id.
 
     Profile identity is the decoupled ``profile_id`` UUID, not the
-    operator-facing label. The review row's ``bucket_id`` must equal
-    the active profile's ``profile_id`` reported by ``profile status``.
+    operator-facing label. Public JSON output must expose the label as
+    ``active_profile`` while redacting the machine identifiers.
     """
 
     outcome = _drive_workflow_round_trip(_isolated_cli_backend)
-    assert _review_rows(outcome)[0]["bucket_id"] == "<bucket-id>"
-    assert outcome.status_payload["profile_id"] == "<profile-id>"
+    assert outcome.status_payload["active_profile"] == "operator"
+    assert _review_rows(outcome)[0]["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
+    assert outcome.status_payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
 
 
 def test_config_app_round_trip_review_row_has_affected_object(_isolated_cli_backend: Path) -> None:

@@ -170,6 +170,7 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      modelo_unavailable: 'El registro de declaraciones de la AEAT no ofrece el modelo solicitado.'
 aggregation:
   grouping:
     errors:
@@ -788,7 +789,6 @@ cli:
         list_help: Lista entradas del catálogo de portales
         modelo_help: Filtra por portales vinculados a un modelo
         portal_id_help: Identificador del portal
-        unknown_category: 'Categoría de portal desconocida: {category}.'
         view_help: Muestra una entrada del catálogo de portales
       registry_root_help: Raíz del registro
       source_root_help: Raíz del proyecto

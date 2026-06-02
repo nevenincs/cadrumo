@@ -63,6 +63,9 @@ def check_cross_domain_snapshot_routing(
     routing gate) are injected by their owning domain at import time
     via :func:`register_cross_domain_snapshot_check`.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` to run peer-domain checks against.
+
     Modelo 100 has a known-required cross-domain gate -- the renta
     first-slice routing referential-integrity check owned by
     :mod:`aeat.domain.renta`. That check registers itself only as an

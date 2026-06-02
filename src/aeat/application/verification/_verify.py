@@ -13,16 +13,16 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 
-from ...core.time import now
-
 from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.decimal import coerce_decimal
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
+from ...core.time import now
 from ...domain.calculations.registry import (
     InputKind,
     RegistrySnapshot,
     RegistrySnapshotError,
+    RegistryValidationError,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
@@ -98,7 +98,10 @@ def verify_declaracion(
             the declaracion's modelo and period.
     """
     snapshot = _load_snapshot(declaracion, registry_root=registry_root)
-    policy = _verification_policy(snapshot)
+    try:
+        policy = snapshot.verification_policy()
+    except RegistryValidationError as exc:
+        raise VerificationError(str(exc)) from exc
     extracted = _decimal_extracted_values(declaracion)
     inputs = {
         casilla.id: extracted[casilla.id]
@@ -172,27 +175,6 @@ def verify_declaracion(
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _VerificationPolicy:
-    expectation_ids: tuple[str, ...]
-    computed_casillas: set[str]
-    tolerance: Decimal
-    min_coverage: Decimal
-
-
-def _verification_policy(snapshot: RegistrySnapshot) -> _VerificationPolicy:
-    expectations = tuple(snapshot.verification_expectations.values())
-    if not expectations:
-        raise VerificationError("registry verification requires verification expectations")
-    computed_casillas = {casilla_id for expectation in expectations for casilla_id in expectation.computed_casillas}
-    tolerance = min(expectation.tolerance for expectation in expectations)
-    min_coverage = max(expectation.min_coverage for expectation in expectations)
-    return _VerificationPolicy(
-        expectation_ids=tuple(expectation.id for expectation in expectations),
-        computed_casillas=computed_casillas,
-        tolerance=tolerance,
-        min_coverage=min_coverage,
-    )
 
 
 def _load_snapshot(declaracion: DeclaracionObservation, *, registry_root: Path | None) -> RegistrySnapshot:

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ...domain.iva import InvoiceKind
+from ..transactions import LedgerImportDiagnosticKind
 from ._filter import (
     DeclaracionReviewFilterSpec,
     DeclaracionReviewStatus,
@@ -13,7 +14,6 @@ from ._filter import (
     InvoiceReviewFilterSpec,
     InvoiceReviewStatus,
     LedgerReviewFilterSpec,
-    LedgerReviewIssue,
     LedgerReviewStatus,
     parse_filter_clause,
     parse_filter_clauses,
@@ -97,12 +97,12 @@ def test_ledger_spec_parses_status_and_period() -> None:
 
 def test_ledger_spec_parses_issue_filter() -> None:
     spec = LedgerReviewFilterSpec.from_strings(["issue=gap", "period=2026-Q1"])
-    assert spec.issue is LedgerReviewIssue.GAP
+    assert spec.issue is LedgerImportDiagnosticKind.GAP
 
 
 def test_ledger_spec_parses_duplicate_issue() -> None:
     spec = LedgerReviewFilterSpec.from_strings(["issue=duplicate"])
-    assert spec.issue is LedgerReviewIssue.DUPLICATE
+    assert spec.issue is LedgerImportDiagnosticKind.DUPLICATE
 
 
 def test_ledger_spec_parses_import_id() -> None:

@@ -599,7 +599,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
     # Import every payload module so their @register_schema decorators populate
     # SCHEMA_REGISTRY.  The CLI loads these lazily at dispatch time; the generator
     # must trigger them explicitly before inspecting the registry.
-    from . import (  # noqa: F401
+    from . import (
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -611,7 +611,7 @@ def generate_cli_reference(docs_root: Path) -> dict[str, str]:
         _root_payloads,
         app,
     )
-    from ._config import (  # noqa: F401
+    from ._config import (
         _google_payloads,
         _profile_censo_payloads,
     )
@@ -706,7 +706,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         """
     )
 
-    result = subprocess.run(  # noqa: S603 — trusted: own interpreter, literal generator code
+    result = subprocess.run(
         [sys.executable, "-c", code],
         env=env,
         capture_output=True,
@@ -768,7 +768,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         """
     )
 
-    result = subprocess.run(  # noqa: S603 — trusted: own interpreter, literal collector code
+    result = subprocess.run(
         [sys.executable, "-c", code],
         env=env,
         capture_output=True,

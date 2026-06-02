@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from ...core.aggregation import ForeignAssetClass, OperationKind347, OperationKind349, RetencionScheme
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
-    OperationKind347,
-    OperationKind349,
     aggregate_counterpart_347,
     aggregate_counterpart_349,
     declarable_counterparty_nifs_347,
@@ -22,7 +21,6 @@ from ._errors import (
     AggregationValidationError,
 )
 from ._foreign_assets import (
-    ForeignAssetClass,
     ForeignAssetClassRollup,
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
@@ -83,7 +81,6 @@ from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
     RetencionPerceptorRollup,
-    RetencionScheme,
     aggregate_retenciones_111,
     aggregate_retenciones_115,
     aggregate_retenciones_123,

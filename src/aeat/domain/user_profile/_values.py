@@ -230,6 +230,9 @@ class UserProfileSnapshot(BaseModel):
     ) -> UserProfileSnapshot:
         """Create an immutable snapshot from a live profile record.
 
+        Args:
+            profile: The :class:`UserProfileRecord` to snapshot.
+
         Returns:
             An immutable :class:`UserProfileSnapshot` for the given profile.
         """

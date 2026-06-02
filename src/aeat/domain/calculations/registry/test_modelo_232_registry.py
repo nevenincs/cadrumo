@@ -456,6 +456,10 @@ def test_committed_modelo_232_declarante_casillas_export_through_page_01_record(
         page_01 = next(record for record in revision.export_layouts[0].records if record.record_type == "page_01")
         page_field_ids = {field.id for field in page_01.fields}
         for casilla in revision.casillas:
+            # Page 01 carries the declarante casillas; the vinculadas related-party
+            # rows export through the page_02 row layout, not page_01.
+            if not (casilla.section and casilla.section[0] == "declarante"):
+                continue
             assert casilla.export_refs, f"casilla {casilla.id!r} missing export_refs"
             for export_ref in casilla.export_refs:
                 assert export_ref in page_field_ids, (

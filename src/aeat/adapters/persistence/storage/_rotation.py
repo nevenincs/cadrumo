@@ -258,11 +258,11 @@ def rotate_master_key(
     Args:
         plan: Tuple of :class:`RotationPlanEntry` records — one per
             consumer (transactions, drafts, submissions, etc.).
-        old_master_key_provider: Provider returning the master key
-            currently in use.
-        new_master_key_provider: Provider returning the new master
-            key. Rotating to an identical key is permitted (no-op
-            rotation) but the caller is responsible for the
+        old_master_key_provider: :class:`MasterKeyProvider` returning
+            the master key currently in use.
+        new_master_key_provider: :class:`MasterKeyProvider` returning
+            the new master key. Rotating to an identical key is permitted
+            (no-op rotation) but the caller is responsible for the
             different-keys discipline.
 
     Returns:
@@ -438,10 +438,10 @@ def rotate_blob_stores(
     Args:
         blob_store_roots: Tuple of root directories (each containing
             a ``blobs/`` subtree) to walk.
-        old_master_key_provider: Provider returning the master key
-            currently in use.
-        new_master_key_provider: Provider returning the new master
-            key.
+        old_master_key_provider: :class:`MasterKeyProvider` returning
+            the master key currently in use.
+        new_master_key_provider: :class:`MasterKeyProvider` returning
+            the new master key.
 
     Returns:
         A frozen :class:`RotationSummary` covering every visited blob.

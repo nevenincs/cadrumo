@@ -36,8 +36,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...domain.calculations.registry._bindings import RegistryModeloObservation
-from ...domain.calculations.registry._schema import RegistrySnapshot
+from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshot
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,

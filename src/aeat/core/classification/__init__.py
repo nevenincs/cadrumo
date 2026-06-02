@@ -339,7 +339,7 @@ def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
     """Return the default :class:`ClassificationPolicy` for ``sensitivity``.
 
     Args:
-        sensitivity: The class to look up.
+        sensitivity: The :class:`SensitivityClass` to look up.
 
     Returns:
         The default policy. The returned record is frozen and shared;

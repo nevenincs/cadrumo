@@ -173,7 +173,7 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     """Atomically persist ``envelope`` as JSON to ``path``.
 
     Args:
-        envelope: The envelope to write.
+        envelope: The :class:`Envelope` to write.
         path: Destination file. Parent directory is created if absent.
 
     Raises:
@@ -389,7 +389,8 @@ def save_encrypted_envelope(
     Args:
         envelope: The plaintext envelope to encrypt and persist.
         path: Destination file. Parent directory is created if absent.
-        master_key_provider: Source of the master key.
+        master_key_provider: :class:`MasterKeyProvider` supplying the master key
+            used to derive the per-consumer encryption key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes (e.g.
             ``b"aeat.domain.transactions.v1"``). Different
             consumers MUST use distinct contexts so cross-consumer
@@ -459,8 +460,11 @@ def load_encrypted_envelope[PayloadT: BaseModel](
     Args:
         path: Source file (must exist).
         envelope_type: The parameterised envelope class.
-        expected_class: The sensitivity class the consumer expects.
-        master_key_provider: Source of the master key.
+        expected_class: The :class:`SensitivityClass` the consumer expects.
+            Mismatch raises :class:`ClassificationError` before any crypto
+            attempt.
+        master_key_provider: :class:`MasterKeyProvider` supplying the master key
+            used to derive the per-consumer decryption key via HKDF-SHA256.
         hkdf_context: Per-consumer context bytes; MUST match the
             value supplied at save time.
         max_supported_version: Highest inner-envelope schema version
@@ -537,6 +541,18 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
 
     Repository load paths are strict ciphertext-only; this function
     is the only sanctioned path that touches plaintext envelopes.
+
+    Args:
+        path: Target file to re-encrypt in place.
+        envelope_type: The parameterised envelope class.
+        expected_class: The :class:`SensitivityClass` the consumer expects.
+        master_key_provider: :class:`MasterKeyProvider` supplying the master key
+            used to derive the per-consumer encryption key via HKDF-SHA256.
+        hkdf_context: Per-consumer context bytes; MUST match those used
+            for subsequent load calls.
+        max_supported_version: Highest inner-envelope schema version
+            the consumer supports.
+        migrators: Optional ordered tuple of forward migrators.
     """
     if not path.exists():
         return False

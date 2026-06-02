@@ -34,7 +34,7 @@ operator never declared a gating field.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING
@@ -92,9 +92,6 @@ from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWin
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines.taxpayer_model import (
     IrpfEstimationRegime as _IrpfEstimationRegime,
-)
-from ...domain.deadlines.taxpayer_model import (
-    IrpfIncomeCategory as _IrpfIncomeCategory,
 )
 from ._errors import (
     OverviewAgendaError,

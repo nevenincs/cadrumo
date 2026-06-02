@@ -49,7 +49,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-from ..calculations.registry._bindings import CasillaObservation
+from ..calculations.registry import CasillaObservation
 from ._errors import ModeloValidationError
 from ._row_models import ModeloDetailRow
 
@@ -81,6 +81,7 @@ class CalculationRevisionAmendmentKind(StrEnum):
 
 
 from ._ids import CalculationRevisionId, WorkUnitId
+
 ModeloActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),

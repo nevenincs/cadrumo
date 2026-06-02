@@ -35,16 +35,14 @@ def test_override_to_one_unblocks_live_read() -> None:
 
 def test_override_to_zero_blocks_live_read() -> None:
     """An override to anything other than '1' raises the typed refusal."""
-    with override_settings(aeat_live_tests_enabled="0"):
-        with pytest.raises(AeatLiveReadNotEnabledError):
-            _build_gate().require_live_read()
+    with override_settings(aeat_live_tests_enabled="0"), pytest.raises(AeatLiveReadNotEnabledError):
+        _build_gate().require_live_read()
 
 
 def test_override_to_true_string_still_blocks() -> None:
     """The gate is strict on the literal string '1' — 'true' does not pass."""
-    with override_settings(aeat_live_tests_enabled="true"):
-        with pytest.raises(AeatLiveReadNotEnabledError):
-            _build_gate().require_live_read()
+    with override_settings(aeat_live_tests_enabled="true"), pytest.raises(AeatLiveReadNotEnabledError):
+        _build_gate().require_live_read()
 
 
 def test_override_restoration_after_block_exits() -> None:
@@ -57,9 +55,8 @@ def test_override_restoration_after_block_exits() -> None:
 
 def test_live_write_is_permanently_forbidden_regardless_of_override() -> None:
     """Per AEAT safety-and-legal-gates: live writes are forbidden, no override unlocks them."""
-    with override_settings(aeat_live_tests_enabled="1"):
-        with pytest.raises(LiveSubmitForbiddenError):
-            _build_gate().require_live_write()
+    with override_settings(aeat_live_tests_enabled="1"), pytest.raises(LiveSubmitForbiddenError):
+        _build_gate().require_live_write()
 
 
 def test_snapshot_reflects_overridden_value() -> None:

@@ -23,7 +23,7 @@ K = TypeVar("K", bound=Hashable)
 
 
 @runtime_checkable
-class ResourceRepository(Protocol, Generic[T, K]):  # noqa: UP046
+class ResourceRepository(Protocol, Generic[T, K]):
     """Typed read-only resource repository protocol."""
 
     def get(self, key: K) -> T:
@@ -39,7 +39,7 @@ class ResourceRepository(Protocol, Generic[T, K]):  # noqa: UP046
         ...
 
 
-class ResourceCacheRepository(Generic[T, K]):  # noqa: UP046
+class ResourceCacheRepository(Generic[T, K]):
     """Default Repository implementation with an Identity Map cache.
 
     Subclasses override :meth:`_load` to read and validate one

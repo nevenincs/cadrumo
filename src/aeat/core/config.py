@@ -23,7 +23,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, f
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
-from .external_constants import DEFAULT_CURRENCY, OutputLanguage
+from .external_constants import DEFAULT_CURRENCY, DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
 
@@ -58,9 +58,9 @@ class SecretStoreBackend(StrEnum):
 # Project root: four levels up from src/aeat/core/config.py
 # (file → core/ → aeat/ → src/ → REPO_ROOT).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"  # noqa: S105 - published dev/test-only value.
+DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
-DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"  # noqa: S105 - env var name, not a secret.
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"
 """Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
 
 
@@ -256,6 +256,14 @@ class Settings(BaseSettings):
             "the whole filed-history or wallet/cartera surface."
         ),
     )
+    aeat_live_iva_cancellation_drain_ms: int = Field(
+        default=250,
+        ge=0,
+        description=(
+            "Drain delay (ms) after a bounded live IVA read surface is cancelled, giving Playwright "
+            "browser tasks time to report cancellation-only errors before the loop handler is restored."
+        ),
+    )
     # ── LLM provider endpoints ────────────────────────────────────────────
     aeat_llm_openai_chat_completions_url: str = Field(
         default="https://api.openai.com/v1/chat/completions",
@@ -419,9 +427,15 @@ class Settings(BaseSettings):
     )
 
     # ── Multilingual i18n ───────────────────────────────────────────────────
-    aeat_output_language: Annotated[OutputLanguage | None, BeforeValidator(_coerce_output_language_setting)] = Field(
-        default=None,
-        description="Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default.",
+    aeat_output_language: Annotated[
+        OutputLanguage | None,
+        BeforeValidator(_coerce_output_language_setting),
+    ] = Field(
+        default=DEFAULT_OUTPUT_LANGUAGE,
+        description=(
+            "Target ISO 639-1 language code for user-facing content. Invalid values coerce to None "
+            "and fall back to the default."
+        ),
     )
     aeat_authoritative_language_aeat_terms: str = Field(
         default="es",
@@ -1014,7 +1028,9 @@ class Settings(BaseSettings):
                 from ._bucket_pointer_io import read_pointer
 
                 pointer = read_pointer(self.aeat_local_storage_root)
-            except Exception:  # BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK: read_pointer raises OSError, json.JSONDecodeError, ValidationError on filesystem/encoding/schema drift; degrade to None for best-effort active-bucket resolution.
+            except Exception:
+                # BROAD-EXCEPT-RATIONALE-POINTER-READ-FALLBACK: read_pointer may raise on
+                # filesystem, encoding, or schema drift; degrade for best-effort active bucket resolution.
                 pointer = None
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()

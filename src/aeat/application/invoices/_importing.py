@@ -89,6 +89,9 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
 def merge_invoice_import(catalogue: InvoiceCatalogue, invoices: Sequence[Invoice]) -> InvoiceImportResult:
     """Merge imported invoices into ``catalogue`` without duplicating IDs.
 
+    Args:
+        catalogue: The :class:`InvoiceCatalogue` to merge the imported invoices into.
+
     Returns an :class:`InvoiceImportResult` with the updated catalogue
     and counts of imported and skipped invoices.
     """

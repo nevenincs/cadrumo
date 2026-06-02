@@ -17,6 +17,7 @@ from ._errors import (
     JustificanteError,
     JustificanteParseError,
     JustificanteVerificationError,
+    PdfModeloImportError,
 )
 from ._repository import (
     JustificanteRepository,
@@ -31,4 +32,5 @@ __all__ = [
     "JustificanteParserBackend",
     "JustificanteRepository",
     "JustificanteVerificationError",
+    "PdfModeloImportError",
 ]

@@ -10,7 +10,7 @@ to the correct revision.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Mapping
 from contextlib import asynccontextmanager, nullcontext
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -19,8 +19,6 @@ from pathlib import Path
 from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
-
-from ...core.time import now
 
 from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import (
@@ -113,13 +111,14 @@ from ...core.errors import AeatError as _AeatError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
+from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaObservation as _CasillaObservation,
 )
 from ...domain.calculations.registry import (
     RegistryModeloObservation as _RegistryModeloObservation,
 )
-from ...domain.calculations.registry._authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
+from ...domain.calculations.registry import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -356,6 +355,7 @@ class LiveIvaReadOutcome(BaseModel):
     outcome_mode: LiveIvaAcquisitionFailureMode = LiveIvaAcquisitionFailureMode.UNKNOWN
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
+    failure_context: dict[str, object] | None = None
     captured_count: int | None = None
     calculation_observation_count: int | None = None
 
@@ -423,6 +423,7 @@ class IvaRemoteStateAcquisitionSurfaceManifest(BaseModel):
     outcome_mode: LiveIvaAcquisitionFailureMode = LiveIvaAcquisitionFailureMode.UNKNOWN
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
+    failure_context: dict[str, object] | None = None
     captured_count: int | None = None
     calculation_observation_count: int | None = None
     reloaded_history_count: int | None = None
@@ -663,7 +664,7 @@ async def capture_source_filed_data(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
-    """Capture filed observations required by a target filing's registry dependencies and return a :class:`SourceFiledDataCaptureReport`."""
+    """Capture filed observations required by a target filing's registry dependencies."""
     from ...core.resources import resources as _resources
 
     session, settings = await _active_verified_session()
@@ -857,6 +858,7 @@ async def _capture_iva_compensation_history_with_session(
     year_from: int,
     year_to: int,
     output_root: Path,
+    progress_context: dict[str, object] | None = None,
 ) -> IvaCompensationHistoryCaptureReport:
     """Capture filed Modelo 303s using an already-acquired AEAT session."""
     store = _FiledDeclaracionObservationStore(output_root)
@@ -874,8 +876,25 @@ async def _capture_iva_compensation_history_with_session(
         ) as register,
     ):
         for year in range(year_to, year_from - 1, -1):
+            if progress_context is not None:
+                progress_context.update(
+                    {
+                        "phase": "walk_declarations_register",
+                        "modelo": "303",
+                        "ejercicio": year,
+                    }
+                )
             declarations = await register.walk(modelo="303", ejercicio=year)
             for declaration in _latest_declarations_by_period(declarations):
+                if progress_context is not None:
+                    progress_context.update(
+                        {
+                            "phase": "capture_declaration_observation",
+                            "modelo": declaration.modelo,
+                            "ejercicio": declaration.ejercicio,
+                            "period": declaration.period,
+                        }
+                    )
                 observation = await register.capture_observation(
                     declaration,
                     artefact_sink=store.persist_artefact,
@@ -1256,8 +1275,6 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     in an :class:`ExpedientesCapture`, and persists through
     :class:`ExpedientesService` against the active bucket.
     """
-    from datetime import UTC, datetime
-
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
     session, settings = await _active_verified_session()
@@ -1349,8 +1366,17 @@ async def _capture_iva_compensation_wallet_with_session(
     target_period: str,
     taxpayer_nif: str | None = None,
     output_root: Path | None = None,
+    progress_context: dict[str, object] | None = None,
 ) -> IvaWalletCaptureReport:
     """Capture and persist the wallet with an already-acquired AEAT session."""
+    if progress_context is not None:
+        progress_context.update(
+            {
+                "phase": "fetch_iva_compensation_wallet",
+                "target_year": target_year,
+                "target_period": target_period,
+            }
+        )
     observation: _IvaCompensationWalletObservation = await _fetch_iva_compensation_wallet(
         session,
         target_year=target_year,
@@ -1399,14 +1425,17 @@ async def _capture_iva_remote_state_for_active_storage(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Run the combined read while the profile bucket session is active."""
-    async with _suppress_live_iva_playwright_cancellation_noise():
+    settings = _load_settings()
+    async with _suppress_live_iva_playwright_cancellation_noise(
+        drain_ms=settings.aeat_live_iva_cancellation_drain_ms,
+        restore_on_exit=False,
+    ):
         if year_from > year_to:
             raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
-            translated_message="live.errors.year_range_invalid",
-        )
+                message="from-year must be less than or equal to to-year",
+                translated_message="live.errors.year_range_invalid",
+            )
 
-        settings = _load_settings()
         _AeatAccessGate(settings).require_live_read()
         store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
         filed_history: IvaCompensationHistoryCaptureReport | None = None
@@ -1440,6 +1469,12 @@ async def _capture_iva_remote_state_for_active_storage(
         session = auth_result.session
 
         try:
+            filed_progress: dict[str, object] = {
+                "phase": "not_started",
+                "modelo": "303",
+                "year_from": year_from,
+                "year_to": year_to,
+            }
             filed_history = await _await_live_iva_surface(
                 _capture_iva_compensation_history_with_session(
                     session,
@@ -1447,14 +1482,21 @@ async def _capture_iva_remote_state_for_active_storage(
                     year_from=year_from,
                     year_to=year_to,
                     output_root=store_root / "filed-history",
+                    progress_context=filed_progress,
                 ),
                 surface=LiveIvaReadSurface.FILED_HISTORY,
                 timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+                progress_context=filed_progress,
             )
         except (TimeoutError, _AeatError, OSError) as exc:
             filed_error = exc
 
         try:
+            wallet_progress: dict[str, object] = {
+                "phase": "not_started",
+                "target_year": target_year,
+                "target_period": target_period,
+            }
             wallet = await _await_live_iva_surface(
                 _capture_iva_compensation_wallet_with_session(
                     session,
@@ -1463,9 +1505,11 @@ async def _capture_iva_remote_state_for_active_storage(
                     target_period=target_period,
                     taxpayer_nif=taxpayer_nif,
                     output_root=store_root / "wallet",
+                    progress_context=wallet_progress,
                 ),
                 surface=LiveIvaReadSurface.WALLET_CARTERA,
                 timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+                progress_context=wallet_progress,
             )
         except (TimeoutError, _AeatError, OSError) as exc:
             wallet_error = exc
@@ -1491,6 +1535,7 @@ async def _await_live_iva_surface[T](
     *,
     surface: LiveIvaReadSurface,
     timeout_ms: int,
+    progress_context: Mapping[str, object] | None = None,
 ) -> T:
     """Bound one combined live IVA read surface with a typed timeout."""
     try:
@@ -1500,12 +1545,17 @@ async def _await_live_iva_surface[T](
             f"live IVA {surface.value} read did not complete within {timeout_ms} ms",
             surface=surface.value,
             timeout_ms=timeout_ms,
+            progress_context=progress_context,
         ) from exc
 
 
 @asynccontextmanager
-async def _suppress_live_iva_playwright_cancellation_noise():
-    """Suppress Playwright TargetClosed loop noise caused by bounded live-surface cancellation."""
+async def _suppress_live_iva_playwright_cancellation_noise(
+    *,
+    drain_ms: int = 0,
+    restore_on_exit: bool = True,
+):
+    """Suppress Playwright loop noise caused by bounded live-surface cancellation."""
     loop = asyncio.get_running_loop()
     previous_handler = loop.get_exception_handler()
 
@@ -1520,19 +1570,22 @@ async def _suppress_live_iva_playwright_cancellation_noise():
     loop.set_exception_handler(handler)
     try:
         yield
-        await asyncio.sleep(0)
     finally:
-        loop.set_exception_handler(previous_handler)
+        if drain_ms > 0:
+            await asyncio.sleep(drain_ms / 1000)
+        if restore_on_exit:
+            loop.set_exception_handler(previous_handler)
 
 
 def _is_playwright_target_closed_context(context: dict[str, object]) -> bool:
     exception = context.get("exception")
     if exception is None:
         return False
-    return (
-        type(exception).__name__ == "TargetClosedError"
-        and "Target page, context or browser has been closed" in str(exception)
-    )
+    name = type(exception).__name__
+    message = str(exception)
+    if name == "TargetClosedError" and "Target page, context or browser has been closed" in message:
+        return True
+    return name == "Error" and "net::ERR_ABORTED" in message and "frame was detached" in message
 
 
 def build_iva_remote_state_acquisition_report(
@@ -1603,7 +1656,7 @@ def load_iva_remote_state_acquisition_manifest(
     *,
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest | None:
-    """Load one encrypted live IVA acquisition manifest by id and return an :class:`IvaRemoteStateAcquisitionManifest`."""
+    """Load one encrypted live IVA acquisition manifest by id."""
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return repo.load(acquisition_id)
 
@@ -1666,6 +1719,7 @@ def _iva_remote_state_surface_manifest(
             outcome_mode=outcome.outcome_mode,
             failure_mode=outcome.failure_mode,
             failure_type=outcome.failure_type,
+            failure_context=outcome.failure_context,
             captured_count=outcome.captured_count,
             calculation_observation_count=outcome.calculation_observation_count,
             reloaded_history_count=filed.reloaded_history_count if filed is not None else None,
@@ -1677,6 +1731,7 @@ def _iva_remote_state_surface_manifest(
         outcome_mode=outcome.outcome_mode,
         failure_mode=outcome.failure_mode,
         failure_type=outcome.failure_type,
+        failure_context=outcome.failure_context,
         captured_count=outcome.captured_count,
         calculation_observation_count=outcome.calculation_observation_count,
         wallet_row_count=wallet.row_count if wallet is not None else None,
@@ -1710,6 +1765,7 @@ def _surface_outcome(
             outcome_mode=failure_mode,
             failure_mode=failure_mode,
             failure_type=error.__class__.__name__,
+            failure_context=_redacted_failure_context(error),
         )
     if report is None:
         return LiveIvaReadOutcome(
@@ -1726,6 +1782,66 @@ def _surface_outcome(
         captured_count=getattr(report, "captured_count", None),
         calculation_observation_count=getattr(report, "calculation_observation_count", None),
     )
+
+
+def _redacted_failure_context(error: BaseException) -> dict[str, object] | None:
+    context = getattr(error, "context", None)
+    if not isinstance(context, Mapping):
+        return None
+    redacted = _redacted_context_mapping(context)
+    return redacted or None
+
+
+def _redacted_context_mapping(context: Mapping[object, object]) -> dict[str, object]:
+    redacted: dict[str, object] = {}
+    for raw_key, raw_value in context.items():
+        key = str(raw_key)
+        if not key or key.startswith("_"):
+            continue
+        value = _redacted_context_value(raw_value, key=key)
+        if value is not None:
+            redacted[key] = value
+    return redacted
+
+
+def _redacted_context_value(value: object, *, key: str) -> object | None:
+    if isinstance(value, bool | int | float):
+        return value
+    if isinstance(value, str):
+        text = _redact_url_like_context_value(value, key=key)
+        return text if text else None
+    if isinstance(value, Mapping):
+        return _redacted_context_mapping(value)
+    if isinstance(value, tuple | list):
+        items = tuple(
+            item
+            for item in (_redacted_context_value(entry, key=key) for entry in value[:8])
+            if item is not None
+        )
+        return items
+    return _bounded_context_text(value)
+
+
+def _redact_url_like_context_value(value: str, *, key: str) -> str:
+    text = _bounded_context_text(value)
+    if "url" not in key.casefold():
+        return text
+    from urllib.parse import urlsplit
+
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return ""
+    if not parsed.scheme and not parsed.netloc:
+        return parsed.path
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+def _bounded_context_text(value: object, *, max_length: int = 160) -> str:
+    text = " ".join(str(value).replace("\xa0", " ").split())
+    if len(text) <= max_length:
+        return text
+    return f"{text[: max_length - 1]}…"
 
 
 def _auth_outcome(

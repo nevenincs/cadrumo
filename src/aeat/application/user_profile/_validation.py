@@ -57,6 +57,9 @@ class ProfileValidationService:
     def validate_record(self, record: UserProfileRecord) -> ProfileValidationReport:
         """Validate every fact on a profile against the schema.
 
+        Args:
+            record: The :class:`UserProfileRecord` whose facts are validated.
+
         Returns a :class:`ProfileValidationReport`.
         """
         return self._build_report(record.profile_id, record.facts)

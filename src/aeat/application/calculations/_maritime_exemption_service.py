@@ -41,7 +41,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...domain.calculations.registry._bindings import CasillaObservation
+from ...domain.calculations.registry import CasillaObservation
+from ...domain.renta._errors import RentaValidationError
 from ...domain.renta._maritime_exemption import (
     MaritimeWorkerFacts,
     art_7p_eligible,
@@ -51,7 +52,6 @@ from ...domain.renta._maritime_exemption import (
     guard_da41_inactive,
     rebeca_eligible,
 )
-from ...domain.renta._errors import RentaValidationError
 
 
 class MaritimeExemptionResult(BaseModel):

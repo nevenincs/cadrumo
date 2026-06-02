@@ -16,8 +16,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ....core.time import now as _utc_now
-
 from ....core.config import (
     Settings,
     StorageRouteKind,
@@ -25,6 +23,7 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
+from ....core.time import now as _utc_now
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
 from .master_key._active_session import _active_session
@@ -115,12 +114,19 @@ class StorageRuntime(BaseModel):
         from .sql.engine import get_engine
         from .sql.secure_objects import SecureObjectRepository
 
+        active = _active_session.get()
+        assert active is not None
         settings = Settings(
             aeat_local_storage_root=self.storage_root,
             aeat_active_profile=self.bucket_id,
         )
         engine = get_engine(settings)
-        return SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
+        return SecureObjectRepository(
+            engine=engine,
+            namespace_registry=STORAGE_NAMESPACE_REGISTRY,
+            active_session_bucket_id=active.bucket_id,
+            require_secure_active_session=True,
+        )
 
     def _require_current_active_session(self) -> None:
         """Refuse repository construction when the live session drifted."""

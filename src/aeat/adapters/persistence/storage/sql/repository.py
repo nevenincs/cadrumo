@@ -165,7 +165,7 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
 
     def list_all(self) -> list[PortalRecord]:
         """Return every :class:`PortalRecord` in the table, ordered by surrogate id."""
-        rows = self._session.execute(select(_orm.PortalRow).order_by(_orm.PortalRow.id)).scalars().all()
+        rows = self._session.execute(select(_orm.PortalOrmRow).order_by(_orm.PortalOrmRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> PortalRecord:
@@ -180,24 +180,24 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
         Raises:
             RepositoryError: When no row matches.
         """
-        row = self._session.get(_orm.PortalRow, record_id)
+        row = self._session.get(_orm.PortalOrmRow, record_id)
         if row is None:
             raise RepositoryError(f"portal id={record_id} not found")
         return self._to_record(row)
 
     def upsert(self, record: PortalRecord) -> PortalRecord:
         """Insert or update ``record`` and return the persisted :class:`PortalRecord`."""
-        row: _orm.PortalRow | None = None
+        row: _orm.PortalOrmRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.PortalRow, record.id)
+            row = self._session.get(_orm.PortalOrmRow, record.id)
             if row is None:
                 raise RepositoryError(f"portal id={record.id} not found for update")
         else:
             row = self._session.execute(
-                select(_orm.PortalRow).where(_orm.PortalRow.identifier == record.identifier)
+                select(_orm.PortalOrmRow).where(_orm.PortalOrmRow.identifier == record.identifier)
             ).scalar_one_or_none()
         if row is None:
-            row = _orm.PortalRow(
+            row = _orm.PortalOrmRow(
                 identifier=record.identifier,
                 base_url=record.base_url,
                 auth_method=record.auth_method.value,
@@ -216,14 +216,14 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        row = self._session.get(_orm.PortalRow, record_id)
+        row = self._session.get(_orm.PortalOrmRow, record_id)
         if row is None:
             raise RepositoryError(f"portal id={record_id} not found")
         self._session.delete(row)
         _flush_or_wrap(self._session, "portal")
 
     @staticmethod
-    def _to_record(row: _orm.PortalRow) -> PortalRecord:
+    def _to_record(row: _orm.PortalOrmRow) -> PortalRecord:
         try:
             auth_method = PortalAuthMethod(row.auth_method)
         except ValueError as exc:

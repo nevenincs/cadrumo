@@ -68,7 +68,7 @@ def _run_aeat(
     env = _env()
     if extra_env:
         env.update(extra_env)
-    return subprocess.run(  # noqa: S603 - trusted interpreter and literal test harness.
+    return subprocess.run(
         [sys.executable, "-c", _CLI_HARNESS, str(storage_root), *args],
         cwd=Path(__file__).parents[3],
         env=env,

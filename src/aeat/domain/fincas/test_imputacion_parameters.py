@@ -84,7 +84,7 @@ def test_legal_section_carries_lirpf_art_85_citation_with_required_text() -> Non
 
 def test_lirpf_art_85_parameter_record_is_frozen() -> None:
     with pytest.raises(ValidationError):
-        setattr(load_imputacion_parameters(), "recent_revision_rate", Decimal("0.05"))  # noqa: B010
+        setattr(load_imputacion_parameters(), "recent_revision_rate", Decimal("0.05"))
 
 
 def test_lirpf_art_85_corpus_excerpt_is_present() -> None:

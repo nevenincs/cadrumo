@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._errors import RegistryLoadError
 from ._loader import (
     discover_modelo_sources,
@@ -365,6 +364,97 @@ order = 0
 encoding = "latin-1"
 line_ending = "crlf"
 required = true
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_merges_completeness_manifest_casilla_fragments(tmp_path: Path) -> None:
+    """Large calculation-completeness manifests can split their casilla list."""
+
+    single_file = tmp_path / "999.toml"
+    single_file.write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025".completeness_manifest]
+source_ref = "aeat-manual"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".completeness_manifest.casillas]]
+number = "0001"
+
+[[revisions."2025".completeness_manifest.casillas]]
+number = "0002"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    expected = load_modelo_file(single_file)
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "completeness").mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Fragment test"
+official_name = "Fragment test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "revision.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "completeness" / "manifest.toml").write_text(
+        """
+[revisions."2025".completeness_manifest]
+source_ref = "aeat-manual"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "completeness" / "casillas-0001.toml").write_text(
+        """
+[[revisions."2025".completeness_manifest.casillas]]
+number = "0001"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "completeness" / "casillas-0002.toml").write_text(
+        """
+[[revisions."2025".completeness_manifest.casillas]]
+number = "0002"
 """.lstrip(),
         encoding="utf-8",
     )

@@ -294,7 +294,11 @@ def aggregate_iva_ledger_candidate_bindings(
     *,
     period: Period | str,
 ) -> dict[str, Decimal]:
-    """Validate pre-classified candidates and resolve registry bindings."""
+    """Validate pre-classified candidates and resolve registry bindings.
+
+    Args:
+        revision: The :class:`ModeloRevision` used to resolve binding values.
+    """
     aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
     if aggregation.issues:
         first = aggregation.issues[0]
@@ -326,7 +330,12 @@ def aggregate_iva_ledger_observations(
     *,
     period: Period | str,
 ) -> IvaLedgerAggregation:
-    """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`."""
+    """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`.
+
+    Args:
+        transactions: The :class:`TransactionCatalogue` supplying active ledger entries.
+        period: Filing period; either a :class:`Period` instance or a period code string.
+    """
     resolved_period = period if isinstance(period, Period) else Period.model_validate(period)
     observations: list[IvaLedgerObservation] = []
     prorrata_references: list[ProrrataLedgerReference] = []

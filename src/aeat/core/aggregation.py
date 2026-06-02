@@ -46,3 +46,68 @@ class RowSetGroupingKind(StrEnum):
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
     REFUND = "refund"
+
+
+class RetencionScheme(StrEnum):
+    """Closed catalogue of retenciones schemes across the retenciones family.
+
+    Each scheme maps to one of the casillas (or grouped casillas) on a
+    retenciones modelo form. The mapping from scheme to modelo lives in the
+    per-modelo entry-point functions; this enum is the union. Declared in
+    :mod:`aeat.core` as a closed value set per the architecture contract.
+    """
+
+    # Modelo 111 schemes (quarterly retenciones IRPF on labor + activities)
+    WORK_INCOME = "rendimientos_trabajo"  # clave A
+    ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
+    PROFESSIONAL = "actividades_profesionales"  # clave H (subset of G)
+    PRIZE = "premios"  # clave I (lottery, prize)
+    # Modelo 115 schemes (urban rental withholding)
+    URBAN_RENTAL = "arrendamiento_urbano"  # locales de negocio
+    # Modelo 123 schemes (capital mobiliario, dividends, interest)
+    CAPITAL_INTEREST = "intereses"  # clave I (interest income)
+    CAPITAL_DIVIDEND = "dividendos"  # clave A (dividend income)
+    CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
+
+
+class OperationKind347(StrEnum):
+    """Modelo 347 operation kinds (clave de operación).
+
+    Source: AEAT Modelo 347 instrucciones. Declared in :mod:`aeat.core` as a
+    closed value set per the architecture contract.
+    """
+
+    DELIVERY = "entregas_y_prestaciones"  # clave A
+    ACQUISITION = "adquisiciones_y_recepciones"  # clave B
+    INSURANCE = "operaciones_seguros"  # clave C
+    RENTAL = "arrendamientos_locales"  # clave D
+    SUBSIDY = "subvenciones_y_ayudas"  # clave E
+
+
+class OperationKind349(StrEnum):
+    """Modelo 349 intracomunitarias operation kinds.
+
+    Source: AEAT Modelo 349 instrucciones. The clave maps from the underlying
+    directionality (entrega/adquisición) and operation type (bienes/servicios).
+    """
+
+    INTRA_DELIVERY = "entrega_intracomunitaria_bienes"  # clave E
+    INTRA_ACQUISITION = "adquisicion_intracomunitaria_bienes"  # clave A
+    INTRA_SERVICE_OUT = "prestacion_servicios_intracom"  # clave S
+    INTRA_SERVICE_IN = "adquisicion_servicios_intracom"  # clave I
+    TRIANGULAR = "triangular"  # clave T
+
+
+class ForeignAssetClass(StrEnum):
+    """Modelo 720 asset classes (clave de tipo de bien).
+
+    Source: AEAT Modelo 720 instrucciones. Each class is declared separately;
+    the declarability gate (50,000 EUR per class) is applied after the
+    aggregator runs. Declared in :mod:`aeat.core` as a closed value set.
+    """
+
+    ACCOUNT = "cuenta_entidad_financiera"  # clave C
+    SECURITY = "valor_seguro_renta"  # clave V
+    REAL_ESTATE = "inmueble_extranjero"  # clave I
+    INSURANCE = "seguro_renta_temporal_vitalicia"  # clave S
+    VIRTUAL_CURRENCY = "moneda_virtual"  # clave M

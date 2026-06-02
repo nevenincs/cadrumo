@@ -120,6 +120,17 @@ def compare_taxation_modes(
 ) -> TaxationComparisonResult:
     """Run the registry engine for conjunta and individual, diff the results, and return a :class:`TaxationComparisonResult`.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose revision is executed for both
+            conjunta and individual taxation modes.
+        inputs: Casilla input values shared across both runs.
+        binding_values: Pre-resolved Decimal binding values; must include all
+            profile-sourced bindings except ``declaration_type``.
+        enum_binding_values: Pre-resolved string enum binding values.
+        relation_values: Optional cross-revision aggregation values.
+        date_binding_values: Optional date-typed binding values.
+        date_context: Optional date context for temporal casilla resolution.
+
     The caller must supply all profile-sourced bindings (CCAA, birth
     date, etc.) that the revision needs, *except* ``declaration_type``:
     this function injects ``declaration_type=2`` for the conjunta run

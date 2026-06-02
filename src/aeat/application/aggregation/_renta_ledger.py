@@ -199,6 +199,12 @@ def aggregate_renta_ledger_expenses(
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
+    Args:
+        transactions: The :class:`TransactionCatalogue` supplying active ledger entries.
+        invoices: The :class:`InvoiceCatalogue` used for invoice-linked deductibility checks.
+        bucket_id: Activity bucket identifier for scoping the aggregation.
+        period: Filing period; either a :class:`Period` instance or a period code string.
+
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
     """

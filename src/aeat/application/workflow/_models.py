@@ -163,8 +163,12 @@ class ProfileBucketPointer(BaseModel):
 
 
 def declaration_key(modelo: str, period: str) -> str:
-    """Return the canonical state-store key for a ``(modelo, period)`` pair."""
-    return f"{modelo.strip()}:{period.strip()}"
+    """Return the canonical state-store key for a ``(modelo, period)`` pair.
+
+    The period segment is upper-cased so a lowercase token (``2025q1``) and its
+    uppercase form (``2025Q1``) resolve to the same key.
+    """
+    return f"{modelo.strip()}:{period.strip().upper()}"
 
 
 class WorkflowState(BaseModel):
@@ -274,7 +278,13 @@ def active_transaction_catalogue_repository(
     *,
     objects: SecureObjectRepository | None = None,
 ) -> TransactionCatalogueRepository:
-    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket."""
+    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket.
+
+    Args:
+        state: The current workflow state used to resolve the active bucket.
+        objects: Optional :class:`SecureObjectRepository` override passed through
+            to the returned repository.
+    """
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
     from ._errors import NoActiveProfileError
 

@@ -56,6 +56,8 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
 )
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
+_REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
+_COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
 _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
     {
         "casillas",
@@ -112,7 +114,9 @@ def _as_toml_table(value: object) -> dict[str, object] | None:
     key type at this single TOML deserialization boundary.
     """
     if isinstance(value, dict):
-        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE: TOML deserialization erases str-key type after isinstance narrowing; annotation re-attaches the known str key at the boundary.
+        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE: TOML deserialization
+        # erases str-key type after isinstance narrowing; annotation
+        # re-attaches the known str key at the boundary.
         return value  # type: ignore[return-value]
     return None
 
@@ -380,9 +384,60 @@ def _merge_revision_fragment_field(
             )
         merged_revision[key] = _merge_export_layout_fragments(path, existing, value)
         return
+    if key == _REVISION_COMPLETENESS_MANIFEST:
+        existing = merged_revision.get(key)
+        merged_revision[key] = _merge_singleton_table_fragment(
+            path,
+            key,
+            existing,
+            value,
+            append_array_fields=_COMPLETENESS_MANIFEST_APPEND_ARRAYS,
+        )
+        return
     if key in merged_revision:
         raise RegistryLoadError(f"{path}: revision fragment redeclares scalar field {key!r}")
     merged_revision[key] = value
+
+
+def _merge_singleton_table_fragment(
+    path: Path,
+    field_name: str,
+    existing: object | None,
+    incoming: object,
+    *,
+    append_array_fields: frozenset[str],
+) -> dict[str, object]:
+    """Merge a singleton nested TOML table whose selected arrays are appendable."""
+    incoming_table = _as_toml_table(incoming)
+    if incoming_table is None:
+        raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} must be a table")
+    if existing is None:
+        existing_table: dict[str, object] = {}
+    else:
+        existing_table = _as_toml_table(existing)
+        if existing_table is None:
+            raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} conflicts with a non-table field")
+
+    merged = dict(existing_table)
+    for key, value in incoming_table.items():
+        if key in append_array_fields:
+            if not isinstance(value, tuple):
+                raise RegistryLoadError(
+                    f"{path}: revision fragment field {field_name!r}.{key!r} must be an array"
+                )
+            existing_values = merged.get(key, ())
+            if not isinstance(existing_values, tuple):
+                raise RegistryLoadError(
+                    f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with a non-array field"
+                )
+            merged[key] = (*existing_values, *value)
+            continue
+        if key in merged and merged[key] != value:
+            raise RegistryLoadError(
+                f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with another fragment"
+            )
+        merged[key] = value
+    return merged
 
 
 def _merge_export_layout_fragments(
