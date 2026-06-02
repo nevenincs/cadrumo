@@ -56,14 +56,9 @@ def _invoke_test_fn(fn: Callable[..., None]) -> None:
         fn(_build_ast_cache())
     else:
         fn()
-_BROWSER_STAGE = (
-    _SRC_ROOT
-    / "adapters"
-    / "outbound"
-    / "aeat"
-    / "sede"
-    / "_browser_stage.py"
-)
+
+
+_BROWSER_STAGE = _SRC_ROOT / "adapters" / "outbound" / "aeat" / "sede" / "_browser_stage.py"
 _NARROWING_TEST = _SRC_ROOT / "test_except_clause_narrowing.py"
 
 _MARKER_TOKEN = "LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY"
@@ -77,9 +72,7 @@ _MARKER_TOKEN = "LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY"
 def test_s651_logging_rationale_marker_precedes_type_checking_block() -> None:
     """LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY must appear within 3 lines before `if TYPE_CHECKING:`."""
     lines = _BROWSER_STAGE.read_text(encoding="utf-8").splitlines()
-    type_checking_indices = [
-        i for i, line in enumerate(lines) if line.strip().startswith("if TYPE_CHECKING:")
-    ]
+    type_checking_indices = [i for i, line in enumerate(lines) if line.strip().startswith("if TYPE_CHECKING:")]
     assert type_checking_indices, "No `if TYPE_CHECKING:` block found in _browser_stage.py"
 
     # For each TYPE_CHECKING block, check the 3 lines immediately preceding it.
@@ -90,9 +83,7 @@ def test_s651_logging_rationale_marker_precedes_type_checking_block() -> None:
             found = True
             break
 
-    assert found, (
-        f"Expected {_MARKER_TOKEN!r} within 3 lines before `if TYPE_CHECKING:` in _browser_stage.py"
-    )
+    assert found, f"Expected {_MARKER_TOKEN!r} within 3 lines before `if TYPE_CHECKING:` in _browser_stage.py"
 
 
 # ---------------------------------------------------------------------------
