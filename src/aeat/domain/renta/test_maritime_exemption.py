@@ -204,9 +204,7 @@ class TestGuardDa41Inactive:
     def test_does_not_raise_when_not_eligible(self) -> None:
         # Must not raise for any profile that does not meet the DA 41 selector.
         guard_da41_inactive(MaritimeWorkerFacts())
-        guard_da41_inactive(
-            MaritimeWorkerFacts(worker_class="trabajador_del_mar", tuna_fleet=False)
-        )
+        guard_da41_inactive(MaritimeWorkerFacts(worker_class="trabajador_del_mar", tuna_fleet=False))
 
     def test_error_carries_legal_context(self) -> None:
         facts = MaritimeWorkerFacts(
