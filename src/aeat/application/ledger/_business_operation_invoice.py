@@ -349,6 +349,7 @@ class _BusinessOperationInvoiceService:
         # honours the override and falls back to a fresh `Settings()` when
         # none is active, so production resolution is unchanged.
         from ...core.config import load_settings as _load_settings
+
         self._settings = settings or _load_settings()
         self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
