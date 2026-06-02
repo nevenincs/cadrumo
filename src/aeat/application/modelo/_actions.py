@@ -2783,6 +2783,14 @@ def _evaluate_advisory_predicate_fires(
     - ``advisory_when_ratio_ge(["num_id", "den_id", "threshold"])`` — fires when
       num/den >= threshold and den > 0. Art. 110.3.b RIRPF: exempt from M130
       when retenciones_acumuladas / rendimientos_brutos >= 0.70.
+    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — fires when the
+      material implication is violated, i.e. the antecedent is strictly positive
+      but the consequent is zero. As an ADVISORY this surfaces a non-blocking
+      operator alert for the same shape the BLOCKING_RULE variant refuses: e.g.
+      a positive resultado contable with an undetermined (zero) base imponible,
+      a likely silent under-declaration that a positive-result entity should
+      confirm (legitimate zero-base via BIN compensation remains permissible,
+      hence advisory rather than blocking).
     """
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
@@ -2799,6 +2807,14 @@ def _evaluate_advisory_predicate_fires(
         except _decimal.InvalidOperation:
             return False
         return (num / den) >= threshold
+    m = _PREDICATE_IMPLIES_NONZERO.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return False
+        antecedent = casilla_values.get(ids[0], Decimal(0))
+        consequent = casilla_values.get(ids[1], Decimal(0))
+        return antecedent > Decimal(0) and consequent == Decimal(0)
     return False
 
 

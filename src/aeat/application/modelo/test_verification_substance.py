@@ -310,6 +310,40 @@ def test_advisory_when_ratio_ge_does_not_fire_when_denominator_zero() -> None:
     ) is False
 
 
+def test_advisory_implies_nonzero_fires_on_positive_result_zero_base() -> None:
+    """implies_nonzero advisory fires when antecedent positive but consequent zero.
+
+    The M200 silent under-declaration: resultado contable (00501) positive but
+    base imponible (DP200014:00552) undetermined (zero). The advisory must fire
+    so the operator is alerted before a human files. Mirrors the BLOCKING_RULE
+    implies_nonzero violation case, surfaced non-blockingly.
+    """
+    values: dict[str, Decimal] = {"00501": Decimal("140000"), "DP200014:00552": Decimal("0")}
+    assert _evaluate_advisory_predicate_fires(
+        'implies_nonzero(["00501", "DP200014:00552"])', values
+    ) is True
+
+
+def test_advisory_implies_nonzero_does_not_fire_on_non_positive_antecedent() -> None:
+    """No false positive on losses: a non-positive resultado contable holds trivially.
+
+    A loss/zero-result entity (00501 <= 0) legitimately has a zero base; the
+    advisory must NOT fire (it would otherwise be noise on every loss filing).
+    """
+    loss: dict[str, Decimal] = {"00501": Decimal("-5000"), "DP200014:00552": Decimal("0")}
+    zero: dict[str, Decimal] = {"00501": Decimal("0"), "DP200014:00552": Decimal("0")}
+    assert _evaluate_advisory_predicate_fires('implies_nonzero(["00501", "DP200014:00552"])', loss) is False
+    assert _evaluate_advisory_predicate_fires('implies_nonzero(["00501", "DP200014:00552"])', zero) is False
+
+
+def test_advisory_implies_nonzero_does_not_fire_when_consequent_nonzero() -> None:
+    """A determined base (consequent non-zero) satisfies the implication; no advisory."""
+    values: dict[str, Decimal] = {"00501": Decimal("140000"), "DP200014:00552": Decimal("140000")}
+    assert _evaluate_advisory_predicate_fires(
+        'implies_nonzero(["00501", "DP200014:00552"])', values
+    ) is False
+
+
 def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
     """Art. 110.3.b ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
 
