@@ -19,9 +19,9 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
-from ...core.errors import AeatError
 from ...core.time import now
 from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -140,10 +140,6 @@ class IvaCompensationReconciliationReport(BaseModel):
 
     decision: IvaCompensationReconciliationDecision
     prefill_report: BindingPrefillReport
-
-
-class IvaCompensationReconciliationInputError(AeatError, ValueError):
-    """Raised when wallet evidence does not match the target Modelo 303 snapshot."""
 
 
 class IvaWalletDecisionSourceResolver:
@@ -636,7 +632,6 @@ __all__ = [
     "IvaCompensationAuthoritySource",
     "IvaCompensationOverride",
     "IvaCompensationReconciliationDecision",
-    "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
     "IvaWalletDecisionSourceResolver",
     "reconcile_iva_compensation_wallet",

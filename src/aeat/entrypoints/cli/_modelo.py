@@ -5704,9 +5704,9 @@ def iva_wallet_seed_cmd(
     from decimal import Decimal, InvalidOperation
 
     from ...application.calculations._iva_compensation_history import (
-        IvaCompensationSeedConflictError,
         seed_iva_compensation_period,
     )
+    from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 
     if not confirm:
         raise typer.BadParameter(

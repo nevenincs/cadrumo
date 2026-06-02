@@ -16,8 +16,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import (
     IVA_COMPENSATION_HISTORY_NAMESPACE,
     SensitivityClass,
@@ -25,7 +23,13 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.time import now
+from ...domain.iva_compensation._errors import (
+    IvaCompensationCarryForwardPolicyError,
+    IvaCompensationDecimalParseError,
+    IvaCompensationSeedConflictError,
+    IvaCompensationYearRangeError,
+)
 from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol
 
@@ -88,30 +92,6 @@ class IvaCompensationCarryForwardReport(BaseModel):
     as_of_year: int = Field(ge=2000, le=2099)
     lots: tuple[IvaCompensationCarryForwardLot, ...]
     unallocated_applied_amount: Decimal = Field(ge=_ZERO)
-
-class IvaCompensationCarryForwardPolicyError(AeatError, ValueError):
-    """Raised when IVA compensation carry-forward lots violate policy."""
-
-class IvaCompensationSeedConflictError(AeatError, ValueError):
-    """Raised when a seed is attempted for a period that already has a stored state."""
-
-class IvaCompensationYearRangeError(AeatError, ValueError):
-    """Raised when a filing_year or as_of_year falls outside the supported range [2000, 2099].
-
-    Replaces bare :exc:`ValueError` at the year-range guards in
-    :func:`iva_compensation_period_key` and
-    :func:`build_iva_compensation_carry_forward_report`.  Inherits from
-    :exc:`ValueError` to preserve compatibility with any existing ``except
-    ValueError`` guard at the call site.
-    """
-
-class IvaCompensationDecimalParseError(AeatError, ValueError):
-    """Raised when a casilla value cannot be coerced to :class:`~decimal.Decimal`.
-
-    Replaces the bare :exc:`ValueError` re-raised from :exc:`InvalidOperation`
-    inside :func:`_decimal_casilla_values`.  Inherits from :exc:`ValueError` to
-    preserve compatibility and chains the original :exc:`InvalidOperation` cause.
-    """
 
 def iva_compensation_period_key(filing_year: int, period: str) -> str:
     """Return the latest-state key for one Modelo 303 period."""
@@ -377,12 +357,10 @@ def _expiry_review_state(
 
 __all__ = [
     "IvaCompensationCarryForwardLot",
-    "IvaCompensationCarryForwardPolicyError",
     "IvaCompensationCarryForwardReport",
     "IvaCompensationExpiryReviewState",
     "IvaCompensationHistoryRepository",
     "IvaCompensationPeriodState",
-    "IvaCompensationSeedConflictError",
     "build_iva_compensation_carry_forward_report",
     "enforce_iva_compensation_four_year_window",
     "iva_compensation_period_key",
