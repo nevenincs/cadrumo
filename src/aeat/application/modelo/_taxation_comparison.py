@@ -84,9 +84,7 @@ class TaxationComparisonResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _casilla_by_semantic_role(
-    snapshot: RegistrySnapshot, role: str
-) -> str | None:
+def _casilla_by_semantic_role(snapshot: RegistrySnapshot, role: str) -> str | None:
     """Return the casilla id with ``semantic_role == role``, or ``None``."""
     for casilla in snapshot.revision.casillas:
         if casilla.semantic_role == role:
@@ -118,7 +116,9 @@ def compare_taxation_modes(
     date_binding_values: Mapping[str, date] | None = None,
     date_context: Mapping[str, date] | None = None,
 ) -> TaxationComparisonResult:
-    """Run the registry engine for conjunta and individual, diff the results, and return a :class:`TaxationComparisonResult`.
+    """Run the registry engine for conjunta and individual, then diff the results.
+
+    Returns a :class:`TaxationComparisonResult`.
 
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision is executed for both
@@ -201,10 +201,7 @@ def compare_taxation_modes(
         )
     else:
         recommendation = TaxationRecommendation.INDIFFERENT
-        reason = (
-            f"difference is {delta:.2f} € (below the €1 materiality threshold); "
-            "either filing mode is acceptable"
-        )
+        reason = f"difference is {delta:.2f} € (below the €1 materiality threshold); either filing mode is acceptable"
 
     return TaxationComparisonResult(
         filing_year=snapshot.filing_year,
@@ -265,10 +262,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"work unit {work_unit_id!r} not found; "
-            "check 'aeat app modelo work list'"
-        )
+        raise WorkUnitNotFoundError(f"work unit {work_unit_id!r} not found; check 'aeat app modelo work list'")
 
     try:
         authority = _authority_via_resources()
