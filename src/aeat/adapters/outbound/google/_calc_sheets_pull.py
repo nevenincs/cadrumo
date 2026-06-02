@@ -42,14 +42,10 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 if TYPE_CHECKING:
     from googleapiclient.discovery import Resource as _GoogleResource
 
-# A single batch-get value-range entry from the Sheets API.
-# Shape: {"range": str, "values": list[list[object]]}
-_ValueRange = dict[str, Any]
-
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....application.storage.calc_sheets import collect_row_sets
-from ....application.storage.calc_sheets._engine import _registry_sha
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....application.storage.calc_sheets import collect_row_sets, registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
 from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata, SheetExportPlan
 from ....core.decimal import coerce_decimal
@@ -75,7 +71,9 @@ from ._api import execute_request
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
 
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+# A single batch-get value-range entry from the Sheets API.
+# Shape: {"range": str, "values": list[list[object]]}
+_ValueRange = dict[str, Any]
 
 
 class OperatorEdit(BaseModel):
@@ -339,12 +337,13 @@ def _classify_metadata_match(
         and metadata.revision_id == snapshot.revision.id
         and metadata.filing_year == snapshot.filing_year
         and metadata.period == snapshot.period
-        and metadata.registry_sha == _registry_sha(snapshot)
+        and metadata.registry_sha == registry_sha(snapshot)
     )
     return (MetadataMatchState.MATCHES if matches else MetadataMatchState.STALE), metadata
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
+# object; no stub type available in google-api-python-client.
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if raw is None or raw == "":
         return None
@@ -661,7 +660,8 @@ def _read_row_set_edits(
     return tuple(edits), cells_read
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
+# object; no stub type available in google-api-python-client.
 def _row_set_block_range(row_set: Any) -> str:
     """Build the A1 range covering the 50-row data block of one row-set."""
     last_column = max(col.header_address.column for col in row_set.columns)
@@ -691,7 +691,8 @@ def _batch_get_values_for_row_sets(
     return response.get("valueRanges", []) or []
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
+# object; no stub type available in google-api-python-client.
 def _decode_row_set_block(
     rows: list[list[object]],
     row_set: Any,
@@ -715,7 +716,8 @@ def _decode_row_set_block(
     return tuple(cells), cells_in_block
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
+# object; no stub type available in google-api-python-client.
 def _decode_row_set_cell(
     raw: object,
     col_index: int,
@@ -895,8 +897,7 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
     if pull.metadata_match is MetadataMatchState.MATCHES:
         return
     raise OutboundStorageConflictError(
-        f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
-        f"does not bind to the supplied snapshot",
+        f"refusing to compute: workbook metadata_match={pull.metadata_match!r} does not bind to the supplied snapshot",
         context={
             "spreadsheet_id": pull.spreadsheet_id,
             "metadata_match": pull.metadata_match,
@@ -961,9 +962,7 @@ def _collect_binding_values(
             if text is not None:
                 enum_binding_values[binding.id] = text
         else:
-            binding_values[binding.id] = _coerce_edit_value_to_decimal(
-                edit.value if edit is not None else None
-            )
+            binding_values[binding.id] = _coerce_edit_value_to_decimal(edit.value if edit is not None else None)
     return binding_values, enum_binding_values
 
 

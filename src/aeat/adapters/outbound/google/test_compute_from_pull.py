@@ -44,7 +44,7 @@ def _modelo_130_snapshot():
 def _matching_metadata(snapshot) -> PullMetadata:
     """Build a PullMetadata that matches the snapshot's registry-SHA stamp."""
 
-    from ....application.storage.calc_sheets._engine import _registry_sha
+    from ....application.storage.calc_sheets import registry_sha
 
     return PullMetadata(
         modelo_id=snapshot.modelo.id,
@@ -52,7 +52,7 @@ def _matching_metadata(snapshot) -> PullMetadata:
         filing_year=snapshot.filing_year,
         period=snapshot.period,
         engine_version="calc-sheets/0.1.0",
-        registry_sha=_registry_sha(snapshot),
+        registry_sha=registry_sha(snapshot),
     )
 
 
@@ -120,7 +120,7 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match="metadata_match=<MetadataMatchState.STALE"):
+    with pytest.raises(OutboundStorageConflictError, match=r"metadata_match=<MetadataMatchState\.STALE"):
         compute_from_pull(snapshot, pull)
 
 
@@ -136,7 +136,7 @@ def test_compute_from_pull_refuses_missing_metadata() -> None:
         cells_read=0,
     )
 
-    with pytest.raises(OutboundStorageConflictError, match="metadata_match=<MetadataMatchState.MISSING"):
+    with pytest.raises(OutboundStorageConflictError, match=r"metadata_match=<MetadataMatchState\.MISSING"):
         compute_from_pull(snapshot, pull)
 
 

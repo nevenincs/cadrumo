@@ -21,7 +21,7 @@ Operator-facing CLI surface lives under
 domain and application logic only.
 """
 
-from ._engine import build_export_plan, collect_row_sets
+from ._engine import build_export_plan, collect_row_sets, registry_sha
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._records import (
     OperatorInput,
@@ -72,5 +72,6 @@ __all__ = [
     "build_export_plan",
     "collect_row_sets",
     "plan_layout",
+    "registry_sha",
     "translate_formula",
 ]
