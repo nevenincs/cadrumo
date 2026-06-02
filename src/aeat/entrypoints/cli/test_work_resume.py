@@ -25,7 +25,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()

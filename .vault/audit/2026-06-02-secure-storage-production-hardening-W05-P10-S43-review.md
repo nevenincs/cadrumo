@@ -21,7 +21,7 @@ Resolution: resolved on re-review. `inspect_remote_mirror_download` now reads bo
 
 `_compare_manifest_objects` marks a stale mirror only when `remote_entry.storage_revision_id == local_entry.previous_storage_revision_id`. That detects the immediate predecessor case covered by the current test, but a mirror that last synced at revision A while local storage has advanced through B to C is still stale and is instead reported as `REVISION_CONFLICT` because the local manifest retains only C's immediate previous revision B. This blurs the required stale-mirror versus conflict distinction and can send a recoverable catch-up condition down the conflict path. Use revision timestamps and manifest watermarks, or persist enough lineage metadata, to classify older remote revisions as stale when they are behind the local object timeline rather than divergent. Add a real repository test that saves the same secure object at least three times and compares the first manifest with the latest manifest.
 
-Resolution: resolved for the reported stale-mirror gap on re-review. `_compare_manifest_objects` now delegates stale detection to `_is_stale_remote_entry`, which preserves the immediate-predecessor check and also treats an older remote `revision_written_at` as stale. `test_remote_mirror_comparison_detects_older_stale_remote_revision` covers a real three-save repository sequence where the first manifest is compared against the latest manifest.
+Resolution: resolved after S440. Secure-object rows now preserve `revision_ancestor_ids`; raw rows expose that ancestry without decrypting payloads; remote mirror manifests carry revision ancestry; and `_is_stale_remote_entry` treats a remote revision as stale only when its revision id is the local immediate predecessor or appears in the local ancestry tuple. `test_remote_mirror_comparison_detects_older_stale_remote_revision` covers a real three-save repository sequence where the first manifest is compared against the latest manifest.
 
 ## S43-003 | LOW | Mirror inspection helpers are not yet wired into the operator sync path
 
@@ -33,16 +33,18 @@ The new detection helpers are exported from `src/aeat/adapters/outbound/storage/
 
 Resolution: resolved on final re-review. `_is_stale_remote_entry` now refuses the timestamp fallback when both entries expose incompatible `previous_storage_revision_id` values, preserving `REVISION_CONFLICT` for older divergent revisions with conflicting lineage evidence. `_normalise_revision_timestamp` prevents offset-aware versus offset-naive timestamp comparison crashes. Tests now cover naive stale timestamps and older divergent revisions remaining `REVISION_CONFLICT`.
 
-## S43-005 | LOW | Stale detection remains limited by one-hop revision lineage depth
+## S43-005 | MEDIUM | Stale detection remains limited by one-hop revision lineage depth
 
-The S43-004 remediation correctly prevents timestamps from overriding explicit incompatible previous revision ids. A residual ambiguity remains when an older remote entry does not expose incompatible lineage evidence, especially a root remote revision with `previous_storage_revision_id=None`: with only one previous revision id in each manifest entry, the comparator cannot prove whether that older revision is an ancestor or an unrelated root revision. The current timestamp fallback intentionally classifies that state as `STALE_MIRROR` to preserve recoverable stale detection for mirrors more than one revision behind. Track this as a lineage-depth limitation for future manifest evolution rather than an active S43-004 blocker.
+The S43-004 remediation correctly prevents timestamps from overriding explicit incompatible previous revision ids, but one-hop lineage was not enough to distinguish a true older ancestor from an unrelated older root revision. A remote root revision with `previous_storage_revision_id=None` could only be handled conservatively as conflict, which broke the required stale classification for mirrors more than one revision behind.
 
-## Residual Review Notes
+Resolution: resolved in S440. `secure_objects` now persists revision ancestry, `SecureObjectRawRow` carries it as structured data, and `RemoteMirrorObjectManifest` includes `revision_ancestor_ids`. Stale classification now uses revision-id ancestry instead of timestamp fallback. The three-save real repository test classifies the first manifest as `STALE_MIRROR`, while `test_remote_mirror_comparison_keeps_unknown_older_root_revision_conflict` proves an unrelated older root revision remains `REVISION_CONFLICT`.
 
-The scoped tests use real `SecureObjectRepository`, `EphemeralMasterKeyProvider`, SQLite-backed storage, and `LocalFileSystemProvider`; no fakes, mocks, stubs, monkeypatches, skips, or xfails were found in the reviewed test files. Exception handling remains typed for expected provider failures and does not catch broad exceptions. The provider implementations remain bytes-only; the concrete provider boundary continues to treat ciphertext as opaque payload.
+## Review Notes
+
+No S43 residual findings remain open. The scoped tests use real `SecureObjectRepository`, `EphemeralMasterKeyProvider`, SQLite-backed storage, and `LocalFileSystemProvider`; no fakes, mocks, stubs, monkeypatches, skips, or xfails were found in the reviewed S43 mirror test files. Exception handling remains typed for expected provider failures and does not catch broad exceptions. The provider implementations remain bytes-only; the concrete provider boundary continues to treat ciphertext as opaque payload.
 
 Validation run: `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 16 tests.
 
 Re-review validation run: `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 18 tests.
 
-Final re-review validation was not rerun by reviewer; implementer reported `ruff` passed and focused pytest reported 20 passed.
+Final re-review validation was rerun after S440: `uv run --no-sync pytest -q src/aeat/adapters/outbound/storage/test_mirror_manifest.py src/aeat/adapters/outbound/storage/test_foundation.py` passed with 27 tests. `uv run --no-sync pytest -q src/aeat/adapters/persistence/storage/sql/test_secure_objects.py` passed with 41 tests. Targeted Ruff over the storage, mirror, and secure-object ancestry surfaces passed.

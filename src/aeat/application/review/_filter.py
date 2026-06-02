@@ -152,7 +152,6 @@ class LedgerReviewStatus(StrEnum):
     SKIPPED = "skipped"
 
 
-
 class InvoiceReviewFilterKey(StrEnum):
     """Closed catalogue of invoice-evidence review filter keys.
 

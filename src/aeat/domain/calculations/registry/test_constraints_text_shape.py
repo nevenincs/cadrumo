@@ -160,6 +160,7 @@ class TestNumericViolatesPreserved:
 
     def test_numeric_violates_still_works(self) -> None:
         from decimal import Decimal
+
         c = _make(sign="non_negative", min_value=Decimal("0"), max_value=Decimal("100"))
         assert c.violates(Decimal("50")) is None
         assert c.violates(Decimal("-1")) is not None

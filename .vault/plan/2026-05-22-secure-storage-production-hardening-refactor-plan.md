@@ -173,7 +173,19 @@ Exercise the final storage architecture with real code paths, real encrypted sto
 - [x] `W06.P11.S47` - add adverse-condition tests for revision conflicts and partial remote mirrors; `src/aeat/adapters`.
 - [x] `W06.P11.S48` - run focused storage, config, profile, live, ledger, modelo, and remote provider test gates; `src/aeat`.
 - [x] `W06.P11.S49` - run final SecureStorage code review and persist audit closeout; `.vault/audit`.
-- [ ] `W06.P11.S428` - run live Google Drive mirror and calc-sheets export verification against configured app-owned Drive contents, including formula-level sheet inspection; `src/aeat/adapters/outbound/storage/test_google_drive_live.py src/aeat/adapters/outbound/google src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `W06.P11.S428` - run repo-native live Google Drive mirror verification against the configured app-owned Drive contents after OAuth session readiness, and preserve connector evidence for Drive hierarchy plus calc-sheets formula/value reads; `src/aeat/adapters/outbound/storage/test_google_drive_live.py src/aeat/adapters/outbound/google src/aeat/entrypoints/cli/_config/_google.py .vault/audit`.
+- [x] `W06.P11.S429` - fix calc-sheets strict PullResult metadata handling and rerun registry-backed export/pull validation; `src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py src/aeat/adapters/outbound/google src/aeat/application/storage/calc_sheets`.
+- [ ] `W06.P11.S430` - blocked-on-interactive OAuth consent: complete active-profile Google OAuth login/session persistence after desktop client registration, then rerun the repo-native read-only probe and live Drive provider tests; `src/aeat/entrypoints/cli/_config/_google.py src/aeat/adapters/outbound/google src/aeat/adapters/outbound/storage/test_google_drive_live.py`.
+- [x] `W06.P11.S431` - complete full workbook export proof and quota-aware handling after the observed Google Sheets 429, preserving bounded formula/value evidence for the configured app-owned calc-sheets workbook; `src/aeat/adapters/outbound/google src/aeat/application/storage/calc_sheets .vault/audit`.
+- [x] `W06.P11.S432` - fix secure-object deterministic lookup regression so natural-key save/load, upsert convergence, profile records, Google folder config, and mirror archive raw keys use HashedLookup with legacy key migration; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py src/aeat/adapters/persistence/storage/sql/_orm.py src/aeat/adapters/persistence/storage/sql/secure_objects.py src/aeat/adapters/persistence/storage/sql/test_secure_objects.py src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py`.
+- [x] `W06.P11.S433` - fix access-gate authorization directory-mode export drift so the AEAT CLI imports before Google folder and live validation commands run; `src/aeat/core/access_gate/__init__.py src/aeat/core/access_gate/_authorization.py src/aeat/tests/test_modelo_authorization_gate.py src/aeat/entrypoints/cli/test_root_help_shape.py`.
+- [x] `W06.P11.S434` - make live Google Drive tests open a real active-profile storage session and fail enabled provider-build failures instead of skipping storage readiness; `src/aeat/adapters/outbound/storage/test_google_drive_live.py src/aeat/adapters/outbound/google/test_oauth_live.py .vault/audit`.
+- [x] `W06.P11.S435` - fix Modelo 202 quota-base dependency wiring so registry-backed calc-sheets validation loads the committed registry without stale 1P source coverage defects; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes src/aeat/domain/calculations/registry/test_modelo_202_registry.py`.
+- [x] `W06.P11.S436` - fix relation prefill so a missing prior filing leaves only that relation operator-manual instead of suppressing independently resolvable relation values; `src/aeat/application/calculations/_relation_prefill.py src/aeat/application/calculations/test_relation_prefill_source_mesh.py src/aeat/application/calculations/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py src/aeat/domain/calculations/registry/__init__.py`.
+- [x] `W06.P11.S437` - wrap legacy EncryptedString lookup-migration UTF-8 decode failures in AEAT DecryptionError and cover the corrupted-plaintext path with real crypto; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py`.
+- [x] `W06.P11.S438` - model the Modelo 202 1P quota-base previous-year source coverage or add an explicit registry gate so the legal hook is not left as comment-only operator-manual behavior; `src/aeat/_data/registry/aeat/modelos/200 src/aeat/_data/registry/aeat/modelos/202 src/aeat/domain/calculations/registry/test_modelo_202_registry.py .vault/audit`.
+- [x] `W06.P11.S439` - tighten remote mirror provider metadata comparison so upload and download inspection detect namespace, object-key, byte-length, and content-hash drift against manifest entries; `src/aeat/adapters/outbound/storage/_mirror_manifest.py src/aeat/adapters/outbound/storage/test_mirror_manifest.py .vault/audit`.
+- [x] `W06.P11.S440` - resolve S43-005 by preserving secure-object revision ancestry in raw mirror manifests so stale mirrors more than one revision behind are classified without timestamp-only ambiguity; `src/aeat/adapters/persistence/storage/sql src/aeat/adapters/outbound/storage .vault/audit`.
 
 ## Wave `W07` - classified secure-SQL hygiene backlog adoption
 
@@ -183,17 +195,17 @@ This Wave adopts the remaining classified secure-SQL hygiene backlog into the pr
 
 Reconcile the remaining classified files with the accepted R1 through R3 repair pattern, identify the next bounded repair slice, and require research or execution notes where repository boundaries are unclear.
 
-- [ ] `W07.P12.S50` - Inventory remaining classified secure-SQL hygiene files and write a research-backed slice map; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
-- [ ] `W07.P12.S51` - Select the next application or CLI hygiene slice after runtime-readiness implications are researched; `src/aeat/application`.
-- [ ] `W07.P12.S52` - Validate candidate isolation patterns against settings-backed repository injection before repair; `src/aeat/tests`.
-- [ ] `W07.P12.S53` - Select the next domain repository hygiene slice after inventory confirms ownership; `src/aeat/domain`.
+- [x] `W07.P12.S50` - Inventory remaining classified secure-SQL hygiene files and write a research-backed slice map; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
+- [x] `W07.P12.S51` - Select the next application or CLI hygiene slice after runtime-readiness implications are researched; `src/aeat/application`.
+- [x] `W07.P12.S52` - Validate candidate isolation patterns against settings-backed repository injection before repair; `src/aeat/tests`.
+- [x] `W07.P12.S53` - Select the next domain repository hygiene slice after inventory confirms ownership; `src/aeat/domain`.
 
 ### Phase `W07.P13` - classified backlog gates
 
 Close each adopted hygiene slice only after focused tests, the secure-SQL guard, and a review audit prove the slice used real code paths without monkeypatch, fake, stub, or naked environment shortcuts.
 
 - [x] `W07.P13.S54` - Run the secure-SQL guard and focused repaired-slice tests for the first adopted slice; `commit `177f0669a` passed the secure-SQL helper tests, the ephemeral-key hygiene guard, and the focused repaired-slice suite; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py src/aeat/tests/test_secure_sql.py`.
-- [ ] `W07.P13.S55` - Persist hygiene review and remaining-backlog closeout after each adopted slice; `.vault/audit`.
+- [x] `W07.P13.S55` - Persist hygiene review and remaining-backlog closeout after each adopted slice; `.vault/audit`.
 
 ### Phase `W07.P14` - cross-contamination residual queue
 
@@ -205,9 +217,9 @@ treated as broadly hardened.
 - [x] `W07.P14.S56` - Define the shared development/test database password in core settings and route database-backed storage tests through `Settings.aeat_dev_test_database_password` or `aeat.tests.secure_sql`; `src/aeat/core/config.py src/aeat/tests/secure_sql.py`.
 - [x] `W07.P14.S57` - Add a guard that flags ad hoc secure-storage test password and ephemeral default-repository patterns; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
 - [x] `W07.P14.S58` - Commit the first secure-SQL isolation helper and proof tests; `commit `177f0669a`; `src/aeat/tests/secure_sql.py src/aeat/tests/test_secure_sql.py`.
-- [ ] `W07.P14.S59` - Audit the remaining W04.F12 files and classify each as already isolated, repairable with `aeat.tests.secure_sql`, or requiring runtime-profile orchestration; `src/aeat/adapters src/aeat/application src/aeat/domain`.
-- [ ] `W07.P14.S60` - Repair the next bounded residual slice without fakes, stubs, monkeypatches, private taxpayer data, or root-database cross-contamination; `src/aeat`.
-- [ ] `W07.P14.S61` - Run the secure-SQL guard plus focused residual-slice tests after each repair and persist the review result; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py .vault/audit`.
+- [x] `W07.P14.S59` - Audit the remaining W04.F12 files and classify each as already isolated, repairable with `aeat.tests.secure_sql`, or requiring runtime-profile orchestration; `src/aeat/adapters src/aeat/application src/aeat/domain`.
+- [x] `W07.P14.S60` - Repair the next bounded residual slice without fakes, stubs, monkeypatches, private taxpayer data, or root-database cross-contamination; `src/aeat`.
+- [x] `W07.P14.S61` - Run the secure-SQL guard plus focused residual-slice tests after each repair and persist the review result; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py .vault/audit`.
 
 ## Wave `W09` - worktree coverage reconciliation
 
@@ -277,7 +289,7 @@ Current register count: `293` production candidate files.
 
 | ID | Path | Signals | Target type | Owning row | Status |
 | --- | --- | --- | --- | --- | --- |
-| `AFR-001` | `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-001` | `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-002` | `src/aeat/adapters/inbound/borrador/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-003` | `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-004` | `src/aeat/adapters/inbound/declaracion/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
@@ -575,21 +587,21 @@ Current register count: `293` production candidate files.
 
 Turn the audit inventory into a repeatable rollout register so implementation agents do not rediscover or re-scope the surface independently.
 
-- [ ] `W12.P20.S78` - Convert the active-profile runtime discovery audit production index into a runtime adoption register grouped by adapter, application, domain, core, and CLI ownership; `.vault/exec`.
-- [ ] `W12.P20.S79` - Classify each direct `SecureObjectRepository()` and `SecureBoundRepository` default as `runtime-default`, `bootstrap-custody`, `test-runtime`, or `retired`; `src/aeat`.
-- [ ] `W12.P20.S80` - Classify each pointer, manifest, and bucket scan caller as `manifest-discovery`, `bootstrap-custody`, or `runtime-default`; `src/aeat`.
-- [ ] `W12.P20.S81` - Classify each SQL route, active-profile, and master-key session caller as runtime policy, bootstrap policy, or test-only setup; `src/aeat`.
-- [ ] `W12.P20.S82` - Persist classification closeout with unresolved exceptions and explicit owner rows before migration tasks start; `.vault/audit`.
+- [x] `W12.P20.S78` - Convert the active-profile runtime discovery audit production index into a runtime adoption register grouped by adapter, application, domain, core, and CLI ownership; `.vault/exec`.
+- [x] `W12.P20.S79` - Classify each direct `SecureObjectRepository()` and `SecureBoundRepository` default as `runtime-default`, `bootstrap-custody`, `test-runtime`, or `retired`; `src/aeat`.
+- [x] `W12.P20.S80` - Classify each pointer, manifest, and bucket scan caller as `manifest-discovery`, `bootstrap-custody`, or `runtime-default`; `src/aeat`.
+- [x] `W12.P20.S81` - Classify each SQL route, active-profile, and master-key session caller as runtime policy, bootstrap policy, or test-only setup; `src/aeat`.
+- [x] `W12.P20.S82` - Persist classification closeout with unresolved exceptions and explicit owner rows before migration tasks start; `.vault/audit`.
 
 ### Phase `W12.P21` - runtime default repository migration
 
 Move production repositories away from direct physical-store construction while preserving explicit constructor injection for real-behavior tests and controlled bootstrap paths.
 
-- [ ] `W12.P21.S83` - Migrate workflow state and bucket-event repositories to runtime-owned secure-object factories; `src/aeat`.
-- [ ] `W12.P21.S84` - Migrate transaction, invoice, filing, submission, justificante, and modelo repositories to runtime-owned secure-bound or secure-object factories; `src/aeat/domain`.
-- [ ] `W12.P21.S85` - Migrate ledger, filing history, modelo reconciliation, calculation observation, usage-ratio, and calc-sheet repositories to runtime-owned defaults; `src/aeat/application`.
-- [ ] `W12.P21.S86` - Migrate auth, AEAT observation, Google OAuth/session, LLM cache/usage, and outbound adapter repositories to runtime-owned defaults or classified remote-mirror paths; `src/aeat/adapters`.
-- [ ] `W12.P21.S87` - Add focused real-behavior tests for each migrated repository family proving active profile routing, route mismatch refusal, missing-session refusal, and isolated test profile writes; `src/aeat`.
+- [x] `W12.P21.S83` - Migrate workflow state and bucket-event repositories to runtime-owned secure-object factories; `src/aeat`.
+- [x] `W12.P21.S84` - Migrate transaction, invoice, filing, submission, justificante, and modelo repositories to runtime-owned secure-bound or secure-object factories; `src/aeat/domain`.
+- [x] `W12.P21.S85` - Migrate ledger, filing history, modelo reconciliation, calculation observation, usage-ratio, and calc-sheet repositories to runtime-owned defaults; `src/aeat/application`.
+- [x] `W12.P21.S86` - Migrate auth, AEAT observation, Google OAuth/session, LLM cache/usage, and outbound adapter repositories to runtime-owned defaults or classified remote-mirror paths; `src/aeat/adapters`.
+- [x] `W12.P21.S87` - Add focused real-behavior tests for each migrated repository family proving active profile routing, route mismatch refusal, missing-session refusal, and isolated test profile writes; `src/aeat`.
 
 ### Phase `W12.P22` - CLI and profile bootstrap boundary
 
@@ -630,7 +642,7 @@ Close the runtime rollout only after mechanical checks prove the application no 
 
 These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-core vault plan status`, `vaultspec-core vault plan check`, and `vaultspec-core vault plan step check` can track file-level closure mechanically. Do not close a step until the matching `AFR-*` table row has a final disposition and the owning implementation row has either migrated, retained, or explicitly rejected the file.
 
-- [ ] `W12.P26.S103` - Close `AFR-001` for `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`.
+- [x] `W12.P26.S103` - Close `AFR-001` for `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`.
 - [ ] `W12.P26.S104` - Close `AFR-002` for `src/aeat/adapters/inbound/borrador/_parser.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_parser.py`.
 - [ ] `W12.P26.S105` - Close `AFR-003` for `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
 - [ ] `W12.P26.S106` - Close `AFR-004` for `src/aeat/adapters/inbound/declaracion/_parser.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/adapters/inbound/declaracion/_parser.py`.
@@ -1022,7 +1034,7 @@ This Wave adopts the ledger JSONL side stores discovered during W05.P09.S36 with
 
 ### Phase `W17.P37` - ledger JSONL secure-object migration
 
-Close the two W05.P09.S36 ledger side-store findings with runtime-created secure-object repositories or an explicit ADR-backed exception before the side-store hardening campaign is treated as complete.
+Close the two W05.P09.S36 ledger side-store findings with runtime-created secure-object repositories or an explicit ADR-backed exception before the side-store hardening campaign is treated as complete. Both rows are identified-not-started slices until their repositories or exception ADRs land.
 
-- [ ] `W17.P37.S424` - migrate purchase invoice evidence JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_evidence.py`.
-- [ ] `W17.P37.S425` - migrate payable and collectible business-operation invoice JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_business_operation_invoice.py`.
+- [ ] `W17.P37.S424` - identified-not-started: migrate purchase invoice evidence JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_evidence.py`.
+- [ ] `W17.P37.S425` - identified-not-started: migrate payable and collectible business-operation invoice JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_business_operation_invoice.py`.

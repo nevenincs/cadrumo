@@ -30,10 +30,12 @@ revision conflict states against encrypted object manifests.
 
 ## Outcome
 
-`W05.P10.S43` now exposes `RemoteMirrorInspection` results for remote mirror
+`W05.P10.S43` exposes `RemoteMirrorInspection` results for remote mirror
 degradation and has focused real-behavior coverage for partial upload, partial
-download, ciphertext drift, immediate stale mirrors, older stale mirrors,
-timestamp normalization, and revision conflicts.
+download, ciphertext drift, immediate stale mirrors, conservative conflict
+classification for older revisions, and revision conflicts. The step is closed
+after `W05.P10.S426` wired inspection into the sync push path and
+`W05.P10.S427` removed timestamp-only stale inference.
 
 Modified files:
 
@@ -54,13 +56,7 @@ Validation:
 
 ## Notes
 
-Mandatory review found no HIGH or CRITICAL findings. Initial MEDIUM findings
-for download drift and older stale mirrors were resolved before closure. A
-follow-up MEDIUM for timestamp-only stale classification was resolved by
-normalizing timestamps and refusing timestamp fallback when explicit previous
-revision lineage conflicts.
-
-One LOW lineage-depth residual remains in the audit: current manifest entries
-carry one-hop previous revision metadata, so an older remote root revision with
-no incompatible previous revision id cannot be proven ancestor versus divergent
-without future manifest lineage expansion.
+Mandatory review originally found helper-level defects and production wiring
+gaps. Follow-up execution resolved the S43 queue. `W06.P11.S428` remains open
+for live Google Drive and calc-sheets export verification against configured
+app-owned Drive contents.
