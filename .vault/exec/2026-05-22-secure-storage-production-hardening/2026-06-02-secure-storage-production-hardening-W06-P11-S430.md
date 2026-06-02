@@ -18,7 +18,7 @@ related:
 
 ## Outcome
 
-Open.
+Closed.
 
 Evidence:
 
@@ -42,5 +42,13 @@ Evidence:
 - `aeat config google login` was attempted with the active profile and timed out after approximately 180 seconds without persisting a token.
 - Follow-up `aeat config google status` still reported `client_registered=True` and `session_present=False`.
 - The leftover `config google login` process family from that timed-out attempt was stopped by exact PID; unrelated concurrent pytest, docs, and live-app processes were left untouched.
+- The operator created a replacement Cloud Console Desktop client named `AEAT CLI` / `aeat-cli-client`; the JSON at `C:\Users\hello\Downloads\client_secret_165763895566-cggg7ek6ovd1cossjejbq9n0iet9ehbk.apps.googleusercontent.com.json` validates as an installed-client payload with `http://localhost` redirect.
+- `aeat config google register --client-json C:\Users\hello\Downloads\client_secret_165763895566-cggg7ek6ovd1cossjejbq9n0iet9ehbk.apps.googleusercontent.com.json` persisted client id `165763895566-cggg7ek6ovd1cossjejbq9n0iet9ehbk.apps.googleusercontent.com` for project `code-12345678`.
+- `aeat config google login` completed the loopback consent flow for `hello@gergely-wootsch.com`; follow-up `aeat config google status` reported `session_present=True`, the new client id, and `reauth_required=False`.
+- The first post-login `aeat config google sync probe --read-only` exposed a CLI payload/schema bug: provider reports may set `root_folder_present=None`, while `GoogleSyncProbeResult` previously required a strict boolean. `src/aeat/entrypoints/cli/_config/_google_payloads.py` now matches the provider contract and `src/aeat/entrypoints/cli/_config/test_google_sync_push.py` covers that boundary.
+- The next post-fix probe reached Google but reported Drive API disabled for project `code-12345678`; `gcloud services enable drive.googleapis.com sheets.googleapis.com --project=code-12345678` completed successfully and subsequent service listing confirmed both APIs enabled.
+- With Drive enabled, the old persisted root folder `1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ` was not visible to the new `drive.file` OAuth app context. A new app-owned root folder was created through the authenticated AEAT credentials and bound with `aeat config google folder set 1ihfBowDJ9Tk_IOaorGGz665Jg2zRMyCA`.
+- Final `aeat config google sync probe --read-only` passed with `reachable=True`, `writable=False`, `root_folder_present=True`, and root folder id `1ihfBowDJ9Tk_IOaorGGz665Jg2zRMyCA`.
+- Focused validation passed: `ruff check src/aeat/entrypoints/cli/_config/_google_payloads.py src/aeat/entrypoints/cli/_config/test_google_sync_push.py`; `pytest src/aeat/entrypoints/cli/_config/test_google_sync_push.py -q`; `AEAT_LIVE_TESTS_ENABLED=1 AEAT_LIVE_TESTS_GOOGLE=1 AEAT_STORAGE_PROVIDER_KIND=google_drive AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID=1ihfBowDJ9Tk_IOaorGGz665Jg2zRMyCA pytest -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py -q`.
 
-No Drive files were created, moved, or deleted while investigating this blocker.
+Drive mutation note: the completed remediation created one new app-owned root folder in the operator's Drive and the live gate created then deleted `_probe` sentinel and manifest objects under that root folder. The old inaccessible folder id was not modified.

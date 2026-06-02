@@ -103,7 +103,7 @@ class GoogleSyncProbeResult(OutputSchema):
     reachable: bool
     writable: bool
     read_only: bool
-    root_folder_present: bool
+    root_folder_present: bool | None = None
     root_folder_id: str
     detail: str = ""
 

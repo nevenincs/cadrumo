@@ -76,8 +76,7 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
     # or an ERROR, both still caught above.
     assert report.warnings, "expected the tolerated export-header warnings to be present"
     assert all(
-        issue.message == "export header is not yet classified by user-profile schema"
-        for issue in report.warnings
+        issue.message == "export header is not yet classified by user-profile schema" for issue in report.warnings
     ), "an unexpected non-export-header warning kind appeared"
     assert {issue.selector for issue in report.warnings} >= {
         "colegio_concertado",

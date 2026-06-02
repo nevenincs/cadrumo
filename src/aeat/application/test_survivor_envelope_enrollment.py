@@ -40,8 +40,7 @@ def _assert_enrolled(error_cls: type[AeatError], message: str = "test trigger") 
     except error_cls as exc:
         code = get_registered_error_code(exc)
         assert code.code in ERROR_REGISTRY, (
-            f"{error_cls.__qualname__} maps to code {code.code!r} "
-            f"which is not present in ERROR_REGISTRY"
+            f"{error_cls.__qualname__} maps to code {code.code!r} which is not present in ERROR_REGISTRY"
         )
         envelope = build_error_envelope(exc)
         assert isinstance(envelope, ErrorEnvelope)
