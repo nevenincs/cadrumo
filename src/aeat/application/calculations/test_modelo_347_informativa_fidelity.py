@@ -151,9 +151,7 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
-        assert loaded is not None, (
-            f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
-        )
+        assert loaded is not None, f"year-N observation not found for ({_MODELO!r}, {_YEAR_N}, '0A') after save"
         assert loaded.observation == obs_n, (
             "year-N 347 observation did not survive the encrypted-SQL roundtrip; "
             "at least one casilla was silently dropped, coerced, or defaulted away"
@@ -258,9 +256,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         observations=tuple(o for o in obs_n.observations if o.casilla_id != "contraparte.importe-Q4"),
     )
 
-    assert obs_n != obs_n_missing_q4, (
-        "the full observation and the Q4-omitted observation must be strictly unequal"
-    )
+    assert obs_n != obs_n_missing_q4, "the full observation and the Q4-omitted observation must be strictly unequal"
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
@@ -322,8 +318,7 @@ def test_enrollment_recorder_evidences_two_distinct_renta_years_and_matches_mani
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; "
-        f"got {evidence.distinct_renta_years!r}"
+        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
     )
 
     assert_enrollment_matches_manifest(evidence)

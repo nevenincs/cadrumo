@@ -182,8 +182,7 @@ def test_monkeypatch_setattr_sites_are_documented(
         for lineno, target in _setattr_sites(module_path, tree):
             # Check if this file+target combination is documented.
             matched = any(
-                rel == relative and (tgt == target or target is None)
-                for rel, tgt in _DOCUMENTED_SETATTR_MOCKS
+                rel == relative and (tgt == target or target is None) for rel, tgt in _DOCUMENTED_SETATTR_MOCKS
             )
             if matched:
                 _logger.debug(
@@ -193,14 +192,11 @@ def test_monkeypatch_setattr_sites_are_documented(
                     target,
                 )
                 continue
-            violations.append(
-                f"{relative}:{lineno}: monkeypatch.setattr(target={target!r})"
-            )
+            violations.append(f"{relative}:{lineno}: monkeypatch.setattr(target={target!r})")
 
     assert not violations, (
         "Undocumented monkeypatch.setattr/setitem/delattr sites found "
-        "(add to _DOCUMENTED_SETATTR_MOCKS with justification, or remove):\n"
-        + "\n".join(violations)
+        "(add to _DOCUMENTED_SETATTR_MOCKS with justification, or remove):\n" + "\n".join(violations)
     )
 
 
