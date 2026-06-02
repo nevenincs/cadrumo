@@ -114,8 +114,8 @@ Capture and drive M303 chain, entrypoints cluster, M721 887 grounding to closure
 Re-verify the 9 commits landed this session for sibling regressions and silent coverage shrinkage
 
 - [x] `P02.S06` - Verify M210 Phase-1 consumer modules exist; `check aeat.application.review et al; `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/application_links/0001-application_links.toml`.
-- [ ] `P02.S07` - Author source_citations for modelo-200-base-imponible and -previa formulas; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/formulas.toml`.
-- [ ] `P02.S08` - Confirm M151 WT-only fix landed in peer M151 commit; `re-stage when peer dir tracked; `src/aeat/_data/registry/aeat/modelos/151/revisions/2015-y-siguientes/workbook_parity_refs/0001-workbook_parity_refs.toml`.
+- [x] `P02.S07` - Author source_citations for modelo-200-base-imponible and -previa formulas; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/formulas.toml`.
+- [x] `P02.S08` - Confirm M151 WT-only fix landed in peer M151 commit; `re-stage when peer dir tracked; `src/aeat/_data/registry/aeat/modelos/151/revisions/2015-y-siguientes/workbook_parity_refs/0001-workbook_parity_refs.toml`.
 - [ ] `P02.S09` - Add non-zero BIN coverage test for M200 base-determination chain; `src/aeat/application/filing/test_decimal_inputs_routing.py`.
 - [ ] `P02.S10` - Add non-zero BL-negativa coverage test for M100 renta taxation_comparison; `src/aeat/application/modelo/test_taxation_comparison.py`.
 - [ ] `P02.S11` - Re-strengthen attachment_id persistence proof; `src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py`.
@@ -127,7 +127,7 @@ Re-verify the 9 commits landed this session for sibling regressions and silent c
 xdist collection skew, bash environment, synthetic-PDF generator gap, encrypted-column round-trip, wizard-catalogue startup ordering
 
 - [ ] `P03.S14` - Diagnose xdist collection-skew root cause and add deterministic test discovery gate; `pyproject.toml`.
-- [ ] `P03.S15` - Restore bash interpreter or formalize PowerShell mandate for this worktree; `CLAUDE.md`.
+- [x] `P03.S15` - Restore bash interpreter or formalize PowerShell mandate for this worktree; `CLAUDE.md`.
 - [ ] `P03.S16` - Document robust background-pytest capture pattern; `replace Tee Select-Object -Last 5 antipattern; `.claude/rules`.
 - [ ] `P03.S17` - Extend synthetic-PDF generator with M303 primitive form-field support; `src/aeat/tests/fixtures/justificantes/_generate.py`.
 - [ ] `P03.S18` - Clarify EncryptedString str-vs-bytes round-trip on object_key column; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
