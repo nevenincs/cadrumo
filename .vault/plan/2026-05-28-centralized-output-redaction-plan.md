@@ -194,10 +194,10 @@ Update generated API references and operator-facing architecture notes after the
 
 Persist the final inventory and review trail.
 
-- [ ] `W04.P14.S79` - persist before/after output-surface inventory with counts and exceptions; `.vault/audit`.
-- [ ] `W04.P14.S80` - persist code-review findings for the centralized output redaction rollout; `.vault/audit`.
-- [ ] `W04.P14.S81` - update the secure-storage hardening plan with cross-reference to this redaction rollout; `.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`.
-- [ ] `W04.P14.S82` - update the CLI workflow index with the new output privacy boundary; `.vault/index`.
+- [x] `W04.P14.S79` - persist before/after output-surface inventory with counts and exceptions; `.vault/audit`.
+- [x] `W04.P14.S80` - persist code-review findings for the centralized output redaction rollout; `.vault/audit`.
+- [x] `W04.P14.S81` - update the secure-storage hardening plan with cross-reference to this redaction rollout; `.vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md`.
+- [x] `W04.P14.S82` - update the CLI workflow index with the new output privacy boundary; `.vault/index`.
 
 ## Parallelization
 

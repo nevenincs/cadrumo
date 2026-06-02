@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-05-19'
+date: '2026-06-02'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -355,6 +355,38 @@ related:
   - '[[2026-05-15-cli-workflow-redesign-audit]]'
   - '[[2026-05-16-cli-workflow-redesign-audit]]'
   - '[[2026-05-19-cli-workflow-redesign-audit]]'
+  - '[[2026-05-21-cli-workflow-redesign-W02-S08]]'
+  - '[[2026-05-21-cli-workflow-redesign-W03-S11]]'
+  - '[[2026-05-21-cli-workflow-redesign-W03-S12]]'
+  - '[[2026-05-21-cli-workflow-redesign-W03-S15-review]]'
+  - '[[2026-05-21-cli-workflow-redesign-W03-S15]]'
+  - '[[2026-05-21-cli-workflow-redesign-W05-S22-review]]'
+  - '[[2026-05-21-cli-workflow-redesign-W05-S22]]'
+  - '[[2026-05-21-cli-workflow-redesign-exec]]'
+  - '[[2026-05-21-cli-workflow-redesign-taxpayer-type-applicability-summary]]'
+  - '[[2026-05-21-corporate-entity-calculation-adr]]'
+  - '[[2026-05-21-profile-state-aggregate-adr]]'
+  - '[[2026-05-21-profile-uuid-identity-adr]]'
+  - '[[2026-05-21-sii-digital-iva-ledger-adr]]'
+  - '[[2026-05-21-state-architecture-plan]]'
+  - '[[2026-05-21-state-architecture-testimonial-regression-audit]]'
+  - '[[2026-05-21-state-architecture-w01-audit]]'
+  - '[[2026-05-21-state-architecture-w02-audit]]'
+  - '[[2026-05-21-state-architecture-w04-audit]]'
+  - '[[2026-05-21-state-architecture-w05-audit]]'
+  - '[[2026-05-21-state-architecture-w06-audit]]'
+  - '[[2026-05-21-state-read-projection-adr]]'
+  - '[[2026-05-21-taxpayer-type-applicability-adr]]'
+  - '[[2026-05-21-taxpayer-type-applicability-plan]]'
+  - '[[2026-05-21-taxpayer-type-applicability-research]]'
+  - '[[2026-05-21-work-verify-deadline-independence-adr]]'
+  - '[[2026-05-22-cli-workflow-redesign-exec]]'
+  - '[[2026-05-22-w02-s08-overview-derivation-review]]'
+  - '[[2026-05-22-w03-s11-applicability-review]]'
+  - '[[2026-05-22-w03-s12-deadline-review]]'
+  - '[[2026-05-22-w03-s13-rate-schedules-review]]'
+  - '[[2026-05-23-cli-workflow-redesign-exec]]'
+  - '[[2026-06-02-centralized-output-redaction-audit]]'
 ---
 
 # `cli-workflow-redesign` feature index
@@ -431,6 +463,13 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr` - `cli-workflow-redesign` adr: `integrity-warning stability` | (**status:** `accepted`)
 - `2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr` - `cli-workflow-redesign` adr: `list-vs-query leaf semantics` | (**status:** `accepted`)
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr` - `cli-workflow-redesign` adr: `Modelo 145 local payer communication reopening` | (**status:** `accepted`)
+- `2026-05-21-corporate-entity-calculation-adr` - `cli-workflow-redesign` adr: `The corporate-entity calculation model — a legal entity is routed to the Impuesto sobre Sociedades schedule (Modelo 200/202, LIS rate scale), an attribution entity to member pass-through, and never to the IRPF tarifa` | (**status:** `accepted`)
+- `2026-05-21-profile-state-aggregate-adr` - `cli-workflow-redesign` adr: `Profile state is one aggregate, owned by one repository, written through a cross-store unit-of-work` | (**status:** `accepted`)
+- `2026-05-21-profile-uuid-identity-adr` - `cli-workflow-redesign` adr: `Profile identity is a generated UUID; the display name is a decoupled mutable label` | (**status:** `accepted`)
+- `2026-05-21-sii-digital-iva-ledger-adr` - `cli-workflow-redesign` adr: `SII is modelled as a rolling ledger-submission enrolment, not a periodic-window modelo; it suppresses Modelo 347 and 390 and switches Modelo 303 to monthly` | (**status:** `proposed`)
+- `2026-05-21-state-read-projection-adr` - `cli-workflow-redesign` adr: `Every operator-facing surface consumes one canonical state read-projection` | (**status:** `accepted`)
+- `2026-05-21-taxpayer-type-applicability-adr` - `cli-workflow-redesign` adr: `The profile carries a structured entity-type, tax-regime, and enrolment model; modelos, calendar, calculations, and rules derive from it` | (**status:** `accepted`)
+- `2026-05-21-work-verify-deadline-independence-adr` - `cli-workflow-redesign` adr: `work verify validates a calculation and is independent of the filing-window deadline` | (**status:** `accepted`)
 
 ### audit
 
@@ -484,6 +523,19 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-15-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `Apex CLI workflow redesign — 85-wave ground-truth audit`
 - `2026-05-16-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `remediation cycle close-out and task triage`
 - `2026-05-19-cli-workflow-redesign-audit` - `cli-workflow-redesign` audit: `master plan rollout snapshot`
+- `2026-05-21-cli-workflow-redesign-W03-S15-review` - `cli-workflow-redesign` W03.S15 Code Review
+- `2026-05-21-cli-workflow-redesign-W05-S22-review` - `cli-workflow-redesign` W05.S22 Code Review
+- `2026-05-21-state-architecture-testimonial-regression-audit` - `cli-workflow-redesign` audit: state-architecture testimonial regression
+- `2026-05-21-state-architecture-w01-audit` - `cli-workflow-redesign` audit: state-architecture W01 close
+- `2026-05-21-state-architecture-w02-audit` - `cli-workflow-redesign` audit: state-architecture W02 close
+- `2026-05-21-state-architecture-w04-audit` - `cli-workflow-redesign` audit: state-architecture W04 close
+- `2026-05-21-state-architecture-w05-audit` - `cli-workflow-redesign` audit: state-architecture W05 close
+- `2026-05-21-state-architecture-w06-audit` - `cli-workflow-redesign` audit: state-architecture W06 close
+- `2026-05-22-w02-s08-overview-derivation-review` - `cli-workflow-redesign` Code Review
+- `2026-05-22-w03-s11-applicability-review` - `cli-workflow-redesign` Code Review
+- `2026-05-22-w03-s12-deadline-review` - `w03-s12-deadline` Code Review
+- `2026-05-22-w03-s13-rate-schedules-review` - `cli-workflow-redesign` W03.S13 Rate Schedules Review
+- `2026-06-02-centralized-output-redaction-audit` - `centralized-output-redaction` audit: `output-surface inventory and rollout audit`
 
 ### exec
 
@@ -680,12 +732,23 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-14-cli-workflow-redesign-w84-p408-s2319-exec` - `cli-workflow-redesign` `W84.P408.S2319`
 - `2026-05-14-cli-workflow-redesign-w84-p408-s2322-exec` - `cli-workflow-redesign` `W84.P408.S2322`
 - `2026-05-14-cli-workflow-redesign-w84-registry-taxonomy-exec` - `cli-workflow-redesign` `W84.P405.S2305`
+- `2026-05-21-cli-workflow-redesign-W03-S15` - `cli-workflow-redesign` `W03.S15`
+- `2026-05-21-cli-workflow-redesign-W05-S22` - `cli-workflow-redesign` `W05.S22`
+- `2026-05-21-cli-workflow-redesign-exec` - `cli-workflow-redesign` `W02.S07`
+- `2026-05-21-cli-workflow-redesign-W02-S08` - `cli-workflow-redesign` `W02.S08`
+- `2026-05-21-cli-workflow-redesign-W03-S11` - `cli-workflow-redesign` `W03.S11`
+- `2026-05-21-cli-workflow-redesign-W03-S12` - `cli-workflow-redesign` `W03.S12`
+- `2026-05-21-cli-workflow-redesign-taxpayer-type-applicability-summary` - `cli-workflow-redesign` `taxpayer-type-applicability` summary
+- `2026-05-22-cli-workflow-redesign-exec` - `cli-workflow-redesign` `W03.P11.S13`
+- `2026-05-23-cli-workflow-redesign-exec` - `cli-workflow-redesign` `W03.P11.S13` code review
 
 ### plan
 
 - `2026-05-13-cli-workflow-redesign-config-repair-shape-plan` - `cli-workflow-redesign` `config repair shape` plan
 - `2026-05-13-cli-workflow-redesign-epic-plan` - `cli-workflow-redesign` `epic` plan
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan` - `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
+- `2026-05-21-state-architecture-plan` - `cli-workflow-redesign` plan: profile state-management architecture
+- `2026-05-21-taxpayer-type-applicability-plan` - `cli-workflow-redesign` plan: taxpayer entity-type / regime / enrolment model
 
 ### research
 
@@ -727,3 +790,4 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-profile-output-language-research` - `cli-workflow-redesign` research: `profile-owned output language`
 - `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research` - `cli-workflow-redesign` research: `unexposed-backend-capability-audit`
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-research` - `cli-workflow-redesign` research: `Modelo 145 foundation reopening`
+- `2026-05-21-taxpayer-type-applicability-research` - `cli-workflow-redesign` research: grounding the three-axis taxpayer model
