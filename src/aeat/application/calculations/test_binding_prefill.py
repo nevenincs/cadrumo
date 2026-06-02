@@ -21,6 +21,7 @@ from ...domain.calculations.registry import (
     resolve_previous_filing_binding_values,
 )
 from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ...tests.secure_sql import isolated_runtime_profile
 from ..aggregation import CalculationSourceContext
 from ._binding_prefill import (
@@ -30,7 +31,7 @@ from ._binding_prefill import (
     resolve_bindings_from_local_store,
 )
 from ._errors import BindingPrefillTypeError
-from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
+from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._multi_year import PreviousFilingSourceResolver
 from ._observations_repository import CalculationObservationRepository
 
