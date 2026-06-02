@@ -134,9 +134,18 @@ class ApoderadoService:
 
     @property
     def catalogue(self) -> ApoderamientosCatalogue:
+        """Return the AEAT apoderamiento scope catalogue in use by this service."""
         return self._catalogue
 
     def status(self, *, bucket_id: str) -> ApoderadoStatus:
+        """Return the current :class:`ApoderadoStatus` for ``bucket_id``.
+
+        Reads the persisted :class:`ApoderadoConfiguration` (if any) and
+        projects it into a read-only status record. Does not contact AEAT.
+
+        Args:
+            bucket_id: The profile bucket's UUIDv4 identifier.
+        """
         safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
         config = self._repository_for(safe_bucket_id).load(safe_bucket_id)
         if config is None:

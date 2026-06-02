@@ -1,4 +1,27 @@
-"""Read-only Renta WEB Open browser driver."""
+"""Read-only Renta WEB Open browser driver for the AEAT electronic office.
+
+Drives the AEAT Renta WEB Open anonymous simulator — a publicly
+accessible ZK-framework web application that lets an operator open a
+synthetic IRPF (personal income tax) declaration, populate casilla
+(numbered form field) inputs, and read back the computed summary values
+without creating a real submission.
+
+The driver is strictly read-only for tax-filing purposes: it never
+presents, signs, or submits a declaration. It uses the *open* (no-auth)
+simulator path so no citizen credential is required. The computed
+values are returned as a :class:`RentaWebOpenObservation` for use by
+the registry oracle comparison gate.
+
+Key public surfaces:
+
+* :class:`RentaWebOpenSedeDriver` — driver class wired to the central
+  AEAT :class:`BrowserSession` surface.
+* :func:`collect_renta_web_open_observation` — standalone async
+  function that opens the simulator, fills the identification profile,
+  optionally applies casilla overrides, and scrapes the summary values.
+* :func:`extract_renta_web_open_summary_value` — pure text extractor
+  for Spanish-formatted numeric values from the summary body text.
+"""
 
 from __future__ import annotations
 
@@ -54,10 +77,17 @@ class RentaWebOpenSedeDriver:
     """Renta WEB Open driver backed by the central AEAT BrowserSession surface."""
 
     def __init__(self, *, settings: Settings | None = None) -> None:
+        """Initialise the driver with optional ``Settings`` override.
+
+        Args:
+            settings: If ``None``, the driver resolves :class:`Settings`
+                from the default load path when the session is created.
+        """
         self._settings = settings
 
     @property
     def mode(self) -> Literal["live"]:
+        """Always ``"live"`` — the driver requires a real Playwright session."""
         return "live"
 
     def planned_operations(
@@ -66,6 +96,15 @@ class RentaWebOpenSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Return the ordered sequence of remote operations this driver will perform.
+
+        Deserialises ``payload`` via :func:`parse_renta_web_open_live_payload`
+        and builds the :class:`RemoteOperation` list: navigate to the app URL,
+        start the open simulator, fill the identification profile, accept,
+        apply any casilla overrides, navigate to the Resumen, scrape expected
+        summary labels, navigate to any extra casilla scrape targets, and
+        finally close the browser context.
+        """
         live_payload = parse_renta_web_open_live_payload(payload)
         operations: list[RemoteOperation] = [
             RemoteOperation(kind="http", method="GET", url=live_payload.app_url),
@@ -91,6 +130,14 @@ class RentaWebOpenSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
+        """Run the async driver synchronously and return a :class:`RentaWebOpenObservation`.
+
+        Wraps :meth:`collect_observation_async` in ``asyncio.run``.
+        :class:`SedeError`, :class:`SiteHealthError`, and
+        :class:`BrowserError` are re-raised as
+        :class:`RegistryValidationError` so the registry oracle layer
+        sees a uniform failure type.
+        """
         try:
             return asyncio.run(self.collect_observation_async(payload, expected=expected))
         except (SedeError, SiteHealthError, BrowserError) as exc:
@@ -102,6 +149,7 @@ class RentaWebOpenSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
+        """Async entry point — delegates to :func:`collect_renta_web_open_observation`."""
         return await collect_renta_web_open_observation(payload, expected=expected, settings=self._settings)
 
 

@@ -242,9 +242,38 @@ class OssIossLedgerSourceResolver:
     owned_sources = ("ledger_oss_aggregation",)
 
     def __init__(self, *, candidates: Sequence[OssIossLedgerCandidate]) -> None:
+        """Construct the resolver with a pre-classified ledger candidate sequence.
+
+        Args:
+            candidates: The substrate-classified ledger lines for the
+                current period. The resolver validates and aggregates
+                these on each :meth:`resolve` call.
+        """
         self._candidates = tuple(candidates)
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Validate candidates and return the resolved OSS/IOSS binding values.
+
+        Validates every candidate through :func:`validate_oss_ioss_observation`
+        then delegates to the registry's
+        ``resolve_ledger_oss_aggregation_binding_values`` to aggregate the
+        matched lines per binding selector.
+
+        Args:
+            context: The :class:`CalculationSourceContext` carrying the
+                ``ModeloRevision`` whose ``ledger_oss_aggregation`` bindings
+                should be resolved.
+
+        Returns:
+            A :class:`CalculationSourceResolution` with resolved
+            binding values, source transaction ids, and per-observation
+            provenance records.
+
+        Raises:
+            AggregationValidationError: When any candidate's persisted IVA
+                amount disagrees with the destination Member State rate by
+                more than one cent.
+        """
         observations = validate_oss_ioss_observations(self._candidates)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,

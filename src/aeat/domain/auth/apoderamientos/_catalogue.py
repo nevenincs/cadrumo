@@ -48,9 +48,11 @@ class ApoderamientosCatalogue(BaseModel):
     scopes: tuple[ApoderadoScope, ...]
 
     def code_set(self) -> frozenset[str]:
+        """Return the set of every scope code declared in this catalogue."""
         return frozenset(scope.code for scope in self.scopes)
 
     def get(self, code: str) -> ApoderadoScope | None:
+        """Return the :class:`ApoderadoScope` for ``code``, or ``None`` if absent."""
         for scope in self.scopes:
             if scope.code == code:
                 return scope

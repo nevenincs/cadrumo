@@ -44,7 +44,14 @@ if TYPE_CHECKING:
 
 
 class WorkflowEvent(BaseModel):
-    """One operator-visible workflow event."""
+    """One operator-visible event emitted by a mutating workflow verb.
+
+    Events are appended to :attr:`WorkflowState.bucket_events` so the
+    operator can audit which actions ran, when, and against which object.
+    ``action`` names the verb (e.g. ``"profile.created"``); ``reason``
+    carries a free-form human-readable annotation; ``bucket_id`` and
+    ``object_id`` are optional pointers to the affected resource.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -108,7 +115,12 @@ class WorkflowPurpose(StrEnum):
 
 
 class WorkflowAbortReason(StrEnum):
-    """Closed set of reasons the workflow may abort."""
+    """Closed set of reasons the :class:`WorkflowEngine` may abort a run.
+
+    Each member maps to a distinct failure path in the engine's stage
+    sequence. CLI surfaces and audit logs carry the string value so
+    operators and tools can key on it without importing this module.
+    """
 
     NO_PENDING_OBLIGATION = "NO_PENDING_OBLIGATION"
     INBOX_BLOCKING_REQUERIMIENTO = "INBOX_BLOCKING_REQUERIMIENTO"
@@ -123,7 +135,14 @@ class WorkflowAbortReason(StrEnum):
 
 
 class DeclaracionPointer(BaseModel):
-    """Pointer to a persisted filing draft and its status."""
+    """Lightweight pointer to a persisted filing draft stored in :class:`WorkflowState`.
+
+    Keyed in :attr:`WorkflowState.declarations` by the value returned from
+    :func:`declaration_key`. ``draft_id`` and ``status`` are written by the
+    workflow engine after each filing stage; ``exported_path`` records the
+    on-disk fichero-BOE path when the draft was exported; ``verified`` records
+    the last verification verdict for the ``work verify`` command.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -349,7 +368,13 @@ WorkflowState.model_rebuild()
 
 
 class SiteHealthAlert(BaseModel):
-    """Workflow-side alert wrapping a browser site-health status."""
+    """Workflow-side alert wrapping a ``SiteHealthStatus`` observation.
+
+    Attached to a :class:`WorkflowStep` when the AEAT browser health-check
+    adapter reports a non-nominal site status during a workflow run. ``stage``
+    identifies the workflow stage that observed the alert; ``run_id`` ties it
+    to the enclosing :class:`WorkflowResult`.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -398,23 +423,34 @@ class WorkflowStepDetails(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="allow")
 
     def __getitem__(self, key: str) -> object:
+        """Return the diagnostic value stored under ``key``."""
         return self.__pydantic_extra__[key] if self.__pydantic_extra__ else self.__dict__[key]
 
     def __contains__(self, key: object) -> bool:
+        """Return ``True`` if ``key`` is present in the step's diagnostic payload."""
         extra = self.__pydantic_extra__ or {}
         return key in extra or key in self.__dict__
 
     def get(self, key: str, default: object = None) -> object:
+        """Return the diagnostic value for ``key``, or ``default`` if absent."""
         if self.__pydantic_extra__ and key in self.__pydantic_extra__:
             return self.__pydantic_extra__[key]
         return self.__dict__.get(key, default)
 
     def items(self) -> Mapping[str, object]:
+        """Return all extra diagnostic key-value pairs as a ``Mapping``."""
         merged: dict[str, object] = dict(self.__pydantic_extra__ or {})
         return merged
 
 
 def _coerce_workflow_step_details(value: object) -> object:
+    """BeforeValidator coercion: ``Mapping`` → ``WorkflowStepDetails``.
+
+    Pydantic calls this before the ``WorkflowStep.details`` field is
+    validated. ``None`` and already-typed instances pass through unchanged;
+    a ``Mapping`` is coerced into a :class:`WorkflowStepDetails` so the
+    stored shape is always the typed record.
+    """
     if value is None or isinstance(value, WorkflowStepDetails):
         return value
     if isinstance(value, Mapping):

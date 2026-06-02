@@ -1,3 +1,11 @@
+"""CLI commands for the ``aeat app overview`` subcommand group.
+
+Provides the ``status``, ``calendar``, ``agenda``, ``backlog``, and
+``explain`` verbs. All verbs are local-only: they never contact AEAT
+and apply no mutations to stored state. Help strings are localized via
+:func:`~aeat.core.i18n.tr`; the docstrings here document internal
+logic and are not surfaced as operator-facing CLI help.
+"""
 from __future__ import annotations
 
 from datetime import date as _date

@@ -105,6 +105,12 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 
 
 def _assert_query_browser_action(action: str) -> None:
+    """Assert that ``action`` is permitted under the GROI read-only guard policy.
+
+    Raises :class:`RegistryValidationError` via
+    :func:`assert_remote_operation_allowed` if the action pattern is
+    not allowed by ``_READ_GUARD_POLICY``.
+    """
     assert_remote_operation_allowed(
         _READ_GUARD_POLICY,
         RemoteOperation(kind="browser_action", action=action),
@@ -112,6 +118,7 @@ def _assert_query_browser_action(action: str) -> None:
 
 
 def _groi_shape_suggestion() -> str:
+    """Return the localised shape-change suggestion string for GROI error messages."""
     return tr("adapters.aeat.sede.groi.suggestions.shape_change")
 
 
@@ -131,6 +138,11 @@ async def _locate(
     description: str,
     timeout_ms: int,
 ) -> Locator:
+    """Locate the first visible element from ``selectors`` on the GROI page.
+
+    Thin wrapper around :func:`first_visible_locator` that injects the
+    GROI ``surface_label`` and shape-change suggestion string.
+    """
     return await first_visible_locator(
         page,
         selectors,
@@ -178,10 +190,17 @@ class GroiSedeDriver:
     """
 
     def __init__(self, *, settings: Settings | None = None) -> None:
+        """Initialise the driver with optional ``Settings`` override.
+
+        Args:
+            settings: If ``None``, the driver resolves :class:`Settings`
+                from the default load path when the session is created.
+        """
         self._settings = settings
 
     @property
     def mode(self) -> Literal["live"]:
+        """Always ``"live"`` — the driver requires a real Playwright session."""
         return "live"
 
     def planned_operations(
@@ -190,6 +209,14 @@ class GroiSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Return the ordered list of remote operations planned for this driver run.
+
+        Builds the sequence: GET the GROI URL, open the form, then one
+        ``check-nif-<NIF>`` browser action per declared NIF (sorted
+        alphabetically), and finally ``discard-session``.  At least one
+        entry in ``expected`` is required; raises
+        :class:`RegistryValidationError` otherwise.
+        """
         del payload
         if not expected:
             raise RegistryValidationError("GroiSedeDriver.planned_operations requires at least one expected NIF")
@@ -214,6 +241,13 @@ class GroiSedeDriver:
         expected: Mapping[str, object],
         timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
     ) -> GroiResult:
+        """Run the async GROI driver synchronously and return a :class:`GroiResult`.
+
+        Wraps :meth:`collect_async` in ``asyncio.run``.
+        :class:`SedeError`, :class:`SiteHealthError`, and
+        :class:`BrowserError` are re-raised as
+        :class:`RegistryValidationError` for the registry oracle layer.
+        """
         try:
             return asyncio.run(self.collect_async(payload, expected=expected, timeout_ms=timeout_ms))
         except (SedeError, SiteHealthError, BrowserError) as exc:
@@ -226,6 +260,7 @@ class GroiSedeDriver:
         expected: Mapping[str, object],
         timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
     ) -> GroiResult:
+        """Async entry point — delegates to :func:`collect_groi_observations`."""
         return await collect_groi_observations(
             payload,
             expected=expected,

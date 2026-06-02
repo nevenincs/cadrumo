@@ -34,6 +34,13 @@ BucketActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
+"""Short label identifying the actor that emitted a bucket event.
+
+A non-empty string of at most 64 characters; trailing and leading
+whitespace is stripped at validation time. Typical values are the CLI
+command path (``"aeat.app.modelo.calculate"``) or an automated-agent
+slug (``"censo.sync"``).
+"""
 _ObjectId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -272,6 +279,7 @@ class BucketEventHistoryCatalogue(BaseModel):
         return self
 
     def get(self, event_id: str) -> BucketEvent | None:
+        """Return the :class:`BucketEvent` for ``event_id``, or ``None`` if absent."""
         return self.events.get(event_id)
 
     def for_bucket(
@@ -306,13 +314,16 @@ class BucketEventHistoryCatalogue(BaseModel):
         return tuple(sorted(matching, key=lambda e: e.occurred_at))
 
     def values(self) -> ValuesView[BucketEvent]:
+        """Return a live view over every :class:`BucketEvent` in the catalogue."""
         return self.events.values()
 
     # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS: pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware base class. Successor epic required.
     def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
+        """Iterate over every :class:`BucketEvent` in insertion order."""
         return iter(self.events.values())
 
     def __len__(self) -> int:
+        """Return the total number of events in the catalogue."""
         return len(self.events)
 
 

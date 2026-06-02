@@ -35,6 +35,15 @@ def normalize_response_text(text: str) -> str:
 
 
 def registry_failure_message(exc: BaseException) -> str:
+    """Build a registry-facing error string enriched with the failure_mode context field.
+
+    Sede driver exceptions carry a ``context`` mapping; this helper
+    extracts ``failure_mode`` (falling back to a ``site_health:<state>``
+    label when only a ``state`` key is present) and appends it to the
+    base ``str(exc)`` so callers wrapping the exception into a
+    :class:`RegistryValidationError` preserve the diagnostic context.
+    Returns ``str(exc)`` unchanged when no ``failure_mode`` is derivable.
+    """
     context = getattr(exc, "context", None)
     if not isinstance(context, Mapping) or not context:
         return str(exc)
@@ -57,6 +66,38 @@ async def first_visible_locator(
     surface_label: str,
     shape_suggestion: str,
 ) -> Locator:
+    """Return the first selector in ``selectors`` that resolves to a visible element.
+
+    Probes each selector in order using a short ``probe_timeout_ms``
+    deadline. If a selector is not visible within that window,
+    ``PlaywrightError`` / ``PlaywrightTimeoutError`` is caught and the
+    next selector is tried. When no selector resolves,
+    :class:`SedeParseError` is raised with
+    ``SedeFailureMode.EXTERNAL_SHAPE_CHANGED`` so callers can distinguish
+    "AEAT changed the page layout" from transient network timeouts.
+
+    Args:
+        page: Playwright ``Page`` on which to probe the selectors.
+        selectors: CSS selector strings tried in declaration order.
+        stage: Opaque label for the current driver stage, included in
+            the error context.
+        description: Human-readable description of the expected element,
+            used in the error message.
+        timeout_ms: Overall operation timeout (ms); ``probe_timeout_ms``
+            is capped to this value.
+        probe_timeout_ms: Per-selector visibility probe budget (ms).
+        surface_label: Sede surface name included in log and error
+            messages (e.g. ``"GROI"``).
+        shape_suggestion: Localised guidance string appended to
+            :class:`SedeParseError` when all selectors fail.
+
+    Returns:
+        The first ``Locator`` from ``selectors`` whose element was
+        visible within ``probe_timeout_ms``.
+
+    Raises:
+        SedeParseError: When every selector probe timed out or failed.
+    """
     probe_timeout = min(timeout_ms, probe_timeout_ms)
     for selector in selectors:
         locator = page.locator(selector).first
