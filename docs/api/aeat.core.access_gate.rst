@@ -13,4 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   aeat.core.access_gate._authorization
    aeat.core.access_gate._errors
