@@ -163,8 +163,12 @@ class ProfileBucketPointer(BaseModel):
 
 
 def declaration_key(modelo: str, period: str) -> str:
-    """Return the canonical state-store key for a ``(modelo, period)`` pair."""
-    return f"{modelo.strip()}:{period.strip()}"
+    """Return the canonical state-store key for a ``(modelo, period)`` pair.
+
+    The period segment is upper-cased so a lowercase token (``2025q1``) and its
+    uppercase form (``2025Q1``) resolve to the same key.
+    """
+    return f"{modelo.strip()}:{period.strip().upper()}"
 
 
 class WorkflowState(BaseModel):
