@@ -123,6 +123,12 @@ adapters:
         template_not_detected: Could not auto-detect template for {path}; pass --modelo
           and --año to override.
         year_conflict: --año {year} conflicts with detected {detected}.
+    financial:
+      providers:
+        pdf_n26:
+          errors:
+            parse_failed: Could not parse the N26 PDF statement. The source path has
+              been redacted from diagnostics.
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have
@@ -3163,6 +3169,8 @@ errors:
       be requested without a prior registration.
     modelo_036_terminal_state: The Modelo 036 record is already deregistered and accepts
       no further operations.
+    modelo_184_share_sum: 'Modelo 184 member share percentages must sum to exactly 100%.'
+    modelo_347_threshold: 'Modelo 347 operations above the reporting threshold require explicit declaration coverage.'
     modelo_censo_stale: 'The operation is refused because you applied a new censo
       after this work was produced. The AEAT is the binding legal source: regenerate
       it against the current censo.'

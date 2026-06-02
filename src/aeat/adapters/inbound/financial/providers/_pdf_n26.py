@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import TypedDict
 
 from .....core.external_constants import DEFAULT_CURRENCY
+from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
@@ -57,6 +58,9 @@ _ROW_RE = re.compile(
 _VALUE_DATE_RE = re.compile(r"^Wertstellung (?P<value_date>\d{2}\.\d{2}\.\d{4})$")
 _STATEMENT_NUMBER_RE = re.compile(r"(?:Kontoauszug )?Nr\. (?P<number>\d+/\d+)")
 _PERIOD_RE = re.compile(r"^\d{2}\.\d{2}\.\d{4} bis \d{2}\.\d{2}\.\d{4}$")
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+
+_logger = get_logger(__name__)
 
 
 class _InProgressRow(TypedDict):
@@ -187,7 +191,7 @@ class PdfN26Provider(FinancialProvider):
         """Return normalized text lines for every PDF page."""
         try:
             import pdfplumber
-        except ImportError as exc:  # pragma: no cover - dependency is pinned
+        except ImportError as exc:
             raise InvalidFinancialSourceError("pdfplumber is not installed") from exc
         try:
             with pdfplumber.open(str(path)) as pdf:
@@ -196,8 +200,23 @@ class PdfN26Provider(FinancialProvider):
                     text = page.extract_text() or ""
                     lines = tuple(line.strip() for line in text.splitlines() if line.strip())
                     pages.append(lines)
-        except Exception as exc:  # BROAD-EXCEPT-RATIONALE-PDF-N26-TEARDOWN: pdfplumber raises OSError (I/O failure), ValueError (malformed structure), and struct.error (corrupt binary data) from its C-level PDF parser; the upstream exception surface is not fully typed and grows with library versions, so the broad catch is intentional to guarantee conversion to InvalidFinancialSourceError.
-            raise InvalidFinancialSourceError(f"could not parse PDF file: {path}") from exc
+        # BROAD-EXCEPT-RATIONALE-PDF-N26-TEARDOWN: pdfplumber raises
+        # OSError (I/O failure), ValueError (malformed structure), and
+        # struct.error (corrupt binary data) from its C-level PDF parser.
+        # The upstream exception surface is not fully typed and grows
+        # with library versions, so the broad catch is intentional to
+        # guarantee conversion to InvalidFinancialSourceError.
+        except Exception as exc:
+            _logger.error(
+                "pdf_n26_provider: failed to parse PDF file %s: %s",
+                _INPUT_PDF_SOURCE_LABEL,
+                type(exc).__name__,
+            )
+            raise InvalidFinancialSourceError(
+                f"could not parse PDF file: {_INPUT_PDF_SOURCE_LABEL}",
+                translated_message="adapters.inbound.financial.providers.pdf_n26.errors.parse_failed",
+                context={"source": _INPUT_PDF_SOURCE_LABEL},
+            ) from exc
         if not pages:
             raise InvalidFinancialSourceError("PDF file contains no pages")
         return tuple(pages)
