@@ -395,7 +395,6 @@ def _canonical_tax_id(value: str) -> str:
     return value.strip().upper()
 
 
-
 def _narrative_not_yet_found(draft: ModeloDraft) -> str:
     """Build the multilingual narrative for the NOT_YET_FOUND verdict."""
     es = (
