@@ -238,11 +238,26 @@ class SecureBoundRepository[T: BaseModel]:
         yield from sorted(identifiers)
 
     def iter_records(self) -> Iterator[T]:
-        """Yield every persisted payload in lexicographic id order."""
-        for identifier in self.iter_ids():
-            payload = self.load(identifier)
-            if payload is not None:
-                yield payload
+        """Yield every persisted payload in lexicographic id order.
+
+        Parses each row's decrypted payload bytes directly from
+        :meth:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository.list_records`
+        rather than routing through :meth:`load`.  The SQL
+        ``WHERE object_key = ?`` lookup inside :meth:`load` cannot
+        match the stored ciphertext when ``object_key`` is an
+        ``EncryptedString`` column (AES-256-GCM uses a random nonce, so
+        the bind-parameter ciphertext differs from the stored ciphertext
+        every time).  Iterating directly over the decrypted rows is the
+        correct pattern for full-scan enumeration.
+        """
+        envelope_cls = self._envelope_cls()
+        for record in self._objects.list_records(
+            self.namespace,
+            expected_class=self.sensitivity,
+            max_supported_version=self.schema_version,
+        ):
+            envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
+            yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
 
     # ------------------------------------------------------------------
     # Internals
