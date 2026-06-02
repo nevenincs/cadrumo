@@ -165,7 +165,7 @@ This final Wave proves the refactor works under adverse production conditions an
 Exercise the final storage architecture with real code paths, real encrypted stores, and explicit failure assertions.
 
 - [x] `W06.P11.S45` - add adverse-condition tests for locked, expired, wrong-passphrase, and torn-manifest sessions; `src/aeat/adapters/persistence/storage`.
-- [ ] `W06.P11.S46` - add adverse-condition tests for route mismatch, unregistered namespace, and unsecured backend refusal; `src/aeat/adapters/persistence/storage`.
+- [x] `W06.P11.S46` - add adverse-condition tests for route mismatch, unregistered namespace, and unsecured backend refusal; `src/aeat/adapters/persistence/storage`.
 - [ ] `W06.P11.S47` - add adverse-condition tests for revision conflicts and partial remote mirrors; `src/aeat/adapters`.
 - [ ] `W06.P11.S48` - run focused storage, config, profile, live, ledger, modelo, and remote provider test gates; `src/aeat`.
 - [ ] `W06.P11.S49` - run final SecureStorage code review and persist audit closeout; `.vault/audit`.

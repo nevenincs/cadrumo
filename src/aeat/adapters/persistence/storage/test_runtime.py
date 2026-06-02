@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import Settings, StorageRouteKind, override_settings
+from ....core.errors import resolve_error_message
 from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from .errors import StorageValidationError
 from .master_key._active_session import activate_session
@@ -24,8 +26,6 @@ from .runtime_repository import (
 )
 from .sql import SecureObjectRepository
 from .sql.secure_objects import SecureObjectWrite
-from ....core.config import Settings, StorageRouteKind, override_settings
-from ....core.errors import resolve_error_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -44,11 +44,13 @@ def _session(
     opened_at: datetime = _NOW,
     idle_minutes: int = 15,
     unsecured_backend: bool = False,
+    kek: bytes = _KEK,
+    dek: bytes = _DEK,
 ) -> BucketSession:
     return BucketSession.open(
         bucket_id=bucket_id,
-        kek=_KEK,
-        dek=_DEK,
+        kek=kek,
+        dek=dek,
         idle_minutes=idle_minutes,
         opened_at=opened_at,
         unsecured_backend=unsecured_backend,
@@ -139,6 +141,18 @@ def test_runtime_reports_route_and_session_bucket_mismatch(tmp_path: Path) -> No
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,)
 
 
+def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+
+    with activate_session(_session("bucket-b")):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        with pytest.raises(StorageValidationError) as raised:
+            runtime.secure_object_repository()
+
+    assert runtime.readiness.code is StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+
+
 def test_runtime_reports_unsecured_backend_as_unready(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
@@ -150,6 +164,18 @@ def test_runtime_reports_unsecured_backend_as_unready(tmp_path: Path) -> None:
     assert runtime.active_session is not None
     assert runtime.active_session.unsecured_backend is True
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.UNSECURED_BACKEND,)
+
+
+def test_runtime_repository_factory_refuses_initial_unsecured_backend(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+
+    with activate_session(_session("bucket-a", unsecured_backend=True)):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        with pytest.raises(StorageValidationError) as raised:
+            runtime.secure_object_repository()
+
+    assert runtime.readiness.code is StorageRuntimeReadinessCode.UNSECURED_BACKEND
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
 
 
 def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path: Path) -> None:
@@ -222,6 +248,224 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
     assert loaded is not None
     assert loaded.payload == b"runtime-payload"
     assert (tmp_path / "buckets" / "bucket-a" / "db" / "aeat.db").exists()
+
+
+def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    namespace = "aeat.test.runtime.unregistered"
+
+    with (
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+        ),
+        activate_session(_session("bucket-a")),
+    ):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        repo = runtime.secure_object_repository()
+        with pytest.raises(StorageValidationError) as raised:
+            repo.save(
+                namespace=namespace,
+                object_key="runtime-policy-key",
+                classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                written_at=_NOW,
+                payload=b"runtime-policy-payload",
+            )
+        unregistered_rows = tuple(row for row in repo.iter_all_records_raw() if row.namespace == namespace)
+
+    assert raised.value.translated_message == "errors.storage.namespace.unregistered"
+    assert unregistered_rows == ()
+
+
+def test_runtime_bound_repository_refuses_write_after_session_bucket_changes(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    object_key = "stale-session-write"
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        activate_session(_session("bucket-a")),
+    ):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        repo = runtime.secure_object_repository()
+        with activate_session(_session("bucket-b")):
+            with pytest.raises(StorageValidationError) as raised:
+                repo.save(
+                    namespace=namespace,
+                    object_key=object_key,
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    written_at=_NOW,
+                    payload=b"stale-session-payload",
+                )
+            rendered = resolve_error_message(raised.value)
+
+        loaded = repo.load(
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        )
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert "active bucket session changed" in rendered
+    assert loaded is None
+
+
+def test_runtime_bound_repository_refuses_raw_key_write_after_session_bucket_changes(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    hashed_object_key = b"h" * 32
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        activate_session(_session("bucket-a")),
+    ):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        repo = runtime.secure_object_repository()
+        with activate_session(_session("bucket-b")):
+            with pytest.raises(StorageValidationError) as raised:
+                repo.save_with_raw_key(
+                    namespace=namespace,
+                    hashed_object_key=hashed_object_key,
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    written_at=_NOW,
+                    payload=b"stale-raw-session-payload",
+                )
+            rendered = resolve_error_message(raised.value)
+
+        raw_row_exists = repo.exists_by_raw_key(namespace, hashed_object_key)
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert "active bucket session changed" in rendered
+    assert raw_row_exists is False
+
+
+def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    object_key = "unsecured-session-write"
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        activate_session(_session("bucket-a")),
+    ):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        repo = runtime.secure_object_repository()
+        with activate_session(_session("bucket-a", unsecured_backend=True)):
+            with pytest.raises(StorageValidationError) as raised:
+                repo.save(
+                    namespace=namespace,
+                    object_key=object_key,
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    written_at=_NOW,
+                    payload=b"unsecured-session-payload",
+                )
+            rendered = resolve_error_message(raised.value)
+
+        loaded = repo.load(
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        )
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert "unsecured backend" in rendered
+    assert loaded is None
+
+
+def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_changes(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    object_key = "stale-quarantine-row"
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        activate_session(_session("bucket-a")),
+    ):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        repo = runtime.secure_object_repository()
+        repo.save(
+            namespace=namespace,
+            object_key=object_key,
+            classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+            written_at=_NOW,
+            payload=b"quarantine-guard-payload",
+        )
+
+        with activate_session(_session("bucket-b", kek=b"x" * 32, dek=b"y" * 32)):
+            with pytest.raises(StorageValidationError) as raised:
+                repo.quarantine_unreadable_rows()
+            rendered = resolve_error_message(raised.value)
+
+        loaded = repo.load(
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        )
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert "active bucket session changed" in rendered
+    assert loaded is not None
+    assert loaded.payload == b"quarantine-guard-payload"
+
+
+def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_changes(tmp_path: Path) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+    namespace = WORKFLOW_STATE_NAMESPACE.namespace
+    object_key = "stale-diagnostic-row"
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
+        activate_session(_session("bucket-a")),
+    ):
+        runtime = inspect_storage_runtime(settings, now=_NOW)
+        repo = runtime.secure_object_repository()
+        repo.save(
+            namespace=namespace,
+            object_key=object_key,
+            classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+            written_at=_NOW,
+            payload=b"diagnostic-guard-payload",
+        )
+
+        with activate_session(_session("bucket-b", kek=b"x" * 32, dek=b"y" * 32)):
+            diagnostic_calls = (
+                lambda: repo.exists(namespace, object_key),
+                lambda: tuple(repo.iter_all_records_raw()),
+                repo.list_namespaces,
+                lambda: repo.probe_namespace_integrity(namespace),
+                lambda: tuple(repo.iter_namespace_decryptability(namespace)),
+                lambda: repo.list_keys(namespace),
+                lambda: tuple(
+                    repo.iter_records_with_failures(
+                        namespace,
+                        expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                        max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    )
+                ),
+                lambda: repo.peek_metadata(namespace, object_key),
+            )
+            for diagnostic_call in diagnostic_calls:
+                with pytest.raises(StorageValidationError) as raised:
+                    diagnostic_call()
+                assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+
+        loaded = repo.load(
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+        )
+
+    assert loaded is not None
+    assert loaded.payload == b"diagnostic-guard-payload"
 
 
 def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> None:
