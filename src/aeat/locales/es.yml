@@ -142,6 +142,9 @@ adapters:
           errors:
             parse_failed: No se pudo analizar el extracto PDF de N26. La ruta de origen
               se ha ocultado en los diagnósticos.
+    justificante:
+      errors:
+        parse_failed: 'No se pudo analizar el PDF del justificante. La ruta de origen se ha ocultado en los diagnósticos.'
   sede:
     errors:
       cotejo_nav_failed: La navegación a la página de cotejo de AEAT falló; la sesión
