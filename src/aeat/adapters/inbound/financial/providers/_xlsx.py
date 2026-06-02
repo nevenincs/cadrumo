@@ -174,9 +174,7 @@ class XlsxProvider(FinancialProvider):
         workbook = _open_workbook_or_refuse(path)
         try:
             best = _select_best_layout_across_worksheets(workbook)
-            best_rows = (
-                [list(row) for row in best.worksheet.iter_rows(values_only=True)] if best.worksheet else []
-            )
+            best_rows = [list(row) for row in best.worksheet.iter_rows(values_only=True)] if best.worksheet else []
             self._last_sheet_name = best.sheet_name
             self._last_header_index = best.header_index + 1
             if best.score < _MIN_LAYOUT_SCORE:
@@ -284,8 +282,7 @@ def _best_layout_match_for_worksheet(
 ) -> tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None:
     """Return the best (score, header_index, row, lookup, layout) the worksheet matches, or ``None``."""
     sample_rows = [
-        [coerce_cell_text(cell) for cell in row]
-        for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
+        [coerce_cell_text(cell) for cell in row] for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
     ]
     best: tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None = None
     for index, row in enumerate(sample_rows):
