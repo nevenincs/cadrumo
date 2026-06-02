@@ -10,13 +10,13 @@ import pytest
 
 from ...adapters.outbound.aeat.sede._declarations import Declaracion
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._expedientes import (
     ExpedientesCapture,
     ExpedientesService,
     ExpedientesSnapshotNotFoundError,
     expedientes_snapshot_object_key,
 )
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -164,9 +164,7 @@ class TestBucketIsolation:
 
 
 class TestSecureStorage:
-    def test_capture_persists_expedientes_snapshot_as_secure_object(
-        self, secure_engine: TestRuntimeProfile
-    ) -> None:
+    def test_capture_persists_expedientes_snapshot_as_secure_object(self, secure_engine: TestRuntimeProfile) -> None:
         persisted = _service(secure_engine).capture(
             bucket_id=secure_engine.bucket_id,
             capture=_capture(declarations=(_declaration(),)),
