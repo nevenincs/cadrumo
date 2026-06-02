@@ -99,9 +99,9 @@ Resolve the 14-test work-calculate empty-envelope cluster (peer signature drift 
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Diagnose work-calculate empty-envelope; `Reproduce on test_modelo_discovery_defects[1P]; identify where _emit_envelope is silenced; document the precise call path in a comment`.
-- [ ] `P01.S02` - Restore envelope emission for work-calculate; `Production fix in CLI handler + service so success/refusal always emits the SchemaEnvelope; cite the 14 failing test ids`.
-- [ ] `P01.S03` - Verify 14-test cluster passes; `Run all 14 listed CLI tests isolated; commit when green`.
+- [x] `P01.S01` - Diagnose work-calculate empty-envelope; `Reproduce on test_modelo_discovery_defects[1P]; identify where _emit_envelope is silenced; document the precise call path in a comment`.
+- [x] `P01.S02` - Restore envelope emission for work-calculate; `Production fix in CLI handler + service so success/refusal always emits the SchemaEnvelope; cite the 14 failing test ids`.
+- [x] `P01.S03` - Verify 14-test cluster passes; `Run all 14 listed CLI tests isolated; commit when green`.
 
 ### Phase `P02` - IVA wallet decision routing
 
