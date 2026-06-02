@@ -309,7 +309,7 @@ Instantiate the normatives catalogue singleton, re-export the domain/auth apoder
 - [x] `W07.P21.S78` - Instantiate NORMATIVE_CATALOGUE = _LazyCatalogue() in domain/normatives/__init__.py, add it to __all__, and align the docstring example (DB-12); `src/aeat/domain/normatives/__init__.py`.
 - [x] `W07.P21.S79` - Re-export the apoderamientos public surface (ALL_TOKEN, ApoderadoScope, ApoderamientosCatalogue, UnknownScopeError, expand_all_token, load_default_catalogue, parse_scope_tokens) from domain/auth/__init__.py with __all__, and drop the unimplemented providers clause from the docstring (DB-13); `src/aeat/domain/auth/__init__.py`.
 - [x] `W07.P21.S80` - Repoint application/auth/_apoderado.py:44 and core/resources/_repos/apoderamientos.py:15 to import from aeat.domain.auth instead of the apoderamientos submodule (DB-13); `src/aeat/application/auth/_apoderado.py`.
-- [ ] `W07.P21.S81` - Rewrite domain/modelos/__init__.py docstring to describe the real surface (modelo codes, filing/calculation/verification repositories, work units, calculation revisions, row models) with :class:CalculationRevision and :class:ModeloRevision cross-links (DB-03); `src/aeat/domain/modelos/__init__.py`.
+- [x] `W07.P21.S81` - Rewrite domain/modelos/__init__.py docstring to describe the real surface (modelo codes, filing/calculation/verification repositories, work units, calculation revisions, row models) with :class:CalculationRevision and :class:ModeloRevision cross-links (DB-03); `src/aeat/domain/modelos/__init__.py`.
 
 ### Phase `W07.P22` - CLI-to-application routing (DB-36)
 
