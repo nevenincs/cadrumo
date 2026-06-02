@@ -100,9 +100,7 @@ def test_wizard_next_label_uses_tr() -> None:
     """The 'next' tab-label emit uses tr() with the canonical locale key."""
     src = _source(_COMMANDS_REL)
     pattern = re.compile(r"tr\(['\"]" + re.escape(_NEXT_LOCALE_KEY) + r"['\"]")
-    assert pattern.search(src), (
-        f"wizard/_commands.py must call tr('{_NEXT_LOCALE_KEY}') for the next tab label"
-    )
+    assert pattern.search(src), f"wizard/_commands.py must call tr('{_NEXT_LOCALE_KEY}') for the next tab label"
 
 
 def test_wizard_next_locale_key_in_en() -> None:
@@ -148,9 +146,7 @@ _PDFWORD_RATIONALE_TOKEN = "ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD"
 def test_pdfword_alias_rationale_comment_present() -> None:
     """_PdfWord TypeAlias has the ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD comment."""
     src = _source(_PARSER_REL)
-    assert _PDFWORD_RATIONALE_TOKEN in src, (
-        f"{_PDFWORD_RATIONALE_TOKEN!r} rationale comment missing from _parser.py"
-    )
+    assert _PDFWORD_RATIONALE_TOKEN in src, f"{_PDFWORD_RATIONALE_TOKEN!r} rationale comment missing from _parser.py"
 
 
 def test_pdfword_alias_is_dict_str_any() -> None:
@@ -187,9 +183,7 @@ def test_local_sidecar_return_type_is_mapping() -> None:
     hints = LocalFileSystemProvider._load_sidecar.__annotations__
     return_hint = hints.get("return")
     hint_str = str(return_hint)
-    assert "Mapping" in hint_str, (
-        f"_load_sidecar return annotation should be Mapping[str, object], got {hint_str!r}"
-    )
+    assert "Mapping" in hint_str, f"_load_sidecar return annotation should be Mapping[str, object], got {hint_str!r}"
 
 
 def test_local_sidecar_runtime_returns_mapping() -> None:

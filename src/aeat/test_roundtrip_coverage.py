@@ -178,8 +178,7 @@ def test_persistence_boundary_roundtrip_tests_exist() -> None:
 
     assert not missing, (
         "Persistence boundaries declared in the roundtrip inventory are missing "
-        "their roundtrip test files (per aeat-roundtrip-discipline.md):\n\n"
-        + "\n".join(f"  - {m}" for m in missing)
+        "their roundtrip test files (per aeat-roundtrip-discipline.md):\n\n" + "\n".join(f"  - {m}" for m in missing)
     )
 
 
@@ -193,13 +192,10 @@ def test_roundtrip_inventory_has_no_duplicate_paths() -> None:
     duplicates: list[str] = []
     for label, rel_path in _BOUNDARY_ROUNDTRIP_INVENTORY:
         if rel_path in seen_paths:
-            duplicates.append(
-                f"{rel_path!r} appears as both {seen_paths[rel_path]!r} and {label!r}"
-            )
+            duplicates.append(f"{rel_path!r} appears as both {seen_paths[rel_path]!r} and {label!r}")
         else:
             seen_paths[rel_path] = label
 
-    assert not duplicates, (
-        "Duplicate paths in _BOUNDARY_ROUNDTRIP_INVENTORY:\n"
-        + "\n".join(f"  - {d}" for d in duplicates)
+    assert not duplicates, "Duplicate paths in _BOUNDARY_ROUNDTRIP_INVENTORY:\n" + "\n".join(
+        f"  - {d}" for d in duplicates
     )
