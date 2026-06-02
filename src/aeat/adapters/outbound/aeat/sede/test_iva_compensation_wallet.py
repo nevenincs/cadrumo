@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -16,6 +17,7 @@ from ._iva_compensation_wallet import (
     _assert_read_browser_action,
     _assert_read_http,
     _parse_spanish_decimal,
+    _wait_for_wallet_execute_initial_shape,
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
     _wallet_row_from_cells,
@@ -220,6 +222,35 @@ def test_wallet_execute_gate_detection_identifies_read_query_shape() -> None:
 
     status = _wallet_execute_gate_status(html, expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet)
 
+    assert status == "wallet-execute-submit-present"
+
+
+def test_wallet_execute_initial_shape_waits_for_delayed_submit() -> None:
+    pending_html = "<html><body><main></main></body></html>"
+    wallet_html = f"""
+    <html><body>
+      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <input id="ejecutar" name="ejecutar" type="submit" />
+      </form>
+    </body></html>
+    """
+    pages = [pending_html, pending_html, wallet_html]
+
+    async def content() -> str:
+        if len(pages) == 1:
+            return pages[0]
+        return pages.pop(0)
+
+    async def run() -> tuple[str, str]:
+        return await _wait_for_wallet_execute_initial_shape(
+            content=content,
+            expected_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+            timeout_ms=2_000,
+        )
+
+    html, status = asyncio.run(run())
+
+    assert html == wallet_html
     assert status == "wallet-execute-submit-present"
 
 
