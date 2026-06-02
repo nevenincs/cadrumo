@@ -107,8 +107,7 @@ def test_csv_extensions_constant_drives_csv_provider_routing() -> None:
     for ext in CSV_EXTENSIONS:
         provider = provider_for_extension(Path(f"statement{ext}"))
         assert isinstance(provider, CsvProvider), (
-            f"Expected CsvProvider for extension {ext!r} from CSV_EXTENSIONS "
-            f"but got {type(provider).__name__}"
+            f"Expected CsvProvider for extension {ext!r} from CSV_EXTENSIONS but got {type(provider).__name__}"
         )
 
 

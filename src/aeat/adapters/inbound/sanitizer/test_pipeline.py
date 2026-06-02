@@ -74,8 +74,7 @@ def _build_real_world_like_pdf() -> bytes:
     pdf = pikepdf.Pdf.new()
     pdf.add_blank_page(page_size=(612, 792))
     pdf.pages[0].contents_add(
-        b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n"
-        b"BT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
+        b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\nBT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
     )
     pdf.docinfo["/Title"] = pikepdf.String(f"Justificante AEAT {_REAL_NIE_CANARY}")
     pdf.docinfo["/Author"] = pikepdf.String(_REAL_NAME_CANARY)
