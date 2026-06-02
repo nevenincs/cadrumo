@@ -197,7 +197,7 @@ def reconcile_modelo_303_iva_compensation(
     *,
     taxpayer_nif: str,
     wallet: IvaCompensationWalletObservation | None,
-    repository: "CalculationObservationRepository | None" = None,
+    repository: CalculationObservationRepository | None = None,
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = _DEFAULT_MAX_WALLET_AGE_DAYS,
