@@ -405,6 +405,18 @@ TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
+TEST_RUNTIME_PROFILE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="test_runtime_profile",
+    namespace="aeat.tests.runtime.profile",
+    owner="aeat.tests.test_secure_sql",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="runtime-row",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
 LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_expedientes_snapshot",
     namespace="aeat.application.live.expedientes_snapshot",
@@ -763,6 +775,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         TEST_SESSION_LIFECYCLE_NAMESPACE,
         TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
+        TEST_RUNTIME_PROFILE_NAMESPACE,
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
         LIVE_VERIFY_OBSERVATION_NAMESPACE,
