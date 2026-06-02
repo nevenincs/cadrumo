@@ -187,6 +187,10 @@ def aggregate_renta_income_ledger(
 
     Args:
         transactions: The :class:`TransactionCatalogue` of ledger transactions to aggregate.
+        bucket_id: Bucket identifier carried through to provenance and audit
+            records so the resulting aggregation cannot be silently misattributed.
+        period: The quarterly :class:`Period` (or canonical string token) whose
+            year anchors the cumulative window.
 
     Returns a :class:`RentaIncomeLedgerAggregation` covering the
     cumulative fiscal window. ``period`` must be a quarterly period token
