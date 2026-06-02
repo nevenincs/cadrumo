@@ -16,14 +16,11 @@ no eviction, because the bundled data is immutable per install.
 from __future__ import annotations
 
 from collections.abc import Hashable, Iterable
-from typing import Generic, Protocol, TypeVar, runtime_checkable
-
-T = TypeVar("T")
-K = TypeVar("K", bound=Hashable)
+from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
-class ResourceRepository(Protocol, Generic[T, K]):
+class ResourceRepository[T, K: Hashable](Protocol):
     """Typed read-only resource repository protocol."""
 
     def get(self, key: K) -> T:
@@ -39,7 +36,7 @@ class ResourceRepository(Protocol, Generic[T, K]):
         ...
 
 
-class ResourceCacheRepository(Generic[T, K]):
+class ResourceCacheRepository[T, K: Hashable]:
     """Default Repository implementation with an Identity Map cache.
 
     Subclasses override :meth:`_load` to read and validate one
@@ -67,9 +64,7 @@ class ResourceCacheRepository(Generic[T, K]):
         the available keys. Subclasses with a finite key space
         (year-keyed catalogues, etc.) override.
         """
-        raise NotImplementedError(
-            f"{type(self).__name__} does not implement all(); override per repository"
-        )
+        raise NotImplementedError(f"{type(self).__name__} does not implement all(); override per repository")
 
     def clear_cache(self) -> None:
         """Empty the Identity Map.
