@@ -175,8 +175,8 @@ Create the domain/iva_compensation package and migrate the Modelo-303 carry-forw
 
 Scaffold the domain package and relocate the five IVA-compensation error classes.
 
-- [ ] `W03.P07.S33` - Scaffold domain/iva_compensation/ with __init__, _errors, _carry_forward, _reconciliation, _balance modules (tag relocation:domain/iva_compensation-init); `src/aeat/domain/iva_compensation/__init__.py`.
-- [ ] `W03.P07.S34` - Move the 5 IVA-compensation error classes (IvaCompensationCarryForwardPolicyError, IvaCompensationSeedConflictError, IvaCompensationYearRangeError, IvaCompensationDecimalParseError, IvaCompensationReconciliationInputError) into domain/iva_compensation/_errors.py and repoint importers; `src/aeat/domain/iva_compensation/_errors.py`.
+- [x] `W03.P07.S33` - Scaffold domain/iva_compensation/ with __init__, _errors, _carry_forward, _reconciliation, _balance modules (tag relocation:domain/iva_compensation-init); `src/aeat/domain/iva_compensation/__init__.py`.
+- [x] `W03.P07.S34` - Move the 5 IVA-compensation error classes (IvaCompensationCarryForwardPolicyError, IvaCompensationSeedConflictError, IvaCompensationYearRangeError, IvaCompensationDecimalParseError, IvaCompensationReconciliationInputError) into domain/iva_compensation/_errors.py and repoint importers; `src/aeat/domain/iva_compensation/_errors.py`.
 
 ### Phase `W03.P08` - Move carry-forward, reconciliation and balance logic
 
