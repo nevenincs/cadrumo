@@ -45,7 +45,6 @@ CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.adapters.inbound.borrador",
     "aeat.adapters.inbound.declaracion",
     "aeat.adapters.inbound.justificante",
-    "aeat.adapters.inbound.identity",
     "aeat.adapters.inbound.sanitizer",
     "aeat.adapters.inbound.financial",
     "aeat.adapters.inbound.financial.providers",
