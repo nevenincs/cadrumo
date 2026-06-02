@@ -349,9 +349,7 @@ def _prior_303_observation(
                 (
                     ObservedCasillaValue(
                         casilla_id=(
-                            "iva.compensacion-pendiente-periodos-anteriores"
-                            if semantic_compensation_ids
-                            else "110"
+                            "iva.compensacion-pendiente-periodos-anteriores" if semantic_compensation_ids else "110"
                         ),
                         value=str(prior_pending),
                         source_artefact_kind="submitted_file",
