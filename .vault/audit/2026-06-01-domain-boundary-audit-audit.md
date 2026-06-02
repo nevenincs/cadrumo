@@ -1499,6 +1499,23 @@ remediation is currently HELD at audit-only per the active action policy.
     confirmed all-clean on 2026-06-03 (a viable window for a dedicated pass), but the
     footprint + high-churn locale/registry surfaces make a single-turn attempt
     abandon-prone (cf. the S51 T8 collision + S64 revert).
+  - **2026-06-03: S89 EXECUTED — closed (commit `7acd25e44`).** Landed on a clean-surface
+    window via the *relocate-the-error* approach (not retire), which eliminated the
+    locale cascade entirely: `IvaWalletReconciliationError` moved to
+    `domain/iva_compensation/_errors.py` (registry path-string update, code +
+    message_key preserved — same S61/S62/S54 pattern). The six functions moved to
+    `domain/iva_compensation/_reconciliation.py`; `validate_wallet_matches_snapshot` +
+    `local_recurrence_authority_source` publicized (orchestrator consumers) per the
+    refinement above. Two read-only `@runtime_checkable` Protocols added — read-only
+    members proved necessary: plain mutable attribute annotations are invariant, so the
+    adapter's `AnyHttpUrl source_url` / `BindingId binding_id` only satisfy covariant
+    read-only `@property` members (ty caught this; fixed). The application orchestrator
+    now takes the wallet Protocol and DROPPED the `adapters.outbound.aeat.sede` import —
+    removing the application→adapters edge. `DEFAULT_MAX_WALLET_AGE_DAYS` publicized; the
+    `source_kind` Literal annotation tightened (`Final` not `Final[str]`). Behaviour-
+    neutral: 36 + 19 tests green, ty clean, collect-only clean (276), Domain-not-
+    application contract KEPT. No locale change was needed, so the feared 4-locale cascade
+    never materialised.
   - **Verification gate list for the atomic commit:** `pytest --collect-only`,
     `lint-imports` (confirm the domain→adapters/application edges are gone),
     `test_registry_enforcement.py`, locale parity + honesty gates, the full
