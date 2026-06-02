@@ -325,15 +325,15 @@ Author OutputSchema subclasses for the 4 google-config command emit sites in _co
 
 Author OutputSchema subclasses for the 4 census command emit sites in _config/_profile_census_payloads.py, register each, and migrate the emit sites.
 
-- [ ] `W05.P21.S178` - author CensusRefreshResult OutputSchema subclass with @register_schema decorator for config.census.refresh; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
-- [ ] `W05.P21.S179` - migrate census_refresh bare emit site to _emit_envelope using typed CensusRefreshResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `W05.P21.S180` - author CensusShowResult OutputSchema subclass with @register_schema decorator for config.census.show; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
-- [ ] `W05.P21.S181` - migrate census_show bare emit site to _emit_envelope using typed CensusShowResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `W05.P21.S182` - author CensusCompareResult OutputSchema subclass with @register_schema decorator for config.census.compare; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
-- [ ] `W05.P21.S183` - migrate census_compare bare emit site to _emit_envelope using typed CensusCompareResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `W05.P21.S184` - author CensusApplyResult OutputSchema subclass with @register_schema decorator for config.census.apply; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
-- [ ] `W05.P21.S185` - migrate census_apply bare emit site to _emit_envelope using typed CensusApplyResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
-- [ ] `W05.P21.S186` - append census command paths to MIGRATED_COMMANDS and import _config._profile_census_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W05.P21.S178` - author CensusRefreshResult OutputSchema subclass with @register_schema decorator for config.census.refresh; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
+- [x] `W05.P21.S179` - migrate census_refresh bare emit site to _emit_envelope using typed CensusRefreshResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `W05.P21.S180` - author CensusShowResult OutputSchema subclass with @register_schema decorator for config.census.show; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
+- [x] `W05.P21.S181` - migrate census_show bare emit site to _emit_envelope using typed CensusShowResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `W05.P21.S182` - author CensusCompareResult OutputSchema subclass with @register_schema decorator for config.census.compare; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
+- [x] `W05.P21.S183` - migrate census_compare bare emit site to _emit_envelope using typed CensusCompareResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `W05.P21.S184` - author CensusApplyResult OutputSchema subclass with @register_schema decorator for config.census.apply; `src/aeat/entrypoints/cli/_config/_profile_census_payloads.py`.
+- [x] `W05.P21.S185` - migrate census_apply bare emit site to _emit_envelope using typed CensusApplyResult; `src/aeat/entrypoints/cli/_config/_profile_census.py`.
+- [x] `W05.P21.S186` - append census command paths to MIGRATED_COMMANDS and import _config._profile_census_payloads as side-effect; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
 
 ### Phase `W05.P22` - __init__.py payload classes - 4 emit sites
 
@@ -388,5 +388,5 @@ Assert MIGRATED_COMMANDS equals the full set of registered schema paths; remove 
 Add a structural pytest that walks CLI entrypoint modules under src/aeat/entrypoints/cli/ and asserts zero remaining bare _emit(ctx call sites, with an explicit exclusion list for non-transport _emit helpers in wizard and observability modules.
 
 - [x] `W06.P27.S206` - author test_zero_bare_emit_sites that walks CLI entrypoint modules under src/aeat/entrypoints/cli/ and asserts zero bare _emit(ctx call sites remain; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W06.P27.S207` - document the explicit exclusion list for non-transport _emit functions in application/wizard/_runner.py and core/observability test_sink files in the structural assertion docstring; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
-- [ ] `W06.P27.S208` - run the full CLI test suite and confirm all gates are green; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W06.P27.S207` - document the explicit exclusion list for non-transport _emit functions in application/wizard/_runner.py and core/observability test_sink files in the structural assertion docstring; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
+- [x] `W06.P27.S208` - run the full CLI test suite and confirm all gates are green; `src/aeat/entrypoints/cli/test_json_schema_conformance.py`.
