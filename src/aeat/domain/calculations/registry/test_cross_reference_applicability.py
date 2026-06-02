@@ -138,7 +138,6 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
     arithmetic.
     """
 
-
     from . import load_registry_tree
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
@@ -213,7 +212,6 @@ def test_oss_369_filing_schedules_select_only_when_oss_enrolled() -> None:
     not see the schedule fire at all — the cross-reference applicability
     gate is then defense-in-depth at the binding layer.
     """
-
 
     from . import applicable_filing_schedules, load_registry_tree
 
@@ -292,7 +290,6 @@ def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
     deadline-window predicate validation.
     """
 
-
     from ...user_profile._loader import load_user_profile_schema
     from ...user_profile._registry_contract import (
         UserProfileRegistryContractSeverity,
@@ -349,7 +346,6 @@ def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> 
     schema-side regression (predicate dropped on serialisation, mode flipped)
     fails alongside any TOML edit.
     """
-
 
     from . import load_registry_tree
 

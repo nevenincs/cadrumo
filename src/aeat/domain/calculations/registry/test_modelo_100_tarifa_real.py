@@ -663,9 +663,7 @@ def test_s361_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
         f"0610 ({c0610!r}) must equal 0595 ({c0595!r}) - 0609 ({c0609!r}). "
         f"Structural identity failure in renta-2024-cuota-diferencial."
     )
-    assert c0610 < c0595, (
-        f"0610 ({c0610!r}) must be less than 0595 ({c0595!r}) when retenciones > 0."
-    )
+    assert c0610 < c0595, f"0610 ({c0610!r}) must be less than 0595 ({c0595!r}) when retenciones > 0."
 
 
 def test_s361_anti_tautology_higher_retencion_reduces_cuota_diferencial(
