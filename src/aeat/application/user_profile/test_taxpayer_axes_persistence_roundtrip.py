@@ -78,9 +78,7 @@ def _required_facts(schema) -> list[UserProfileFact]:
             continue
         for field in section.fields:
             if field.required:
-                facts.append(
-                    UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder")
-                )
+                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
     return facts
 
 
@@ -132,10 +130,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     facts = tuple(_required_facts(schema)) + _TAXPAYER_AXIS_FACTS
     # iva.regime is required; override the placeholder with the real
     # W01-added REAGP token so the regime axis is exercised non-default.
-    facts = tuple(
-        UserProfileFact(path="iva.regime", value="REAGP") if f.path == "iva.regime" else f
-        for f in facts
-    )
+    facts = tuple(UserProfileFact(path="iva.regime", value="REAGP") if f.path == "iva.regime" else f for f in facts)
 
     state = register_active_profile(
         WorkflowState(),
@@ -154,10 +149,7 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     # exact persisted value — boolean facts included.
     assert _fact_value(record, "taxpayer_type.entity_type") == "legal_entity"
     assert _fact_value(record, "taxpayer_type.legal_entity_form") == "cooperativa"
-    assert (
-        _fact_value(record, "taxpayer_type.irpf_income_categories")
-        == "trabajo,capital_inmobiliario,pension"
-    )
+    assert _fact_value(record, "taxpayer_type.irpf_income_categories") == "trabajo,capital_inmobiliario,pension"
     assert _fact_value(record, "irpf.estimation_regime") == "directa_simplificada"
     assert _fact_value(record, "iva.regime") == "REAGP"
     assert _fact_value(record, "iva.sii_enrolled") is True
