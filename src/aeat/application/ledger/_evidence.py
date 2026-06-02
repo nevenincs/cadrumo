@@ -89,7 +89,14 @@ class PurchaseInvoiceEvidence(BaseModel):
 
 
 class PurchaseInvoiceEvidencePatch(BaseModel):
-    """Mutable subset of fields accepted by ``update``."""
+    """Mutable subset of ``PurchaseInvoiceEvidence`` fields accepted by ``update``.
+
+    Only the fields listed here may be changed after an evidence record is
+    created. ``evidence_id``, ``bucket_id``, ``source_path``,
+    ``source_sha256``, ``media_kind``, and the timestamp fields are immutable.
+    A ``None`` value for any optional field means "leave unchanged"; the
+    service ignores ``None`` entries when applying the patch.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -208,6 +215,16 @@ class PurchaseInvoiceEvidenceService:
         settings: Settings | None = None,
         bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     ) -> None:
+        """Initialise the service with optional dependency injection.
+
+        Args:
+            settings: Resolved ``Settings`` object. When ``None``,
+                ``load_settings()`` is called so that test overrides via
+                ``override_settings()`` are honoured.
+            bucket_event_repository: Audit-event sink. Defaults to
+                ``BucketEventHistoryRepository`` backed by the project's
+                configured storage directory.
+        """
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var and lands writes in the project default.
         from ...core.config import load_settings as _load_settings
@@ -229,6 +246,36 @@ class PurchaseInvoiceEvidenceService:
         notes: str = "",
         actor: str = "cli",
     ) -> PurchaseInvoiceEvidenceResult:
+        """Attach a new purchase invoice evidence file to a bucket (ledger).
+
+        Resolves ``source_path`` to an absolute path, verifies the file
+        exists, infers the ``MediaKind`` from the extension, SHA-256 hashes
+        the file, creates a ``PurchaseInvoiceEvidence`` record, appends it to
+        the per-bucket JSONL store, and emits a
+        ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event.
+
+        Args:
+            bucket_id: Ledger bucket the evidence belongs to.
+            source_path: Local path to a PDF or image file.
+            supplier: Optional vendor name extracted from the invoice.
+            invoice_number: Optional invoice identifier from the document.
+            invoice_date: Optional issue date string (free-form; typically
+                ``YYYY-MM-DD``).
+            taxable_base: Optional net taxable amount (``~decimal.Decimal``).
+            iva_rate: Optional IVA percentage as a ``~decimal.Decimal``.
+            iva_amount: Optional IVA amount as a ``~decimal.Decimal``.
+            notes: Operator free-text annotation.
+            actor: Identifier stamped on the audit event (defaults to
+                ``"cli"``).
+
+        Returns:
+            ``PurchaseInvoiceEvidenceResult`` carrying the new record and the
+            emitted audit event id.
+
+        Raises:
+            ``PurchaseInvoiceEvidenceInputError``: if ``source_path`` is not a
+                readable file or has an unsupported extension.
+        """
         resolved = Path(source_path).expanduser().resolve()
         if not resolved.is_file():
             raise PurchaseInvoiceEvidenceInputError(
@@ -269,6 +316,19 @@ class PurchaseInvoiceEvidenceService:
         return PurchaseInvoiceEvidenceResult(record=record, bucket_event_ids=(event_id,))
 
     def view(self, *, bucket_id: str, evidence_id: str) -> PurchaseInvoiceEvidence:
+        """Return the single evidence record identified by ``evidence_id``.
+
+        Args:
+            bucket_id: Ledger bucket to search.
+            evidence_id: Unique evidence id assigned at ``add`` time.
+
+        Returns:
+            The matching ``PurchaseInvoiceEvidence`` record.
+
+        Raises:
+            ``PurchaseInvoiceEvidenceNotFoundError``: if no record with that id
+                exists in the bucket.
+        """
         for record in _load(self._settings, bucket_id):
             if record.evidence_id == evidence_id:
                 return record
@@ -278,6 +338,15 @@ class PurchaseInvoiceEvidenceService:
         )
 
     def list_all(self, *, bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
+        """Return all evidence records for a bucket in append order.
+
+        Args:
+            bucket_id: Ledger bucket to read.
+
+        Returns:
+            A tuple of ``PurchaseInvoiceEvidence`` records, oldest first.
+            Returns an empty tuple if the bucket has no evidence file yet.
+        """
         return tuple(_load(self._settings, bucket_id))
 
     def update(
@@ -288,6 +357,28 @@ class PurchaseInvoiceEvidenceService:
         patch: PurchaseInvoiceEvidencePatch,
         actor: str = "cli",
     ) -> PurchaseInvoiceEvidenceResult:
+        """Apply a partial update to an existing evidence record.
+
+        Loads the bucket's record list, finds the record matching
+        ``evidence_id``, merges non-``None`` fields from ``patch``, stamps
+        ``updated_at``, writes the updated list back, and emits a
+        ``PURCHASE_INVOICE_EVIDENCE_REPLACED`` audit event.
+
+        Args:
+            bucket_id: Ledger bucket containing the record.
+            evidence_id: Id of the record to update.
+            patch: ``PurchaseInvoiceEvidencePatch`` carrying the fields to
+                change. Fields set to ``None`` are left unchanged.
+            actor: Identifier stamped on the audit event.
+
+        Returns:
+            ``PurchaseInvoiceEvidenceResult`` with the updated record and audit
+            event id.
+
+        Raises:
+            ``PurchaseInvoiceEvidenceNotFoundError``: if no matching record
+                exists.
+        """
         records = _load(self._settings, bucket_id)
         for index, record in enumerate(records):
             if record.evidence_id != evidence_id:
@@ -323,6 +414,25 @@ class PurchaseInvoiceEvidenceService:
         evidence_id: str,
         actor: str = "cli",
     ) -> PurchaseInvoiceEvidenceResult:
+        """Remove an evidence record from a bucket.
+
+        Finds the record, removes it from the in-memory list, rewrites the
+        JSONL file without it, and emits a
+        ``PURCHASE_INVOICE_EVIDENCE_DETACHED`` audit event.
+
+        Args:
+            bucket_id: Ledger bucket containing the record.
+            evidence_id: Id of the record to remove.
+            actor: Identifier stamped on the audit event.
+
+        Returns:
+            ``PurchaseInvoiceEvidenceResult`` carrying the removed record and
+            the audit event id.
+
+        Raises:
+            ``PurchaseInvoiceEvidenceNotFoundError``: if no matching record
+                exists.
+        """
         records = _load(self._settings, bucket_id)
         for index, record in enumerate(records):
             if record.evidence_id == evidence_id:
