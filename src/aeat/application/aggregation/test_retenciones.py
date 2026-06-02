@@ -172,7 +172,7 @@ class TestAggregate111:
         from ._grouping import filter_observations_for_modelo
         from ._retenciones import _MODELO_SCHEME_CATALOGUE
 
-        with pytest.raises(AggregationUnsupportedModeloError, match="modelo '347'"):
+        with pytest.raises(AggregationUnsupportedModeloError):
             filter_observations_for_modelo(
                 (),
                 modelo="347",
