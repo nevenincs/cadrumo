@@ -605,6 +605,12 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         inputs={
             "07": Decimal("10000.00"),
             "09": Decimal("2100.00"),
+            # Compensation carry-over binding required by the
+            # iva.compensacion-pendiente-periodos-anteriores bound casilla
+            # (registry change made this a mandatory input for export
+            # roundtrips). Zero is the neutral value for a first-quarter
+            # filing with no prior carry-over.
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         },
         schema_provider=provider,
     )

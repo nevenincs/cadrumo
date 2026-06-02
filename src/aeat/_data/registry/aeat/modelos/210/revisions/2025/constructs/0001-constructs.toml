@@ -1,6 +1,12 @@
 [[revisions."2025".constructs]]
 id = "m210-irnr-calculation"
 title = "Modelo 210 IRNR calculation"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
 formulas = [
     "m210-base-imponible-2025",
     "m210-tipo-gravamen-2025-resolve",
