@@ -24,18 +24,17 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
 from ...core.errors import ErrorCategory, get_error_exit_code
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 from . import _modelo as modelo_cli
 from ._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,
 )
-from ...tests.cli_runner import invoke_cached_cli
-from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -45,16 +44,12 @@ _BUCKET_ID = "default"
 
 @pytest.fixture
 def isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=tmp_path / "audit"),
         profile_create_storage_span(_BUCKET_ID),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 def _register_maritime_profile(*, overrides: dict[str, str]) -> None:
@@ -108,9 +103,7 @@ class TestHelpSurfaceLocalisation:
 class TestArt7pEnvelopeContract:
     """JSON envelope carries CasillaObservation with the Art. 7.p) BOE anchor."""
 
-    def test_art_7p_envelope_validates_against_output_schema(
-        self, isolated_backend: None
-    ) -> None:
+    def test_art_7p_envelope_validates_against_output_schema(self, isolated_backend: None) -> None:
         _register_maritime_profile(
             overrides={
                 "maritime_worker.worker_class": "trabajador_del_mar",
@@ -145,9 +138,7 @@ class TestArt7pEnvelopeContract:
 class TestRetmarMandatoryFilingWarningSurface:
     """RETMAR completeness gate surfaces as a translated non-blocking warning."""
 
-    def test_retmar_registered_profile_emits_warning_alongside_observation(
-        self, isolated_backend: None
-    ) -> None:
+    def test_retmar_registered_profile_emits_warning_alongside_observation(self, isolated_backend: None) -> None:
         _register_maritime_profile(
             overrides={
                 "maritime_worker.worker_class": "trabajador_del_mar",
@@ -192,9 +183,7 @@ class TestDa41InactiveGuard:
     renders the translated message in the operator's active locale.
     """
 
-    def test_da41_refusal_propagates_through_cli_verb(
-        self, isolated_backend: None
-    ) -> None:
+    def test_da41_refusal_propagates_through_cli_verb(self, isolated_backend: None) -> None:
         _register_maritime_profile(
             overrides={
                 "maritime_worker.worker_class": "trabajador_del_mar",
@@ -222,9 +211,7 @@ class TestDa41InactiveGuard:
 class TestVerbWiringIntegration:
     """The verb reads the active profile and dispatches the service correctly."""
 
-    def test_no_eligibility_yields_empty_observations(
-        self, isolated_backend: None
-    ) -> None:
+    def test_no_eligibility_yields_empty_observations(self, isolated_backend: None) -> None:
         # An active profile without any maritime_worker facts produces no
         # pathway match — the envelope is well-formed and the observation
         # list is empty.
@@ -243,9 +230,7 @@ class TestVerbWiringIntegration:
         assert validated.retmar_mandatory_filing is False
         assert validated.retmar_warning is None
 
-    def test_facts_reader_round_trips_through_profile(
-        self, isolated_backend: None
-    ) -> None:
+    def test_facts_reader_round_trips_through_profile(self, isolated_backend: None) -> None:
         _register_maritime_profile(
             overrides={
                 "maritime_worker.worker_class": "trabajador_del_mar",

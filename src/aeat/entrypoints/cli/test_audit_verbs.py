@@ -17,15 +17,14 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql import dispose_engine
 from ...application.evidence import EvidenceBundleService
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
 from ...core.i18n import tr
-from . import app
 from ...tests.secure_sql import isolated_profile_storage_root
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -33,17 +32,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     audit_dir = tmp_path / "audit"
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=audit_dir),
         profile_create_storage_span("operator"),
     ):
-        try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-            yield audit_dir
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        yield audit_dir
 
 
 _WORK_UNIT_ID = "a" * 64
