@@ -106,8 +106,7 @@ def test_alias_inventory_discovers_known_owners() -> None:
     }
     missing = required_owners - inventory.aliases_by_owner.keys()
     assert not missing, (
-        f"alias inventory missing owners {sorted(missing)!r}; "
-        f"discovered {sorted(inventory.aliases_by_owner.keys())!r}"
+        f"alias inventory missing owners {sorted(missing)!r}; discovered {sorted(inventory.aliases_by_owner.keys())!r}"
     )
 
 
@@ -158,13 +157,11 @@ def test_bare_str_typed_id_detector_recognises_synthetic_violation(tmp_path) -> 
 
     inventory = build_alias_inventory(fixture_root)
     assert "invoice" in inventory.aliases_by_owner, (
-        f"alias inventory failed to discover InvoiceId; got "
-        f"{sorted(inventory.aliases_by_owner.keys())!r}"
+        f"alias inventory failed to discover InvoiceId; got {sorted(inventory.aliases_by_owner.keys())!r}"
     )
     invoice_shape = inventory.constraints_by_owner["invoice"]
     assert invoice_shape == ConstraintShape(min_length=64, max_length=64), (
-        f"alias inventory failed to extract InvoiceId constraint shape; "
-        f"got {invoice_shape!r}"
+        f"alias inventory failed to extract InvoiceId constraint shape; got {invoice_shape!r}"
     )
 
     findings = find_bare_str_typed_id_fields(fixture_root, inventory)
@@ -173,8 +170,7 @@ def test_bare_str_typed_id_detector_recognises_synthetic_violation(tmp_path) -> 
         f"detector mis-classifies typed alias usage; flagged {sorted(by_class)!r}"
     )
     assert "shape-compatible promotion candidate" in by_class["BareField"].message, (
-        f"BareField (min/max match alias) must be classified compatible; "
-        f"got {by_class['BareField'].message!r}"
+        f"BareField (min/max match alias) must be classified compatible; got {by_class['BareField'].message!r}"
     )
     assert "shape-incompatible" in by_class["OptionalBareField"].message, (
         f"OptionalBareField (no constraints) must be classified incompatible; "
@@ -223,8 +219,7 @@ def test_sibling_domain_detector_flags_synthetic_violation(tmp_path: Path) -> No
 
     findings = find_sibling_domain_id_imports(root)
     assert any("ExampleId" in f.message for f in findings), (
-        "sibling-domain detector failed to surface synthetic violation; "
-        f"findings={[f.render() for f in findings]!r}"
+        f"sibling-domain detector failed to surface synthetic violation; findings={[f.render() for f in findings]!r}"
     )
 
     consumer.write_text("ExampleId = str\n")
@@ -239,17 +234,13 @@ def test_private_name_detector_flags_synthetic_violation(tmp_path: Path) -> None
     pkg.mkdir(parents=True)
     (root / "application" / "__init__.py").write_text("")
     (pkg / "__init__.py").write_text("")
-    (pkg / "_ids.py").write_text(
-        "ExampleId = str\n"
-        "_HEX_EXAMPLE_LENGTH = 64\n"
-    )
+    (pkg / "_ids.py").write_text("ExampleId = str\n_HEX_EXAMPLE_LENGTH = 64\n")
     consumer = pkg / "_consumer.py"
     consumer.write_text("from ._ids import _HEX_EXAMPLE_LENGTH\n")
 
     findings = find_private_id_imports(root)
     assert any("_HEX_EXAMPLE_LENGTH" in f.message for f in findings), (
-        "private-name detector failed to surface synthetic violation; "
-        f"findings={[f.render() for f in findings]!r}"
+        f"private-name detector failed to surface synthetic violation; findings={[f.render() for f in findings]!r}"
     )
 
     consumer.write_text("from ._ids import ExampleId\n")
@@ -334,11 +325,7 @@ def test_sibling_domain_enum_detector_flags_synthetic_violation(tmp_path: Path) 
         sub = domain / name
         sub.mkdir()
         (sub / "__init__.py").write_text("")
-    (domain / "b" / "_enums.py").write_text(
-        "import enum\n"
-        "class ExampleKind(enum.Enum):\n"
-        "    X = 'x'\n"
-    )
+    (domain / "b" / "_enums.py").write_text("import enum\nclass ExampleKind(enum.Enum):\n    X = 'x'\n")
     consumer = domain / "a" / "_consumer.py"
     consumer.write_text("from aeat.domain.b._enums import ExampleKind\n")
 
@@ -409,9 +396,7 @@ def test_sibling_domain_protocol_detector_flags_synthetic_violation(tmp_path: Pa
         sub.mkdir()
         (sub / "__init__.py").write_text("")
     (domain / "b" / "_protocols.py").write_text(
-        "from typing import Protocol\n"
-        "class ExampleProtocol(Protocol):\n"
-        "    def run(self) -> None: ...\n"
+        "from typing import Protocol\nclass ExampleProtocol(Protocol):\n    def run(self) -> None: ...\n"
     )
     consumer = domain / "a" / "_consumer.py"
     consumer.write_text("from aeat.domain.b._protocols import ExampleProtocol\n")
@@ -473,9 +458,7 @@ def test_no_same_name_constant_multi_declarations() -> None:
     """
 
     findings = find_same_name_constant_multi_declarations()
-    assert findings == [], (
-        "same-name constant multi-declaration detected:\n" + _render(findings)
-    )
+    assert findings == [], "same-name constant multi-declaration detected:\n" + _render(findings)
 
 
 def test_same_name_constant_detector_flags_synthetic_violation(tmp_path: Path) -> None:
@@ -531,9 +514,7 @@ def test_kind_status_state_alias_inventory_discovers_known_aliases(tmp_path: Pat
     assert "review" in inv.aliases_by_owner, (
         f"inventory failed to discover ReviewStatus; got {sorted(inv.aliases_by_owner.keys())!r}"
     )
-    assert "review_kind_enum" not in inv.aliases_by_owner, (
-        "inventory should not discover enum classes"
-    )
+    assert "review_kind_enum" not in inv.aliases_by_owner, "inventory should not discover enum classes"
 
 
 def test_bare_str_kind_status_state_detector_flags_synthetic_violation(
@@ -546,22 +527,14 @@ def test_bare_str_kind_status_state_detector_flags_synthetic_violation(
     pkg.mkdir(parents=True)
     (root / "domain" / "__init__.py").write_text("")
     (pkg / "__init__.py").write_text("")
-    (pkg / "_schema.py").write_text(
-        "from typing import Literal\n"
-        "ReviewStatus = Literal['pending', 'approved']\n"
-    )
+    (pkg / "_schema.py").write_text("from typing import Literal\nReviewStatus = Literal['pending', 'approved']\n")
     consumer = pkg / "_models.py"
-    consumer.write_text(
-        "from pydantic import BaseModel\n"
-        "class ReviewRecord(BaseModel):\n"
-        "    review_status: str\n"
-    )
+    consumer.write_text("from pydantic import BaseModel\nclass ReviewRecord(BaseModel):\n    review_status: str\n")
 
     inv = build_kind_status_state_alias_inventory(root)
     findings = find_bare_str_kind_status_state_fields(root, inv)
     assert any("ReviewRecord" in f.message for f in findings), (
-        "clause-10 detector failed to surface synthetic violation; "
-        f"findings={[f.render() for f in findings]!r}"
+        f"clause-10 detector failed to surface synthetic violation; findings={[f.render() for f in findings]!r}"
     )
 
     # fix: use the typed alias
