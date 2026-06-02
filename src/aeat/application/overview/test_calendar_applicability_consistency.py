@@ -157,19 +157,14 @@ def test_calendar_and_explain_agree_on_applicability_verdict(
         cal_verdict = calendar_verdicts[modelo]
         exp_verdict = explain_verdicts.get(modelo)
         if exp_verdict is None:
-            mismatches.append(
-                f"  {modelo}: calendar={cal_verdict.value!r} explain=MISSING"
-            )
+            mismatches.append(f"  {modelo}: calendar={cal_verdict.value!r} explain=MISSING")
         elif cal_verdict is not exp_verdict:
-            mismatches.append(
-                f"  {modelo}: calendar={cal_verdict.value!r} explain={exp_verdict.value!r}"
-            )
+            mismatches.append(f"  {modelo}: calendar={cal_verdict.value!r} explain={exp_verdict.value!r}")
 
     if mismatches:
         formatted = "\n".join(mismatches)
         pytest.fail(
-            f"calendar and explain disagree on applicability verdict for "
-            f"profile {profile.entity_type}:\n{formatted}"
+            f"calendar and explain disagree on applicability verdict for profile {profile.entity_type}:\n{formatted}"
         )
 
 
