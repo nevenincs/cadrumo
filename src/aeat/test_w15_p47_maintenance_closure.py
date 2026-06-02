@@ -68,9 +68,15 @@ def test_s615_pointer_read_fallback_rationale_present() -> None:
     assert _POINTER_TOKEN in src, (
         f"core/config.py: missing {_POINTER_TOKEN!r} — S615 not applied"
     )
-    lines_with_token = [ln for ln in src.splitlines() if _POINTER_TOKEN in ln]
-    assert any("except Exception" in ln for ln in lines_with_token), (
-        f"core/config.py: {_POINTER_TOKEN!r} found but not on an ``except Exception`` line"
+    lines = src.splitlines()
+    # The rationale marker sits on the ``except Exception`` line or on one of the
+    # comment lines immediately below it (a formatter may wrap a long inline
+    # comment onto the following line); accept either placement.
+    token_indices = [i for i, ln in enumerate(lines) if _POINTER_TOKEN in ln]
+    assert any(
+        any("except Exception" in lines[j] for j in range(max(0, idx - 2), idx + 1)) for idx in token_indices
+    ), (
+        f"core/config.py: {_POINTER_TOKEN!r} found but not on or adjacent to an ``except Exception`` line"
     )
 
 

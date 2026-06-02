@@ -57,7 +57,7 @@ def _has_type_ignore(lines: list[str], lineno: int) -> bool:
 # S668: _app_live.py — 9 wire-payload splat sites
 # ---------------------------------------------------------------------------
 
-_S668_LINES = [1067, 1093, 1181, 1367, 1397, 1461, 1514, 1566, 1642]
+_S668_LINES = [1082, 1108, 1196, 1382, 1412, 1476, 1529, 1581, 1657]
 
 
 @pytest.mark.parametrize("lineno", _S668_LINES)
