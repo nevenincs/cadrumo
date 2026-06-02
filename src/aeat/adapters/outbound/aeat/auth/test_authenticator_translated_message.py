@@ -271,9 +271,7 @@ def test_authenticate_already_active_carries_translated_message(
 
     async def run() -> None:
         with pytest.raises(AeatLoginAssertionError) as exc_info:
-            await authenticator.authenticate(
-                browser_session=cast(BrowserSessionLike, _RecordingBrowserSession())
-            )
+            await authenticator.authenticate(browser_session=cast(BrowserSessionLike, _RecordingBrowserSession()))
         exc = exc_info.value
         assert exc.translated_message == "adapters.auth.authenticator.errors.already_active"
 
