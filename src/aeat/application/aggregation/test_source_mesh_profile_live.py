@@ -93,13 +93,13 @@ def test_profile_source_resolver_matches_existing_profile_binding_resolution() -
     assert resolution.enum_binding_values == legacy.enum_binding_values
     assert resolution.source_transaction_ids == ()
     assert resolution.provenance
-    assert {
-        item.source_ref for item in resolution.provenance if item.source_kind == "profile"
-    } == {f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}"}
+    assert {item.source_ref for item in resolution.provenance if item.source_kind == "profile"} == {
+        f"profile:{_BUCKET_ID}:binding:{_CCAA_BINDING}"
+    }
     profile_fingerprint = f"sha256:{hashlib.sha256(profile_record.model_dump_json().encode('utf-8')).hexdigest()}"
-    assert {
-        item.fingerprint for item in resolution.provenance if item.source_kind == "profile"
-    } == {profile_fingerprint}
+    assert {item.fingerprint for item in resolution.provenance if item.source_kind == "profile"} == {
+        profile_fingerprint
+    }
 
 
 def test_profile_source_resolver_respects_caller_owned_precedence() -> None:
