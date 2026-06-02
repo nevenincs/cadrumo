@@ -13,6 +13,7 @@ from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
 from ...core.errors import BaseSeverity as _BaseSeverity
+from ...core.parsing._dates import _parse_iso8601_date
 from ...core.resources import resources as _resources
 from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
@@ -360,10 +361,10 @@ def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str,
             date_inputs[binding_id] = value
             continue
         if isinstance(value, str):
-            try:
-                date_inputs[binding_id] = date.fromisoformat(value)
-            except ValueError as exc:
-                raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}") from exc
+            parsed = _parse_iso8601_date(value)
+            if parsed is None:
+                raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}")
+            date_inputs[binding_id] = parsed
     return date_inputs
 
 
