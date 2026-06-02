@@ -11,6 +11,7 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-documentation-workflow.md
 @.agents/rules/aeat-git-worktree-safety.md
 @.agents/rules/aeat-local-execution.md
+@.agents/rules/aeat-locales-cli.md
 @.agents/rules/aeat-quality-gates.md
 @.agents/rules/aeat-rag-discovery.md
 @.agents/rules/aeat-registry-authority-flow.md

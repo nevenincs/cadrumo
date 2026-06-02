@@ -11,6 +11,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-documentation-workflow.md
 @.claude/rules/aeat-git-worktree-safety.md
 @.claude/rules/aeat-local-execution.md
+@.claude/rules/aeat-locales-cli.md
 @.claude/rules/aeat-quality-gates.md
 @.claude/rules/aeat-rag-discovery.md
 @.claude/rules/aeat-registry-authority-flow.md
