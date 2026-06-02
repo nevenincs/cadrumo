@@ -9,6 +9,15 @@ application layer.
 
 from __future__ import annotations
 
+from ._carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationCarryForwardReport,
+    IvaCompensationExpiryReviewState,
+    IvaCompensationPeriodState,
+    build_iva_compensation_carry_forward_report,
+    derive_303_compensation_available,
+    enforce_iva_compensation_four_year_window,
+)
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationDecimalParseError,
@@ -18,9 +27,16 @@ from ._errors import (
 )
 
 __all__ = [
+    "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardPolicyError",
+    "IvaCompensationCarryForwardReport",
     "IvaCompensationDecimalParseError",
+    "IvaCompensationExpiryReviewState",
+    "IvaCompensationPeriodState",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationSeedConflictError",
     "IvaCompensationYearRangeError",
+    "build_iva_compensation_carry_forward_report",
+    "derive_303_compensation_available",
+    "enforce_iva_compensation_four_year_window",
 ]

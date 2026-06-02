@@ -15,19 +15,18 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     parse_iva_compensation_wallet_html,
 )
+from ...core.resources import resources
+from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ...tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationAuthoritySource,
     IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from ...core.resources import resources
-from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ...tests.secure_sql import dev_test_database_password, isolated_runtime_profile
-
 from . import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

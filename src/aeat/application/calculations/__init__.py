@@ -11,6 +11,14 @@ inputs from authoritative prior filings instead of operator
 hand-entry.
 """
 
+from ...domain.iva_compensation._carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationCarryForwardReport,
+    IvaCompensationExpiryReviewState,
+    IvaCompensationPeriodState,
+    build_iva_compensation_carry_forward_report,
+    enforce_iva_compensation_four_year_window,
+)
 from ._binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -19,13 +27,7 @@ from ._binding_prefill import (
     resolve_bindings_from_local_store,
 )
 from ._iva_compensation_history import (
-    IvaCompensationCarryForwardLot,
-    IvaCompensationCarryForwardReport,
-    IvaCompensationExpiryReviewState,
     IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
-    build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
     iva_compensation_period_key,
     iva_compensation_state_from_filed_observation,
 )

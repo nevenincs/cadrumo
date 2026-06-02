@@ -7,12 +7,12 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._iva_compensation_history import (
+from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
-    IvaCompensationHistoryRepository,
     build_iva_compensation_carry_forward_report,
 )
+from ._iva_compensation_history import IvaCompensationHistoryRepository
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _FOUR_YEAR_WINDOW: Final[int] = 4

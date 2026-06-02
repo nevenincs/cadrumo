@@ -17,18 +17,17 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from ..calculations import (
-    CalculationObservationRepository,
-    IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
-    extract_modelo_303_local_iva_compensation_recurrence,
-    resolve_bindings_from_local_store,
-)
 from ...core.external_constants import load_external_constants
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
+from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ...tests.secure_sql import isolated_runtime_profile
-
+from ..calculations import (
+    CalculationObservationRepository,
+    IvaCompensationHistoryRepository,
+    extract_modelo_303_local_iva_compensation_recurrence,
+    resolve_bindings_from_local_store,
+)
 from . import (
     _latest_declarations_by_period,
     _persist_iva_compensation_history_observations_strict,

@@ -123,8 +123,8 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() 
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -> None:
+    from ..domain.iva_compensation._carry_forward import build_iva_compensation_carry_forward_report
     from ..domain.iva_compensation._errors import IvaCompensationYearRangeError
-    from .calculations._iva_compensation_history import build_iva_compensation_carry_forward_report
 
     with pytest.raises(IvaCompensationYearRangeError):
         build_iva_compensation_carry_forward_report((), as_of_year=2100)
