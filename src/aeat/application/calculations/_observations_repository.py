@@ -320,7 +320,10 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
         target_year: int,
         target_period: str,
     ) -> tuple[IvaCompensationReconciliationDecision, ...]:
-        """Return immutable decision history as a tuple of :class:`IvaCompensationReconciliationDecision` for one taxpayer and target period."""
+        """Return decision history for one taxpayer and target period.
+
+        Returns an immutable tuple of :class:`IvaCompensationReconciliationDecision`.
+        """
         taxpayer_token = taxpayer_nif.strip().upper()
         decisions: list[IvaCompensationReconciliationDecision] = []
         for record in self._objects.list_records(

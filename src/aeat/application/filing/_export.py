@@ -268,7 +268,10 @@ def verify_export(
     file_path: Path,
     schema_provider: RegistrySchemaProvider | None = None,
 ) -> DeclaracionVerifyResult:
-    """Verify an exported file against an approved :class:`ModeloDraft` and return a :class:`DeclaracionVerifyResult`."""
+    """Verify an exported file against an approved :class:`ModeloDraft`.
+
+    Returns a :class:`DeclaracionVerifyResult`.
+    """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
