@@ -282,9 +282,7 @@ def _all_scripts_files() -> list[pathlib.Path]:
     """Return all Python files directly under scripts/ (non-test)."""
     if not _SCRIPTS_ROOT.is_dir():
         return []
-    return sorted(
-        p for p in _SCRIPTS_ROOT.glob("*.py") if not p.name.startswith("test_")
-    )
+    return sorted(p for p in _SCRIPTS_ROOT.glob("*.py") if not p.name.startswith("test_"))
 
 
 def test_no_bare_utf8_literals_in_scripts() -> None:
