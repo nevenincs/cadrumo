@@ -22,13 +22,12 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core._bucket_pointer_io import read_pointer
-from ...core.config import SecretStoreBackend, load_settings, override_settings
+from ...core.config import load_settings
 from ...domain.user_profile import new_profile_id
-from ...tests.secure_sql import dev_test_database_password
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..user_profile._orchestration import ProfileAlreadyRegisteredError
 from ._catalogue import SETUP_FLOW
 from ._commands import _run_full_flow
@@ -40,17 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def _backend(tmp_path: Path) -> Iterator[Path]:
     """Per-bucket storage root with file-backed custody."""
 
-    with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine(settings)
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 _QUIET_CREATE_FLAGS = {"tax-id": "00000000T", "activity": "Servicios"}

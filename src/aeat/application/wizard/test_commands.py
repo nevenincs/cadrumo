@@ -13,13 +13,10 @@ from pathlib import Path
 
 import pytest
 import typer
-from pydantic import SecretStr
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import SecretStoreBackend, override_settings
 from ...core.i18n import tr
-from ...tests.secure_sql import dev_test_database_password
+from ...tests.secure_sql import isolated_profile_storage_root
 from ._catalogue import SETUP_FLOW
 from ._commands import build_wizard_command
 from ._persistence import WizardPersistMode
@@ -34,17 +31,8 @@ def runner() -> CliRunner:
 
 @pytest.fixture
 def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
-    with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine(settings)
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def _wizard_app(mode: WizardPersistMode) -> typer.Typer:

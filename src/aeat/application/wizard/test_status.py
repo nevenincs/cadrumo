@@ -12,11 +12,9 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr, ValidationError
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import SecretStoreBackend, override_settings
-from ...tests.secure_sql import dev_test_database_password
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from ..user_profile._testing import register_minimal_profile
 from ..workflow._models import WorkflowState
@@ -32,17 +30,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _file_backed_profile_store(tmp_path: Path) -> Iterator[None]:
-    with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=None,
-        aeat_secret_store_backend=SecretStoreBackend.FILE,
-        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _register_profile_state(
