@@ -118,7 +118,7 @@ Build the return-type gate, remediate via swarm, verify green.
 
 - [x] `W02.P02.S04` - Build the return-type linking gate enumerating unlinked aeat-typed return annotations; `src/aeat/tests/test_docstring_return_type_links.py`.
 - [x] `W02.P02.S05` - Remediate the return-type violations via a partitioned sonnet swarm, drive to 0; `src/aeat/application`.
-- [ ] `W02.P02.S06` - Verify the return-type gate, the stub correspondence, and the offline nitpicky build are green; `docs/conf.py`.
+- [x] `W02.P02.S06` - Verify the return-type gate, the stub correspondence, and the offline nitpicky build are green; `docs/conf.py`.
 
 ## Wave `W03` - parameter-type linking gate
 
@@ -128,8 +128,8 @@ Extend the signature-link gate to parameter annotations, scoped to avoid obvious
 
 Extend to parameter annotations, remediate via swarm, verify green.
 
-- [ ] `W03.P03.S07` - Extend the signature-link gate to parameter annotations, scoped to high-value links; `src/aeat/tests/test_docstring_return_type_links.py`.
-- [ ] `W03.P03.S08` - Remediate the parameter-type violations via a partitioned swarm, drive to 0; `src/aeat/domain`.
+- [x] `W03.P03.S07` - Extend the signature-link gate to parameter annotations, scoped to high-value links; `src/aeat/tests/test_docstring_return_type_links.py`.
+- [x] `W03.P03.S08` - Remediate the parameter-type violations via a partitioned swarm, drive to 0; `src/aeat/domain`.
 - [ ] `W03.P03.S09` - Verify the parameter-type gate and the offline nitpicky build are green; `docs/conf.py`.
 
 ## Description
