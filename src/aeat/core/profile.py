@@ -195,7 +195,6 @@ class SetupAnswers(BaseModel):
     surnames: str = ""
     activity: str = ""
     """Free-text actividad económica / epígrafe IAE description."""
-    address_postcode: str = ""
     activity_start_date: str = ""
     """Optional ISO-8601 censo alta date for the economic activity."""
     taxation_type: Any = ""
