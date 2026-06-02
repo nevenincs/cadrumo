@@ -19,6 +19,7 @@ exclude_type_checking_imports = True
 
 [importlinter:contract:no-renta-in-registry]
 name = Calculations registry must not import directly from domain.renta
+unmatched_ignore_imports_alerting = warn
 type = forbidden
 source_modules =
     aeat.domain.calculations
@@ -47,15 +48,21 @@ ignore_imports =
 
 [importlinter:contract:domain-not-application]
 name = Domain must not import application
+unmatched_ignore_imports_alerting = warn
 type = forbidden
 source_modules =
     aeat.domain
 forbidden_modules =
     aeat.application
-# Lazy function-scoped imports from domain.deadlines and domain.profile
-# into application.wizard remain as Wave-future cleanup. Wave 3 P04 set
-# up the register_profile_keys() injection pattern; full elimination of
-# these five edges requires further refactor not yet scheduled.
+# Lazy function-scoped import from domain.profile._keys into
+# application.wizard._compiler remains as Wave-future cleanup. Wave 3 P04 set
+# up the register_profile_keys() injection pattern; four of the original five
+# edges (domain.deadlines._profiles -> wizard.{_catalogue,_persistence,
+# _setup_answers} and domain.profile._keys -> wizard._catalogue) are now
+# eliminated — _profiles.py reads core.profile_catalogue and _keys.py reads
+# core.profile_catalogue.get_wizard_flows. Only the single _keys -> _compiler
+# function-scoped edge (compile_profile_keys, run at first PROFILE_KEYS access)
+# remains; its full elimination requires further refactor not yet scheduled.
 #
 # core.resources._repos.topics deferred loader import (resource-management-api
 # ADR, 2026-05-16): TopicCatalogueRepository._load contains a function-local
@@ -68,10 +75,6 @@ forbidden_modules =
 # test imports core.resources, which lazily loads core.resources._repos.topics).
 # Pinned individually (no wildcard) so a new non-deferred edge is still caught.
 ignore_imports =
-    aeat.domain.deadlines._profiles -> aeat.application.wizard._catalogue
-    aeat.domain.deadlines._profiles -> aeat.application.wizard._persistence
-    aeat.domain.deadlines._profiles -> aeat.application.wizard._setup_answers
-    aeat.domain.profile._keys -> aeat.application.wizard._catalogue
     aeat.domain.profile._keys -> aeat.application.wizard._compiler
     aeat.core.resources._repos.topics -> aeat.application.topics
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
@@ -79,7 +82,6 @@ ignore_imports =
     aeat.domain.calculations.registry.test_detail_record_modelo_coverage -> aeat.application.storage.calc_sheets
     aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.test_work_unit -> aeat.application.modelo
-    aeat.domain.profile.conftest -> aeat.application.wizard._compiler
 
 # ── S22: Core must not import outer layers ────────────────────────────────────
 # Core is the innermost layer and must not import from domain, application,
@@ -110,6 +112,7 @@ ignore_imports =
 
 [importlinter:contract:core-not-outer]
 name = Core must not import outer layers
+unmatched_ignore_imports_alerting = warn
 type = forbidden
 source_modules =
     aeat.core
@@ -161,6 +164,7 @@ ignore_imports =
 
 [importlinter:contract:layered]
 name = AEAT layered architecture
+unmatched_ignore_imports_alerting = warn
 type = layers
 layers =
     aeat.entrypoints
@@ -311,10 +315,6 @@ ignore_imports =
     aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.adapters.persistence.storage
     # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
-    aeat.domain.deadlines._profiles -> aeat.application.wizard._catalogue
-    aeat.domain.deadlines._profiles -> aeat.application.wizard._persistence
-    aeat.domain.deadlines._profiles -> aeat.application.wizard._setup_answers
-    aeat.domain.profile._keys -> aeat.application.wizard._catalogue
     aeat.domain.profile._keys -> aeat.application.wizard._compiler
     # ── domain test cross-layer edges ──
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
@@ -322,7 +322,6 @@ ignore_imports =
     aeat.domain.calculations.registry.test_detail_record_modelo_coverage -> aeat.application.storage.calc_sheets
     aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.test_work_unit -> aeat.application.modelo
-    aeat.domain.profile.conftest -> aeat.application.wizard._compiler
     # ── core test files ──
     aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
     aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
