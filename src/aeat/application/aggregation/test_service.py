@@ -302,7 +302,10 @@ def test_site8_result_rejects_period_mismatch() -> None:
 
 
 def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
-    """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for provider/payload mismatch."""
+    """``PerModeloAggregationResult._envelope_matches_payload`` raises ``AggregationConfigError``.
+
+    Triggered by a provider / payload type mismatch.
+    """
     from ._retenciones import RetencionObservation, RetencionScheme
     from ._service import PerModeloAggregationCommand, aggregate_per_modelo
 
