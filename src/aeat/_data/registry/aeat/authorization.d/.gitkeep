@@ -1,0 +1,3 @@
+# Keeps the empty authorization.d/ directory tracked. Per-modelo enrollment
+# fragments (<modelo>.toml) are added here, each in the same commit as its
+# enrolling end-to-end test. Default-deny: an empty directory authorizes nothing.
