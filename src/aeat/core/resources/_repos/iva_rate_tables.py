@@ -11,11 +11,7 @@ if TYPE_CHECKING:
     from ....domain.iva import EUMemberState, IvaRateRecord
 
 
-class IvaRateTableRepository(
-    ResourceCacheRepository[
-        Mapping["EUMemberState", "tuple[IvaRateRecord, ...]"], None
-    ]
-):
+class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "tuple[IvaRateRecord, ...]"], None]):
     """Singleton-keyed repository for the bundled IVA rate table.
 
     Wraps :func:`aeat.domain.iva._rates.load_iva_rate_table`.
