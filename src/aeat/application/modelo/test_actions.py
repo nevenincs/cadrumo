@@ -247,7 +247,7 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
     'application.modelo.findings.iva_wallet_next_action' and must not be
     the old hardcoded English string.
     """
-    from ...application.calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
+    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 
     decision = IvaCompensationReconciliationDecision(
         target_year=2026,

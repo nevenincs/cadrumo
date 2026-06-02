@@ -20,9 +20,9 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ._test_envelope import unwrap_schema_envelope as _payload
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._test_envelope import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -168,10 +168,10 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     with profile_storage_session(bucket_id):
         from datetime import UTC, datetime
 
-        from ...application.calculations._iva_wallet_reconciliation import (
+        from ...application.calculations._observations_repository import IvaWalletDecisionRepository
+        from ...domain.iva_compensation._reconciliation import (
             IvaCompensationReconciliationDecision,
         )
-        from ...application.calculations._observations_repository import IvaWalletDecisionRepository
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase))

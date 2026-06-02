@@ -16,8 +16,8 @@ import pytest
 from pydantic import ValidationError
 
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ._errors import ObservationKeyError
-from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 from ._observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,

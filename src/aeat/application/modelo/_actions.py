@@ -148,7 +148,7 @@ from ._profile_binding import ProfileSourcedBindingResult
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ValidatedRegistryAuthority
-    from ..calculations._iva_wallet_reconciliation import (
+    from ...domain.iva_compensation._reconciliation import (
         IvaCompensationReconciliationDecision,
     )
     from ..calculations._observations_repository import IvaWalletDecisionRepository
@@ -1103,6 +1103,21 @@ def calculate_modelo_revision(
         )
     )
 
+    # TEMP DEBUG #146 — remove after evidence captured.
+    import logging as _logging_debug
+    _logging_debug.getLogger(__name__).error(
+        "calculate_modelo_revision DEBUG: modelo=%s year=%s period=%s decision=%r "
+        "compensacion_binding=%r compensacion_casilla_in_inputs=%r resultado_regimen_general_present=%r "
+        "caller_keys=%s backend_keys=%s resolved_keys=%s",
+        work_unit.modelo, work_unit.filing_year, work_unit.period,
+        iva_compensation_decision,
+        resolved_bindings.get("modelo-303-compensacion-pendiente-anteriores"),
+        resolved_inputs.get("iva.compensacion-pendiente-periodos-anteriores"),
+        "iva.resultado-regimen-general" in resolved_inputs,
+        sorted(caller_binding_values.keys()),
+        sorted(lower_precedence_binding_values.keys()),
+        sorted(resolved_bindings.keys()),
+    )
     engine_result = calculate_registry_snapshot(
         snapshot,
         inputs=resolved_inputs,
@@ -1247,7 +1262,7 @@ def _apply_iva_compensation_decision_binding(
             )
         return
 
-    from ..calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
+    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 
     if not isinstance(decision, IvaCompensationReconciliationDecision):
         raise ModeloIvaWalletReconciliationBlocked("iva_compensation_decision has an unsupported type")
