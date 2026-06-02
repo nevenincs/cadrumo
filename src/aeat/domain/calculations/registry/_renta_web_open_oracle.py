@@ -88,21 +88,61 @@ class RentaWebOpenDriver(Protocol):
     """Execution boundary for live or replay Renta WEB Open adapters."""
 
     @property
-    def mode(self) -> Literal["live", "replay"]: ...
+    def mode(self) -> Literal["live", "replay"]:
+        """Identify whether this driver talks to a real surface or replays a capture.
+
+        Returns:
+            Either ``"live"`` (the driver scrapes the public Renta WEB Open
+            simulator, AEAT's online estimator for the IRPF income-tax
+            declaration filed on Modelo 100, a tax form) or ``"replay"`` (the
+            driver decodes a previously captured JSON payload). The oracle uses
+            the value only to phrase its result narrative.
+        """
+        ...
 
     def planned_operations(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
+    ) -> tuple[RemoteOperation, ...]:
+        """Describe the remote work this driver would perform, without performing it.
+
+        The remote-state guard inspects the returned operations before any are
+        executed, so a driver must declare its full plan up front.
+
+        Args:
+            payload: Raw request bytes; for the live driver this carries the
+                optional JSON capture configuration, for the replay driver the
+                captured observation document.
+            expected: Mapping of expected casilla numbers (the numbered boxes on
+                Modelo 100) to their expected values, used to scope the plan.
+
+        Returns:
+            The ordered ``RemoteOperation`` tuple the driver intends to run.
+        """
+        ...
 
     def collect_observation(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> RentaWebOpenObservation: ...
+    ) -> RentaWebOpenObservation:
+        """Execute the driver and return the observed Modelo 100 outputs.
+
+        Args:
+            payload: Raw request bytes carrying the live capture configuration
+                or the replay document.
+            expected: Mapping of expected casilla numbers (the numbered boxes on
+                the form) to their expected values, available to scope scraping.
+
+        Returns:
+            A ``RentaWebOpenObservation`` whose ``values`` maps casilla numbers
+            to their observed string renderings, plus an optional evidence
+            locator pointing at the captured source.
+        """
+        ...
 
 
 class RentaWebOpenReplayDriver:
@@ -110,6 +150,13 @@ class RentaWebOpenReplayDriver:
 
     @property
     def mode(self) -> Literal["replay"]:
+        """Report this driver as a replay surface.
+
+        Returns:
+            Always ``"replay"``: this driver decodes a captured JSON document
+            rather than scraping the live Renta WEB Open simulator, so the
+            oracle can run deterministically offline.
+        """
         return "replay"
 
     def planned_operations(
@@ -118,6 +165,21 @@ class RentaWebOpenReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Declare the single local-parse operation this replay driver performs.
+
+        Replay never touches the network: it parses a captured workbook-style
+        JSON document, so the plan is one ``local_workbook`` operation regardless
+        of the request.
+
+        Args:
+            payload: Raw request bytes (the captured document is read in
+                ``collect_observation``; this method ignores its contents).
+            expected: Mapping of expected casilla numbers to expected values;
+                unused, present to satisfy the ``RentaWebOpenDriver`` protocol.
+
+        Returns:
+            A one-element tuple holding the local-parse ``RemoteOperation``.
+        """
         return (RemoteOperation(kind="local_workbook", action="parse-renta-web-open-replay"),)
 
     def collect_observation(
@@ -126,6 +188,22 @@ class RentaWebOpenReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
+        """Decode the captured replay payload into observed Modelo 100 outputs.
+
+        Args:
+            payload: UTF-8 JSON bytes holding a previously captured Renta WEB
+                Open observation document.
+            expected: Mapping of expected casilla numbers to expected values;
+                unused, present to satisfy the ``RentaWebOpenDriver`` protocol.
+
+        Returns:
+            A ``RentaWebOpenObservation`` carrying the decoded casilla values
+            and the document's raw evidence locator.
+
+        Raises:
+            RegistryValidationError: If the payload is not decodable as the
+                expected replay JSON document.
+        """
         document = decode_replay_json_payload(payload, surface_label="Renta WEB Open replay")
         return RentaWebOpenObservation(
             values=dict(document.observed),
@@ -141,10 +219,25 @@ class RentaWebOpenOracle:
 
     @property
     def oracle_id(self) -> str:
+        """Return the stable identifier for this parity oracle.
+
+        Returns:
+            The constant ``"modelo-100-renta-web-open"``, stamped onto every
+            ``ParityResult`` so a verdict can be traced back to the oracle that
+            produced it.
+        """
         return "modelo-100-renta-web-open"
 
     @property
     def surface_kind(self) -> OracleSurfaceKind:
+        """Classify the external surface this oracle compares against.
+
+        Returns:
+            The ``OracleSurfaceKind`` ``"open_simulator"``: Renta WEB Open is
+            AEAT's public, unauthenticated estimator for the Modelo 100 income
+            declaration, distinct from authenticated filing surfaces. The
+            remote-state guard reads this to scope which operations are allowed.
+        """
         return "open_simulator"
 
     def planned_operations(
@@ -153,6 +246,25 @@ class RentaWebOpenOracle:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Describe the remote operations a parity run would perform, without running them.
+
+        When a driver is configured the call delegates to it. Otherwise the
+        oracle returns a placeholder plan (an HTTP GET against the simulator URL
+        plus a browser action marked as requiring a driver) so the guard can
+        still preflight an unconfigured oracle.
+
+        Args:
+            payload: Raw request bytes forwarded to the driver when present.
+            expected: Mapping of expected casilla numbers (the numbered boxes on
+                Modelo 100) to their expected values. Must be non-empty.
+
+        Returns:
+            The ordered ``RemoteOperation`` tuple the run intends to perform.
+
+        Raises:
+            RegistryValidationError: If ``expected`` is empty, since a parity
+                run with no expected casilla has nothing to verify.
+        """
         if not expected:
             raise RegistryValidationError(
                 "RentaWebOpenOracle.planned_operations requires at least one expected casilla"
@@ -173,6 +285,27 @@ class RentaWebOpenOracle:
         *,
         expected: Mapping[str, object],
     ) -> ParityResult:
+        """Run a Renta WEB Open parity check and return a typed verdict.
+
+        The remote-state guard first authorizes the planned operations. A
+        blocked plan yields a ``"blocked"`` result; an unconfigured driver yields
+        an ``"unverifiable"`` result after a passing preflight. With a driver, each
+        expected casilla (a numbered box on Modelo 100) is compared against its
+        observed value, and the per-casilla verdicts are combined into one overall
+        verdict.
+
+        Args:
+            policy: The remote-state guard policy authorizing the run; its id is
+                recorded as the result's cross-reference.
+            payload: Raw request bytes passed to the driver.
+            expected: Mapping of expected casilla numbers to expected values to
+                compare against the observation.
+
+        Returns:
+            A ``ParityResult`` carrying the verdict (``"match"``, ``"mismatch"``,
+            ``"unverifiable"``, or ``"blocked"``), a human-readable narrative,
+            the per-casilla comparisons, and any raw evidence locator.
+        """
         operations = self.planned_operations(payload, expected=expected)
         try:
             assert_oracle_operations_allowed(self, policy, operations)

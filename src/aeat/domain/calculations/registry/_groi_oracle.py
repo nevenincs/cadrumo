@@ -93,21 +93,65 @@ class GroiDriver(Protocol):
     """Execution boundary for GROI live or replay adapters."""
 
     @property
-    def mode(self) -> Literal["live", "replay"]: ...
+    def mode(self) -> Literal["live", "replay"]:
+        """Discriminate which execution surface this driver speaks to.
+
+        Returns either ``"live"`` (a driver that drives the real AEAT GROI
+        servlet through an authenticated browser session) or ``"replay"`` (a
+        driver that decodes a previously captured response from local corpus
+        bytes). ``GroiOracle`` reads this to label evidence provenance and to
+        decide whether a run touched the network.
+
+        Returns:
+            The literal ``"live"`` or ``"replay"``.
+        """
+        ...
 
     def planned_operations(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
+    ) -> tuple[RemoteOperation, ...]:
+        """Declare the remote operations this driver intends to perform.
+
+        The operations are pre-flighted through the registry's remote-state
+        guard before any of them runs, so the read-only invariant can be
+        enforced by construction. The driver returns the sequence it would
+        execute for the given probe rather than executing it.
+
+        Args:
+            payload: Raw adapter input bytes (a live request envelope or a
+                captured replay document, depending on the driver mode).
+            expected: Mapping of Spanish NIF (the per-taxpayer fiscal
+                identifier) to its expected ROI-registration verdict; ROI is
+                the AEAT Registro de Operadores Intracomunitarios, the
+                register of operators cleared for intra-EU trade.
+
+        Returns:
+            The ordered ``RemoteOperation`` tuple this driver would emit.
+        """
+        ...
 
     def collect_observation(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> GroiObservation: ...
+    ) -> GroiObservation:
+        """Execute the GROI probe and return the observed verdicts.
+
+        Args:
+            payload: Raw adapter input bytes for this driver mode.
+            expected: Mapping of Spanish NIF to its expected ROI-registration
+                verdict, used by live drivers to scope which identifiers to
+                query.
+
+        Returns:
+            A ``GroiObservation`` whose ``values`` map upper-cased NIFs to
+            lowercase verdict tokens (``valid`` / ``invalid`` / ``unknown``).
+        """
+        ...
 
 
 class GroiReplayDriver:
@@ -123,6 +167,15 @@ class GroiReplayDriver:
 
     @property
     def mode(self) -> Literal["replay"]:
+        """Identify this driver as a deterministic local replay.
+
+        Always ``"replay"``: this driver decodes a captured GROI response from
+        local corpus bytes and never touches the network, making it the
+        offline counterpart used by the parity test suite.
+
+        Returns:
+            The literal ``"replay"``.
+        """
         return "replay"
 
     def planned_operations(
@@ -131,6 +184,21 @@ class GroiReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Declare the single local-parse operation a replay performs.
+
+        Both arguments are ignored: a replay reads a fixed captured document
+        and performs no network or browser action, so it returns exactly one
+        ``RemoteOperation`` of kind ``local_workbook`` with action
+        ``parse-groi-replay``. The remote-state guard still pre-flights this
+        list for uniformity with the live path.
+
+        Args:
+            payload: Captured replay bytes; ignored.
+            expected: Expected NIF-to-verdict mapping; ignored.
+
+        Returns:
+            A one-element tuple naming the local replay-parse operation.
+        """
         del payload, expected
         return (RemoteOperation(kind="local_workbook", action="parse-groi-replay"),)
 
@@ -140,6 +208,25 @@ class GroiReplayDriver:
         *,
         expected: Mapping[str, object],
     ) -> GroiObservation:
+        """Decode the captured replay payload into observed verdicts.
+
+        The ``expected`` mapping is ignored; the observation is read straight
+        from the captured document. The payload is a JSON envelope with an
+        ``observed`` object (NIF to verdict) and an optional
+        ``raw_evidence_locator`` pointing at the corpus sample on disk.
+
+        Args:
+            payload: JSON replay bytes; decoded via the shared replay decoder.
+            expected: Expected NIF-to-verdict mapping; ignored.
+
+        Returns:
+            A ``GroiObservation`` carrying the captured verdicts and evidence
+            locator.
+
+        Raises:
+            RegistryValidationError: If the payload is malformed or carries
+                blank NIF keys or verdict values.
+        """
         del expected
         document = decode_replay_json_payload(payload, surface_label="GROI replay")
         return GroiObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
@@ -164,10 +251,31 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
 
     @property
     def oracle_id(self) -> str:
+        """Return the stable catalogue identifier for this oracle.
+
+        The value is the module-level ``GROI_ORACLE_ID`` constant
+        (``aeat-groi-spanish-roi-checker``), used as the key under which the
+        oracle registers in the live-parity catalogue.
+
+        Returns:
+            The catalogue registration key.
+        """
         return GROI_ORACLE_ID
 
     @property
     def surface_kind(self) -> OracleSurfaceKind:
+        """Return the surface-kind tag that gates cross-reference pairing.
+
+        Always ``"iva_id_check"``: the same tag carried by the VIES sibling
+        oracle. VIES (VAT Information Exchange System) is the EU service that
+        checks foreign-EU VAT identifiers, the GROI equivalent for the rest of
+        the EU. Sharing the tag lets the registry's surface-kind
+        compatibility table pair GROI checks against ``public_read_surface``
+        cross-references (other read-only public lookups).
+
+        Returns:
+            The ``OracleSurfaceKind`` literal ``"iva_id_check"``.
+        """
         return "iva_id_check"
 
     def planned_operations(
@@ -176,6 +284,30 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
         *,
         expected: Mapping[str, object],
     ) -> tuple[RemoteOperation, ...]:
+        """Declare the remote operations a GROI verification would perform.
+
+        The operations are pre-flighted through the remote-state guard before
+        any browser action runs, enforcing the read-only AEAT mandate by
+        construction. With a driver configured the call delegates to that
+        driver. With no driver configured the oracle synthesises the canonical
+        live sequence directly: a GET against the GROI servlet URL pulled from
+        central config, a browser action to open the form, one
+        ``check-nif-<nif>`` action per expected NIF in sorted order, and a
+        final ``discard-session`` action.
+
+        Args:
+            payload: Raw adapter input bytes, forwarded to a configured driver.
+            expected: Non-empty mapping of Spanish NIF to its expected
+                ROI-registration verdict; NIF is the per-taxpayer fiscal
+                identifier and ROI is the AEAT register of intra-EU operators.
+
+        Returns:
+            The ordered ``RemoteOperation`` tuple for this verification.
+
+        Raises:
+            RegistryValidationError: If ``expected`` is empty, or if any NIF
+                key or verdict value is blank.
+        """
         if not expected:
             raise RegistryValidationError("GroiOracle.planned_operations requires at least one expected NIF")
         expected_values = self._expected_values(expected)

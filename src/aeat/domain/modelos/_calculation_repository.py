@@ -46,12 +46,51 @@ class CalculationRevisionCatalogueRepository:
 
     @property
     def bucket_id(self) -> str | None:
+        """Identifier of the per-profile storage bucket this repository reads and writes.
+
+        A modelo (an AEAT tax form or declaration) carries calculation revisions
+        per filing profile, and each profile owns its own encrypted bucket. This
+        property exposes the resolved bucket identifier, or ``None`` when the
+        repository was constructed against a caller-supplied ``SecureObjectRepository``
+        rather than a resolved bucket.
+
+        Returns:
+            The trimmed bucket identifier, or ``None`` when no bucket was resolved.
+        """
         return self._bucket_id
 
     def exists(self) -> bool:
+        """Report whether a calculation-revision catalogue has been persisted.
+
+        Checks the encrypted store for an object under this repository's namespace
+        and key without decrypting or validating it, so a ``True`` result attests
+        to presence only, not integrity.
+
+        Returns:
+            ``True`` when a stored catalogue object exists, ``False`` otherwise.
+        """
         return self._objects.exists(_CALCULATION_NAMESPACE, _CALCULATION_OBJECT_KEY)
 
     def load(self) -> CalculationRevisionCatalogue:
+        """Load and decrypt the persisted calculation-revision catalogue.
+
+        A calculation revision is a dated, computed version of a modelo's casilla
+        values (a casilla is a numbered box on an AEAT form); the catalogue is the
+        keyed collection of those revisions. The stored record is decrypted, its
+        ``Envelope`` parsed, and its sensitivity classification and schema version
+        checked before the payload is returned. When nothing has been persisted yet,
+        an empty ``CalculationRevisionCatalogue`` is returned rather than raising.
+
+        Returns:
+            The persisted ``CalculationRevisionCatalogue``, or an empty one when no
+            record exists.
+
+        Raises:
+            CalculationRevisionPersistenceError: If the stored record fails the
+                FINANCIAL classification check, or its envelope schema version
+                exceeds the version this consumer supports, or an integrity error
+                surfaces while decrypting and decoding the record.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
@@ -82,6 +121,17 @@ class CalculationRevisionCatalogueRepository:
         return envelope.payload
 
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
+        """Persist the calculation-revision catalogue to encrypted storage.
+
+        Wraps the catalogue (the keyed collection of a modelo's dated calculation
+        revisions) in an ``Envelope`` stamped with the current schema version, write
+        time, and FINANCIAL sensitivity classification, then writes the serialised
+        envelope to the encrypted store under this repository's namespace and key.
+        An existing catalogue object at that location is overwritten.
+
+        Args:
+            catalogue: The ``CalculationRevisionCatalogue`` to serialise and store.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         envelope = Envelope[CalculationRevisionCatalogue](

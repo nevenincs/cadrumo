@@ -128,15 +128,65 @@ class UserProfileLifecycleRepository:
 
     @property
     def bucket_id(self) -> str:
+        """Return the logical profile bucket this repository is bound to.
+
+        A bucket is a named, isolated storage partition: every read and write
+        addresses this bucket's own database, so two operators never share
+        profile storage. The value is the stripped, non-blank identifier
+        supplied at construction.
+
+        Returns:
+            The name of the bucket (storage partition) this repository
+            operates against.
+        """
         return self._bucket_id
 
     def exists(self, profile_id: str) -> bool:
+        """Report whether a live profile aggregate is stored under ``profile_id``.
+
+        Probes the secure-object backend for the single live profile-value
+        record keyed by ``profile_id`` (a UUIDv4) in this bucket, without
+        decrypting or validating the payload.
+
+        Args:
+            profile_id: The immutable UUIDv4 identifying the profile.
+
+        Returns:
+            ``True`` when a record exists under that key, else ``False``.
+        """
         return self._objects.exists(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),
         )
 
     def load(self, profile_id: str) -> UserProfileRecord:
+        """Load and decrypt the live profile aggregate for ``profile_id``.
+
+        Reads the encrypted ``Envelope`` (the stored container that holds the
+        encrypted payload plus its metadata) for the single live profile
+        record in this bucket, validates it back into a ``UserProfileRecord``,
+        and enforces two storage-contract checks before returning the payload.
+        First, the envelope's classification (its declared sensitivity level)
+        must match the level expected for profile data. Second, the schema
+        version recorded on the envelope must not be newer than the version
+        this code can read.
+
+        Args:
+            profile_id: The immutable UUIDv4 identifying the profile.
+
+        Returns:
+            The decrypted ``UserProfileRecord`` carried by the envelope.
+
+        Raises:
+            ProfileNotFoundError: No record is stored under ``profile_id``
+                in this bucket.
+            StoredProfileDriftError: The stored payload no longer validates
+                against the current ``UserProfileRecord`` schema.
+            ClassificationError: The envelope's classification differs from
+                the level expected for profile data.
+            EnvelopeVersionError: The stored schema version is newer than
+                this code can read.
+        """
         record = self._objects.load(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),
@@ -162,6 +212,21 @@ class UserProfileLifecycleRepository:
         return envelope.payload
 
     def save(self, record: UserProfileRecord) -> None:
+        """Persist ``record`` as this bucket's single live profile aggregate.
+
+        Wraps the ``UserProfileRecord`` in an encrypted ``Envelope`` (the
+        stored container holding the encrypted payload plus its metadata)
+        stamped with the current schema version, the write timestamp, and the
+        sensitivity classification for profile data, then stores it under the
+        key derived from ``record.profile_id``. A profile bucket holds exactly
+        one live profile record, so this overwrites any prior aggregate for
+        the same ``profile_id``. Afterwards it clears the cached output
+        language, because a write may have changed the active profile's
+        preferred language for command-line output.
+
+        Args:
+            record: The live profile aggregate to encrypt and store.
+        """
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
             written_at=now(),
@@ -202,6 +267,20 @@ class UserProfileLifecycleRepository:
             yield envelope.payload
 
     def delete(self, profile_id: str) -> bool:
+        """Remove the live profile aggregate stored under ``profile_id``.
+
+        Deletes the single live profile record keyed by ``profile_id`` from
+        this bucket. When a record was actually removed, it clears the cached
+        output language, because the deleted profile may have governed the
+        active profile's preferred language for command-line output.
+
+        Args:
+            profile_id: The immutable UUIDv4 identifying the profile.
+
+        Returns:
+            ``True`` when a record was deleted, ``False`` when no record was
+            stored under that key.
+        """
         deleted = self._objects.delete(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),
@@ -225,15 +304,67 @@ class UserProfileSnapshotRepository:
 
     @property
     def bucket_id(self) -> str:
+        """Return the logical profile bucket this repository is bound to.
+
+        A bucket is a named, isolated storage partition: snapshot keys are
+        scoped to this bucket, so every read and write addresses the bucket's
+        own database and no two operators share snapshot storage. The value is
+        the stripped, non-blank identifier supplied at construction.
+
+        Returns:
+            The name of the bucket (storage partition) this repository
+            operates against.
+        """
         return self._bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
+        """Report whether a filing-time snapshot is stored under ``snapshot_id``.
+
+        Probes the secure-object backend for the immutable snapshot keyed by
+        this bucket and ``snapshot_id``, without decrypting or validating the
+        payload. A snapshot is the frozen profile state captured at the
+        moment a tax filing was prepared; a profile owns many such snapshots.
+
+        Args:
+            snapshot_id: The identifier of the snapshot, globally unique
+                within this bucket.
+
+        Returns:
+            ``True`` when a snapshot exists under that key, else ``False``.
+        """
         return self._objects.exists(
             USER_PROFILE_SNAPSHOT_NAMESPACE,
             user_profile_snapshot_object_key(self._bucket_id, snapshot_id),
         )
 
     def load(self, snapshot_id: str) -> UserProfileSnapshot:
+        """Load and decrypt the filing-time snapshot for ``snapshot_id``.
+
+        A snapshot is the frozen profile state captured when a tax filing was
+        prepared. Reads the encrypted ``Envelope`` (the stored container that
+        holds the encrypted payload plus its metadata) for the immutable
+        snapshot keyed by this bucket and ``snapshot_id``, validates it into a
+        ``UserProfileSnapshot``, and enforces two storage-contract checks
+        before returning the payload. First, the envelope's classification
+        (its declared sensitivity level) must match the level expected for
+        snapshot data. Second, the schema version recorded on the envelope
+        must not be newer than the version this code can read.
+
+        Args:
+            snapshot_id: The identifier of the snapshot, globally unique
+                within this bucket.
+
+        Returns:
+            The decrypted ``UserProfileSnapshot`` carried by the envelope.
+
+        Raises:
+            ProfileSnapshotNotFoundError: No snapshot is stored under
+                ``snapshot_id`` in this bucket.
+            ClassificationError: The envelope's classification differs from
+                the level expected for snapshot data.
+            EnvelopeVersionError: The stored schema version is newer than
+                this code can read.
+        """
         record = self._objects.load(
             USER_PROFILE_SNAPSHOT_NAMESPACE,
             user_profile_snapshot_object_key(self._bucket_id, snapshot_id),
@@ -256,6 +387,21 @@ class UserProfileSnapshotRepository:
         return envelope.payload
 
     def save(self, snapshot: UserProfileSnapshot) -> None:
+        """Persist ``snapshot`` as an immutable filing-time snapshot.
+
+        A snapshot is the frozen profile state captured when a tax filing was
+        prepared. Wraps the ``UserProfileSnapshot`` in an encrypted
+        ``Envelope`` (the stored container holding the encrypted payload plus
+        its metadata) stamped with the current schema version, the write
+        timestamp, and the sensitivity classification for snapshot data, then
+        stores it under the key derived from this bucket and
+        ``snapshot.snapshot_id``. Snapshots never change once written, so each
+        save adds a new entry to the many snapshots a profile owns rather than
+        mutating live profile state.
+
+        Args:
+            snapshot: The filing-time profile snapshot to encrypt and store.
+        """
         envelope = Envelope[UserProfileSnapshot](
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
             written_at=now(),

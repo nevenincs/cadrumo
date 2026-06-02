@@ -199,15 +199,60 @@ class CensoSnapshotRepository:
 
     @property
     def bucket_id(self) -> str:
+        """Return the profile bucket this repository is scoped to.
+
+        The value is the trimmed ``bucket_id`` the repository was constructed
+        with. Every secure-object key this repository reads or writes is
+        namespaced under it, so the bucket id is the isolation boundary that
+        keeps one operator profile's censo snapshots from leaking into
+        another's.
+
+        Returns:
+            The non-blank bucket identifier.
+        """
         return self._bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
+        """Report whether a censo snapshot is persisted under the given id.
+
+        Probes the secure-object store for this repository's bucket without
+        decrypting or validating the payload. A censo snapshot is the captured
+        state of an operator's Modelo 036 census facts (the AEAT tax form that
+        registers a taxpayer's activities and obligations).
+
+        Args:
+            snapshot_id: Content-addressed id of the snapshot to probe.
+
+        Returns:
+            ``True`` if an object exists at the derived key, ``False``
+            otherwise.
+        """
         return self._repository.exists(
             CENSO_SNAPSHOT_NAMESPACE,
             censo_snapshot_object_key(self._bucket_id, snapshot_id),
         )
 
     def load(self, snapshot_id: str) -> CensoSnapshot:
+        """Load and return the censo snapshot stored under ``snapshot_id``.
+
+        Decrypts the stored secure object, validates that the wrapper's
+        sensitivity classification and schema version are the ones this
+        repository expects, and returns the ``CensoSnapshot`` it contains. The
+        loaded payload's ``bucket_id`` and ``snapshot_id`` are checked against
+        this repository's bucket and the requested id, so a mislabelled or
+        cross-bucket record fails loudly rather than leaking.
+
+        Args:
+            snapshot_id: Exact content-addressed id of the snapshot to load.
+
+        Returns:
+            The validated ``CensoSnapshot``.
+
+        Raises:
+            CensoSnapshotNotFoundError: No object exists at the derived key.
+            LiveApplicationInputError: The payload's bucket or id does not
+                match what was requested.
+        """
         record = self._repository.load(
             CENSO_SNAPSHOT_NAMESPACE,
             censo_snapshot_object_key(self._bucket_id, snapshot_id),
@@ -233,6 +278,16 @@ class CensoSnapshotRepository:
         return snapshot
 
     def list_snapshots(self) -> tuple[CensoSnapshot, ...]:
+        """Return every censo snapshot belonging to this repository's bucket.
+
+        Reads all records in the censo namespace, validates each stored
+        wrapper, and keeps only those whose payload ``bucket_id`` matches this
+        repository's bucket. The result is sorted by capture time and then
+        snapshot id, so the ordering is stable across calls.
+
+        Returns:
+            A tuple of ``CensoSnapshot``, oldest capture first.
+        """
         snapshots = [
             snapshot
             for record in self._repository.list_records(
@@ -246,6 +301,24 @@ class CensoSnapshotRepository:
         return tuple(sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id)))
 
     def resolve(self, snapshot_id: str) -> CensoSnapshot:
+        """Resolve an exact or prefix snapshot id to a single snapshot.
+
+        Serves operator-facing lookups where typing a full content-addressed
+        id is impractical: a unique leading prefix of the SHA-256 id is
+        accepted. Scans this bucket's snapshots for an exact id or any id that
+        starts with the trimmed input.
+
+        Args:
+            snapshot_id: Full id or a leading prefix of one.
+
+        Returns:
+            The single matching ``CensoSnapshot``.
+
+        Raises:
+            LiveApplicationInputError: ``snapshot_id`` is blank.
+            CensoSnapshotNotFoundError: No snapshot matches, or the prefix
+                matches more than one snapshot.
+        """
         trimmed_snapshot_id = snapshot_id.strip()
         if not trimmed_snapshot_id:
             raise LiveApplicationInputError("snapshot_id must not be blank")
@@ -268,6 +341,21 @@ class CensoSnapshotRepository:
         return matches[0]
 
     def save(self, snapshot: CensoSnapshot) -> None:
+        """Persist a censo snapshot into this bucket's secure-object store.
+
+        Wraps the snapshot in an ``Envelope`` stamped with the current censo
+        schema version, sensitivity classification, and write time, then
+        writes it at the derived secure-object key. The snapshot's
+        ``bucket_id`` must match this repository's bucket, so a payload is
+        never filed under the wrong profile.
+
+        Args:
+            snapshot: The ``CensoSnapshot`` to persist.
+
+        Raises:
+            LiveApplicationInputError: The snapshot's ``bucket_id`` differs
+                from this repository's bucket.
+        """
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 f"censo snapshot bucket_id={snapshot.bucket_id!r} "
@@ -343,6 +431,23 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         profile_id: str | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[CensoSnapshot, ...]:
+        """Return censo snapshots for this bucket, narrowed by profile and state.
+
+        Widens the base service's listing with two optional filters. Each
+        snapshot moves through a closed lifecycle of ACTIVE, SUPERSEDED, then
+        DISCARDED states. By default only ACTIVE snapshots are returned, since
+        re-fetching supersedes the prior capture for the same profile.
+
+        Args:
+            profile_id: When given, keep only snapshots for this operator
+                profile (matched against the trimmed id).
+            state: Lifecycle state to keep; defaults to
+                ``SnapshotLifecycleState.ACTIVE``. Pass ``None`` to keep
+                snapshots in every state.
+
+        Returns:
+            A tuple of matching ``CensoSnapshot``, oldest capture first.
+        """
         snapshots: tuple[CensoSnapshot, ...] = super().list_snapshots()
         if profile_id is not None:
             trimmed = profile_id.strip()
@@ -352,6 +457,20 @@ class CensoSnapshotService(SnapshotService[CensoSnapshot]):
         return snapshots
 
     def latest_active(self, *, profile_id: str) -> CensoSnapshot | None:
+        """Return the most recently captured ACTIVE snapshot for a profile.
+
+        Serves the ``show_censo`` and ``apply_censo_to_profile`` CLI verbs,
+        which need the single current view of an operator's Modelo 036 census
+        facts. Selects the ACTIVE snapshot with the latest ``captured_at`` for
+        the given profile.
+
+        Args:
+            profile_id: Operator profile whose latest capture is wanted.
+
+        Returns:
+            The newest ACTIVE ``CensoSnapshot``, or ``None`` when the profile
+            has no ACTIVE snapshot.
+        """
         snapshots = self.list_snapshots(profile_id=profile_id)
         if not snapshots:
             return None

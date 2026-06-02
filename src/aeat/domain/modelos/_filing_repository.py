@@ -44,12 +44,46 @@ class ModeloRecordCatalogueRepository:
 
     @property
     def bucket_id(self) -> str | None:
+        """Profile bucket this repository reads from and writes to.
+
+        A bucket is the per-profile partition that isolates one taxpayer's
+        encrypted records from another's. Returns the resolved bucket
+        identifier, or ``None`` when the repository was constructed against
+        an injected ``SecureObjectRepository`` and no bucket id was supplied.
+        """
         return self._bucket_id
 
     def exists(self) -> bool:
+        """Report whether a persisted filing-record catalogue exists.
+
+        Returns ``True`` when an encrypted catalogue BLOB has already been
+        written for this bucket, ``False`` otherwise. This is a presence
+        check only; it neither decrypts nor validates the stored payload.
+        Call ``load`` to retrieve and verify the catalogue contents.
+        """
         return self._objects.exists(_FILING_NAMESPACE, _FILING_OBJECT_KEY)
 
     def load(self) -> ModeloRecordCatalogue:
+        """Load and decrypt the filing-record catalogue from storage.
+
+        A modelo is an AEAT tax form, and each filing record is the durable
+        receipt that a calculation revision (a dated, immutable result for
+        that form) was filed for a given form, year, and period. The whole
+        catalogue is persisted as one encrypted FINANCIAL-class BLOB and
+        returned as a ``ModeloRecordCatalogue``.
+
+        Returns an empty catalogue when nothing has been persisted yet.
+
+        Returns:
+            The decrypted ``ModeloRecordCatalogue`` for this bucket.
+
+        Raises:
+            ModeloRecordPersistenceError: If the stored envelope fails its
+                sensitivity-class or schema-version integrity checks, or if
+                its on-disk classification is not FINANCIAL, or if it was
+                written at a schema version newer than this consumer
+                supports.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
@@ -80,6 +114,17 @@ class ModeloRecordCatalogueRepository:
         return envelope.payload
 
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
+        """Persist the filing-record catalogue as a single encrypted BLOB.
+
+        Wraps ``catalogue`` in a FINANCIAL-class envelope stamped with the
+        current schema version and write timestamp, then writes it through
+        the secure object store. The entire catalogue is rewritten as one
+        encrypted object per bucket, replacing any prior catalogue for this
+        bucket.
+
+        Args:
+            catalogue: The ``ModeloRecordCatalogue`` to encrypt and store.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         envelope = Envelope[ModeloRecordCatalogue](
