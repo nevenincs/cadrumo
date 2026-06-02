@@ -31,18 +31,12 @@ def isolated_language_state(tmp_path: Path) -> Iterator[None]:
     locale resolver a real backing store to read from.
     """
 
-    from ..adapters.persistence.storage.sql import dispose_engine
-
-    dispose_engine()
     with (
         override_settings(aeat_output_language=""),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("default"),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 def _seed_profile_language(language: str) -> None:

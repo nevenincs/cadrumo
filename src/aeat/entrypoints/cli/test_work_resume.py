@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.workflow import (
     WorkflowAbortReason,
@@ -27,15 +26,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
