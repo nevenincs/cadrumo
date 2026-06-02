@@ -35,8 +35,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
-
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -190,9 +188,7 @@ def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
     )
     assert result.exit_code == 0, result.output
     profile_rows = [
-        line
-        for line in result.output.splitlines()
-        if line.startswith("100\t") and line.split("\t")[4] == "profile"
+        line for line in result.output.splitlines() if line.startswith("100\t") and line.split("\t")[4] == "profile"
     ]
     assert profile_rows, result.output
     assert all(line.split("\t")[5] == "profile fact" for line in profile_rows), profile_rows
@@ -305,11 +301,7 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding() -> None:
         ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
-    row = next(
-        line
-        for line in result.output.splitlines()
-        if "estimacion-directa-es-normal" in line
-    )
+    row = next(line for line in result.output.splitlines() if "estimacion-directa-es-normal" in line)
     columns = row.split("\t")
     # typed_enum column still names the enum; input_channel says decimal.
     assert "EstimacionDirectaModalidad" in columns
@@ -362,12 +354,8 @@ def test_work_calculate_leads_with_a_result_summary() -> None:
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    summary_header_index = next(
-        i for i, line in enumerate(lines) if line.startswith("role\tcasilla\tvalue\tlabel")
-    )
-    first_casilla_index = next(
-        i for i, line in enumerate(lines) if line.startswith("casilla\t")
-    )
+    summary_header_index = next(i for i, line in enumerate(lines) if line.startswith("role\tcasilla\tvalue\tlabel"))
+    first_casilla_index = next(i for i, line in enumerate(lines) if line.startswith("casilla\t"))
     # The summary block precedes the full casilla table.
     assert summary_header_index < first_casilla_index
     # The summary surfaces the headline IRPF result casilla.
@@ -434,8 +422,17 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     work_unit_id = _create_202_work_unit(period)
     result = invoke_cached_cli(
         [
-            "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
-            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_unit_id,
+            "--binding",
+            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--binding",
+            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -461,9 +458,7 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
     _create_profile()
     described = invoke_cached_cli(["app", "modelo", "describe", "202"])
     assert described.exit_code == 0, described.output
-    periods_line = next(
-        line for line in described.output.splitlines() if line.startswith("Periods\t")
-    )
+    periods_line = next(line for line in described.output.splitlines() if line.startswith("Periods\t"))
     advertised = {token.strip() for token in periods_line.split("\t", 1)[1].split(",")}
     assert advertised == {"1P", "2P", "3P"}, described.output
 
@@ -471,8 +466,15 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
         work_unit_id = _create_202_work_unit(period)
         calculated = invoke_cached_cli(
             [
-                "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
-                "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--binding",
+                "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
             ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)
