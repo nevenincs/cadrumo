@@ -98,29 +98,29 @@ _RETENCIONES_CASILLA = "28"
 
 # All 111 manual-input casillas not driven by the scenario are zero.
 _ZERO_CASILLAS = (
-    ["04", "05", "06"]   # trabajo especie
-    + ["07", "08", "09"] # actividades econ dinerario
-    + ["10", "11", "12"] # actividades econ especie
-    + ["13", "14", "15"] # premios dinerario
-    + ["16", "17", "18"] # premios especie
-    + ["19", "20", "21"] # ganancias forestales dinerario
-    + ["22", "23", "24"] # ganancias forestales especie
-    + ["25", "26", "27"] # cesión derechos imagen
-    + ["29"]             # resultado anteriores autoliquidaciones
+    ["04", "05", "06"]  # trabajo especie
+    + ["07", "08", "09"]  # actividades econ dinerario
+    + ["10", "11", "12"]  # actividades econ especie
+    + ["13", "14", "15"]  # premios dinerario
+    + ["16", "17", "18"]  # premios especie
+    + ["19", "20", "21"]  # ganancias forestales dinerario
+    + ["22", "23", "24"]  # ganancias forestales especie
+    + ["25", "26", "27"]  # cesión derechos imagen
+    + ["29"]  # resultado anteriores autoliquidaciones
 )
 
 _YEAR_N_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("5"),  "02": Decimal("12000.00"), "03": Decimal("2280.00")},
-    "2T": {"01": Decimal("6"),  "02": Decimal("14000.00"), "03": Decimal("2660.00")},
-    "3T": {"01": Decimal("4"),  "02": Decimal("10500.00"), "03": Decimal("1995.00")},
-    "4T": {"01": Decimal("5"),  "02": Decimal("13000.00"), "03": Decimal("2470.00")},
+    "1T": {"01": Decimal("5"), "02": Decimal("12000.00"), "03": Decimal("2280.00")},
+    "2T": {"01": Decimal("6"), "02": Decimal("14000.00"), "03": Decimal("2660.00")},
+    "3T": {"01": Decimal("4"), "02": Decimal("10500.00"), "03": Decimal("1995.00")},
+    "4T": {"01": Decimal("5"), "02": Decimal("13000.00"), "03": Decimal("2470.00")},
 }
 
 _YEAR_N_PLUS_1_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("3"),  "02": Decimal("9000.00"),  "03": Decimal("1710.00")},
-    "2T": {"01": Decimal("4"),  "02": Decimal("11000.00"), "03": Decimal("2090.00")},
-    "3T": {"01": Decimal("5"),  "02": Decimal("15000.00"), "03": Decimal("2850.00")},
-    "4T": {"01": Decimal("4"),  "02": Decimal("12500.00"), "03": Decimal("2375.00")},
+    "1T": {"01": Decimal("3"), "02": Decimal("9000.00"), "03": Decimal("1710.00")},
+    "2T": {"01": Decimal("4"), "02": Decimal("11000.00"), "03": Decimal("2090.00")},
+    "3T": {"01": Decimal("5"), "02": Decimal("15000.00"), "03": Decimal("2850.00")},
+    "4T": {"01": Decimal("4"), "02": Decimal("12500.00"), "03": Decimal("2375.00")},
 }
 
 
@@ -131,9 +131,7 @@ def _calculate_111(
     casilla_inputs: dict[str, Decimal],
 ) -> RegistryCalculationResult:
     """Run the REAL 111 quarterly calculation and return the engine result."""
-    snapshot = resources().modelos.authority.snapshot(
-        _MODELO_111, filing_year=filing_year, period=period
-    )
+    snapshot = resources().modelos.authority.snapshot(_MODELO_111, filing_year=filing_year, period=period)
     # Supply all manual-input zero casillas plus the scenario inputs.
     zero_inputs = {cid: Decimal("0") for cid in _ZERO_CASILLAS}
     inputs = {
@@ -149,17 +147,12 @@ def _calculate_111(
     )
 
 
-def _111_observation(
-    *, filing_year: int, period: str, result: RegistryCalculationResult
-) -> RegistryModeloObservation:
+def _111_observation(*, filing_year: int, period: str, result: RegistryCalculationResult) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=_MODELO_111,
         filing_year=filing_year,
         period=period,
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=val)
-            for cid, val in result.values.items()
-        ),
+        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
     )
 
 
@@ -169,12 +162,8 @@ def _calculate_190(
     relation_values: dict[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 190 annual calculation from resolved relations; return result + count."""
-    snapshot = resources().modelos.authority.snapshot(
-        _MODELO_190, filing_year=filing_year, period="0A"
-    )
-    relation_binding_values = materialize_relation_binding_values(
-        snapshot.revision, relation_values, period="0A"
-    )
+    snapshot = resources().modelos.authority.snapshot(_MODELO_190, filing_year=filing_year, period="0A")
+    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values}
     inputs = {
         **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
@@ -203,8 +192,7 @@ def _compute_year_111_totals(
     All other perception-count and importe casillas are zero in this scenario.
     """
     totals: dict[str, Decimal] = {
-        cid: Decimal("0")
-        for cid in _PERCEPTION_COUNT_CASILLAS + _IMPORTE_CASILLAS + [_RETENCIONES_CASILLA]
+        cid: Decimal("0") for cid in _PERCEPTION_COUNT_CASILLAS + _IMPORTE_CASILLAS + [_RETENCIONES_CASILLA]
     }
     for period, inputs in quarters.items():
         result = _calculate_111(filing_year=filing_year, period=period, casilla_inputs=inputs)
@@ -245,12 +233,8 @@ def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        expected = _compute_year_111_totals(
-            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo
-        )
-        snapshot_190 = resources().modelos.authority.snapshot(
-            _MODELO_190, filing_year=_YEAR_N, period="0A"
-        )
+        expected = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
+        snapshot_190 = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190, repository=obs_repo)
 
     resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
@@ -272,12 +256,8 @@ def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
         _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
-        expected_n1 = _compute_year_111_totals(
-            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo
-        )
-        snapshot_190_n1 = resources().modelos.authority.snapshot(
-            _MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A"
-        )
+        expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
+        snapshot_190_n1 = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
 
     resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
@@ -315,51 +295,29 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         obs_repo = CalculationObservationRepository()
 
         # Year N: calculate four 111 quarters, persist, resolve 190, calculate 190.
-        expected_n = _compute_year_111_totals(
-            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo
-        )
+        expected_n = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         # 111 feeder: evidence the feeder year via one real quarterly calculation.
-        _q1_result = _calculate_111(
-            filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"]
-        )
-        recorder_111.record_calculation_year(
-            filing_year=_YEAR_N, produced_value_count=len(_q1_result.values)
-        )
+        _q1_result = _calculate_111(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
+        recorder_111.record_calculation_year(filing_year=_YEAR_N, produced_value_count=len(_q1_result.values))
 
-        snapshot_190_n = resources().modelos.authority.snapshot(
-            _MODELO_190, filing_year=_YEAR_N, period="0A"
-        )
+        snapshot_190_n = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_190_n, repository=obs_repo)
-        resolved_n = {
-            item.relation: item.value for item in prefill_n.values if item.value is not None
-        }
+        resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
         result_n, produced_n = _calculate_190(filing_year=_YEAR_N, relation_values=resolved_n)
         recorder_190.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1: same pipeline.
-        expected_n1 = _compute_year_111_totals(
-            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo
-        )
+        expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         _q1_result_n1 = _calculate_111(
             filing_year=_YEAR_N_PLUS_1, period="1T", casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"]
         )
-        recorder_111.record_calculation_year(
-            filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values)
-        )
+        recorder_111.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values))
 
-        snapshot_190_n1 = resources().modelos.authority.snapshot(
-            _MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A"
-        )
+        snapshot_190_n1 = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
-        resolved_n1 = {
-            item.relation: item.value for item in prefill_n1.values if item.value is not None
-        }
-        result_n1, produced_n1 = _calculate_190(
-            filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1
-        )
-        recorder_190.record_calculation_year(
-            filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1
-        )
+        resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
+        result_n1, produced_n1 = _calculate_190(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
+        recorder_190.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant Year N:
     # total-percepciones = sum of perception-count relations; in this
