@@ -141,9 +141,7 @@ def resolve_maritime_exemption(
 
     if rebeca_eligible(facts):
         if gross_navigation_income is None:
-            raise RentaValidationError(
-                "gross_navigation_income is required when REBECA eligibility applies"
-            )
+            raise RentaValidationError("gross_navigation_income is required when REBECA eligibility applies")
         obs = calculate_rebeca_exemption(
             gross_navigation_income=gross_navigation_income,
             facts=facts,
