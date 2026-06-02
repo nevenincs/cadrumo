@@ -46,7 +46,7 @@ Add the docstring and link enforcement tooling and enable the ruff D ruleset wit
 Restore the lint recipe to green so the docstring gate can be wired onto a working recipe; the referenced relative-imports check script is currently absent.
 
 - [x] `W01.P02.S05` - restore the relative-imports check script the lint recipe references; `scripts/check_relative_imports.py`.
-- [ ] `W01.P02.S06` - confirm the lint recipe runs green end to end; `justfile`.
+- [x] `W01.P02.S06` - confirm the lint recipe runs green end to end; `justfile`.
 
 ### Phase `W01.P03` - documentation build recipes
 
@@ -66,7 +66,7 @@ Repair the inconsistent Sphinx config: fix the toctree, remove stale exclusions 
 - [x] `W01.P04.S12` - remove the myst xref warning suppression; `docs/conf.py`.
 - [x] `W01.P04.S13` - drop the sphinx_markdown_builder extension; `docs/conf.py`.
 - [x] `W01.P04.S14` - curate the nitpick_ignore baseline coupled to autodoc_mock_imports; `docs/conf.py`.
-- [ ] `W01.P04.S15` - confirm a nitpicky build surfaces only curated ignores; `docs/conf.py`.
+- [x] `W01.P04.S15` - confirm a nitpicky build surfaces only curated ignores; `docs/conf.py`.
 - [x] `W01.P04.S66` - document the deferred multilang attachment point as a seam comment; `docs/conf.py`.
 - [x] `W01.P04.S67` - seed the linkcheck_ignore baseline and add the advisory linkcheck lane; `docs/conf.py`.
 
@@ -175,16 +175,16 @@ Author the English repo-bootstrap surface through the documentation pipeline res
 
 Replace the self-flagged out-of-date README via the documentation pipeline so it reflects shipped features.
 
-- [ ] `W04.P16.S50` - rewrite the stale readme through the documentation pipeline researcher author editor flow; `README.md`.
-- [ ] `W04.P16.S51` - confirm the readme reflects shipped features and passes editorial review; `README.md`.
+- [x] `W04.P16.S50` - rewrite the stale readme through the documentation pipeline researcher author editor flow; `README.md`.
+- [x] `W04.P16.S51` - confirm the readme reflects shipped features and passes editorial review; `README.md`.
 
 ### Phase `W04.P17` - author the narrative bootstrap pages
 
 Author the getting-started and architecture pages the toctree depends on, through the documentation pipeline, with domain-driven filenames.
 
-- [ ] `W04.P17.S52` - author the getting-started narrative page through the documentation pipeline; `docs/getting-started.md`.
-- [ ] `W04.P17.S53` - author the architecture narrative page through the documentation pipeline; `docs/architecture.md`.
-- [ ] `W04.P17.S54` - confirm both narrative pages build under the nitpicky gate and pass editorial review; `docs/getting-started.md`.
+- [x] `W04.P17.S52` - author the getting-started narrative page through the documentation pipeline; `docs/getting-started.md`.
+- [x] `W04.P17.S53` - author the architecture narrative page through the documentation pipeline; `docs/architecture.md`.
+- [x] `W04.P17.S54` - confirm both narrative pages build under the nitpicky gate and pass editorial review; `docs/getting-started.md`.
 
 ### Phase `W04.P18` - bootstrap presence pin
 
@@ -201,8 +201,8 @@ Codify the documentation editorial workflow, flip every gate to blocking once th
 
 Document the researcher-author-editor authoring workflow as a domain-named contributor guide.
 
-- [ ] `W05.P19.S57` - codify the documentation authoring and editorial review workflow through the documentation pipeline; `docs/authoring-guide.md`.
-- [ ] `W05.P19.S58` - confirm the authoring guide builds under the nitpicky gate and passes editorial review; `docs/authoring-guide.md`.
+- [x] `W05.P19.S57` - codify the documentation authoring and editorial review workflow through the documentation pipeline; `docs/authoring-guide.md`.
+- [x] `W05.P19.S58` - confirm the authoring guide builds under the nitpicky gate and passes editorial review; `docs/authoring-guide.md`.
 
 ### Phase `W05.P20` - flip gates to blocking
 
@@ -210,14 +210,14 @@ Wire docs-check into the standing gate set and make the docstring, correspondenc
 
 - [x] `W05.P20.S59` - wire docs-check into the standing gate set; `justfile`.
 - [x] `W05.P20.S60` - make the docstring, correspondence, and cli conformance tests blocking in the unit gate; `pyproject.toml`.
-- [ ] `W05.P20.S61` - confirm a full green run across lint, docs-check, and the suite; `justfile`.
+- [x] `W05.P20.S61` - confirm a full green run across lint, docs-check, and the suite; `justfile`.
 
 ### Phase `W05.P21` - epic closure honesty review
 
 Run a fresh-context honesty review against the closure summary before declaring the epic structurally complete, per the campaign-close rule.
 
-- [ ] `W05.P21.S62` - run a fresh-context honesty review against the epic closure summary; `.vault/audit`.
-- [ ] `W05.P21.S63` - track honesty-review findings as new steps with verification gates; `.vault/plan/2026-05-30-docs-architecture-plan.md`.
+- [x] `W05.P21.S62` - run a fresh-context honesty review against the epic closure summary; `.vault/audit`.
+- [x] `W05.P21.S63` - track honesty-review findings as new steps with verification gates; `.vault/plan/2026-05-30-docs-architecture-plan.md`.
 
 ## Wave `W06` - build-time CLI reference migration
 
