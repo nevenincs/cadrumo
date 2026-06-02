@@ -1737,6 +1737,26 @@ required_text = [
     "Zona Especial Canaria",
 ]
 
+[legal."ley-35-2006:art-48"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-48.html#a48"
+document_id = "BOE-A-2006-20764"
+article = "48"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a48"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "Base legal para la integracion y compensacion de rentas en la base imponible GENERAL del IRPF (Modelo 100). El saldo negativo de ganancias y perdidas patrimoniales de la base general se compensa con el saldo positivo de rendimientos e imputaciones con el limite del 25 por ciento; el saldo negativo restante se compensa en los cuatro anios siguientes (casillas 1391 saldo pendiente -> 1388 aplicacion). Distinto del art.49, que rige la base imponible del AHORRO."
+required_text = [
+    "La base imponible general será el resultado de sumar los siguientes saldos",
+    "con el límite del 25 por ciento",
+    "se compensará en los cuatro años siguientes",
+]
+
 [legal."ley-35-2006:art-49"]
 evidence_tier = "legal_authority"
 authority = "boe"
