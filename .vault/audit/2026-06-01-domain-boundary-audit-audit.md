@@ -1473,6 +1473,26 @@ remediation is currently HELD at audit-only per the active action policy.
   (confirmed convention divergence). The two DB-06 halves are NOT a single mechanical
   dedup.
 
+- 2026-06-02 (cont.): **DB-44 root cause scoped (fix deferred — high-blast-radius).**
+  `resolve_active_bucket_id` (core/_bucket_pointer_io) has NO cache and reads
+  settings/env/pointer each call; `isolated_runtime_profile` correctly scopes the
+  active bucket + storage root via `override_settings` and disposes the engine in
+  its finally block. The leak is therefore NOT in pointer resolution. Likely cause:
+  BOTH assets test modules (test_assets.py, test_assets_roundtrip.py) call
+  `isolated_runtime_profile(tmp_path=...)` with the SAME default
+  `bucket_id="test-runtime-profile"` while their `storage_root` differs per
+  `tmp_path` — so a SQLAlchemy engine / SecureObjectRepository cached by the
+  constant bucket_id can serve a prior test's connection (wrong DB → empty load)
+  in a multi-test run, non-deterministically by order. Two candidate fixes: (a)
+  TEST-ONLY low-risk — give each assets test a unique bucket_id (isolates the
+  cache key); (b) FOUNDATION — key the engine/repository cache by storage_root and
+  fully dispose per profile. (a) is the safe first attempt but the flake is
+  non-deterministic so it needs several confirming runs; (b) touches the secure-
+  storage foundation used by every isolated_runtime_profile test (high blast
+  radius). Fresh-context work with a multi-run verification harness; not an
+  exhausted-context change (a prior attempt at this exact flake misattributed
+  causation — S55).
+
 ## Codification candidates
 
 
