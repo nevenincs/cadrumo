@@ -86,7 +86,10 @@ class CalcSheetsApplyResult(BaseModel):
     tab_count: int = Field(ge=1)
 
 
-def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
+# ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
+# googleapiclient.discovery.build() returns an untyped Resource object; no stub
+# narrows the concrete type.
+def _drive_service(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -98,7 +101,10 @@ def _drive_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-B
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY: googleapiclient.discovery.build() returns untyped Resource object; no stub narrows the concrete type.
+# ANY-RETURN-RATIONALE-GOOGLE-BUILD-FACTORY:
+# googleapiclient.discovery.build() returns an untyped Resource object; no stub
+# narrows the concrete type.
+def _sheets_service(credentials: object) -> Any:
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -110,7 +116,9 @@ def _sheets_service(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
+# googleapiclient Resource object; no stub type is available in
+# google-api-python-client.
 def _find_folder(
     drive: Any,
     *,
@@ -159,7 +167,9 @@ def _find_folder(
     return None
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
+# googleapiclient Resource object; no stub type is available in
+# google-api-python-client.
 def _create_folder(
     drive: Any,
     *,
@@ -180,7 +190,9 @@ def _create_folder(
     )
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
+# googleapiclient Resource object; no stub type is available in
+# google-api-python-client.
 def _ensure_folder(
     drive: Any,
     *,
@@ -194,7 +206,9 @@ def _ensure_folder(
     return created["id"]
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
+# googleapiclient Resource object; no stub type is available in
+# google-api-python-client.
 def _find_spreadsheet(
     drive: Any,
     *,
@@ -233,7 +247,9 @@ def _find_spreadsheet(
     return None
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource object; no stub type available in google-api-python-client.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
+# googleapiclient Resource object; no stub type is available in
+# google-api-python-client.
 def _create_spreadsheet(
     drive: Any,
     sheets: Any,
