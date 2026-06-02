@@ -29,19 +29,19 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
-from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import (
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ..user_profile._orchestration import (
     profile_create_storage_span,
     register_active_profile,
 )
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
-from aeat.core._bucket_pointer_io import read_pointer
-from aeat.core.config import SecretStoreBackend, load_settings, override_settings
-from aeat.domain.user_profile import ProfileSchemaValidationError, UserProfileFact
-from aeat.tests.secure_sql import dev_test_database_password
+from ..workflow._persistence import workflow_state_repository
+from ..workflow._profile_bucket_scan import read_profile_bucket
+from ...core._bucket_pointer_io import read_pointer
+from ...core.config import SecretStoreBackend, load_settings, override_settings
+from ...domain.user_profile import ProfileSchemaValidationError, UserProfileFact
+from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

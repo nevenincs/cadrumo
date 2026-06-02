@@ -87,7 +87,7 @@ def emit_workflow_state_reset(
     actor: str,
     source: str,
 ) -> BucketEvent:
-    """Append a ``workflow_state.reset`` event to the bucket-event history.
+    """Append a ``workflow_state.reset`` event to the bucket-event history and return the :class:`BucketEvent`.
 
     The event is recorded against the recovered bucket id when one
     survives on the fingerprint, or against the system bucket otherwise.

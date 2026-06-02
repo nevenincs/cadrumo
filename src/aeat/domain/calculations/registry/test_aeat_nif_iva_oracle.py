@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.config import Settings
+from ....core.config import Settings
 
 from ._aeat_nif_iva_oracle import (
     ORACLE_ID,

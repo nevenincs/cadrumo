@@ -26,7 +26,7 @@ from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.logging import get_logger
 from ....domain.attachments._errors import (
@@ -195,7 +195,7 @@ class AttachmentStore(BaseModel):
         _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
 
     def load_manifest(self, attachment_id: str) -> Attachment:
-        """Load and validate the manifest for ``attachment_id``."""
+        """Load and validate the :class:`Attachment` manifest for ``attachment_id``."""
         digest = _require_digest(attachment_id)
         record = self._objects_repo().load(
             _ATTACHMENT_MANIFEST_NAMESPACE,
@@ -220,7 +220,7 @@ class AttachmentStore(BaseModel):
         return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
-        """Iterate over every manifest in sorted attachment-id order."""
+        """Iterate over every :class:`Attachment` manifest in sorted attachment-id order."""
         manifests: list[Attachment] = []
         for record in self._objects_repo().list_records(
             _ATTACHMENT_MANIFEST_NAMESPACE,

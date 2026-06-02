@@ -60,7 +60,7 @@ _CRUD_VERB_TO_EVENT_SUFFIX: dict[CrudVerb, BucketEventSuffix] = {
 
 
 def event_suffix_for(verb: CrudVerb) -> BucketEventSuffix | None:
-    """Return the canonical bucket-event suffix for ``verb``, or None for read verbs."""
+    """Return the :class:`BucketEventSuffix` for ``verb``, or None for read verbs."""
     return _CRUD_VERB_TO_EVENT_SUFFIX.get(verb)
 
 

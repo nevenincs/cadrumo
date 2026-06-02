@@ -18,8 +18,8 @@ from typing import TypedDict
 
 import pytest
 
-from aeat.adapters.persistence.storage import LIVE_CENSO_SNAPSHOT_NAMESPACE
-from aeat.application.live._censo import (
+from ...adapters.persistence.storage import LIVE_CENSO_SNAPSHOT_NAMESPACE
+from ._censo import (
     CENSO_SNAPSHOT_NAMESPACE,
     CensoSnapshot,
     CensoSnapshotRepository,
@@ -28,8 +28,8 @@ from aeat.application.live._censo import (
     censo_snapshot_object_key,
     derive_censo_snapshot_id,
 )
-from aeat.application.live._errors import LiveApplicationInputError
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ._errors import LiveApplicationInputError
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -443,7 +443,7 @@ def test_anti_tautology_mutating_on_disk_payload_is_detected_on_load(
 
     from pydantic import ValidationError
 
-    from aeat.adapters.persistence.storage import (
+    from ...adapters.persistence.storage import (
         Envelope,
         SensitivityClass,
     )

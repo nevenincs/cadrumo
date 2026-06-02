@@ -57,7 +57,7 @@ class ModelLawCoverageLedger(CoverageModel):
 
     @property
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
-        """Return evidence tiers that have no supporting registry evidence."""
+        """Return :class:`EvidenceTierCoverageGate` entries that have no supporting registry evidence."""
         return tuple(gate for gate in self.gates if gate.status == "gap")
 
 
@@ -80,7 +80,7 @@ def audit_registry_model_law_coverage(
     *,
     source_root: Path,
 ) -> RegistryCoverageAudit:
-    """Validate registry coverage ledgers for every modelo revision.
+    """Validate registry coverage ledgers and return a :class:`RegistryCoverageAudit`.
 
     Legal authority, official guidance, and layout authority are mandatory for
     every revision because the registry cannot be filing-grade without them.
@@ -123,7 +123,11 @@ def audit_registry_model_law_coverage(
 
 
 def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCoverageLedger:
-    """Build the four-tier coverage ledger for a validated registry snapshot."""
+    """Build the four-tier coverage ledger for a validated registry snapshot.
+
+    Returns:
+        A :class:`ModelLawCoverageLedger` summarising coverage across all evidence tiers.
+    """
     return ModelLawCoverageLedger(
         modelo=snapshot.modelo.id,
         revision=snapshot.revision.id,

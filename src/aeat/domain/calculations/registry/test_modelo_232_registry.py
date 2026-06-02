@@ -8,7 +8,7 @@ from itertools import pairwise
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import (
     InputKind,

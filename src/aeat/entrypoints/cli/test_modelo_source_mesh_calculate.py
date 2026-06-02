@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -11,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.transactions import (
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -22,8 +20,9 @@ from aeat.domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ._test_envelope import unwrap_schema_envelope as _payload
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -129,8 +128,8 @@ def _transaction(
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
-    from aeat.application.user_profile._orchestration import profile_storage_session
-    from aeat.application.workflow._models import resolve_active_bucket_id
+    from ...application.user_profile._orchestration import profile_storage_session
+    from ...application.workflow._models import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
@@ -169,10 +168,10 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     with profile_storage_session(bucket_id):
         from datetime import UTC, datetime
 
-        from aeat.application.calculations._iva_wallet_reconciliation import (
+        from ...application.calculations._iva_wallet_reconciliation import (
             IvaCompensationReconciliationDecision,
         )
-        from aeat.application.calculations._observations_repository import IvaWalletDecisionRepository
+        from ...application.calculations._observations_repository import IvaWalletDecisionRepository
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase))

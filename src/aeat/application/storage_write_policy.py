@@ -6,10 +6,11 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from aeat.core.config import Settings, StorageRouteKind, classify_storage_route
-from aeat.core.i18n import tr
+from ..core.config import Settings, StorageRouteKind, classify_storage_route
+from ..core.i18n import tr
 
 from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 
 class StorageWritePolicyCode(StrEnum):
     """Machine-readable runtime write-policy outcomes."""
@@ -118,7 +119,11 @@ def inspect_storage_write_policy(
     bootstrap_exempt: bool,
     settings: Settings | None = None,
 ) -> StorageWritePolicyDecision:
-    """Return whether ``verb_path`` may perform profile-bound writes."""
+    """Return whether ``verb_path`` may perform profile-bound writes.
+
+    Returns a :class:`StorageWritePolicyDecision` with the allow/deny
+    verdict and the policy code that determined it.
+    """
     if bootstrap_exempt:
         return StorageWritePolicyDecision(
             allowed=True,

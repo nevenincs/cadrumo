@@ -6,9 +6,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain._identifiers import ModeloIdentifier
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ModeloHistoryEntry(BaseModel):
     """One recorded filing event observed by the local filing-state store."""

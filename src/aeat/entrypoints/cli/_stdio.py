@@ -24,6 +24,7 @@ which is strictly worse than leaving the stream as-is.
 from __future__ import annotations
 
 import contextlib
+
 # LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK: stdlib logging used for debug-level platform diagnostic on Windows ctypes failure; core logging is unavailable at stream-bootstrap time.
 import logging
 import os

@@ -16,11 +16,11 @@ from pathlib import Path
 import pytest
 import typer
 
-from aeat.core.config import override_settings
-from aeat.core.i18n import tr
-from aeat.entrypoints.cli._common import _draft_by_id
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_cli_runtime_profile, isolated_sessionless_storage_root
+from ...core.config import override_settings
+from ...core.i18n import tr
+from ._common import _draft_by_id
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_cli_runtime_profile, isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -33,9 +33,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def _active_profile_env(tmp_path: Path) -> Iterator[Path]:
     """Active-profile runtime with CLI directories isolated; no drafts present."""
-    with override_settings(aeat_output_language="en"):
-        with isolated_cli_runtime_profile(tmp_path=tmp_path) as runtime:
-            yield runtime.storage_root
+    with override_settings(aeat_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path) as runtime:
+        yield runtime.storage_root
 
 
 def test_draft_by_id_raises_bad_parameter_for_unknown_id(
@@ -80,9 +79,8 @@ def test_draft_by_id_error_message_contains_draft_id_interpolation(
 @pytest.fixture
 def _sessionless_env(tmp_path: Path) -> Iterator[Path]:
     """Pristine storage root with no profile, English locale."""
-    with override_settings(aeat_output_language="en"):
-        with isolated_sessionless_storage_root(tmp_path=tmp_path) as root:
-            yield root
+    with override_settings(aeat_output_language="en"), isolated_sessionless_storage_root(tmp_path=tmp_path) as root:
+        yield root
 
 
 def test_active_profile_or_exit_locale_keys_resolve_to_real_strings() -> None:

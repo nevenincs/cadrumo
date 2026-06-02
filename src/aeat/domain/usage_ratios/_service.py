@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.logging import get_logger
 
@@ -55,7 +55,7 @@ def usage_ratios_object_key(bucket_id: str) -> str:
 
 
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
-    """Load one bucket's persisted usage-ratio profile, or return an empty one."""
+    """Load one bucket's persisted :class:`UsageRatioProfile`, or return an empty one."""
     from ...adapters.persistence.storage import Envelope, SensitivityClass
     from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket

@@ -26,7 +26,7 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ._schema import Justificante
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    pass
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):
@@ -50,7 +50,11 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
         return tuple(self.iter_ids())
 
     def iter_justificantes(self) -> Iterator[Justificante]:
-        """Yield every persisted justificante, in lexicographic CSV order."""
+        """Yield every persisted justificante, in lexicographic CSV order.
+
+        Returns:
+            Iterator over :class:`Justificante` records.
+        """
         yield from self.iter_records()
 
 

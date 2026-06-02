@@ -20,7 +20,7 @@ from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
@@ -102,6 +102,8 @@ def build_overview_agenda(
     ``adjusted_closes_on >= as_of``; if multiple obligations close on
     the same date, the deterministic calendar ordering
     ``(closes_on, modelo, period)`` resolves the tie.
+
+    Returns an :class:`OverviewAgenda`.
     """
     if horizon_days <= 0:
         raise OverviewAgendaError(f"horizon_days must be positive; got {horizon_days}")

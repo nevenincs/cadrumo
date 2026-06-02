@@ -74,6 +74,9 @@ def resources() -> ResourceRegistry:
     (manuals, normatives, iva catalogues). Tests that mutate
     Settings between cases call ``resources.cache_clear()`` to
     rebuild with the new values.
+
+    Returns:
+        The process-wide cached :class:`ResourceRegistry` instance.
     """
     from ..config import load_settings
 

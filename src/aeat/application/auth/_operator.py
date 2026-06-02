@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings, load_settings, unwrap_optional_secret
@@ -183,7 +183,7 @@ class AuthClearResult(BaseModel):
     cleared_locks: int
 
 def list_operator_auth_providers() -> AuthProvidersReport:
-    """Return implemented and reserved auth provider slots."""
+    """Return the :class:`AuthProvidersReport` enumerating implemented and reserved auth provider slots."""
     return AuthProvidersReport(providers=list_auth_providers())
 
 class AuthConfigureNoActiveBucketError(AeatError):
@@ -567,7 +567,11 @@ def build_live_auth_preflight_report(
     *,
     settings: Settings | None = None,
 ) -> LiveAuthPreflightReport:
-    """Return a redacted preflight report before a live read may trigger auth."""
+    """Return a redacted preflight report before a live read may trigger auth.
+
+    Returns a :class:`LiveAuthPreflightReport` with provider status,
+    identity alignment, and active-profile health indicators.
+    """
     resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:

@@ -31,8 +31,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -56,30 +56,30 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     Returns the source ``bucket_id`` (== ``profile_id``) for D5 checks.
     """
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.application.modelo._actions import create_work_unit
-    from aeat.core._bucket_pointer_io import resolve_active_bucket_id
-    from aeat.core.config import override_settings
-    from aeat.domain.calculations.registry import CasillaObservation
-    from aeat.domain.modelos._calculation_repository import (
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...application.modelo._actions import create_work_unit
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core.config import override_settings
+    from ...domain.calculations.registry import CasillaObservation
+    from ...domain.modelos._calculation_repository import (
         CalculationRevisionCatalogueRepository,
         upsert_calculation_revision,
     )
-    from aeat.domain.modelos._calculation_revision import (
+    from ...domain.modelos._calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,
         derive_calculation_revision_id,
     )
-    from aeat.domain.modelos._filing_record import (
+    from ...domain.modelos._filing_record import (
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
     )
-    from aeat.domain.modelos._filing_repository import (
+    from ...domain.modelos._filing_repository import (
         ModeloRecordCatalogueRepository,
         upsert_filing_record,
     )
-    from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
+    from ...domain.modelos._repository import WorkUnitCatalogueRepository
 
     # 1. Provision profile via CLI.
     csv = tmp_path / "bank.csv"
@@ -178,7 +178,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             filed_at=filed_at,
             filed_by="operator",
         )
-        from aeat.domain.modelos._codes import ModeloCode
+        from ...domain.modelos._codes import ModeloCode
 
         filing_record = ModeloRecord(
             filing_record_id=filing_record_id,
@@ -210,13 +210,13 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
 def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     """All four financial-history categories survive export/import with strict equality."""
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.core._bucket_pointer_io import resolve_active_bucket_id
-    from aeat.core.config import override_settings
-    from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-    from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-    from aeat.domain.transactions._repository import TransactionCatalogueRepository
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core.config import override_settings
+    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+    from ...domain.modelos._repository import WorkUnitCatalogueRepository
+    from ...domain.transactions._repository import TransactionCatalogueRepository
 
     bundle_path = tmp_path / "source-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)
@@ -286,10 +286,10 @@ def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
     is not enforcing provenance preservation.
     """
 
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from aeat.core.config import override_settings
-    from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-    from aeat.domain.user_profile._portable_export import UserProfilePortableExport
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...core.config import override_settings
+    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ...domain.user_profile._portable_export import UserProfilePortableExport
 
     bundle_path = tmp_path / "tautology-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)

@@ -11,7 +11,7 @@ from dataclasses import is_dataclass
 
 import pytest
 
-from aeat.tests.fixtures.justificantes._generate import (
+from ._generate import (
     _FIXTURES,
     _Fixture,
     _Modelo036Fixture,

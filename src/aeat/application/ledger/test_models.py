@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...core.external_constants import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_CORE
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
@@ -19,7 +20,6 @@ from ...domain.transactions import (
     TransactionDirection,
 )
 from . import CLASSIFIED_BY_MANUAL, ManualLedgerTransactionCommand, ManualLedgerTransactionResult
-from ...core.external_constants import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_CORE
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

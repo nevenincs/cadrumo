@@ -139,10 +139,11 @@ def register(code: ErrorCode) -> ErrorCode:
     """Register ``code`` in the global catalogue.
 
     Args:
-        code: The error-code record to add.
+        code: The :class:`ErrorCode` record to add.
 
     Returns:
-        The same ``code`` object for fluent use at declaration sites.
+        The same :class:`ErrorCode` object for fluent use at declaration
+        sites.
 
     Raises:
         ValueError: If a duplicate code identifier is encountered.
@@ -154,7 +155,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES
+from .registry import _ALL_DECLARED_ERROR_CODES
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
     {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES}
@@ -284,7 +285,12 @@ def build_error_envelope(
     context: Mapping[str, object] | None = None,
     trace_id: str | None = None,
 ) -> ErrorEnvelope:
-    """Build the deterministic JSON stderr envelope for ``error``."""
+    """Build the deterministic JSON stderr envelope for ``error``.
+
+    Returns:
+        A frozen :class:`ErrorEnvelope` suitable for serialisation to
+        the machine-readable stderr payload.
+    """
     code = get_registered_error_code(error)
     merged_context = _merge_error_context(error, context)
     return ErrorEnvelope(

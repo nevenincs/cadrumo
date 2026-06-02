@@ -70,7 +70,7 @@ def project_invoice_reviews(
     spec: InvoiceReviewFilterSpec,
     invoice_id: str | None = None,
 ) -> tuple[InvoiceReviewProjection, ...]:
-    """Return backend-computed review rows for invoices matching ``spec``."""
+    """Return backend-computed :class:`InvoiceReviewProjection` rows for invoices matching ``spec``."""
     rows: list[InvoiceReviewProjection] = []
     for invoice in catalogue.values():
         review = state.invoice_reviews.get(invoice.invoice_id)
@@ -86,7 +86,7 @@ def project_invoice_reviews(
 
 
 def project_invoice_review(invoice: Invoice, review: InvoiceReviewRecord | None) -> InvoiceReviewProjection:
-    """Return a backend-owned display projection for one invoice."""
+    """Return the backend-owned :class:`InvoiceReviewProjection` for one invoice."""
     base, iva = invoice_display_amounts(invoice, review)
     payment = review.fields.get("payment.id") if review else None
     return InvoiceReviewProjection(
@@ -131,7 +131,7 @@ def invoice_display_amounts(
 
 
 def invoice_review_status(invoice: Invoice, review: InvoiceReviewRecord | None) -> InvoiceReviewStatus:
-    """Return the backend-owned invoice review status."""
+    """Return the backend-owned :class:`InvoiceReviewStatus` for the invoice."""
     del invoice
     if review and review.fields.get("payment.id"):
         return InvoiceReviewStatus.PAID
@@ -141,7 +141,7 @@ def invoice_review_status(invoice: Invoice, review: InvoiceReviewRecord | None) 
 
 
 def apply_manual_invoice_match(state: WorkflowState, invoice_id: str, ledger_id: str) -> WorkflowState:
-    """Return ``state`` with a manual invoice/payment match recorded."""
+    """Return the updated :class:`WorkflowState` with a manual invoice/payment match recorded."""
     return update_invoice_review(
         state,
         invoice_id,
@@ -158,7 +158,11 @@ def project_invoice_payment_matches(
     transactions: TransactionCatalogue,
     state: WorkflowState,
 ) -> InvoiceMatchProjection:
-    """Return period-labelled invoice/payment match status."""
+    """Return period-labelled invoice/payment match status.
+
+    Returns an :class:`InvoiceMatchProjection` with matched and unmatched
+    rows for the given period.
+    """
     matched: list[InvoiceMatchRow] = []
     unmatched: list[InvoiceMatchRow] = []
     for invoice in catalogue.values():

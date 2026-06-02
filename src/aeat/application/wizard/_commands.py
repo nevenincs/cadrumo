@@ -876,7 +876,11 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         from ...core.click_context import json_output_requested
         from ...core.json_contract import emit_json_success
 
-        verb = "created" if mode == "create" else "updated"
+        verb = tr(
+            "wizard.commands.status.created"
+            if mode == "create"
+            else "wizard.commands.status.updated"
+        )
         # `next_label` is the operator-facing localised label for the
         # next-step tab; `next` is the machine-parseable command hint
         # scripted consumers parse on the lowercase key column. The two
@@ -905,7 +909,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             # key column; localising it would force every consumer to
             # build a per-locale key table.
             _typer.echo(f"profile\t{profile_name}")
-            _typer.echo(f"status\t{verb}")
+            _typer.echo(f"{tr('application.wizard.output_labels.status')}\t{verb}")
             if mode == "create":
                 _typer.echo(f"active_profile\t{profile_name}")
             _typer.echo(f"next\t{payload['next']}")

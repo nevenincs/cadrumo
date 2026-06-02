@@ -28,9 +28,9 @@ import os
 
 import pytest
 
-from aeat.adapters.outbound.google._oauth_flow import run_login_flow
-from aeat.adapters.outbound.google._records import REQUIRED_SCOPES
-from aeat.adapters.outbound.google._session_store import (
+from ._oauth_flow import run_login_flow
+from ._records import REQUIRED_SCOPES
+from ._session_store import (
     delete_session,
     load_client,
     load_metadata,

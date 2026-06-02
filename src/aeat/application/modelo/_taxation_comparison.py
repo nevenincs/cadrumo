@@ -118,7 +118,7 @@ def compare_taxation_modes(
     date_binding_values: Mapping[str, date] | None = None,
     date_context: Mapping[str, date] | None = None,
 ) -> TaxationComparisonResult:
-    """Run the registry engine for conjunta and individual and diff the results.
+    """Run the registry engine for conjunta and individual, diff the results, and return a :class:`TaxationComparisonResult`.
 
     The caller must supply all profile-sourced bindings (CCAA, birth
     date, etc.) that the revision needs, *except* ``declaration_type``:
@@ -228,9 +228,12 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
 
     Resolves the registry snapshot and all profile-sourced bindings
     from the stored work unit, then delegates to
-    :func:`compare_taxation_modes`.  The ``declaration_type`` binding is
+    :func:`compare_taxation_modes`. The ``declaration_type`` binding is
     injected by the comparison engine; the stored profile value is
     intentionally ignored so both paths are always evaluated.
+
+    Returns a :class:`TaxationComparisonResult` with the conjunta and
+    individual calculation outcomes.
 
     Raises :class:`TaxationComparisonError` when the work unit's modelo
     does not support the comparison (e.g. not Modelo 100).

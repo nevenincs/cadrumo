@@ -280,7 +280,7 @@ class BucketEventHistoryCatalogue(BaseModel):
         *,
         event_types: tuple[BucketEventType, ...] | None = None,
     ) -> tuple[BucketEvent, ...]:
-        """Return every event recorded against ``bucket_id`` in chronological order.
+        """Return every :class:`BucketEvent` recorded against ``bucket_id`` in chronological order.
 
         Events are sorted by ``occurred_at`` ascending and optionally filtered to one
         or more event types.
@@ -297,7 +297,11 @@ class BucketEventHistoryCatalogue(BaseModel):
         object_type: BucketEventObjectType,
         object_id: str,
     ) -> tuple[BucketEvent, ...]:
-        """Return every event recorded against one object, ordered by ``occurred_at`` ascending."""
+        """Return every event recorded against one object, ordered by ``occurred_at`` ascending.
+
+        Returns:
+            Tuple of :class:`BucketEvent` records in chronological order.
+        """
         matching = (e for e in self.events.values() if e.object_type is object_type and e.object_id == object_id)
         return tuple(sorted(matching, key=lambda e: e.occurred_at))
 

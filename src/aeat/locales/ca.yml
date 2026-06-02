@@ -634,6 +634,7 @@ cli:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici
         group_help: Llibres d'existències per activitat, moviments i valoració
+        iva_rate_help: Tipus d'IVA en percentatge
         list_help: Llista els llibres d'existències del bucket actiu
         movement_add_help: Afegeix un moviment de compra, venda o ajust al llibre
         movement_date_help: Data del moviment (AAAA-MM-DD)
@@ -649,7 +650,6 @@ cli:
         valuation_method_help: Mètode de valoració (fifo o pmp)
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
-        iva_rate_help: 'Tipus d''IVA en percentatge'
       payable_invoice:
         add_help: Registra una nova factura pagable
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
@@ -1546,7 +1546,7 @@ cli:
       dry_run_help: Report changes without modifying the configuration
       from_help: Source profile ID to import settings from
       help: Initialize a new active profile and config bucket.
-      iva_regime_help: 'IVA regime (general, simplificado, exento, etc.)'
+      iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
@@ -2571,6 +2571,7 @@ cli:
 core:
   profile:
     errors:
+      output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: La implementació de respostes del projecte
         s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
         una vegada.
@@ -2836,8 +2837,8 @@ errors:
     sede_g313_no_censo: La seu electrònica de l'AEAT (G313) no ha retornat cap cens
       llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve
       està registrat per a aquest NIF.
-    sede_no_censo: La seu electrònica de l'AEAT no ha retornat cap cens llegible
-      per al perfil {profile_id}.
+    sede_no_censo: La seu electrònica de l'AEAT no ha retornat cap cens llegible per
+      al perfil {profile_id}.
   error:
     error_access_gate_submission: La política de control d'accés ha rebutjat una operació
       d'enviament.
@@ -2910,6 +2911,17 @@ errors:
     error_financial_invoices_invoice_link: No s'ha pogut enllaçar la factura amb la
       transacció.
     error_financial_invoices_invoice_not_found: No s'ha trobat la factura sol·licitada.
+    error_financial_iva: S'ha produït un error en el càlcul de l'IVA.
+    error_financial_iva_catalogue: El catàleg d'IVA no s'ha pogut carregar, resoldre
+      o validar.
+    error_financial_iva_category_not_found: No s'ha trobat la categoria d'IVA sol·licitada
+      al catàleg.
+    error_financial_iva_classification: No s'ha pogut classificar l'IVA de manera
+      determinista.
+    error_financial_iva_rate_not_found: No s'ha trobat cap tipus d'IVA per a l'estat
+      membre i el tipus sol·licitats.
+    error_financial_iva_rate_overlap: Dos tipus d'IVA comparteixen una finestra de
+      vigència.
     error_financial_provider: S'ha produït un error en importar el document financer.
     error_financial_provider_config: Una subclasse de proveïdor financer té declaracions
       d'atributs de corpus invàlides o que manquen.
@@ -2921,6 +2933,12 @@ errors:
     error_invoice_link_inconsistency: L'enllaç ha deixat la factura i la transacció
       dessincronitzades. Revisa tots dos catàlegs manualment.
     error_invoice_validation: Un registre de factura no ha superat la validació.
+    error_iva_prorrata: S'ha produït un error en el càlcul de la prorrata de l'IVA.
+    error_iva_prorrata_input: Les dades d'entrada de la prorrata de l'IVA infringeixen
+      les seves invariants.
+    error_iva_prorrata_sector: Les dades de separació sectorial de la prorrata de
+      l'IVA són inconsistents.
+    error_iva_validation: Un valor de l'IVA no és vàlid.
     error_justificante: S'ha produït un error relacionat amb el justificant.
     error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
     error_llm: S'ha produït un error en el model de llenguatge.
@@ -3033,16 +3051,6 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
-    error_financial_iva_rate_not_found: 'No s''ha trobat cap tipus d''IVA per a l''estat membre i el tipus sol·licitats.'
-    error_financial_iva_rate_overlap: 'Dos tipus d''IVA comparteixen una finestra de vigència.'
-    error_financial_iva: 'S''ha produït un error en el càlcul de l''IVA.'
-    error_financial_iva_catalogue: 'El catàleg d''IVA no s''ha pogut carregar, resoldre o validar.'
-    error_financial_iva_category_not_found: 'No s''ha trobat la categoria d''IVA sol·licitada al catàleg.'
-    error_financial_iva_classification: 'No s''ha pogut classificar l''IVA de manera determinista.'
-    error_iva_prorrata: 'S''ha produït un error en el càlcul de la prorrata de l''IVA.'
-    error_iva_prorrata_input: 'Les dades d''entrada de la prorrata de l''IVA infringeixen les seves invariants.'
-    error_iva_prorrata_sector: 'Les dades de separació sectorial de la prorrata de l''IVA són inconsistents.'
-    error_iva_validation: 'Un valor de l''IVA no és vàlid.'
   fail:
     censo_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -3104,8 +3112,8 @@ errors:
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sanitization_source_parse: El PDF d'origen no s'ha pogut obrir per sanejar-lo.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
-    fail_sede_censo_parse: Un valor de la pàgina del cens de la Seu de l'AEAT no
-      s'ha pogut interpretar.
+    fail_sede_censo_parse: Un valor de la pàgina del cens de la Seu de l'AEAT no s'ha
+      pogut interpretar.
     fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
       de l'AEAT ha fallat o el fitxer no és vàlid.
     fail_sede_parse: No s'ha pogut interpretar la pàgina capturada de la Seu de l'AEAT.
@@ -3306,8 +3314,8 @@ errors:
       de perfil.
     censo_apply_conflict: No es pot aplicar el cens perquè hi ha feina en curs sobre
       una unitat dependent. Resol primer l'estat pendent.
-    censo_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema
-      no admet. Revisa el camp indicat amb el teu assessor.
+    censo_field_validation: El cens de l'AEAT ha retornat un valor que l'esquema no
+      admet. Revisa el camp indicat amb el teu assessor.
     censo_not_available: L'AEAT no ha retornat cap cens llegible. És possible que
       no estiguis donat d'alta a l'IAE o que el teu certificat no estigui registrat
       al teu NIF.
@@ -3409,8 +3417,8 @@ errors:
       document d'origen.
     refused_financial_provider_validation: Un camp del document financer (data o import)
       no ha superat la validació.
-    refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina
-      a casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
+    refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
+      casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.

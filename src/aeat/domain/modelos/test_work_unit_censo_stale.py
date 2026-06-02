@@ -5,15 +5,13 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from pydantic import ValidationError
 
-from aeat.domain.modelos._work_unit import (
+from ._work_unit import (
     ModeloCode,
     WorkUnit,
     derive_work_unit_id,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

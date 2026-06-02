@@ -233,7 +233,11 @@ class RemoteStateGuardResult(RemoteStateGuardModel):
 
 
 def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecision) -> RemoteStateGuardPolicy:
-    """Build the executable remote-state guard policy for a registry cross-reference."""
+    """Build the executable remote-state guard policy for a registry cross-reference.
+
+    Returns:
+        The :class:`RemoteStateGuardPolicy` derived from the cross-reference decision.
+    """
     if decision.evidence_tier == "legal_authority":
         raise RegistryValidationError("remote-state policy cannot be built from legal-authority evidence")
     evidence_tier: RemoteEvidenceTier = decision.evidence_tier
@@ -265,7 +269,11 @@ def assert_remote_operation_allowed(
     policy: RemoteStateGuardPolicy,
     operation: RemoteOperation,
 ) -> RemoteStateGuardResult:
-    """Return an allowed decision or raise for forbidden AEAT remote state."""
+    """Return an allowed decision or raise for forbidden AEAT remote state.
+
+    Returns:
+        A :class:`RemoteStateGuardResult` with an allowed decision.
+    """
     result = evaluate_remote_operation(policy, operation)
     if result.decision == "blocked":
         raise RegistryValidationError(result.reason)
@@ -273,7 +281,7 @@ def assert_remote_operation_allowed(
 
 
 def evaluate_remote_operation(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -> RemoteStateGuardResult:
-    """Evaluate one operation against the deny-by-default remote-state guard."""
+    """Evaluate one operation against the guard and return a :class:`RemoteStateGuardResult`."""
     if operation.kind == "local_workbook":
         return RemoteStateGuardResult(
             decision="allowed",

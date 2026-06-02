@@ -789,8 +789,8 @@ def test_config_repair_report_includes_registry_integrity_check(tmp_path) -> Non
     so the test runs inside a real active-profile storage runtime to
     satisfy the encrypted-column decrypt path.
     """
-    from aeat.application.diagnostics import build_config_repair_report
-    from aeat.tests.secure_sql import isolated_runtime_profile
+    from ....application.diagnostics import build_config_repair_report
+    from ....tests.secure_sql import isolated_runtime_profile
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         report = build_config_repair_report()

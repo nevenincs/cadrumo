@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.storage._local import LocalFileSystemProvider
-from aeat.core.i18n import tr
+from .adapters.outbound.storage._local import LocalFileSystemProvider
+from .core.i18n import tr
 
 pytestmark = [
     pytest.mark.unit,

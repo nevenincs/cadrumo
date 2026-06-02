@@ -37,25 +37,28 @@ from pydantic import BaseModel, Field
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+from ...domain import renta as _renta_snapshot_checks  # noqa: F401
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
     CasillaDefinition,
+    CasillaId,
     ExportLayoutDefinition,
     FormulaDefinition,
+    FormulaId,
+    LegalRefId,
     ModeloDefinition,
     ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
+    SourceRefId,
     ValidatedRegistryAuthority,
     expression_casilla_refs,
 )
-from ...domain.calculations.registry._ids import CasillaId, FormulaId, LegalRefId, SourceRefId
 from ...domain.filing import CasillaCollection, CasillaSchema
 from ...domain.filing._errors import ModeloBuilderError
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class TaxpayerProfileIdentity(Protocol):
     """Structural identity surface accepted by the filing profile projector."""
@@ -114,14 +117,17 @@ class RegistryCasillaCollection:
         return iter(self.casillas)
 
     def get(self, casilla_id: str) -> CasillaSchema | None:
-        """Return the schema for ``casilla_id``, or ``None`` if absent."""
+        """Return the :class:`CasillaSchema` for ``casilla_id``, or ``None`` if absent."""
         for casilla in self.casillas:
             if casilla.id == casilla_id:
                 return casilla
         return None
 
     def all(self) -> Sequence[CasillaSchema]:
-        """Return all casilla schemas in declaration order."""
+        """Return all casilla schemas in declaration order.
+
+        Each element is a :class:`CasillaSchema`.
+        """
         return self.casillas
 
 @dataclass(frozen=True, slots=True)
@@ -151,14 +157,18 @@ class RegistrySchemaProvider:
     subviews: dict[str, RegistryModeloSubview]
 
     def get_collection(self, modelo: str) -> CasillaCollection:
-        """Return the casilla collection for ``modelo``; raises :exc:`ModeloBuilderError` when absent."""
+        """Return the casilla collection for ``modelo``.
+
+        Returns a :class:`CasillaCollection` for the modelo.
+        Raises :exc:`ModeloBuilderError` when the modelo is absent.
+        """
         try:
             return self.collections[modelo]
         except KeyError as exc:
             raise ModeloBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
 
     def get_subview(self, modelo: str) -> RegistryModeloSubview:
-        """Return the validated registry subview backing ``modelo``."""
+        """Return the :class:`RegistryModeloSubview` backing ``modelo``."""
         try:
             return self.subviews[modelo]
         except KeyError as exc:
@@ -228,7 +238,7 @@ def build_runtime_schema_provider(
     period: str | None = None,
     modelos: Sequence[str] | None = None,
 ) -> RegistrySchemaProvider:
-    """Build the production schema provider from validated registry TOML."""
+    """Build and return the :class:`RegistrySchemaProvider` from validated registry TOML."""
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
     resolved_source_root = (source_root or bundled_path()).resolve()
     selected_ids = _normalize_modelo_selection(modelos)

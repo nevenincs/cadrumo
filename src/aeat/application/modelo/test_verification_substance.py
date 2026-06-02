@@ -16,30 +16,30 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo import (
+from . import (
     calculate_modelo_revision,
     create_work_unit,
     verify_modelo_revision,
 )
-from aeat.application.modelo._actions import (
+from ._actions import (
     StoredCalculationDriftError,
     _evaluate_advisory_predicate_fires,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,
 )
-from aeat.core.resources import resources
-from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, VerificationPredicateDefinition
-from aeat.domain.deadlines import IVARegime, TaxpayerProfile
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._calculation_revision import CalculationRevisionCatalogue
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.modelos._verification_report import (
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, VerificationPredicateDefinition
+from ...domain.deadlines import IVARegime, TaxpayerProfile
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._calculation_revision import CalculationRevisionCatalogue
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from aeat.domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -310,6 +310,40 @@ def test_advisory_when_ratio_ge_does_not_fire_when_denominator_zero() -> None:
     ) is False
 
 
+def test_advisory_implies_nonzero_fires_on_positive_result_zero_base() -> None:
+    """implies_nonzero advisory fires when antecedent positive but consequent zero.
+
+    The M200 silent under-declaration: resultado contable (00501) positive but
+    base imponible (DP200014:00552) undetermined (zero). The advisory must fire
+    so the operator is alerted before a human files. Mirrors the BLOCKING_RULE
+    implies_nonzero violation case, surfaced non-blockingly.
+    """
+    values: dict[str, Decimal] = {"00501": Decimal("140000"), "DP200014:00552": Decimal("0")}
+    assert _evaluate_advisory_predicate_fires(
+        'implies_nonzero(["00501", "DP200014:00552"])', values
+    ) is True
+
+
+def test_advisory_implies_nonzero_does_not_fire_on_non_positive_antecedent() -> None:
+    """No false positive on losses: a non-positive resultado contable holds trivially.
+
+    A loss/zero-result entity (00501 <= 0) legitimately has a zero base; the
+    advisory must NOT fire (it would otherwise be noise on every loss filing).
+    """
+    loss: dict[str, Decimal] = {"00501": Decimal("-5000"), "DP200014:00552": Decimal("0")}
+    zero: dict[str, Decimal] = {"00501": Decimal("0"), "DP200014:00552": Decimal("0")}
+    assert _evaluate_advisory_predicate_fires('implies_nonzero(["00501", "DP200014:00552"])', loss) is False
+    assert _evaluate_advisory_predicate_fires('implies_nonzero(["00501", "DP200014:00552"])', zero) is False
+
+
+def test_advisory_implies_nonzero_does_not_fire_when_consequent_nonzero() -> None:
+    """A determined base (consequent non-zero) satisfies the implication; no advisory."""
+    values: dict[str, Decimal] = {"00501": Decimal("140000"), "DP200014:00552": Decimal("140000")}
+    assert _evaluate_advisory_predicate_fires(
+        'implies_nonzero(["00501", "DP200014:00552"])', values
+    ) is False
+
+
 def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
     """Art. 110.3.b ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
 
@@ -328,7 +362,7 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
     # Exactly 70% ratio: retenciones 10500 / rendimientos 15000
     casilla_values: dict[str, Decimal] = {"06": Decimal("10500"), "01": Decimal("15000")}
 
-    from aeat.domain.modelos._verification_report import ModeloVerificationFindingSeverity
+    from ...domain.modelos._verification_report import ModeloVerificationFindingSeverity
 
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
@@ -472,7 +506,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     removes that regex without updating the canonical set, this
     test fires.
     """
-    from aeat.application.modelo import _actions
+    from . import _actions
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
         "any_nonzero": 'any_nonzero(["01", "02"])',
@@ -731,8 +765,8 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
-    from aeat.application.modelo._actions import _assert_revision_content_integrity
-    from aeat.domain.calculations.registry import CasillaObservation
+    from ._actions import _assert_revision_content_integrity
+    from ...domain.calculations.registry import CasillaObservation
 
     target_obs = revision.observations[0]
     tampered_obs = CasillaObservation.model_construct(
@@ -868,7 +902,7 @@ def test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent() -> N
     Proves the provenance threading is structural (not a constant default)
     and would fail the previous test if the casilla lookup returned None.
     """
-    from aeat.application.modelo._actions import _missing_required_casilla_finding
+    from ._actions import _missing_required_casilla_finding
 
     finding = _missing_required_casilla_finding("99", "wu-test-id", casilla_def=None)
     assert finding.legal_refs == (), "finding with no casilla_def must carry empty legal_refs"

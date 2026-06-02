@@ -6,12 +6,12 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.ledger._ratios import (
+from ._ratios import (
     eligible_ratio_categories,
     validate_ratios_profile,
 )
-from aeat.domain.categories import SpendingCategory
-from aeat.domain.usage_ratios import (
+from ...domain.categories import SpendingCategory
+from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
 )

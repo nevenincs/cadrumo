@@ -16,16 +16,15 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.renta import RentaDeductibleExpenseObservation
-from ...domain.transactions import TransactionCatalogueRepository
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._errors import AggregationValidationError, t
 from ._iva_ledger import (
@@ -48,7 +47,6 @@ from ._source_mesh import (
     storage_degradation_resolution,
 )
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 class ModeloLedgerBindingAggregation(BaseModel):
@@ -317,7 +315,11 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> ModeloLedgerBindingAggregation:
-    """Resolve ledger-backed registry bindings from the active bucket."""
+    """Resolve ledger-backed registry bindings from the active bucket.
+
+    Returns a :class:`ModeloLedgerBindingAggregation` containing all
+    resolved binding values and per-source issue lists.
+    """
     binding_values: dict[str, Decimal] = {}
     source_transaction_ids: set[str] = set()
     iva_issues: tuple[IvaLedgerAggregationIssue, ...] = ()

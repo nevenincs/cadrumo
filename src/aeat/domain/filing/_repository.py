@@ -17,7 +17,6 @@ from ._runtime_repository import resolve_filing_repository_bucket_id, secure_obj
 from ._schema import ModeloDraft
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
     from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 
@@ -49,7 +48,7 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         return tuple(self.iter_ids())
 
     def iter_drafts(self) -> Iterator[ModeloDraft]:
-        """Yield every persisted draft, in lexicographic id order."""
+        """Yield every persisted :class:`ModeloDraft`, in lexicographic id order."""
         return self.iter_records()
 
 

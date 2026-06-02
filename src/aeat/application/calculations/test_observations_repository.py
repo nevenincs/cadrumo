@@ -185,7 +185,6 @@ def test_load_decision_returns_hashed_key_record(tmp_path) -> None:
     persisted via save_decision is keyed with iva_wallet_decision_key (hashed)
     and must be returned directly without triggering the legacy fallback.
     """
-    from pathlib import Path
 
     from ...tests.secure_sql import isolated_runtime_profile
     from ._observations_repository import IvaWalletDecisionRepository

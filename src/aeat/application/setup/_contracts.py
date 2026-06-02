@@ -7,6 +7,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from ...core.external_constants import OutputLanguage
 from ...core.identity import BucketId, ProfileId
 
 
@@ -44,7 +45,7 @@ class InitializeWorkspaceCommand(BaseModel):
         default=None,
         description="Environment variable containing the certificate password.",
     )
-    output_language: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None = Field(
+    output_language: OutputLanguage | None = Field(
         default=None,
         description="Preferred output language code (e.g., 'es', 'ca', 'gl', 'eu').",
     )

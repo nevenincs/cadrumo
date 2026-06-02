@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError

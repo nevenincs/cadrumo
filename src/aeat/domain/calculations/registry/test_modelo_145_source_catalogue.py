@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._legal import verify_legal_catalogue
 from ._loader import load_registry_tree

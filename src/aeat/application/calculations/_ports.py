@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 
@@ -96,12 +95,15 @@ class FiledDeclaracionObservationProtocol(Protocol):
 
     @property
     def artefacts(self) -> Sequence[FiledDeclaracionArtefactProtocol]:
-        """Sequence of artefacts attached to this declaration."""
+        """Sequence of artefacts attached to this declaration.
+
+        Each element satisfies :class:`FiledDeclaracionArtefactProtocol`.
+        """
         ...
 
     @property
     def casillas(self) -> Sequence[ObservedCasillaValueProtocol]:
-        """Sequence of observed casilla values extracted from the declaration."""
+        """Sequence of :class:`ObservedCasillaValueProtocol` values extracted from the declaration."""
         ...
 
 

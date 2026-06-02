@@ -6,8 +6,8 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from aeat.core.errors import CoreValidationError
-from aeat.core.time import coerce_utc_aware, validate_utc_aware
+from ..errors import CoreValidationError
+from . import coerce_utc_aware, validate_utc_aware
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._errors import RegistryLoadError
 from ._loader import (

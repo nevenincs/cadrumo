@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
-from ..calculations.registry._ids import BindingId, CasillaId
+from ..calculations.registry import BindingId, CasillaId
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ..submission import ModeloDraftStatus
 

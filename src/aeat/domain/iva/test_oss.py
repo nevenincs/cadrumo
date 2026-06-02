@@ -7,20 +7,19 @@ from typing import cast
 
 import pytest
 
-from aeat.domain.iva import (
+from . import (
     REGIME_PERIODICITY,
-    IvaTerritorialScope,
     CustomerTaxStatus,
     DeductionScope,
     EUMemberState,
     InvoiceKind,
     IossFilerRole,
+    IvaCategory,
+    IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
     OssIossRegime,
     RegimePeriodicity,
     TransactionKind,
-    IvaCategory,
-    IvaInvoiceClassificationCriteria,
     classify_iva,
     regime_allows_deduction,
 )

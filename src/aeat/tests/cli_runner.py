@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from functools import cache
-from typing import Any
+from typing import NotRequired, Unpack
 
 import click
 from click.testing import CliRunner, Result
 from typer.main import get_command
-from typing_extensions import NotRequired, TypedDict, Unpack
+from typing_extensions import TypedDict
 
-from aeat.entrypoints.cli import app
+from ..entrypoints.cli import app
 
 _RUNNER = CliRunner()
 

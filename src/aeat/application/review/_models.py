@@ -22,6 +22,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.i18n import Translatable as tr
 from ...core.time._utc import validate_utc_aware
 from ...domain.invoices import Invoice
@@ -31,8 +32,6 @@ from ..filing import ModeloValidationFinding
 from ..workflow._models import WorkflowEvent
 from ..workflow._utils import utc_now
 from ._enums import ReviewItemKind, ReviewSeverity
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class _ReviewItemBase(BaseModel):

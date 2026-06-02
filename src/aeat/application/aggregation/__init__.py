@@ -117,10 +117,10 @@ from ._source_profile import ProfileSourceResolver
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
-    "AggregationErrorCodes",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
     "AggregationError",
+    "AggregationErrorCodes",
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
     "AggregationSourceKind",

@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede._declarations import Declaracion, capture_declaration, walk_declarations_register
-from aeat.adapters.outbound.aeat.sede._errors import SedeError
-from aeat.adapters.outbound.aeat.sede._schema import SedeCapture
-from aeat.tests.live_gate import requires_live_enabled
+from ._declarations import Declaracion, capture_declaration, walk_declarations_register
+from ._errors import SedeError
+from ._schema import SedeCapture
+from .....tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
@@ -33,12 +33,12 @@ async def _load_active_clave_session():
         operator has not opted into live tests.
     """
     # Local imports keep the test file lightweight when skipped.
-    from aeat.application.auth import (
+    from .....application.auth import (
         AuthProviderKind,
         ensure_authenticated_aeat_session,
     )
-    from aeat.core.config import load_settings
-    from aeat.core.errors import AeatError
+    from .....core.config import load_settings
+    from .....core.errors import AeatError
 
     settings = load_settings()
     try:

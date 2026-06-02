@@ -29,7 +29,7 @@ def applicable_filing_schedules(
     *,
     period: str | None = None,
 ) -> tuple[ModeloScheduleDefinition, ...]:
-    """Return filing schedules whose profile predicates match the supplied facts."""
+    """Return :class:`ModeloScheduleDefinition` items whose profile predicates match the supplied facts."""
     matched: list[ModeloScheduleDefinition] = []
     for schedule in revision.filing_schedules:
         if period is not None and period not in schedule.periods:

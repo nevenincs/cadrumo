@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import RegistryValidationError
 from ._loader import load_registry_tree

@@ -41,11 +41,15 @@ class AttachmentStoreProtocol(Protocol):
         ...
 
     def load_manifest(self, attachment_id: str) -> Attachment:
-        """Load and validate the manifest for ``attachment_id``."""
+        """Load and validate the manifest for ``attachment_id``.
+
+        Returns:
+            The validated :class:`Attachment` manifest record.
+        """
         ...
 
     def iter_manifests(self) -> Iterator[Attachment]:
-        """Iterate over every manifest in sorted attachment-id order."""
+        """Iterate over every :class:`Attachment` manifest in sorted attachment-id order."""
         ...
 
     def verify_blob(self, attachment_id: str) -> None:

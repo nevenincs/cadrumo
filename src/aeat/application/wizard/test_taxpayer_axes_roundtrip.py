@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.profile import SetupAnswers
+
 from ...domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -23,7 +25,6 @@ from ...domain.deadlines import (
 )
 from ._catalogue import SETUP_FLOW
 from ._persistence import project_answers, serialise_answers
-from aeat.core.profile import SetupAnswers
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

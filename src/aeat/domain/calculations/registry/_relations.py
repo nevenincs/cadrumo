@@ -48,7 +48,7 @@ def relation_source_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryRelationSourceRequirement, ...]:
-    """Return source declarations needed to resolve relations for a filing."""
+    """Return :class:`RegistryRelationSourceRequirement` items needed to resolve relations for a filing."""
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }

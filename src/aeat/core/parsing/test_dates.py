@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.parsing._dates import _parse_ddmmyyyy_date, _parse_iso8601_date
+from ._dates import _parse_ddmmyyyy_date, _parse_iso8601_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

@@ -18,6 +18,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
@@ -38,7 +39,6 @@ from ._base import (
 )
 from ._constants import CSV_EXTENSIONS
 
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 _logger = get_logger(__name__)
 
 class CsvColumnMap(BaseModel):
@@ -182,7 +182,11 @@ class CsvProvider(FinancialProvider):
     provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate CSV structure, encoding, and layout support."""
+        """Validate CSV structure, encoding, and layout support.
+
+        Returns:
+            A :class:`ProviderValidation` with the validation outcome.
+        """
         try:
             rows, _, encoding, dialect = self._load_rows(path)
         except InvalidFinancialSourceError as exc:
@@ -225,7 +229,7 @@ class CsvProvider(FinancialProvider):
         )
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from the CSV source."""
+        """Yield strict :class:`RawTransaction` records from the CSV source."""
         _logger.debug("csv_provider ingest: loading %s", path.name)
         rows, source_sha256, _, _ = self._load_rows(path)
         header_index, layout, headers, lookup = self._locate_header(rows)

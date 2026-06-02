@@ -17,7 +17,7 @@ import uuid
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
-from datetime import UTC, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -37,7 +37,6 @@ from ._models import (
     RunTrace,
     StepBoundaryPayload,
 )
-from ._replay import REPLAY_ACTIVE_ENV_VAR
 from ._sink import JsonlRunSink
 from ._store import _run_dir, _validate_run_id, save_trace
 

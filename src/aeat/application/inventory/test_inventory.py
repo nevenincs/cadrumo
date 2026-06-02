@@ -9,18 +9,18 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
-from aeat.adapters.persistence.storage.errors import StorageValidationError
-from aeat.application.inventory import (
+from ...adapters.persistence.storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
+from ...adapters.persistence.storage.errors import StorageValidationError
+from . import (
     InventoryActividadConflictError,
     InventoryActividadNotFoundError,
     InventoryMovementCommand,
     InventoryService,
     InventoryServiceInputError,
 )
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.domain.profile.inventory import MovementKind, ValuationMethod
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...domain.profile.inventory import MovementKind, ValuationMethod
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

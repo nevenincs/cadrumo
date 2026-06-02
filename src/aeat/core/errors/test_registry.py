@@ -22,7 +22,8 @@ from . import (
     render_error_json,
     render_error_text,
 )
-from ._registry import _DEFERRED_BIND, _flush_deferred_binds, logger as _registry_logger
+from ._registry import _DEFERRED_BIND, _flush_deferred_binds
+from ._registry import logger as _registry_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

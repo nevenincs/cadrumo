@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.core.time import now
+from ......core.time import now
 
 from ......core.logging import get_logger
 from ._base import CERTIFICATE_CONTEXT_MARKER, _CertBackend
@@ -127,7 +127,7 @@ class PlaywrightContextBackend(_CertBackend):
             url: HTTPS endpoint to probe.
 
         Returns:
-            A populated handshake result describing the outcome.
+            A :class:`HandshakeResult` describing the outcome.
         """
         _ = now()  # touch datetime so imports stay explicit
         return HttpxFallbackBackend().verify(cert, url)

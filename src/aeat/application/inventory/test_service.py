@@ -8,13 +8,12 @@ is not tautological — it proves the alias round-trips and is UTC-aware.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 import pytest
 
-from aeat.core.time import now
-from aeat.application.inventory._service import _now_utc  # re-exported alias
-
+from ._service import _now_utc  # re-exported alias
+from ...core.time import now
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

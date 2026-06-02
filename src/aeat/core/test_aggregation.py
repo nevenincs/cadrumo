@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.core.aggregation import AggregationSourceKind
+from .aggregation import AggregationSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

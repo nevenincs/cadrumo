@@ -154,8 +154,8 @@ else:  # POSIX
 def exclusive_file_lock(
     target: Path,
     *,
-    timeout: "float | _DefaultLockTimeout" = DEFAULT_LOCK_TIMEOUT,
-    retry_backoff: "float | _DefaultLockTimeout" = _DEFAULT_RETRY_BACKOFF,
+    timeout: float | _DefaultLockTimeout = DEFAULT_LOCK_TIMEOUT,
+    retry_backoff: float | _DefaultLockTimeout = _DEFAULT_RETRY_BACKOFF,
 ) -> Iterator[Path]:
     """Acquire an OS-level exclusive lock on a sidecar lock file.
 

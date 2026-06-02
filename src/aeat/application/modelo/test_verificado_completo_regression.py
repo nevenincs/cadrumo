@@ -25,24 +25,24 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo import (
+from . import (
     StoredCalculationDriftError,
     calculate_modelo_revision,
     create_work_unit,
     verify_modelo_revision,
 )
-from aeat.core.resources import resources
-from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.deadlines import IVARegime, TaxpayerProfile
-from aeat.domain.calculations.registry import InputKind
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.modelos._verification_report import (
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.calculations.registry import InputKind
+from ...domain.deadlines import IVARegime, TaxpayerProfile
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from aeat.domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -245,7 +245,7 @@ def test_tampered_revision_raises_drift_error(repos) -> None:
     In production, such breakage can occur through raw-storage manipulation or a
     future schema migration that mutates the payload without updating the id.
     """
-    from aeat.application.modelo._actions import _assert_revision_content_integrity
+    from ._actions import _assert_revision_content_integrity
 
     wu_repo, cr_repo, _vr_repo, bv_repo = repos
 

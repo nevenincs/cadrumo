@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import (
     InputKind,

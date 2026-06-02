@@ -319,16 +319,20 @@ class AttachmentCatalogue(BaseModel):
         return False
 
     def get(self, attachment_id: str) -> Attachment | None:
-        """Return one attachment by ID if present.
+        """Return one :class:`Attachment` by ID if present.
 
         Args:
             attachment_id: Stable attachment identifier (SHA-256 hex digest).
 
         Returns:
-            The matching attachment, or ``None`` when absent.
+            The matching :class:`Attachment`, or ``None`` when absent.
         """
         return self.attachments.get(attachment_id)
 
     def values(self) -> Iterator[Attachment]:
-        """Iterate over catalogue attachments."""
+        """Iterate over catalogue attachments.
+
+        Returns:
+            Iterator over :class:`Attachment` instances.
+        """
         return iter(self.attachments.values())

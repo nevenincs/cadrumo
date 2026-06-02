@@ -19,25 +19,25 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.modelo import calculate_modelo_revision, create_work_unit
-from aeat.application.modelo._actions import ModeloError
-from aeat.application.modelo._profile_binding import (
+from . import calculate_modelo_revision, create_work_unit
+from ._actions import ModeloError
+from ._profile_binding import (
     ProfileSourcedBindingResult,
     resolve_profile_sourced_bindings,
 )
-from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.core.resources import resources
-from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import (
+from ..user_profile import UserProfileLifecycleRepository
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.calculations.registry import (
     DataBindingDefinition,
     FormulaDefinition,
     FormulaExpression,
     RegistrySnapshot,
 )
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -390,7 +390,7 @@ class TestBoolTypedProfileBinding:
         must refuse rather than silently coercing True -> "True" and
         producing a dispatch-table miss.
         """
-        from aeat.application.modelo._profile_binding import ProfileBindingResolutionError
+        from ._profile_binding import ProfileBindingResolutionError
 
         # Construct a snapshot whose CCAA binding (enum channel) is satisfied
         # by a bool fact — a mis-wired scenario the guard must catch.

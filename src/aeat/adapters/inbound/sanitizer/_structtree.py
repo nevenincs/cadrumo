@@ -28,10 +28,10 @@ def drop_struct_tree(pdf: Pdf) -> tuple[ScrubbedSurface, tuple[SanitizationWarni
         pdf: An open PDF whose StructTree should be wiped.
 
     Returns:
-        A 2-tuple of (counter, warnings). Counter is zero when the
-        tree was absent and one when it was dropped. Warnings
-        carry ``structtree_dropped_lossy`` when the tree was
-        present so callers see the lossy step in the audit log.
+        A 2-tuple of (counter, warnings). The counter is a :class:`ScrubbedSurface`
+        that is zero when the tree was absent and one when it was dropped. Warnings
+        carry :class:`SanitizationWarning` ``structtree_dropped_lossy`` when the tree
+        was present so callers see the lossy step in the audit log.
     """
     warnings: tuple[SanitizationWarning, ...] = ()
     if "/StructTreeRoot" not in pdf.Root:

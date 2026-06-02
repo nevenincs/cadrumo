@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
@@ -575,6 +575,8 @@ class ProfileRepository:
         by every :class:`ProfileRepository` write. Tombstoned profiles
         are included so callers that need the full inventory (repair,
         audit) see them; live-surface callers filter on ``status``.
+
+        Each element is a :class:`ProfileSummary`.
         """
         buckets_root = self._root / BUCKETS_DIRNAME
         if not buckets_root.is_dir():

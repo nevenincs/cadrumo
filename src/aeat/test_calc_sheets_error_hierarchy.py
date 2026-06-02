@@ -12,21 +12,21 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.outbound.google._errors import (
+from .adapters.outbound.google._errors import (
     GoogleAuthError,
     GoogleAuthValidationError,
 )
-from aeat.adapters.persistence.storage.bucket._errors import (
+from .adapters.persistence.storage.bucket._errors import (
     BucketError,
     BucketValidationError,
 )
-from aeat.application.storage.calc_sheets._errors import (
+from .application.storage.calc_sheets._errors import (
     CalcSheetsEngineError,
     CalcSheetsParityError,
     CalcSheetsRecordError,
 )
-from aeat.core.errors import AeatError, build_error_envelope
-from aeat.core.errors._registry import ErrorEnvelope
+from .core.errors import AeatError, build_error_envelope
+from .core.errors._registry import ErrorEnvelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -65,7 +65,7 @@ def test_calc_sheets_error_code_registered(
     error_cls: type[AeatError], expected_code: str
 ) -> None:
     """Each calc_sheets error must be bound to its declared ErrorCode."""
-    from aeat.core.errors import get_registered_error_code
+    from .core.errors import get_registered_error_code
 
     ec = get_registered_error_code(error_cls)
     assert ec is not None, f"{error_cls.__name__} has no registered ErrorCode"

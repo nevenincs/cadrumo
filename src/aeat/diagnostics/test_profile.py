@@ -8,17 +8,17 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import (
+from ..adapters.persistence.storage.sql.engine import dispose_engine
+from ..application.user_profile._orchestration import (
     build_lifecycle_service,
     profile_create_storage_span,
     select_profile_with_lifecycle_span,
 )
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.i18n import tr
-from aeat.diagnostics.__main__ import app
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ..application.user_profile._testing import register_minimal_profile
+from ..application.workflow._persistence import workflow_state_repository
+from ..core.i18n import tr
+from .__main__ import app
+from ..tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -52,7 +52,7 @@ def _seed_profile(profile_id: str) -> None:
 
 
 def _read_fact(profile_id: str, path: str) -> str | None:
-    from aeat.application.user_profile._orchestration import fact_value, profile_storage_session
+    from ..application.user_profile._orchestration import fact_value, profile_storage_session
 
     with profile_storage_session(profile_id):
         record = build_lifecycle_service(bucket_id=profile_id).read(profile_id)

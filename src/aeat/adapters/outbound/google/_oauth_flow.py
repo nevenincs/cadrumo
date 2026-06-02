@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
@@ -103,9 +103,10 @@ def credentials_to_records(
         issued_at: Timestamp the credential was first issued.
 
     Returns:
-        A `(OAuthToken, OAuthMetadata)` pair ready for SecureObjectRepository
-        persistence. Both records validate strict pydantic invariants;
-        the metadata refuses tuples missing `drive.file` or `spreadsheets`.
+        A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for
+        SecureObjectRepository persistence. Both records validate strict
+        pydantic invariants; the metadata refuses tuples missing
+        ``drive.file`` or ``spreadsheets``.
 
     Raises:
         GoogleAuthScopeInsufficientError: When `granted_scopes` omits
@@ -144,7 +145,7 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
         profile: Resolved active profile UUID (per `_profile_binding`).
 
     Returns:
-        A `(OAuthToken, OAuthMetadata)` pair ready for persistence.
+        A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for persistence.
     """
     check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
     refresh_token, token_uri, account_email, granted_scopes = _run_local_server(client)

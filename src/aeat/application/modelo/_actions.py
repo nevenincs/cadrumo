@@ -34,7 +34,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from aeat.core.time import now as _utc_now
+from ...core.time import now as _utc_now
 
 from ...application.auth import AuthProviderKind, select_provider
 from ...core.config import Settings, load_settings
@@ -672,6 +672,8 @@ def list_work_units(
     ``include_discarded=True`` to see them. The result is sorted
     by ``(bucket_id, filing_year, modelo, period)`` so consumers
     see a stable ordering across calls without re-sorting.
+
+    Each element is a :class:`WorkUnit`.
     """
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
@@ -736,7 +738,7 @@ def rename_work_unit(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
-    """Update a work unit's display name and bump ``updated_at``.
+    """Update a work unit's display name, bump ``updated_at``, and return the :class:`WorkUnit`.
 
     The ``work_unit_id`` does not change — the identifier is
     content-addressed by the four-axis key, not by display name.
@@ -944,7 +946,7 @@ def calculate_modelo_revision(
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
-    """Run the registry formula engine and persist a draft revision.
+    """Run the registry formula engine, persist a draft revision, and return a :class:`CalculationRevision`.
 
     Pipeline:
 
@@ -1116,6 +1118,14 @@ def calculate_modelo_revision(
         sorted(
             [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
+            # Persist the date-binding and raw-relation inputs alongside the
+            # Decimal/enum binding overrides so a verify / file replay can
+            # reconstruct the identical draft from the revision alone, without
+            # re-resolving the live profile (which would break immutable-snapshot
+            # determinism). The draft-builder routes them back onto the engine's
+            # date_binding_values / relation_values channels by registry id-set.
+            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
+            + [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()]
         )
     )
     casilla_values = dict(engine_result.values)
@@ -1471,7 +1481,10 @@ def calculate_modelo_revision_from_bucket_aggregation(
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
-    """Calculate a modelo revision using bucket-local ledger aggregation."""
+    """Calculate a modelo revision using bucket-local ledger aggregation.
+
+    Returns a :class:`CalculationRevision`.
+    """
     from ...domain.calculations.registry import RegistrySnapshotError
     from ..aggregation import (
         CalculationSourceContext,
@@ -1933,6 +1946,8 @@ def list_calculation_revisions(
     Results are sorted by ``(work_unit_id, created_at)`` so the
     chronological revision chain for one work unit is contiguous
     and stable across calls.
+
+    Each element is a :class:`CalculationRevision`.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
@@ -1947,7 +1962,11 @@ def get_calculation_revision(
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> CalculationRevision:
-    """Return one calculation revision by id, or raise."""
+    """Return one calculation revision by id, or raise.
+
+    Returns the :class:`CalculationRevision` matching
+    ``calculation_revision_id``.
+    """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
     revision = catalogue.get(calculation_revision_id)
@@ -2764,6 +2783,14 @@ def _evaluate_advisory_predicate_fires(
     - ``advisory_when_ratio_ge(["num_id", "den_id", "threshold"])`` — fires when
       num/den >= threshold and den > 0. Art. 110.3.b RIRPF: exempt from M130
       when retenciones_acumuladas / rendimientos_brutos >= 0.70.
+    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — fires when the
+      material implication is violated, i.e. the antecedent is strictly positive
+      but the consequent is zero. As an ADVISORY this surfaces a non-blocking
+      operator alert for the same shape the BLOCKING_RULE variant refuses: e.g.
+      a positive resultado contable with an undetermined (zero) base imponible,
+      a likely silent under-declaration that a positive-result entity should
+      confirm (legitimate zero-base via BIN compensation remains permissible,
+      hence advisory rather than blocking).
     """
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
@@ -2780,6 +2807,14 @@ def _evaluate_advisory_predicate_fires(
         except _decimal.InvalidOperation:
             return False
         return (num / den) >= threshold
+    m = _PREDICATE_IMPLIES_NONZERO.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return False
+        antecedent = casilla_values.get(ids[0], Decimal(0))
+        consequent = casilla_values.get(ids[1], Decimal(0))
+        return antecedent > Decimal(0) and consequent == Decimal(0)
     return False
 
 
@@ -3656,7 +3691,7 @@ def list_filing_records(
     include_superseded: bool = False,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ModeloRecord, ...]:
-    """List filing records, optionally filtered to a bucket.
+    """List :class:`ModeloRecord` filing records, optionally filtered to a bucket.
 
     Superseded records are excluded unless ``include_superseded``
     is true. Results are sorted by ``(bucket_id, filing_year,
@@ -3683,7 +3718,7 @@ def get_filing_record(
     *,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> ModeloRecord:
-    """Return one filing record by id, or raise."""
+    """Return the :class:`ModeloRecord` for the given id, or raise."""
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
@@ -3700,7 +3735,7 @@ def list_verification_reports(
     calculation_revision_id: str | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> tuple[VerificationReport, ...]:
-    """List verification reports, optionally filtered to one calculation revision.
+    """List :class:`VerificationReport` records, optionally filtered to one calculation revision.
 
     Results are sorted by ``(calculation_revision_id, run_at)``.
     """
@@ -3719,7 +3754,7 @@ def get_verification_report(
     *,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> VerificationReport:
-    """Return one verification report by id, or raise."""
+    """Return one :class:`VerificationReport` by id, or raise."""
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)

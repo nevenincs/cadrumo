@@ -12,9 +12,9 @@ import secrets
 
 import pytest
 
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
-from aeat.adapters.persistence.storage.master_key._errors import MasterKeyReentrantError
-from aeat.adapters.persistence.storage.master_key import EphemeralMasterKeyProvider
+from . import EphemeralMasterKeyProvider
+from ._errors import MasterKeyReentrantError
+from .....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -25,9 +25,8 @@ def test_ephemeral_provider_raises_reentrant_error_on_second_enter() -> None:
     key = secrets.token_bytes(32)
     provider = EphemeralMasterKeyProvider(key=key)
 
-    with provider:
-        with pytest.raises(MasterKeyReentrantError) as exc_info:
-            provider.__enter__()
+    with provider, pytest.raises(MasterKeyReentrantError) as exc_info:
+        provider.__enter__()
 
     assert exc_info.value.provider_name == "EphemeralMasterKeyProvider"
 

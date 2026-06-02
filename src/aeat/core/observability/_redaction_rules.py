@@ -26,6 +26,10 @@ def diagnostic_rules() -> tuple[RedactionRule, ...]:
 
     Cached at module scope after first resolution so repeated emits do
     not re-import the redaction substrate.
+
+    Returns:
+        A tuple of :class:`RedactionRule` instances for the
+        ``DIAGNOSTIC`` sensitivity class.
     """
     global _DIAGNOSTIC_RULES
     if _DIAGNOSTIC_RULES is None:

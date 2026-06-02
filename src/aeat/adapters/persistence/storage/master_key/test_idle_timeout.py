@@ -6,8 +6,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.master_key._idle_timeout import (
+from ._bucket_session import BucketSession
+from ._idle_timeout import (
     DEFAULT_IDLE_LOCK_MINUTES,
     IdleEvaluation,
     evaluate_idle,

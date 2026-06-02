@@ -1,6 +1,6 @@
 """Error code registry for aeat.core."""
 
-from aeat.core.errors._registry import ErrorCategory, ErrorCode
+from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (

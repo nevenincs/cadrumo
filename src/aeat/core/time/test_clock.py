@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from aeat.core.time import now
+from . import now
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

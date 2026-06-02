@@ -11,7 +11,7 @@ from ._domain import _DECLARED_ERROR_CODES as _DOMAIN_CODES
 from ._entrypoints import _DECLARED_ERROR_CODES as _ENTRYPOINTS_CODES
 
 if TYPE_CHECKING:
-    from aeat.core.errors._registry import ErrorCode
+    from .._registry import ErrorCode
 
 _ALL_DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     *_DOMAIN_CODES,

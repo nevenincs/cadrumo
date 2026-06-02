@@ -40,7 +40,7 @@ class ValidatedRegistryAuthority:
 
     @classmethod
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
-        """Load registry TOML and construct a reusable authority instance."""
+        """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
         resolved_root = root.expanduser().resolve()
         return _load_authority(
             resolved_root,
@@ -49,14 +49,22 @@ class ValidatedRegistryAuthority:
         )
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
-        """Return a modelo definition by id."""
+        """Return a modelo definition by id.
+
+        Returns:
+            The :class:`ModeloDefinition` for ``modelo_id``.
+        """
         try:
             return self._modelos_by_id[modelo_id]
         except KeyError as exc:
             raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
 
     def validate_modelo(self, modelo_id: str) -> ModeloDefinition:
-        """Validate one modelo once and return its definition."""
+        """Validate one modelo once and return its definition.
+
+        Returns:
+            The validated :class:`ModeloDefinition` for ``modelo_id``.
+        """
         modelo = self.modelo(modelo_id)
         if not self._registry_validated and modelo_id not in self._validated_modelos:
             self._validator.validate_modelo(modelo)
@@ -80,7 +88,7 @@ class ValidatedRegistryAuthority:
         on: date | None = None,
         revision_id: str | None = None,
     ) -> RegistrySnapshot:
-        """Return a cached validated snapshot for one filing context."""
+        """Return a cached validated :class:`RegistrySnapshot` for one filing context."""
         key = (modelo_id, filing_year, period, on, revision_id)
         cached = self._snapshots.get(key)
         if cached is not None:
@@ -136,6 +144,9 @@ def bundled_authority() -> ValidatedRegistryAuthority:
     instead of writing the bundled-path boilerplate inline.  The result
     is backed by :func:`_load_authority`'s LRU cache, so repeated calls
     within one process are free.
+
+    Returns:
+        A :class:`ValidatedRegistryAuthority` loaded from the bundled registry tree.
     """
     root = _bundled_path("registry", "aeat")
     return ValidatedRegistryAuthority.load(root, source_root=_bundled_path())

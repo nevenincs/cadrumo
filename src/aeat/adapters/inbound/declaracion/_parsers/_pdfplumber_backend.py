@@ -18,7 +18,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 
-from aeat.core.logging import get_logger
+from .....core.logging import get_logger
 
 from ...pdf._pdfplumber import (
     extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl,

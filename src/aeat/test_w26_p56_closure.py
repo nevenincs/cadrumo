@@ -10,7 +10,6 @@ Asserts that:
 
 from __future__ import annotations
 
-import importlib
 import pathlib
 import re
 
@@ -44,7 +43,7 @@ _S658_MARKER_SITES: list[tuple[str, int]] = [
     ("entrypoints/cli/_registry_payloads.py", 76),
 ]
 
-_EXPECTED_ALLOWLIST_SIZE = 84  # 99 original - 15 paid down
+_EXPECTED_ALLOWLIST_SIZE = 7  # 99 original; later campaigns paid down further
 
 
 def test_s658_markers_present() -> None:
@@ -85,7 +84,6 @@ def test_allowlist_size_is_84() -> None:
 def test_ratchet_still_passes() -> None:
     """The type-ignore ratchet must pass programmatically after the S658 paydown."""
     import importlib.util
-    import sys
 
     inv_path = _SRC_ROOT / "test_type_ignore_rationale_inventory.py"
     spec = importlib.util.spec_from_file_location("_inv_module", inv_path)

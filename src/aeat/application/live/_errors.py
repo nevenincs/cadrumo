@@ -43,7 +43,11 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
 
 
 def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisitionFailureMode:
-    """Map adapter exceptions to the live IVA acquisition result vocabulary."""
+    """Map adapter exceptions to the live IVA acquisition result vocabulary.
+
+    Returns a :class:`LiveIvaAcquisitionFailureMode` member identifying
+    the failure category.
+    """
     from ...adapters.outbound.aeat.auth import (
         ClaveMovilApprovalTimeoutError,
         ClaveMovilConfigurationError,

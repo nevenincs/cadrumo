@@ -33,8 +33,8 @@ from ...adapters.outbound.aeat.sede._declarations import Declaracion
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
-from ...core.time import now
 from ...core.identity import BucketId, SnapshotId
+from ...core.time import now
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SecureSnapshotRepository,

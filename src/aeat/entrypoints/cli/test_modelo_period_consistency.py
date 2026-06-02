@@ -13,15 +13,14 @@ expected stage — they do not assert calculated Decimal values.
 
 from __future__ import annotations
 
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ._test_envelope import unwrap_schema_envelope as _payload
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

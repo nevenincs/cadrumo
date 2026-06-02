@@ -20,7 +20,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import AeatError
@@ -118,7 +118,7 @@ class ReconciliationCrossBucketRefusedError(AeatError):
     """
 
 def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliationReport:
-    """Reconcile a modelo work unit against external evidence.
+    """Reconcile a modelo work unit against external evidence and return a :class:`ModeloReconciliationReport`.
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
     Composes the existing low-level reconciler at

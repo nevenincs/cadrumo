@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.logging import get_logger
 from ._errors import ModeloError
@@ -103,7 +103,11 @@ class VerificationReportCatalogueRepository:
 def upsert_verification_report(
     catalogue: VerificationReportCatalogue, report: VerificationReport
 ) -> VerificationReportCatalogue:
-    """Return a new catalogue with ``report`` inserted or replaced."""
+    """Return a new catalogue with ``report`` inserted or replaced.
+
+    Returns:
+        A :class:`VerificationReportCatalogue` with the given report added or updated.
+    """
     mapping = dict(catalogue.reports)
     mapping[report.verification_report_id] = report
     return VerificationReportCatalogue(reports=mapping)

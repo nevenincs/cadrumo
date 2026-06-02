@@ -193,7 +193,10 @@ class InventoryService:
         opening_stock: Decimal = Decimal("0"),
         actor: str = "cli",
     ) -> InventoryLedgerResult:
-        """Create a fresh ledger for one actividad/year. Rejects duplicates."""
+        """Create a fresh ledger for one actividad/year. Rejects duplicates.
+
+        Returns an :class:`InventoryLedgerResult`.
+        """
         try:
             method = parse_valuation_method(valuation_method)
         except Exception as exc:
@@ -261,7 +264,11 @@ class InventoryService:
         movement: InventoryMovementCommand,
         actor: str = "cli",
     ) -> InventoryLedgerResult:
-        """Append a movement to the named ledger; refuses duplicate movement_id."""
+        """Append a movement to the named ledger; refuses duplicate movement_id.
+
+        Returns an :class:`InventoryLedgerResult` with the updated ledger
+        after the movement is appended.
+        """
         ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
         if any(m.movement_id == movement.movement_id for m in ledger.period_movements):
             raise InventoryServiceInputError(
@@ -336,7 +343,7 @@ class InventoryService:
         year: int,
         actor: str = "cli",
     ) -> InventoryLedgerResult:
-        """Drop the entire ledger for actividad/year. Idempotent on absence."""
+        """Drop the entire ledger for actividad/year and return an :class:`InventoryLedgerResult`. Idempotent on absence."""
         repository = self._repository_for(bucket_id)
         document = repository.load()
         ledger = _find_ledger(document, actividad_id, year)

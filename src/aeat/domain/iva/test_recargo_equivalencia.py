@@ -8,10 +8,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
-from aeat.domain.iva import (
-    LivaArt161RecargoRates,
+from ...core.resources import bundled_path
+from . import (
     IvaRateKind,
+    LivaArt161RecargoRates,
     load_recargo_rates,
     recargo_rate_for,
 )

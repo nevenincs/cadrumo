@@ -62,8 +62,8 @@ class FincaValidationError(FincaRegisterError, ValueError):
 __all__ = [
     "AmortizationLedgerCapExceededError",
     "ContractNotFoundError",
-    "FincaNotFoundError",
     "FincaAggregationError",
+    "FincaNotFoundError",
     "FincaRegisterError",
     "FincaValidationError",
     "TierResolutionError",

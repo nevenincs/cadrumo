@@ -26,7 +26,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from aeat.domain.deadlines import (
+from . import (
     MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
     DeadlineShift,
@@ -38,7 +38,7 @@ from aeat.domain.deadlines import (
     next_business_day,
     shift_deadline,
 )
-from aeat.domain.deadlines._errors import DeadlineValidationError
+from ._errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

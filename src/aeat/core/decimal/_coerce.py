@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 
-from aeat.core.logging import get_logger
+from ..logging import get_logger
 
 _logger = get_logger(__name__)
 

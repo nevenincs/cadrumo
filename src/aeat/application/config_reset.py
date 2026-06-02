@@ -45,7 +45,7 @@ CONFIG_RESET_SCOPE_CLI_VALUES: tuple[str, ...] = tuple(scope.value.lower() for s
 
 
 def parse_config_reset_scope(raw: str) -> ConfigResetScope:
-    """Parse a CLI reset-scope token into the backend enum."""
+    """Parse a CLI reset-scope token into the :class:`ConfigResetScope` enum member."""
     return ConfigResetScope(raw.strip().upper())
 
 

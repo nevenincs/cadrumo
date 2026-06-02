@@ -26,15 +26,15 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage import SensitivityClass
-from aeat.application.user_profile._repository import (
+from ...adapters.persistence.storage import SensitivityClass
+from ...application.user_profile._repository import (
     USER_PROFILE_VALUE_NAMESPACE,
     UserProfileLifecycleRepository,
     user_profile_value_object_key,
 )
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from aeat.entrypoints.cli import app
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from . import app
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

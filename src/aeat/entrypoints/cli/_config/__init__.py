@@ -7,7 +7,6 @@ through :class:`BucketEventHistoryRepository`.
 from __future__ import annotations
 
 import asyncio
-import re
 import typing
 from collections.abc import Mapping
 from datetime import datetime
@@ -43,10 +42,17 @@ from ....application.wizard._commands import build_wizard_command as _build_wiza
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
 from ....core.errors import AeatError as _AeatError
+from ....core.external_constants import OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
 from ....core.profile_catalogue import get_setup_flow as _get_setup_flow
+from ....core.redaction import (
+    CLI_BUCKET_ID_PLACEHOLDER,
+    CLI_PROFILE_ID_PLACEHOLDER,
+    redact_for_cli_output,
+    redact_structured_for_cli_output,
+)
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit, _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -96,14 +102,6 @@ bucket_app = typer.Typer(
 )
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(_SUPPORTED_OUTPUT_LANGUAGES)
-_REPAIR_LOG_UUID_RE = re.compile(
-    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-)
-_REPAIR_LOG_TAX_ID_RE = re.compile(r"\b(?:[XYZKLMABCDEFGHJNPQRSUVW]\d{7}[A-Z]|\d{8}[A-Z])\b", re.IGNORECASE)
-_REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE = re.compile(
-    r"(?i)\b(?P<label>object[_-]?key|lookup[_-]?key)\s*(?P<sep>[:=])\s*(?P<value>[^,\s;]+)"
-)
-_REPAIR_LOG_OBJECT_KEY_RE = re.compile(r"\b(?:wallet|transaction-catalogue):[^\s,;]+")
 
 
 @app.callback()
@@ -278,15 +276,7 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     except OSError:
         return ()
     text = tail_bytes.decode("utf-8", errors="replace")
-    return tuple(_redact_repair_log_line(line) for line in text.splitlines()[-count:])
-
-
-def _redact_repair_log_line(line: str) -> str:
-    """Redact identifiers before diagnostic log lines are echoed to the operator."""
-    redacted = _REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE.sub(r"\g<label>\g<sep><object-key>", line)
-    redacted = _REPAIR_LOG_OBJECT_KEY_RE.sub("<object-key>", redacted)
-    redacted = _REPAIR_LOG_UUID_RE.sub("<profile-id>", redacted)
-    return _REPAIR_LOG_TAX_ID_RE.sub("<tax-id>", redacted)
+    return tuple(redact_for_cli_output(line) for line in text.splitlines()[-count:])
 
 
 @repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
@@ -422,7 +412,7 @@ def repair_profile(
         lines = [
             f"dry_run\t{result.dry_run}",
             f"repaired\t{result.repaired}",
-            f"active_profile\t{_redacted_profile_identifier(health.active_profile)}",
+            f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
             f"status\t{health.status}",
             f"manifest_status\t{result.status or ''}",
             f"reason\t{result.reason}",
@@ -442,7 +432,7 @@ def repair_profile(
     lines = [
         f"dry_run\t{result.dry_run}",
         f"cleared_pointer\t{result.cleared_pointer}",
-        f"active_profile\t{_redacted_profile_identifier(health.active_profile)}",
+        f"active_profile\t{CLI_PROFILE_ID_PLACEHOLDER if health.active_profile else ''}",
         f"source\t{health.source}",
         f"status\t{health.status}",
         f"registered_bucket\t{health.registered_bucket}",
@@ -457,24 +447,11 @@ def repair_profile(
     _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
-def _redacted_profile_identifier(value: str | None) -> str:
-    return "<profile-id>" if value else ""
-
-
 def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     """Return a paste-safe repair payload with internal profile ids removed."""
-    redacted = dict(payload)
-    for key in ("before", "after"):
-        nested = redacted.get(key)
-        if isinstance(nested, dict):
-            redacted[key] = _redact_profile_health_payload(nested)
-    return redacted
-
-
-def _redact_profile_health_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
-    redacted = dict(payload)
-    if redacted.get("active_profile"):
-        redacted["active_profile"] = "<profile-id>"
+    redacted = redact_structured_for_cli_output(payload)
+    if not isinstance(redacted, dict):
+        return {}
     return redacted
 
 
@@ -491,7 +468,6 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
     immutable bucket UUID via the manifest scan.
     """
     from ....domain.user_profile import ProfileNotFoundError
-
     from .._config_payloads import RepairProfileResult
 
     pointer = _resolve_profile_by_label(label)
@@ -500,22 +476,23 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         record = _read_profile_record(profile_id=profile_id, bucket_id=profile_id)
     except ProfileNotFoundError:
         payload = {
-            "profile_id": "<profile-id>",
-            "bucket_id": "<profile-id>",
+            "profile_id": profile_id,
+            "bucket_id": profile_id,
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
             "status": "missing_profile_record",
             "next_action": _profile_record_missing_next_action(profile_id, label=pointer.label),
         }
+        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
             ctx,
             command="config.repair.profile",
-            result=RepairProfileResult.model_validate(payload),
+            result=repair_payload,
             lines=(
                 "readiness\tmissing_profile_record",
-                "profile_id\t<profile-id>",
-                "bucket_id\t<profile-id>",
+                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tmissing",
@@ -525,8 +502,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         raise typer.Exit(code=2) from None
     except _AeatError as exc:
         payload = {
-            "profile_id": "<profile-id>",
-            "bucket_id": "<profile-id>",
+            "profile_id": profile_id,
+            "bucket_id": profile_id,
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
@@ -534,14 +511,15 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
             "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
+        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
             ctx,
             command="config.repair.profile",
-            result=RepairProfileResult.model_validate(payload),
+            result=repair_payload,
             lines=(
                 "readiness\tprofile_record_unreadable",
-                "profile_id\t<profile-id>",
-                "bucket_id\t<profile-id>",
+                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tunreadable",
@@ -552,8 +530,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
     except Exception as exc:
         boundary = _ConfigBoundaryError(exc)
         payload = {
-            "profile_id": "<profile-id>",
-            "bucket_id": "<profile-id>",
+            "profile_id": profile_id,
+            "bucket_id": profile_id,
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
@@ -561,14 +539,15 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
             "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
         }
+        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
         _emit_envelope(
             ctx,
             command="config.repair.profile",
-            result=RepairProfileResult.model_validate(payload),
+            result=repair_payload,
             lines=(
                 "readiness\tprofile_record_unreadable",
-                "profile_id\t<profile-id>",
-                "bucket_id\t<profile-id>",
+                f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+                f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tunreadable",
@@ -577,23 +556,24 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         )
         raise typer.Exit(code=2) from boundary
     payload = {
-        "profile_id": "<profile-id>",
-        "bucket_id": "<profile-id>",
+        "profile_id": profile_id,
+        "bucket_id": profile_id,
         "display_name": record.display_name,
         "registered_bucket": True,
         "profile_record_present": True,
         "status": record.status.value,
         "next_action": f"aeat config profile switch {pointer.label}",
     }
+    repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
     _emit_envelope(
         ctx,
         command="config.repair.profile",
-        result=RepairProfileResult.model_validate(payload),
+        result=repair_payload,
         lines=(
             "readiness\tready",
             f"display_name\t{record.display_name}",
-            "profile_id\t<profile-id>",
-            "bucket_id\t<profile-id>",
+            f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}",
+            f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}",
             "registered_bucket\tpresent",
             "profile_record\tpresent",
             f"status\t{record.status.value}",
@@ -632,7 +612,6 @@ def repair_integrity_objects(
 ) -> None:
     """Wrap build_repair_integrity_report and render through _emit."""
     from ....application.repair_integrity import build_repair_integrity_report
-
     from .._config_payloads import RepairIntegrityObjectsResult
 
     # Cold-root guard: integrity is bootstrap-exempt; on a root with no
@@ -686,7 +665,6 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
     when the operator explicitly asks for it here.
     """
     from ....application.diagnostics import build_registry_integrity_report
-
     from .._config_payloads import RepairIntegrityRegistryResult
 
     report = build_registry_integrity_report()
@@ -1012,11 +990,10 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1741,11 +1718,10 @@ def config_reset(
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
 def auth_providers(
     ctx: typer.Context,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1782,11 +1758,10 @@ def auth_configure(
         help=tr("cli.config.auth.provider_help"),
     ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1857,11 +1832,10 @@ def auth_configure(
 def auth_status(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1891,11 +1865,10 @@ def auth_status(
 def auth_test(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1932,11 +1905,10 @@ def auth_login(
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
     fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
     reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -1980,11 +1952,10 @@ def auth_clear(
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -2030,7 +2001,6 @@ def auth_clear(
 def auth_diagnostics_list(ctx: typer.Context) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     from ....application.auth import list_auth_diagnostics
-
     from .._config_payloads import AuthDiagnosticsListResult
 
     report = list_auth_diagnostics()
@@ -2196,7 +2166,6 @@ apoderado_app.add_typer(scopes_app, name="scopes")
 def apoderado_scopes_list(ctx: typer.Context) -> None:
     """List all available representative scopes in the vocabulary."""
     from ....application.auth._apoderado import ApoderadoService
-
     from .._config_payloads import ApoderadoScopesListResult
 
     svc = ApoderadoService()

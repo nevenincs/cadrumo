@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.domain.fincas import Finca, UseType
+from . import Finca, UseType
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

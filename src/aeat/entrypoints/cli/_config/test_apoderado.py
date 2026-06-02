@@ -4,11 +4,11 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.entrypoints.cli import app as root_app
-from aeat.entrypoints.cli._config.__init__ import app
-from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from .. import app as root_app
+from .__init__ import app
+from .._errors import CliRefusedBoundaryError
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -65,7 +65,7 @@ def test_apoderado_happy_path_against_active_profile(_per_bucket_backend: Path) 
     label-based ``read_profile_bucket`` resolver. This exercises the
     normal active-profile path the no-active-profile test cannot reach.
     """
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
     runner = CliRunner()
     create = runner.invoke(

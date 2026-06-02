@@ -17,7 +17,7 @@ import sys
 
 import pytest
 
-from aeat.core.logging import get_logger
+from .core.logging import get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

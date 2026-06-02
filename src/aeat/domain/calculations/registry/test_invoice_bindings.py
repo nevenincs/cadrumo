@@ -15,7 +15,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import resources
+from ....core.resources import resources
 
 from ._bindings import (
     InvoiceObservation,

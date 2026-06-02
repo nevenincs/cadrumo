@@ -14,12 +14,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.errors import CoreValidationError
 from .....core.identity import BucketId
 from .....core.time._utc import validate_utc_aware
-from ._errors import BucketValidationError
-
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SHA256_HEX_LEN = 64
 

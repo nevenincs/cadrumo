@@ -26,10 +26,7 @@ from datetime import date
 
 import pytest
 
-from aeat.domain.calculations.registry.applicability import ApplicabilityVerdict
-from ._explain import build_overview_explain
-
-from . import OverviewCalendarRange, build_overview_calendar
+from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 
 from ...domain.deadlines._models import IVARegime
 from ...domain.deadlines.taxpayer_model import (
@@ -38,6 +35,8 @@ from ...domain.deadlines.taxpayer_model import (
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
+from . import OverviewCalendarRange, build_overview_calendar
+from ._explain import build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

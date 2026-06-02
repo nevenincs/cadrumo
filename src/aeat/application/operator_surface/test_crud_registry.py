@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.operator_surface._crud_contract import (
+from ._crud_contract import (
     CANONICAL_CRUD_VERBS,
     NounGroupExceptionKind,
 )
-from aeat.application.operator_surface._crud_registry import (
+from ._crud_registry import (
     APODERADO,
     BUILTIN_CRUD_CATALOGUE,
     COLLECTIBLE_INVOICE,

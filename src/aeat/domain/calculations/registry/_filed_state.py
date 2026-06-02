@@ -77,6 +77,9 @@ def compare_calculation_to_filed_observation(
     :class:`RegistryCalculationEntry` for formula-computed casillas, so
     the regulatory grounding for every drifted casilla is preserved in
     the comparison result and propagates to CLI / audit surfaces.
+
+    Returns:
+        A :class:`RegistryFiledStateComparison` summarising all casilla-level drift.
     """
     if calculation.modelo != observation.modelo:
         raise RegistryValidationError(

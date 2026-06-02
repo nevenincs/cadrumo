@@ -24,8 +24,8 @@ import pytest
 from click import Group
 from click.testing import Result
 
-from aeat.core.paths import PROJECT_ROOT
-from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
+from ...core.paths import PROJECT_ROOT
+from ...tests.cli_runner import aeat_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -11,23 +11,23 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.adapters.outbound.aeat.sede import (
+from ...adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from aeat.application.calculations import (
+from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     IvaCompensationPeriodState,
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
-from aeat.core.external_constants import load_external_constants
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...core.external_constants import load_external_constants
+from ...core.resources import resources
+from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
+from ...tests.secure_sql import isolated_runtime_profile
 
 from . import (
     _latest_declarations_by_period,

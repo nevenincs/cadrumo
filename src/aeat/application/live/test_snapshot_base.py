@@ -10,17 +10,15 @@ from typing import Any
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from aeat.adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
-from aeat.adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from aeat.application.live._borrador_100 import BorradorSnapshotNotFoundError
-from aeat.application.live._censo import CensoSnapshotNotFoundError
-from aeat.application.live._errors import LiveApplicationInputError
-from aeat.application.live._borrador_100 import Borrador100SnapshotRepository
-from aeat.application.live._censo import CensoSnapshotRepository
-from aeat.application.live._snapshot_base import (
+from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+from ._censo import CensoSnapshotNotFoundError, CensoSnapshotRepository
+from ._errors import LiveApplicationInputError
+from ._snapshot_base import (
     SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
@@ -29,9 +27,9 @@ from aeat.application.live._snapshot_base import (
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
-from aeat.core.errors import AeatError
-from aeat.core.identity import BucketId
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...core.errors import AeatError
+from ...core.identity import BucketId
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -495,8 +493,8 @@ def test_secure_snapshot_repository_conforms_to_protocol(
 
     Uses the expedientes namespace+model to exercise the generic class.
     """
-    from aeat.adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-    from aeat.application.live._expedientes import (
+    from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+    from ._expedientes import (
         PersistedExpedientesSnapshot,
         expedientes_snapshot_object_key,
     )

@@ -59,8 +59,32 @@ def _discover_test_modules() -> list[Path]:
             try:
                 path.relative_to(_FIXTURES_DIR)
             except ValueError:
-                collected.add(path)
+                if _module_defines_test_functions(path):
+                    collected.add(path)
     return sorted(collected)
+
+
+def _module_defines_test_functions(path: Path) -> bool:
+    """Return True if ``path`` declares any ``def test_*`` function at module level.
+
+    Modules named ``_test_<topic>.py`` are sometimes private helpers that
+    expose utilities to tests (the leading underscore signals "private",
+    the ``test_`` segment names the consumer family). Such helpers carry
+    no test functions themselves and must not be required to declare
+    ``pytestmark``. This filter keeps the marker-integrity gate honest
+    by scoping it to actual test modules.
+    """
+    try:
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
+    except (SyntaxError, OSError):
+        return True
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith("test_"):
+            return True
+        if isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+            return True
+    return False
 
 
 def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:

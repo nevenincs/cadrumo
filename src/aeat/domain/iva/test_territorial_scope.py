@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.domain.iva import IvaTerritorialScope
+from . import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

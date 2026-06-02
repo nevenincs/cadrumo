@@ -7,7 +7,6 @@ test itself passes.
 
 from __future__ import annotations
 
-import importlib
 import pathlib
 import subprocess
 import sys
@@ -56,7 +55,7 @@ _S661_SITES: list[tuple[str, str]] = [
 # S660 removed: 17 (Cluster A continuation + _registry_payloads remaining)
 # S661 removed: 10 (Clusters C/D/E/F)
 # Total removed: 35 → final: 84 - 35 = 49
-_EXPECTED_ALLOWLIST_SIZE = 49
+_EXPECTED_ALLOWLIST_SIZE = 7  # further paid down beyond P57 baseline
 
 
 def _file_has_token(rel_path: str, token: str) -> bool:

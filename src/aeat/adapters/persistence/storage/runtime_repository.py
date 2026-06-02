@@ -37,12 +37,12 @@ def secure_object_repository_for_bucket(
     bucket_id: str,
     settings: Settings | None = None,
 ) -> SecureObjectRepository:
-    """Return a bucket-attached secure-object repository through storage runtime."""
+    """Return a bucket-attached :class:`SecureObjectRepository` through storage runtime."""
     return inspect_bucket_storage_runtime(bucket_id, settings or load_settings()).secure_object_repository()
 
 
 def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
-    """Return a bucket-attached repository for the selected active profile."""
+    """Return a :class:`SecureObjectRepository` attached to the selected active profile bucket."""
     from ....core._bucket_pointer_io import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
@@ -56,7 +56,7 @@ def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
 def secure_object_repository_for_active_bucket_or_default_route(
     settings: Settings | None = None,
 ) -> SecureObjectRepository:
-    """Return active-bucket storage when selected, otherwise the process default.
+    """Return a :class:`SecureObjectRepository` for the active bucket, or the process default.
 
     This lower-level storage helper is for repository base classes that
     still support explicit injected/default SQL engines in tests and
@@ -80,7 +80,7 @@ def secure_object_repository_for_active_bucket_or_default_route(
 def secure_object_repository_for_cold_bootstrap_state(
     settings: Settings | None = None,
 ) -> SecureObjectRepository:
-    """Return the process-default repository for cold-root recovery reads.
+    """Return a :class:`SecureObjectRepository` for cold-root recovery reads.
 
     This is the narrow bootstrap exception used before any active
     profile bucket pointer exists. Normal profile-bound code must use

@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests import FIXTURES_DIR
+from .....tests import FIXTURES_DIR
 
 from .. import PdfN26Provider
 from ._detection import detect_provider
@@ -152,7 +152,7 @@ def test_extract_statement_currency_uses_default_currency() -> None:
     Enrollment means both the pattern check and the return value must reference
     DEFAULT_CURRENCY so that the authoritative constant governs all currency logic.
     """
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from .....core.external_constants import DEFAULT_CURRENCY
 
     from ._pdf_n26 import _extract_statement_currency
 

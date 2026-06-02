@@ -21,9 +21,9 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.logging import get_logger
-from ._errors import AmortizationLedgerCapExceededError
-from ._models import FincaAmortizacionLedgerEntry, Finca, FincaRendimientoRecord
 from ...core.money import round_to_cents as _round_to_cents
+from ._errors import AmortizationLedgerCapExceededError
+from ._models import Finca, FincaAmortizacionLedgerEntry, FincaRendimientoRecord
 
 _logger = get_logger(__name__)
 
@@ -140,7 +140,11 @@ def computation_to_ledger_entry(
     income: FincaRendimientoRecord,
     computation: AmortizationComputation,
 ) -> FincaAmortizacionLedgerEntry:
-    """Project an :class:`AmortizationComputation` into a persistable record."""
+    """Project an :class:`AmortizationComputation` into a persistable record.
+
+    Returns:
+        A :class:`FincaAmortizacionLedgerEntry` ready for persistence.
+    """
     return FincaAmortizacionLedgerEntry(
         finca_id=finca_id,
         period_year=computation.period_year,

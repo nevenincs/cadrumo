@@ -11,11 +11,11 @@ from typing import cast
 import click
 import pytest
 
-from aeat.application.operator_surface import get_operator_surface_contract
-from aeat.application.wizard._catalogue import SETUP_FLOW
-from aeat.core.config import override_settings
-from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...application.operator_surface import get_operator_surface_contract
+from ...application.wizard._catalogue import SETUP_FLOW
+from ...core.config import override_settings
+from ...tests.cli_runner import aeat_click_command, invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

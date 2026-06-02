@@ -36,7 +36,7 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from aeat.core.config import Settings
+from ..core.config import Settings
 
 __all__ = [
     "isolated_aeat_env",

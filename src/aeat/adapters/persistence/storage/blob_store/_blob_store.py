@@ -42,7 +42,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE
@@ -319,7 +319,7 @@ class EncryptedBlobStore:
         )
 
     def iter_manifests(self) -> Iterator[BlobManifest]:
-        """Yield the manifest of every blob currently persisted.
+        """Yield the :class:`BlobManifest` of every blob currently persisted.
 
         The walk is shallow: only the canonical
         ``blobs/<hex[:2]>/<hex>.manifest.json`` files are visited.

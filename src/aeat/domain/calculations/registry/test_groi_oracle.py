@@ -17,7 +17,7 @@ import json
 import pytest
 from pydantic import AnyUrl, ValidationError
 
-from aeat.core.config import Settings
+from ....core.config import Settings
 
 from ._errors import RegistryValidationError
 from ._groi_oracle import (

@@ -45,7 +45,12 @@ def render_command_output(
     payload: object,
     lines: Iterable[str],
 ) -> RenderedCommandOutput:
-    """Render a payload or line iterator according to the root output format."""
+    """Render a payload or line iterator according to the root output format.
+
+    Returns:
+        A :class:`RenderedCommandOutput` containing the format and the
+        rendered, redacted text body.
+    """
     try:
         output_format = OutputFormat(format_name.strip().lower() or OutputFormat.TEXT.value)
     except ValueError as exc:

@@ -46,7 +46,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
     `aeat_local_storage_root` redirection separately.
     """
 
-    from aeat.core.config import override_settings
+    from ...core.config import override_settings
 
     with override_settings(aeat_active_profile="operator"):
         yield
@@ -92,7 +92,7 @@ def test_storage_state_paths_composes_profile_name_into_filename(
     (env var > pointer file); switching it between calls changes the
     target path."""
 
-    from aeat.core.config import override_settings
+    from ...core.config import override_settings
 
     del monkeypatch  # unused; switching profiles via Settings override
     settings = _settings(tmp_path)

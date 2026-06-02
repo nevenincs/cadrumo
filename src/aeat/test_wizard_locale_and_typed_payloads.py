@@ -81,7 +81,7 @@ def test_wizard_status_locale_key_exists_in_all_locales() -> None:
 
 def test_wizard_root_in_dynamic_translation_roots() -> None:
     """'wizard' must appear in _ast_scanner._DYNAMIC_TRANSLATION_ROOTS."""
-    from aeat.locales._ast_scanner import _DYNAMIC_TRANSLATION_ROOTS
+    from .locales._ast_scanner import _DYNAMIC_TRANSLATION_ROOTS
 
     assert "wizard" in _DYNAMIC_TRANSLATION_ROOTS, (
         "'wizard' is not in _DYNAMIC_TRANSLATION_ROOTS — "
@@ -96,7 +96,7 @@ def test_catalogue_fstring_prefixes_detected_by_scanner() -> None:
     tree = ast.parse(source, filename=str(catalogue_path))
 
     # Import the internal function directly to scan just the catalogue module
-    from aeat.locales._ast_scanner import _extract_fstring_prefixes
+    from .locales._ast_scanner import _extract_fstring_prefixes
 
     markers = _extract_fstring_prefixes(tree)
     wizard_markers = {m for m in markers if m.startswith("wizard.")}
@@ -113,7 +113,7 @@ def test_catalogue_fstring_prefixes_detected_by_scanner() -> None:
 
 def test_google_api_typeddicts_importable() -> None:
     """GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet must be importable from _api."""
-    from aeat.adapters.outbound.google._api import (
+    from .adapters.outbound.google._api import (
         GoogleApiResponseBody,
         GoogleDriveFile,
         GoogleSheetsRange,
@@ -131,7 +131,7 @@ def test_google_api_typeddicts_importable() -> None:
 
 def test_google_drive_file_required_id_field() -> None:
     """GoogleDriveFile must declare 'id' as a required key."""
-    from aeat.adapters.outbound.google._api import GoogleDriveFile
+    from .adapters.outbound.google._api import GoogleDriveFile
 
     assert "id" in GoogleDriveFile.__required_keys__, (
         "GoogleDriveFile.id is not marked as required"
@@ -140,7 +140,7 @@ def test_google_drive_file_required_id_field() -> None:
 
 def test_google_sheets_range_required_range_field() -> None:
     """GoogleSheetsRange must declare 'range' as a required key."""
-    from aeat.adapters.outbound.google._api import GoogleSheetsRange
+    from .adapters.outbound.google._api import GoogleSheetsRange
 
     assert "range" in GoogleSheetsRange.__required_keys__, (
         "GoogleSheetsRange.range is not marked as required"
@@ -149,7 +149,7 @@ def test_google_sheets_range_required_range_field() -> None:
 
 def test_google_spreadsheet_required_spreadsheet_id_field() -> None:
     """GoogleSpreadsheet must declare 'spreadsheetId' as a required key."""
-    from aeat.adapters.outbound.google._api import GoogleSpreadsheet
+    from .adapters.outbound.google._api import GoogleSpreadsheet
 
     assert "spreadsheetId" in GoogleSpreadsheet.__required_keys__, (
         "GoogleSpreadsheet.spreadsheetId is not marked as required"
@@ -163,7 +163,7 @@ def test_google_spreadsheet_required_spreadsheet_id_field() -> None:
 
 def test_oauth_client_payload_typeddict_importable() -> None:
     """OAuthClientPayload TypedDict must be importable from cli._config._google."""
-    from aeat.entrypoints.cli._config._google import OAuthClientPayload
+    from .entrypoints.cli._config._google import OAuthClientPayload
 
     assert hasattr(OAuthClientPayload, "__annotations__")
     assert "installed" in OAuthClientPayload.__annotations__
@@ -171,7 +171,7 @@ def test_oauth_client_payload_typeddict_importable() -> None:
 
 def test_oauth_client_wrapper_accepts_valid_desktop_payload() -> None:
     """_OAuthClientWrapper.model_validate must accept a valid Cloud Console Desktop payload."""
-    from aeat.entrypoints.cli._config._google import _OAuthClientWrapper
+    from .entrypoints.cli._config._google import _OAuthClientWrapper
 
     valid = {
         "installed": {
@@ -190,7 +190,7 @@ def test_oauth_client_wrapper_rejects_missing_installed() -> None:
     """_OAuthClientWrapper.model_validate must reject a payload without 'installed'."""
     from pydantic import ValidationError
 
-    from aeat.entrypoints.cli._config._google import _OAuthClientWrapper
+    from .entrypoints.cli._config._google import _OAuthClientWrapper
 
     with pytest.raises(ValidationError):
         _OAuthClientWrapper.model_validate({"web": {"client_id": "456"}})
@@ -200,7 +200,7 @@ def test_oauth_client_wrapper_rejects_non_dict_payload() -> None:
     """_OAuthClientWrapper.model_validate must reject a non-dict payload."""
     from pydantic import ValidationError
 
-    from aeat.entrypoints.cli._config._google import _OAuthClientWrapper
+    from .entrypoints.cli._config._google import _OAuthClientWrapper
 
     with pytest.raises(ValidationError):
         _OAuthClientWrapper.model_validate("not a dict")
@@ -213,7 +213,7 @@ def test_oauth_client_wrapper_rejects_non_dict_payload() -> None:
 
 def test_invoice_row_payload_typeddict_importable() -> None:
     """InvoiceRowPayload must be importable from _importing."""
-    from aeat.application.invoices._importing import InvoiceRowPayload
+    from .application.invoices._importing import InvoiceRowPayload
 
     assert hasattr(InvoiceRowPayload, "__annotations__")
     expected_fields = {"kind", "currency", "counterparty_name", "counterparty_tax_id", "lines"}
@@ -223,7 +223,7 @@ def test_invoice_row_payload_typeddict_importable() -> None:
 
 def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
     """_decode_invoice_payload must return InvoiceRowPayload instances from JSON input."""
-    from aeat.application.invoices._importing import _decode_invoice_payload
+    from .application.invoices._importing import _decode_invoice_payload
 
     raw = json.dumps([
         {
@@ -243,8 +243,8 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
 
 def test_parse_invoice_payload_end_to_end_json() -> None:
     """parse_invoice_payload must produce a validated Invoice from a complete JSON row."""
-    from aeat.application.invoices._importing import parse_invoice_payload
-    from aeat.domain.invoices import Invoice
+    from .application.invoices._importing import parse_invoice_payload
+    from .domain.invoices import Invoice
 
     raw = json.dumps({
         "invoice_number": "F2024-001",

@@ -20,18 +20,18 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.calculations._iva_wallet_reconciliation import (
+from ..calculations._iva_wallet_reconciliation import (
     IvaCompensationReconciliationDecision,
 )
-from aeat.application.calculations._observations_repository import IvaWalletDecisionRepository
-from aeat.application.modelo import calculate_modelo_revision, create_work_unit
-from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.core.resources import resources
-from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ..calculations._observations_repository import IvaWalletDecisionRepository
+from . import calculate_modelo_revision, create_work_unit
+from ..user_profile import UserProfileLifecycleRepository
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -24,13 +24,12 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-from aeat.domain.profile._descendant_facts import (
+from ._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from aeat.domain.profile.family import DescendantInfo, RentaFamilyProfile
-
+from .family import DescendantInfo, RentaFamilyProfile
 
 # ---------------------------------------------------------------------------
 # Fixtures

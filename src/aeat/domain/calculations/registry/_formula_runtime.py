@@ -175,7 +175,7 @@ def calculate_registry_snapshot(
     date_binding_values: Mapping[str, date] | None = None,
     text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
-    """Evaluate all computed formulas in a validated registry snapshot.
+    """Evaluate all computed formulas and return a :class:`RegistryCalculationResult`.
 
     ``enum_binding_values`` carries string-valued bindings (typically
     profile-sourced enums like ``CCAA``) that the
@@ -1261,7 +1261,7 @@ def read_parameter(
     Raises :class:`RegistryValidationError` if the modelo / revision / parameter
     is not registered, or if the date context selects 0 or >1 dated values.
     """
-    from aeat.core.resources import bundled_path
+    from ....core.resources import bundled_path
 
     from ._authority import ValidatedRegistryAuthority
 

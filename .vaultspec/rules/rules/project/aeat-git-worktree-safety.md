@@ -47,7 +47,10 @@ If you are tempted to use one of the above because:
 - "I just need to isolate whether this failure is mine or pre-existing"
   — **NO.** Investigate by inspection: read `git diff -- <files>`,
   read `git log -- <files>`, run pytest on the specific test in
-  isolation. Never destroy state to debug.
+  isolation. To compare against a committed version without `checkout`
+  or `stash`: copy the working file aside, `git show HEAD:<file>` and
+  `Write` the committed content in place, test, then restore your copy.
+  Never destroy state to debug.
 - "I'll pop it right back" — **NO.** Pop can conflict; partial apply
   strands work. Two consecutive prior incidents confirm this is not
   recoverable in practice.

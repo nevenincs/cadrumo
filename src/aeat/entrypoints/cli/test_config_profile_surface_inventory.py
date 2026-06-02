@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from typer.testing import CliRunner
 
-from aeat.entrypoints.cli._config import profile_app
+from ._config import profile_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

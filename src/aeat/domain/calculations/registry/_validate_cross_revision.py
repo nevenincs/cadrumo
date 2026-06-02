@@ -1,7 +1,9 @@
-"""Cross-revision drift validation for registry casillas.
+"""Cross-revision drift validation policies for registry casillas.
 
-Detects field-level divergence when the same casilla id appears in
-multiple :class:`ModeloRevision` records of the same :class:`ModeloDefinition`.
+Applies two policies over the divergences detected by
+:mod:`aeat.domain.calculations.registry._cross_revision_divergence`: the
+strict hard-fail continuity policy for overlapping revisions and declared
+continuity surfaces, and the advisory non-overlapping drift summary.
 """
 
 from __future__ import annotations
@@ -9,22 +11,18 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
+from itertools import pairwise
 
+from ._cross_revision_divergence import (
+    CrossRevisionCasillaDivergence,
+    _iter_cross_revision_casilla_divergences,
+    _revisions_overlap,
+)
 from ._errors import RegistryValidationError
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
-    CasillaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    PeriodSelector,
-)
-
-_CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
-    "label",
-    "section",
-    "data_type",
-    "semantic_role",
-    "legal_refs",
 )
 
 # D3 defines revision-level continuidad_validation = "strict" as
@@ -33,30 +31,10 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
 # corpus-wide completeness gate proves every repeated id has been reviewed.
 
 __all__ = (
-    "CrossRevisionCasillaDivergence",
     "CrossRevisionCasillaDriftSummary",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "validate_cross_revision_casilla_consistency",
 )
-
-
-@dataclass(frozen=True, slots=True)
-class CrossRevisionCasillaDivergence:
-    """One field-level difference for a repeated casilla id."""
-
-    modelo_id: str
-    casilla_id: str
-    left_revision_id: str
-    right_revision_id: str
-    field: str
-    left_value: object
-    right_value: object
-    revisions_overlap: bool
-    left_continuidad_id: str | None = None
-    right_continuidad_id: str | None = None
-    evolution_id: str | None = None
-    evolution_kind: str | None = None
-    evolution_covers_field: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,37 +51,6 @@ class CrossRevisionCasillaDriftSummary:
     evolution_kinds: tuple[str, ...] = ()
     covered_by_evolution_count: int = 0
     uncovered_count: int = 0
-
-
-def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
-    """Return the stable cross-revision fingerprint for a casilla."""
-    return tuple(getattr(casilla, field) for field in _CROSS_REVISION_CASILLA_FIELDS)
-
-
-def _period_selector_year_bounds(selector: PeriodSelector) -> tuple[int, int | None]:
-    if selector.years:
-        return min(selector.years), max(selector.years)
-    if selector.year_from is None:
-        return 0, None
-    return selector.year_from, selector.year_to
-
-
-def _period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
-    left_start, left_end = _period_selector_year_bounds(left)
-    right_start, right_end = _period_selector_year_bounds(right)
-    if left_end is not None and left_end < right_start:
-        return False
-    if right_end is not None and right_end < left_start:
-        return False
-    return bool(set(left.periods).intersection(right.periods))
-
-
-def _revisions_overlap(left: object, right: object) -> bool:
-    left_selector = getattr(left, "period_selector", None)
-    right_selector = getattr(right, "period_selector", None)
-    if not isinstance(left_selector, PeriodSelector) or not isinstance(right_selector, PeriodSelector):
-        return True
-    return _period_selectors_overlap(left_selector, right_selector)
 
 
 def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
@@ -155,7 +102,10 @@ def _validate_strict_cross_revision_casilla_continuity(
 ) -> tuple[str, ...]:
     """Enforce explicit continuity decisions for opted-in declared surfaces."""
     failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    semantic_failures: list[str] = []
     for modelo in modelos:
+        semantic_failures.extend(_validate_strict_continuity_evolution_references(modelo))
+        semantic_failures.extend(_validate_strict_retired_continuity_surfaces(modelo))
         for divergence in _iter_cross_revision_casilla_divergences((modelo,)):
             if divergence.revisions_overlap:
                 continue
@@ -177,7 +127,7 @@ def _validate_strict_cross_revision_casilla_continuity(
                 divergence.right_revision_id,
             )
             failures[key].append(divergence)
-    return tuple(
+    drift_failures = tuple(
         _format_strict_continuity_failure(modelo_id, casilla_id, left_revision_id, right_revision_id, divergences)
         for (
             modelo_id,
@@ -185,6 +135,158 @@ def _validate_strict_cross_revision_casilla_continuity(
             left_revision_id,
             right_revision_id,
         ), divergences in failures.items()
+    )
+    return (*semantic_failures, *drift_failures)
+
+
+def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -> tuple[str, ...]:
+    """Validate declared strict continuity evolutions against real casilla surfaces."""
+    continuidad_ids_by_revision = _continuidad_ids_by_revision(modelo)
+    failures: list[str] = []
+    for declaring_revision_id, evolution in _iter_declared_continuity_evolutions(modelo):
+        revision_pair = _revision_pair_for_evolution(modelo, evolution)
+        if revision_pair is None:
+            continue
+        left_revision, right_revision = revision_pair
+        if not _is_strict_non_overlapping_revision_pair(left_revision, right_revision):
+            continue
+
+        left_ids = continuidad_ids_by_revision[left_revision.id]
+        right_ids = continuidad_ids_by_revision[right_revision.id]
+        if evolution.continuidad_id not in left_ids and evolution.continuidad_id not in right_ids:
+            failures.append(
+                _format_unmatched_continuity_evolution_failure(
+                    modelo.id,
+                    declaring_revision_id,
+                    evolution,
+                    "no matching casilla continuity id in either revision",
+                )
+            )
+            continue
+
+        if evolution.evolution_kind != "retired":
+            continue
+        if evolution.continuidad_id not in left_ids:
+            failures.append(
+                _format_unmatched_continuity_evolution_failure(
+                    modelo.id,
+                    declaring_revision_id,
+                    evolution,
+                    "retired evolution has no source casilla continuity id",
+                )
+            )
+        if evolution.continuidad_id in right_ids:
+            failures.append(
+                _format_unmatched_continuity_evolution_failure(
+                    modelo.id,
+                    declaring_revision_id,
+                    evolution,
+                    "retired evolution target revision still declares the continuity id",
+                )
+            )
+    return tuple(failures)
+
+
+def _validate_strict_retired_continuity_surfaces(modelo: ModeloDefinition) -> tuple[str, ...]:
+    """Require retired declarations when a strict continuity chain disappears."""
+    continuidad_ids_by_revision = _continuidad_ids_by_revision(modelo)
+    failures: list[str] = []
+    for left_revision, right_revision in _adjacent_revisions(modelo):
+        if not _is_strict_non_overlapping_revision_pair(left_revision, right_revision):
+            continue
+        missing_ids = continuidad_ids_by_revision[left_revision.id] - continuidad_ids_by_revision[right_revision.id]
+        for continuidad_id in sorted(missing_ids):
+            if _has_retired_evolution(modelo, left_revision.id, right_revision.id, continuidad_id):
+                continue
+            failures.append(
+                "strict continuity retirement missing: "
+                f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
+                f"revisions {left_revision.id!r}->{right_revision.id!r} "
+                "has a source casilla continuity surface but no target casilla "
+                "and no retired evolution declaration"
+            )
+    return tuple(failures)
+
+
+def _continuidad_ids_by_revision(modelo: ModeloDefinition) -> dict[str, set[str]]:
+    return {
+        revision.id: {
+            casilla.continuidad_id
+            for casilla in revision.casillas
+            if casilla.continuidad_id is not None
+        }
+        for revision in modelo.revisions.values()
+    }
+
+
+def _iter_declared_continuity_evolutions(
+    modelo: ModeloDefinition,
+) -> tuple[tuple[str, CasillaContinuidadEvolutionDefinition], ...]:
+    return tuple(
+        (revision.id, evolution)
+        for revision in modelo.revisions.values()
+        for evolution in revision.casilla_continuidad_evolutions
+    )
+
+
+def _revision_pair_for_evolution(
+    modelo: ModeloDefinition,
+    evolution: CasillaContinuidadEvolutionDefinition,
+) -> tuple[ModeloRevision, ModeloRevision] | None:
+    left_revision = modelo.revisions.get(evolution.from_revision)
+    right_revision = modelo.revisions.get(evolution.to_revision)
+    if left_revision is None or right_revision is None:
+        return None
+    return left_revision, right_revision
+
+
+def _adjacent_revisions(modelo: ModeloDefinition) -> tuple[tuple[ModeloRevision, ModeloRevision], ...]:
+    ordered_revisions = tuple(
+        sorted(
+            modelo.revisions.values(),
+            key=lambda revision: (revision.valid_from, revision.id),
+        )
+    )
+    return tuple(pairwise(ordered_revisions))
+
+
+def _is_strict_non_overlapping_revision_pair(
+    left_revision: ModeloRevision,
+    right_revision: ModeloRevision,
+) -> bool:
+    return (
+        left_revision.continuidad_validation == "strict"
+        or right_revision.continuidad_validation == "strict"
+    ) and not _revisions_overlap(left_revision, right_revision)
+
+
+def _has_retired_evolution(
+    modelo: ModeloDefinition,
+    left_revision_id: str,
+    right_revision_id: str,
+    continuidad_id: str,
+) -> bool:
+    return any(
+        evolution.continuidad_id == continuidad_id
+        and evolution.from_revision == left_revision_id
+        and evolution.to_revision == right_revision_id
+        and evolution.evolution_kind == "retired"
+        for _declaring_revision_id, evolution in _iter_declared_continuity_evolutions(modelo)
+    )
+
+
+def _format_unmatched_continuity_evolution_failure(
+    modelo_id: str,
+    declaring_revision_id: str,
+    evolution: CasillaContinuidadEvolutionDefinition,
+    reason: str,
+) -> str:
+    return (
+        "strict continuity evolution mismatch: "
+        f"modelo {modelo_id} declaring_revision {declaring_revision_id!r} "
+        f"evolution {evolution.id!r} continuidad_id {evolution.continuidad_id!r} "
+        f"revisions {evolution.from_revision!r}->{evolution.to_revision!r} "
+        f"evolution_kind {evolution.evolution_kind!r}: {reason}"
     )
 
 
@@ -251,6 +353,9 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     repeated numeric ids; this inventory keeps that drift visible without
     turning it into a load-time error before the schema has an explicit
     continuity/evolution contract.
+
+    Returns:
+        Tuple of :class:`CrossRevisionCasillaDriftSummary` records, one per drifted casilla id.
     """
     if example_limit < 1:
         raise RegistryValidationError("example_limit must be at least 1")
@@ -306,82 +411,3 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
             )
         )
     return tuple(summaries)
-
-
-def _iter_cross_revision_casilla_divergences(
-    modelos: Iterable[ModeloDefinition],
-) -> tuple[CrossRevisionCasillaDivergence, ...]:
-    divergences: list[CrossRevisionCasillaDivergence] = []
-    for modelo in modelos:
-        by_id: dict[str, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                by_id[casilla.id].append((revision, casilla))
-        for casilla_id, occurrences in by_id.items():
-            if len(occurrences) < 2:
-                continue
-            for index, (left_revision, left_casilla) in enumerate(occurrences[:-1]):
-                left_sig = _cross_revision_signature(left_casilla)
-                for right_revision, right_casilla in occurrences[index + 1 :]:
-                    revisions_overlap = _revisions_overlap(left_revision, right_revision)
-                    right_sig = _cross_revision_signature(right_casilla)
-                    if right_sig == left_sig:
-                        continue
-                    evolution = _matching_evolution(left_revision, right_revision, left_casilla, right_casilla)
-                    for field, left_value, right_value in zip(
-                        _CROSS_REVISION_CASILLA_FIELDS,
-                        left_sig,
-                        right_sig,
-                        strict=True,
-                    ):
-                        if left_value == right_value:
-                            continue
-                        divergences.append(
-                            CrossRevisionCasillaDivergence(
-                                modelo_id=modelo.id,
-                                casilla_id=casilla_id,
-                                left_revision_id=left_revision.id,
-                                right_revision_id=right_revision.id,
-                                field=field,
-                                left_value=left_value,
-                                right_value=right_value,
-                                revisions_overlap=revisions_overlap,
-                                left_continuidad_id=left_casilla.continuidad_id,
-                                right_continuidad_id=right_casilla.continuidad_id,
-                                evolution_id=evolution.id if evolution is not None else None,
-                                evolution_kind=evolution.evolution_kind if evolution is not None else None,
-                                evolution_covers_field=_evolution_covers_field(evolution, field),
-                            )
-                        )
-    return tuple(divergences)
-
-
-def _matching_evolution(
-    left_revision: ModeloRevision,
-    right_revision: ModeloRevision,
-    left_casilla: CasillaDefinition,
-    right_casilla: CasillaDefinition,
-) -> CasillaContinuidadEvolutionDefinition | None:
-    continuidad_ids = {left_casilla.continuidad_id, right_casilla.continuidad_id} - {None}
-    if len(continuidad_ids) != 1:
-        return None
-    continuidad_id = next(iter(continuidad_ids))
-    for revision in (left_revision, right_revision):
-        for evolution in revision.casilla_continuidad_evolutions:
-            if evolution.continuidad_id != continuidad_id:
-                continue
-            if {evolution.from_revision, evolution.to_revision} == {left_revision.id, right_revision.id}:
-                return evolution
-    return None
-
-
-def _evolution_covers_field(evolution: CasillaContinuidadEvolutionDefinition | None, field: str) -> bool:
-    if evolution is None:
-        return False
-    if evolution.evolution_kind == "label_evolved":
-        return field == "label"
-    if evolution.evolution_kind == "legal_refs_evolved":
-        return field == "legal_refs"
-    if evolution.evolution_kind == "label_and_legal_refs_evolved":
-        return field in {"label", "legal_refs"}
-    return evolution.evolution_kind == "repurposed"

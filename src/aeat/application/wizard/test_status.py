@@ -14,18 +14,18 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.wizard._status import (
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ..user_profile._orchestration import profile_create_storage_span, profile_storage_session
+from ..user_profile._testing import register_minimal_profile
+from ._status import (
     WizardStatusError,
     WizardStatusReport,
     build_wizard_status,
     load_active_taxpayer_profile,
 )
-from aeat.application.workflow._models import WorkflowState
-from aeat.core.config import SecretStoreBackend, override_settings
-from aeat.tests.secure_sql import dev_test_database_password
+from ..workflow._models import WorkflowState
+from ...core.config import SecretStoreBackend, override_settings
+from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

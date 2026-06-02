@@ -14,8 +14,8 @@ from __future__ import annotations
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from aeat.adapters.persistence.storage.errors import EncryptionError
-from aeat.adapters.persistence.storage.master_key._dek_wrap import (
+from ..errors import EncryptionError
+from ._dek_wrap import (
     WrappedDek,
     unwrap_dek,
     wrap_dek,

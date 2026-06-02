@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

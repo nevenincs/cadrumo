@@ -58,13 +58,13 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...core.errors import AeatError, resolve_error_message
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
-from ...domain.calculations.registry import InputKind, RegistryQueryService
-from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry._ids import BindingId, CasillaId
-from ...domain.calculations.registry._queries import parse_modelo_period
 from ...core.money import round_to_cents as _round_to_cents
+from ...domain.calculations.registry import BindingId, CasillaId, InputKind, RegistryQueryService
+from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (
@@ -3036,11 +3036,10 @@ def work_calculate(
             ),
         ),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -3330,7 +3329,7 @@ def work_compare_taxation(
         str,
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         help=tr(
@@ -3655,11 +3654,10 @@ def work_verify(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -3720,11 +3718,10 @@ def work_file(
         str | None,
         typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
@@ -5958,11 +5955,10 @@ def work_preview_maritime_exemption(
             ),
         ),
     ] = None,
-    output_language: str | None = typer.Option(
+    output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
         "--language",
-        click_type=_OUTPUT_LANGUAGE_CLI,
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:

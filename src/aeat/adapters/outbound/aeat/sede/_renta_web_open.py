@@ -113,7 +113,7 @@ async def collect_renta_web_open_observation(
     expected: Mapping[str, object],
     settings: Settings | None = None,
 ) -> RentaWebOpenObservation:
-    """Open the anonymous simulator, create a synthetic declaration, and scrape summary rows."""
+    """Open the anonymous simulator, create a synthetic declaration, and return a :class:`RentaWebOpenObservation`."""
     live_payload = parse_renta_web_open_live_payload(payload)
     browser_session = await default_browser_session_factory(settings or Settings())
     context = None

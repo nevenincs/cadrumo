@@ -335,7 +335,7 @@ class ClaveMovilAuthProvider:
         browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
-        """Run the Cl@ve Móvil login flow and return an ``AeatSession``.
+        """Run the Cl@ve Móvil login flow and return an :class:`AeatSession`.
 
         Attempts to resume a cached session first. Falls back to the
         human-in-the-loop QR-scan flow (or the non-QR DNI/NIE +
@@ -380,10 +380,12 @@ class ClaveMovilAuthProvider:
         """Probe the encrypted persisted session without side effects.
 
         Unlike :meth:`authenticate`, this method NEVER falls back to a
-        fresh login and NEVER deletes the persisted session —
-        even when the probe fails. Callers can
-        therefore use it as a pure diagnostic without accidentally
-        triggering a fresh operator-mediated Cl@ve request.
+        fresh login and NEVER deletes the persisted session, even when
+        the probe fails. Callers can therefore use it as a pure diagnostic
+        without accidentally triggering a fresh operator-mediated Cl@ve request.
+
+        Returns:
+            A 2-tuple of (:class:`AeatSession`, :class:`AeatLoginAssertion`).
         """
         async with self._lock:
             if self._active_session is not None:
@@ -496,6 +498,9 @@ class ClaveMovilAuthProvider:
         dispatched from the selector. When no explicit target is supplied and
         the session metadata has a concrete post-auth landing URL, the probe
         can navigate there directly.
+
+        Returns:
+            An :class:`AeatLoginAssertion` describing the probe outcome.
         """
         context = self._context
         if context is None:
@@ -574,7 +579,7 @@ class ClaveMovilAuthProvider:
         )
 
     def describe(self) -> AuthProviderDescription:
-        """Return an operator-readable description of the Cl@ve Móvil provider state.
+        """Return an :class:`AuthProviderDescription` for the Cl@ve Móvil provider state.
 
         Severity is set explicitly here so a normal pending state — Cl@ve
         Móvil completion requires an operator-mediated tap on the phone —

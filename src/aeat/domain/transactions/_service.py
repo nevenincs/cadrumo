@@ -36,7 +36,7 @@ def find_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Tr
         transaction_id: Stable transaction identifier.
 
     Returns:
-        The matching transaction, or ``None`` when absent.
+        The matching :class:`Transaction`, or ``None`` when absent.
     """
     return catalogue.get(transaction_id)
 
@@ -50,7 +50,7 @@ def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_i
         invoice_id: Invoice foreign key to attach.
 
     Returns:
-        A fresh immutable catalogue with the linked invoice.
+        A fresh immutable :class:`TransactionCatalogue` with the linked invoice.
     """
     transaction = _require_transaction(catalogue, transaction_id)
     updated_transaction = _validate_transaction_update(
@@ -101,7 +101,7 @@ def set_classification(
             to ``None``.
 
     Returns:
-        A fresh immutable catalogue with updated classification metadata.
+        A fresh :class:`TransactionCatalogue` with updated classification metadata.
 
     """
     transaction = _require_transaction(catalogue, transaction_id)
@@ -196,7 +196,7 @@ def snapshot_classification_state(
     *,
     fallback_at: datetime | None = None,
 ) -> ClassificationHistoryEntry:
-    """Return a history entry capturing the transaction's current active state.
+    """Return a :class:`ClassificationHistoryEntry` capturing the transaction's current active state.
 
     When no explicit ``classified_at`` is present (the pipeline has
     never run against this transaction), fall back to the provenance

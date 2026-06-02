@@ -720,7 +720,7 @@ class TestParseDaysInSpain:
     """
 
     def setup_method(self) -> None:
-        from aeat.domain.deadlines._profiles import _parse_days_in_spain
+        from ._profiles import _parse_days_in_spain
 
         self._parse = _parse_days_in_spain
 

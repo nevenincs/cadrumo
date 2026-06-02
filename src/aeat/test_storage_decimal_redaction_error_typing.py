@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 def test_financial_validation_error_not_value_error() -> None:
     """FinancialValidationError must not be a ValueError subclass."""
-    from aeat.adapters.inbound.financial.providers._base import (
+    from .adapters.inbound.financial.providers._base import (
         FinancialValidationError,
     )
 
@@ -33,20 +33,20 @@ def test_financial_validation_error_not_value_error() -> None:
 
 def test_financial_validation_error_is_aeat_error() -> None:
     """FinancialValidationError still derives from AeatError."""
-    from aeat.adapters.inbound.financial.providers._base import (
+    from .adapters.inbound.financial.providers._base import (
         FinancialValidationError,
     )
-    from aeat.core.errors import AeatError
+    from .core.errors import AeatError
 
     assert issubclass(FinancialValidationError, AeatError)
 
 
 def test_financial_validation_error_registered() -> None:
     """FinancialValidationError has a registered ErrorCode."""
-    from aeat.adapters.inbound.financial.providers._base import (
+    from .adapters.inbound.financial.providers._base import (
         FinancialValidationError,
     )
-    from aeat.core.errors import ERROR_REGISTRY, get_registered_error_code
+    from .core.errors import ERROR_REGISTRY, get_registered_error_code
 
     err = FinancialValidationError("test")
     code = get_registered_error_code(err)
@@ -63,10 +63,10 @@ def test_encrypted_string_raises_storage_validation_error() -> None:
 
     Dialect argument is irrelevant — type-guard fires before it is used.
     """
-    from aeat.adapters.persistence.storage.crypto._encrypted_columns import (
+    from .adapters.persistence.storage.crypto._encrypted_columns import (
         EncryptedString,
     )
-    from aeat.adapters.persistence.storage.errors import StorageValidationError
+    from .adapters.persistence.storage.errors import StorageValidationError
 
     col = EncryptedString()
     with pytest.raises(StorageValidationError):
@@ -78,10 +78,10 @@ def test_encrypted_bytes_raises_storage_validation_error() -> None:
 
     Dialect argument is irrelevant — type-guard fires before it is used.
     """
-    from aeat.adapters.persistence.storage.crypto._encrypted_columns import (
+    from .adapters.persistence.storage.crypto._encrypted_columns import (
         EncryptedBytes,
     )
-    from aeat.adapters.persistence.storage.errors import StorageValidationError
+    from .adapters.persistence.storage.errors import StorageValidationError
 
     col = EncryptedBytes()
     with pytest.raises(StorageValidationError):
@@ -93,10 +93,10 @@ def test_hashed_lookup_compute_raises_storage_validation_error() -> None:
 
     The type-guard fires before key resolution so no master-key provider is needed.
     """
-    from aeat.adapters.persistence.storage.crypto._encrypted_columns import (
+    from .adapters.persistence.storage.crypto._encrypted_columns import (
         HashedLookup,
     )
-    from aeat.adapters.persistence.storage.errors import StorageValidationError
+    from .adapters.persistence.storage.errors import StorageValidationError
 
     with pytest.raises(StorageValidationError):
         HashedLookup.compute(12345)  # type: ignore[arg-type]
@@ -108,10 +108,10 @@ def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
     The type-guard fires before key resolution so no master-key provider is needed.
     Dialect argument is irrelevant at this error path.
     """
-    from aeat.adapters.persistence.storage.crypto._encrypted_columns import (
+    from .adapters.persistence.storage.crypto._encrypted_columns import (
         HashedLookup,
     )
-    from aeat.adapters.persistence.storage.errors import StorageValidationError
+    from .adapters.persistence.storage.errors import StorageValidationError
 
     col = HashedLookup()
     with pytest.raises(StorageValidationError):
@@ -125,15 +125,15 @@ def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
 
 def test_decimal_format_error_not_value_error() -> None:
     """DecimalFormatError must not be a ValueError subclass."""
-    from aeat.core.errors import DecimalFormatError
+    from .core.errors import DecimalFormatError
 
     assert not issubclass(DecimalFormatError, ValueError)
 
 
 def test_decimal_format_error_raised_on_none_without_fallback() -> None:
     """format_decimal raises DecimalFormatError when value is None and none_value omitted."""
-    from aeat.core.decimal._format import format_decimal
-    from aeat.core.errors import DecimalFormatError
+    from .core.decimal._format import format_decimal
+    from .core.errors import DecimalFormatError
 
     with pytest.raises(DecimalFormatError):
         format_decimal(None)
@@ -141,7 +141,7 @@ def test_decimal_format_error_raised_on_none_without_fallback() -> None:
 
 def test_decimal_format_error_registered() -> None:
     """DecimalFormatError has a registered ErrorCode in ERROR_REGISTRY."""
-    from aeat.core.errors import ERROR_REGISTRY, DecimalFormatError, get_registered_error_code
+    from .core.errors import ERROR_REGISTRY, DecimalFormatError, get_registered_error_code
 
     err = DecimalFormatError("test")
     code = get_registered_error_code(err)
@@ -155,15 +155,15 @@ def test_decimal_format_error_registered() -> None:
 
 def test_redaction_error_not_value_error() -> None:
     """RedactionError must not be a ValueError subclass."""
-    from aeat.core.errors import RedactionError
+    from .core.errors import RedactionError
 
     assert not issubclass(RedactionError, ValueError)
 
 
 def test_redact_raises_redaction_error_for_non_str() -> None:
     """redact() raises RedactionError when passed a non-str value."""
-    from aeat.core.errors import RedactionError
-    from aeat.core.redaction import redact
+    from .core.errors import RedactionError
+    from .core.redaction import redact
 
     with pytest.raises(RedactionError):
         redact(12345, rules=())  # type: ignore[arg-type]
@@ -171,8 +171,8 @@ def test_redact_raises_redaction_error_for_non_str() -> None:
 
 def test_redact_for_cli_output_raises_redaction_error_for_non_str() -> None:
     """redact_for_cli_output() raises RedactionError for non-str input."""
-    from aeat.core.errors import RedactionError
-    from aeat.core.redaction import redact_for_cli_output
+    from .core.errors import RedactionError
+    from .core.redaction import redact_for_cli_output
 
     with pytest.raises(RedactionError):
         redact_for_cli_output({"not": "a string"})  # type: ignore[arg-type]
@@ -180,7 +180,7 @@ def test_redact_for_cli_output_raises_redaction_error_for_non_str() -> None:
 
 def test_redaction_error_registered() -> None:
     """RedactionError has a registered ErrorCode in ERROR_REGISTRY."""
-    from aeat.core.errors import ERROR_REGISTRY, RedactionError, get_registered_error_code
+    from .core.errors import ERROR_REGISTRY, RedactionError, get_registered_error_code
 
     err = RedactionError("test")
     code = get_registered_error_code(err)
@@ -198,8 +198,8 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
     # Import _agenda lazily; OverviewAgendaError is raised before any
     # network or profile access so no fixture setup is needed.
-    from aeat.application.overview._agenda import build_overview_agenda
-    from aeat.application.overview._errors import OverviewAgendaError
+    from .application.overview._agenda import build_overview_agenda
+    from .application.overview._errors import OverviewAgendaError
 
     with pytest.raises(OverviewAgendaError):
         build_overview_agenda(
@@ -241,7 +241,7 @@ def test_censo_sync_error_is_aeat_error() -> None:
     the contract tested is that the error class itself is properly
     typed and registered.
     """
-    from aeat.core.errors import AeatError
+    from .core.errors import AeatError
 
     censo_sync_error_cls = _load_censo_sync_error_class()
     assert issubclass(censo_sync_error_cls, AeatError)
@@ -260,8 +260,8 @@ def test_censo_sync_error_no_longer_value_error() -> None:
 
 def test_portal_validation_error_both_url_and_path() -> None:
     """build_entry raises PortalValidationError when both url and path are given."""
-    from aeat.domain.portals._entries._common import build_entry
-    from aeat.domain.portals._errors import PortalValidationError
+    from .domain.portals._entries._common import build_entry
+    from .domain.portals._errors import PortalValidationError
 
     with pytest.raises(PortalValidationError):
         build_entry(
@@ -279,8 +279,8 @@ def test_portal_validation_error_both_url_and_path() -> None:
 
 def test_portal_validation_error_path_not_starting_slash() -> None:
     """build_entry raises PortalValidationError when path does not start with /."""
-    from aeat.domain.portals._entries._common import build_entry
-    from aeat.domain.portals._errors import PortalValidationError
+    from .domain.portals._entries._common import build_entry
+    from .domain.portals._errors import PortalValidationError
 
     with pytest.raises(PortalValidationError):
         build_entry(
@@ -302,8 +302,8 @@ def test_portal_validation_error_path_not_starting_slash() -> None:
 
 def test_profile_answer_type_error_descendant_bad_discapacidad() -> None:
     """parse_descendiente_flag raises ProfileAnswerTypeError for invalid DISCAPACIDAD."""
-    from aeat.core.errors import ProfileAnswerTypeError
-    from aeat.domain.profile._descendant_facts import parse_descendiente_flag
+    from .core.errors import ProfileAnswerTypeError
+    from .domain.profile._descendant_facts import parse_descendiente_flag
 
     with pytest.raises(ProfileAnswerTypeError):
         parse_descendiente_flag("NACIMIENTO=2010-01-01,DISCAPACIDAD=50")
@@ -311,8 +311,8 @@ def test_profile_answer_type_error_descendant_bad_discapacidad() -> None:
 
 def test_profile_answer_type_error_marriage_date_invalid() -> None:
     """parse_marriage_date_flag raises ProfileAnswerTypeError for non-ISO-8601 input."""
-    from aeat.core.errors import ProfileAnswerTypeError
-    from aeat.domain.profile._marriage_facts import parse_marriage_date_flag
+    from .core.errors import ProfileAnswerTypeError
+    from .domain.profile._marriage_facts import parse_marriage_date_flag
 
     with pytest.raises(ProfileAnswerTypeError):
         parse_marriage_date_flag("not-a-date")
@@ -320,8 +320,8 @@ def test_profile_answer_type_error_marriage_date_invalid() -> None:
 
 def test_profile_answer_type_error_ccaa_unknown_label() -> None:
     """CCAA.from_label raises ProfileAnswerTypeError for an unknown CCAA label."""
-    from aeat.core.errors import ProfileAnswerTypeError
-    from aeat.domain.profile._ccaa import CCAA
+    from .core.errors import ProfileAnswerTypeError
+    from .domain.profile._ccaa import CCAA
 
     with pytest.raises(ProfileAnswerTypeError):
         CCAA.from_label("xyzzy")
@@ -336,11 +336,11 @@ def test_m232_binding_error_too_many_rows() -> None:
     """materialize_m232_related_party_rows raises RegistryValidationError for >5 rows."""
     from decimal import Decimal as _Decimal
 
-    from aeat.domain.calculations.registry._errors import RegistryValidationError
-    from aeat.domain.calculations.registry._m232_row_bindings import (
+    from .domain.calculations.registry._errors import RegistryValidationError
+    from .domain.calculations.registry._m232_row_bindings import (
         materialize_m232_related_party_rows,
     )
-    from aeat.domain.modelos._row_models import Modelo232VinculadaRow
+    from .domain.modelos._row_models import Modelo232VinculadaRow
 
     dummy_row = Modelo232VinculadaRow(
         nif="12345678A",
@@ -361,7 +361,7 @@ def test_m232_binding_error_too_many_rows() -> None:
 
 def test_error_envelope_roundtrip_decimal_format_error() -> None:
     """build_error_envelope produces a valid ErrorEnvelope for DecimalFormatError."""
-    from aeat.core.errors import DecimalFormatError, build_error_envelope
+    from .core.errors import DecimalFormatError, build_error_envelope
 
     err = DecimalFormatError("test decimal format")
     envelope = build_error_envelope(err)
@@ -371,7 +371,7 @@ def test_error_envelope_roundtrip_decimal_format_error() -> None:
 
 def test_error_envelope_roundtrip_redaction_error() -> None:
     """build_error_envelope produces a valid ErrorEnvelope for RedactionError."""
-    from aeat.core.errors import RedactionError, build_error_envelope
+    from .core.errors import RedactionError, build_error_envelope
 
     err = RedactionError("test redaction error")
     envelope = build_error_envelope(err)

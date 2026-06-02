@@ -46,8 +46,8 @@ from ...adapters.outbound.aeat.sede._notifications import (
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
-from ...core.time import now
 from ...core.identity import BucketId, SnapshotId
+from ...core.time import now
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SecureSnapshotRepository,
@@ -139,12 +139,12 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         bucket_id: str,
         snapshot: NotificationsSnapshot,
     ) -> PersistedNotificationsSnapshot:
-        """Persist a snapshot for the active bucket.
+        """Persist a snapshot for the active bucket and return the :class:`PersistedNotificationsSnapshot`.
 
-        Returns the persisted record. The caller is responsible for
-        emitting the corresponding ``live.notifications.snapshot_captured``
-        bucket event; this service does not couple to the event
-        repository so the persistence can be tested in isolation.
+        The caller is responsible for emitting the corresponding
+        ``live.notifications.snapshot_captured`` bucket event; this
+        service does not couple to the event repository so the
+        persistence can be tested in isolation.
         """
         return self._capture_stateless(bucket_id=bucket_id, snapshot=snapshot)
 
@@ -154,7 +154,11 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         bucket_id: str,
         snapshot_id: str,
     ) -> PersistedNotificationsSnapshot:
-        """Look up a snapshot by full id or any unambiguous prefix."""
+        """Look up a snapshot by full id or any unambiguous prefix.
+
+        Returns the :class:`PersistedNotificationsSnapshot` that matches
+        ``snapshot_id`` within ``bucket_id``.
+        """
         return self.resolve_snapshot(bucket_id=bucket_id, snapshot_id=snapshot_id)
 
     def latest(
@@ -162,7 +166,7 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
         *,
         bucket_id: str,
     ) -> PersistedNotificationsSnapshot | None:
-        """Return the most recent snapshot, or None if none captured."""
+        """Return the most recent :class:`PersistedNotificationsSnapshot`, or None if none captured."""
         snapshots = self.list_snapshots(bucket_id=bucket_id)
         if not snapshots:
             return None

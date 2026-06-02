@@ -6,7 +6,7 @@ from typing import ClassVar, cast
 import pytest
 from playwright.async_api import BrowserContext, Page, Playwright
 
-from aeat.tests import FIXTURES_DIR
+from .....tests import FIXTURES_DIR
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError

@@ -20,8 +20,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ...outbound.storage._errors import OutboundStorageConflictError
 from ....domain.calculations.registry._schema import InputKind
+from ...outbound.storage._errors import OutboundStorageConflictError
 from ._calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,

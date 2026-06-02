@@ -11,11 +11,6 @@ inputs from authoritative prior filings instead of operator
 hand-entry.
 """
 
-from ._iva_wallet_balance import (
-    IvaWalletBalanceReport,
-    build_iva_wallet_balance_report,
-    query_iva_wallet_balance,
-)
 from ._binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -34,6 +29,11 @@ from ._iva_compensation_history import (
     enforce_iva_compensation_four_year_window,
     iva_compensation_period_key,
     iva_compensation_state_from_filed_observation,
+)
+from ._iva_wallet_balance import (
+    IvaWalletBalanceReport,
+    build_iva_wallet_balance_report,
+    query_iva_wallet_balance,
 )
 from ._iva_wallet_reconciliation import (
     IvaCompensationAuthoritySource,
@@ -70,9 +70,6 @@ IvaCompensationReconciliationReport.model_rebuild()
 
 __all__ = [
     "AssembledObservations",
-    "IvaWalletBalanceReport",
-    "build_iva_wallet_balance_report",
-    "query_iva_wallet_balance",
     "BindingPrefillReport",
     "CalculationObservationRepository",
     "IvaCompensationAuthoritySource",
@@ -86,6 +83,7 @@ __all__ = [
     "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
+    "IvaWalletBalanceReport",
     "IvaWalletDecisionRepository",
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
@@ -100,6 +98,7 @@ __all__ = [
     "assemble_related_party_observations",
     "assemble_withholding_observations",
     "build_iva_compensation_carry_forward_report",
+    "build_iva_wallet_balance_report",
     "enforce_iva_compensation_four_year_window",
     "extract_modelo_303_local_iva_compensation_recurrence",
     "iva_compensation_period_key",
@@ -107,6 +106,7 @@ __all__ = [
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
     "observation_key",
+    "query_iva_wallet_balance",
     "reconcile_iva_compensation_wallet",
     "reconcile_modelo_303_iva_compensation",
     "resolve_bindings_from_local_store",

@@ -20,6 +20,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.identity import BucketId
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -27,7 +28,6 @@ from ...domain.buckets import (
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...core.identity import BucketId
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._ids import WorkUnitId
 from ...domain.modelos._protocols import (
@@ -73,7 +73,7 @@ def assemble_work_unit_history(
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> WorkUnitHistory:
-    """Return every bucket event scoped to ``work_unit_id``.
+    """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
     Events are merged from four object-scoped streams and ordered by
     ``occurred_at`` ascending. The work unit itself is loaded to:

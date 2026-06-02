@@ -176,7 +176,10 @@ def build_repair_integrity_report(
     namespace: str | None = None,
     repository: _SecureObjectRepositoryProtocol | None = None,
 ) -> RepairIntegrityReport:
-    """Probe namespace integrity. When ``namespace`` is set, restrict scope."""
+    """Probe namespace integrity. When ``namespace`` is set, restrict scope.
+
+    Returns a :class:`RepairIntegrityReport`.
+    """
     if repository is not None:
         return _build_repair_integrity_report(namespace=namespace, repository=repository)
     with active_bucket_repair_session():
@@ -246,6 +249,9 @@ def build_repair_list_report(
     but caps the inventory at the integrity-readable count for
     bandwidth control on large namespaces — same as ``--all`` for
     namespaces with no integrity issues.
+
+    Returns a :class:`RepairListReport` enumerating the matching object
+    keys and their decryptability status.
     """
     if include_all and only_unreadable:
         msg = "build_repair_list_report cannot combine --all and --unreadable; pass one or neither"
@@ -425,7 +431,11 @@ class RepairRemediationDecisionRepository:
         )
 
     def load_decision(self, decision_id: str) -> RepairRemediationDecision:
-        """Load one decision by its content-addressed id; re-derives + checks the id."""
+        """Load one decision by its content-addressed id; re-derives + checks the id.
+
+        Returns the :class:`RepairRemediationDecision` matching
+        ``decision_id`` after verifying its content-addressed identity.
+        """
         record = self._repo().load(
             namespace=_REPAIR_DECISION_NAMESPACE,
             object_key=decision_id,
@@ -445,7 +455,7 @@ class RepairRemediationDecisionRepository:
         return decoded
 
     def list_decisions(self) -> tuple[RepairRemediationDecision, ...]:
-        """Return every persisted decision in decision-time descending order."""
+        """Return every persisted :class:`RepairRemediationDecision` in decision-time descending order."""
         repo = self._repo()
         records = tuple(
             repo.list_records(
@@ -597,7 +607,7 @@ def _surface(
 
 
 def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSurface, ...]:
-    """Return the catalogued repair-policy CLI surfaces.
+    """Return the :class:`RepairPolicyCommandSurface` catalog for repair-policy CLI surfaces.
 
     The catalog mirrors the Typer command registry for repair,
     recovery, import, export, and bucket-history surfaces. It is used

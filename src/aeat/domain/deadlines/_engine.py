@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.aggregation import PeriodKind
 from ...core.logging import get_logger

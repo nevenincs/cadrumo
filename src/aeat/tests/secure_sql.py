@@ -9,18 +9,18 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.bucket._layout import BucketPaths, provision_bucket_directory
-from aeat.adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
-from aeat.adapters.persistence.storage.bucket._manifest_io import write_manifest
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.master_key._kdf_params import KdfParams
-from aeat.adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
-from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from aeat.core.config import Settings, load_settings, override_settings
+from ..adapters.persistence.storage import EphemeralMasterKeyProvider
+from ..adapters.persistence.storage.bucket._layout import BucketPaths, provision_bucket_directory
+from ..adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
+from ..adapters.persistence.storage.bucket._manifest_io import write_manifest
+from ..adapters.persistence.storage.master_key._active_session import activate_session
+from ..adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ..adapters.persistence.storage.master_key._kdf_params import KdfParams
+from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
+from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..adapters.persistence.storage.sql.engine import dispose_engine
+from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..core.config import Settings, load_settings, override_settings
 
 _TEST_KEK = b"t" * 32
 _TEST_DEK = b"r" * 32

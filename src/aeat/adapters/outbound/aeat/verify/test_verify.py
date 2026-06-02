@@ -12,12 +12,12 @@ from pathlib import Path
 
 import pytest
 
-import aeat.adapters.outbound.aeat.verify as verify_module
-from aeat.adapters.outbound.aeat.verify import (
+from .. import verify as verify_module
+from . import (
     VerifyBrowserKeyboardLike,
     verify_csv,
 )
-from aeat.domain.calculations.registry import RegistryValidationError
+from .....domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -196,7 +196,7 @@ async def test_build_default_browser_session_raises_browser_adapter_type_error_o
     class is asserted directly so any regression to bare TypeError fails
     this test.
     """
-    from aeat.core.config import Settings
+    from .....core.config import Settings
 
     class _NotASession:
         """Intentionally wrong type — satisfies no browser-session protocol."""
@@ -217,7 +217,7 @@ def test_browser_adapter_type_error_is_registered() -> None:
     expected code so the error infrastructure can build a typed envelope
     without KeyError at runtime.
     """
-    from aeat.core.errors import ERROR_REGISTRY
+    from .....core.errors import ERROR_REGISTRY
 
     assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY, (
         "'ERROR_SEDE_BROWSER_ADAPTER_TYPE' not found in ERROR_REGISTRY; "
@@ -229,8 +229,8 @@ def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
     """build_error_envelope must produce a valid ErrorEnvelope for BrowserAdapterTypeError
     without raising — confirming the registry binding covers the full envelope pipeline.
     """
-    from aeat.core.errors import build_error_envelope
-    from aeat.adapters.outbound.aeat.sede._errors import BrowserAdapterTypeError
+    from ..sede._errors import BrowserAdapterTypeError
+    from .....core.errors import build_error_envelope
 
     exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type: <class 'object'>")
     envelope = build_error_envelope(exc)

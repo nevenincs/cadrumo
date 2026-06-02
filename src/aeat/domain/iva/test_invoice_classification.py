@@ -8,17 +8,17 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import IvaLedgerObservation
-from aeat.domain.invoices import IvaRate
-from aeat.domain.iva import (
+from ...core.resources import bundled_path
+from ..calculations.registry import IvaLedgerObservation
+from ..invoices import IvaRate
+from . import (
     InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
     IvaSettlementSide,
 )
-from aeat.domain.iva._invoice_classification import (
+from ._invoice_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
 )
@@ -136,7 +136,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     from datetime import date
     from decimal import Decimal
 
-    from aeat.domain.invoices import invoice_line_to_iva_observation
+    from ..invoices import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="inv-001",
@@ -160,7 +160,7 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
     from datetime import date
     from decimal import Decimal
 
-    from aeat.domain.invoices import invoice_line_to_iva_observation
+    from ..invoices import invoice_line_to_iva_observation
 
     obs = invoice_line_to_iva_observation(
         invoice_id="bill-77",
@@ -178,7 +178,7 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
 def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
     from datetime import date
 
-    from aeat.domain.invoices import invoice_line_to_iva_observation
+    from ..invoices import invoice_line_to_iva_observation
 
     with pytest.raises(ValidationError, match=r"base_amount|iva_amount|Decimal|decimal"):
         invoice_line_to_iva_observation(
@@ -199,11 +199,11 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     from datetime import date
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry import (
+    from ..calculations.registry import (
         load_registry_tree,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.invoices import invoice_line_to_iva_observation
+    from ..invoices import invoice_line_to_iva_observation
 
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     m303 = next(m for m in modelos if m.id == "303")

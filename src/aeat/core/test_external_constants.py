@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.config import Settings
-from aeat.core.errors import CoreValidationError
-from aeat.core.external_constants import (
+from .config import Settings
+from .errors import CoreValidationError
+from .external_constants import (
     AeatSection,
     ExternalConstants,
     load_external_constants,
@@ -333,7 +333,7 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
 def test_subdomain_enum_aligns_with_aeat_domains() -> None:
     """The :class:`PortalHost` enum hosts mirror the TOML registry hosts."""
 
-    from aeat.domain.portals._categories import PortalHost
+    from ..domain.portals._categories import PortalHost
 
     domains = load_external_constants().aeat.domains
     configured_hosts = {
@@ -477,7 +477,7 @@ def test_manuals_http_timeout_is_settings() -> None:
 def test_binary_mime_type_value() -> None:
     """``BINARY_MIME_TYPE`` equals the IANA-registered opaque-binary MIME type."""
 
-    from aeat.core.external_constants import BINARY_MIME_TYPE
+    from .external_constants import BINARY_MIME_TYPE
 
     assert BINARY_MIME_TYPE == "application/octet-stream"
 
@@ -488,7 +488,7 @@ def test_google_drive_reads_binary_mime_from_external_constants() -> None:
     import importlib
     import importlib.util
 
-    from aeat.core.external_constants import BINARY_MIME_TYPE
+    from .external_constants import BINARY_MIME_TYPE
 
     spec = importlib.util.find_spec("aeat.adapters.outbound.storage._google_drive")
     assert spec is not None, "_google_drive module not found"
@@ -506,7 +506,7 @@ def test_google_drive_reads_binary_mime_from_external_constants() -> None:
 def test_default_currency_value() -> None:
     """``DEFAULT_CURRENCY`` equals the ISO 4217 Euro code."""
 
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from .external_constants import DEFAULT_CURRENCY
 
     assert DEFAULT_CURRENCY == "EUR"
 
@@ -514,7 +514,7 @@ def test_default_currency_value() -> None:
 def test_default_currency_is_final_str() -> None:
     """``DEFAULT_CURRENCY`` is a ``str`` instance (typed ``Final[str]``)."""
 
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from .external_constants import DEFAULT_CURRENCY
 
     assert isinstance(DEFAULT_CURRENCY, str)
 
@@ -522,14 +522,12 @@ def test_default_currency_is_final_str() -> None:
 def test_ledger_transaction_command_reads_currency_from_external_constants() -> None:
     """The manual ledger transaction command default currency comes from ``DEFAULT_CURRENCY``."""
 
-    import inspect
-
-    from aeat.application.ledger._models import ManualLedgerTransactionCommand
-    from aeat.core.external_constants import DEFAULT_CURRENCY
 
     # Construct with no explicit currency — the field default must resolve to DEFAULT_CURRENCY.
     # We verify by inspecting that the module imports DEFAULT_CURRENCY (not a local literal).
-    import aeat.application.ledger._models as _models_mod
+    from ..application.ledger import _models as _models_mod
+    from ..application.ledger._models import ManualLedgerTransactionCommand
+    from .external_constants import DEFAULT_CURRENCY
 
     assert hasattr(_models_mod, "DEFAULT_CURRENCY"), (
         "_models module must import DEFAULT_CURRENCY from external_constants"
@@ -546,8 +544,8 @@ def test_ledger_transaction_command_reads_currency_from_external_constants() -> 
 def test_currency_service_reads_native_eur_from_external_constants() -> None:
     """The currency normalisation service uses ``DEFAULT_CURRENCY`` for native EUR check."""
 
-    import aeat.domain.currency._service as _service_mod
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from ..domain.currency import _service as _service_mod
+    from .external_constants import DEFAULT_CURRENCY
 
     assert hasattr(_service_mod, "DEFAULT_CURRENCY"), (
         "_service module must import DEFAULT_CURRENCY from external_constants"
@@ -558,8 +556,8 @@ def test_currency_service_reads_native_eur_from_external_constants() -> None:
 def test_aggregation_predicates_read_currency_from_external_constants() -> None:
     """The aggregation currency predicate uses ``DEFAULT_CURRENCY``, not a local literal."""
 
-    import aeat.application.aggregation._currency_predicates as _pred_mod
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from ..application.aggregation import _currency_predicates as _pred_mod
+    from .external_constants import DEFAULT_CURRENCY
 
     assert hasattr(_pred_mod, "DEFAULT_CURRENCY"), (
         "_currency_predicates must import DEFAULT_CURRENCY from external_constants"
@@ -570,8 +568,8 @@ def test_aggregation_predicates_read_currency_from_external_constants() -> None:
 def test_config_financial_base_currency_default_equals_default_currency() -> None:
     """``Settings.financial_base_currency`` default equals ``DEFAULT_CURRENCY``."""
 
-    from aeat.core.config import Settings
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from .config import Settings
+    from .external_constants import DEFAULT_CURRENCY
 
     settings = Settings()
     assert settings.financial_base_currency == DEFAULT_CURRENCY
@@ -582,8 +580,8 @@ def test_blob_store_put_default_content_type_reads_from_external_constants() -> 
 
     import inspect
 
-    from aeat.adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
-    from aeat.core.external_constants import BINARY_MIME_TYPE
+    from ..adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
+    from .external_constants import BINARY_MIME_TYPE
 
     sig = inspect.signature(EncryptedBlobStore.put)
     default = sig.parameters["content_type"].default
@@ -601,7 +599,7 @@ def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
 
     import importlib
 
-    from aeat.core.external_constants import BINARY_MIME_TYPE
+    from .external_constants import BINARY_MIME_TYPE
 
     mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
 
@@ -618,7 +616,7 @@ def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
 def test_classified_by_manual_value() -> None:
     """``CLASSIFIED_BY_MANUAL`` equals the sentinel stored in persisted records."""
 
-    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+    from .external_constants import CLASSIFIED_BY_MANUAL
 
     assert CLASSIFIED_BY_MANUAL == "manual"
 
@@ -626,7 +624,7 @@ def test_classified_by_manual_value() -> None:
 def test_classified_by_manual_is_final_str() -> None:
     """``CLASSIFIED_BY_MANUAL`` is a ``str`` instance (typed ``Final[str]``)."""
 
-    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+    from .external_constants import CLASSIFIED_BY_MANUAL
 
     assert isinstance(CLASSIFIED_BY_MANUAL, str)
 
@@ -641,7 +639,7 @@ def test_application_ledger_imports_classified_by_manual_from_core() -> None:
 
     import importlib
 
-    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+    from .external_constants import CLASSIFIED_BY_MANUAL
 
     ledger_init = importlib.import_module("aeat.application.ledger")
 
@@ -661,7 +659,7 @@ def test_application_ledger_models_does_not_define_classified_by_manual_locally(
 
     import importlib
 
-    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+    from .external_constants import CLASSIFIED_BY_MANUAL
 
     models_mod = importlib.import_module("aeat.application.ledger._models")
 
@@ -681,7 +679,7 @@ def test_domain_transactions_service_imports_classified_by_manual_from_core() ->
 
     import importlib
 
-    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+    from .external_constants import CLASSIFIED_BY_MANUAL
 
     service_mod = importlib.import_module("aeat.domain.transactions._service")
 
@@ -749,7 +747,7 @@ def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None
 def test_json_mime_type_value() -> None:
     """``JSON_MIME_TYPE`` equals the IANA-registered JSON MIME type."""
 
-    from aeat.core.external_constants import JSON_MIME_TYPE
+    from .external_constants import JSON_MIME_TYPE
 
     assert JSON_MIME_TYPE == "application/json"
 
@@ -757,7 +755,7 @@ def test_json_mime_type_value() -> None:
 def test_csv_mime_type_value() -> None:
     """``CSV_MIME_TYPE`` equals the IANA-registered CSV MIME type."""
 
-    from aeat.core.external_constants import CSV_MIME_TYPE
+    from .external_constants import CSV_MIME_TYPE
 
     assert CSV_MIME_TYPE == "text/csv"
 
@@ -765,7 +763,7 @@ def test_csv_mime_type_value() -> None:
 def test_json_mime_type_is_final_str() -> None:
     """``JSON_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
 
-    from aeat.core.external_constants import JSON_MIME_TYPE
+    from .external_constants import JSON_MIME_TYPE
 
     assert isinstance(JSON_MIME_TYPE, str)
 
@@ -773,7 +771,7 @@ def test_json_mime_type_is_final_str() -> None:
 def test_csv_mime_type_is_final_str() -> None:
     """``CSV_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
 
-    from aeat.core.external_constants import CSV_MIME_TYPE
+    from .external_constants import CSV_MIME_TYPE
 
     assert isinstance(CSV_MIME_TYPE, str)
 
@@ -788,7 +786,7 @@ def test_declarations_uses_json_mime_constant() -> None:
 
     import importlib
 
-    from aeat.core.external_constants import JSON_MIME_TYPE
+    from .external_constants import JSON_MIME_TYPE
 
     mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
 
@@ -809,7 +807,7 @@ def test_tabular_export_uses_csv_mime_constant() -> None:
 
     import importlib
 
-    from aeat.core.external_constants import CSV_MIME_TYPE
+    from .external_constants import CSV_MIME_TYPE
 
     mod = importlib.import_module("aeat.application.export._tabular")
 
@@ -856,9 +854,9 @@ def test_m347_threshold_eur_value() -> None:
 
     from decimal import Decimal
 
-    from aeat.core.external_constants import M347_THRESHOLD_EUR
+    from .external_constants import M347_THRESHOLD_EUR
 
-    assert M347_THRESHOLD_EUR == Decimal("3005.06")
+    assert Decimal("3005.06") == M347_THRESHOLD_EUR
 
 
 def test_m347_threshold_eur_is_final_decimal() -> None:
@@ -866,7 +864,7 @@ def test_m347_threshold_eur_is_final_decimal() -> None:
 
     from decimal import Decimal
 
-    from aeat.core.external_constants import M347_THRESHOLD_EUR
+    from .external_constants import M347_THRESHOLD_EUR
 
     assert isinstance(M347_THRESHOLD_EUR, Decimal)
 
@@ -876,7 +874,7 @@ def test_counterpart_aggregator_reads_threshold_from_external_constants() -> Non
 
     import importlib
 
-    from aeat.core.external_constants import M347_THRESHOLD_EUR
+    from .external_constants import M347_THRESHOLD_EUR
 
     mod = importlib.import_module("aeat.application.aggregation._counterpart")
 
@@ -931,9 +929,9 @@ def test_modelo_720_reporting_threshold_eur_value() -> None:
 
     from decimal import Decimal
 
-    from aeat.core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+    from .external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
-    assert MODELO_720_REPORTING_THRESHOLD_EUR == Decimal("50000.00")
+    assert Decimal("50000.00") == MODELO_720_REPORTING_THRESHOLD_EUR
 
 
 def test_modelo_720_reporting_threshold_eur_is_final_decimal() -> None:
@@ -941,7 +939,7 @@ def test_modelo_720_reporting_threshold_eur_is_final_decimal() -> None:
 
     from decimal import Decimal
 
-    from aeat.core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+    from .external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
     assert isinstance(MODELO_720_REPORTING_THRESHOLD_EUR, Decimal)
 
@@ -951,7 +949,7 @@ def test_foreign_assets_aggregator_reads_threshold_from_external_constants() -> 
 
     import importlib
 
-    from aeat.core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
+    from .external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
     mod = importlib.import_module("aeat.application.aggregation._foreign_assets")
 

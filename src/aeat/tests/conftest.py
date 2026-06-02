@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests._marker_hook import apply as _apply_marker_contract
+from ._marker_hook import apply as _apply_marker_contract
 
 LIVE_ACCESS_MARKERS: frozenset[str] = frozenset({"live_read", "live_write"})
 """Access markers that count as ``live`` for banned-import / opt-in gating."""

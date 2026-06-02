@@ -6,15 +6,15 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.aggregation import (
+from . import (
     CounterpartObservation,
     OperationKind349,
     PerModeloAggregationCommand,
     PerModeloAggregationProvider,
     resolve_per_modelo_registry_binding_values,
 )
-from aeat.application.aggregation._counterpart import CounterpartSourceKind
-from aeat.core.resources import resources
+from ._counterpart import CounterpartSourceKind
+from ...core.resources import resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

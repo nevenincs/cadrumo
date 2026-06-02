@@ -26,7 +26,7 @@ from functools import cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._formula_runtime import calculate_registry_snapshot
 from ._loader import load_registry_tree
@@ -42,7 +42,7 @@ _SOURCE_ROOT = bundled_path()
 def _registry():
     """Load the registry tree once for the session."""
     # Import for side-effect: cross-domain snapshot checks.
-    import aeat.domain.renta  # noqa: F401
+    from ... import renta  # noqa: F401
 
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     return {m.id: m for m in modelos}, catalogues

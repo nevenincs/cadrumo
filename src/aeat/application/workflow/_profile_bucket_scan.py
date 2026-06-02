@@ -112,11 +112,11 @@ def read_profile_bucket(
 
 
 def read_profile_bucket_by_id(profile_id: str, *, root: Path | None = None) -> ProfileBucketPointer | None:
-    """Return the bucket pointer for the profile whose UUID is ``profile_id``.
+    """Return the :class:`ProfileBucketPointer` for the profile whose UUID is ``profile_id``.
 
     Resolves ``<root>/buckets/<profile_id>/manifest.toml`` directly.
     Returns ``None`` when the manifest is absent. Resolves a profile
-    regardless of lifecycle status — a tombstoned profile is still
+    regardless of lifecycle status - a tombstoned profile is still
     addressable by its UUID so ``show`` and diagnostics can inspect it;
     the returned pointer carries the manifest ``status`` so the caller
     can branch on it.
@@ -196,7 +196,11 @@ def list_profile_buckets(
 
 
 def list_profile_bucket_scan_issues(*, root: Path | None = None) -> tuple[ProfileBucketScanIssue, ...]:
-    """Return non-sensitive manifest-scan issues found under the profile root."""
+    """Return non-sensitive manifest-scan issues found under the profile root.
+
+    Each element is a :class:`ProfileBucketScanIssue` describing one
+    structural problem found in the profile bucket directories.
+    """
     resolved_root = _resolve_root(root)
     buckets_root = resolved_root / BUCKETS_DIRNAME
     if not buckets_root.is_dir():

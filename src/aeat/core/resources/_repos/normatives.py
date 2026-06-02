@@ -42,13 +42,21 @@ class NormativeRepository(ResourceCacheRepository["NormativeCatalogue", None]):
         return self.get(None)
 
     def find_reference(self, ref_id: str) -> NormativeReference:
-        """Look up a normative reference by id via the singleton catalogue."""
+        """Look up a normative reference by id via the singleton catalogue.
+
+        Returns:
+            The matching :class:`NormativeReference` from the catalogue.
+        """
         from ....domain.normatives import find_reference
 
         return find_reference(self.singleton, ref_id)
 
     def find_articulo(self, ref_id: str, articulo: str) -> Articulo:
-        """Look up a normative articulo via the singleton catalogue."""
+        """Look up a normative articulo via the singleton catalogue.
+
+        Returns:
+            The matching :class:`Articulo` from the normative reference.
+        """
         from ....domain.normatives import find_articulo
 
         return find_articulo(self.singleton, ref_id, articulo)

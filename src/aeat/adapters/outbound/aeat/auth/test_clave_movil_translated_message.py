@@ -18,7 +18,6 @@ Coverage:
 from __future__ import annotations
 
 import asyncio
-import json
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -31,7 +30,6 @@ from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from ._authenticator import AeatLoginAssertionError
 from ._clave_movil import ClaveMovilAuthProvider, _ClaveMovilSessionMetadata
-from ._providers import AuthProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

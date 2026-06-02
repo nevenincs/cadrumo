@@ -27,12 +27,12 @@ import os
 
 import pytest
 
-from aeat.adapters.outbound.storage import (
+from . import (
     OutboundStorageNotFoundError,
     StorageProvider,
     get_storage_provider,
 )
-from aeat.core.logging import get_logger
+from ....core.logging import get_logger
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
@@ -49,7 +49,7 @@ def _live_profile() -> str:
 def _skip_unless_drive_configured() -> None:
     if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
         pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
-    from aeat.core.config import load_settings
+    from ....core.config import load_settings
 
     settings = load_settings()
     if settings.aeat_storage_provider_kind != "google_drive":

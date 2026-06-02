@@ -23,6 +23,7 @@ from typing import ClassVar
 import pytest
 from pydantic import BaseModel, ConfigDict
 
+from .....core.config import Settings
 from .. import SensitivityClass
 from ..sql import SecureObjectRepository
 from ..sql._orm import Base
@@ -33,7 +34,6 @@ from ._repository_test_suite import (
     assert_secure_repository_contract,
 )
 from ._secure_repository import SecureBoundRepository
-from .....core.config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

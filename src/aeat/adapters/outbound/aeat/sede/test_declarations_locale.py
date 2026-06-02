@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.i18n import tr
+from .....core.i18n import tr
 
 from ._declarations import _parse_listbox
 from ._errors import SedeNavigationError, SedeParseError

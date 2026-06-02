@@ -15,7 +15,6 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
-from .._errors import LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
 
@@ -71,7 +70,7 @@ class LocalAdapter(_ProviderAdapter):
             request: Normalized provider request.
 
         Returns:
-            Normalized completion containing the trimmed assistant message
+            :class:`ProviderCompletion` containing the trimmed assistant message
             and reported token counts.
 
         Raises:

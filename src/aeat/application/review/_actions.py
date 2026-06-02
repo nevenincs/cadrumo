@@ -20,7 +20,7 @@ def update_ledger_review(
     action: str,
     reason: str = "",
 ) -> WorkflowState:
-    """Return state with workflow attention history for one transaction."""
+    """Return a :class:`WorkflowState` with workflow attention history for one transaction."""
     if fields:
         raise ReviewError("ledger review annotations must not store durable ledger fields")
     if skipped is not None:
@@ -47,7 +47,7 @@ def update_invoice_review(
     action: str,
     reason: str = "",
 ) -> WorkflowState:
-    """Return state with review metadata updated for one invoice."""
+    """Return the updated :class:`WorkflowState` with review metadata for one invoice applied."""
     reviews = dict(state.invoice_reviews)
     current = reviews.get(invoice_id, InvoiceReviewRecord(invoice_id=invoice_id))
     if isinstance(current, dict):

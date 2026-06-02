@@ -83,6 +83,7 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
+  "torch>=2.4",
 ]
 
 [project.scripts]
@@ -130,6 +131,9 @@ explicit = true
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
 ]
+
+[tool.vaultspec-rag]
+managed-torch-direct-dependency = true
 [dependency-groups]
 dev = [
   # Import-linter for layered-architecture boundary enforcement.
@@ -218,6 +222,25 @@ ignore = [
   "S101",  # allow assert in tests
   "TID252",  # tolerate relative parent imports within subpackages
   "N813",  # `Translatable as tr` is the canonical i18n alias across the codebase
+  # Spanish-language ambiguous-unicode checks are noise on this project:
+  # the codebase quotes BOE, AEAT, and other regulatory sources verbatim,
+  # which contains accented Latin glyphs (á é í ó ú ñ) and the inverted
+  # punctuation marks (¿ ¡). These are linguistically correct, not
+  # confusables, and tagging them as ambiguous would degrade legal-source
+  # fidelity. RUF001/002/003 are turned off project-wide on that basis.
+  "RUF001",  # ambiguous-unicode-character-string (Spanish chars in literals)
+  "RUF002",  # ambiguous-unicode-character-docstring (Spanish chars in docstrings)
+  "RUF003",  # ambiguous-unicode-character-comment (Spanish chars in comments)
+  # RUF012 (mutable-class-default) is a false positive for pydantic
+  # BaseModel subclasses, which are the dominant boundary-record
+  # pattern in this codebase. pydantic deep-copies field defaults on
+  # every instance construction (see pydantic-core's `deepcopy_default`
+  # path) so a `list[str] = []` default on a BaseModel attribute does
+  # NOT exhibit the shared-mutable-state bug ruff is warning about.
+  # The check would still be useful on plain @dataclass / NamedTuple /
+  # bare class state but the project's models are predominantly
+  # pydantic; ignoring project-wide is the right trade.
+  "RUF012",  # mutable-class-default (pydantic field defaults — safe)
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -380,6 +403,35 @@ convention = "google"
 # W14 aggregate closure test uses RATIONALE marker strings as assertion
 # tokens; ruff's S105 heuristic misreads these as hardcoded passwords.
 "src/aeat/test_w14_p46_survivor_closure.py" = ["S105"]
+# The wave-closure aggregate tests under src/aeat/ enumerate RATIONALE marker
+# strings ("password", "secret", "token", etc.) as assertion tokens to prove
+# the ratchet covers them; ruff's S105/S106 heuristic flags every such
+# literal as a hardcoded password. They are not credentials.
+"src/aeat/test_w15_p47_maintenance_closure.py" = ["S105", "S106"]
+"src/aeat/test_w17_p49_closure.py" = ["S105", "S106"]
+"src/aeat/test_w18_p50_closure.py" = ["S105", "S106"]
+"src/aeat/test_w20_p52_closure.py" = ["S105", "S106"]
+"src/aeat/test_w22_p54_closure.py" = ["S105", "S106"]
+"src/aeat/test_w26_p59_closure.py" = ["S105", "S106"]
+"src/aeat/test_w26_p60_closure.py" = ["S105", "S106"]
+"src/aeat/test_w27_p61_closure.py" = ["S105", "S106"]
+"src/aeat/test_w28_p62_closure.py" = ["S105", "S106"]
+# Same pattern for the rationale-marker ratchets and their broad-except /
+# any-return / narrowed-except cousins under src/aeat/.
+"src/aeat/test_any_return_rationale_markers.py" = ["S105", "S106"]
+"src/aeat/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
+"src/aeat/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
+"src/aeat/test_ratchet_extensions_and_marker_completion.py" = ["S105", "S106"]
+# OAuth / mTLS / clave-pin fixture authoring uses literal credential
+# shape examples (e.g., the example access_token "ya29.fake-bearer"
+# documented in the AEAT auth ADR); they are not real credentials.
+"src/aeat/adapters/outbound/aeat/auth/_fixtures.py" = ["S105", "S106"]
+# Test modules under master_key/ exercise the passphrase-rejection paths
+# with literal short / weak / sentinel passphrases as assertion inputs.
+"src/aeat/adapters/persistence/storage/master_key/test_master_key.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/test_path_safety.py" = ["S105", "S106"]
+"src/aeat/core/test_logging.py" = ["S105", "S106"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.

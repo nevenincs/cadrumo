@@ -7,13 +7,11 @@ source outside the canonical StrEnum definition.
 
 from __future__ import annotations
 
-import ast
 import re
-from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from ...core.paths import PROJECT_ROOT
 
 from ._actions import LedgerProviderID
 
@@ -71,6 +69,6 @@ def test_no_bare_string_dispatch_survivors_in_actions() -> None:
             lines_with_bare_dispatch.append(f"_actions.py:{i}: {stripped!r}")
 
     assert not lines_with_bare_dispatch, (
-        f"Bare provider_id string comparison(s) survived migration:\n"
+        "Bare provider_id string comparison(s) survived migration:\n"
         + "\n".join(f"  {l}" for l in lines_with_bare_dispatch)
     )

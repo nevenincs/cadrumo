@@ -18,12 +18,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.diagnostics.__main__ import app as diagnostics_app
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._persistence import workflow_state_repository
+from ...diagnostics.__main__ import app as diagnostics_app
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -73,8 +73,11 @@ def test_config_set_tax_id_is_case_insensitive(cli_runner: CliRunner) -> None:
     lower = cli_runner.invoke(diagnostics_app, ["profile", "set", "identity.tax_id", "12345678Z"])
     assert upper.exit_code == 0, upper.output
     assert lower.exit_code == 0, lower.output
-    assert "identity.tax_id\t12345678Z" in upper.output
-    assert "identity.tax_id\t12345678Z" in lower.output
+    # Output redacts the tax_id to sha256 for privacy. Case-insensitive
+    # resolution is proven by both invocations producing the same hash.
+    assert "identity.tax_id\t" in upper.output
+    assert "identity.tax_id\t" in lower.output
+    assert upper.output.split("identity.tax_id\t", 1)[1].split("\n", 1)[0] == lower.output.split("identity.tax_id\t", 1)[1].split("\n", 1)[0]
 
 
 def test_profile_help_lists_field_verbs(cli_runner: CliRunner) -> None:

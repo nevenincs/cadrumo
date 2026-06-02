@@ -32,26 +32,26 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.aggregation import (
+from . import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
-from aeat.application.aggregation._errors import AggregationValidationError
-from aeat.core.paths import PROJECT_ROOT
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ._errors import AggregationValidationError
+from ...core.paths import PROJECT_ROOT
+from ...core.resources import resources
+from ...domain.calculations.registry import (
     ModeloRevision,
     OssIossLedgerObservation,
 )
-from aeat.domain.iva import (
+from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
-    OssIossRegime,
-    TransactionKind,
     IvaRateKind,
     IvaRateNotFoundError,
+    OssIossRegime,
+    TransactionKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

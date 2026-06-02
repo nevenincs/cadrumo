@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.errors import AeatError, CoreError, CoreValidationError
-from aeat.core.errors._not_found import CoreNotFoundError
+from . import AeatError, CoreError, CoreValidationError
+from ._not_found import CoreNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -135,7 +135,7 @@ def test_core_error_does_not_catch_non_core_aeat_error() -> None:
     (McpLaunchError inherits AeatError directly, not CoreError) raised
     inside a try block is NOT caught by a CoreError handler.
     """
-    from aeat.core.errors import McpLaunchError  # noqa: PLC0415
+    from . import McpLaunchError
 
     with pytest.raises(McpLaunchError):
         try:

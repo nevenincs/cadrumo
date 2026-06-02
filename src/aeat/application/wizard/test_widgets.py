@@ -14,15 +14,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.wizard._errors import WizardValidationError
-from aeat.application.wizard._models import (
+from ._errors import WizardValidationError
+from ._models import (
     WizardChoice,
     WizardCondition,
     WizardQuestion,
     WizardWidget,
 )
-from aeat.application.wizard._widgets import validate_widget_answer
-from aeat.core.i18n import Translatable as tr
+from ._widgets import validate_widget_answer
+from ...core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -275,7 +275,7 @@ def test_error_carries_prompt_key_context() -> None:
     assert error.context is not None
     # `prompt_key` is the resolved field label, never the raw
     # translation key path.
-    from aeat.core.i18n import tr as _tr
+    from ...core.i18n import tr as _tr
 
     assert error.context["prompt_key"] == _tr(str(_TEXT_PROMPT))
     assert "prompt_key_path" not in error.context

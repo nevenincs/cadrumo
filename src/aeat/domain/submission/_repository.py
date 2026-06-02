@@ -17,7 +17,7 @@ from ...core.logging import get_logger
 from ._models import ModeloPresentado
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    pass
 
 _log = get_logger(__name__)
 
@@ -45,6 +45,9 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         rather than aborting the iteration. Diagnostic surfaces depend
         on listing all healthy submissions even when a single row is
         unreadable.
+
+        Returns:
+            Iterator over :class:`ModeloPresentado` records.
         """
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 

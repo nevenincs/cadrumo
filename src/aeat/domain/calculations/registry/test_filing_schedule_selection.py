@@ -6,8 +6,8 @@ from collections.abc import Callable
 
 import pytest
 
-from aeat.core.resources import bundled_path
-from aeat.domain.deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
+from ....core.resources import bundled_path
+from ...deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
 
 from ...user_profile import (
     UserProfileRegistryContractSeverity,

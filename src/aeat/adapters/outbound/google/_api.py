@@ -27,7 +27,7 @@ class _ExecutableRequest(Protocol):
     the concrete stub type while still narrowing away bare ``Any``.
     """
 
-    def execute(self, http: object = None, num_retries: int = 0) -> Any: ...  # noqa: D102
+    def execute(self, http: object = None, num_retries: int = 0) -> Any: ...
 
 
 # The google-api-python-client wire protocol returns JSON-decoded dicts whose

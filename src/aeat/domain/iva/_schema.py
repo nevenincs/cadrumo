@@ -369,7 +369,7 @@ class IvaCatalogue(_IvaStrictMutable):
         return key in self.regulations
 
     def get(self, category: IvaCategory) -> IvaRegulation | None:
-        """Return the regulation for ``category`` or ``None`` if absent."""
+        """Return the :class:`IvaRegulation` for ``category`` or ``None`` if absent."""
         return self.regulations.get(category)
 
 
@@ -404,7 +404,11 @@ class IvaVerificationReport(_IvaStrictFrozen):
 
     @property
     def errors(self) -> tuple[IvaVerificationIssue, ...]:
-        """Return the subset of issues whose :attr:`IvaVerificationIssue.level` is ``"error"``."""
+        """Return the subset of issues whose :attr:`IvaVerificationIssue.level` is ``"error"``.
+
+        Returns:
+            Tuple of :class:`IvaVerificationIssue` objects with error-level severity.
+        """
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property

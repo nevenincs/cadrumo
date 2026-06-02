@@ -31,11 +31,10 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ...core._bucket_pointer_io import resolve_active_bucket_id
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
 from ..auth._models import AuthState
 from ._utils import utc_now
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -275,7 +274,7 @@ def active_transaction_catalogue_repository(
     *,
     objects: SecureObjectRepository | None = None,
 ) -> TransactionCatalogueRepository:
-    """Return the transaction catalogue repository for the active profile bucket."""
+    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket."""
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
     from ._errors import NoActiveProfileError
 
@@ -300,7 +299,10 @@ def update_declaration_pointer(
     exported_path: str | None = None,
     verified: bool | None = None,
 ) -> WorkflowState:
-    """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
+    """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``.
+
+    Returns the updated :class:`WorkflowState` with the pointer recorded.
+    """
     import json as _json
 
     declarations: dict[str, DeclaracionPointer] = dict(state.declarations)

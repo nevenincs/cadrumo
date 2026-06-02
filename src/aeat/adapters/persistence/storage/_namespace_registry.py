@@ -11,10 +11,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.classification import SensitivityClass
 from .errors import NamespaceRegistryError
-
-from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
@@ -173,21 +172,21 @@ class StorageHierarchyRegistry(BaseModel):
         return self
 
     def namespace_by_key(self, key: str) -> SecureObjectNamespaceDefinition:
-        """Return a namespace definition by registry key."""
+        """Return a :class:`SecureObjectNamespaceDefinition` by registry key."""
         for namespace in self.namespaces:
             if namespace.key == key:
                 return namespace
         raise KeyError(key)
 
     def namespace_by_value(self, value: str) -> SecureObjectNamespaceDefinition:
-        """Return a namespace definition by persisted namespace value."""
+        """Return a :class:`SecureObjectNamespaceDefinition` by persisted namespace value."""
         for namespace in self.namespaces:
             if namespace.namespace == value:
                 return namespace
         raise KeyError(value)
 
     def path_by_key(self, key: str) -> StoragePathDefinition:
-        """Return a path definition by registry key."""
+        """Return a :class:`StoragePathDefinition` by registry key."""
         for path in self.paths:
             if path.key == key:
                 return path

@@ -32,7 +32,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Final
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
@@ -108,13 +108,13 @@ def resolve_relations_from_local_store(
     repository: CalculationObservationRepository | None = None,
     captured_at: datetime | None = None,
 ) -> RelationValues:
-    """Build a `RelationValues` record from the local observation store.
+    """Build a :class:`RelationValues` record from the local observation store.
 
-    Returns a `RelationValues` whose `values` tuple has one
-    `RelationValue` per relation declared in the snapshot's
+    Returns a :class:`RelationValues` whose ``values`` tuple has one
+    ``RelationValue`` per relation declared in the snapshot's
     revision, with provenance stamped per entry. Relations the
-    local store cannot resolve get `value=None` and
-    `provenance="operator_manual"` so the engine emits a blank cell
+    local store cannot resolve get ``value=None`` and
+    ``provenance="operator_manual"`` so the engine emits a blank cell
     the operator can fill by hand.
     """
     repo = repository if repository is not None else CalculationObservationRepository()

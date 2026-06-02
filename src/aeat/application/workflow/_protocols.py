@@ -24,7 +24,6 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ...domain.submission._protocols import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
@@ -33,6 +32,7 @@ from ...domain.deadlines import Schedule, TaxpayerProfile
 # engine re-exports them here so adapters can import the contract from
 # the workflow package without taking a second divergent definition.
 from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
+from ...domain.submission._protocols import ModeloDraftLike
 
 
 @runtime_checkable
@@ -70,7 +70,7 @@ class ModeloDraftBuilderProtocol(Protocol):
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Build and return a registry-backed filing draft."""
+        """Build and return a :class:`RegistryModeloDraftProtocol` registry-backed filing draft."""
         ...
 
 
@@ -106,7 +106,11 @@ class CertificateBundleProtocol(Protocol):
     """
 
     def describe(self) -> AuthProviderDescription:
-        """Return the current auth-provider description; raise on failure."""
+        """Return the current auth-provider description; raise on failure.
+
+        Returns an :class:`AuthProviderDescription` with the provider's
+        configured and available state.
+        """
         ...
 
 

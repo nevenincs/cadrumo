@@ -22,8 +22,8 @@ from typing import cast
 
 import pytest
 
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -85,7 +85,7 @@ def _active_bucket_id() -> str:
     field to ``<bucket-id>``. Test-side seeders (``_seed_purchase_invoice_evidence``)
     require the un-redacted UUID to persist matching bucket records.
     """
-    from aeat.application.workflow._models import resolve_active_bucket_id
+    from ...application.workflow._models import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "no active profile bucket resolved"
@@ -278,12 +278,12 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
 
 def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
     """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
-    from aeat.adapters.persistence.storage import (
+    from ...adapters.persistence.storage import (
         activate_master_key_provider,
         get_master_key_provider,
     )
-    from aeat.domain.categories import SpendingCategory
-    from aeat.domain.usage_ratios import UsageRatioProfile, save_usage_ratios
+    from ...domain.categories import SpendingCategory
+    from ...domain.usage_ratios import UsageRatioProfile, save_usage_ratios
 
     with activate_master_key_provider(get_master_key_provider()):
         save_usage_ratios(
@@ -478,11 +478,11 @@ def _drive_ledger_lifecycle_round_trip(
 
 def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
     """Persist one RECEIVED purchase invoice and return its id."""
-    from aeat.adapters.persistence.storage import (
+    from ...adapters.persistence.storage import (
         activate_master_key_provider,
         get_master_key_provider,
     )
-    from aeat.domain.invoices import (
+    from ...domain.invoices import (
         Invoice,
         InvoiceCatalogue,
         InvoiceCatalogueRepository,
@@ -490,7 +490,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
         IvaRate,
         PaymentStatus,
     )
-    from aeat.domain.iva import InvoiceKind
+    from ...domain.iva import InvoiceKind
 
     purchase_line = InvoiceLine(
         description="Material oficina",

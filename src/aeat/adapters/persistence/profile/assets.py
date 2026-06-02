@@ -10,16 +10,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.errors import AeatError
 from ....core.logging import get_logger
+from ....domain.profile._errors import AssetRecordError
 from ....domain.profile.assets import (
     AmortizacionLedger,
     AssetRecord,
     AssetsLedgerDocument,
 )
-from ....domain.profile._errors import AssetRecordError
 from ..storage import SensitivityClass
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
@@ -38,7 +38,7 @@ def load_assets() -> tuple[AssetRecord, ...]:
     """Load persisted asset records from the encrypted ledger.
 
     Returns:
-        Tuple of persisted asset records, empty when the ledger is absent.
+        Tuple of :class:`AssetRecord` entries, empty when the ledger is absent.
     """
     return AssetsLedgerRepository().load().assets
 
@@ -64,7 +64,7 @@ def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
         asset: Asset record to insert.
 
     Returns:
-        The updated ledger document including the newly inserted asset.
+        The updated :class:`AssetsLedgerDocument` including the newly inserted asset.
     """
     return AssetsLedgerRepository().add(asset)
 
@@ -73,7 +73,7 @@ def load_amortizacion_ledger() -> AmortizacionLedger:
     """Load the amortizacion ledger, returning an empty ledger when absent.
 
     Returns:
-        Persisted amortizacion ledger or an empty one when no envelope exists.
+        Persisted :class:`AmortizacionLedger` or an empty one when no envelope exists.
     """
     return AmortizacionLedgerRepository().load()
 
@@ -113,7 +113,7 @@ class AssetsLedgerRepository:
         """Load the ledger, returning an empty document when absent.
 
         Returns:
-            Decrypted assets ledger document.
+            Decrypted :class:`AssetsLedgerDocument`.
 
         Raises:
             AssetRecordError: When the envelope exists but cannot be loaded or decrypted.
@@ -147,7 +147,7 @@ class AssetsLedgerRepository:
             asset: Asset record to insert.
 
         Returns:
-            The ledger document including the new asset.
+            The :class:`AssetsLedgerDocument` including the new asset.
 
         Raises:
             AssetRecordError: When an asset with the same identifier already exists.
@@ -207,7 +207,7 @@ class AmortizacionLedgerRepository:
         """Load the ledger, returning an empty document when absent.
 
         Returns:
-            Decrypted amortizacion ledger.
+            Decrypted :class:`AmortizacionLedger`.
 
         Raises:
             AssetRecordError: When the envelope exists but cannot be loaded or decrypted.

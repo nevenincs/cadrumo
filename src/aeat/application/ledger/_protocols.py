@@ -28,11 +28,15 @@ class FinancialProviderProtocol(Protocol):
     """
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield raw transactions from ``path``."""
+        """Yield raw transactions from ``path``.
+
+        Each yielded item is a :class:`RawTransaction` parsed from the
+        provider-format file at ``path``.
+        """
         ...
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate ``path`` and return a typed validation result."""
+        """Validate ``path`` and return a :class:`ProviderValidation` result."""
         ...
 
 

@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede._declarations import Declaracion
-from aeat.adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-from aeat.application.live._expedientes import (
+from ...adapters.outbound.aeat.sede._declarations import Declaracion
+from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+from ._expedientes import (
     ExpedientesCapture,
     ExpedientesService,
     ExpedientesSnapshotNotFoundError,
     expedientes_snapshot_object_key,
 )
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -11,18 +11,18 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.adapters.outbound.aeat.sede import (
+from ...adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
 )
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.auth import AuthProviderKind
-from aeat.application.live import (
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.auth import AuthProviderKind
+from ...application.live import (
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryReport,
     IvaCompensationHistoryRow,
@@ -32,16 +32,16 @@ from aeat.application.live import (
     filed_data_listing_row,
     select_declarations_for_capture,
 )
-from aeat.application.registry import (
+from ...application.registry import (
     RegistryTreeReport,
     verify_filed_state,
 )
-from aeat.core.access_gate import AeatLiveReadNotEnabledError
-from aeat.core.config import override_settings
-from aeat.core.resources import bundled_path, resources
-from aeat.domain.calculations.registry import calculate_registry_snapshot
-from aeat.entrypoints.cli._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
-from aeat.tests.cli_runner import invoke_cached_cli
+from ...core.access_gate import AeatLiveReadNotEnabledError
+from ...core.config import override_settings
+from ...core.resources import bundled_path, resources
+from ...domain.calculations.registry import calculate_registry_snapshot
+from ._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
+from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

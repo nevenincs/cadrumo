@@ -231,7 +231,7 @@ class AeatSession(BaseModel):
 
     @property
     def handshake(self) -> HandshakeResult | None:
-        """Embedded TLS-leg handshake outcome; ``None`` for non-certificate providers."""
+        """Embedded TLS-leg :class:`HandshakeResult`; ``None`` for non-certificate providers."""
         if isinstance(self.provider_detail, CertificateSessionDetail):
             return self.provider_detail.handshake
         return None
@@ -450,7 +450,7 @@ class AeatAuthenticator:
     # ── Synchronous helpers ─────────────────────────────────────────────────
 
     def load_certificate(self) -> LoadedCertificate:
-        """Load the configured PKCS#12 bundle and return a frozen record."""
+        """Load the configured PKCS#12 bundle and return a :class:`LoadedCertificate`."""
         bundle = self._require_bundle()
         return load_certificate(bundle)
 
@@ -504,7 +504,7 @@ class AeatAuthenticator:
             target_url: Optional override URL for the authentication target.
 
         Returns:
-            An authenticated :class:`AeatSession` ready for use.
+            An authenticated :class:`AeatSession` ready for downstream use.
 
         Raises:
             AeatLoginAssertionError: When the browser session factory returns a context
@@ -746,7 +746,11 @@ class AeatAuthenticator:
         *,
         target_url: str | None = None,
     ) -> AeatLoginAssertion:
-        """Provider-protocol alias for :meth:`verify_login`."""
+        """Provider-protocol alias for :meth:`verify_login`.
+
+        Returns:
+            A :class:`AeatLoginAssertion` describing the verification outcome.
+        """
         return await self.verify_login(session, target_url=target_url)
 
     async def capture_storage_state(self, session: AeatSession) -> Path:
@@ -766,7 +770,11 @@ class AeatAuthenticator:
         browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
-        """Resume a persisted AEAT browser session from ``path``."""
+        """Resume a persisted AEAT browser session from ``path``.
+
+        Returns:
+            An :class:`AeatSession` reconstructed from the persisted state.
+        """
         async with self._lock:
             if self._context is not None:
                 raise AuthValidationError(
@@ -780,7 +788,7 @@ class AeatAuthenticator:
             )
 
     def describe(self) -> AuthProviderDescription:
-        """Return a safe summary of the configured auth provider.
+        """Return an :class:`AuthProviderDescription` with a safe summary of the configured provider.
 
         Three distinct certificate states surface here, each with its
         own ``health_summary`` and ``health_severity`` so a downstream

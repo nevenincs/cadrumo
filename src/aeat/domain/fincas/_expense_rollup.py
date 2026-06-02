@@ -22,9 +22,9 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.money import round_to_cents as _round_to_cents
 from ._enums import ExpenseCategory
 from ._models import FincaGasto
-from ...core.money import round_to_cents as _round_to_cents
 
 CARRY_FORWARD_MAX_YEARS: int = 4
 """LIRPF art. 23.1.a) párrafo segundo: ``en los cuatro años siguientes``."""

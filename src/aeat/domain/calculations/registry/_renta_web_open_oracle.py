@@ -218,7 +218,7 @@ class RentaWebOpenOracle:
 
 
 def parse_renta_web_open_live_payload(payload: bytes) -> RentaWebOpenLivePayload:
-    """Parse the optional JSON payload for Renta WEB Open verification."""
+    """Parse the optional JSON payload and return a :class:`RentaWebOpenLivePayload`."""
     if not payload:
         return RentaWebOpenLivePayload()
     try:

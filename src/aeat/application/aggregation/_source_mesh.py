@@ -22,6 +22,7 @@ from ...core.logging import get_logger
 from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
 
+
 class SourceMeshError(CoreValidationError):
     """Raised when a ``CalculationSourceMesh`` field validator rejects an invariant.
 
@@ -34,6 +35,7 @@ class SourceMeshError(CoreValidationError):
     """
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 _log = get_logger(__name__)
 
 CalculationSourceDiagnosticReason = Literal[
@@ -167,14 +169,21 @@ class ModeloSourceResolver(Protocol):
         """Registry binding source kinds this resolver owns."""
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        """Resolve source-backed calculation values for ``context``."""
+        """Resolve source-backed calculation values for ``context``.
+
+        Returns a :class:`CalculationSourceResolution` carrying resolved
+        binding values, provenance, and any source diagnostics.
+        """
 
 def merge_source_resolutions(
     resolutions: Sequence[CalculationSourceResolution],
     *,
     resolver_id: str = "source_mesh",
 ) -> CalculationSourceResolution:
-    """Merge resolver outputs and reject ambiguous ownership."""
+    """Merge resolver outputs and reject ambiguous ownership.
+
+    Returns a :class:`CalculationSourceResolution`.
+    """
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
     relation_values: dict[str, Decimal] = {}
@@ -223,7 +232,7 @@ def collect_unhandled_source_diagnostics(
     handled_sources: frozenset[str],
     manual_sources: frozenset[str] = frozenset({"manual_input"}),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Return diagnostics for revision bindings with no enrolled resolver."""
+    """Return :class:`CalculationSourceDiagnostic` entries for revision bindings with no enrolled resolver."""
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in revision.bindings:
         source = str(binding.source)
@@ -246,7 +255,7 @@ def storage_degradation_resolution(
     source_kinds: Sequence[str],
     error: BaseException,
 ) -> CalculationSourceResolution:
-    """Return an empty source resolution carrying secure-storage degradation diagnostics."""
+    """Return an empty :class:`CalculationSourceResolution` carrying secure-storage degradation diagnostics."""
     normalized_sources = tuple(sorted({source.strip() for source in source_kinds if source.strip()}))
     _log.debug(
         "source mesh resolver storage degradation resolver_id=%s source_kinds=%s error_type=%s",

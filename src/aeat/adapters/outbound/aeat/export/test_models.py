@@ -15,9 +15,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....domain.submission import (
+    ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    ModeloPresentado,
     make_submission_id,
 )
 

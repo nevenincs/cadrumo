@@ -19,12 +19,12 @@ import click
 import pytest
 import typer
 
-from aeat.application.review import LedgerReviewFilterKey
-from aeat.core.paths import PROJECT_ROOT
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import discover_modelo_sources
-from aeat.entrypoints.cli import _ledger
-from aeat.tests.cli_runner import invoke_cached_cli
+from ...application.review import LedgerReviewFilterKey
+from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import discover_modelo_sources
+from . import _ledger
+from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

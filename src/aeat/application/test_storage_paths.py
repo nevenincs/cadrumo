@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application._storage_paths import storage_path
+from ._storage_paths import storage_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

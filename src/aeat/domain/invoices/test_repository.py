@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.domain.invoices._enums import IvaRate, PaymentStatus
-from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
-from aeat.domain.invoices._repository import InvoiceCatalogueRepository
-from aeat.domain.iva import InvoiceKind
-from aeat.domain.transactions import (
+from ._enums import IvaRate, PaymentStatus
+from ._models import Invoice, InvoiceCatalogue, InvoiceLine
+from ._repository import InvoiceCatalogueRepository
+from ..iva import InvoiceKind
+from ..transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -29,8 +29,8 @@ from aeat.domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from aeat.domain.transactions._repository import TransactionCatalogueRepository
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ..transactions._repository import TransactionCatalogueRepository
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._loader import load_registry_tree
 from ._temporal import select_revision
@@ -159,7 +159,7 @@ class TestCliFlag:
 
     def test_help_exposes_prestacion_inss_exenta_flag(self) -> None:
         """The --prestacion-inss-exenta flag is advertised in work calculate --help."""
-        from aeat.tests.cli_runner import invoke_cached_cli
+        from ....tests.cli_runner import invoke_cached_cli
 
         result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
         assert result.exit_code == 0

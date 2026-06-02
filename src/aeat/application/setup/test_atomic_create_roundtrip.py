@@ -23,11 +23,11 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.core.config import SecretStoreBackend, override_settings
-from aeat.core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import dev_test_database_password
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import SecretStoreBackend, override_settings
+from ...core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

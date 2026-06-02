@@ -262,7 +262,7 @@ def test_pdfminer_logger_level_governed_by_dictconfig() -> None:
     """
     import logging
 
-    import aeat.core.logging as _logging_mod
+    from . import logging as _logging_mod
 
     # Force a fresh dictConfig run by temporarily resetting the guard.
     original_configured = _logging_mod._CONFIGURED
@@ -289,7 +289,7 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
     """
     import logging
 
-    import aeat.core.logging as _logging_mod
+    from . import logging as _logging_mod
 
     original_configured = _logging_mod._CONFIGURED
     _logging_mod._CONFIGURED = False
@@ -299,8 +299,8 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
         _logging_mod._CONFIGURED = original_configured or True
 
     # Trigger module imports — side-effects would show up as level mutations.
-    import aeat.adapters.inbound.pdf._pdfplumber  # noqa: F401
-    import aeat.domain.calculations.registry._record_design  # noqa: F401
+    from ..adapters.inbound.pdf import _pdfplumber
+    from ..domain.calculations.registry import _record_design  # noqa: F401
 
     pdfminer_logger = logging.getLogger("pdfminer")
     assert pdfminer_logger.level == logging.WARNING, (
@@ -310,7 +310,7 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
 
     # Confirm the per-module silencer has been deleted from _pdfplumber's
     # public surface.
-    from aeat.adapters.inbound.pdf._pdfplumber import __all__ as pdfplumber_all
+    from ..adapters.inbound.pdf._pdfplumber import __all__ as pdfplumber_all
 
     assert "suppress_pdfminer_debug_logging" not in pdfplumber_all, (
         "suppress_pdfminer_debug_logging still exported from _pdfplumber; "
@@ -327,7 +327,7 @@ def test_pikepdf_core_logger_level_governed_by_dictconfig() -> None:
     """
     import logging
 
-    import aeat.core.logging as _logging_mod
+    from . import logging as _logging_mod
 
     original_configured = _logging_mod._CONFIGURED
     _logging_mod._CONFIGURED = False
@@ -375,7 +375,11 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
-from .logging import _scrub_value, attach_run_sink, detach_run_sink  # noqa: E402 — test-only import after module symbols
+from .logging import (  # noqa: E402 — test-only import after module symbols
+    _scrub_value,
+    attach_run_sink,
+    detach_run_sink,
+)
 
 
 def test_scrub_value_str_overload_returns_str() -> None:

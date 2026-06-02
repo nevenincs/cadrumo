@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError

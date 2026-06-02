@@ -137,7 +137,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     must equal the projection of observations. Matching pair validates clean."""
     from datetime import UTC, datetime
 
-    from aeat.domain.calculations.registry import CasillaObservation
+    from ..calculations.registry import CasillaObservation
 
     from ._calculation_revision import CalculationRevision, CalculationRevisionState
 
@@ -175,7 +175,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
 
     import pydantic
 
-    from aeat.domain.calculations.registry import CasillaObservation
+    from ..calculations.registry import CasillaObservation
 
     from ._calculation_revision import CalculationRevision, CalculationRevisionState
 
@@ -277,8 +277,8 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
     from ._row_models import (
         Modelo184MemberRow,
         Modelo232VinculadaRow,
-        Modelo349OperadorRow,
         Modelo347ContraparteRow,
+        Modelo349OperadorRow,
     )
 
     # Create one row of each type with distinct nif/nif_comunitario values.

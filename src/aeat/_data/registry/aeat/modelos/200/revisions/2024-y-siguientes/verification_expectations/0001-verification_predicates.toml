@@ -1,0 +1,14 @@
+# Soundness gate: the IS base imponible must be determined when the entity
+# reports a positive accounting result. Without a derivation from resultado
+# contable, casilla DP200014:00552 (base imponible) can be left silently zero
+# while casilla 00501 (resultado de la cuenta de perdidas y ganancias antes de
+# IS) is positive, yielding cuota integra cero -- a silent under-declaration the
+# verify gate would otherwise grant. ADVISORY (non-blocking): a positive result
+# with a legitimately zero base (BIN compensation, correcciones) is possible, so
+# this surfaces an operator-facing advisory rather than refusing the draft, while
+# the modelo-200-base-determination ADR tracks the durable derivation (Phase 2).
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
+expression = 'implies_nonzero(["00501", "DP200014:00552"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-30"]

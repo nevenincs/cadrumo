@@ -137,8 +137,8 @@ def get_storage_provider(
             `load_settings()`.
 
     Returns:
-        A concrete `StorageProvider` already wired with credentials +
-        root directory / folder ID for the resolved profile.
+        A concrete :class:`StorageProvider` already wired with credentials and
+        root directory or folder ID for the resolved profile.
 
     Raises:
         OutboundStorageValidationError: When the settings value is unknown, the

@@ -429,7 +429,11 @@ class CalculationRevisionCatalogue(BaseModel):
         return self.revisions.values()
 
     def for_work_unit(self, work_unit_id: str) -> tuple[CalculationRevision, ...]:
-        """Return every revision attached to one work unit."""
+        """Return every revision attached to one work unit.
+
+        Returns:
+            Tuple of :class:`CalculationRevision` records for the given work unit.
+        """
         return tuple(rev for rev in self.revisions.values() if rev.work_unit_id == work_unit_id)
 
     def __iter__(self) -> Iterator[CalculationRevision]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples

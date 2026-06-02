@@ -7,7 +7,7 @@ import hashlib
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.domain.attachments._ids import AttachmentId
+from ._ids import AttachmentId
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

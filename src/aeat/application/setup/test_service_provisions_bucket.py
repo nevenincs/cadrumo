@@ -19,14 +19,14 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
-from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.setup._contracts import InitializeWorkspaceCommand
-from aeat.application.setup._service import initialize_workspace
-from aeat.application.user_profile._orchestration import ProfileAlreadyRegisteredError
-from aeat.core.config import SecretStoreBackend, load_settings, override_settings
-from aeat.tests.secure_sql import dev_test_database_password
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ._contracts import InitializeWorkspaceCommand
+from ._service import initialize_workspace
+from ..user_profile._orchestration import ProfileAlreadyRegisteredError
+from ...core.config import SecretStoreBackend, load_settings, override_settings
+from ...tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

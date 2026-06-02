@@ -118,8 +118,8 @@ def test_financial_package_canonical_decimal_delegates_to_domain() -> None:
         if "aeat.adapters.inbound.financial" in key or "aeat.domain._identifiers" in key:
             del sys.modules[key]
 
-    from aeat.adapters.inbound.financial import canonical_decimal  # type: ignore[attr-defined]
-    from aeat.domain._identifiers import canonical_decimal_string
+    from .adapters.inbound.financial import canonical_decimal  # type: ignore[attr-defined]
+    from .domain._identifiers import canonical_decimal_string
 
     assert canonical_decimal is canonical_decimal_string, (
         "aeat.adapters.inbound.financial.canonical_decimal must be the same "

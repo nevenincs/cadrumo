@@ -25,8 +25,8 @@ _SRC_ROOT = _REPO_ROOT / "src" / "aeat"
 
 
 def test_s620_identity_error_is_aeat_error_subclass() -> None:
-    from aeat.core.errors import AeatError
-    from aeat.core.identity._documents import IdentityError
+    from .core.errors import AeatError
+    from .core.identity._documents import IdentityError
 
     assert issubclass(IdentityError, AeatError), (
         "IdentityError must be a subclass of AeatError"
@@ -35,7 +35,7 @@ def test_s620_identity_error_is_aeat_error_subclass() -> None:
 
 def test_s620_identity_error_raised_not_valueerror() -> None:
     """validate_identity raises IdentityError, not a bare ValueError."""
-    from aeat.core.identity._documents import IdentityError, validate_identity
+    from .core.identity._documents import IdentityError, validate_identity
 
     with pytest.raises(IdentityError):
         validate_identity("INVALID-DOC-XYZ-999")
@@ -47,8 +47,8 @@ def test_s620_identity_error_raised_not_valueerror() -> None:
 
 
 def test_s621_example_limit_zero_raises_registry_validation_error() -> None:
-    from aeat.domain.calculations.registry._errors import RegistryValidationError
-    from aeat.domain.calculations.registry._validate_cross_revision import (
+    from .domain.calculations.registry._errors import RegistryValidationError
+    from .domain.calculations.registry._validate_cross_revision import (
         summarize_non_overlapping_cross_revision_casilla_drift,
     )
 
@@ -64,7 +64,7 @@ def test_s621_example_limit_zero_raises_registry_validation_error() -> None:
 def test_s622_revision_validation_context_no_any_annotation() -> None:
     import typing
 
-    from aeat.domain.calculations.registry._validate_revision_context import (
+    from .domain.calculations.registry._validate_revision_context import (
         RevisionValidationContext,
     )
 
@@ -127,7 +127,7 @@ def test_s624_synthesise_single_line_no_bare_dict_any_return() -> None:
 
 
 def test_s625_classified_by_manual_constant_value() -> None:
-    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+    from .core.external_constants import CLASSIFIED_BY_MANUAL
 
     assert CLASSIFIED_BY_MANUAL == "manual"
 
@@ -170,7 +170,7 @@ def test_s626_no_prose_deferred_comment_in_errors_registry() -> None:
                 violations.append((i, prev.strip()))
 
     assert not violations, (
-        f"Prose-only '# deferred' comment adjacent to type: ignore found:\n"
+        "Prose-only '# deferred' comment adjacent to type: ignore found:\n"
         + "\n".join(f"  line {ln}: {txt}" for ln, txt in violations)
     )
 

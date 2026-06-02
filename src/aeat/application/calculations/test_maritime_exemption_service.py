@@ -16,18 +16,18 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.calculations._maritime_exemption_service import (
+from ._maritime_exemption_service import (
     MaritimeExemptionResult,
     resolve_maritime_exemption,
 )
-from aeat.domain.renta._maritime_exemption import (
+from ...domain.renta._errors import RentaValidationError
+from ...domain.renta._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
     ProfileCompletenessError,
 )
-from aeat.domain.renta._errors import RentaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

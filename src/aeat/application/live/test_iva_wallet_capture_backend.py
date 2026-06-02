@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede import (
+from ...adapters.outbound.aeat.sede import (
     IVA_COMPENSATION_WALLET_URL,
     FiledDeclaracionObservationStore,
     parse_iva_compensation_wallet_html,
 )
-from aeat.application.calculations import (
+from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationAuthoritySource,
     IvaCompensationHistoryRepository,
@@ -24,9 +24,9 @@ from aeat.application.calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from aeat.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from ...core.resources import resources
+from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 
 from . import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 

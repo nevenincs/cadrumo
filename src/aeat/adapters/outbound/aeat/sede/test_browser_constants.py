@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.config import load_settings
+from .....core.config import load_settings
 
 from ._browser_constants import default_viewport, selector_probe_timeout_ms
 

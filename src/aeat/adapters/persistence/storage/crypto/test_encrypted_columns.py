@@ -277,7 +277,7 @@ class TestEncryptedPayload:
         assert EncryptedPayload(data={"k": 1}).data == {"k": 1}
         assert EncryptedPayload(data=[1, 2, 3]).data == [1, 2, 3]
         assert EncryptedPayload(data="text").data == "text"
-        assert EncryptedPayload(data=42).data == 42  # noqa: S101 — test assertion
+        assert EncryptedPayload(data=42).data == 42
         assert EncryptedPayload(data=None).data is None
 
     def test_encrypted_payload_rejects_missing_data_field(self) -> None:

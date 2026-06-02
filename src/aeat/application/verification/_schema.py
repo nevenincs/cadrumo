@@ -17,9 +17,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...domain.calculations.registry._ids import CasillaId
-
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...domain.calculations.registry import CasillaId
 
 
 class DiscrepancyCause(StrEnum):

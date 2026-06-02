@@ -13,14 +13,14 @@ from collections import deque
 
 import pytest
 
-from aeat.application.wizard._catalogue import SETUP_FLOW
-from aeat.application.wizard._errors import WizardScriptOverflowError
-from aeat.application.wizard._models import WizardWidget
-from aeat.application.wizard._persistence import project_answers, serialise_answers
-from aeat.application.wizard._prompter import ScriptedPrompter
-from aeat.application.wizard._runner import run_flow
-from aeat.core.profile import SetupAnswers
-from aeat.domain.deadlines._models import LegalEntityForm
+from ._catalogue import SETUP_FLOW
+from ._errors import WizardScriptOverflowError
+from ._models import WizardWidget
+from ._persistence import project_answers, serialise_answers
+from ._prompter import ScriptedPrompter
+from ._runner import run_flow
+from ...core.profile import SetupAnswers
+from ...domain.deadlines._models import LegalEntityForm
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -280,7 +280,7 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
     same section. A section-wide upfront evaluation hid this question.
     """
 
-    from aeat.application.wizard._commands import _scripted_from_canonical
+    from ._commands import _scripted_from_canonical
 
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
@@ -295,7 +295,7 @@ def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
     """A legal entity is never asked the spouse / personal-IRPF or the
     IRPF income-category questions — they are gated to natural persons."""
 
-    from aeat.application.wizard._commands import _scripted_from_canonical
+    from ._commands import _scripted_from_canonical
 
     canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
@@ -323,7 +323,7 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
     it asked because the operator named ``--activity`` on the command
     line (``force_visible``)."""
 
-    from aeat.application.wizard._commands import _scripted_from_canonical
+    from ._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",
@@ -344,7 +344,7 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
     """A pure landlord (only capital_inmobiliario, no --activity flag)
     is never asked for an economic activity — the gate stays closed."""
 
-    from aeat.application.wizard._commands import _scripted_from_canonical
+    from ._commands import _scripted_from_canonical
 
     flags = {
         "entity-type": "natural_person",

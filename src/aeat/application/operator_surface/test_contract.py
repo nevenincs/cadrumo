@@ -9,8 +9,8 @@ from collections.abc import Iterator
 import pytest
 from pydantic import ValidationError
 
-from aeat.application import operator_surface
-from aeat.application.operator_surface import (
+from .. import operator_surface
+from . import (
     ModeloLifecycleStep,
     MountedCommandDomain,
     OperatorMutability,
@@ -25,10 +25,10 @@ from aeat.application.operator_surface import (
     resolve_source_kind_alias,
     retired_surface_suggestion,
 )
-from aeat.application.operator_surface._models import LifecycleContract, RootSurface
-from aeat.application.overview import FilingStatus
-from aeat.core.config import override_settings
-from aeat.core.errors import get_registered_error_code
+from ._models import LifecycleContract, RootSurface
+from ..overview import FilingStatus
+from ...core.config import override_settings
+from ...core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

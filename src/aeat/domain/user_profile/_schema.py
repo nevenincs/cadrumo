@@ -191,14 +191,18 @@ class ProfileSchemaDefinition(BaseModel):
         return tuple(f"{section.key}.{field.key}" for section in self.sections for field in section.fields)
 
     def section(self, key: str) -> ProfileSectionDefinition:
-        """Return a section by canonical section key."""
+        """Return a :class:`ProfileSectionDefinition` by canonical section key."""
         for section in self.sections:
             if section.key == key:
                 return section
         raise UserProfileNotFoundError(f"unknown user-profile section {key!r}")
 
     def field(self, path: _FieldPath) -> ProfileFieldDefinition:
-        """Return a field by canonical dotted path."""
+        """Return a field by canonical dotted path.
+
+        Returns:
+            The :class:`ProfileFieldDefinition` for the given path.
+        """
         section_key, field_key = path.split(".", 1)
         section = self.section(section_key)
         for field in section.fields:

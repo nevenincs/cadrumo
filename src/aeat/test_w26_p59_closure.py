@@ -57,7 +57,7 @@ def _has_type_ignore(lines: list[str], lineno: int) -> bool:
 # S668: _app_live.py — 9 wire-payload splat sites
 # ---------------------------------------------------------------------------
 
-_S668_LINES = [1062, 1088, 1176, 1362, 1392, 1456, 1509, 1561, 1637]
+_S668_LINES = [1067, 1093, 1181, 1367, 1397, 1461, 1514, 1566, 1642]
 
 
 @pytest.mark.parametrize("lineno", _S668_LINES)
@@ -73,7 +73,7 @@ def test_s668_app_live_wire_payload_marker_present(lineno: int) -> None:
 # S669 Sub-A: _modelo.py — 4 kv_pairs splat sites
 # ---------------------------------------------------------------------------
 
-_S669A_LINES = [895, 897, 899, 918]
+_S669A_LINES = [902, 904, 906, 925]
 
 
 @pytest.mark.parametrize("lineno", _S669A_LINES)
@@ -245,6 +245,6 @@ def test_prior_wave_ratchet_still_passes() -> None:
     known = mod._KNOWN_VIOLATING_LINES  # type: ignore[attr-defined]
     new_violations = violations - known
     assert not new_violations, (
-        f"W26.P59 introduced new type-ignore violations:\n"
+        "W26.P59 introduced new type-ignore violations:\n"
         + "\n".join(f"  {rel}:{lineno}" for rel, lineno in sorted(new_violations))
     )

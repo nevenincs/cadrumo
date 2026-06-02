@@ -41,18 +41,18 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import now
-from aeat.domain.calculations.registry.applicability import (
+from ...core.time import now
+from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     PayerFact as _PayerFact,
 )
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
-from aeat.domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import (
     taxpayer_model_is_declared as _taxpayer_model_is_declared,
 )
 
@@ -843,7 +843,7 @@ def build_overview_status_report(
     state: WorkflowState | None = None,
     raw_values: Mapping[str, object] | None = None,
 ) -> OverviewStatusReport:
-    """Build the typed readiness report used by root and overview status.
+    """Build and return the :class:`OverviewStatusReport` used by root and overview status.
 
     Consumes the canonical :func:`build_operator_state_projection`; the
     bespoke per-surface store assembly this function once carried is

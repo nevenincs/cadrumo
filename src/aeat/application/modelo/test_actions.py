@@ -27,14 +27,14 @@ from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ._actions import (
     _IVA_LEDGER_EXEMPT_REGIMES,
-    _RevisionInputsProvider,
+    WorkflowInputMismatchError,
     _collect_revision_verification_findings,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
     _iva_wallet_blocked_message,
     _iva_wallet_blocking_verification_finding,
     _missing_required_casilla_finding,
-    WorkflowInputMismatchError,
+    _RevisionInputsProvider,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -337,7 +337,7 @@ class TestWorkflowInputMismatchError:
     and must carry structured context.
     """
 
-    def _make_provider(self, modelo: str = "100", period: str = "0A") -> "_RevisionInputsProvider":
+    def _make_provider(self, modelo: str = "100", period: str = "0A") -> _RevisionInputsProvider:
         work_unit = _minimal_work_unit(modelo=modelo, period=period)
         revision = _minimal_calculation_revision(work_unit)
         return _RevisionInputsProvider(revision=revision, work_unit=work_unit)

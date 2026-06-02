@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.diagnostics.__main__ import app
-from aeat.tests.secure_sql import isolated_runtime_profile
+from .__main__ import app
+from ..tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -17,11 +17,11 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.live._censo import CensoSnapshotService
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.entrypoints.cli._config import profile_app
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.live._censo import CensoSnapshotService
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ._config import profile_app
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -44,8 +44,8 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _seed_active_profile() -> None:
-    from aeat.application.user_profile._testing import register_minimal_profile
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from ...application.user_profile._testing import register_minimal_profile
+    from ...application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
     repo.update(
@@ -58,7 +58,7 @@ def _seed_active_profile() -> None:
 
 
 def _capture_snapshot() -> str:
-    from aeat.application.workflow._models import resolve_active_bucket_id
+    from ...application.workflow._models import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     assert active is not None, "active profile must be seeded before capture"
@@ -95,7 +95,7 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     env value.
     """
 
-    from aeat.core.config import override_settings
+    from ...core.config import override_settings
 
     _seed_active_profile()
 
@@ -175,9 +175,9 @@ def test_apply_emits_censo_applied_bucket_event(cli_runner: CliRunner) -> None:
     catalogue before this assertion landed — the emission was
     implemented but not witnessed end-to-end."""
 
-    from aeat.application.workflow._models import resolve_active_bucket_id
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...application.workflow._models import resolve_active_bucket_id
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _seed_active_profile()
     snapshot_id = _capture_snapshot()
@@ -221,7 +221,7 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
 
     import json
 
-    from aeat.tests.cli_runner import invoke_cached_cli
+    from ...tests.cli_runner import invoke_cached_cli
 
     _seed_active_profile()
     _capture_snapshot()
@@ -247,7 +247,7 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
 
     import json
 
-    from aeat.tests.cli_runner import invoke_cached_cli
+    from ...tests.cli_runner import invoke_cached_cli
 
     _seed_active_profile()
     _capture_snapshot()

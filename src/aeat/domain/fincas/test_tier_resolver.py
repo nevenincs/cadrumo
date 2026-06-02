@@ -15,9 +15,9 @@ import pytest
 
 from . import (
     LEY_12_2023_IN_FORCE_DATE,
-    ReduccionTier,
     Arrendamiento,
     Finca,
+    ReduccionTier,
     TierResolutionError,
     UseType,
     resolve_reduccion,

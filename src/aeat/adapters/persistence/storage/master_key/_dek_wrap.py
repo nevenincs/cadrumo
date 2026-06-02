@@ -24,9 +24,8 @@ import secrets
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from pydantic import BaseModel, Field
 
-from ..errors import EncryptionError
-
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..errors import EncryptionError
 
 _NONCE_BYTES = 12
 _TAG_BYTES = 16
@@ -60,7 +59,7 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
             bucket.
 
     Returns:
-        A frozen `WrappedDek` record carrying nonce, ciphertext, and
+        A frozen :class:`WrappedDek` record carrying nonce, ciphertext, and
         tag.
 
     Raises:

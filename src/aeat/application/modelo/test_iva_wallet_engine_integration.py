@@ -10,26 +10,26 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
-from aeat.application.calculations import (
+from ...adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
+from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationOverride,
     IvaWalletDecisionRepository,
     reconcile_modelo_303_iva_compensation,
 )
-from aeat.application.modelo import (
+from . import (
     ModeloIvaWalletReconciliationBlocked,
     calculate_modelo_revision,
     create_work_unit,
 )
-from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.core.resources import resources
-from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ..user_profile import UserProfileLifecycleRepository
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository
+from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

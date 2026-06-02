@@ -7,15 +7,14 @@ error (malformed period, unknown modelo) must surface as a
 
 from __future__ import annotations
 
-
 import pytest
 import typer
 
-from aeat.application.modelo import WorkUnitNotFoundError
-from aeat.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from aeat.entrypoints.cli._modelo import _bad_parameter_from_error
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-from aeat.tests.cli_runner import invoke_cached_cli
+from ...application.modelo import WorkUnitNotFoundError
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ._modelo import _bad_parameter_from_error
+from ._test_envelope import unwrap_schema_envelope as _payload
+from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -121,7 +120,7 @@ def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None
 
     import inspect
 
-    from aeat.entrypoints.cli._modelo import work_calculate
+    from ._modelo import work_calculate
 
     source = inspect.getsource(work_calculate)
     assert "calculate_modelo_revision_from_bucket_aggregation(" in source
@@ -133,8 +132,8 @@ def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
     --binding KEY=VALUE syntax and a bindings-list discovery command so
     the first `work calculate` failure is self-correcting."""
 
-    from aeat.domain.calculations.registry import RegistryValidationError
-    from aeat.entrypoints.cli._modelo import _missing_binding_guidance
+    from ...domain.calculations.registry import RegistryValidationError
+    from ._modelo import _missing_binding_guidance
 
     error = RegistryValidationError(
         "binding 'irpf.previous_year_economic_activity_net_income' has no supplied value",
@@ -153,8 +152,8 @@ def test_missing_binding_guidance_passes_non_input_errors_through() -> None:
     returned unchanged - the guidance is scoped to inputs the operator
     can actually supply."""
 
-    from aeat.domain.calculations.registry import RegistryValidationError
-    from aeat.entrypoints.cli._modelo import _missing_binding_guidance
+    from ...domain.calculations.registry import RegistryValidationError
+    from ._modelo import _missing_binding_guidance
 
     error = RegistryValidationError(
         "casilla referenced before evaluation",
@@ -337,7 +336,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
 
     from pathlib import Path
 
-    from aeat.core.paths import PROJECT_ROOT
+    from ...core.paths import PROJECT_ROOT
 
     cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
     canonical = cli_root / "_modelo.py"
@@ -365,7 +364,7 @@ def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
     any bucket-event emission call. If a future change wires one
     in by accident, this test fails fast."""
 
-    from aeat.core.paths import PROJECT_ROOT
+    from ...core.paths import PROJECT_ROOT
 
     canonical_text = (PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
     forbidden_emitters = (
@@ -397,7 +396,7 @@ def test_evidence_kind_accepts_canonical_and_hyphenated_values(raw: str, expecte
     The import command parses the alias and normalises it before
     dispatching the application action."""
 
-    from aeat.domain.modelos._filing_record import ExternalEvidenceKind
+    from ...domain.modelos._filing_record import ExternalEvidenceKind
 
     normalised = raw.strip().replace("-", "_")
     assert ExternalEvidenceKind(normalised) is ExternalEvidenceKind(expected)
@@ -407,7 +406,7 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
     """``--evidence-kind`` still rejects values that aren't a valid
     enum member after hyphen-to-underscore normalisation."""
 
-    from aeat.domain.modelos._filing_record import ExternalEvidenceKind
+    from ...domain.modelos._filing_record import ExternalEvidenceKind
 
     raw = "aeat_bogus_evidence"
     with pytest.raises(ValueError, match="aeat_bogus_evidence"):
@@ -423,7 +422,7 @@ def test_validate_work_unit_id_accepts_valid_hex64() -> None:
     """A 64-character lowercase hex string is accepted and returned stripped."""
     import typer as _typer
 
-    from aeat.entrypoints.cli._modelo import _validate_work_unit_id
+    from ._modelo import _validate_work_unit_id
 
     valid = "a" * 64
     result = _validate_work_unit_id(valid)
@@ -434,7 +433,7 @@ def test_validate_work_unit_id_accepts_valid_hex64() -> None:
 
 def test_validate_work_unit_id_strips_whitespace() -> None:
     """Leading/trailing whitespace is stripped before validation."""
-    from aeat.entrypoints.cli._modelo import _validate_work_unit_id
+    from ._modelo import _validate_work_unit_id
 
     valid = "b" * 64
     assert _validate_work_unit_id(f"  {valid}  ") == valid
@@ -455,7 +454,7 @@ def test_validate_work_unit_id_rejects_malformed(bad: str) -> None:
     """Malformed work_unit_id values raise ``typer.BadParameter``."""
     import typer as _typer
 
-    from aeat.entrypoints.cli._modelo import _validate_work_unit_id
+    from ._modelo import _validate_work_unit_id
 
     with pytest.raises(_typer.BadParameter):
         _validate_work_unit_id(bad)
@@ -477,7 +476,7 @@ def test_validate_work_unit_id_rejects_malformed(bad: str) -> None:
 )
 def test_parse_casilla_override_accepts_valid_keys(spec: str) -> None:
     """Valid CasillaId keys are accepted by ``_parse_casilla_override``."""
-    from aeat.entrypoints.cli._modelo import _parse_casilla_override
+    from ._modelo import _parse_casilla_override
 
     key, _ = _parse_casilla_override(spec)
     assert key
@@ -495,7 +494,7 @@ def test_parse_casilla_override_rejects_invalid_keys(spec: str) -> None:
     """Invalid CasillaId keys raise ``typer.BadParameter``."""
     import typer as _typer
 
-    from aeat.entrypoints.cli._modelo import _parse_casilla_override
+    from ._modelo import _parse_casilla_override
 
     with pytest.raises(_typer.BadParameter):
         _parse_casilla_override(spec)
@@ -511,7 +510,7 @@ def test_parse_casilla_override_rejects_invalid_keys(spec: str) -> None:
 )
 def test_parse_binding_override_accepts_valid_keys(spec: str) -> None:
     """Valid BindingId keys are accepted by ``_parse_binding_override``."""
-    from aeat.entrypoints.cli._modelo import _parse_binding_override
+    from ._modelo import _parse_binding_override
 
     key, _ = _parse_binding_override(spec)
     assert key
@@ -530,7 +529,7 @@ def test_parse_binding_override_rejects_invalid_keys(spec: str) -> None:
     """Invalid BindingId keys raise ``typer.BadParameter``."""
     import typer as _typer
 
-    from aeat.entrypoints.cli._modelo import _parse_binding_override
+    from ._modelo import _parse_binding_override
 
     with pytest.raises(_typer.BadParameter):
         _parse_binding_override(spec)
@@ -549,15 +548,15 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
 
     from datetime import UTC, datetime
 
-    from aeat.domain.modelos._codes import ModeloCode
-    from aeat.domain.modelos._filing_record import (
+    from ...domain.modelos._codes import ModeloCode
+    from ...domain.modelos._filing_record import (
         ExternalEvidence,
         ExternalEvidenceKind,
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
     )
-    from aeat.entrypoints.cli._modelo import _filing_record_payload
+    from ._modelo import _filing_record_payload
 
     imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
     filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
@@ -612,13 +611,13 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
 
     from datetime import UTC, datetime
 
-    from aeat.domain.modelos._codes import ModeloCode
-    from aeat.domain.modelos._filing_record import (
+    from ...domain.modelos._codes import ModeloCode
+    from ...domain.modelos._filing_record import (
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
     )
-    from aeat.entrypoints.cli._modelo import _filing_record_payload
+    from ._modelo import _filing_record_payload
 
     work_unit_id = "a" * 64
     revision_id = "c" * 64
@@ -656,15 +655,15 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
 
     from datetime import UTC, datetime
 
-    from aeat.domain.modelos._codes import ModeloCode
-    from aeat.domain.modelos._filing_record import (
+    from ...domain.modelos._codes import ModeloCode
+    from ...domain.modelos._filing_record import (
         ExternalEvidence,
         ExternalEvidenceKind,
         ModeloRecord,
         ModeloRecordStatus,
         derive_filing_record_id,
     )
-    from aeat.entrypoints.cli._modelo import _filing_record_lines
+    from ._modelo import _filing_record_lines
 
     imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
     work_unit_id = "a" * 64
@@ -780,7 +779,7 @@ def test_work_calculate_help_exposes_by_actor_flag() -> None:
     actor; the default factory pulls the active profile display name when
     ``--by`` is omitted."""
 
-    from aeat.tests.cli_runner import invoke_cached_cli
+    from ...tests.cli_runner import invoke_cached_cli
 
     result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
     assert result.exit_code == 0, result.output
@@ -935,7 +934,7 @@ def test_work_create_normalizes_valid_period_tokens(period: str, expected_normal
     """Valid period tokens (in any accepted form) must be normalized to the
     canonical registry form (e.g. ``Q1`` → ``1T``) before being stored."""
 
-    from aeat.entrypoints.cli._modelo import _resolve_year_period
+    from ._modelo import _resolve_year_period
 
     _, normalized = _resolve_year_period(2026, period)
     assert normalized == expected_normalized, (
@@ -992,7 +991,7 @@ def test_period_token_error_enumerates_modelo_specific_tokens() -> None:
     generic shape hint.
     """
 
-    from aeat.entrypoints.cli._modelo import _declared_period_tokens
+    from ._modelo import _declared_period_tokens
 
     annual = _declared_period_tokens("100")
     assert annual == ("0A",), f"M100 declared periods: {annual!r}"
@@ -1056,8 +1055,8 @@ def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
     """A valid JSON object is parsed into the typed model with all fields preserved."""
     import typer as _typer
 
-    from aeat.application.aggregation._retenciones import RetencionObservation, RetencionScheme
-    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+    from ...application.aggregation._retenciones import RetencionObservation, RetencionScheme
+    from ._modelo import _parse_typed_cli_observations
 
     raw = (
         '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
@@ -1083,8 +1082,8 @@ def test_parse_typed_cli_observations_rejects_invalid_json_syntax() -> None:
     """A string that is not valid JSON raises ``typer.BadParameter``."""
     import typer as _typer
 
-    from aeat.application.aggregation._retenciones import RetencionObservation
-    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+    from ...application.aggregation._retenciones import RetencionObservation
+    from ._modelo import _parse_typed_cli_observations
 
     with pytest.raises(_typer.BadParameter):
         _parse_typed_cli_observations(["{not: json}"], model=RetencionObservation, flag="--retencion-observation")
@@ -1094,8 +1093,8 @@ def test_parse_typed_cli_observations_rejects_non_object_json() -> None:
     """A JSON value that is not an object (e.g. an array) raises ``typer.BadParameter``."""
     import typer as _typer
 
-    from aeat.application.aggregation._retenciones import RetencionObservation
-    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+    from ...application.aggregation._retenciones import RetencionObservation
+    from ._modelo import _parse_typed_cli_observations
 
     with pytest.raises(_typer.BadParameter):
         _parse_typed_cli_observations(
@@ -1113,8 +1112,8 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     """
     import typer as _typer
 
-    from aeat.application.aggregation._retenciones import RetencionObservation
-    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+    from ...application.aggregation._retenciones import RetencionObservation
+    from ._modelo import _parse_typed_cli_observations
 
     missing_scheme = (
         '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
@@ -1129,7 +1128,7 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
     """A refused verification report surfaces a retrieval next_action pointer."""
     from datetime import UTC, datetime
 
-    from aeat.domain.modelos._verification_report import (
+    from ...domain.modelos._verification_report import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
         ModeloVerificationFindingSeverity,
@@ -1137,7 +1136,7 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
         VerificationReport,
         derive_verification_report_id,
     )
-    from aeat.entrypoints.cli._modelo import _verification_report_lines
+    from ._modelo import _verification_report_lines
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "a" * 64
@@ -1174,12 +1173,12 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
     """A granted verification report does NOT emit a next_action pointer."""
     from datetime import UTC, datetime
 
-    from aeat.domain.modelos._verification_report import (
+    from ...domain.modelos._verification_report import (
         VerificationCompletenessStatus,
         VerificationReport,
         derive_verification_report_id,
     )
-    from aeat.entrypoints.cli._modelo import _verification_report_lines
+    from ._modelo import _verification_report_lines
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "b" * 64
@@ -1221,7 +1220,7 @@ class TestDt12ReduccionPlanPensiones:
         """
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         result = _compute_dt12_reduccion_plan_pensiones(
             gross_rescate=Decimal("60000"),
@@ -1234,7 +1233,7 @@ class TestDt12ReduccionPlanPensiones:
         """Changing the pre/post ratio produces a different reducción amount."""
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         result_carla = _compute_dt12_reduccion_plan_pensiones(
             gross_rescate=Decimal("60000"),
@@ -1254,7 +1253,7 @@ class TestDt12ReduccionPlanPensiones:
     def test_zero_pre_2007_yields_zero_reduccion(self) -> None:
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         result = _compute_dt12_reduccion_plan_pensiones(
             gross_rescate=Decimal("60000"),
@@ -1268,7 +1267,7 @@ class TestDt12ReduccionPlanPensiones:
 
         import pytest
 
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         with pytest.raises(ValueError, match="aportaciones_totales must be positive"):
             _compute_dt12_reduccion_plan_pensiones(
@@ -1282,7 +1281,7 @@ class TestDt12ReduccionPlanPensiones:
 
         import pytest
 
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         with pytest.raises(ValueError, match="gross_rescate must be non-negative"):
             _compute_dt12_reduccion_plan_pensiones(
@@ -1305,7 +1304,7 @@ class TestSalReservaEspecialDotacion:
         """
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         result = _compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
@@ -1324,7 +1323,7 @@ class TestSalReservaEspecialDotacion:
         """
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         result = _compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
@@ -1337,7 +1336,7 @@ class TestSalReservaEspecialDotacion:
         """Spec oracle: reserva=50k (at cap), capital=100k => dotacion=0."""
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         result = _compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
@@ -1350,7 +1349,7 @@ class TestSalReservaEspecialDotacion:
         """Reserva above 50% cap (overfunded from prior period) => dotacion=0."""
         from decimal import Decimal
 
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         result = _compute_sal_reserva_especial_dotacion(
             beneficio_neto=Decimal("120000"),
@@ -1364,7 +1363,7 @@ class TestSalReservaEspecialDotacion:
 
         import pytest
 
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         with pytest.raises(ValueError, match="capital_social must be positive"):
             _compute_sal_reserva_especial_dotacion(
@@ -1378,7 +1377,7 @@ class TestSalReservaEspecialDotacion:
 
         import pytest
 
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         with pytest.raises(ValueError, match="beneficio_neto must be non-negative"):
             _compute_sal_reserva_especial_dotacion(
@@ -1406,8 +1405,8 @@ class TestPensionReduccionErrorEnvelope:
         """_compute_dt12: aportaciones_totales=0 raises PensionReduccionError."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ...application.calculations._errors import PensionReduccionError
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         with pytest.raises(PensionReduccionError) as exc_info:
             _compute_dt12_reduccion_plan_pensiones(
@@ -1425,8 +1424,8 @@ class TestPensionReduccionErrorEnvelope:
         """_compute_dt12: gross_rescate<0 raises PensionReduccionError."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ...application.calculations._errors import PensionReduccionError
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         with pytest.raises(PensionReduccionError) as exc_info:
             _compute_dt12_reduccion_plan_pensiones(
@@ -1442,8 +1441,8 @@ class TestPensionReduccionErrorEnvelope:
         """_compute_dt12: aportaciones_pre_2007<0 raises PensionReduccionError."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ...application.calculations._errors import PensionReduccionError
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         with pytest.raises(PensionReduccionError) as exc_info:
             _compute_dt12_reduccion_plan_pensiones(
@@ -1459,8 +1458,8 @@ class TestPensionReduccionErrorEnvelope:
         """_compute_sal: capital_social=0 raises PensionReduccionError."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ...application.calculations._errors import PensionReduccionError
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         with pytest.raises(PensionReduccionError) as exc_info:
             _compute_sal_reserva_especial_dotacion(
@@ -1478,8 +1477,8 @@ class TestPensionReduccionErrorEnvelope:
         """_compute_sal: beneficio_neto<0 raises PensionReduccionError."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ...application.calculations._errors import PensionReduccionError
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         with pytest.raises(PensionReduccionError) as exc_info:
             _compute_sal_reserva_especial_dotacion(
@@ -1495,8 +1494,8 @@ class TestPensionReduccionErrorEnvelope:
         """_compute_sal: reserva_dotada<0 raises PensionReduccionError."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+        from ...application.calculations._errors import PensionReduccionError
+        from ._modelo import _compute_sal_reserva_especial_dotacion
 
         with pytest.raises(PensionReduccionError) as exc_info:
             _compute_sal_reserva_especial_dotacion(
@@ -1510,8 +1509,8 @@ class TestPensionReduccionErrorEnvelope:
 
     def test_pension_reduccion_error_is_core_validation_error(self) -> None:
         """PensionReduccionError is a CoreValidationError and ValueError subclass."""
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.core.errors import CoreValidationError
+        from ...application.calculations._errors import PensionReduccionError
+        from ...core.errors import CoreValidationError
 
         assert issubclass(PensionReduccionError, CoreValidationError)
         assert issubclass(PensionReduccionError, ValueError)
@@ -1520,9 +1519,9 @@ class TestPensionReduccionErrorEnvelope:
         """PensionReduccionError maps to REFUSED_PENSION_REDUCCION_COMPUTATION."""
         from decimal import Decimal
 
-        from aeat.application.calculations._errors import PensionReduccionError
-        from aeat.core.errors import get_registered_error_code
-        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+        from ...application.calculations._errors import PensionReduccionError
+        from ...core.errors import get_registered_error_code
+        from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
         try:
             _compute_dt12_reduccion_plan_pensiones(
@@ -1631,7 +1630,7 @@ def test_describe_non_period_error_is_localized() -> None:
     This test verifies the locale key resolves to a non-empty string and
     the CLI does not surface a Python traceback.
     """
-    from aeat.core.i18n import tr
+    from ...core.i18n import tr
 
     # Confirm the locale key resolves with a message kwarg — this is the
     # same call the production code makes at the error site.
@@ -1651,7 +1650,7 @@ def test_describe_period_error_locale_key_interpolates_message() -> None:
     Verifies that the locale value contains the %{message} interpolation
     slot so callers can pass arbitrary registry error text through.
     """
-    from aeat.core.i18n import tr
+    from ...core.i18n import tr
 
     sentinel = "sentinel-registry-error-xyz"
     rendered = tr("cli.app.modelo.describe.period_error", message=sentinel)
@@ -1677,8 +1676,8 @@ def test_dt12_computation_error_locale_key_interpolates_message() -> None:
     """
     from decimal import Decimal
 
-    from aeat.core.i18n import tr
-    from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+    from ...core.i18n import tr
+    from ._modelo import _compute_dt12_reduccion_plan_pensiones
 
     with pytest.raises(ValueError) as exc_info:
         _compute_dt12_reduccion_plan_pensiones(
@@ -1707,8 +1706,8 @@ def test_sal_computation_error_locale_key_interpolates_message() -> None:
     """
     from decimal import Decimal
 
-    from aeat.core.i18n import tr
-    from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+    from ...core.i18n import tr
+    from ._modelo import _compute_sal_reserva_especial_dotacion
 
     with pytest.raises(ValueError) as exc_info:
         _compute_sal_reserva_especial_dotacion(
@@ -1743,7 +1742,7 @@ class TestDeclaredPeriodTokensAutocomplete:
 
     def test_empty_modelo_returns_empty_tuple(self) -> None:
         """Empty and whitespace-only modelo strings return () without error."""
-        from aeat.entrypoints.cli._modelo import _declared_period_tokens
+        from ._modelo import _declared_period_tokens
 
         assert _declared_period_tokens("") == ()
         assert _declared_period_tokens("   ") == ()
@@ -1756,7 +1755,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         unknown modelos. The narrowed except arm catches it and returns (),
         matching the autocomplete contract.
         """
-        from aeat.entrypoints.cli._modelo import _declared_period_tokens
+        from ._modelo import _declared_period_tokens
 
         # "XXXXXX" is guaranteed unregistered; the real authority raises
         # RegistryValidationError which is an AeatError subtype.
@@ -1770,7 +1769,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         the authority resolves the definition, and the period set is returned.
         Modelo 303 is a known quarterly modelo; its tokens include quarterly markers.
         """
-        from aeat.entrypoints.cli._modelo import _declared_period_tokens
+        from ._modelo import _declared_period_tokens
 
         result = _declared_period_tokens("303")
         # Modelo 303 is quarterly; at minimum the four quarterly tokens are present.
@@ -1797,7 +1796,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         """
         import logging
 
-        from aeat.entrypoints.cli import _modelo as _modelo_module
+        from . import _modelo as _modelo_module
 
         # Verify the module logger is correctly named — this proves _log.debug(...)
         # in the except Exception arm writes to the right logger.
@@ -1814,7 +1813,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         # indirectly by asserting the logger is capable of capturing DEBUG records.
         with caplog.at_level(logging.DEBUG, logger="aeat.entrypoints.cli._modelo"):
             # The unknown modelo exercises the AeatError arm — no DEBUG record.
-            from aeat.entrypoints.cli._modelo import _declared_period_tokens
+            from ._modelo import _declared_period_tokens
 
             _declared_period_tokens("XXXXXX")
 
@@ -1834,8 +1833,8 @@ class TestDeclaredPeriodTokensAutocomplete:
         RegistryValidationError is the most likely subtype. This test asserts
         the function returns () rather than propagating the error to Click.
         """
-        from aeat.core.errors import AeatError
-        from aeat.entrypoints.cli._modelo import _declared_period_tokens
+        from ...core.errors import AeatError
+        from ._modelo import _declared_period_tokens
 
         # Both the "totally unknown" and the "empty" paths return () silently.
         # The unknown modelo exercises the real AeatError arm.

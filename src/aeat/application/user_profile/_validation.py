@@ -11,9 +11,8 @@ import re
 from collections.abc import Iterable
 from datetime import date
 
-from ...core.parsing._dates import _parse_iso8601_date
-
 from ...core.errors import BaseSeverity
+from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.user_profile import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -56,11 +55,14 @@ class ProfileValidationService:
         return self._schema
 
     def validate_record(self, record: UserProfileRecord) -> ProfileValidationReport:
-        """Validate every fact on a profile against the schema."""
+        """Validate every fact on a profile against the schema.
+
+        Returns a :class:`ProfileValidationReport`.
+        """
         return self._build_report(record.profile_id, record.facts)
 
     def validate_facts(self, profile_id: str, facts: Iterable[UserProfileFact]) -> ProfileValidationReport:
-        """Validate a free-standing collection of facts (e.g. a registration command)."""
+        """Validate a free-standing collection of facts (e.g. a registration command) and return a :class:`ProfileValidationReport`."""
         return self._build_report(profile_id, tuple(facts))
 
     def _build_report(

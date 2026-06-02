@@ -25,7 +25,7 @@ def build_remote_mirror_namespace_manifest(
     namespace: str,
     rows: Iterable[SecureObjectRawRow],
 ) -> RemoteMirrorNamespaceManifest:
-    """Build a manifest from raw ciphertext rows for one secure-object namespace."""
+    """Build a :class:`RemoteMirrorNamespaceManifest` from raw ciphertext rows for one namespace."""
     entries = tuple(_remote_mirror_object_manifest(row) for row in rows if row.namespace == namespace)
     latest = max(
         (entry for entry in entries if entry.revision_written_at is not None),
@@ -46,7 +46,7 @@ def put_remote_mirror_namespace_manifest(
     provider: StorageProvider,
     manifest: RemoteMirrorNamespaceManifest,
 ) -> ProviderObjectMetadata:
-    """Persist a namespace mirror manifest through the remote storage provider."""
+    """Persist a namespace mirror manifest and return its :class:`ProviderObjectMetadata`."""
     payload = manifest.model_dump_json().encode("utf-8")
     return provider.put(
         REMOTE_MIRROR_MANIFEST_NAMESPACE,
@@ -61,7 +61,7 @@ def inspect_remote_mirror_upload(
     provider: StorageProvider,
     expected_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Detect remote upload drift against an expected local namespace manifest."""
+    """Detect remote upload drift and return a :class:`RemoteMirrorInspection` against the expected namespace manifest."""
     remote_manifest = _load_remote_manifest(provider, expected_manifest.namespace)
     issues = list(_compare_manifest_objects(local=expected_manifest, remote=remote_manifest))
     for entry in expected_manifest.objects:
@@ -103,7 +103,7 @@ def inspect_remote_mirror_download(
     provider: StorageProvider,
     remote_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Detect whether a remote manifest can be downloaded completely."""
+    """Detect whether a remote manifest can be downloaded completely; return a :class:`RemoteMirrorInspection`."""
     issues: list[RemoteMirrorIssue] = []
     for entry in remote_manifest.objects:
         try:
@@ -125,7 +125,7 @@ def compare_remote_mirror_manifests(
     local: RemoteMirrorNamespaceManifest,
     remote: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Compare local and remote namespace manifests for stale or conflicting revisions."""
+    """Compare local and remote namespace manifests and return a :class:`RemoteMirrorInspection`."""
     return RemoteMirrorInspection(
         namespace=local.namespace,
         issues=tuple(_compare_manifest_objects(local=local, remote=remote)),

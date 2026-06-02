@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.classification import SensitivityClass
+from ...core.classification import SensitivityClass
 
 from . import (
     ProfileFieldDefinition,

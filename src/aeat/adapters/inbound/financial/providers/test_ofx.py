@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests import FIXTURES_DIR
+from .....tests import FIXTURES_DIR
 
 from .. import OfxProvider
 

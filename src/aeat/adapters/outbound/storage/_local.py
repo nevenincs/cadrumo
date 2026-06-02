@@ -156,7 +156,7 @@ class LocalFileSystemProvider:
         content_hash: str,
         label: str,
     ) -> ProviderObjectMetadata:
-        """Atomically write the object and its sidecar.
+        """Atomically write the object and its sidecar, returning :class:`ProviderObjectMetadata`.
 
         Atomicity guarantee: the payload file is written to a `.tmp`
         sibling and renamed into place. The sidecar is written

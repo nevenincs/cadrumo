@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.bucket._errors import BucketValidationError
-from aeat.adapters.persistence.storage.bucket._keystore_paths import (
+from ._errors import BucketValidationError
+from ._keystore_paths import (
     keystore_path,
     keystore_root,
     validate_keystore_separation,

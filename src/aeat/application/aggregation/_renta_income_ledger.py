@@ -31,6 +31,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -40,13 +41,10 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
-
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS = "01"
@@ -160,7 +158,10 @@ def aggregate_renta_income_ledger_from_repositories(
     period: Period | str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
-    """Load the transaction catalogue and aggregate cumulative M130 income."""
+    """Load the transaction catalogue and aggregate cumulative M130 income.
+
+    Returns a :class:`RentaIncomeLedgerAggregation`.
+    """
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -178,10 +179,12 @@ def aggregate_renta_income_ledger(
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate INCOMING professional-income transactions into M130 casilla 01.
 
-    ``period`` must be a quarterly period token (``{year}Q{n}``). The
-    cumulative window extends from Jan 1 of the period's year through the
-    last day of the declared quarter, implementing the year-to-date
-    accumulation rule for IRPF pagos fraccionados (RD 439/2007 art. 110.2).
+    Returns a :class:`RentaIncomeLedgerAggregation` covering the
+    cumulative fiscal window. ``period`` must be a quarterly period token
+    (``{year}Q{n}``). The cumulative window extends from Jan 1 of the
+    period's year through the last day of the declared quarter,
+    implementing the year-to-date accumulation rule for IRPF pagos
+    fraccionados (RD 439/2007 art. 110.2).
     """
     resolved_period = _resolve_quarterly_period(period)
     # Cumulative start: Jan 1 of the fiscal year.

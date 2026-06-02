@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from aeat.core.time import now
+from ......core.time import now
 
 from ......core.logging import get_logger
 from .._errors import AuthConfigurationError
@@ -67,7 +67,7 @@ class HttpxFallbackBackend(_CertBackend):
             url: HTTPS endpoint to probe.
 
         Returns:
-            A populated handshake result describing the outcome.
+            A :class:`HandshakeResult` describing the closed-failure outcome.
         """
         from ..certificate import HandshakeResult
 

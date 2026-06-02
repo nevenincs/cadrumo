@@ -30,8 +30,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import now
-
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
     SensitivityClass,
@@ -41,7 +39,8 @@ from ...adapters.persistence.storage.envelope._secure_repository import SecureBo
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
-from ...domain.auth.apoderamientos import (
+from ...core.time import now
+from ...domain.auth import (
     ApoderamientosCatalogue,
     load_default_catalogue,
     parse_scope_tokens,
@@ -158,7 +157,7 @@ class ApoderadoService:
         scope_tokens: tuple[str, ...],
         notes: str = "",
     ) -> ApoderadoConfiguration:
-        """Persist apoderado config; validates and dedups scopes against the catalogue."""
+        """Persist apoderado config and return the resulting :class:`ApoderadoConfiguration`; validates and dedups scopes against the catalogue."""
         granted = parse_scope_tokens(scope_tokens, self._catalogue)
         config = ApoderadoConfiguration(
             bucket_id=bucket_id,
@@ -183,6 +182,9 @@ class ApoderadoService:
         remote contact. The current implementation reports the local
         configuration only; the live verification extension point raises
         :class:`ApoderadoLiveCheckUnavailableError` until wired.
+
+        Returns an :class:`ApoderadoStatus` summarising the current
+        apoderado configuration for ``bucket_id``.
         """
         return self.status(bucket_id=bucket_id)
 

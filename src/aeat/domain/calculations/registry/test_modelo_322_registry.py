@@ -7,7 +7,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
@@ -132,11 +132,11 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
 def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry import (
+    from . import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.iva import (
+    from ...iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,

@@ -35,13 +35,13 @@ from typing import Any
 
 import pytest
 
-from aeat.application.modelo._profile_binding import (
+from ._profile_binding import (
     _inject_derived_marriage_facts,  # pyright: ignore[reportPrivateUsage]
     _profile_fact_index,  # pyright: ignore[reportPrivateUsage]
     _resolve_one,  # pyright: ignore[reportPrivateUsage]
 )
-from aeat.core.resources import resources
-from aeat.domain.user_profile import (
+from ...core.resources import resources
+from ...domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     load_user_profile_schema,

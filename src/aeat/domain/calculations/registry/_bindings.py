@@ -219,7 +219,7 @@ def previous_filing_observation_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryModeloObservationRequirement, ...]:
-    """Return filed declarations needed by previous-filing bindings."""
+    """Return :class:`RegistryModeloObservationRequirement` items needed by previous-filing bindings."""
     grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
@@ -635,7 +635,12 @@ def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
 def invoice_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[InvoiceObservationRequirement, ...]:
-    """Return invoice ledger slices needed by ``revision``'s invoice bindings."""
+    """Return invoice ledger slices needed by ``revision``'s invoice bindings.
+
+    Returns:
+        Tuple of :class:`InvoiceObservationRequirement` records describing
+        each distinct invoice-fact slice the revision requires.
+    """
     grouped: dict[
         tuple[tuple[str, ...], _RectificationScope, str | None],
         set[str],
@@ -1376,6 +1381,9 @@ def unsupported_ledger_iva_observations(
 ) -> tuple[IvaLedgerObservation, ...]:
     """Return IVA observations no binding on ``revision`` can consume.
 
+    Returns:
+        Tuple of :class:`IvaLedgerObservation` instances not matched by any binding.
+
     This is the fail-closed counterpart to
     :func:`resolve_ledger_iva_aggregation_binding_values`. Empty match
     sets on supported bindings still resolve to zero, but a concrete
@@ -1791,7 +1799,7 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
 def counterpart_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[CounterpartObservationRequirement, ...]:
-    """Return counterpart slices needed by ``revision``'s counterpart bindings."""
+    """Return :class:`CounterpartObservationRequirement` slices needed by ``revision``'s counterpart bindings."""
     grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[str]] = {}
     for binding in revision.bindings:
         if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
@@ -2007,7 +2015,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
 def withholding_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[WithholdingObservationRequirement, ...]:
-    """Return withholding slices needed by ``revision``'s withholding bindings."""
+    """Return :class:`WithholdingObservationRequirement` slices needed by ``revision``'s withholding bindings."""
     grouped: dict[tuple[str, ...], set[str]] = {}
     for binding in revision.bindings:
         if binding.source != RowSetGroupingKind.WITHHOLDING:

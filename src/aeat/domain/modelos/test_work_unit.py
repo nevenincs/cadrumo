@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.modelo import (
+from ...application.modelo import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
@@ -32,19 +32,19 @@ from aeat.application.modelo import (
     list_work_units,
     rename_work_unit,
 )
-from aeat.domain.modelos._errors import ModeloValidationError
-from aeat.domain.modelos._repository import (
+from ._errors import ModeloValidationError
+from ._repository import (
     WorkUnitCatalogueRepository,
     remove_work_unit,
     upsert_work_unit,
 )
-from aeat.domain.modelos._work_unit import (
+from ._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
     derive_work_unit_id,
 )
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -561,7 +561,7 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
-    from aeat.core.paths import PROJECT_ROOT
+    from ...core.paths import PROJECT_ROOT
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
@@ -583,7 +583,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     module referencing a competing namespace string is a shadow
     storage location."""
 
-    from aeat.core.paths import PROJECT_ROOT
+    from ...core.paths import PROJECT_ROOT
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
@@ -617,7 +617,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     new display names so the audit trail captures the full transition.
     """
 
-    from aeat.domain.buckets import (
+    from ..buckets import (
         BucketEventHistoryRepository,
         BucketEventType,
     )
@@ -665,7 +665,7 @@ def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepo
     is not silently dropped at the persistence boundary.
     """
 
-    from aeat.domain.profile._ccaa import CCAA
+    from ..profile._ccaa import CCAA
 
     unit = create_work_unit(
         bucket_id="default",
@@ -693,7 +693,7 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
     call is not overwritten.
     """
 
-    from aeat.domain.profile._ccaa import CCAA
+    from ..profile._ccaa import CCAA
 
     first = create_work_unit(
         bucket_id="default",

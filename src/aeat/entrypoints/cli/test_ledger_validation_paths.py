@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.entrypoints.cli import app
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -241,7 +241,7 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
 def _set_profile_axis(key: str, value: str) -> None:
     """Set one profile axis via the diagnostics-app descriptor setter."""
-    from aeat.diagnostics.__main__ import app as diagnostics_app
+    from ...diagnostics.__main__ import app as diagnostics_app
 
     result = _RUNNER.invoke(diagnostics_app, ["profile", "set", key, value])
     assert result.exit_code == 0, result.output

@@ -21,9 +21,9 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
-from aeat.core.aggregation import AggregationSourceKind
-from aeat.core.external_constants import M347_THRESHOLD_EUR
-from aeat.domain.calculations.registry._bindings import CounterpartSourceKind
+from ...core.aggregation import AggregationSourceKind
+from ...core.external_constants import M347_THRESHOLD_EUR
+from ...domain.calculations.registry._bindings import CounterpartSourceKind
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {
@@ -263,6 +263,8 @@ def aggregate_counterpart_347(
     Filters to 347 operation kinds. Threshold gating (the €3,005.06
     declaration floor) belongs to the modelo binding consumer; this
     aggregator returns raw per-counterparty totals.
+
+    Returns a :class:`CounterpartAggregation`.
     """
     return _aggregate_for_modelo(observations, modelo="347", period=period)
 
@@ -278,6 +280,9 @@ def aggregate_counterpart_349(
     the additional NIF-IVA / GROI readiness gates: Spanish
     counterparties require GROI readiness and non-Spanish
     counterparties require NIF-IVA readiness.
+
+    Returns a :class:`CounterpartAggregation` with rollups sorted by
+    ``(source_kind, counterparty_nif, operation_kind)``.
     """
     return _aggregate_for_modelo(observations, modelo="349", period=period)
 

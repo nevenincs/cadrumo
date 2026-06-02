@@ -100,7 +100,7 @@ class DefaultBrowserSession:
 
 
 async def default_browser_session_factory(settings: Settings) -> DefaultBrowserSession:
-    """Start Playwright and return a wrapped :class:`BrowserSession`.
+    """Start Playwright and return a wrapped :class:`DefaultBrowserSession`.
 
     The returned object satisfies
     :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike` and owns its Playwright
@@ -130,7 +130,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
 
 
 async def create_browser_session(settings: Settings, profile: Profile) -> DefaultBrowserSession:
-    """Start Playwright and return a wrapped :class:`BrowserSession` for ``profile``."""
+    """Start Playwright and return a :class:`DefaultBrowserSession` wrapping a :class:`BrowserSession` for ``profile``."""
     playwright = await _start_playwright()
     try:
         session = BrowserSession(

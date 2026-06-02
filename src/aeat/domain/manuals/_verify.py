@@ -14,9 +14,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ._errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
 from ._loader import iter_sections, load_manual, resolve_part_root
 from ._schema import ManualId, ManualPart, Section
-from ._errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
 
 _logger = get_logger(__name__)
 
@@ -57,12 +57,16 @@ class ManualVerificationReport(BaseModel):
 
     @property
     def errors(self) -> tuple[ManualVerificationIssue, ...]:
-        """Return only the ``level == 'error'`` issues."""
+        """Return only the :class:`ManualVerificationIssue` items with ``level == 'error'``."""
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property
     def warnings(self) -> tuple[ManualVerificationIssue, ...]:
-        """Return only the ``level == 'warning'`` issues."""
+        """Return only the ``level == 'warning'`` issues.
+
+        Returns:
+            Tuple of :class:`ManualVerificationIssue` objects with warning-level severity.
+        """
         return tuple(issue for issue in self.issues if issue.level == "warning")
 
     @property

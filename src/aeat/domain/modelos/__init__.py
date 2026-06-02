@@ -1,4 +1,16 @@
-"""Modelo identifiers."""
+"""Modelo identity codes and informational-declaration row models.
+
+The public surface exposes ``ModeloCode`` (the closed set of AEAT modelo
+identifiers) together with the typed per-row records for the informational
+declarations: ``Modelo184MemberRow``, ``Modelo232VinculadaRow``,
+``Modelo347ContraparteRow``, ``Modelo349OperadorRow``, and ``ModeloDetailRow``
+(plus ``M347_THRESHOLD_EUR`` and ``validate_m349_nif_format``).
+
+The package also hosts, as submodules imported by their consumers directly, the
+domain-layer modelo persistence and identity core: the calculation, filing, and
+verification repositories, calculation revisions, filing records, verification
+reports, and work units.
+"""
 
 from __future__ import annotations
 
@@ -14,12 +26,12 @@ from ._row_models import (
 )
 
 __all__ = (
-    "ModeloCode",
+    "M347_THRESHOLD_EUR",
     "Modelo184MemberRow",
     "Modelo232VinculadaRow",
-    "Modelo349OperadorRow",
     "Modelo347ContraparteRow",
+    "Modelo349OperadorRow",
+    "ModeloCode",
     "ModeloDetailRow",
-    "M347_THRESHOLD_EUR",
     "validate_m349_nif_format",
 )

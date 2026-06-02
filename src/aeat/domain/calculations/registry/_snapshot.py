@@ -73,7 +73,11 @@ def build_snapshot(
     on: date | None = None,
     revision_id: str | None = None,
 ) -> RegistrySnapshot:
-    """Validate ``modelo`` and return the selected immutable snapshot."""
+    """Validate ``modelo`` and return the selected immutable snapshot.
+
+    Returns:
+        The validated :class:`RegistrySnapshot` for the requested filing context.
+    """
     source_root_key = str(source_root.expanduser().resolve())
     key = (id(modelo), id(catalogues), source_root_key, filing_year, period, on, revision_id)
     cached = _SNAPSHOT_CACHE.get(key)

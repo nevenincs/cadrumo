@@ -8,7 +8,7 @@ from functools import lru_cache
 
 import pytest
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
@@ -153,7 +153,7 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
 
 
 def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:
-    from aeat.domain.calculations.registry import (
+    from . import (
         CasillaObservation,
         RegistryModeloObservation,
         resolve_previous_filing_binding_values,
@@ -243,11 +243,11 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
-    from aeat.domain.calculations.registry import (
+    from . import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from aeat.domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]

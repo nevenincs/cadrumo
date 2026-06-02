@@ -38,7 +38,7 @@ from pathlib import Path
 import pikepdf
 import pytest
 
-from aeat.tests import FIXTURES_DIR
+from ....tests import FIXTURES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

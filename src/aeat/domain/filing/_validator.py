@@ -65,7 +65,7 @@ class ModeloValidator:
             draft: The draft to validate.
 
         Returns:
-            A tuple of findings, possibly empty.
+            A tuple of :class:`ModeloValidationFinding` items, possibly empty.
         """
         collection = self._schema_provider.get_collection(draft.modelo)
         findings: list[ModeloValidationFinding] = []
@@ -203,7 +203,7 @@ def apply_validation(
     draft: ModeloDraft,
     findings: tuple[ModeloValidationFinding, ...],
 ) -> ModeloDraft:
-    """Return a copy of ``draft`` with ``findings`` and a fresh status.
+    """Return a :class:`ModeloDraft` copy of ``draft`` with ``findings`` and a fresh status.
 
     Status promotion logic:
 
@@ -225,7 +225,11 @@ def apply_validation(
 def derive_validation_status(
     findings: tuple[ModeloValidationFinding, ...],
 ) -> ModeloDraftStatus:
-    """Return the machine validation status implied by ``findings``."""
+    """Return the machine validation status implied by ``findings``.
+
+    Returns:
+        The :class:`ModeloDraftStatus` derived from the severity of the findings.
+    """
     has_error = any(f.severity is BaseSeverity.ERROR for f in findings)
     has_warning = any(f.severity is BaseSeverity.WARNING for f in findings)
     if has_error:

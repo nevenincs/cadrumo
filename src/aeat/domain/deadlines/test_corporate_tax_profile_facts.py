@@ -23,9 +23,9 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.domain.deadlines import TaxpayerProfile
-from aeat.domain.deadlines._models import IVARegime
-from aeat.domain.deadlines._profiles import taxpayer_profile_from_mapping
+from . import TaxpayerProfile
+from ._models import IVARegime
+from ._profiles import taxpayer_profile_from_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.errors import BaseSeverity
+from . import BaseSeverity
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

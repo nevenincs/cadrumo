@@ -22,6 +22,11 @@ Example::
 from __future__ import annotations
 
 from ._cite import cite, short_title
+from ._errors import (
+    NormativeError,
+    NormativeNotFoundError,
+    NormativeParseError,
+)
 from ._loader import load_catalogue
 from ._lookup import find_articulo, find_reference
 from ._schema import (
@@ -33,11 +38,6 @@ from ._schema import (
     NormativeVerificationReport,
 )
 from ._verify import raise_on_errors, verify_catalogue
-from ._errors import (
-    NormativeError,
-    NormativeNotFoundError,
-    NormativeParseError,
-)
 
 
 class _LazyCatalogue:
@@ -58,7 +58,7 @@ class _LazyCatalogue:
         return self._cache
 
     def reload(self) -> NormativeCatalogue:
-        """Force a re-read of the corpus and return the fresh catalogue."""
+        """Force a re-read of the corpus and return the fresh :class:`NormativeCatalogue`."""
         self._cache = load_catalogue()
         return self._cache
 
@@ -75,11 +75,24 @@ class _LazyCatalogue:
         return key in self._ensure()
 
     def get(self, ref_id: str) -> NormativeReference | None:
-        """Return the reference keyed by ``ref_id`` or ``None`` if absent."""
+        """Return the reference keyed by ``ref_id`` or ``None`` if absent.
+
+        Returns:
+            The :class:`NormativeReference` for ``ref_id``, or ``None`` when not found.
+        """
         return self._ensure().get(ref_id)
 
 
+NORMATIVE_CATALOGUE = _LazyCatalogue()
+"""Lazily-loaded module-level :class:`NormativeCatalogue` singleton.
+
+Triggers :func:`load_catalogue` on first access and caches the result. Tests that
+rebind the corpus root per-test should call :func:`load_catalogue` directly.
+"""
+
+
 __all__ = [
+    "NORMATIVE_CATALOGUE",
     "Articulo",
     "NormativeCatalogue",
     "NormativeError",

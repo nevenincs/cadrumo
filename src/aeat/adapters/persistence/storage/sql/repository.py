@@ -63,7 +63,7 @@ class SqlRecordRepository[RecordT](ABC):
 
     @abstractmethod
     def list_all(self) -> list[RecordT]:
-        """Return every row as a pydantic record, ordered by primary key."""
+        """Return every row as a typed pydantic record, ordered by primary key."""
 
     @abstractmethod
     def get(self, record_id: int) -> RecordT:
@@ -86,7 +86,7 @@ class SqlRecordRepository[RecordT](ABC):
                 update.
 
         Returns:
-            The persisted record reflecting the on-disk state.
+            The persisted typed record reflecting the on-disk state.
         """
 
     @abstractmethod
@@ -106,7 +106,7 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
     """Repository for :class:`ModeloCatalogueRecord`."""
 
     def list_all(self) -> list[ModeloCatalogueRecord]:
-        """Return every record in the table, ordered by surrogate id."""
+        """Return every :class:`ModeloCatalogueRecord` in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.ModeloRow).order_by(_orm.ModeloRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
@@ -128,7 +128,7 @@ class ModeloRepository(SqlRecordRepository[ModeloCatalogueRecord]):
         return self._to_record(row)
 
     def upsert(self, record: ModeloCatalogueRecord) -> ModeloCatalogueRecord:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted :class:`ModeloCatalogueRecord`."""
         row: _orm.ModeloRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.ModeloRow, record.id)
@@ -164,7 +164,7 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
     """Repository for :class:`PortalRecord`."""
 
     def list_all(self) -> list[PortalRecord]:
-        """Return every record in the table, ordered by surrogate id."""
+        """Return every :class:`PortalRecord` in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.PortalRow).order_by(_orm.PortalRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
@@ -186,7 +186,7 @@ class PortalRepository(SqlRecordRepository[PortalRecord]):
         return self._to_record(row)
 
     def upsert(self, record: PortalRecord) -> PortalRecord:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted :class:`PortalRecord`."""
         row: _orm.PortalRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.PortalRow, record.id)
@@ -244,7 +244,7 @@ class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
     """Repository for :class:`CorpusArtifactRecord`."""
 
     def list_all(self) -> list[CorpusArtifactRecord]:
-        """Return every record in the table, ordered by surrogate id."""
+        """Return every :class:`CorpusArtifactRecord` in the table, ordered by surrogate id."""
         rows = self._session.execute(select(_orm.CorpusArtifactRow).order_by(_orm.CorpusArtifactRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
@@ -266,7 +266,7 @@ class CorpusArtifactRepository(SqlRecordRepository[CorpusArtifactRecord]):
         return self._to_record(row)
 
     def upsert(self, record: CorpusArtifactRecord) -> CorpusArtifactRecord:
-        """Insert or update ``record`` and return the persisted entity."""
+        """Insert or update ``record`` and return the persisted :class:`CorpusArtifactRecord`."""
         row: _orm.CorpusArtifactRow | None = None
         if record.id is not None:
             row = self._session.get(_orm.CorpusArtifactRow, record.id)

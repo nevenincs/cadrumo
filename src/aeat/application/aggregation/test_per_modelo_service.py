@@ -8,8 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.application import aggregation
-from aeat.application.aggregation import (
+from .. import aggregation
+from . import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
     AggregationSourceKind,
@@ -31,8 +31,8 @@ from aeat.application.aggregation import (
     declarable_counterparty_nifs_347,
     get_per_modelo_aggregation_contract,
 )
-from aeat.application.aggregation._counterpart import CounterpartSourceKind
-from aeat.core.errors import get_registered_error_code
+from ._counterpart import CounterpartSourceKind
+from ...core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

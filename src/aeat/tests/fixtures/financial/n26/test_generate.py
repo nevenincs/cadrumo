@@ -14,10 +14,10 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from aeat.tests.fixtures.financial.n26._generate import (
+from ._generate import (
     _FIXTURES,
-    _Fixture,
     _draw_page,
+    _Fixture,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]

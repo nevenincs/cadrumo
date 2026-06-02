@@ -8,21 +8,21 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
+from ...adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
-from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.domain.submission import (
+from ...adapters.persistence.storage.errors import ClassificationError
+from . import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
     make_submission_id,
 )
-from aeat.domain.submission._repository import (
+from ._repository import (
     SubmissionRepository,
 )
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 

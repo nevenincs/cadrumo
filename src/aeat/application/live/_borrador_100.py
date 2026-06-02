@@ -23,7 +23,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,

@@ -22,20 +22,19 @@ source-mesh and registry-level test suites.
 
 from __future__ import annotations
 
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-import aeat.application.wizard._catalogue  # noqa: F401  # register wizard catalogue at import time
-import aeat.application.wizard._persistence  # noqa: F401  # register project_answers projector at import time
-from aeat.application.user_profile._repository import UserProfileLifecycleRepository
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ...application.wizard import _catalogue  # register wizard catalogue at import time
+from ...application.wizard import _persistence  # noqa: F401  # register project_answers projector at import time
+from ...application.user_profile._repository import UserProfileLifecycleRepository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ._test_envelope import unwrap_schema_envelope as _payload
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

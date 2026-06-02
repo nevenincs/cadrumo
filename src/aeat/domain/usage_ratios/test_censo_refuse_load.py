@@ -16,14 +16,14 @@ from pathlib import Path
 
 import pytest
 
-from aeat.domain.categories import SpendingCategory
-from aeat.domain.usage_ratios import (
+from ..categories import SpendingCategory
+from . import (
     CensoRatioMismatchError,
     UsageRatioProfile,
     load_usage_ratios_with_censo_guard,
     save_usage_ratios,
 )
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

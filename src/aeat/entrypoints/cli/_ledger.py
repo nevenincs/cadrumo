@@ -18,7 +18,7 @@ import typer
 from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (

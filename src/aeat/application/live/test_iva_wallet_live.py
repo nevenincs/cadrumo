@@ -9,16 +9,16 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
-from aeat.adapters.persistence.storage import get_master_key_provider
-from aeat.application.calculations import IvaWalletDecisionRepository
-from aeat.application.modelo import ModeloIvaWalletReconciliationBlocked
-from aeat.application.modelo._actions import _apply_iva_compensation_decision_binding
-from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.application.user_profile._projections import record_to_path_values
-from aeat.application.workflow._models import require_active_bucket_id
-from aeat.core.config import load_settings
-from aeat.tests.live_gate import requires_live_enabled
+from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
+from ...adapters.persistence.storage import get_master_key_provider
+from ..calculations import IvaWalletDecisionRepository
+from ..modelo import ModeloIvaWalletReconciliationBlocked
+from ..modelo._actions import _apply_iva_compensation_decision_binding
+from ..user_profile import UserProfileLifecycleRepository
+from ..user_profile._projections import record_to_path_values
+from ..workflow._models import require_active_bucket_id
+from ...core.config import load_settings
+from ...tests.live_gate import requires_live_enabled
 
 from . import capture_iva_compensation_wallet
 

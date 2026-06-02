@@ -16,14 +16,14 @@ from contextlib import contextmanager
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 from urllib.parse import unquote
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
-from .external_constants import DEFAULT_CURRENCY
+from .external_constants import DEFAULT_CURRENCY, OutputLanguage
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
 
@@ -165,6 +165,24 @@ class JustificanteParserBackendSetting(StrEnum):
     """Settings-shape selector for the justificante PDF parsing backend."""
 
     PDFPLUMBER = "pdfplumber"
+
+
+def _coerce_output_language_setting(value: str) -> OutputLanguage | None:
+    """Coerce env-var output-language to OutputLanguage enum or None.
+
+    Accepts any string input. Returns the matching OutputLanguage member
+    OR None for invalid input, preserving the forgiving-fallback semantic
+    at the validator layer: operators with mistyped AEAT_OUTPUT_LANGUAGE
+    env vars normalise to None and fall through to the default at
+    resolution time, rather than raising ValidationError at settings load.
+    """
+    if not value:
+        return None
+    normalized = value.lower().strip()
+    try:
+        return OutputLanguage(normalized)
+    except ValueError:
+        return None
 
 
 class Settings(BaseSettings):
@@ -401,9 +419,9 @@ class Settings(BaseSettings):
     )
 
     # ── Multilingual i18n ───────────────────────────────────────────────────
-    aeat_output_language: str = Field(
-        default="es",
-        description="Target ISO 639-1 language code for user-facing content.",
+    aeat_output_language: Annotated[OutputLanguage | None, BeforeValidator(_coerce_output_language_setting)] = Field(
+        default=None,
+        description="Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default.",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
         default="es",
@@ -1169,6 +1187,9 @@ class Settings(BaseSettings):
         Bridges :mod:`aeat.core.external_constants` to the settings facade
         so callers reach third-party hostnames, AEAT service paths, OAuth
         scopes, and LLM endpoints through a single accessor.
+
+        Returns:
+            The process-wide cached :class:`ExternalConstants` instance.
         """
         from .external_constants import load_external_constants
 
@@ -1220,7 +1241,13 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
-    """Classify the effective primary SQL route for write guards."""
+    """Classify the effective primary SQL route for write guards.
+
+    Returns:
+        A :class:`StorageRouteClassification` identifying whether the
+        resolved database URL was explicitly supplied, derived from the
+        active bucket, or inferred as the root fallback.
+    """
     resolved = settings or load_settings()
     database_url = resolved.aeat_database_url
     database_path = _sqlite_database_path(database_url)
@@ -1262,6 +1289,10 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     that need a named bucket route. Explicit primary database URLs stay
     fail-closed: a caller cannot convert an operator-supplied SQL URL
     into a bucket route by passing a bucket id.
+
+    Returns:
+        A :class:`Settings` instance with ``aeat_database_url`` resolved
+        to the per-bucket SQLite path for ``bucket_id``.
     """
     trimmed = bucket_id.strip()
     if not trimmed:

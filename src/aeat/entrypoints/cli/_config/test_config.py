@@ -25,11 +25,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.core.config import override_settings
-from aeat.entrypoints.cli._config._errors import ConfigBoundaryError
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core.config import override_settings
+from ._errors import ConfigBoundaryError
+from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -202,7 +202,7 @@ def test_non_aeat_error_cause_chain_reaches_config_boundary_error(tmp_path: Path
             assert isinstance(cause, ConfigBoundaryError)
             # Real-failure trigger raises a SQLAlchemy DatabaseError or
             # similar; the wrapped original_exception is non-AeatError.
-            from aeat.core.errors import AeatError
+            from ....core.errors import AeatError
             assert not isinstance(cause.original_exception, AeatError)
 
 
@@ -260,7 +260,7 @@ def test_config_boundary_error_is_registered_aeat_error_subclass() -> None:
     must have a registered ErrorCode or __init_subclass__ raises. Verify
     the class was successfully declared by instantiating it.
     """
-    from aeat.core.errors import AeatError, get_registered_error_code
+    from ....core.errors import AeatError, get_registered_error_code
 
     err = ConfigBoundaryError(RuntimeError("probe"))
     assert isinstance(err, AeatError)

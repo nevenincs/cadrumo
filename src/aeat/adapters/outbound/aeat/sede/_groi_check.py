@@ -237,7 +237,7 @@ class GroiSedeDriver:
         *,
         expected: Mapping[str, object],
     ) -> GroiObservation:
-        """Adapt the per-NIF result tuple into the registry-Protocol observation shape.
+        """Return a :class:`GroiObservation` by adapting the per-NIF result into the registry-Protocol shape.
 
         Drives the live GROI form via :meth:`collect`, then collapses the
         per-NIF observations into a flat ``{nif: verdict}`` mapping that
@@ -262,7 +262,7 @@ async def collect_groi_observations(
     timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
     browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
 ) -> GroiResult:
-    """Drive the GROI form per declared NIF and return one observation each."""
+    """Drive the GROI form per declared NIF and return a :class:`GroiResult` with one observation each."""
     del payload
     if not expected:
         raise RegistryValidationError("collect_groi_observations requires at least one expected NIF")

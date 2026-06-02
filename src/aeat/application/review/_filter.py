@@ -112,7 +112,7 @@ def parse_filter_clause(raw: str) -> FilterClause:
 
 
 def parse_filter_clauses(raw: Iterable[str]) -> tuple[FilterClause, ...]:
-    """Parse a sequence of ``KEY=VALUE`` strings into typed clauses.
+    """Parse a sequence of ``KEY=VALUE`` strings into typed :class:`FilterClause` instances.
 
     The order of input strings is preserved in the output tuple so the
     CLI can render a deterministic diagnostic.
@@ -319,7 +319,7 @@ class LedgerReviewFilterSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
-        """Parse ``--filter`` arguments into a typed ledger spec."""
+        """Parse ``--filter`` arguments into a typed :class:`LedgerReviewFilterSpec`."""
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
         _ensure_unique_keys(clauses, scope="ledger")
@@ -390,7 +390,11 @@ class InvoiceReviewFilterSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> InvoiceReviewFilterSpec:
-        """Parse ``--filter`` arguments into a typed invoice spec."""
+        """Parse ``--filter`` arguments into a typed invoice spec.
+
+        Returns an :class:`InvoiceReviewFilterSpec` with filter fields
+        populated from the parsed ``key=value`` clause strings.
+        """
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
         _ensure_unique_keys(clauses, scope="invoice")
@@ -438,7 +442,7 @@ class DeclaracionReviewFilterSpec(BaseModel):
 
     @classmethod
     def from_strings(cls, raw: Iterable[str]) -> DeclaracionReviewFilterSpec:
-        """Parse ``--filter`` arguments into a typed declaration spec."""
+        """Parse ``--filter`` arguments into a typed :class:`DeclaracionReviewFilterSpec`."""
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="declaration", allowed=DeclaracionReviewFilterKey)
         _ensure_unique_keys(clauses, scope="declaration")

@@ -44,11 +44,9 @@ gate will fail.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from .core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

@@ -49,7 +49,7 @@ def build_complementaria(
     *,
     schema_provider: CasillaSchemaProvider,
 ) -> ModeloComplementaria:
-    """Build and persist a complementaria from a submitted filing."""
+    """Build, persist, and return the :class:`ModeloComplementaria` for a submitted filing."""
     original_submission = _submitted_original(original)
     original_draft = _load_original_draft(original_submission.draft_id)
     if original_draft.modelo != original_submission.modelo or original_draft.period != original_submission.period:
@@ -184,7 +184,11 @@ def _delta(original_draft: ModeloDraft, amended_draft: ModeloDraft) -> CasillaDe
 
 
 def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiva:
-    """Load a previously persisted amendment by id."""
+    """Load a previously persisted amendment by id.
+
+    Returns a :class:`ModeloComplementaria` or :class:`ModeloSustitutiva`
+    depending on the amendment kind.
+    """
     from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 
     repository = ModeloAmendmentRepository()
@@ -200,7 +204,11 @@ def load_amendment(amendment_id: str) -> ModeloComplementaria | ModeloSustitutiv
 
 
 def list_amendments(*, modelo: str | None = None) -> tuple[ModeloComplementaria | ModeloSustitutiva, ...]:
-    """Return every persisted amendment, optionally filtered by modelo."""
+    """Return every persisted amendment, optionally filtered by modelo.
+
+    Each element is a :class:`ModeloSustitutiva` or
+    :class:`ModeloComplementaria` depending on its amendment kind.
+    """
     from ...domain.filing._complementaria_repository import ModeloAmendmentRepository
 
     repository = ModeloAmendmentRepository()

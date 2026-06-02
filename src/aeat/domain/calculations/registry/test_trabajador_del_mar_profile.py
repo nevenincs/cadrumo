@@ -13,8 +13,8 @@ import tomllib
 
 import pytest
 
-from aeat.core.resources import bundled_path
-from aeat.domain.user_profile import ProfileFieldType, load_user_profile_schema
+from ....core.resources import bundled_path
+from ...user_profile import ProfileFieldType, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

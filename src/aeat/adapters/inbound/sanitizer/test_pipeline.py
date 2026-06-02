@@ -21,7 +21,7 @@ import pikepdf
 import pytest
 from pydantic import SecretStr
 
-from aeat.tests import FIXTURES_DIR
+from ....tests import FIXTURES_DIR
 
 from . import fixtures, sanitize_pdf
 from ._errors import AlreadySanitizedError, SignaturePresentError

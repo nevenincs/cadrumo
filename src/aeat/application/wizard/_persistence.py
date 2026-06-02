@@ -120,6 +120,8 @@ def persist_answers(
     so a field the operator did not name is left untouched. It must be
     supplied for ``"edit"``; it is ignored for ``"create"``, which
     always registers the full set.
+
+    Returns the updated :class:`WorkflowState` after persisting the answers.
     """
     from ...domain.user_profile import UserProfileFact
 
@@ -149,7 +151,7 @@ def persist_patch(
     *,
     state: WorkflowState,
 ) -> WorkflowState:
-    """Patch the active profile with only the explicitly supplied flags.
+    """Patch the active profile with only the explicitly supplied flags and return the updated :class:`WorkflowState`.
 
     ``supplied`` is the canonical-token dict keyed by *question id*,
     carrying exactly the flags the operator named on a non-interactive

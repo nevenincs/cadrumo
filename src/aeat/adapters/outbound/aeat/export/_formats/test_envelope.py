@@ -11,6 +11,8 @@ from decimal import Decimal
 
 import pytest
 
+from ......core.external_constants import LATIN_1_ENCODING
+
 from ._deserialise import deserialise_envelope
 from ._record_spec import (
     FieldKind,
@@ -18,8 +20,6 @@ from ._record_spec import (
     record_field,
     validate_segment_specs,
 )
-from aeat.core.external_constants import LATIN_1_ENCODING
-
 from ._serialise import serialise_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]

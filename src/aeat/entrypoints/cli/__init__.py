@@ -43,11 +43,11 @@ from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
 from ._common import _FORMAT_TEXT, _emit, _emit_envelope
-from ._root_payloads import AppRootResult, RootStatusResult
 from ._errors import decorate_typer_app as _decorate_typer_app
 from ._errors import write_stderr as _write_stderr
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
+from ._root_payloads import AppRootResult, RootStatusResult
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
@@ -165,6 +165,19 @@ def _root(
     if profile is not None:
         _activate_profile_override(ctx, profile)
     from ...application.user_profile import _language_resolver as _language_resolver
+
+    # Register the profile-setup wizard catalogue (SETUP_FLOW / WIZARD_FLOWS)
+    # and the project-answers projection through the same side-effect-import
+    # contract as the language resolver above: importing each module runs its
+    # body, which calls ``register_wizard_catalogue`` / ``register_project_
+    # answers``. Without them, any dispatch that reaches the wizard catalogue
+    # or the project-answers projection (e.g. ``app modelo work create``)
+    # fails with "Wizard catalogue has not been registered" /
+    # "project_answers has not been registered". Kept after the ``--version``
+    # / ``--help`` fast-path exits so those surfaces stay free of the
+    # application-layer import.
+    from ...application.wizard import _catalogue as _catalogue
+    from ...application.wizard import _persistence as _persistence
 
     _activate_active_bucket_session(ctx)
     if ctx.invoked_subcommand is None:

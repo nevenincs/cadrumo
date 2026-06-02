@@ -216,9 +216,9 @@ def settlement_sides_for_flow(
         flow: The :class:`IvaFlowDirection` to classify.
 
     Returns:
-        ``{DEVENGADA}`` for :attr:`IvaFlowDirection.REPERCUTIDO`,
-        ``{DEDUCIBLE}`` for :attr:`IvaFlowDirection.SOPORTADO`,
-        ``{DEVENGADA, DEDUCIBLE}`` for
+        Frozenset of :class:`IvaSettlementSide` values: ``{DEVENGADA}`` for
+        :attr:`IvaFlowDirection.REPERCUTIDO`, ``{DEDUCIBLE}`` for
+        :attr:`IvaFlowDirection.SOPORTADO`, ``{DEVENGADA, DEDUCIBLE}`` for
         :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`.
     """
     return _FLOW_TO_SETTLEMENT_SIDES[flow]

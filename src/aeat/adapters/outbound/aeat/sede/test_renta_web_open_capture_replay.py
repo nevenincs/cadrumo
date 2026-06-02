@@ -27,7 +27,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.tests.live_gate import requires_live_enabled
+from .....tests.live_gate import requires_live_enabled
 
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile

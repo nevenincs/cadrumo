@@ -13,16 +13,16 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.outbound.google import (
+from ....adapters.outbound.google import (
     GoogleAuthClientNotRegisteredError,
     GoogleAuthError,
     GoogleAuthExpiredError,
     GoogleAuthValidationError,
 )
-from aeat.adapters.outbound.storage import OutboundStorageError
-from aeat.core.errors import resolve_error_message
-from aeat.core.i18n import tr
-from aeat.entrypoints.cli._config._google import _google_refusal
+from ....adapters.outbound.storage import OutboundStorageError
+from ....core.errors import resolve_error_message
+from ....core.i18n import tr
+from ._google import _google_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

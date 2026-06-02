@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.decimal import coerce_decimal
+from . import coerce_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

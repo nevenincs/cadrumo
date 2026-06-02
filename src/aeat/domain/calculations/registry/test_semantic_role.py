@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import bundled_path
+from ....core.resources import bundled_path
 
 from . import load_modelo_path
 from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition

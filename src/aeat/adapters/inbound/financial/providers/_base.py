@@ -49,7 +49,7 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
@@ -563,7 +563,7 @@ def build_raw_transaction(
     description: str,
     raw_fields: Mapping[str, str],
 ) -> RawTransaction:
-    """Create one strict raw transaction with shared provenance semantics."""
+    """Create one strict :class:`RawTransaction` with shared provenance semantics."""
     return RawTransaction(
         transaction_id=transaction_id,
         booked_date=booked_date,

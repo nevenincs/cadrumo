@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core.time import now as _utc_now
 from ....core.time._utc import validate_utc_aware
-from ....domain.calculations.registry._ids import (
+from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
     FormulaId,
@@ -53,6 +53,7 @@ from ._errors import CalcSheetsRecordError
 DecimalValue = _RegistryDecimalValue
 
 from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+
 
 class TabName(StrEnum):
     """The tabs the engine emits in every workbook.

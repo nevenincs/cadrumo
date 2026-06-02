@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.overview import OverviewStatusReport
-from aeat.entrypoints.cli._overview_rendering import render_cli_overview_status_lines
+from ...application.overview import OverviewStatusReport
+from ._overview_rendering import render_cli_overview_status_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

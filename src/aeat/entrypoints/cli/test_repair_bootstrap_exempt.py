@@ -24,9 +24,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.master_key._active_session import has_active_bucket_session
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_sessionless_storage_root
+from ...adapters.persistence.storage.master_key._active_session import has_active_bucket_session
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -52,7 +52,7 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
     locale-resolved CLI output stays deterministic for assertions.
     """
 
-    from aeat.core.config import override_settings
+    from ...core.config import override_settings
 
     with override_settings(aeat_output_language="en"):
         with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:

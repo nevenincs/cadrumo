@@ -33,11 +33,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ...core.identity import BucketId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
-
-from ...core.identity import BucketId
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
+
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
@@ -225,7 +225,7 @@ class ModeloRecordCatalogue(BaseModel):
         filing_year: int,
         period: str,
     ) -> ModeloRecord | None:
-        """Return the current (non-superseded) filing record for a tuple.
+        """Return the current (non-superseded) :class:`ModeloRecord` for a filing tuple.
 
         Returns ``None`` when no filing has ever happened for the
         tuple. Returns the active filing record when one exists. Never
@@ -252,7 +252,11 @@ class ModeloRecordCatalogue(BaseModel):
         filing_year: int,
         period: str,
     ) -> tuple[ModeloRecord, ...]:
-        """Return every filing record for a tuple, ordered by filed_at."""
+        """Return every filing record for a tuple, ordered by filed_at.
+
+        Returns:
+            Tuple of :class:`ModeloRecord` objects ordered by filing timestamp.
+        """
         matching = tuple(
             record
             for record in self.records.values()

@@ -33,12 +33,11 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from aeat.core.parsing import parse_bool as _parse_bool
-from aeat.core.parsing import parse_date as _parse_date_canonical
-
-from ._errors import SedeError, SedeFailureMode
+from .....core.parsing import parse_bool as _parse_bool
+from .....core.parsing import parse_date as _parse_date_canonical
 
 from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ._errors import SedeError, SedeFailureMode
 
 # G313 publishes the operator's elected withholding rate as a percentage
 # string. The closed enum {15, 7, 1} is enforced at the CensoSyncService
@@ -126,7 +125,7 @@ _G313_LABELS: Final[dict[str, str]] = {
 }
 
 def parse_g313_html(html: str) -> CensoFactSet:
-    """Parse a G313 (Mis Datos Censales) result page into a CensoFactSet.
+    """Parse a G313 (Mis Datos Censales) result page into a :class:`CensoFactSet`.
 
     The parser is deliberately label-driven rather than DOM-structural:
     AEAT re-shapes the surrounding ZK markup periodically without

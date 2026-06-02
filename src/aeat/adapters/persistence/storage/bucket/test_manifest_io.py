@@ -8,18 +8,18 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
-from aeat.adapters.persistence.storage.bucket._manifest import (
+from ._layout import provision_bucket_directory
+from ._manifest import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
-from aeat.adapters.persistence.storage.bucket._manifest_io import (
+from ._manifest_io import (
     manifest_path,
     read_manifest,
     write_manifest,
 )
-from aeat.adapters.persistence.storage.errors import StorageValidationError
+from ..errors import StorageValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

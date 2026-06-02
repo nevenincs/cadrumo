@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.external_constants import UTF_8_ENCODING
 from ....persistence.storage import SensitivityClass
@@ -65,7 +65,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
 
 
 def load(path: Path) -> PersistedBrowserSession | None:
-    """Load a persisted browser session for logical ``path``."""
+    """Load a :class:`PersistedBrowserSession` for logical ``path``, or ``None`` when absent."""
     record = _repository().load(
         _SESSION_NAMESPACE,
         _key(path),

@@ -16,6 +16,7 @@ from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import TypedDict
 
+from .....core.external_constants import DEFAULT_CURRENCY
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
     FinancialProvider,
@@ -26,7 +27,6 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
-from .....core.external_constants import DEFAULT_CURRENCY
 from ._constants import PDF_EXTENSION
 
 _HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"
@@ -108,7 +108,11 @@ class PdfN26Provider(FinancialProvider):
     provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that ``path`` is an N26 PDF statement with at least one row."""
+        """Validate that ``path`` is an N26 PDF statement with at least one row.
+
+        Returns:
+            A :class:`ProviderValidation` with the validation outcome.
+        """
         try:
             pages = self._extract_pages(path)
             self._require_n26_statement(pages)
@@ -130,7 +134,7 @@ class PdfN26Provider(FinancialProvider):
         )
 
     def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from the N26 PDF statement."""
+        """Yield strict :class:`RawTransaction` records from the N26 PDF statement."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         pages = self._extract_pages(path)

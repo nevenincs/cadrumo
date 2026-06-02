@@ -58,7 +58,11 @@ class ApoderamientosCatalogue(BaseModel):
 
 
 def load_default_catalogue(path: Path | None = None) -> ApoderamientosCatalogue:
-    """Load the shipped scope catalogue from disk."""
+    """Load the shipped scope catalogue from disk.
+
+    Returns:
+        The validated :class:`ApoderamientosCatalogue` with all registered scopes.
+    """
     resolved = path or _DEFAULT_CATALOGUE_PATH
     raw = tomllib.loads(resolved.read_text(encoding="utf-8"))
     scopes = tuple(

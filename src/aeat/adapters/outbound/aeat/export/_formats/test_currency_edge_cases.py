@@ -23,7 +23,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.external_constants import LATIN_1_ENCODING
+from ......core.external_constants import LATIN_1_ENCODING
 
 from ._record_spec import encode_currency
 

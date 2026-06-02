@@ -9,9 +9,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.aggregation import CalculationSourceContext
-from aeat.application.live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
-from aeat.application.modelo import (
+from ..aggregation import CalculationSourceContext
+from ..live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
+from . import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorBindingResult,
@@ -20,16 +20,16 @@ from aeat.application.modelo import (
     create_work_unit,
     resolve_modelo_100_borrador_bindings,
 )
-from aeat.core.errors import ErrorCategory, get_registered_error_code
-from aeat.core.resources import resources
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.domain.calculations.registry import RegistrySnapshot
-from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._calculation_revision import derive_calculation_revision_id
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ..user_profile import UserProfileLifecycleRepository
+from ...core.errors import ErrorCategory, get_registered_error_code
+from ...core.resources import resources
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from ...domain.modelos._calculation_revision import derive_calculation_revision_id
+from ...domain.modelos._repository import WorkUnitCatalogueRepository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -14,10 +14,10 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from aeat.application.wizard._catalogue import WIZARD_FLOWS
-from aeat.application.wizard._compiler import compile_profile_keys
-from aeat.application.wizard._errors import WizardCompileError
-from aeat.application.wizard._models import (
+from ._catalogue import WIZARD_FLOWS
+from ._compiler import compile_profile_keys
+from ._errors import WizardCompileError
+from ._models import (
     WizardChoice,
     WizardCondition,
     WizardFlow,
@@ -26,8 +26,8 @@ from aeat.application.wizard._models import (
     WizardVisibility,
     WizardWidget,
 )
-from aeat.core.i18n import Translatable as tr
-from aeat.domain.profile._keys import ProfileKeyRequirement
+from ...core.i18n import Translatable as tr
+from ...domain.profile._keys import ProfileKeyRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

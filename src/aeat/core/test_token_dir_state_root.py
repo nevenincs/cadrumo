@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests.env_scope import scoped_env_var
+from ..tests.env_scope import scoped_env_var
 
 from .config import Settings
 from .paths import resolve_project_path

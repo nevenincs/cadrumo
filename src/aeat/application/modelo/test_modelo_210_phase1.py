@@ -28,12 +28,11 @@ m210-irnr-full-engine ADR (§D2.4):
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo._actions import (
+from ._actions import (
     ModeloApplicabilityFilterError,
     _evaluate_applicability_filter,
     _evaluate_predicate_expression,
@@ -41,20 +40,19 @@ from aeat.application.modelo._actions import (
     _resolve_m210_rate,
     _rewrite_m210_sentinels,
 )
-from aeat.domain.calculations.registry._schema import VerificationPredicateDefinition
-from aeat.domain.modelos._verification_report import (
-    ModeloVerificationFindingKind,
-)
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ...core.resources import resources
+from ...domain.calculations.registry import (
     M210_CONVENIO_MISSING_SENTINEL,
     M210_DEFERRED_TIPO_SENTINEL,
     M210_NOT_YET_AUTHORED_SENTINEL,
     CasillaObservation,
-    ConvenioRateRow,
     RegistrySnapshot,
 )
-from aeat.domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
+from ...domain.calculations.registry._schema import VerificationPredicateDefinition
+from ...domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
+from ...domain.modelos._verification_report import (
+    ModeloVerificationFindingKind,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

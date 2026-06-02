@@ -20,7 +20,7 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import date
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -299,7 +299,10 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
 
 
 def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
-    """Tombstone ``profile_id`` inside an application-owned bucket session."""
+    """Tombstone ``profile_id`` inside an application-owned bucket session.
+
+    Returns the deleted :class:`UserProfileRecord`.
+    """
     with profile_storage_session(profile_id):
         aggregate = ProfileRepository().delete(profile_id)
     return aggregate.record
@@ -463,7 +466,7 @@ def set_active_field(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Upsert one fact on the active profile and append a WorkflowEvent."""
+    """Upsert one fact on the active profile, append a WorkflowEvent, and return the updated :class:`WorkflowState`."""
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.edit_field(
@@ -487,7 +490,10 @@ def set_active_fields(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Upsert several facts on the active profile in sequence."""
+    """Upsert several facts on the active profile in sequence.
+
+    Returns a :class:`WorkflowState`.
+    """
     updated = state
     for fact in facts:
         updated = set_active_field(updated, fact, secure_objects=secure_objects, schema=schema)
@@ -588,6 +594,9 @@ def rename_profile(
     This function is a thin coordinator: the cross-store label write —
     record AND manifest — lives solely in :meth:`ProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
+
+    Returns the updated :class:`UserProfileRecord` after the label change
+    is persisted.
     """
     repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
     aggregate = repository.rename(profile_id, new_label=new_label)

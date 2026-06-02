@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.tests.fixtures.borrador._generate import (
+from ._generate import (
     _format_spanish_decimal,
     _render_borrador_pdf,
 )

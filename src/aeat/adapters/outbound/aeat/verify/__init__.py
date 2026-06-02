@@ -33,12 +33,16 @@ from .....core.errors import AeatError as _AeatError
 from .....core.logging import get_logger as _get_logger
 from .....domain.calculations.registry import (
     RemoteOperation as _RemoteOperation,
+)
+from .....domain.calculations.registry import (
     RemoteStateGuardPolicy as _RemoteStateGuardPolicy,
+)
+from .....domain.calculations.registry import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
 from .....domain.justificante._errors import JustificanteVerificationError as _JustificanteVerificationError
-from ..sede._errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
 from .._playwright import PlaywrightError as _PlaywrightError
+from ..sede._errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
 
 _logger = _get_logger(__name__)
 
@@ -95,7 +99,7 @@ class VerifyBrowserContextLike(Protocol):
     """Subset of Playwright's ``BrowserContext`` API used by :func:`verify_csv`."""
 
     async def new_page(self) -> VerifyBrowserPageLike:
-        """Open a new page within this browser context."""
+        """Open a new :class:`VerifyBrowserPageLike` within this browser context."""
         ...
 
     async def close(self) -> None:

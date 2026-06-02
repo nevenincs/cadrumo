@@ -45,7 +45,7 @@ def materialize_m232_related_party_rows(
         rows: Tuple of Modelo232VinculadaRow objects from CLI input
 
     Returns:
-        Tuple of CasillaObservation objects for all row fields
+        Tuple of :class:`CasillaObservation` objects for all row fields
 
     Raises:
         RegistryValidationError: If rows exceed form capacity (>5 rows) or if

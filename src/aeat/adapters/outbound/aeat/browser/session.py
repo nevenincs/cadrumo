@@ -16,7 +16,7 @@ from playwright.async_api import (
     Response,
 )
 
-from aeat.core.time import now
+from .....core.time import now
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError

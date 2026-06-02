@@ -10,17 +10,17 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from aeat.adapters.persistence.storage import (
+from ..adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
     has_active_bucket_session,
 )
-from aeat.adapters.persistence.storage.master_key._active_session import _active_session
-from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from aeat.adapters.persistence.storage.sql import dispose_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from aeat.core.classification import SensitivityClass
-from aeat.core.config import override_settings
-from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ..adapters.persistence.storage.master_key._active_session import _active_session
+from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ..adapters.persistence.storage.sql import dispose_engine
+from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..core.classification import SensitivityClass
+from ..core.config import override_settings
+from ..tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 from .diagnostics import (
     ConfigRepairReport,
@@ -165,7 +165,7 @@ def test_render_config_repair_text_is_operator_readable(
     with isolated_runtime_profile(tmp_path=tmp_path):
         rendered = render_config_repair_text(build_config_repair_report())
 
-    from aeat.core.i18n import tr
+    from ..core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
     assert "registry.load" in rendered
@@ -182,7 +182,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     After fix: each key resolves to a real translated label.
     """
 
-    from aeat.adapters.outbound.aeat.browser._site_health import (
+    from ..adapters.outbound.aeat.browser._site_health import (
         SiteHealthEvidence,
         SiteHealthState,
         SiteHealthStatus,
@@ -314,10 +314,10 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> No
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
-    from aeat.application.auth import update_auth
-    from aeat.application.user_profile._orchestration import profile_create_storage_span
-    from aeat.application.user_profile._testing import register_minimal_profile
-    from aeat.application.workflow import WorkflowState
+    from .auth import update_auth
+    from .user_profile._orchestration import profile_create_storage_span
+    from .user_profile._testing import register_minimal_profile
+    from .workflow import WorkflowState
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
@@ -337,7 +337,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> No
         provider_only = update_auth(no_provider, provider="clave_movil")
         fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-        from aeat.application.wizard._status import build_wizard_status
+        from .wizard._status import build_wizard_status
 
         for state in (no_provider, provider_only, fully_authenticated):
             setup_report = build_wizard_status(state)
@@ -620,7 +620,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from aeat.application.wizard._status import WizardStatusReport
+    from .wizard._status import WizardStatusReport
 
     from .diagnostics import _profile_check
 
@@ -654,7 +654,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from aeat.application.wizard._status import WizardStatusReport
+    from .wizard._status import WizardStatusReport
 
     from .diagnostics import _profile_check
 
@@ -702,7 +702,7 @@ def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:
     thinking they forgot a field; operator-fixable rows carry no tag.
     """
 
-    from aeat.core.i18n import tr
+    from ..core.i18n import tr
 
     rendered = render_config_repair_text(_internal_registry_repair_report())
     internal_label = tr("cli.diagnostics.repair.audience_internal")
@@ -723,8 +723,8 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     problem rather than a profile gap.
     """
 
-    from aeat.application.diagnostics import _registry_cross_domain_integrity_check
-    from aeat.core.resources import bundled_path
+    from .diagnostics import _registry_cross_domain_integrity_check
+    from ..core.resources import bundled_path
 
     check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
@@ -742,7 +742,7 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
 def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
     """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
 
-    from aeat.core.errors import ERROR_REGISTRY, get_registered_error_code
+    from ..core.errors import ERROR_REGISTRY, get_registered_error_code
 
     from ._errors import DiagnosticModelError
 
@@ -754,7 +754,7 @@ def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
 def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> None:
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 
-    from aeat.core.errors import build_error_envelope
+    from ..core.errors import build_error_envelope
 
     from ._errors import DiagnosticModelError
 

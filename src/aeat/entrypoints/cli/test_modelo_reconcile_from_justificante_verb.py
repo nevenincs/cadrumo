@@ -17,16 +17,16 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.domain.modelos._codes import ModeloCode
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from aeat.entrypoints.cli import app
-from aeat.tests import FIXTURES_DIR
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._persistence import workflow_state_repository
+from ...domain.modelos._codes import ModeloCode
+from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from . import app
+from ...tests import FIXTURES_DIR
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

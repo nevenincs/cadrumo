@@ -11,13 +11,13 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.operator_surface import build_help_document
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow import workflow_state_repository
-from aeat.core.config import SecretStoreBackend, Settings
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
+from ...application.operator_surface import build_help_document
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow import workflow_state_repository
+from ...core.config import SecretStoreBackend, Settings
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

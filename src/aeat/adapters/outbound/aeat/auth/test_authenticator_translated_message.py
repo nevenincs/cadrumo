@@ -32,16 +32,14 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from .....core.config import CertificateBackend, Settings, override_settings
+from .....core.config import CertificateBackend, Settings
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from . import (
     AEAT_SESSION_IDLE_TTL,
-    CERTIFICATE_CONTEXT_MARKER,
     AeatAuthenticator,
     AeatLoginAssertionError,
     AeatSession,
-    BrowserContextLike,
     BrowserSessionLike,
     CertificateSessionDetail,
     HandshakeResult,

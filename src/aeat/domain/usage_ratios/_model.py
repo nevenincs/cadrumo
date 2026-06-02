@@ -179,6 +179,9 @@ def validate_usage_ratio_reference(
     alias or a parallel identifier. When a row also carries ``business_pct``,
     the percentage must match the referenced profile ratio so the stored
     transaction fact and its proportionality source cannot drift.
+
+    Returns:
+        The validated :class:`UsageRatioReference` anchored to the profile.
     """
     if category_id is None:
         raise UsageRatioValidationError("usage_ratio_id requires category_id on the ledger transaction")

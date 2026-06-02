@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-
 import pytest
 
-from aeat.tests.cli_runner import invoke_cached_cli
+from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

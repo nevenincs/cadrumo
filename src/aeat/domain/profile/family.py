@@ -12,10 +12,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Art. 58.1 LIRPF: first-child cutoff for full-year eligibility is 1 July.
 _FULL_YEAR_CUTOFF_MONTH = 7
@@ -324,7 +323,7 @@ class RentaFamilyProfile(BaseModel):
             if d.custodia_compartida and d.is_eligible_ordinary(filing_year)
         )
 
-    def custodia_compartida_prorrata_factor(self, descendant: "DescendantInfo", filing_year: int) -> "Decimal":
+    def custodia_compartida_prorrata_factor(self, descendant: DescendantInfo, filing_year: int) -> Decimal:
         """Return the Art. 59 LIRPF prorrata factor for one descendant.
 
         Returns ``Decimal("0.5")`` when ``descendant.custodia_compartida`` is

@@ -11,10 +11,10 @@ from typing import Any, cast
 import pytest
 from pydantic import AnyUrl
 
-import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
-from aeat.core.resources import bundled_path
-from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
-from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from ... import renta as _renta_snapshot_checks  # noqa: F401
+from ....core.resources import bundled_path
+from ...profile import PROFILE_KEYS, TaxResidenceProfile
+from ...profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 from . import (
     CasillaDefinition,

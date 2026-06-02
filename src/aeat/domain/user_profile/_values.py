@@ -25,6 +25,7 @@ from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
 from ...core.time import now as utc_now
 from ._errors import UserProfileValidationError
+
 _SnapshotId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z_0-9.:-]*$"),
@@ -169,7 +170,7 @@ class UserProfileRecord(BaseModel):
         return self
 
     def tombstone(self, *, removed_at: datetime | None = None) -> UserProfileRecord:
-        """Return a tombstoned copy of the live profile root."""
+        """Return a tombstoned :class:`UserProfileRecord` copy of the live profile root."""
         instant = removed_at or utc_now()
         return self.model_copy(
             update={
@@ -227,7 +228,11 @@ class UserProfileSnapshot(BaseModel):
         snapshot_id: str | None = None,
         created_at: datetime | None = None,
     ) -> UserProfileSnapshot:
-        """Create an immutable snapshot from a live profile record."""
+        """Create an immutable snapshot from a live profile record.
+
+        Returns:
+            An immutable :class:`UserProfileSnapshot` for the given profile.
+        """
         if profile.status is not UserProfileStatus.ACTIVE:
             raise UserProfileValidationError("cannot snapshot a tombstoned profile")
         instant = created_at or utc_now()

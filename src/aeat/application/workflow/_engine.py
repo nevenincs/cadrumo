@@ -1311,6 +1311,8 @@ def update_declaration_pointer(
     Upserts a :class:`DeclaracionPointer` into the ``declarations``
     registry. If a pointer already exists for the key, its fields are
     updated with the supplied values.
+
+    Returns the updated :class:`WorkflowState` with the upserted pointer.
     """
     key = declaration_key(modelo, period)
     current = state.declarations.get(key)

@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
+from ... import renta as _renta_snapshot_checks  # noqa: F401
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -103,7 +103,11 @@ def run_registry_calculation_scenario(
     registry_root: Path,
     source_root: Path,
 ) -> RegistryScenarioRunReport:
-    """Execute ``scenario`` against the registry calculator and compare outputs."""
+    """Execute ``scenario`` against the registry calculator and compare outputs.
+
+    Returns:
+        A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
+    """
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     try:
         authority.modelo(scenario.modelo)

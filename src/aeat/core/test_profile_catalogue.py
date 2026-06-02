@@ -40,8 +40,8 @@ def test_setup_flow_round_trip_identity() -> None:
     """get_setup_flow() returns the exact SETUP_FLOW object from _catalogue."""
 
     # Import _catalogue first — its module body calls register_wizard_catalogue.
-    import aeat.application.wizard._catalogue as catalogue
-    from aeat.core.profile_catalogue import get_setup_flow
+    from ..application.wizard import _catalogue as catalogue
+    from .profile_catalogue import get_setup_flow
 
     assert get_setup_flow() is catalogue.SETUP_FLOW, (
         "get_setup_flow() must return the identical SETUP_FLOW object "
@@ -52,8 +52,8 @@ def test_setup_flow_round_trip_identity() -> None:
 def test_wizard_flows_round_trip_identity() -> None:
     """get_wizard_flows() returns the exact WIZARD_FLOWS tuple from _catalogue."""
 
-    import aeat.application.wizard._catalogue as catalogue
-    from aeat.core.profile_catalogue import get_wizard_flows
+    from ..application.wizard import _catalogue as catalogue
+    from .profile_catalogue import get_wizard_flows
 
     assert get_wizard_flows() is catalogue.WIZARD_FLOWS, (
         "get_wizard_flows() must return the identical WIZARD_FLOWS tuple "
@@ -64,7 +64,7 @@ def test_wizard_flows_round_trip_identity() -> None:
 def test_setup_flow_id_is_setup() -> None:
     """The registered SETUP_FLOW carries the canonical 'setup' identifier."""
 
-    from aeat.core.profile_catalogue import get_setup_flow
+    from .profile_catalogue import get_setup_flow
 
     flow = get_setup_flow()
     assert flow.id == "setup", f"Expected flow.id == 'setup', got {flow.id!r}"
@@ -73,7 +73,7 @@ def test_setup_flow_id_is_setup() -> None:
 def test_wizard_flows_contains_setup_flow() -> None:
     """WIZARD_FLOWS is a tuple that contains the SETUP_FLOW descriptor."""
 
-    from aeat.core.profile_catalogue import get_setup_flow, get_wizard_flows
+    from .profile_catalogue import get_setup_flow, get_wizard_flows
 
     flows = get_wizard_flows()
     assert isinstance(flows, tuple), f"WIZARD_FLOWS must be a tuple, got {type(flows)}"
@@ -95,14 +95,14 @@ def test_no_deferred_upward_import_in_deadlines_profiles() -> None:
 
     source = _source_of("aeat.domain.deadlines._profiles")
     assert _UPWARD_PATTERN not in source, (
-        f"aeat.domain.deadlines._profiles still contains a direct import from "
-        f"aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
-        f"aeat.core.profile_catalogue instead."
+        "aeat.domain.deadlines._profiles still contains a direct import from "
+        "aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
+        "aeat.core.profile_catalogue instead."
     )
     assert _ALT_UPWARD_PATTERN not in source, (
-        f"aeat.domain.deadlines._profiles still contains an absolute import from "
-        f"aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
-        f"aeat.core.profile_catalogue instead."
+        "aeat.domain.deadlines._profiles still contains an absolute import from "
+        "aeat.application.wizard._catalogue. Remove it and use get_setup_flow() from "
+        "aeat.core.profile_catalogue instead."
     )
 
 
@@ -111,22 +111,22 @@ def test_no_deferred_upward_import_in_profile_keys() -> None:
 
     source = _source_of("aeat.domain.profile._keys")
     assert _UPWARD_PATTERN not in source, (
-        f"aeat.domain.profile._keys still contains a direct import from "
-        f"aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
-        f"aeat.core.profile_catalogue instead."
+        "aeat.domain.profile._keys still contains a direct import from "
+        "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
+        "aeat.core.profile_catalogue instead."
     )
     assert _ALT_UPWARD_PATTERN not in source, (
-        f"aeat.domain.profile._keys still contains an absolute import from "
-        f"aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
-        f"aeat.core.profile_catalogue instead."
+        "aeat.domain.profile._keys still contains an absolute import from "
+        "aeat.application.wizard._catalogue. Remove it and use get_wizard_flows() from "
+        "aeat.core.profile_catalogue instead."
     )
 
 
 def test_profile_catalogue_exports_are_callable() -> None:
     """All public symbols in aeat.core.profile_catalogue are importable and callable."""
 
-    from aeat.core import profile_catalogue
-    from aeat.core.errors import CoreError
+    from . import profile_catalogue
+    from .errors import CoreError
 
     assert callable(profile_catalogue.register_wizard_catalogue)
     assert callable(profile_catalogue.get_setup_flow)

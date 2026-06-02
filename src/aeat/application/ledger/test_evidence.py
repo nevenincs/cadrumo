@@ -7,16 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.application.ledger._evidence import (
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ._evidence import (
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
 )
-from aeat.core.config import Settings
-from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.tests.secure_sql import isolated_runtime_profile
+from ...core.config import Settings
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.resources._repos.normatives import NormativeRepository
+from .normatives import NormativeRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -57,7 +57,7 @@ def test_normative_repository_get_surfaces_parse_error_on_bad_catalogue(tmp_path
 
     repo = NormativeRepository(root=tmp_path)
 
-    from aeat.domain.normatives._errors import NormativeParseError
+    from ....domain.normatives._errors import NormativeParseError
 
     with pytest.raises(NormativeParseError):
         _ = repo.singleton

@@ -610,6 +610,7 @@ cli:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
         group_help: Készlet-főkönyvek tevékenységek, mozgások és értékelés szerint.
+        iva_rate_help: IVA-kulcs százalékban.
         list_help: Készlet-főkönyvek listázása az aktív bucketben.
         movement_add_help: Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása
           a főkönyvhöz.
@@ -626,7 +627,6 @@ cli:
         valuation_method_help: Értékelési módszer (fifo vagy pmp).
         valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
         year_help: Adóév.
-        iva_rate_help: 'IVA-kulcs százalékban.'
       payable_invoice:
         add_help: Új fizetendő számla regisztrálása.
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
@@ -2567,6 +2567,7 @@ cli:
 core:
   profile:
     errors:
+      output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
 dotted:
@@ -2829,8 +2830,8 @@ errors:
     sede_g313_no_censo: Az AEAT G313 szekcióból nem sikerült olvasható censot lekérni
       a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je
       regisztrálva van-e.
-    sede_no_censo: Az AEAT szekcióból nem sikerült olvasható censot lekérni a(z)
-      {profile_id} profilhoz.
+    sede_no_censo: Az AEAT szekcióból nem sikerült olvasható censot lekérni a(z) {profile_id}
+      profilhoz.
   error:
     error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
       műveletet.
@@ -2898,6 +2899,14 @@ errors:
     error_financial_invoices_invoice_link: A számlát és a tranzakciót nem sikerült
       összekapcsolni.
     error_financial_invoices_invoice_not_found: A kért számla nem található.
+    error_financial_iva: IVA-számítási hiba történt.
+    error_financial_iva_catalogue: Az IVA-katalógust nem sikerült betölteni, feloldani
+      vagy érvényesíteni.
+    error_financial_iva_category_not_found: A kért IVA-kategória nem található a katalógusban.
+    error_financial_iva_classification: Az IVA nem sorolható be egyértelműen.
+    error_financial_iva_rate_not_found: Nem található IVA-kulcs a kért tagállam és
+      típus esetén.
+    error_financial_iva_rate_overlap: Két IVA-kulcs azonos hatályossági ablakot oszt.
     error_financial_provider: Hiba történt a pénzügyi dokumentum importálása során.
     error_financial_provider_config: Egy pénzügyi szolgáltató alosztályának corpus-attribútum
       deklarációi hiányoznak vagy érvénytelenek.
@@ -2907,6 +2916,11 @@ errors:
     error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
       szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
     error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
+    error_iva_prorrata: Hiba történt az IVA prorrata-számítás során.
+    error_iva_prorrata_input: Az IVA prorrata bemeneti adatai sértik az invariánsokat.
+    error_iva_prorrata_sector: Az IVA prorrata szektoriális-szétválasztási adatai
+      ellentmondásosak.
+    error_iva_validation: Egy IVA-mezőérték érvénytelen.
     error_justificante: Igazolással kapcsolatos hiba történt.
     error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
       kódot.
@@ -3000,16 +3014,6 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
-    error_financial_iva_rate_not_found: 'Nem található IVA-kulcs a kért tagállam és típus esetén.'
-    error_financial_iva_rate_overlap: 'Két IVA-kulcs azonos hatályossági ablakot oszt.'
-    error_financial_iva: 'IVA-számítási hiba történt.'
-    error_financial_iva_catalogue: 'Az IVA-katalógust nem sikerült betölteni, feloldani vagy érvényesíteni.'
-    error_financial_iva_category_not_found: 'A kért IVA-kategória nem található a katalógusban.'
-    error_financial_iva_classification: 'Az IVA nem sorolható be egyértelműen.'
-    error_iva_prorrata: 'Hiba történt az IVA prorrata-számítás során.'
-    error_iva_prorrata_input: 'Az IVA prorrata bemeneti adatai sértik az invariánsokat.'
-    error_iva_prorrata_sector: 'Az IVA prorrata szektoriális-szétválasztási adatai ellentmondásosak.'
-    error_iva_validation: 'Egy IVA-mezőérték érvénytelen.'
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -3247,8 +3251,8 @@ errors:
       egyszer fut le. Profil váltáshoz használja az  parancsot.
     censo_apply_conflict: A censo nem alkalmazható, mert folyamatban van munka egy
       függő egységen. Először oldja meg a függőben lévő állapotot.
-    censo_field_validation: Az AEAT censo olyan értéket adott vissza, amelyet a
-      séma nem tud elfogadni. Tekintse át az elnevezett mezőt tanácsadójával.
+    censo_field_validation: Az AEAT censo olyan értéket adott vissza, amelyet a séma
+      nem tud elfogadni. Tekintse át az elnevezett mezőt tanácsadójával.
     censo_not_available: Az AEAT nem adott vissza olvasható censot. Előfordulhat,
       hogy nincs IAE-n regisztrálva, vagy a tanúsítványa nincs a NIF-jéhez rendelve.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modelo-futtatást,

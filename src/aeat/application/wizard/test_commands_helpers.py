@@ -118,7 +118,7 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
     from ...domain.profile._ccaa import CCAA
 
     expected = [member.value for member in CCAA] + ["pais_vasco", "navarra"]
-    assert _CCAA_CHOICE_VALUES == expected
+    assert expected == _CCAA_CHOICE_VALUES
 
 
 def test_no_flag_name_inserts_no_prefix_for_confirm_questions() -> None:

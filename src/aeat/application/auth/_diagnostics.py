@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -122,7 +122,11 @@ class _DiagnosticPayload(BaseModel):
 
 
 def list_auth_diagnostics() -> AuthDiagnosticListReport:
-    """List readable encrypted Cl@ve auth diagnostics without exposing page bodies."""
+    """List readable encrypted Cl@ve auth diagnostics without exposing page bodies.
+
+    Returns an :class:`AuthDiagnosticListReport` sorted by capture time,
+    most recent first.
+    """
     rows = tuple(
         sorted(
             (_summary_from_payload(_payload(record.payload)) for record in _diagnostic_records()),
@@ -134,7 +138,7 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 
 
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
-    """Load one encrypted Cl@ve auth diagnostic by id, redacting sensitive bodies."""
+    """Load one encrypted Cl@ve auth diagnostic by id and return an :class:`AuthDiagnosticDetail`, redacting sensitive bodies."""
     record = _secure_objects().load(
         _DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
@@ -160,7 +164,11 @@ def record_auth_diagnostic_phone_state(
     diagnostic_id: str,
     phone_state: str,
 ) -> AuthDiagnosticReportResult | None:
-    """Attach the operator-observed Cl@ve app state to an encrypted diagnostic."""
+    """Attach the operator-observed Cl@ve app state to an encrypted diagnostic.
+
+    Returns an :class:`AuthDiagnosticReportResult`, or ``None`` when the
+    diagnostic is not found.
+    """
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
         raise AuthDiagnosticPhoneStateError(
             phone_state, context={"phone_state": phone_state}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.domain.auth.apoderamientos import (
+from . import (
     ALL_TOKEN,
     UnknownScopeError,
     expand_all_token,

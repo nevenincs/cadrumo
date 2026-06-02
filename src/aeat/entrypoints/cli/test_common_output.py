@@ -3,9 +3,9 @@ from __future__ import annotations
 import click
 import pytest
 
-from aeat.core.json_contract import OutputSchema
-from aeat.core.redaction import CLI_PROFILE_ID_PLACEHOLDER
-from aeat.entrypoints.cli._common import _emit_envelope
+from ...core.json_contract import OutputSchema
+from ...core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ._common import _emit_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

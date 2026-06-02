@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from aeat.core.profile import SetupAnswers
+from ...core.profile import SetupAnswers
 
 from ...domain.deadlines._models import (
     IVARegime,
@@ -63,7 +63,7 @@ class WizardStatusError(WizardError):
 
 
 def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
-    """Return the readiness report for the current workflow state.
+    """Return the :class:`WizardStatusReport` readiness for the current workflow state.
 
     ``profile_ready`` is true only when both the registry-required keys
     (identity) AND the deadline-engine enrolment key (IVA regime) are

@@ -11,7 +11,6 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
-
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -22,8 +21,8 @@ from ..categories import (
     StatutoryCapPeriod,
     family_for,
 )
-from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from ._errors import RentaValidationError
+from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 
 LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 
@@ -243,7 +242,11 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
 
 
 def normalize_spending_category(value: SpendingCategory | str) -> SpendingCategory:
-    """Normalize persisted category identifiers to closed enum members."""
+    """Normalize persisted category identifiers to closed enum members.
+
+    Returns:
+        The :class:`SpendingCategory` member for the given value.
+    """
     if isinstance(value, SpendingCategory):
         return value
     return SpendingCategory(value)
@@ -254,7 +257,7 @@ def evaluate_renta_deductibility(
     profile: CategoryProfile,
     context: RentaDeductibilityContext,
 ) -> RentaDeductibilityResult:
-    """Evaluate one classified ledger fact against its category profile."""
+    """Evaluate one classified ledger fact and return a :class:`RentaDeductibilityResult`."""
     if profile.category is not fact.category:
         raise RentaValidationError(
             f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}"
@@ -336,7 +339,11 @@ def build_renta_deductible_expense_observation(
     *,
     tax_year: int,
 ) -> RentaDeductibleExpenseObservation:
-    """Build a first-slice Modelo 100 observation from an eligible result."""
+    """Build a first-slice Modelo 100 observation from an eligible result.
+
+    Returns:
+        A :class:`RentaDeductibleExpenseObservation` ready for filing assembly.
+    """
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category is not result.category:

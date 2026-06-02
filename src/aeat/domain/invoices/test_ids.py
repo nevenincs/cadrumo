@@ -7,7 +7,7 @@ import hashlib
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.domain.invoices._ids import InvoiceId
+from ._ids import InvoiceId
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

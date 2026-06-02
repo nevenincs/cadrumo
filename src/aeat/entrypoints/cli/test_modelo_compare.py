@@ -30,8 +30,6 @@ Authority for M130 casilla arithmetic:
 
 from __future__ import annotations
 
-from aeat.entrypoints.cli._test_envelope import unwrap_schema_envelope as _payload
-
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
@@ -39,12 +37,13 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.user_profile._repository import UserProfileLifecycleRepository
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import CasillaObservation, calculate_registry_snapshot
-from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ...application.user_profile._repository import UserProfileLifecycleRepository
+from ...core.resources import resources
+from ...domain.calculations.registry import CasillaObservation, calculate_registry_snapshot
+from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ._test_envelope import unwrap_schema_envelope as _payload
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

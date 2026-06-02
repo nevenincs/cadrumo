@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.classification import (
+from .classification import (
     OutputSensitivityClass,
     SensitivityClass,
     default_output_policy_for,
     default_policy_for,
 )
-from aeat.core.redaction import (
+from .redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
@@ -47,6 +47,7 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
 def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
     payload = {
         "profile_id": _PROFILE_ID,
+        "active_profile": _PROFILE_ID,
         "bucket_id": "bucket-alpha",
         "object_key": _OBJECT_KEY,
         "label": "operator",
@@ -68,6 +69,7 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
 
     assert redacted == {
         "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        "active_profile": CLI_PROFILE_ID_PLACEHOLDER,
         "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
         "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
         "label": "operator",

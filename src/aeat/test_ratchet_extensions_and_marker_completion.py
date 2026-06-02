@@ -75,7 +75,7 @@ def test_check_relative_imports_uses_local_utf8_constant() -> None:
         if 'encoding="utf-8"' in ln
     ]
     assert not lines_with_bare, (
-        f"scripts/check_relative_imports.py: bare encoding=\"utf-8\" survived at "
+        "scripts/check_relative_imports.py: bare encoding=\"utf-8\" survived at "
         + ", ".join(f"line {i}: {ln.strip()!r}" for i, ln in lines_with_bare)
     )
 

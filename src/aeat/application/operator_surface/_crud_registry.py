@@ -104,7 +104,7 @@ BUILTIN_CRUD_CATALOGUE: CrudContractCatalogue = CrudContractCatalogue(
 
 
 def get_builtin_catalogue() -> CrudContractCatalogue:
-    """Return the shipped noun-group catalogue.
+    """Return the shipped :class:`CrudContractCatalogue`.
 
     Indirection through a function lets future code substitute a
     catalogue per test fixture without mutating module-level state.

@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.resources import bundled_path
-from aeat.domain.categories import SpendingCategory, resolve_category_profiles
-from aeat.domain.renta import (
+from ....core.resources import bundled_path
+from ...categories import SpendingCategory, resolve_category_profiles
+from ...renta import (
     RentaDeductibilityContext,
     RentaDeductibleExpenseFact,
     RentaExpenseDirection,

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.logging import get_logger
 from ._errors import InvoicePersistenceError
@@ -149,7 +149,7 @@ class InvoiceCatalogueRepository:
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
 
     def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
-        """Return the secure-object upsert for ``catalogue`` without committing it."""
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 

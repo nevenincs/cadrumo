@@ -94,7 +94,11 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         kind: RuleKind | None = None,
         lang: str | None = None,
     ) -> Iterator[Rule]:
-        """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries."""
+        """Delegate to :func:`aeat.domain.manuals.find_rules` for rule queries.
+
+        Yields each matching :class:`Rule` from the catalogue in
+        encounter order.
+        """
         from ....domain.manuals import find_rules
 
         return find_rules(
@@ -106,7 +110,10 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         )
 
     def iter_sections(self, manual: Manual) -> Iterator[Section]:
-        """Delegate to :func:`aeat.domain.manuals.iter_sections` for section iteration."""
+        """Delegate to :func:`aeat.domain.manuals.iter_sections` for section iteration.
+
+        Yields each :class:`Section` from ``manual`` in document order.
+        """
         from ....domain.manuals import iter_sections
 
         return iter_sections(manual, settings=self._settings())

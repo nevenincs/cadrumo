@@ -7,7 +7,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from aeat.core.aggregation import AggregationSourceKind
+from ...core.aggregation import AggregationSourceKind
+
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -16,7 +18,6 @@ from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
 from ._models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ReviewQueueRow(BaseModel):
     """CLI-ready read-only review queue row."""
@@ -72,7 +73,7 @@ def project_review_queue(
     state: ReviewState = ReviewState.PENDING,
     modelo: str | None = None,
 ) -> ReviewQueueReport:
-    """Return review rows using accepted source-kind vocabulary."""
+    """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary."""
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
     bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
@@ -94,7 +95,10 @@ def project_review_queue(
     return ReviewQueueReport(rows=rows)
 
 def project_review_item(item_id: str, *, settings: Settings | None = None) -> ReviewQueueRow:
-    """Return one review row by id."""
+    """Return one review row by id.
+
+    Returns a :class:`ReviewQueueRow` matching ``item_id``.
+    """
     report = project_review_queue(settings=settings, state=ReviewState.ALL)
     for row in report.rows:
         if row.item_id == item_id:
@@ -202,7 +206,6 @@ def _render_summary(value: str) -> str:
 
 def _active_bucket_id() -> str:
     from ..workflow._models import active_bucket_id_or_raise
-    from ..workflow._persistence import workflow_state_repository
 
     return active_bucket_id_or_raise()
 

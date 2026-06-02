@@ -30,9 +30,9 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.adapters.persistence.storage.bucket._manifest import ManifestKdfParams
-from aeat.adapters.persistence.storage.errors import KeyDerivationError
-from aeat.adapters.persistence.storage.master_key._kdf import derive_kek
+from ..bucket._manifest import ManifestKdfParams
+from ..errors import KeyDerivationError
+from ._kdf import derive_kek
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

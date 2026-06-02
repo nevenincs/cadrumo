@@ -81,6 +81,9 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
 
     Entries are sorted by index so the reconstructed tuple preserves the
     original insertion order.
+
+    Returns:
+        Tuple of :class:`DescendantInfo` reconstructed from the profile facts.
     """
     rows: dict[int, dict[str, str]] = {}
     for path, value in facts.items():

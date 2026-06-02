@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.outbound.aeat.sede._groi_check import (
+from ._groi_check import (
     DEFAULT_GROI_TIMEOUT_MS,
     GroiNifVerdict,
     GroiResult,
@@ -24,8 +24,8 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     _assert_query_browser_action,
     extract_verdict_from_response_text,
 )
-from aeat.core.config import Settings
-from aeat.domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
+from .....core.config import Settings
+from .....domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -177,7 +177,7 @@ def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
 # AEAT changes the response phrasing, this suite breaks loudly.
 # ---------------------------------------------------------------------------
 
-from aeat.core.resources import bundled_path
+from .....core.resources import bundled_path
 
 _GROI_RESPONSE_SAMPLES_DIR = bundled_path("corpus", "aeat_official", "groi_response_samples")
 

@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...tests.cli_runner import invoke_cached_cli
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -114,9 +114,9 @@ def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
     refactor that gated ALL stubs on the flag would fail (b).
     """
 
-    from aeat.core.config import override_settings
-    from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
-    from aeat.entrypoints.cli._modelo import _guard_stub_modelo
+    from ...core.config import override_settings
+    from ._errors import CliRefusedBoundaryError
+    from ._modelo import _guard_stub_modelo
 
     with override_settings(aeat_m210_engine_live=True):
         # Flag-True: modelo 210 falls through silently (no exception).
@@ -135,9 +135,9 @@ def test_guard_stub_modelo_210_refuses_when_engine_live_flag_is_unset() -> None:
     under the default Settings() — no override, real ContextVar state.
     """
 
-    from aeat.core.config import Settings
-    from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
-    from aeat.entrypoints.cli._modelo import _guard_stub_modelo
+    from ...core.config import Settings
+    from ._errors import CliRefusedBoundaryError
+    from ._modelo import _guard_stub_modelo
 
     assert Settings().aeat_m210_engine_live is False, (
         "S391 contract: m210_engine_live must default False until S392 acceptance"

@@ -15,16 +15,16 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.core.config import SecretStoreBackend, override_settings
-from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import dev_test_database_password
+from ..core.config import SecretStoreBackend, override_settings
+from ..tests.cli_runner import invoke_cached_cli
+from ..tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @contextmanager
 def _isolate(tmp_path: Path) -> Iterator[None]:
-    from aeat.adapters.persistence.storage.sql import dispose_engine
+    from ..adapters.persistence.storage.sql import dispose_engine
 
     with override_settings(
         aeat_local_storage_root=tmp_path / "storage",
@@ -42,9 +42,9 @@ def _isolate(tmp_path: Path) -> Iterator[None]:
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
     """Seed an active profile through the profile application service."""
 
-    from aeat.application.user_profile._orchestration import register_active_profile
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.domain.user_profile import UserProfileFact
+    from .user_profile._orchestration import register_active_profile
+    from .workflow._persistence import workflow_state_repository
+    from ..domain.user_profile import UserProfileFact
 
     repo = workflow_state_repository()
     facts = (
@@ -94,9 +94,9 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         facts = {row["path"]: row["value"] for row in json.loads(show_via_config.output)["facts"]}
         assert facts["iva.regime"] == "GENERAL"
 
-        from aeat.application.user_profile import UserProfileLifecycleRepository
-        from aeat.application.user_profile._orchestration import fact_value, profile_storage_session
-        from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+        from .user_profile import UserProfileLifecycleRepository
+        from .user_profile._orchestration import fact_value, profile_storage_session
+        from .workflow._profile_bucket_scan import read_profile_bucket
 
         # The bucket directory is named by the minted UUID; resolve it
         # from the operator label "default" carried in the manifest.

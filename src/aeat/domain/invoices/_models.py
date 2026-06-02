@@ -556,10 +556,10 @@ class InvoiceCatalogue(BaseModel):
             invoice_id: Stable invoice identifier.
 
         Returns:
-            The matching invoice, or ``None`` when absent.
+            The matching :class:`Invoice`, or ``None`` when absent.
         """
         return self.invoices.get(invoice_id)
 
     def values(self) -> Iterator[Invoice]:
-        """Iterate over catalogue invoices."""
+        """Iterate over catalogue :class:`Invoice` records."""
         return iter(self.invoices.values())

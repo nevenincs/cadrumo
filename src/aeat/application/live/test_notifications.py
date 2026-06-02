@@ -9,17 +9,17 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from aeat.adapters.outbound.aeat.sede._notifications import (
+from ...adapters.outbound.aeat.sede._notifications import (
     NotificationsSnapshot,
     RemoteNotification,
 )
-from aeat.adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
-from aeat.application.live._notifications import (
+from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
+from ._notifications import (
     NotificationsService,
     NotificationsSnapshotNotFoundError,
     notifications_snapshot_object_key,
 )
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -120,7 +120,7 @@ class PromptRegistry(BaseModel):
         self.definitions[self._composite_key(definition.id, definition.version)] = definition
 
     def get(self, prompt_id: str, version: int | None = None) -> PromptDefinition:
-        """Return a prompt definition by id and optional version."""
+        """Return a :class:`PromptDefinition` by id and optional version."""
         if version is not None:
             return self.definitions[self._composite_key(prompt_id, version)]
         candidates = [item for item in self.definitions.values() if item.id == prompt_id]
@@ -134,7 +134,7 @@ class PromptRegistry(BaseModel):
 
     @classmethod
     def seeded(cls) -> PromptRegistry:
-        """Return the default prompt registry for current downstream consumers."""
+        """Return a :class:`PromptRegistry` seeded with the default prompts for current downstream consumers."""
         registry = cls()
         registry.register(
             PromptDefinition(

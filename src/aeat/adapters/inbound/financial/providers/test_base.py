@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.tests import FIXTURES_DIR
+from .....tests import FIXTURES_DIR
 
 from .....domain.transactions import RawTransaction, SourceFormat
 from .. import (

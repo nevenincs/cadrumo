@@ -20,21 +20,21 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.auth._operator import (
+from ....adapters.persistence.storage.master_key._active_session import activate_session
+from ....adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.auth._operator import (
     AuthLoginNotEnabledError,
     AuthLoginPreconditionError,
     configure_operator_auth,
     inspect_operator_auth,
     login_operator_auth,
 )
-from aeat.application.auth._operator import test_operator_auth as probe_operator_auth
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import override_settings
-from aeat.entrypoints.cli._config import app as config_app
+from ....application.auth._operator import test_operator_auth as probe_operator_auth
+from ....application.user_profile._testing import register_minimal_profile
+from ....application.workflow._persistence import workflow_state_repository
+from ....core.config import override_settings
+from . import app as config_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -161,7 +161,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
     # empty by construction. Render the i18n key (with its ``provider``
     # interpolation context) through ``tr`` to get the user-prose
     # surface this round-5 B2 finding promises.
-    from aeat.core.i18n import tr
+    from ....core.i18n import tr
 
     message = tr(exc_info.value.translated_message, **(exc_info.value.context or {}))
     assert "AEAT_LIVE_TESTS_ENABLED" not in message, (
@@ -191,15 +191,14 @@ def test_login_refuses_when_certificate_path_unset(
     configure_operator_auth("certificate")  # no --file persisted
 
     # Enable the live-tests gate via the canonical Settings override.
-    with override_settings(aeat_live_tests_enabled="1"):
-        with pytest.raises(AuthLoginPreconditionError) as exc_info:
-            asyncio.run(login_operator_auth("certificate"))
+    with override_settings(aeat_live_tests_enabled="1"), pytest.raises(AuthLoginPreconditionError) as exc_info:
+        asyncio.run(login_operator_auth("certificate"))
 
     # The exception is operator-facing via ``translated_message`` only —
     # the raise site passes no positional ``message``, so ``str(exc)`` is
     # empty by construction. Render the i18n key through ``tr`` to get
     # the user-prose surface this round-5 finding promises.
-    from aeat.core.i18n import tr
+    from ....core.i18n import tr
 
     message = tr(exc_info.value.translated_message)
     assert "AEAT_CERTIFICATE_PATH" not in message
@@ -335,7 +334,7 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
         aeat_clave_movil_dni_nie="00000001R",
         aeat_output_language="ca",
     ):
-        from aeat.core.i18n._render import clear_output_language_cache
+        from ....core.i18n._render import clear_output_language_cache
 
         clear_output_language_cache()
         result = configure_operator_auth("clave_movil")

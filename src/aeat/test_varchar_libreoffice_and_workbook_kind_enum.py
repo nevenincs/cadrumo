@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from .core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -136,7 +136,7 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
     """WorkbookKind must be a StrEnum enrolling all six canonical kind values."""
     from enum import StrEnum
 
-    from aeat.domain.calculations.registry._workbook_parity import WorkbookKind
+    from .domain.calculations.registry._workbook_parity import WorkbookKind
 
     assert issubclass(WorkbookKind, StrEnum), (
         "WorkbookKind must be a StrEnum subclass, not a Literal alias."

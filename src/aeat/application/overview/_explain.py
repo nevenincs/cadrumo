@@ -23,8 +23,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now
-from aeat.domain.calculations.registry.applicability import (
+from ...core.time import now
+from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )

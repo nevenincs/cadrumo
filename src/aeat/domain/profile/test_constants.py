@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from aeat.domain.profile import ProfileName
+from . import ProfileName
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

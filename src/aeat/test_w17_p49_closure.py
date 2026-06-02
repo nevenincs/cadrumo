@@ -73,7 +73,7 @@ def test_s634_no_bare_eur_default_in_ledger_expenses() -> None:
     Literal["EUR"] type annotations are exempt — only default-value positions are checked.
     Uses AST so Literal["EUR"] annotations are never misidentified.
     """
-    from aeat.core.external_constants import DEFAULT_CURRENCY
+    from .core.external_constants import DEFAULT_CURRENCY
 
     assert DEFAULT_CURRENCY == "EUR", "sanity: DEFAULT_CURRENCY must equal 'EUR'"
 
@@ -109,7 +109,7 @@ def test_s634_no_bare_eur_default_in_ledger_expenses() -> None:
 
 def test_s635_prefill_report_type_is_binding_prefill_report() -> None:
     """IvaCompensationReconciliationReport.prefill_report must be typed BindingPrefillReport."""
-    from aeat.application.calculations import (
+    from .application.calculations import (
         BindingPrefillReport,
         IvaCompensationReconciliationReport,
     )

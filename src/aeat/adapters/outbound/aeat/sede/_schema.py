@@ -22,7 +22,7 @@ from typing import Final, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
-from .....domain.calculations.registry._ids import CasillaId
+from .....domain.calculations.registry import CasillaId
 from ._errors import SedeValidationError
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(

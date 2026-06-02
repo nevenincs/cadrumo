@@ -123,7 +123,7 @@ class UsageRecorder:
             until: Inclusive upper date bound, or ``None`` for no upper bound.
 
         Returns:
-            Loaded usage records in file-iteration order.
+            Loaded :class:`UsageRecord` entries in file-iteration order.
         """
         from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass

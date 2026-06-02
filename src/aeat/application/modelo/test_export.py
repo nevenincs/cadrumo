@@ -18,31 +18,31 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import SecretStoreBackend, Settings, override_settings
-from aeat.domain.deadlines import TaxpayerProfile
-from aeat.domain.deadlines._models import IVARegime
-from aeat.domain.filing import ModeloCasillaProvenance
-from aeat.domain.modelos._calculation_repository import (
+from ...adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ..calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
+from ..user_profile._orchestration import profile_create_storage_span
+from ..user_profile._testing import register_minimal_profile
+from ..workflow._persistence import workflow_state_repository
+from ...core.config import SecretStoreBackend, Settings, override_settings
+from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines._models import IVARegime
+from ...domain.filing import ModeloCasillaProvenance
+from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
 )
-from aeat.domain.modelos._calculation_revision import (
+from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from aeat.domain.modelos._codes import ModeloCode
-from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueRepository
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
-from aeat.domain.modelos._verification_repository import VerificationReportCatalogueRepository
-from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from aeat.tests.secure_sql import dev_test_database_password
+from ...domain.modelos._codes import ModeloCode
+from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ...tests.secure_sql import dev_test_database_password
 
 from ._actions import (
     CalculationRevisionNotFoundError,

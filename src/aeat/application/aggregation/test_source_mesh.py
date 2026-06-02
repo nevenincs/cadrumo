@@ -7,9 +7,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage.errors import DecryptionError
-from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import load_registry_tree
+from ...adapters.persistence.storage.errors import DecryptionError
+from ...core.resources import bundled_path
+from ...domain.calculations.registry import load_registry_tree
 
 from . import (
     CalculationSourceDiagnostic,

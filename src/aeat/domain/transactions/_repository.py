@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
@@ -197,7 +197,7 @@ class TransactionCatalogueRepository:
         )
 
     def to_secure_object_write(self, catalogue: TransactionCatalogue) -> SecureObjectWrite:
-        """Return the secure-object upsert for ``catalogue`` without committing it."""
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
         from ...adapters.persistence.storage.envelope._envelope import Envelope
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 

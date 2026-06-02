@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.aggregation import AggregationPeriodError, Period, PeriodKind
+from . import AggregationPeriodError, Period, PeriodKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

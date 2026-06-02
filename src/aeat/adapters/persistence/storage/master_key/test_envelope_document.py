@@ -20,7 +20,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage.master_key._master_key import (
+from ._master_key import (
     EnvelopeDocument,
     _extract_profile_tax_ids,
 )

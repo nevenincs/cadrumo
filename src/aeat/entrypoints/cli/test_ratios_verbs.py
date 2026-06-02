@@ -8,13 +8,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.user_profile._orchestration import profile_create_storage_span
-from aeat.application.user_profile._testing import register_minimal_profile
-from aeat.application.workflow._models import resolve_active_bucket_id
-from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.entrypoints.cli._ledger import ratios_app
-from aeat.tests.secure_sql import isolated_profile_storage_root
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._models import resolve_active_bucket_id
+from ...application.workflow._persistence import workflow_state_repository
+from ._ledger import ratios_app
+from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -92,7 +92,7 @@ def test_ratios_set_emits_ledger_ratios_set_event(cli_runner: CliRunner) -> None
     """`ratios set` records a typed LEDGER_RATIOS_SET event in the bucket
     history so downstream auditors can replay the override sequence."""
 
-    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     set_result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.5"])
     assert set_result.exit_code == 0, set_result.output
@@ -113,7 +113,7 @@ def test_ratios_unset_emits_ledger_ratios_unset_event(cli_runner: CliRunner) -> 
     prior ratio value so the operator-visible mutation cannot be replayed
     only from the secure-object snapshot."""
 
-    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.5"])
     unset_result = cli_runner.invoke(ratios_app, ["unset", "vehiculo_combustible"])
@@ -140,7 +140,7 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
 
     from datetime import UTC, datetime
 
-    from aeat.application.live._censo import CensoSnapshotService
+    from ...application.live._censo import CensoSnapshotService
 
     bucket_id = resolve_active_bucket_id() or ""
     service = CensoSnapshotService(bucket_id=bucket_id)
@@ -163,7 +163,7 @@ def test_ratios_set_emits_censo_override_warning_when_suministros_diverges(
     event. The set itself still lands — the operator may legitimately
     model a planned change — but the divergence is recorded."""
 
-    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
@@ -194,7 +194,7 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw(
     no warning fires. Witnesses that the warning isn't spuriously
     emitted on every HOME_OFFICE set."""
 
-    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
@@ -235,7 +235,7 @@ def test_ratios_set_silent_for_non_home_office_category(cli_runner: CliRunner) -
     """The override-warning event is HOME_OFFICE-scoped per the ADR:
     other categories don't carry the censo-binding contract."""
 
-    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 

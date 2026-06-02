@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import (
+from . import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -47,11 +47,11 @@ from aeat.adapters.persistence.storage import (
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
 )
-from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
-from aeat.adapters.persistence.storage.errors import NamespaceRegistryError
-from aeat.core.classification import SensitivityClass
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
-from aeat.core.paths import PROJECT_ROOT
+from ._namespace_registry import StoragePathDefinition, StoragePathKind
+from .errors import NamespaceRegistryError
+from ....core.classification import SensitivityClass
+from ....core.errors import ERROR_REGISTRY, build_error_envelope
+from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

@@ -15,13 +15,13 @@ import decimal
 
 import pytest
 
-from aeat.core.errors import (
+from .core.errors import (
     AeatError,
     build_error_envelope,
     get_registered_error_code,
 )
-from aeat.core.profile import ProjectAnswersNotRegisteredError
-from aeat.core.profile_catalogue import (
+from .core.profile import ProjectAnswersNotRegisteredError
+from .core.profile_catalogue import (
     WizardCatalogueAlreadyRegisteredError,
     WizardCatalogueNotRegisteredError,
 )
@@ -92,7 +92,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
 
     def test_invalid_decimal_threshold_returns_false(self) -> None:
         """A non-parseable threshold string hits InvalidOperation → returns False."""
-        from aeat.application.modelo._actions import _evaluate_advisory_predicate_fires
+        from .application.modelo._actions import _evaluate_advisory_predicate_fires
 
         result = _evaluate_advisory_predicate_fires(
             self._INVALID_THR_EXPR,
@@ -102,7 +102,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
 
     def test_valid_ratio_ge_evaluates_true(self) -> None:
         """A valid threshold parses and evaluates the ratio correctly."""
-        from aeat.application.modelo._actions import _evaluate_advisory_predicate_fires
+        from .application.modelo._actions import _evaluate_advisory_predicate_fires
 
         # 2/1 = 2.0 >= 0.5 → True
         result = _evaluate_advisory_predicate_fires(
@@ -113,7 +113,7 @@ class TestAdvisoryPredicateDecimalNarrowing:
 
     def test_valid_ratio_below_threshold_evaluates_false(self) -> None:
         """A ratio below threshold correctly returns False."""
-        from aeat.application.modelo._actions import _evaluate_advisory_predicate_fires
+        from .application.modelo._actions import _evaluate_advisory_predicate_fires
 
         # 0.1/1 = 0.1, which is < 0.5 → False
         result = _evaluate_advisory_predicate_fires(
@@ -142,7 +142,7 @@ class TestResultSummaryNarrowing:
 
     def test_aeat_error_from_get_work_unit_returns_none(self) -> None:
         """An AeatError from get_work_unit is caught and returns None."""
-        import aeat.application.modelo._result_summary as module
+        from .application.modelo import _result_summary as module
 
         original = module.get_work_unit
 
@@ -159,7 +159,7 @@ class TestResultSummaryNarrowing:
 
     def test_lookup_error_from_get_work_unit_returns_none(self) -> None:
         """A LookupError from get_work_unit returns None."""
-        import aeat.application.modelo._result_summary as module
+        from .application.modelo import _result_summary as module
 
         original = module.get_work_unit
 
@@ -176,7 +176,7 @@ class TestResultSummaryNarrowing:
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""
-        import aeat.application.modelo._result_summary as module
+        from .application.modelo import _result_summary as module
 
         original = module.get_work_unit
 
@@ -207,7 +207,7 @@ class TestLedgerBulkClassifyNarrowing:
         try:
             # Use a registered AeatError subclass
             raise ProjectAnswersNotRegisteredError()
-        except (AeatError,):
+        except AeatError:
             caught = True
         assert caught
 

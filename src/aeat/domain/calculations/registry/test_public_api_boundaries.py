@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
-from aeat.domain.calculations import registry
+from ....core.paths import PROJECT_ROOT
+from .. import registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

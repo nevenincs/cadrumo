@@ -17,7 +17,6 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from ....core.identity import IdentityError
 from ._records import (
     AddressReplacement,
     ArbitraryReplacement,
@@ -74,11 +73,11 @@ class TestNifReplacement:
         assert replacement.real.get_secret_value() == _REAL_NIF_CANARY
 
     def test_rejects_synthetic_with_bad_checksum(self) -> None:
-        # validate_spanish_tax_id raises IdentityError, which does NOT
-        # inherit from ValueError; pydantic propagates it out of the
-        # @field_validator unwrapped. pytest.raises(ValidationError)
-        # would silently never match — pin the actual class.
-        with pytest.raises(IdentityError, match=r"NIE checksum letter is invalid"):
+        # IdentityError now inherits from ValueError so pydantic wraps
+        # it as ValidationError at the @field_validator boundary. The
+        # original IdentityError message is preserved in the wrapped
+        # error's text.
+        with pytest.raises(ValidationError, match=r"NIE checksum letter is invalid"):
             NifReplacement(
                 real=SecretStr(_REAL_NIE_CANARY),
                 synthetic="Y0000001Z",  # wrong checksum letter

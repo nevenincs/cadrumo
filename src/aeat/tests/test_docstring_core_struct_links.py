@@ -173,3 +173,58 @@ def test_modules_that_use_a_core_struct_link_it() -> None:
             for anchor in sorted(violations[module]):
                 lines.append(f"  {module}  ->  :class:`{anchor}`")
         pytest.fail("\n".join(lines))
+
+
+def _annotation_names(node: ast.AST) -> set[str]:
+    """Return every bare identifier appearing in a (possibly nested) annotation."""
+    names: set[str] = set()
+    for child in ast.walk(node):
+        if isinstance(child, ast.Name):
+            names.add(child.id)
+        elif isinstance(child, ast.Attribute):
+            names.add(child.attr)
+    return names
+
+
+def test_public_functions_link_anchor_parameters() -> None:
+    """A documented public function taking a core struct as a parameter links it.
+
+    The spine is highest-signal at a function's own boundary: if a parameter is
+    typed as a core struct, the function's docstring should cross-link it so a
+    reader following the signature lands on the canonical definition.
+    """
+    violations: dict[str, list[str]] = defaultdict(list)
+    for path in _source_files():
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:  # pragma: no cover - syntax is its own gate's concern
+            continue
+        module = _module_name(path)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            if node.name.startswith("_"):
+                continue
+            doc = ast.get_docstring(node)
+            if not doc:
+                continue
+            linked = {m for m in _ROLE.findall(doc) if m in CORE_STRUCTS}
+            params = node.args.args + node.args.kwonlyargs + node.args.posonlyargs
+            referenced: set[str] = set()
+            for arg in params:
+                if arg.annotation is not None:
+                    referenced |= {n for n in _annotation_names(arg.annotation) if n in CORE_STRUCTS}
+            for anchor in sorted(referenced - linked):
+                violations[f"{module}::{node.name}"].append(anchor)
+
+    if violations:
+        total = sum(len(v) for v in violations.values())
+        lines = [
+            f"{total} public functions take a core struct their docstring does not link.",
+            "Cross-link the parameter type (e.g. in the Args: section) with :class:`Name`:",
+            "",
+        ]
+        for symbol in sorted(violations):
+            for anchor in sorted(violations[symbol]):
+                lines.append(f"  {symbol}  ->  :class:`{anchor}`")
+        pytest.fail("\n".join(lines))

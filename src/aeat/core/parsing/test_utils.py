@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.parsing._utils import _parse_bool
+from ._utils import _parse_bool
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 

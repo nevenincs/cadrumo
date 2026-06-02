@@ -14,8 +14,8 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.resources import resources
-from aeat.domain.calculations.registry import (
+from ....core.resources import resources
+from . import (
     DataBindingDefinition,
     ModeloRevision,
     OssIossLedgerObservation,
@@ -23,7 +23,7 @@ from aeat.domain.calculations.registry import (
     resolve_ledger_oss_aggregation_binding_values,
     validate_ledger_oss_aggregation_binding_definition,
 )
-from aeat.domain.iva import (
+from ...iva import (
     EUMemberState,
     InvoiceKind,
     IvaRateKind,

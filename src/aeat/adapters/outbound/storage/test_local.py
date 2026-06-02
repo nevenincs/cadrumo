@@ -15,16 +15,16 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.outbound.storage import (
-    ProviderKind,
+from . import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
+    OutboundStorageValidationError,
+    ProviderKind,
     StorageCorruptionError,
     StorageProvider,
-    OutboundStorageValidationError,
 )
-from aeat.adapters.outbound.storage._local import LocalFileSystemProvider
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
+from ._local import LocalFileSystemProvider
+from ....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

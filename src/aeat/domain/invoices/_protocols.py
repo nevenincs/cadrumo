@@ -32,7 +32,11 @@ class InvoiceCatalogueRepositoryProtocol(Protocol):
         ...
 
     def load(self) -> InvoiceCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent."""
+        """Return the persisted catalogue or an empty catalogue if absent.
+
+        Returns:
+            The :class:`InvoiceCatalogue` loaded from storage.
+        """
         ...
 
     def save(self, catalogue: InvoiceCatalogue) -> None:

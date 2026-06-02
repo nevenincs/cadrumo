@@ -22,12 +22,12 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket._manifest import ManifestKdfParams
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import ProfileId as _ProfileId
 from ...core.time._utc import validate_utc_aware
 from ...domain.user_profile import UserProfileRecord, UserProfileStatus
 from ...domain.user_profile._errors import UserProfileValidationError
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 class ProfileAggregate(BaseModel):
     """The whole logical profile as one strict, frozen in-memory object.

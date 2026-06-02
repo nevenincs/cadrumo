@@ -10,13 +10,11 @@ revision.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import pytest
 
+from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import InputKind
 from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
-from ...core.resources import bundled_path as _bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

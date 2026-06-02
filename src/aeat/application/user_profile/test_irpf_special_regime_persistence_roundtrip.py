@@ -36,7 +36,7 @@ import pytest
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import override_settings
 from ...core.resources import resources
-from ...domain.deadlines import IrpfSpecialRegime, IVARegime
+from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
 from ...tests.secure_sql import isolated_runtime_profile
 from ..workflow._models import WorkflowState
@@ -179,7 +179,6 @@ def test_anti_tautology_mutating_regime_changes_projection(
     test would fail on the inequality assertion.
     """
 
-    from ...domain.user_profile import UserProfileRecord
 
     def _build_record(regime_value: str) -> UserProfileRecord:
         extra: list[UserProfileFact] = [UserProfileFact(path="irpf.special_regime", value=regime_value)]

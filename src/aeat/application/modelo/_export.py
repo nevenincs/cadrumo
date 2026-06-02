@@ -21,7 +21,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from aeat.core.time import now as _utc_now
+from ...core.time import now as _utc_now
 
 from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
@@ -34,7 +34,6 @@ from ...domain.buckets import (
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from ...domain.modelos._protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -42,6 +41,7 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._errors import ModeloError, ModeloExportError
 from ...domain.modelos._ids import CalculationRevisionId, WorkUnitId
+from ...domain.modelos._protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (

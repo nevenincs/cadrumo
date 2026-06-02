@@ -90,7 +90,7 @@ class AuthProviderProbe(Protocol):
         ...
 
     def describe(self) -> AuthProviderDescriptionLike:
-        """Return a safe description of the active auth provider."""
+        """Return an :class:`AuthProviderDescriptionLike` describing the active auth provider."""
         ...
 
 
@@ -216,11 +216,15 @@ class SubmissionRepositoryProtocol(Protocol):
     """
 
     def load(self, record_id: str) -> ModeloPresentado | None:
-        """Load a persisted submission record by id, or return None if absent."""
+        """Load a persisted :class:`ModeloPresentado` by id, or return None if absent."""
         ...
 
     def iter_submissions(self) -> Iterator[ModeloPresentado]:
-        """Yield every persisted submission in lexicographic id order."""
+        """Yield every persisted submission in lexicographic id order.
+
+        Returns:
+            Iterator over :class:`ModeloPresentado` records.
+        """
         ...
 
     def list_submission_ids(self) -> tuple[str, ...]:

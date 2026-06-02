@@ -5,8 +5,8 @@ from __future__ import annotations
 from functools import cache
 from pathlib import Path
 
-from aeat.adapters.inbound.justificante import parse_justificante
-from aeat.domain.justificante import Justificante
+from ..adapters.inbound.justificante import parse_justificante
+from ..domain.justificante import Justificante
 
 
 @cache

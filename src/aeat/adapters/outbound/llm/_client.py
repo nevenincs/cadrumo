@@ -7,7 +7,7 @@ import json
 
 from pydantic import SecretStr
 
-from aeat.core.time import now
+from ....core.time import now
 
 from ....core.config import Settings
 from ....core.logging import get_logger
@@ -68,7 +68,7 @@ class LLMClient:
             request: Structured completion request.
 
         Returns:
-            The provider response enriched with cache and cost metadata.
+            A :class:`LLMResponse` enriched with cache and cost metadata.
 
         Raises:
             Exception: Re-raised after logging when the LLM provider adapter fails.

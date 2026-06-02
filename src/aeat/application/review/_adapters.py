@@ -13,7 +13,6 @@ findings are sourced from the :class:`ModeloDraft` store via the review imports.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, BaseSeverity
 from datetime import UTC, datetime, time
 from decimal import Decimal
 from pathlib import Path
@@ -21,6 +20,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import Settings
+from ...core.errors import AeatError, BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.invoices import (
@@ -32,7 +32,6 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
-    TransactionDirection,
     is_classified,
 )
 from ..filing import (
@@ -101,6 +100,8 @@ def transactions_low_confidence(
     accepted at confidence 0.4 — both warrant attention. Transactions
     with ``None`` confidence are excluded because they have no claim
     to filter against.
+
+    Each element in the returned tuple is a :class:`TransactionReviewItem`.
     """
     if catalogue is None:
         catalogue = _load_transactions(settings, bucket_id=bucket_id)

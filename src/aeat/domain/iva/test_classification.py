@@ -14,15 +14,14 @@ from decimal import Decimal
 import pytest
 
 from . import (
-    IvaTerritorialScope,
     CustomerTaxStatus,
     EUMemberState,
     InvoiceKind,
-    IvaTerritorialScope,
-    TransactionKind,
     IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaRateKind,
+    IvaTerritorialScope,
+    TransactionKind,
     classify_iva,
 )
 

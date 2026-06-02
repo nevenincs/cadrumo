@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from aeat.core.logging import get_logger
+from ..logging import get_logger
 
 _logger = get_logger(__name__)
 

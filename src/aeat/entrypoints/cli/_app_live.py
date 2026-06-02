@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Annotated
 
 import typer
 
-from aeat.core.time import now
+from ...core.time import now
 
 from ...application.live import (
     FiledDataListingRow,

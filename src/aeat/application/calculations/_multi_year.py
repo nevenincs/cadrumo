@@ -90,12 +90,12 @@ class MultiYearResolver:
         self._repository = repository if repository is not None else CalculationObservationRepository()
 
     def resolve(self, request: MultiYearResolutionRequest) -> MultiYearResolutionReport:
-        """Scan persisted observations matching `request` and report findings.
+        """Scan persisted observations matching ``request`` and return a :class:`MultiYearResolutionReport`.
 
-        The returned `MultiYearResolutionReport.observations` is
-        sorted by `(filing_year, period)` ascending so callers that
-        expect chronological order (e.g. quarter 1T → 4T summing
-        for an annual modelo) can iterate directly.
+        The returned report's ``observations`` are sorted by
+        ``(filing_year, period)`` ascending so callers that expect
+        chronological order (e.g. quarter 1T - 4T summing for an annual
+        modelo) can iterate directly.
         """
         requested_years = tuple(request.current_year - offset for offset in range(1, request.years_back + 1))
         observations: list[RegistryModeloObservation] = []
@@ -183,6 +183,8 @@ def resolve_prior_year_observations(
 
     Equivalent to constructing `MultiYearResolver(repository=...)`
     and calling `resolve(MultiYearResolutionRequest(...))`.
+
+    Returns a :class:`MultiYearResolutionReport`.
     """
     resolver = MultiYearResolver(repository=repository)
     request = MultiYearResolutionRequest(
