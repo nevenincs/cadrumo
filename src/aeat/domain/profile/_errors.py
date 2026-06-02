@@ -1,10 +1,11 @@
 """Domain errors for the contribuyente tax-residence profile and ledgers.
 
 Defines :class:`TaxResidenceProfileError` and its concrete failures
-surfaced to RENTA verification, plus the asset/inventory/amortizacion
-ledger error hierarchy (:class:`AssetRecordError`,
-:class:`InventoryLedgerError`, :class:`AmortizacionLedgerError` and their
-subclasses). Every class derives from :class:`aeat.core.errors.AeatError`
+surfaced to RENTA verification, plus the inventory/amortizacion
+ledger error hierarchy (:class:`InventoryLedgerError`,
+:class:`AmortizacionLedgerError` and their subclasses). The asset-ledger
+errors live with their records in :mod:`aeat.domain.profile.assets`.
+Every class derives from :class:`aeat.core.errors.AeatError`
 so the shared error-code registration hook applies.
 """
 
@@ -81,14 +82,6 @@ class ProfileKeysRegistrationError(CoreError):
         )
 
 
-class AssetRecordError(AeatError):
-    """Raised when an asset record is structurally invalid."""
-
-
-class AssetValidationError(AssetRecordError, ValueError):
-    """Raised when an asset record fails Pydantic validation."""
-
-
 class AmortizacionLedgerError(AeatError):
     """Raised when an amortizacion ledger operation is invalid."""
 
@@ -132,8 +125,6 @@ class BasisCapExceededError(AmortizacionLedgerError):
 
 __all__ = [
     "AmortizacionLedgerError",
-    "AssetRecordError",
-    "AssetValidationError",
     "BasisCapExceededError",
     "ForalRegimeError",
     "InventoryLedgerError",
