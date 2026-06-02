@@ -30,7 +30,6 @@ from ...tests.secure_sql import isolated_profile_storage_root
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     audit_dir = tmp_path / "audit"
