@@ -68,8 +68,7 @@ def test_ownership_categories_apply_raw_afectacion_with_no_multiplier() -> None:
     expected = raw * _OWNERSHIP_STATUTORY_FACTOR
     for category in categories_for_family(SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP):
         assert profile.ratios[category] == expected, (
-            f"ownership {category.value} must deduct at the raw afectación ratio, "
-            "without any statutory multiplier"
+            f"ownership {category.value} must deduct at the raw afectación ratio, without any statutory multiplier"
         )
 
 
