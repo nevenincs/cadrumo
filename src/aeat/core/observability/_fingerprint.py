@@ -152,11 +152,7 @@ def compute_corpus_sha256(
     tree_digest = _hash_tree(vault_dir, excluded_dirs=excluded_vault_subtrees)
     settings_blob = settings.model_dump_json().encode("utf-8")
     resolved_env_path = env_path if env_path is not None else PROJECT_ROOT / "env" / ".env"
-    env_digest = (
-        _file_sha256(resolved_env_path)
-        if resolved_env_path.exists()
-        else hashlib.sha256(b"").hexdigest()
-    )
+    env_digest = _file_sha256(resolved_env_path) if resolved_env_path.exists() else hashlib.sha256(b"").hexdigest()
     h = hashlib.sha256()
     h.update(tree_digest.encode("ascii"))
     h.update(b"|settings|")
