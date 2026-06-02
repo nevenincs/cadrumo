@@ -17,11 +17,10 @@ the four canonical source kinds are accepted.
 from __future__ import annotations
 
 from decimal import Decimal
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.aggregation import AggregationSourceKind
+from ...core.aggregation import AggregationSourceKind, OperationKind347, OperationKind349
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...domain.calculations.registry import CounterpartSourceKind
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
@@ -50,34 +49,6 @@ def _validate_country(value: str, *, field_name: str) -> str:
     if len(value) != 2 or any(char < "A" or char > "Z" for char in value):
         raise ValueError(f"{field_name} must be uppercase ISO-3166 alpha-2, got {value!r}")
     return value
-
-
-class OperationKind347(StrEnum):
-    """Modelo 347 operation kinds (clave de operación).
-
-    Source: AEAT Modelo 347 instrucciones.
-    """
-
-    DELIVERY = "entregas_y_prestaciones"  # clave A
-    ACQUISITION = "adquisiciones_y_recepciones"  # clave B
-    INSURANCE = "operaciones_seguros"  # clave C
-    RENTAL = "arrendamientos_locales"  # clave D
-    SUBSIDY = "subvenciones_y_ayudas"  # clave E
-
-
-class OperationKind349(StrEnum):
-    """Modelo 349 intracomunitarias operation kinds.
-
-    Source: AEAT Modelo 349 instrucciones. The clave maps from the
-    underlying directionality (entrega/adquisición) and operation
-    type (bienes/servicios).
-    """
-
-    INTRA_DELIVERY = "entrega_intracomunitaria_bienes"  # clave E
-    INTRA_ACQUISITION = "adquisicion_intracomunitaria_bienes"  # clave A
-    INTRA_SERVICE_OUT = "prestacion_servicios_intracom"  # clave S
-    INTRA_SERVICE_IN = "adquisicion_servicios_intracom"  # clave I
-    TRIANGULAR = "triangular"  # clave T
 
 
 class CounterpartObservation(BaseModel):
