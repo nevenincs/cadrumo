@@ -76,9 +76,7 @@ class TestIncrementoGuarderia0613Oracle:
     def test_hijos_limit_binds_when_cotizaciones_high(self) -> None:
         """When hijos_menores_3 × 1000 < gastos and cotizaciones_ss, hijos cap binds."""
         profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_guarderia(5000),
-            ),
+            descendientes=(_hijo_guarderia(5000),),
             cotizaciones_ss_madre_2024=3000,
         )
         # min(5000, 1×1000, 3000) = 1000
@@ -87,9 +85,7 @@ class TestIncrementoGuarderia0613Oracle:
     def test_gastos_limit_binds_when_smallest(self) -> None:
         """When gastos_reales < hijos×1000 and cotizaciones_ss, gastos cap binds."""
         profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_guarderia(300),
-            ),
+            descendientes=(_hijo_guarderia(300),),
             cotizaciones_ss_madre_2024=2000,
         )
         # min(300, 1×1000, 2000) = 300
@@ -143,9 +139,7 @@ class TestIncrementoGuarderia0613Oracle:
     def test_zero_gastos_gives_zero(self) -> None:
         """No guardería expenses → increment is always 0."""
         profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_guarderia(0),
-            ),
+            descendientes=(_hijo_guarderia(0),),
             cotizaciones_ss_madre_2024=2000,
         )
         assert profile.incremento_guarderia_0613(2024) == 0
@@ -153,9 +147,7 @@ class TestIncrementoGuarderia0613Oracle:
     def test_future_filing_year_gives_zero(self) -> None:
         """Filing year other than 2024 returns 0 (no binding declared yet)."""
         profile = RentaFamilyProfile(
-            descendientes=(
-                _hijo_guarderia(5000),
-            ),
+            descendientes=(_hijo_guarderia(5000),),
             cotizaciones_ss_madre_2024=2000,
         )
         assert profile.incremento_guarderia_0613(2025) == 0
@@ -180,9 +172,7 @@ class TestGastosGuarderiaFactPersistence:
 
     def test_aggregate_not_emitted_when_zero(self) -> None:
         """Aggregate fact absent when gastos are all zero."""
-        hijos = (
-            _hijo_guarderia(0),
-        )
+        hijos = (_hijo_guarderia(0),)
         facts = dict(descendant_facts_from_list(hijos))
         assert "renta_family.gastos_guarderia_reales_2024" not in facts
 

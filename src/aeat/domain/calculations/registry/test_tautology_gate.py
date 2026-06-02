@@ -141,11 +141,7 @@ def _extract_scenarios(text: str) -> list[tuple[dict[str, Decimal], list[tuple[s
     except SyntaxError:
         return findings
     for node in ast.walk(tree):
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "_scenario_2025"
-        ):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_scenario_2025"):
             continue
         overrides = _scenario_overrides(node)
         expected = _scenario_expected(node)
@@ -210,11 +206,7 @@ def _expected_target_value(node: ast.expr) -> tuple[str, Decimal] | None:
     target: str | None = None
     value: Decimal | None = None
     for kkw in node.keywords:
-        if (
-            kkw.arg == "target"
-            and isinstance(kkw.value, ast.Constant)
-            and isinstance(kkw.value.value, str)
-        ):
+        if kkw.arg == "target" and isinstance(kkw.value, ast.Constant) and isinstance(kkw.value.value, str):
             target = kkw.value.value
         elif kkw.arg == "value":
             value = _decimal_literal_value(kkw.value)
@@ -492,9 +484,7 @@ def test_no_hand_summed_aggregation_tests_across_codebase() -> None:
 
 
 _MODELO_200_DIRECTORY = bundled_path("registry", "aeat", "modelos", "200")
-_MODELO_200_LIQUIDACION_00562_FRAGMENT = (
-    "revisions/2024-y-siguientes/casillas/liquidacion-00562-cuota-integra.toml"
-)
+_MODELO_200_LIQUIDACION_00562_FRAGMENT = "revisions/2024-y-siguientes/casillas/liquidacion-00562-cuota-integra.toml"
 
 
 def test_committed_modelo_200_clears_the_segmento_number_identity_gate() -> None:
@@ -536,9 +526,7 @@ def test_dropping_segmento_to_collide_casilla_identity_hard_fails_the_gate(
     shutil.copytree(_MODELO_200_DIRECTORY, mutated_root)
     fragment_path = mutated_root / _MODELO_200_LIQUIDACION_00562_FRAGMENT
     original = fragment_path.read_text(encoding="utf-8")
-    mutated = "\n".join(
-        line for line in original.splitlines() if not line.strip().startswith("segmento =")
-    )
+    mutated = "\n".join(line for line in original.splitlines() if not line.strip().startswith("segmento ="))
     assert mutated != original, (
         "the Liquidación 00562 fragment must declare a segmento line for the "
         "mutation to drop; the test fixture is stale if it does not"
