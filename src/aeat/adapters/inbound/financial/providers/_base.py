@@ -49,6 +49,7 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors import AeatError
@@ -58,7 +59,6 @@ from .....core.time import now
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 # Defensive ceiling on financial-source ingest size. Real bank statements
 # (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
