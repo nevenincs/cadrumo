@@ -1147,6 +1147,31 @@ remediation is currently HELD at audit-only per the active action policy.
   re-export is intentional and tested, not a dead shim. DB-38 closed as partial-landed +
   excluded-residual; no further action. Collection green (13040).
 
+- DB-42 (MEDIUM, NEW — surfaced by W08.P25 import-linter triage) — the `.importlinter`
+  layered-architecture gate is currently NON-FUNCTIONAL on this branch: it runs with
+  `unmatched_ignore_imports_alerting = error` and `exclude_type_checking_imports = True`,
+  and exits 1 before evaluating any contract because the `ignore_imports` lists have
+  accumulated stale / path-mismatched entries (it errors on the first unmatched ignore).
+  Investigation (grimp graph built with `exclude_type_checking_imports=True` to match
+  the config) found ~93 unmatched ignore lines. CRITICAL NUANCE: a naive bulk-removal is
+  UNSAFE and was reverted — most "unmatched" ignores still cover *sanctioned* edges whose
+  path drifted: (a) production DB-16 deferred `domain.<pkg>._repository -> adapters.
+  persistence.storage.*` imports (ADR-pending, legitimately ignored) pinned at a stale
+  submodule (`-> storage.sql` vs the live `-> storage.envelope`); (b) test-fixture
+  cross-layer imports "permitted per convention" pinned at a moved target (`->
+  application.ledger._models` vs the live `-> application.ledger`); (c) the DB-13 repath
+  itself (`core.resources._repos.apoderamientos -> domain.auth.apoderamientos` became
+  `-> domain.auth`), which silently staled that ignore. Removing these surfaced 36
+  violations that were correctly ignored. **Correct reconciliation:** for each unmatched
+  ignore, decide truly-gone (remove) vs moved (re-pin at the real edge path), verified
+  against the TYPE_CHECKING-excluded grimp graph; do NOT bulk-delete. Best sequenced
+  WITH the DB-16/R5 persistence-boundary ADR — once domain repos move behind ports the
+  bulk of the domain->adapters ignores disappear entirely rather than needing re-pinning.
+  Interim option: set `unmatched_ignore_imports_alerting = warn` so the gate evaluates
+  contracts (catching NEW violations) instead of hard-failing on stale pins. Verified by
+  repeated `lint-imports` runs + a grimp reconciliation script. Add as W08.P25 follow-up
+  Steps; gate is RED until reconciled.
+
 ## Codification candidates
 
 <!-- Findings that satisfy the three durability criteria
