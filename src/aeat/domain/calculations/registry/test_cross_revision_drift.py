@@ -70,29 +70,35 @@ def _modelo(
     default_selector = PeriodSelector(year_from=2024, periods=("0A",))
     for revision_id, casillas in revs.items():
         revision_year = int(revision_id[:4]) if revision_id[:4].isdigit() else 2024
-        revision_payloads[revision_id] = ModeloRevision.model_validate({
-            "id": revision_id,
-            "valid_from": date(revision_year, 1, 1),
-            "period_selector": selectors[revision_id] if selectors is not None else default_selector,
+        revision_payloads[revision_id] = ModeloRevision.model_validate(
+            {
+                "id": revision_id,
+                "valid_from": date(revision_year, 1, 1),
+                "period_selector": selectors[revision_id] if selectors is not None else default_selector,
+                "legal_refs": ("ley-58-2003:art-29",),
+                "source_refs": ("aeat-manual",),
+                "casillas": tuple(casillas),
+                "continuidad_validation": (
+                    "advisory"
+                    if continuidad_validation is None
+                    else continuidad_validation.get(revision_id, "advisory")
+                ),
+                "casilla_continuidad_evolutions": () if evolutions is None else evolutions.get(revision_id, ()),
+            }
+        )
+    return ModeloDefinition.model_validate(
+        {
+            "id": modelo_id,
+            "title": f"Modelo {modelo_id}",
+            "official_name": f"Modelo {modelo_id}",
+            "tax_domain": "iva",
+            "cadence": "annual",
+            "jurisdiction": "ES-AEAT",
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
-            "casillas": tuple(casillas),
-            "continuidad_validation": (
-                "advisory" if continuidad_validation is None else continuidad_validation.get(revision_id, "advisory")
-            ),
-            "casilla_continuidad_evolutions": () if evolutions is None else evolutions.get(revision_id, ()),
-        })
-    return ModeloDefinition.model_validate({
-        "id": modelo_id,
-        "title": f"Modelo {modelo_id}",
-        "official_name": f"Modelo {modelo_id}",
-        "tax_domain": "iva",
-        "cadence": "annual",
-        "jurisdiction": "ES-AEAT",
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-        "revisions": revision_payloads,
-    })
+            "revisions": revision_payloads,
+        }
+    )
 
 
 def _write_continuity_modelo_directory(
@@ -237,10 +243,8 @@ class TestCrossRevisionConsistency:
         assert all("2025" in failure for failure in failures)
 
     def test_two_modelos_independent(self) -> None:
-        m100 = _modelo("100", {"2024": [_casilla(cid="0700", label="A")],
-                                "2025": [_casilla(cid="0700", label="A")]})
-        m180 = _modelo("180", {"2020": [_casilla(cid="0700", label="X")],
-                                "2025": [_casilla(cid="0700", label="X")]})
+        m100 = _modelo("100", {"2024": [_casilla(cid="0700", label="A")], "2025": [_casilla(cid="0700", label="A")]})
+        m180 = _modelo("180", {"2020": [_casilla(cid="0700", label="X")], "2025": [_casilla(cid="0700", label="X")]})
         assert _validate_cross_revision_casilla_consistency([m100, m180]) == ()
 
     def test_canonical_revision_appears_in_failure_message(self) -> None:
@@ -681,7 +685,14 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
         assert revision.continuidad_validation == "strict"
         assert casilla.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
 
-    assert m100.revisions["2022"].casilla_continuidad_evolutions == ()
+    assert (
+        tuple(
+            evolution
+            for evolution in m100.revisions["2022"].casilla_continuidad_evolutions
+            if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
+        )
+        == ()
+    )
     assert tuple(
         evolution.evolution_kind
         for revision_id in ("2023", "2024", "2025")
@@ -690,14 +701,132 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
     ) == ("unchanged", "unchanged", "unchanged")
 
 
+def test_committed_m100_continuity_surface_for_1038_retirement_is_loaded() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    m100 = next(modelo for modelo in modelos if modelo.id == "100")
+
+    continuidad_id = "irpf.deduccion-autonomica.galicia.otras"
+    for revision_id in ("2023", "2024"):
+        revision = m100.revisions[revision_id]
+        casilla = next(item for item in revision.casillas if item.id == "1038")
+        assert revision.continuidad_validation == "strict"
+        assert casilla.label == "Otras deducciones"
+        assert casilla.continuidad_id == continuidad_id
+
+    assert not any(item.id == "1038" for item in m100.revisions["2025"].casillas)
+
+    evolution_pairs = {
+        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
+        for revision in m100.revisions.values()
+        for evolution in revision.casilla_continuidad_evolutions
+        if evolution.continuidad_id == continuidad_id
+    }
+
+    assert evolution_pairs == {
+        ("2023", "2024"): "unchanged",
+        ("2024", "2025"): "retired",
+    }
+
+
+def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    m100 = next(modelo for modelo in modelos if modelo.id == "100")
+
+    continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+    for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
+        revision = m100.revisions[revision_id]
+        casilla = next(item for item in revision.casillas if item.id == "0063")
+        assert casilla.continuidad_id == continuidad_id
+
+    assert {
+        revision_id: m100.revisions[revision_id].continuidad_validation
+        for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025")
+    } == {
+        "2020": "advisory",
+        "2021": "advisory",
+        "2022": "strict",
+        "2023": "strict",
+        "2024": "strict",
+        "2025": "strict",
+    }
+
+    evolution_pairs = {
+        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
+        for revision in m100.revisions.values()
+        for evolution in revision.casilla_continuidad_evolutions
+        if evolution.continuidad_id == continuidad_id
+    }
+
+    assert evolution_pairs == {
+        ("2020", "2021"): "legal_refs_evolved",
+        ("2020", "2022"): "legal_refs_evolved",
+        ("2020", "2023"): "legal_refs_evolved",
+        ("2020", "2024"): "legal_refs_evolved",
+        ("2020", "2025"): "legal_refs_evolved",
+        ("2021", "2022"): "unchanged",
+        ("2021", "2025"): "legal_refs_evolved",
+        ("2022", "2023"): "unchanged",
+        ("2022", "2025"): "legal_refs_evolved",
+        ("2023", "2024"): "unchanged",
+        ("2023", "2025"): "legal_refs_evolved",
+        ("2024", "2025"): "legal_refs_evolved",
+    }
+
+
+def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_loaded() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    m100 = next(modelo for modelo in modelos if modelo.id == "100")
+
+    continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+    for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
+        revision = m100.revisions[revision_id]
+        casilla = next(item for item in revision.casillas if item.id == "0070")
+        assert casilla.continuidad_id == continuidad_id
+
+    assert {
+        revision_id: m100.revisions[revision_id].continuidad_validation
+        for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025")
+    } == {
+        "2020": "advisory",
+        "2021": "advisory",
+        "2022": "strict",
+        "2023": "strict",
+        "2024": "strict",
+        "2025": "strict",
+    }
+
+    evolution_pairs = {
+        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
+        for revision in m100.revisions.values()
+        for evolution in revision.casilla_continuidad_evolutions
+        if evolution.continuidad_id == continuidad_id
+    }
+
+    assert evolution_pairs == {
+        ("2020", "2021"): "label_and_legal_refs_evolved",
+        ("2020", "2022"): "label_and_legal_refs_evolved",
+        ("2020", "2023"): "label_and_legal_refs_evolved",
+        ("2020", "2024"): "label_and_legal_refs_evolved",
+        ("2020", "2025"): "label_and_legal_refs_evolved",
+        ("2021", "2022"): "label_evolved",
+        ("2021", "2023"): "label_evolved",
+        ("2021", "2024"): "label_evolved",
+        ("2021", "2025"): "label_and_legal_refs_evolved",
+        ("2022", "2023"): "label_evolved",
+        ("2022", "2024"): "label_evolved",
+        ("2022", "2025"): "label_and_legal_refs_evolved",
+        ("2023", "2024"): "label_evolved",
+        ("2023", "2025"): "label_and_legal_refs_evolved",
+        ("2024", "2025"): "label_and_legal_refs_evolved",
+    }
+
+
 def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift() -> None:
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     m100 = next(modelo for modelo in modelos if modelo.id == "100")
     revision_2025 = m100.revisions["2025"]
     mutated_casillas = tuple(
-        casilla.model_copy(update={"label": f"{casilla.label} drift"})
-        if casilla.id == "0582"
-        else casilla
+        casilla.model_copy(update={"label": f"{casilla.label} drift"}) if casilla.id == "0582" else casilla
         for casilla in revision_2025.casillas
     )
     mutated_revision = revision_2025.model_copy(update={"casillas": mutated_casillas})
@@ -713,10 +842,7 @@ def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift() 
     assert all("0582" in failure for failure in failures)
     assert all("label" in failure for failure in failures)
     source_revisions = {
-        revision_id
-        for failure in failures
-        for revision_id in ("2022", "2023", "2024")
-        if revision_id in failure
+        revision_id for failure in failures for revision_id in ("2022", "2023", "2024") if revision_id in failure
     }
     assert source_revisions == {
         "2022",
@@ -741,8 +867,7 @@ def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
     singleton_warnings = [
         str(item.message)
         for item in captured
-        if "semantic_role" in str(item.message)
-        and "appears on exactly one casilla" in str(item.message)
+        if "semantic_role" in str(item.message) and "appears on exactly one casilla" in str(item.message)
     ]
 
     # Re-baselined after the 2026-05-20 indexed typo scan and

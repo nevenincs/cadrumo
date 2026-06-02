@@ -1,0 +1,35 @@
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0070-2020-2024-label-and-legal-refs-evolved"
+continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+from_revision = "2020"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0070-2021-2024-label-evolved"
+continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+from_revision = "2021"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0070-2022-2024-label-evolved"
+continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+from_revision = "2022"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0070-2023-2024-label-evolved"
+continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
