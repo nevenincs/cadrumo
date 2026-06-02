@@ -25,14 +25,8 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
     def _load(self, key: int) -> object:
         from ....domain.iva._catalogue import load_iva_catalogues
 
-        catalogues = (
-            load_iva_catalogues(self._root)
-            if self._root is not None
-            else load_iva_catalogues()
-        )
+        catalogues = load_iva_catalogues(self._root) if self._root is not None else load_iva_catalogues()
         try:
             return catalogues[key]
         except KeyError as exc:
-            raise ResourceNotFoundError(
-                f"no IVA catalogue registered for year {key}"
-            ) from exc
+            raise ResourceNotFoundError(f"no IVA catalogue registered for year {key}") from exc

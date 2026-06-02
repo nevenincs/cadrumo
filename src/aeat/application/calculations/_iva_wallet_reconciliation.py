@@ -86,9 +86,7 @@ class IvaWalletDecisionSourceResolver:
                 f"IVA wallet reconciliation blocks automatic Modelo 303 calculation: {decision.divergence}"
             )
         if decision.selected_amount is None:
-            raise IvaCompensationReconciliationInputError(
-                "IVA wallet reconciliation decision has no selected amount"
-            )
+            raise IvaCompensationReconciliationInputError("IVA wallet reconciliation decision has no selected amount")
         fingerprint = f"sha256:{hashlib.sha256(decision.model_dump_json().encode('utf-8')).hexdigest()}"
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -472,7 +470,7 @@ def _authority_sources(
                     source_filing_year=recurrence_source.source_filing_year,
                     source_periods=recurrence_source.source_periods,
                 )
-        )
+            )
         sources.append(recurrence_source)
     if override is not None:
         sources.append(
@@ -502,9 +500,7 @@ def _local_recurrence_authority_source(
     source_periods = tuple(str(item) for item in recurrence.source_periods)
     resolved_at = recurrence.resolved_at
     source_kind: IvaCompensationAuthoritySourceKind = (
-        _FILED_HISTORY_OBSERVATION
-        if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS
-        else "local_recurrence"
+        _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
     )
     return IvaCompensationAuthoritySource(
         source_kind=source_kind,
