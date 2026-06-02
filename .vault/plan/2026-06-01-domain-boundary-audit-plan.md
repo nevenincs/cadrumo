@@ -115,9 +115,9 @@ Relocate the pure regulatory algorithms and typed records into the domain packag
 
 Collapse the duplicated compensacion-disponible derivation to one domain function, repoint all callers, update error-registry dotted-path strings and calculations __all__.
 
-- [ ] `W03.P09.S38` - Collapse _with_derived_303_compensation_available (application/live:1131) and _with_derived_303_compensation_available_observation (adapters/sede/_declarations:1599) into the domain derive_303_compensation_available; `repoint the 3 call sites (live:757, declarations:1183, declarations:1225) preserving provenance wrapping; `src/aeat/application/live/__init__.py`.
-- [ ] `W03.P09.S39` - Update the 5+ dotted-path string references in core/errors/registry/_application.py from application.calculations._iva_* to domain.iva_compensation.*; `src/aeat/core/errors/registry/_application.py`.
-- [ ] `W03.P09.S40` - Update application/calculations/__init__ __all__ and repoint every relocated-symbol caller (live/__init__, modelo/_actions, _observations_repository, _binding_prefill, _iva_wallet_balance, cli/_modelo, cli/_app_live) to the domain package; `verify collect-only clean; `src/aeat/application/calculations/__init__.py`.
+- [x] `W03.P09.S38` - Collapse _with_derived_303_compensation_available (application/live:1131) and _with_derived_303_compensation_available_observation (adapters/sede/_declarations:1599) into the domain derive_303_compensation_available; `repoint the 3 call sites (live:757, declarations:1183, declarations:1225) preserving provenance wrapping; `src/aeat/application/live/__init__.py`.
+- [x] `W03.P09.S39` - Update the 5+ dotted-path string references in core/errors/registry/_application.py from application.calculations._iva_* to domain.iva_compensation.*; `src/aeat/core/errors/registry/_application.py`.
+- [x] `W03.P09.S40` - Update application/calculations/__init__ __all__ and repoint every relocated-symbol caller (live/__init__, modelo/_actions, _observations_repository, _binding_prefill, _iva_wallet_balance, cli/_modelo, cli/_app_live) to the domain package; `verify collect-only clean; `src/aeat/application/calculations/__init__.py`.
 
 ## Wave `W04` - DTO, shim and duplicate discipline (D6)
 
