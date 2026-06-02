@@ -520,9 +520,7 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
     for rule in _iter_modelo_applicability_rules():
         # Payer-fact gate
         if rule.required_payer_fact is not None:
-            profile_key, locale_key = _PAYER_FACT_PROFILE_KEY.get(
-                rule.required_payer_fact, (None, None)
-            )
+            profile_key, locale_key = _PAYER_FACT_PROFILE_KEY.get(rule.required_payer_fact, (None, None))
             if profile_key is not None:
                 key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
                 key_to_meta[profile_key] = (locale_key, _FIX)

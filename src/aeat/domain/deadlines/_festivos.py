@@ -214,9 +214,7 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     """
     path = _calendar_path(year)
     if not path.exists():
-        raise DeadlineValidationError(
-            f"holiday calendar for year {year} not registered (expected file: {path.name})"
-        )
+        raise DeadlineValidationError(f"holiday calendar for year {year} not registered (expected file: {path.name})")
     raw = read_toml(path, error_factory=DeadlineValidationError)
 
     declared_year = raw.get("year")

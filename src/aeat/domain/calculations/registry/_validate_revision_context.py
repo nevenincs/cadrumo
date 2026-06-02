@@ -160,9 +160,7 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         application_link_by_id={link.id: link for link in revision.application_links},
         deadline_window_by_id={window.id: window for window in revision.deadline_windows},
         filing_schedule_by_id={schedule.id: schedule for schedule in revision.filing_schedules},
-        support_removal_decision_by_id={
-            decision.id: decision for decision in revision.support_removal_decisions
-        },
+        support_removal_decision_by_id={decision.id: decision for decision in revision.support_removal_decisions},
         construct_by_id={construct.id: construct for construct in revision.constructs},
         dependency_classification_by_id={
             classification.id: classification for classification in revision.dependency_classifications
