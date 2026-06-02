@@ -99,6 +99,8 @@ _CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
     r"profile[_-]?bucket[_-]?id|"
     r"profile[_-]?id|"
     r"repository[_-]?profile[_-]?id|"
+    r"source[_-]?profile[_-]?id|"
+    r"target[_-]?profile[_-]?id|"
     r"active[_-]?bucket[_-]?id|"
     r"bucket[_-]?id|"
     r"repository[_-]?bucket[_-]?id|"
@@ -108,7 +110,7 @@ _CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
     r"secure[_-]?object[_-]?key|"
     r"storage[_-]?object[_-]?key"
     r")\b)"
-    r"(?P<sep>\s*[:=]\s*)"
+    r"(?P<sep>\s*(?::|=|\t)\s*)"
     r"(?P<value>[^\s,;]+)"
 )
 _CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
@@ -121,6 +123,8 @@ _CLI_PROFILE_ID_KEYS = frozenset(
         "profile_bucket_id",
         "profile_id",
         "repository_profile_id",
+        "source_profile_id",
+        "target_profile_id",
     }
 )
 _CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
@@ -359,13 +363,13 @@ def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
 
 
 def _redact_cli_string(text: str) -> str:
-    redacted = redact_for_log(text)
-    redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
     redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(
         lambda match: f"{match.group('label')}{match.group('sep')}"
         f"{_cli_placeholder_for_key(match.group('label'), match.group('value')) or match.group('value')}",
-        redacted,
+        text,
     )
+    redacted = redact_for_log(redacted)
+    redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
     return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
 
 

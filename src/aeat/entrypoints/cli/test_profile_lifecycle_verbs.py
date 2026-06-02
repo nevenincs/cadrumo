@@ -23,9 +23,10 @@ from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import load_settings
 from ...core.identity import nif_check_letter
+from ...core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ...tests.secure_sql import isolated_profile_storage_root
 from . import app as root_app
 from ._config import profile_app, repair_app
-from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -364,7 +365,8 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
     _seed("operator", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
-    assert "profile_id\toperator" in result.output
+    assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
+    assert "display_name\toperator" in result.output
     # NIF is identity-class data; centralized output redaction (ADR
     # 2026-05-28-centralized-output-redaction) rewrites it to a
     # sha256 fingerprint before it reaches stdout. Assert the
@@ -378,7 +380,8 @@ def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: 
     _seed("spouse", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show", "spouse"])
     assert result.exit_code == 0, result.output
-    assert "profile_id\tspouse" in result.output
+    assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
+    assert "display_name\tspouse" in result.output
     # Per centralized-output-redaction ADR: NIF redacted to sha256
     # fingerprint at the rendering boundary; raw value must not leak.
     assert "identity.tax_id\tsha256:" in result.output
@@ -511,7 +514,8 @@ def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> Non
     # invariant the test guards is that a NEW record was created (the
     # registry pointer below) and labelled with the supplied
     # --display-name.
-    assert "target_profile_id\t<profile-id>" in result.output
+    assert f"source_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
+    assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tSpouse" in result.output
     from ...application.workflow._profile_bucket_scan import read_profile_bucket
     assert read_profile_bucket("Spouse") is not None
@@ -528,7 +532,8 @@ def test_config_profile_show_runs_validation_inline(cli_runner: CliRunner) -> No
     _seed("operator")
     result = cli_runner.invoke(profile_app, ["show"])
     assert result.exit_code == 0, result.output
-    assert "profile_id\toperator" in result.output
+    assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
+    assert "display_name\toperator" in result.output
     assert "readiness\tready" in result.output
 
 
@@ -552,7 +557,7 @@ def test_config_profile_create_quiet_emits_confirmation(cli_runner: CliRunner) -
 
     Before fix: zero output, exit 0 — silent success indistinguishable
     from silent failure.  After fix: at least ``profile\\t<name>`` and
-    ``status\\tcreated`` are emitted so the operator knows the command
+    ``Status\\tCreated`` is emitted so the operator knows the command
     succeeded.
     """
 
@@ -575,13 +580,13 @@ def test_config_profile_create_quiet_emits_confirmation(cli_runner: CliRunner) -
 
     assert result.exit_code == 0, result.output
     assert "profile\tfreshprofile" in result.output
-    assert "status\tcreated" in result.output
+    assert "Status\tCreated" in result.output
     assert "active_profile\tfreshprofile" in result.output
     assert "next\t" in result.output
 
 
 def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRunner) -> None:
-    """``profile edit --quiet`` must emit a confirmation line with ``status\\tupdated``."""
+    """``profile edit --quiet`` must emit a confirmation line with ``Status\\tUpdated``."""
 
     _seed("editme")
 
@@ -604,7 +609,7 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRun
 
     assert result.exit_code == 0, result.output
     assert "profile\teditme" in result.output
-    assert "status\tupdated" in result.output
+    assert "Status\tUpdated" in result.output
 
 
 def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(cli_runner: CliRunner) -> None:
@@ -811,7 +816,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     # lifecycle-service read (`record.profile_id == uuid_before`); the
     # stdout assertion only needs to confirm the show path reached the
     # renamed label's record (display_name + readiness above already do).
-    assert "profile_id\t<profile-id>" in show_result.output
+    assert f"profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in show_result.output
     assert "display_name\tbob" in show_result.output
     assert uuid_before not in show_result.output  # raw UUID must NOT leak
 

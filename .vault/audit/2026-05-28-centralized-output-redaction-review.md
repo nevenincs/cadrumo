@@ -26,6 +26,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S51]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S52]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S53]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S54]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -295,3 +296,47 @@ No HIGH findings in the scoped S53 implementation. CRITICAL findings present: no
 ### Residual risks
 
 - The `json.dumps(...)` leak check is useful but broad; a future regression that emits the UUID under a non-string encoding or hidden transport path could evade this guard. A structured deep-walk assertion over identifier-shaped leaves would close that gap.
+
+## W03.P09.S54 Review
+
+No HIGH findings in the scoped S54 implementation. CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S54.md`
+- `.vault/adr/2026-05-28-centralized-output-redaction-adr.md`
+- `.vault/research/2026-05-28-centralized-output-redaction-research.md`
+- `.vault/audit/2026-05-28-centralized-output-redaction-review.md`
+
+### Findings
+
+- The S54 plan and ADR intent is met: `test_profile_lifecycle_verbs.py` now uses `CLI_PROFILE_ID_PLACEHOLDER` (imported from `src/aeat/core/redaction/__init__.py`) instead of literal `<profile-id>` for profile-ID assertions that are rendered as mutable UUID-shaped routing identity (`target_profile_id` and `profile_id` assertions).
+- Real-output visibility intent is preserved: checks for `profile\tfreshprofile`, `display_name\tSpouse`, and `display_name\tbob` continue to assert operator-facing labels remain readable while raw UUIDs are not expected.
+- The new status assertions (`Status\tCreated`, `Status\tUpdated`) align with the wizard output implementation, which now writes a localized label (`application.wizard.output_labels.status`) plus localized status verb values (`wizard.commands.status.*`), and this is compatible with the test suite’s enforced English locale.
+
+### Residual risks
+
+- Medium risk (test coverage): `test_config_profile_duplicate_copies_to_new_id` still asserts only `target_profile_id` redaction. If that output path regresses but source output were to leak a raw UUID, this file would not catch it. This is a test-completeness gap rather than a production policy bypass and should be covered with a focused assertion for `source_profile_id`.
+- Low risk (future-localization): `Status\tCreated` / `Status\tUpdated` are locale-specific text assertions. They are stable in this suite because `AEAT_OUTPUT_LANGUAGE` is forced to `en`, but they will be brittle if that fixture is changed or if a locale-specific variant is introduced in this module.
+
+## W03.P09.S54 Follow-up Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Findings
+
+- Scope alignment is now complete for the amended S54 state:
+  - `src/aeat/core/redaction/__init__.py` applies key-aware identifier replacement before generic `redact_for_log`, then UUID and object-key token redaction. This closes the redaction-order defect surfaced in the prior pass.
+  - `_CLI_IDENTIFIER_ASSIGNMENT_PATTERN` now accepts tab separators and includes `source_profile_id`/`target_profile_id`, matching the current CLI label formats in lifecycle output.
+  - `src/aeat/core/test_redaction.py` now asserts placeholdering for tab-separated `target_profile_id` and `source_profile_id` lines, and for operator labels on `active_profile`.
+  - `src/aeat/entrypoints/cli/test_profile_lifecycle_verbs.py` now asserts both `source_profile_id` and `target_profile_id` placeholders and keeps label visibility checks (`display_name`) in duplicate/rename path assertions.
+- Replacing literal placeholders with `CLI_PROFILE_ID_PLACEHOLDER` is appropriate and is now fully consistent with ADR guidance and the ADR-backed shared policy.
+- The status assertions are appropriate for this module: `Status\tCreated` / `Status\tUpdated` are emitted by localized wizard output keys, and this CLI test suite currently forces English output via `OUTPUT_LANGUAGE_ENV_VAR` in `src/aeat/entrypoints/cli/conftest.py`.
+
+### Residual risks
+
+- The localized status assertions remain a medium test-robustness risk if the module-level language fixture is changed later, but no runtime policy bypass is indicated.
+- Core structured text redaction remains broad by design (non-key values in other formats may still pass through without key-aware redaction if not matched by `_CLI_IDENTIFIER_ASSIGNMENT_PATTERN`), which is now expected to be covered in later waves (W03.P10+).
