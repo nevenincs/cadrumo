@@ -202,7 +202,7 @@ Collapse the application-result/CLI-payload twin DTOs, delete the re-export shim
 
 Remove pdf/_errors.py and the dead identity/ shim; repoint callers to canonical homes.
 
-- [ ] `W04.P10.S41` - Delete adapters/inbound/pdf/_errors.py shim; `repoint borrador/_errors, declaracion/_errors, pdf/__init__, and pdf/_scrub to import PdfModeloImportError directly from domain/justificante/_errors (DB-29 S1). Partial 2026-06-02 live-gate drift repair: live IVA focused tests exposed that pdf/__init__ and pdf/_scrub still imported the removed shim, so those callers were repointed to domain.justificante; `src/aeat/adapters/inbound/pdf/_errors.py src/aeat/adapters/inbound/pdf/__init__.py src/aeat/adapters/inbound/pdf/_scrub.py`.
+- [x] `W04.P10.S41` - Delete adapters/inbound/pdf/_errors.py shim; `repoint borrador/_errors, declaracion/_errors, pdf/__init__, and pdf/_scrub to import PdfModeloImportError directly from domain/justificante/_errors (DB-29 S1). Partial 2026-06-02 live-gate drift repair: live IVA focused tests exposed that pdf/__init__ and pdf/_scrub still imported the removed shim, so those callers were repointed to domain.justificante; `src/aeat/adapters/inbound/pdf/_errors.py src/aeat/adapters/inbound/pdf/__init__.py src/aeat/adapters/inbound/pdf/_scrub.py`.
 - [x] `W04.P10.S42` - Delete the dead adapters/inbound/identity/ shim package after confirming zero live callers (sanitizer already imports core.identity directly) (DB-29 S2); `src/aeat/adapters/inbound/identity/__init__.py`.
 
 ### Phase `W04.P11` - Unify duplicate parser, enums and name collision
@@ -218,8 +218,8 @@ Unify the Spanish-decimal parser into core, collapse LedgerReviewIssue into Ledg
 
 Type the --category Typer arg as PortalCategory; import StoredProfileDriftError from the application public surface.
 
-- [ ] `W04.P12.S47` - Type the --category Typer option as PortalCategory|None in cli/_app_live (renders Choice) and drop the manual PortalCategory(category) coercion block (DB-37 G1); `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `W04.P12.S48` - Repoint cli/_errors.py StoredProfileDriftError import from domain.user_profile._errors to the application/domain public surface (DB-37 G2); `src/aeat/entrypoints/cli/_errors.py`.
+- [x] `W04.P12.S47` - Type the --category Typer option as PortalCategory|None in cli/_app_live (renders Choice) and drop the manual PortalCategory(category) coercion block (DB-37 G1); `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W04.P12.S48` - Repoint cli/_errors.py StoredProfileDriftError import from domain.user_profile._errors to the application/domain public surface (DB-37 G2); `src/aeat/entrypoints/cli/_errors.py`.
 
 ### Phase `W04.P13` - Collapse twin DTOs
 
