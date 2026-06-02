@@ -354,10 +354,21 @@ def test_accepted_source_kinds_are_enum_members() -> None:
 
 
 def test_accepted_source_kinds_covers_all_four_members() -> None:
-    """ACCEPTED_SOURCE_KINDS must contain exactly the four canonical members."""
-    expected = frozenset(AggregationSourceKind)
+    """ACCEPTED_SOURCE_KINDS must contain exactly the four canonical aggregation kinds.
+
+    The enum carries a fifth member (``INVOICE``) used by the registry-constructs
+    surface; only the four aggregation-source kinds participate at this boundary.
+    """
+    expected = frozenset(
+        {
+            AggregationSourceKind.PAYABLE_INVOICE,
+            AggregationSourceKind.COLLECTIBLE_INVOICE,
+            AggregationSourceKind.LEDGER_TRANSACTION,
+            AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        }
+    )
     actual = frozenset(ACCEPTED_SOURCE_KINDS)
-    assert actual == expected, f"ACCEPTED_SOURCE_KINDS {actual} != all AggregationSourceKind members {expected}"
+    assert actual == expected, f"ACCEPTED_SOURCE_KINDS {actual} != canonical four {expected}"
 
 
 def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
