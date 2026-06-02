@@ -87,9 +87,7 @@ def test_for_dispatch_parameter_kind_pins_parameter_and_op() -> None:
 
 
 def test_for_enum_binding_value_missing_pins_binding_and_op() -> None:
-    err = RegistryValidationError.for_enum_binding_value_missing(
-        binding_id="profile.ccaa", op="lookup_bracket_by_ccaa"
-    )
+    err = RegistryValidationError.for_enum_binding_value_missing(binding_id="profile.ccaa", op="lookup_bracket_by_ccaa")
     assert err.context == {"binding_id": "profile.ccaa", "op": "lookup_bracket_by_ccaa"}
 
 
@@ -109,9 +107,7 @@ def test_for_casilla_referenced_before_evaluation_pins_casilla_id() -> None:
 
 
 def test_for_unknown_input_casillas_sorts_and_joins() -> None:
-    err = RegistryValidationError.for_unknown_input_casillas(
-        casilla_ids=("9999999", "0001", "0002")
-    )
+    err = RegistryValidationError.for_unknown_input_casillas(casilla_ids=("9999999", "0001", "0002"))
     assert err.context == {"casilla_ids": "0001,0002,9999999"}
     assert err.translated_message == "errors.calc.unknown_input_casillas"
 
@@ -122,23 +118,17 @@ def test_for_computed_supplied_as_input_sorts_and_joins() -> None:
 
 
 def test_for_bracket_no_window_pins_parameter_and_as_of() -> None:
-    err = RegistryValidationError.for_bracket_no_window(
-        parameter_id="irpf-2024-estatal", as_of="2026-03-31"
-    )
+    err = RegistryValidationError.for_bracket_no_window(parameter_id="irpf-2024-estatal", as_of="2026-03-31")
     assert err.context == {"parameter_id": "irpf-2024-estatal", "as_of": "2026-03-31"}
 
 
 def test_for_bracket_no_coverage_pins_parameter_and_base() -> None:
-    err = RegistryValidationError.for_bracket_no_coverage(
-        parameter_id="irpf-2024-estatal", base="999999.99"
-    )
+    err = RegistryValidationError.for_bracket_no_coverage(parameter_id="irpf-2024-estatal", base="999999.99")
     assert err.context == {"parameter_id": "irpf-2024-estatal", "base": "999999.99"}
 
 
 def test_for_bracket_negative_base_pins_parameter_and_base() -> None:
-    err = RegistryValidationError.for_bracket_negative_base(
-        parameter_id="irpf-2024-estatal", base="-500.00"
-    )
+    err = RegistryValidationError.for_bracket_negative_base(parameter_id="irpf-2024-estatal", base="-500.00")
     assert err.context == {"parameter_id": "irpf-2024-estatal", "base": "-500.00"}
 
 
@@ -162,9 +152,7 @@ def test_snapshot_error_factory_pins_modelo_id() -> None:
 
 def test_factories_return_correct_subclass_instances() -> None:
     """Each factory returns its declaring subclass (Self), not the base."""
-    assert isinstance(
-        RegistryValidationError.for_unsupported_op("x"), RegistryValidationError
-    )
+    assert isinstance(RegistryValidationError.for_unsupported_op("x"), RegistryValidationError)
     assert isinstance(
         RegistrySnapshotError.for_modelo_not_registered(modelo_id="999"),
         RegistrySnapshotError,
