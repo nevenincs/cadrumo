@@ -514,18 +514,16 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
 
     calendar_modelos = {entry.modelo for entry in cal.entries}
     # Modelo 130 is NOT_APPLICABLE for an objetiva autónomo...
-    assert derive_modelo_applicability(profile, "130").verdict is (
-        ApplicabilityVerdict.NOT_APPLICABLE
-    )
+    assert derive_modelo_applicability(profile, "130").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
     # ...and therefore absent from the calendar.
     assert "130" not in calendar_modelos
     # Modelo 131 is the objetiva pago fraccionado — it must be present.
     assert "131" in calendar_modelos
     # Every surfaced row is a positively APPLICABLE seed-ruled modelo.
     for entry in cal.entries:
-        assert derive_modelo_applicability(profile, entry.modelo).verdict is (
-            ApplicabilityVerdict.APPLICABLE
-        ), entry.modelo
+        assert derive_modelo_applicability(profile, entry.modelo).verdict is (ApplicabilityVerdict.APPLICABLE), (
+            entry.modelo
+        )
 
 
 def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
@@ -626,12 +624,8 @@ def test_calendar_spanning_a_year_without_windows_does_not_raise() -> None:
     assert multi_cal.incomplete_reason is None
     # The empty 2027 year never drops a populated-year obligation: the
     # spanning range is a superset of the 2026-only range.
-    populated_keys = {
-        (entry.modelo, entry.period, entry.closes_on) for entry in populated_cal.entries
-    }
-    multi_keys = {
-        (entry.modelo, entry.period, entry.closes_on) for entry in multi_cal.entries
-    }
+    populated_keys = {(entry.modelo, entry.period, entry.closes_on) for entry in populated_cal.entries}
+    multi_keys = {(entry.modelo, entry.period, entry.closes_on) for entry in multi_cal.entries}
     assert populated_keys <= multi_keys
 
 
@@ -833,9 +827,7 @@ class _NoWindowsEngine:
     ) -> Schedule:
         from ...domain.deadlines._errors import NoDeadlineWindowsError
 
-        raise NoDeadlineWindowsError(
-            f"No registry deadline windows registered for year {year}"
-        )
+        raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
 
 
 class _CorruptRegistryEngine:
@@ -857,9 +849,7 @@ class _CorruptRegistryEngine:
     ) -> Schedule:
         from ...domain.deadlines._errors import ScheduleComputationError
 
-        raise ScheduleComputationError(
-            f"deadline registry validation failed for year {year}"
-        )
+        raise ScheduleComputationError(f"deadline registry validation failed for year {year}")
 
 
 def test_calendar_benign_no_windows_year_still_degrades() -> None:
@@ -871,9 +861,7 @@ def test_calendar_benign_no_windows_year_still_degrades() -> None:
     result rather than propagating the error."""
 
     rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
-    cal = build_overview_calendar(
-        _profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine()
-    )
+    cal = build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_NoWindowsEngine())
 
     assert isinstance(cal, OverviewCalendar)
     assert cal.entries == ()
@@ -897,9 +885,7 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
 
     rng = OverviewCalendarRange(from_date=date(2030, 1, 1), to_date=date(2030, 12, 31))
     with pytest.raises(ScheduleComputationError) as excinfo:
-        build_overview_calendar(
-            _profile(), rng, today=date(2030, 6, 1), engine=_CorruptRegistryEngine()
-        )
+        build_overview_calendar(_profile(), rng, today=date(2030, 6, 1), engine=_CorruptRegistryEngine())
     # The genuine fault is the bare base class, not the benign subtype —
     # the narrowed catch deliberately let it through.
     assert not isinstance(excinfo.value, NoDeadlineWindowsError)

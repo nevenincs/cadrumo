@@ -95,11 +95,17 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     )
     r = _invoke(
         [
-            "config", "profile", "create", "source",
+            "config",
+            "profile",
+            "create",
+            "source",
             "--quiet",
-            "--tax-id", "12345678Z",
-            "--activity", "design",
-            "--output-language", "en",
+            "--tax-id",
+            "12345678Z",
+            "--activity",
+            "design",
+            "--output-language",
+            "en",
         ]
     )
     assert r.exit_code == 0, r.output
@@ -230,9 +236,7 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     assert exported_bundle["profile"]["profile_id"] == source_bucket_id
 
     json_bundle_path = tmp_path / "source-bundle-json.json"
-    json_export = _invoke(
-        ["--format", "json", "config", "profile", "export", "source", "--to", str(json_bundle_path)]
-    )
+    json_export = _invoke(["--format", "json", "config", "profile", "export", "source", "--to", str(json_bundle_path)])
     assert json_export.exit_code == 0, json_export.output
     json_export_payload = assert_public_profile_payload_redacted(json_export.output, source_bucket_id)
     assert json_export_payload["display_name"] == "source"
@@ -344,9 +348,7 @@ def test_v2_bundle_anti_tautology_legal_refs_mutation(tmp_path: Path) -> None:
         # The mutated JSON has "MUTATED-legal-ref" in the first observation's
         # legal_refs; the original had "Ley 37/1992 art. 78".
         (original_bundle_revision,) = tuple(
-            UserProfilePortableExport.model_validate_json(
-                bundle_path.read_text(encoding="utf-8")
-            ).calculation_revisions
+            UserProfilePortableExport.model_validate_json(bundle_path.read_text(encoding="utf-8")).calculation_revisions
         )
         (mutated_revision,) = tuple(mutated_bundle.calculation_revisions)
         # The two bundles must differ somewhere in their observations.
@@ -390,8 +392,15 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
         # Occupy the label "source" in this fresh root with a different UUID profile.
         r_create = _invoke(
             [
-                "config", "profile", "create", "source",
-                "--quiet", "--tax-id", "87654321X", "--activity", "consulting",
+                "config",
+                "profile",
+                "create",
+                "source",
+                "--quiet",
+                "--tax-id",
+                "87654321X",
+                "--activity",
+                "consulting",
             ]
         )
         assert r_create.exit_code == 0, r_create.output
