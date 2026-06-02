@@ -270,9 +270,7 @@ def test_documented_schema_classes_match_registry() -> None:
             continue
         actual_cls = f"{registered.__module__}.{registered.__name__}"
         if actual_cls != documented_cls:
-            mismatches.append(
-                f"{key}: documented={documented_cls!r} but registered={actual_cls!r}"
-            )
+            mismatches.append(f"{key}: documented={documented_cls!r} but registered={actual_cls!r}")
 
     assert not mismatches, (
         f"Documented schema classes do not match the registry ({len(mismatches)}):\n"

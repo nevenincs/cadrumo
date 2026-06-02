@@ -74,6 +74,5 @@ def test_committed_cli_reference_matches_regenerated_output(tmp_path: Path) -> N
     assert drift == [], (
         "Committed CLI reference drifted from generator output. "
         "Re-run the CLI reference regeneration and re-commit the "
-        "affected pages.\n  "
-        + "\n  ".join(drift)
+        "affected pages.\n  " + "\n  ".join(drift)
     )
