@@ -52,10 +52,6 @@ from pathlib import Path
 import pytest
 
 from ...application.user_profile._repository import UserProfileLifecycleRepository
-from ...application.wizard import (
-    _catalogue,  # side-effect: registers wizard catalogue
-    _persistence,  # register project_answers projector at import time
-)
 from ...core.resources import resources
 from ...domain.calculations.registry import calculate_registry_snapshot
 from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus

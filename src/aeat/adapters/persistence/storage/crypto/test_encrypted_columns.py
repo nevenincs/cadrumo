@@ -20,6 +20,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 from ..errors import DecryptionError
 from ..master_key import EphemeralMasterKeyProvider
 from . import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
+from ._crypto import encrypt_record
+from ._encrypted_columns import _AAD_STRING, decrypt_encrypted_string_column
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -190,6 +192,16 @@ class TestCrossTypeReplayPrevention:
             session.execute(
                 select(_CryptoRow.secret_bytes).where(_CryptoRow.secret_bytes.is_not(None)),
             ).all()
+
+    def test_legacy_string_helper_rejects_invalid_utf8_plaintext(self, fixed_master_key: bytes) -> None:
+        wire = encrypt_record(
+            b"\xff\xfe",
+            key=fixed_master_key,
+            associated_data=_AAD_STRING,
+        ).to_wire()
+
+        with pytest.raises(DecryptionError):
+            decrypt_encrypted_string_column(wire)
 
 
 class TestHashedLookup:

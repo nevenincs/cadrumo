@@ -197,7 +197,7 @@ class TestInvalidatePersistedCleanupIsolated:
                 raise _OriginalError("the original persist failure")
             except Exception:
                 with contextlib.suppress(_CleanupError):
-                    raise _CleanupError("cleanup also failed")
+                    raise _CleanupError("cleanup also failed") from None
                 raise  # original re-raised
         except _OriginalError as exc:
             original_raised = exc

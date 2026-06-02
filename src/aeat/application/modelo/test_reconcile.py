@@ -7,20 +7,16 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ..user_profile._orchestration import profile_create_storage_span
-from ..user_profile._testing import register_minimal_profile
-from ..workflow._persistence import workflow_state_repository
-from ...core.config import SecretStoreBackend, override_settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ...tests import FIXTURES_DIR
-from ...tests.secure_sql import dev_test_database_password
-
+from ...tests.secure_sql import isolated_profile_storage_root
+from ..user_profile._orchestration import profile_create_storage_span
+from ..user_profile._testing import register_minimal_profile
+from ..workflow._persistence import workflow_state_repository
 from ._reconcile import (
     ModeloReconciliationCommand,
     ModeloReconciliationSourceKind,
@@ -40,20 +36,12 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_secret_store_backend=SecretStoreBackend.FILE,
-            aeat_secret_passphrase=SecretStr(dev_test_database_password()),
-        ),
+        isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-            yield
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        yield
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
@@ -166,10 +154,7 @@ def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> Non
                 source_path=MODELO_130_FIXTURE,
             ),
         )
-    assert (
-        excinfo.value.translated_message
-        == "application.modelo.errors.reconcile_declaration_unsupported"
-    )
+    assert excinfo.value.translated_message == "application.modelo.errors.reconcile_declaration_unsupported"
 
 
 def test_modelo_reconcile_refuses_unknown_work_unit() -> None:

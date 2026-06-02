@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import json
+import logging
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -58,6 +59,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 if TYPE_CHECKING:
     from .....core.config import Settings
 _BUCKET_ID = "auth-session"
+_SENSITIVE_STORAGE_BASENAME = "12345678Z-private-storage.json"
+_SENSITIVE_NAVIGATION_PAYLOAD = "12345678Z private browser payload"
 
 
 @pytest.fixture(autouse=True)
@@ -308,6 +311,25 @@ class _RecordingPage:
 class _RecordingResponse:
     def __init__(self, status: int) -> None:
         self.status = status
+
+
+class _RaisingPage:
+    async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
+        raise RuntimeError(f"navigation failed for {_SENSITIVE_NAVIGATION_PAYLOAD}")
+
+    async def close(self) -> None:
+        return None
+
+
+class _RaisingBrowserContext:
+    async def new_page(self) -> _RaisingPage:
+        return _RaisingPage()
+
+    async def close(self) -> None:
+        return None
+
+    async def storage_state(self) -> dict[str, object]:
+        return {"cookies": [], "origins": []}
 
 
 class _RecordingBrowserSession:
@@ -730,6 +752,76 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
     assert not _session_store.exists(storage_state_path)
     assert not storage_state_path.exists()
     assert not storage_state_path.with_suffix(".meta.json").exists()
+
+
+def test_invalid_persisted_session_redacts_path_and_reason(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    _settings_factory,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
+    storage_state_path = tmp_path / _SENSITIVE_STORAGE_BASENAME
+
+    caplog.set_level(logging.INFO, logger=authenticator_module.__name__)
+    with pytest.raises(AeatLoginAssertionError) as exc_info:
+        auth._raise_invalid_persisted_state(
+            storage_state_path,
+            f"persisted storage_state missing: {storage_state_path}",
+        )
+
+    rendered = str(exc_info.value)
+    assert _SENSITIVE_STORAGE_BASENAME not in rendered
+    assert str(storage_state_path) not in rendered
+    assert rendered == "persisted AEAT browser session is invalid"
+    assert exc_info.value.context == {
+        "session": "<persisted-aeat-session>",
+        "reason": "storage_state_missing",
+    }
+    assert exc_info.value.translated_message == "errors.auth.auth_auth_authenticator_persisted_session_invalid"
+
+    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    assert _SENSITIVE_STORAGE_BASENAME not in log_text
+    assert str(storage_state_path) not in log_text
+    assert "<persisted-aeat-session>" in log_text
+    assert "reason=storage_state_missing" in log_text
+
+
+@pytest.mark.asyncio
+async def test_run_login_probe_redacts_navigation_exception_text(
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
+    _settings_factory,
+) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
+    cert = auth.load_certificate()
+    now = datetime.now(UTC)
+    session = _certificate_session(
+        authenticated_at=now,
+        idle_deadline=now + AEAT_SESSION_IDLE_TTL,
+        thumbprint=cert.sha256_thumbprint,
+        subject=cert.subject,
+        identity_nif=extract_nif_from_subject(cert),
+    )
+
+    caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
+    assertion = await auth._run_login_probe(
+        cast(BrowserContextLike, _RaisingBrowserContext()),
+        session,
+        settings.aeat_certificate_verify_url,
+    )
+
+    assert assertion.is_valid is False
+    assert assertion.error_message == "RuntimeError"
+    assert _SENSITIVE_NAVIGATION_PAYLOAD not in assertion.model_dump_json()
+
+    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    assert _SENSITIVE_NAVIGATION_PAYLOAD not in log_text
+    assert "target=<aeat-login-probe>" in log_text
+    assert "failure=RuntimeError" in log_text
 
 
 @pytest.mark.asyncio

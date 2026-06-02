@@ -272,11 +272,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
     (
-        "src/aeat/application/ledger/_business_operation_invoice.py",
-        "_save",
-        "path.write_text",
-    ): "per-bucket business-operation-invoice record store; typed pydantic JSONL in the bucket directory",
-    (
         "src/aeat/tests/fixtures/borrador/_generate.py",
         "generate_corpus",
         "out_path.write_bytes",

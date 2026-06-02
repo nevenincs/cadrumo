@@ -84,6 +84,7 @@ log = get_logger(__name__)
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CERT_PASSWORD_SECRET_ENV: Final[str] = "AEAT_CERTIFICATE_PASSWORD_SECRET"
+_PERSISTED_SESSION_LABEL: Final[str] = "<persisted-aeat-session>"
 
 
 AEAT_SESSION_IDLE_TTL: Final[timedelta] = timedelta(minutes=18)
@@ -259,6 +260,48 @@ class _PersistedSessionMetadata(BaseModel):
 
 class _PersistedSessionInvalidError(AeatLoginAssertionError):
     """Raised when a persisted AEAT browser session cannot be trusted."""
+
+
+def _persisted_session_reason_code(reason: str) -> str:
+    """Return a non-sensitive persisted-session invalidation reason code."""
+    reason_lower = reason.lower()
+    if "hash does not match" in reason_lower:
+        return "storage_hash_mismatch"
+    if "past its idle deadline" in reason_lower:
+        return "idle_deadline_expired"
+    if "different certificate thumbprint" in reason_lower:
+        return "certificate_thumbprint_mismatch"
+    if "different certificate subject" in reason_lower:
+        return "certificate_subject_mismatch"
+    if "failed live verification" in reason_lower:
+        return "live_verification_failed"
+    if "could not be resumed" in reason_lower:
+        return "resume_failed"
+    if "storage_state missing" in reason_lower:
+        return "storage_state_missing"
+    if "storage_state is malformed" in reason_lower:
+        return "storage_state_malformed"
+    if "storage_state root" in reason_lower:
+        return "storage_state_root_invalid"
+    if "cookies array" in reason_lower:
+        return "storage_state_cookies_missing"
+    if "origins array" in reason_lower:
+        return "storage_state_origins_missing"
+    if "metadata is malformed" in reason_lower:
+        return "metadata_malformed"
+    if "schema version" in reason_lower:
+        return "schema_version_unsupported"
+    return "invalid_persisted_session"
+
+
+def _persisted_session_reason_from_error(error: AeatLoginAssertionError) -> str:
+    """Extract the redacted persisted-session reason code from an auth error."""
+    context = getattr(error, "context", None)
+    if isinstance(context, Mapping):
+        reason = context.get("reason")
+        if isinstance(reason, str) and reason:
+            return reason
+    return "invalid_persisted_session"
 
 
 # ── Browser session Protocol ────────────────────────────────────────────────
@@ -530,10 +573,11 @@ class AeatAuthenticator:
                         target_url=target,
                     )
                 except _PersistedSessionInvalidError as exc:
+                    reason = _persisted_session_reason_from_error(exc)
                     log.info(
-                        "AeatAuthenticator: persisted session invalid at %s; falling back to fresh auth (%s)",
-                        resume_path,
-                        exc,
+                        "AeatAuthenticator: persisted session invalid session=%s reason=%s; falling back to fresh auth",
+                        _PERSISTED_SESSION_LABEL,
+                        reason,
                     )
 
             cert = self.load_certificate()
@@ -963,8 +1007,11 @@ class AeatAuthenticator:
                 status_code = int(response.status)
                 certificate_recognised = 200 <= status_code < 400
         except Exception as exc:
-            error_message = f"{type(exc).__name__}: {exc}"
-            log.warning("AeatAuthenticator: login probe navigation failed for %s", target, exc_info=True)
+            error_message = type(exc).__name__
+            log.debug(
+                "AeatAuthenticator: login probe navigation failed target=<aeat-login-probe> failure=%s",
+                type(exc).__name__,
+            )
         finally:
             if page is not None:
                 try:
@@ -1166,7 +1213,8 @@ class AeatAuthenticator:
         marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
         if marker != cert.sha256_thumbprint:
             raise AeatLoginAssertionError(
-                f"browser context was not tagged with the expected {CERTIFICATE_CONTEXT_MARKER} marker; cannot continue",
+                "browser context was not tagged with the expected "
+                f"{CERTIFICATE_CONTEXT_MARKER} marker; cannot continue",
                 translated_message="adapters.auth.authenticator.errors.context_marker_missing",
             )
 
@@ -1246,16 +1294,21 @@ class AeatAuthenticator:
 
     def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> NoReturn:
         """Delete the persisted state pair and raise a typed invalidation error."""
-        self._invalidate_persisted_state(storage_state_path, reason)
-        raise _PersistedSessionInvalidError(reason)
+        reason_code = _persisted_session_reason_code(reason)
+        self._invalidate_persisted_state(storage_state_path, reason_code)
+        raise _PersistedSessionInvalidError(
+            "persisted AEAT browser session is invalid",
+            context={"session": _PERSISTED_SESSION_LABEL, "reason": reason_code},
+            translated_message="errors.auth.auth_auth_authenticator_persisted_session_invalid",
+        )
 
-    def _invalidate_persisted_state(self, storage_state_path: Path, reason: str) -> None:
+    def _invalidate_persisted_state(self, storage_state_path: Path, reason_code: str) -> None:
         """Best-effort delete of the persisted state pair."""
         _session_store.delete(storage_state_path)
         log.info(
-            "AeatAuthenticator: invalidated persisted session at %s (%s)",
-            storage_state_path,
-            reason,
+            "AeatAuthenticator: invalidated persisted session session=%s reason=%s",
+            _PERSISTED_SESSION_LABEL,
+            reason_code,
         )
 
     def _require_bundle(self) -> CertificateBundle:

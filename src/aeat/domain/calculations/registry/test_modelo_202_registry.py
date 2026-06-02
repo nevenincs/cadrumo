@@ -7,7 +7,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -59,3 +58,31 @@ def test_committed_modelo_202_static_cross_reference_and_construct_are_declared(
     assert "modelo-202-portal" in construct.application_links
     assert set(construct.live_cross_references) == {"modelo-202-static-documentation"}
     assert set(construct.workbook_parity_refs) == {"modelo-202-dr-xlsx-2025"}
+    assert "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior" in construct.bindings
+    assert "modelo-202-2025-y-siguientes-dep-200-cuota-base" in construct.dependency_classifications
+    assert "modelo-202-2025-y-siguientes-rel-cuota-base-1p" in construct.relations
+    assert "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p" in construct.relations
+
+
+def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_declared() -> None:
+    modelo, _catalogues = _load_modelo_202()
+    revision = modelo.revisions["2025-y-siguientes"]
+    relations = {relation.id: relation for relation in revision.relations}
+
+    one_p = relations["modelo-202-2025-y-siguientes-rel-cuota-base-1p"]
+    assert one_p.source_modelo == "200"
+    assert one_p.source_output == "DP200014B:00592"
+    assert one_p.target_binding == "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
+    assert one_p.source_revision_selector["filing_year_delta"] == -2
+    assert one_p.period_alignment["filing_year_delta"] == -2
+    assert one_p.source_periods == ("0A",)
+    assert one_p.target_periods == ("1P",)
+
+    two_p_three_p = relations["modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
+    assert two_p_three_p.source_modelo == "200"
+    assert two_p_three_p.source_output == "DP200014B:00592"
+    assert two_p_three_p.target_binding == "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
+    assert two_p_three_p.source_revision_selector["filing_year_delta"] == -1
+    assert two_p_three_p.period_alignment["filing_year_delta"] == -1
+    assert two_p_three_p.source_periods == ("0A",)
+    assert two_p_three_p.target_periods == ("2P", "3P")

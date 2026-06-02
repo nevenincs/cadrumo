@@ -12,6 +12,8 @@ provenance fields (``observations``, ``legal_refs``, ``source_refs``,
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import Field
 
 from ...core.identity import BucketId
@@ -27,6 +29,9 @@ from ...domain.modelos._ids import (
     WorkUnitId,
 )
 from ._schemas import OutputSchema, register_schema
+
+if TYPE_CHECKING:
+    from ...application.modelo._export import ModeloExportResult as _AppModeloExportResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -787,11 +792,14 @@ class ModeloBindingsPreviewResult(OutputSchema):
 
 
 @register_schema("modelo.export")
-class ModeloExportResult(OutputSchema):
+class ModeloExportPayload(OutputSchema):
     """Modelo export result (path reference only — no raw bytes in envelope).
 
-    Represents the fichero-BOE write receipt using output_path, byte_size,
-    and file_sha256 instead of raw binary content.
+    Distinct from the application :class:`ModeloExportResult` (DB-26 S51 T8):
+    the backend result carries the write metadata plus an absolute ``Path`` and
+    extra audit fields; this envelope projects the path-reference receipt
+    (fichero-BOE bytes are never carried) using ``output_path`` (stringified),
+    ``byte_size``, and ``file_sha256``. Derive instances via :meth:`from_result`.
     """
 
     operation: str = "modelo.export"
@@ -806,6 +814,30 @@ class ModeloExportResult(OutputSchema):
     file_sha256: str
     format: str
     bucket_event_id: str
+
+    @classmethod
+    def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
+        """Project the application :class:`ModeloExportResult` into this CLI envelope.
+
+        ``output_path`` is stringified from the application ``Path``; the
+        fichero-BOE bytes are intentionally excluded (the file is written to
+        ``output_path``). ``operation`` is the CLI-only discriminator left at its
+        default; the backend's ``exported_at``/``actor`` audit fields are not
+        surfaced in the JSON envelope.
+        """
+        return cls(
+            work_unit_id=result.work_unit_id,
+            calculation_revision_id=result.calculation_revision_id,
+            bucket_id=result.bucket_id,
+            modelo=result.modelo,
+            filing_year=result.filing_year,
+            period=result.period,
+            output_path=str(result.output_path),
+            byte_size=result.byte_size,
+            file_sha256=result.file_sha256,
+            format=result.format,
+            bucket_event_id=result.bucket_event_id,
+        )
 
 
 class DeltaRowPayload(OutputSchema):
@@ -1112,7 +1144,7 @@ __all__ = [
     "ModeloCasillasResult",
     "ModeloCompareResult",
     "ModeloDescribeResult",
-    "ModeloExportResult",
+    "ModeloExportPayload",
     "ModeloHistoryResult",
     "ModeloLifecycleEventPayload",
     "ModeloListResult",

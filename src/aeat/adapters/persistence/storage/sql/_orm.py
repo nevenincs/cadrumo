@@ -22,6 +22,7 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -146,6 +147,7 @@ class SecureObjectRow(Base):
     written_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     previous_revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    revision_ancestor_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
     previous_payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     ciphertext_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

@@ -173,8 +173,8 @@ class InventoryService:
         repository_factory: InventoryRepositoryFactory | None = None,
     ) -> None:
         # `Settings()` bypasses `override_settings`; route through
-        # `load_settings()` so CLI surface tests that override
-        # `aeat_inventories_dir` see their tmp_path isolation.
+        # `load_settings()` so tests and CLI calls see the active scoped
+        # storage runtime.
         from ...core.config import load_settings as _load_settings
 
         self._settings = settings or _load_settings()
@@ -344,7 +344,10 @@ class InventoryService:
         year: int,
         actor: str = "cli",
     ) -> InventoryLedgerResult:
-        """Drop the entire ledger for actividad/year and return an :class:`InventoryLedgerResult`. Idempotent on absence."""
+        """Drop the entire ledger for actividad/year.
+
+        Returns an :class:`InventoryLedgerResult`. Idempotent on absence.
+        """
         repository = self._repository_for(bucket_id)
         document = repository.load()
         ledger = _find_ledger(document, actividad_id, year)

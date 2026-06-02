@@ -669,6 +669,23 @@ class Settings(BaseSettings):
         default=True,
         description="Run browser in headless mode",
     )
+    aeat_wallet_diagnostic_dump_dir: Path | None = Field(
+        default=None,
+        description=(
+            "Opt-in diagnostic capture directory for the IVA compensation "
+            "wallet (cartera) read. The ``None`` default disables capture and "
+            "is the only production posture: with it unset the wallet read "
+            "path is byte-for-byte unchanged. When set via "
+            "``AEAT_WALLET_DIAGNOSTIC_DUMP_DIR`` the read dumps the full "
+            "captured page tree — main document, every popup page, every child "
+            "frame, and per-page screenshots — to this directory so AEAT DOM "
+            "drift on the cartera surface can be diagnosed offline "
+            "against real evidence. The capture may contain live taxpayer "
+            "amounts; it is written only to this operator-chosen directory and "
+            "must never be committed or reused as a fixture without "
+            "sanitisation."
+        ),
+    )
     aeat_active_profile: str | None = Field(
         default=None,
         description=(
@@ -1000,8 +1017,7 @@ class Settings(BaseSettings):
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
         if self.aeat_live_iva_declaration_capture_timeout_ms >= self.aeat_live_iva_surface_timeout_ms:
             raise ValueError(
-                "aeat_live_iva_declaration_capture_timeout_ms must be lower than "
-                "aeat_live_iva_surface_timeout_ms"
+                "aeat_live_iva_declaration_capture_timeout_ms must be lower than aeat_live_iva_surface_timeout_ms"
             )
         return self
 

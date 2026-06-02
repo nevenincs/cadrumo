@@ -8,10 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import Settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ...tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._business_operation_invoice import (
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoiceNotFoundError,
@@ -27,15 +28,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def isolated_settings(tmp_path: Path) -> Settings:
-    """Fresh per-test settings rooted in a temp directory."""
-    return Settings(aeat_invoices_dir=tmp_path / "invoices")
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+        yield profile
 
 
 @pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
-        yield profile.repository
+def isolated_settings(runtime_profile: TestRuntimeProfile) -> Settings:
+    """Fresh per-test settings rooted in a real active runtime profile."""
+    return runtime_profile.settings
+
+
+@pytest.fixture
+def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
+    return runtime_profile.repository
 
 
 def _make_payable_svc(isolated_settings: Settings, objects: SecureObjectRepository) -> PayableInvoiceService:
@@ -245,7 +251,7 @@ class TestCollectibleInvoiceEventEmission:
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id="bucket-002",
+            bucket_id="bucket-001",
             counterparty_nif="C11111111",
             invoice_number="CINV-001",
             invoice_date="2025-05-01",
@@ -254,20 +260,20 @@ class TestCollectibleInvoiceEventEmission:
         catalogue = self._event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.COLLECTIBLE_INVOICE_CREATED
-        assert event.bucket_id == "bucket-002"
+        assert event.bucket_id == "bucket-001"
 
     def test_remove_emits_collectible_invoice_removed(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository
     ) -> None:
         svc = _make_collectible_svc(isolated_settings, secure_objects)
         add_result = svc.add(
-            bucket_id="bucket-002",
+            bucket_id="bucket-001",
             counterparty_nif="C11111111",
             invoice_number="CINV-002",
             invoice_date="2025-05-01",
         )
         remove_result = svc.remove(
-            bucket_id="bucket-002",
+            bucket_id="bucket-001",
             invoice_id=add_result.record.invoice_id,
         )
         assert len(remove_result.bucket_event_ids) == 1
@@ -311,19 +317,33 @@ class TestPrefixCollisionRefusal:
             svc.view(bucket_id="bucket-001", invoice_id=shared_prefix)
 
 
-class TestBucketIsolation:
-    def test_records_are_bucket_scoped(
+class TestSourceKindIsolation:
+    def test_records_are_source_kind_scoped(
+        self, isolated_settings: Settings, secure_objects: SecureObjectRepository
+    ) -> None:
+        payable_svc = _make_payable_svc(isolated_settings, secure_objects)
+        collectible_svc = _make_collectible_svc(isolated_settings, secure_objects)
+        payable_svc.add(bucket_id="bucket-001", counterparty_nif="B1", invoice_number="N1", invoice_date="2025-03-15")
+        collectible_svc.add(
+            bucket_id="bucket-001",
+            counterparty_nif="B2",
+            invoice_number="N2",
+            invoice_date="2025-03-15",
+        )
+        payable_records = payable_svc.list_all(bucket_id="bucket-001")
+        collectible_records = collectible_svc.list_all(bucket_id="bucket-001")
+        assert len(payable_records) == 1
+        assert len(collectible_records) == 1
+        assert payable_records[0].counterparty_nif == "B1"
+        assert collectible_records[0].counterparty_nif == "B2"
+
+    def test_non_active_bucket_fails_closed(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
-        svc.add(bucket_id="bucket-A", counterparty_nif="B1", invoice_number="N1", invoice_date="2025-03-15")
-        svc.add(bucket_id="bucket-B", counterparty_nif="B2", invoice_number="N2", invoice_date="2025-03-15")
-        a_records = svc.list_all(bucket_id="bucket-A")
-        b_records = svc.list_all(bucket_id="bucket-B")
-        assert len(a_records) == 1
-        assert len(b_records) == 1
-        assert a_records[0].counterparty_nif == "B1"
-        assert b_records[0].counterparty_nif == "B2"
+
+        with pytest.raises(StorageValidationError, match="not ready"):
+            svc.add(bucket_id="bucket-002", counterparty_nif="B2", invoice_number="N2", invoice_date="2025-03-15")
 
 
 class TestRecordImmutability:
@@ -342,7 +362,7 @@ class TestRecordImmutability:
 
 
 class TestRoundTripPersistence:
-    def test_jsonl_round_trips_decimals(
+    def test_secure_object_round_trips_decimals(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository
     ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_objects)
@@ -440,7 +460,7 @@ class TestEuVatIdValidator:
 
 
 class TestIntracomFieldsPersistence:
-    """INTRACOM-002 — intracom fields persist through JSONL roundtrip and default to None."""
+    """INTRACOM-002 — intracom fields persist through encrypted roundtrip and default to None."""
 
     def test_intracom_fields_default_to_none(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository
@@ -477,49 +497,23 @@ class TestIntracomFieldsPersistence:
         assert record.eu_iva_id == "DE345678901"
         assert record.operation_type is IntracomOperationType.E
 
-    def test_existing_record_without_intracom_fields_loads_as_none(
-        self, isolated_settings: Settings, secure_objects: SecureObjectRepository, tmp_path: Path
+    def test_invoice_persistence_writes_secure_object_not_jsonl(
+        self, isolated_settings: Settings, secure_objects: SecureObjectRepository
     ) -> None:
-        # Schema migration test: a JSONL record written before the intracom fields
-        # were added (missing keys) must load with country_code=None etc.
-        import json
-        from datetime import UTC, datetime
-
-        from .._storage_paths import storage_path
-        from ._business_operation_invoice import (
-            BusinessOperationInvoiceSourceKind,
-        )
-
-        bucket_id = "bucket-legacy"
-        kind = BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
-        path = storage_path(isolated_settings.aeat_invoices_dir / kind.value, bucket_id)
-        # Write a record in the pre-intracom schema (no country_code / eu_iva_id / operation_type)
-        legacy = {
-            "invoice_id": "abc123",
-            "source_kind": "payable_invoice",
-            "bucket_id": bucket_id,
-            "counterparty_nif": "B99999999",
-            "counterparty_name": "",
-            "invoice_number": "INV-LEGACY-001",
-            "invoice_date": "2024-01-15",
-            "currency": "EUR",
-            "taxable_base": "500",
-            "iva_rate": None,
-            "iva_amount": "0",
-            "total_amount": "500",
-            "notes": "",
-            "created_at": datetime.now(tz=UTC).isoformat(),
-            "updated_at": datetime.now(tz=UTC).isoformat(),
-        }
-        path.write_text(json.dumps(legacy) + "\n", encoding="utf-8")
-
         svc = _make_payable_svc(isolated_settings, secure_objects)
-        records = svc.list_all(bucket_id=bucket_id)
-        assert len(records) == 1
-        assert records[0].country_code is None
-        assert records[0].eu_iva_id is None
-        assert records[0].operation_type is None
-        assert records[0].invoice_number == "INV-LEGACY-001"
+
+        result = svc.add(
+            bucket_id="bucket-001",
+            counterparty_nif="B12345678",
+            invoice_number="INV-SECURE-001",
+            invoice_date="2025-03-15",
+        )
+        records = svc.list_all(bucket_id="bucket-001")
+
+        assert records == (result.record,)
+        assert not (isolated_settings.aeat_invoices_dir / "payable_invoice" / "bucket-001.jsonl").exists()
+        raw_records = tuple(secure_objects.iter_all_records_raw())
+        assert any(row.namespace == "aeat.application.ledger.business_operation_invoices" for row in raw_records)
 
     def test_anti_tautology_intracom_fields_actually_differ(
         self, isolated_settings: Settings, secure_objects: SecureObjectRepository

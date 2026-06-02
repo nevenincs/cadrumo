@@ -23,7 +23,9 @@ class RootStatusResult(OutputSchema):
     extra fields from the application-layer model dump.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -31,5 +33,7 @@ class RootStatusResult(OutputSchema):
 class AppRootResult(OutputSchema):
     """JSON envelope for the bare ``aeat app`` (or ``aeat app --help``) invocation."""
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class var shadows ConfigDict descriptor;
+    # mypy assignment check is incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]

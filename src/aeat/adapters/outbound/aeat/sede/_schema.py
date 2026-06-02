@@ -196,19 +196,24 @@ class ObservedCasillaValue(BaseModel):
 class IvaCompensationWalletRow(BaseModel):
     """One AEAT wallet row for IVA compensation generated in a source period.
 
-    The row represents external AEAT state, not a filed-declaration
-    casilla. It keeps the generation period and the monetary movement
-    columns separate so reconciliation can review expiry, application,
-    and remaining balance scenarios without collapsing evidence into a
-    single synthetic filing.
+    The row represents external AEAT state, not a filed-declaration casilla. It
+    maps one line of AEAT's "Cartera de cuotas de IVA a compensar" detail table:
+    the period that generated the credit plus its still-available balance
+    (the "Cuota Disponible" column), carried in ``pending_amount``.
+
+    AEAT's read-only cartera consultation surface exposes only the available
+    balance per generation period; it does not break out the original generated
+    amount or the cumulative applied amount. ``generated_amount`` and
+    ``applied_amount`` are therefore optional and stay ``None`` for this surface,
+    reserved for a richer AEAT view that itemises the movement columns.
     """
 
     model_config = _STRICT_FROZEN
 
     generation_year: int = Field(ge=2000, le=2099)
     generation_period: str = Field(min_length=1, max_length=8)
-    generated_amount: Decimal = Field(ge=Decimal("0"))
-    applied_amount: Decimal = Field(ge=Decimal("0"))
+    generated_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     pending_amount: Decimal = Field(ge=Decimal("0"))
     raw_label: str | None = Field(default=None, min_length=1, max_length=256)
     mode: Literal["read"] = "read"

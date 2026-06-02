@@ -17,6 +17,7 @@ from ....adapters.outbound.storage._errors import (
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
+    OutboundStorageQuotaError,
 )
 from ._api import GoogleApiResponseBody, _ExecutableRequest, execute_request
 
@@ -46,6 +47,18 @@ class _RaisingRequest:
 
     def execute(self, http: object = None, num_retries: int = 0) -> dict[str, Any]:
         raise self._exc
+
+
+class _RetryRecordingRequest:
+    """Records the retry count passed through the Google request boundary."""
+
+    def __init__(self, payload: dict[str, Any]) -> None:
+        self._payload = payload
+        self.seen_num_retries: int | None = None
+
+    def execute(self, http: object = None, num_retries: int = 0) -> dict[str, Any]:
+        self.seen_num_retries = num_retries
+        return self._payload
 
 
 # ---------------------------------------------------------------------------
@@ -91,28 +104,30 @@ def test_execute_request_passes_nested_dict_payload_intact() -> None:
     assert result["developerMetadata"][0]["metadataKey"] == "aeat_vault_app"
 
 
+def test_execute_request_enables_google_client_retries() -> None:
+    """Requests run through google-api-python-client retry handling."""
+
+    req = _RetryRecordingRequest({"spreadsheetId": "retry-check"})
+    result = execute_request(req, action="sheets.spreadsheets.get")
+
+    assert result["spreadsheetId"] == "retry-check"
+    assert req.seen_num_retries == 3
+
+
 # ---------------------------------------------------------------------------
 # HTTP error translation
 # ---------------------------------------------------------------------------
 
 
-def _make_http_error(status: int) -> Exception:
+def _make_http_error(status: int, content: bytes = b"error") -> Exception:
     """Build a minimal googleapiclient.errors.HttpError-shaped exception."""
 
-    try:
-        from googleapiclient.errors import HttpError
+    import httplib2
+    from googleapiclient.errors import HttpError
 
-        # HttpError requires a Response-shaped object with a .status attribute
-        # and a bytes body.
-        class _FakeResp:
-            def __init__(self, status_code: int) -> None:
-                self.status = status_code
-                self.reason = "test"
+    response = httplib2.Response({"status": str(status), "reason": "test"})
+    return HttpError(resp=response, content=content)
 
-        resp = _FakeResp(status)
-        return HttpError(resp=resp, content=b"error")  # type: ignore[arg-type]
-    except ImportError:
-        pytest.skip("googleapiclient not importable in this environment")
 
 
 def test_http_401_translates_to_permission_error() -> None:
@@ -125,6 +140,22 @@ def test_http_403_translates_to_permission_error() -> None:
     req = _RaisingRequest(_make_http_error(403))
     with pytest.raises(OutboundStoragePermissionError):
         execute_request(req, action="drive.files.get")
+
+
+def test_http_403_rate_limit_translates_to_quota_error() -> None:
+    content = (
+        b'{"error":{"code":403,"message":"quota","errors":[{"reason":"rateLimitExceeded"}],'
+        b'"status":"RESOURCE_EXHAUSTED"}}'
+    )
+    req = _RaisingRequest(_make_http_error(403, content=content))
+    with pytest.raises(OutboundStorageQuotaError):
+        execute_request(req, action="sheets.spreadsheets.get")
+
+
+def test_http_429_translates_to_quota_error() -> None:
+    req = _RaisingRequest(_make_http_error(429))
+    with pytest.raises(OutboundStorageQuotaError):
+        execute_request(req, action="sheets.spreadsheets.get")
 
 
 def test_http_404_translates_to_not_found_error() -> None:

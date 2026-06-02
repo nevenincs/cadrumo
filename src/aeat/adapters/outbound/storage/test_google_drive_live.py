@@ -24,6 +24,8 @@ from __future__ import annotations
 
 import hashlib
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 
 import pytest
@@ -71,13 +73,26 @@ def _skip_unless_drive_configured() -> None:
         pytest.skip("aeat_google_drive_root_folder_id is not configured")
 
 
+@contextmanager
+def _active_profile_storage_session() -> Iterator[None]:
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....core._bucket_pointer_io import resolve_active_bucket_id
+
+    active = resolve_active_bucket_id()
+    if active is None:
+        pytest.fail("live Google Drive tests require an active AEAT profile pointer")
+    with profile_storage_session(active):
+        yield
+
+
 def _provider_or_skip() -> StorageProvider:
     _skip_unless_drive_configured()
     try:
-        return get_storage_provider()
+        with _active_profile_storage_session():
+            return get_storage_provider()
     except Exception as exc:
         _log.debug("cannot build live storage provider", exc_info=True)
-        pytest.skip(f"cannot build live storage provider: {exc}")
+        pytest.fail(f"cannot build live storage provider after live gates passed: {exc}")
 
 
 def test_probe_against_real_drive_returns_writable() -> None:
@@ -165,8 +180,7 @@ def test_remote_mirror_manifest_round_trips_against_real_drive_contents() -> Non
         namespaces = set(provider.iter_namespaces())
         object_hmacs = {metadata.object_key_hmac for metadata in provider.iter_objects(_PROBE_NAMESPACE)}
         manifest_hmacs = {
-            metadata.object_key_hmac
-            for metadata in provider.iter_objects(REMOTE_MIRROR_MANIFEST_NAMESPACE)
+            metadata.object_key_hmac for metadata in provider.iter_objects(REMOTE_MIRROR_MANIFEST_NAMESPACE)
         }
         manifest_payload, _ = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, manifest_hmac)
         reloaded_manifest = RemoteMirrorNamespaceManifest.model_validate_json(manifest_payload)

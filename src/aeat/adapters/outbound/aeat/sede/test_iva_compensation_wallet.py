@@ -108,12 +108,11 @@ def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_c
     """Regression: a populated cartera must never parse to a silent zero wallet.
 
     The live ``allow_empty_wallet_shell`` path must not swallow a results page that
-    carries a non-zero aggregate and detail rows (the false-zero that reported
-    ``total_pending=0`` against a real €258,02 cartera).
+    carries a non-zero aggregate and detail rows.
     """
     html = _cartera_results_html(
-        total="258,02",
-        rows='<tr><td>2024</td><td>4T</td><td>258,02</td></tr>',
+        total="123,45",
+        rows='<tr><td>2024</td><td>4T</td><td>123,45</td></tr>',
     )
 
     observation = parse_iva_compensation_wallet_html(
@@ -127,7 +126,7 @@ def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_c
         allow_empty_wallet_shell=True,
     )
 
-    assert observation.total_pending == Decimal("258.02")
+    assert observation.total_pending == Decimal("123.45")
     assert len(observation.rows) == 1
 
 
@@ -159,7 +158,7 @@ def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> No
     """The aggregate total must reconcile with the sum of detail rows."""
     html = _cartera_results_html(
         total="999,99",
-        rows='<tr><td>2024</td><td>4T</td><td>258,02</td></tr>',
+        rows='<tr><td>2024</td><td>4T</td><td>123,45</td></tr>',
     )
 
     with pytest.raises(SedeParseError, match="does not equal the sum"):

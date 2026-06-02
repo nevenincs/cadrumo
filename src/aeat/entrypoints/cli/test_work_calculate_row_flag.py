@@ -13,6 +13,7 @@ helpers are pure functions that do not touch any external state.
 
 from __future__ import annotations
 
+import subprocess
 from decimal import Decimal
 
 import pytest

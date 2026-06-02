@@ -134,6 +134,7 @@ class AeatPre303Surface(_Frozen):
     functionalities_path: str = Field(min_length=1)
     procedures_path: str = Field(min_length=1)
     iva_wallet_header_tokens: tuple[str, ...] = Field(min_length=1)
+    iva_wallet_total_label_tokens: tuple[str, ...] = Field(min_length=1)
     iva_wallet_empty_page_tokens: tuple[str, ...] = Field(min_length=1)
     representation_own_name_selector: str = Field(min_length=1)
     representation_own_name_label_selector: str = Field(min_length=1)
@@ -143,10 +144,14 @@ class AeatPre303Surface(_Frozen):
     alert_continue_button_text: str = Field(min_length=1)
     wallet_form_selector: str = Field(min_length=1)
     wallet_execute_submit_selector: str = Field(min_length=1)
+    tipo_actuacion_own_name_link_selector: str = Field(min_length=1)
+    wallet_ejercicio_input_selector: str = Field(min_length=1)
+    wallet_periodo_input_selector: str = Field(min_length=1)
     official_access_auth_methods: tuple[str, ...] = Field(min_length=1)
 
     @field_validator(
         "iva_wallet_header_tokens",
+        "iva_wallet_total_label_tokens",
         "iva_wallet_empty_page_tokens",
         "official_access_auth_methods",
         mode="before",

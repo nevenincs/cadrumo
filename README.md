@@ -1,6 +1,6 @@
 # aeat
 
-`aeat` is a local-first Python toolkit for preparing Spanish tax filings. It runs on your own machine. It builds and checks your filings, then produces files you submit yourself. It never sends anything to the Agencia Estatal de Administración Tributaria (AEAT) on your behalf.
+`aeat` is a helper for preparing your Spanish tax forms. It takes the records you keep, works out the figures for each modelo, checks them against the form's rules, and exports a file ready to submit to the Agencia Estatal de Administración Tributaria (AEAT).
 
 > **Status: pre-alpha.** Expect breaking changes between versions.
 

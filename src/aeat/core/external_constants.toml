@@ -86,9 +86,11 @@ procedures_path = "/Sede/iva/pre-303/gestiones.html"
 iva_wallet_header_tokens = [
   "ejercicio",
   "periodo",
-  "gener",
-  "aplic",
-  "pend",
+  "disponible",
+]
+iva_wallet_total_label_tokens = [
+  "compensar",
+  "pendientes",
 ]
 iva_wallet_empty_page_tokens = [
   "cartera",
@@ -106,6 +108,9 @@ alert_modal_selector = "#alertsModal"
 alert_continue_button_text = "continuar"
 wallet_form_selector = "form#Form"
 wallet_execute_submit_selector = "input#ejecutar[name=\"ejecutar\"][type=\"submit\"]"
+tipo_actuacion_own_name_link_selector = "a[href*=\"np=true\"]"
+wallet_ejercicio_input_selector = "input#ejercicio[name=\"ejercicio\"]"
+wallet_periodo_input_selector = "input#periodo[name=\"periodo\"]"
 
 [aeat.help_pages]
 csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"

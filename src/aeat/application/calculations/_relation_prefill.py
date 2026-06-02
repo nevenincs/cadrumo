@@ -38,10 +38,10 @@ from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
     RegistryModeloObservation,
+    RegistryRelationSourceRequirement,
     RegistrySnapshot,
     RegistryValidationError,
     relation_source_requirements,
-    resolve_relation_values_from_observations,
 )
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
@@ -112,6 +112,10 @@ def resolve_relations_from_local_store(
     Args:
         snapshot: The :class:`RegistrySnapshot` whose declared relations are resolved
             from prior observation records in the local store.
+        repository: Optional observation repository. Defaults to the active
+            profile's calculation observation repository.
+        captured_at: Optional timestamp for relation provenance. Defaults to
+            the current clock.
 
     Returns a :class:`RelationValues` whose ``values`` tuple has one
     ``RelationValue`` per relation declared in the snapshot's
@@ -133,40 +137,20 @@ def resolve_relations_from_local_store(
         for relation_id in requirement.relation_ids
     }
 
-    if observations:
-        try:
-            resolved_map = resolve_relation_values_from_observations(
-                snapshot.revision,
-                observations,
-                filing_year=snapshot.filing_year,
-                period=snapshot.period,
-            )
-        except RegistryValidationError as exc:
-            # The runtime resolver raises ``RegistryValidationError``
-            # when a relation requires observations the local store
-            # does not yet hold. Downgrade with a logged warning so
-            # the engine emits blank cells the operator fills by
-            # hand, but the operator-substrate log records the
-            # specific resolver complaint rather than silently
-            # falling back to ``operator_manual`` provenance.
-            _log.warning(
-                "relation prefill: resolver refused observations for "
-                "modelo=%s filing_year=%s period=%s; "
-                "engine will emit blank relation cells: %s",
-                snapshot.modelo.id,
-                snapshot.filing_year,
-                snapshot.period,
-                exc,
-            )
-            resolved_map = {}
-    else:
-        resolved_map = {}
+    resolved_map = _resolve_available_relation_values(observations, requirements_by_relation=requirements_by_relation)
 
     values: list[RelationValue] = []
     for relation in snapshot.revision.relations:
         requirement = requirements_by_relation.get(relation.id)
-        target_year = requirement.filing_year if requirement is not None else snapshot.filing_year + int(
-            relation.source_revision_selector.get("filing_year_delta", 0) if relation.source_revision_selector else 0
+        target_year = (
+            requirement.filing_year
+            if requirement is not None
+            else snapshot.filing_year
+            + int(
+                relation.source_revision_selector.get("filing_year_delta", 0)
+                if relation.source_revision_selector
+                else 0
+            )
         )
         source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
         resolved = resolved_map.get(relation.id)
@@ -191,6 +175,76 @@ def resolve_relations_from_local_store(
             )
         )
     return RelationValues(values=tuple(values))
+
+
+def _resolve_available_relation_values(
+    observations: tuple[RegistryModeloObservation, ...],
+    *,
+    requirements_by_relation: dict[str, RegistryRelationSourceRequirement],
+) -> dict[str, Decimal]:
+    """Resolve each relation requirement independently from available observations."""
+    by_requirement = {requirement: requirement for requirement in requirements_by_relation.values()}
+    resolved: dict[str, Decimal] = {}
+    for requirement in by_requirement:
+        try:
+            value = _resolve_requirement_value(requirement, observations)
+        except RegistryValidationError as exc:
+            _log.warning(
+                "relation prefill: relation requirement %s remains operator-manual: %s",
+                requirement.relation_ids,
+                exc,
+            )
+            continue
+        for relation_id in requirement.relation_ids:
+            resolved[relation_id] = value
+    return resolved
+
+
+def _resolve_requirement_value(
+    requirement: RegistryRelationSourceRequirement,
+    observations: tuple[RegistryModeloObservation, ...],
+) -> Decimal:
+    values = tuple(_observed_requirement_values(requirement, observations))
+    if requirement.aggregation_op == "copy":
+        if len(values) != 1:
+            raise RegistryValidationError(
+                f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation"
+            )
+        return values[0]
+    if requirement.aggregation_op == "sum":
+        return sum(values, Decimal("0"))
+    raise RegistryValidationError(
+        f"relation requirement {requirement.relation_ids!r} uses unsupported aggregation op "
+        f"{requirement.aggregation_op!r}"
+    )
+
+
+def _observed_requirement_values(
+    requirement: RegistryRelationSourceRequirement,
+    observations: tuple[RegistryModeloObservation, ...],
+) -> tuple[Decimal, ...]:
+    values: list[Decimal] = []
+    for source_period in requirement.periods:
+        matches = tuple(
+            observation
+            for observation in observations
+            if observation.modelo == requirement.source_modelo
+            and observation.filing_year == requirement.filing_year
+            and observation.period == source_period
+        )
+        if len(matches) != 1:
+            raise RegistryValidationError(
+                f"expected one observed filing {requirement.source_modelo!r}/"
+                f"{requirement.filing_year}/{source_period!r}, found {len(matches)}"
+            )
+        value = matches[0].casilla_values.get(requirement.source_output)
+        if value is None:
+            raise RegistryValidationError(
+                f"requires observed output {requirement.source_output!r} from "
+                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}"
+            )
+        values.append(value)
+    return tuple(values)
 
 
 class RelationPrefillSourceResolver:
@@ -241,10 +295,7 @@ class RelationPrefillSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="relation_prefill",
-                    source_ref=(
-                        f"{item.relation}:{item.source_filing_year}:"
-                        f"{','.join(item.source_periods)}"
-                    ),
+                    source_ref=(f"{item.relation}:{item.source_filing_year}:{','.join(item.source_periods)}"),
                 )
                 for item in resolved
             ),

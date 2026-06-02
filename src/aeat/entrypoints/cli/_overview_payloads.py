@@ -77,7 +77,9 @@ class OverviewStatusResult(OutputSchema):
     # The status report is an application-layer pydantic model; the full
     # shape is forwarded as-is. We accept extra fields so any new keys
     # the application model adds don't break the conformance gate.
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -99,7 +101,9 @@ class OverviewCalendarResult(OutputSchema):
     warnings: list[dict] = []
     suppressed_entries: list[dict] = []
     profiles: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -109,7 +113,9 @@ class OverviewAgendaResult(OutputSchema):
 
     as_of: str | None = None
     horizon_days: int | None = None
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -117,7 +123,9 @@ class OverviewAgendaResult(OutputSchema):
 class OverviewBacklogResult(OutputSchema):
     """JSON envelope for ``aeat app overview backlog``."""
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -128,5 +136,7 @@ class OverviewExplainResult(OutputSchema):
     modelo: str | None = None
     year: int | None = None
     applicable: bool | None = None
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]

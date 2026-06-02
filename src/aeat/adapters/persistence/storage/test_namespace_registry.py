@@ -28,6 +28,7 @@ from . import (
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
     LIVE_CENSO_SNAPSHOT_NAMESPACE,
     LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
@@ -210,6 +211,12 @@ def test_w03_s22_auth_session_cache_remote_namespaces_are_registered() -> None:
             SensitivityClass.FINANCIAL,
             "{bucket_id}",
         ),
+        "ledger_business_operation_invoices": (
+            LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
+            "aeat.application.ledger.business_operation_invoices",
+            SensitivityClass.FINANCIAL,
+            "{bucket_id}:{source_kind}",
+        ),
         "live_expedientes_snapshot": (
             LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
             "aeat.application.live.expedientes_snapshot",
@@ -263,6 +270,7 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
         "aeat_iva_wallet_observations",
         "application_evidence_bundles",
         "ledger_purchase_invoice_evidence",
+        "ledger_business_operation_invoices",
         "live_expedientes_snapshot",
         "live_notifications_snapshot",
         "live_verify_observations",

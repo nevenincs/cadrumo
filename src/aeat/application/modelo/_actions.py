@@ -123,6 +123,7 @@ from ...domain.period import parse_canonical_period, period_end_date
 from ...domain.profile._ccaa import CCAA
 from ...domain.submission import ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+from ..aggregation._ledger_filing_snapshot import compute_ledger_filing_snapshot
 from ..filing import (
     approve_draft,
     build_draft,
@@ -2874,6 +2875,7 @@ def verify_modelo_revision(
     workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -3042,12 +3044,23 @@ def verify_modelo_revision(
     vr_repo.save(upsert_verification_report(vr_repo.load(), report))
 
     if granted:
+        # Back the verified revision with an immutable content-addressed ledger
+        # snapshot over its contributing rows (modelo-filing-ledger-snapshot ADR).
+        # Uniform for every modelo: a non-ledger revision has no
+        # source_transaction_ids and gets a valid empty snapshot.
+        tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+        filing_snapshot = compute_ledger_filing_snapshot(
+            source_transaction_ids=target.source_transaction_ids,
+            catalogue=tx_repo.load(),
+            captured_at=now,
+        )
         verified = target.model_copy(
             update={
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,
                 "verified_at": now,
                 "verified_by": actor.strip(),
                 "updated_at": now,
+                "ledger_filing_snapshot": filing_snapshot,
             }
         )
         cr_repo.save(upsert_calculation_revision(revisions, verified))

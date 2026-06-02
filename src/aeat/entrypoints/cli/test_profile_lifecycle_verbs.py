@@ -90,7 +90,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-
 def _seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # ``register_minimal_profile`` derives a profile-unique NIF by
     # default so two ``_seed`` calls never collide on the
@@ -166,7 +165,8 @@ def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunn
     result = cli_runner.invoke(
         root_app,
         [
-            "config", "profile",
+            "config",
+            "profile",
             "create",
             "operator",
             "--quiet",
@@ -233,7 +233,8 @@ def test_config_profile_create_refuses_existing_profile(cli_runner: CliRunner) -
     result = cli_runner.invoke(
         root_app,
         [
-            "config", "profile",
+            "config",
+            "profile",
             "create",
             "operator",
             "--quiet",
@@ -353,8 +354,7 @@ def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunn
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.PROFILE_ACTIVATED
-        and event.object_id == "operator"
+        if event.event_type is BucketEventType.PROFILE_ACTIVATED and event.object_id == "operator"
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
     assert matching[-1].payload["profile_id"] == "operator"
@@ -474,7 +474,8 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
     created = cli_runner.invoke(
         root_app,
         [
-            "config", "profile",
+            "config",
+            "profile",
             "create",
             "operator",
             "--quiet",
@@ -518,6 +519,7 @@ def test_config_profile_duplicate_copies_to_new_id(cli_runner: CliRunner) -> Non
     assert f"target_profile_id\t{CLI_PROFILE_ID_PLACEHOLDER}" in result.output
     assert "display_name\tSpouse" in result.output
     from ...application.workflow._profile_bucket_scan import read_profile_bucket
+
     assert read_profile_bucket("Spouse") is not None
 
 
@@ -580,13 +582,13 @@ def test_config_profile_create_quiet_emits_confirmation(cli_runner: CliRunner) -
 
     assert result.exit_code == 0, result.output
     assert "profile\tfreshprofile" in result.output
-    assert "Status\tCreated" in result.output
+    assert "Status\tcreated" in result.output
     assert "active_profile\tfreshprofile" in result.output
     assert "next\t" in result.output
 
 
 def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRunner) -> None:
-    """``profile edit --quiet`` must emit a confirmation line with ``Status\\tUpdated``."""
+    """``profile edit --quiet`` must emit a confirmation line with ``Status\\tupdated``."""
 
     _seed("editme")
 
@@ -609,7 +611,7 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRun
 
     assert result.exit_code == 0, result.output
     assert "profile\teditme" in result.output
-    assert "Status\tUpdated" in result.output
+    assert "Status\tupdated" in result.output
 
 
 def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(cli_runner: CliRunner) -> None:
@@ -721,12 +723,19 @@ def _create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) 
     result = runner.invoke(
         root_app,
         [
-            "config", "profile", "create", name,
+            "config",
+            "profile",
+            "create",
+            name,
             "--quiet",
-            "--tax-id", tax_id or _distinct_nif(name),
-            "--name", name.capitalize(),
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
+            "--tax-id",
+            tax_id or _distinct_nif(name),
+            "--name",
+            name.capitalize(),
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
         ],
     )
     assert result.exit_code == 0, f"create {name!r} failed: {result.output}"
@@ -852,12 +861,19 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
     result = runner.invoke(
         root_app,
         [
-            "config", "profile", "create", "OPERATOR",
+            "config",
+            "profile",
+            "create",
+            "OPERATOR",
             "--quiet",
-            "--tax-id", "12345678Z",
-            "--name", "Operator2",
-            "--activity", "design",
-            "--iva-regime", "GENERAL",
+            "--tax-id",
+            "12345678Z",
+            "--name",
+            "Operator2",
+            "--activity",
+            "design",
+            "--iva-regime",
+            "GENERAL",
         ],
     )
     assert result.exit_code != 0, f"expected case-insensitive refusal, got: {result.output}"

@@ -8,6 +8,7 @@ holds the single canonical ``_execute`` they both route through.
 
 from __future__ import annotations
 
+import json
 from typing import Any, Protocol, TypedDict
 
 from ...outbound.storage._errors import (
@@ -15,7 +16,16 @@ from ...outbound.storage._errors import (
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
+    OutboundStorageQuotaError,
 )
+
+_GOOGLE_API_NUM_RETRIES = 3
+_RATE_LIMIT_MARKERS = {
+    "rateLimitExceeded",
+    "userRateLimitExceeded",
+    "RATE_LIMIT_EXCEEDED",
+    "RESOURCE_EXHAUSTED",
+}
 
 
 class _ExecutableRequest(Protocol):
@@ -129,7 +139,7 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
         OutboundStorageNetworkError: On any other transport or unmapped HTTP failure.
     """
     try:
-        result: GoogleApiResponseBody = request.execute()
+        result: GoogleApiResponseBody = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES)
         return result
     except OutboundStorageError:
         raise
@@ -138,6 +148,13 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
 
         if isinstance(exc, HttpError):
             status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
+            quota_marker = _quota_marker(exc)
+            if status == 429 or (status == 403 and quota_marker is not None):
+                raise OutboundStorageQuotaError(
+                    f"Google {action} exhausted quota (HTTP {status}): {exc}",
+                    context={"action": action, "status": status, "quota_marker": quota_marker or "HTTP_429"},
+                    translated_message="errors.refused.refused_outbound_storage_quota",
+                ) from exc
             if status in (401, 403):
                 raise OutboundStoragePermissionError(
                     f"Google {action} refused (HTTP {status}): {exc}",
@@ -156,3 +173,37 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
             context={"action": action},
             translated_message="adapters.google.calc_sheets.errors.api_call_failed",
         ) from exc
+
+
+def _quota_marker(error: Exception) -> str | None:
+    """Return the quota marker embedded in a Google ``HttpError`` payload, if any."""
+    content = getattr(error, "content", b"")
+    body = content.decode("utf-8", errors="replace") if isinstance(content, bytes) else str(content)
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    raw_error = payload.get("error")
+    if not isinstance(raw_error, dict):
+        return None
+
+    markers: list[str] = []
+    status = raw_error.get("status")
+    if isinstance(status, str):
+        markers.append(status)
+
+    errors = raw_error.get("errors")
+    if isinstance(errors, list):
+        for entry in errors:
+            if isinstance(entry, dict) and isinstance(entry.get("reason"), str):
+                markers.append(entry["reason"])
+
+    details = raw_error.get("details")
+    if isinstance(details, list):
+        for entry in details:
+            if isinstance(entry, dict) and isinstance(entry.get("reason"), str):
+                markers.append(entry["reason"])
+
+    return next((marker for marker in markers if marker in _RATE_LIMIT_MARKERS), None)

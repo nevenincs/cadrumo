@@ -10,6 +10,7 @@ Covers:
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ...core.profile import SetupAnswers
 from ...domain.deadlines._models import IVARegime
@@ -91,7 +92,7 @@ def test_situacion_familiar_enum_member_accepted() -> None:
 
 
 def test_situacion_familiar_invalid_token_rejected() -> None:
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         _base_answers(situacion_familiar="viudo")
 
 

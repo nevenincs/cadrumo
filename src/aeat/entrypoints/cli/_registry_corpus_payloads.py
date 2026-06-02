@@ -80,7 +80,9 @@ class CitationListResult(OutputSchema):
     tag_filter: str | None = None
     topic_count: int
     references: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -92,7 +94,9 @@ class CitationShowResult(OutputSchema):
     reference: dict = {}
     articulo: dict | None = None
     related_topics: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -106,7 +110,9 @@ class CitationVerifyResult(OutputSchema):
     passed: bool
     topic_count: int
     issues: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -120,7 +126,9 @@ class ManualListResult(OutputSchema):
     part_count: int
     topic_count: int
     parts: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -139,7 +147,9 @@ class ManualShowResult(OutputSchema):
     structure_available: bool
     topic_count: int
     section: dict | None = None
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -156,7 +166,9 @@ class ManualRulesListResult(OutputSchema):
     rule_count: int
     topic_count: int
     rules: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
@@ -174,5 +186,7 @@ class ManualVerifyResult(OutputSchema):
     passed: bool
     topic_count: int
     issues: list[dict] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class-variable assignment triggers mypy [assignment]; suppression is the only escape without a mypy plugin upgrade
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
     model_config = {"extra": "allow"}  # type: ignore[assignment]

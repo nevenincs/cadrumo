@@ -97,7 +97,7 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
-    from ...domain.calculations.registry import ModeloDefinition, ModeloRevision
+    from ...domain.calculations.registry import CasillaObservation, ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
         ModeloRecordPayload,
@@ -319,7 +319,7 @@ def modelo_readiness(
     if not projection.modelo_readiness:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
     report = projection.modelo_readiness[0]
-    payload = report.model_dump(mode="json")
+    report.model_dump(mode="json")
     lines = [
         f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
@@ -4946,21 +4946,9 @@ def modelo_export_verb(
         raise _bad_parameter_from_error(exc) from exc
 
     from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloExportResult as _ModeloExportResult
+    from ._modelo_payloads import ModeloExportPayload as _ModeloExportPayload
 
-    export_result = _ModeloExportResult(
-        work_unit_id=result.work_unit_id,
-        calculation_revision_id=result.calculation_revision_id,
-        bucket_id=result.bucket_id,
-        modelo=result.modelo,
-        filing_year=result.filing_year,
-        period=result.period,
-        output_path=str(result.output_path),
-        byte_size=result.byte_size,
-        file_sha256=result.file_sha256,
-        format=result.format,
-        bucket_event_id=result.bucket_event_id,
-    )
+    export_result = _ModeloExportPayload.from_result(result)
     lines = [
         "operation\tmodelo.export",
         f"work_unit_id\t{result.work_unit_id}",
@@ -5238,8 +5226,6 @@ def modelo_project(
     merged_date_bindings = dict(profile_date_bindings)
     # Aliases used by the exception-handler log so the existing
     # observability surface keeps the original variable names.
-    m100_bindings = merged_bindings
-    m100_enum_bindings = merged_enum_bindings
 
     # -- Run M100 registry snapshot calculation ----------------------------------
     try:
