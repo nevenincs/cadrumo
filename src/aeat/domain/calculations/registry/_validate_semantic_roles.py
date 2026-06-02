@@ -54,9 +54,7 @@ def _collect_role_observations(
             for casilla in revision.casillas:
                 if casilla.semantic_role is None:
                     continue
-                grouped[casilla.semantic_role].append(
-                    _RoleObservation(modelo.id, revision.id, casilla)
-                )
+                grouped[casilla.semantic_role].append(_RoleObservation(modelo.id, revision.id, casilla))
     return grouped
 
 
@@ -65,8 +63,13 @@ def _constraints_signature(constraints: object) -> tuple[object, ...]:
     if constraints is None:
         return ()
     fields = (
-        "sign", "min_value", "max_value",
-        "pattern", "min_length", "max_length", "enum",
+        "sign",
+        "min_value",
+        "max_value",
+        "pattern",
+        "min_length",
+        "max_length",
+        "enum",
     )
     return tuple(getattr(constraints, name) for name in fields)
 
@@ -236,7 +239,5 @@ def collect_casillas_by_semantic_role(
             for casilla in revision.casillas:
                 if casilla.semantic_role is None:
                     continue
-                grouped[casilla.semantic_role].append(
-                    (modelo.id, revision.id, casilla.id)
-                )
+                grouped[casilla.semantic_role].append((modelo.id, revision.id, casilla.id))
     return {role: tuple(occs) for role, occs in grouped.items()}
