@@ -57,7 +57,7 @@ Extend continuity metadata only through small source-grounded slices after the r
 
 Resolve the known role-taxonomy edges with focused real-registry checks instead of broad role rewrites.
 
-- [ ] `P03.S15` - Re-audit M347 singleton marker state after shared-worktree changes; `src/aeat/_data/registry/aeat/modelos/347`.
+- [x] `P03.S15` - Re-audit M347 singleton marker state after shared-worktree changes; `src/aeat/_data/registry/aeat/modelos/347`.
 - [ ] `P03.S16` - Verify M349 base_intracomunitaria role coverage; `src/aeat/domain/calculations/registry/test_modelo_349_registry.py`.
 - [ ] `P03.S17` - Verify signed cuota role coverage for IRPF and IS; `src/aeat/domain/calculations/registry/test_semantic_role.py`.
 
