@@ -129,13 +129,35 @@ per-origin-year BIN detail boxes (0174-0182, 00489/00504/.../00700) stay manual.
 quitas/esperas and extinción exclusions are not modelled; they surface as an ADVISORY note plus a
 profile flag, never a hard refusal.
 
-**Modelo 100 — savings-base loss carryforward.** Add three `previous_filing` bindings on the
-carryforward casillas (0462→0393, 0465→0396, 1390→1391), each a straight
-`aggregation = { op = "copy" }` of the prior-year generated saldo: selector
-`{ source_modelo = "100", filing_year_delta = -1, period = "0A", source_output = <prior saldo
-casilla> }`, `legal_refs = ["ley-35-2006:art-49"]`. No cap formula (copy plus the existing
-integración subtract). The 4-year expiry is modelled as a chain of single-year copies; an
-explicit year-tagged expiry guard is deferred to a Phase-2 step.
+**Modelo 100 — base-liquidable-general-negativa carryforward (as delivered).** The casilla
+identifiers in the original draft of this paragraph (`0462→0393`, `0465→0396`, `1390→1391`)
+were stale against the live 2025 Modelo 100 revision and never landed; the delivered
+enrollment grounds against the real Anexo-C casillas. The cross-renta hook is a single
+`previous_filing` binding on the base-liquidable-**general**-negativa carryforward: the
+*opening* pending balance for the immediately-prior origin ejercicio — casilla **1388**
+(`irpf_anexo_c_base_liq_neg_pendiente_inicio`) — is a straight `aggregation = { op = "copy" }`
+of the prior filing's *generated* saldo — casilla **1391**
+(`irpf_anexo_c_base_liq_neg_generado`): selector `{ source_modelo = "100",
+filing_year_delta = -1, period = "0A", source_output = "1391" }`. The carry is
+origin-year-matched in both the 2024 and 2025 revisions (each revision's 1388 is the
+immediately-prior origin year — 2024-rev 1388 = ejercicio 2023, 2025-rev 1388 = ejercicio
+2024), never a same-number copy.
+
+**Grounding correction (art.48, not art.49).** The general-base negativa carry is established
+by Ley 35/2006 **art. 48** ("Integración y compensación de rentas en la base imponible
+GENERAL"), which carries its own four-following-years / 25 % rule (current consolidated text
+per Ley 26/2014). The original draft cited `ley-35-2006:art-49` — but art. 49 governs the
+base imponible del **AHORRO** (savings base), a different mechanism. The committed binding's
+`legal_refs` are corrected `art-49 → art-48` once art. 48 is ingested into the legal
+catalogue + corpus (the exact provision — art. 48 alone vs art. 48 + art. 50.3 for the
+base-*liquidable* level — is adjudicated by the legal-authority pass).
+
+**Deferred (delivered enrollment is general-base carry only).** The savings-base
+(0441-family) art. 49 rolling carry, the integración-subtract that *consumes* the opening
+pending into the current-year base reduction, the four-year multi-origin-year window depth,
+and an explicit year-tagged expiry guard are calc-completeness follow-ons — not claimed by
+the landed enrollment, which proves the general-base carry wiring/provenance across two
+distinct renta years through the full `calculate_modelo_revision` engine.
 
 **Modelo 202 — modalidad art.40.2 (cleanest of the three; no new formula).** Only casilla
 `01` ("Mod.40.2 base", `required = true`, `input_kind = "manual"` today) flips manual →
