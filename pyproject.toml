@@ -241,6 +241,15 @@ ignore = [
   # bare class state but the project's models are predominantly
   # pydantic; ignoring project-wide is the right trade.
   "RUF012",  # mutable-class-default (pydantic field defaults — safe)
+  # N806 (non-lowercase-variable-in-function) fires on the project's
+  # uppercase-with-leading-underscore "function-local constant" naming
+  # pattern: `_EXPECTED`, `_CASILLA_28_LEAVES`, `_SENTINEL_NAME_FRAGMENTS`,
+  # `_AUTOCONSUMO_PROMOTOR_BINDING`, etc. — sentinels, expected-data
+  # fixtures, and configuration-table snapshots that ARE constants
+  # within their scope but happen to be declared inside a function for
+  # readability or closure reasons. The naming is intentional and the
+  # pattern is widespread; project-wide ignore is the right call.
+  "N806",  # non-lowercase-variable-in-function (intentional local constants)
 ]
 
 [tool.ruff.lint.pydocstyle]
