@@ -342,7 +342,9 @@ def _apply_fx_conversion(
     result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)
     if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
         return (None, None)
-    return (result.rate, result.eur_amount)
+    # value_in_eur is the non-negative EUR magnitude; the sign is carried by
+    # raw.amount + direction (Transaction.value_in_eur rejects negatives).
+    return (result.rate, abs(result.eur_amount))
 
 
 def _evaluate_import_rows(
@@ -487,6 +489,7 @@ def import_ledger_source(
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file.
 
@@ -536,6 +539,7 @@ def import_ledger_source(
             catalogue=existing_catalogue,
             raw_rows=raw_transactions,
             direction_resolver=_direction_from_amount,
+            currency_normalizer=currency_normalizer,
         )
         return LedgerSourceImportResult(
             rows=len(raw_transactions),
@@ -565,6 +569,7 @@ def import_ledger_source(
         bucket_event_repository=event_repository,
         actor=command.actor,
         source_command=command.source_command,
+        currency_normalizer=currency_normalizer,
     )
     summary = result.summary
     diagnostic_events = _diagnostic_events(

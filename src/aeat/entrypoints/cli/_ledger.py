@@ -1719,6 +1719,33 @@ def ledger_status(
             lines.append(
                 _ledger_status_readiness_issue_line(transaction, reason=issue.reason.value, detail=issue.detail)
             )
+    # Advisory: surface any finalized modelo revision whose backing ledger
+    # snapshot has drifted from the live ledger (modelo-filing-ledger-snapshot
+    # ADR). Appended as free-form lines; the structured envelope is unchanged.
+    from ...application.aggregation._ledger_filing_snapshot import stale_filed_revisions
+    from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+    from ...domain.modelos._repository import WorkUnitCatalogueRepository
+
+    revisions = CalculationRevisionCatalogueRepository().load()
+    work_units = WorkUnitCatalogueRepository().load()
+    for revision, verdict in stale_filed_revisions(revisions=revisions, catalogue=transactions):
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != transaction_repository.bucket_id:
+            continue
+        lines.append(
+            "\t".join(
+                (
+                    "ledger_filing_stale",
+                    f"modelo={work_unit.modelo}",
+                    f"year={work_unit.filing_year}",
+                    f"period={work_unit.period}",
+                    f"revision={revision.calculation_revision_id}",
+                    f"changed={len(verdict.changed)}",
+                    f"removed={len(verdict.removed)}",
+                )
+            )
+        )
+
     from ._ledger_payloads import LedgerStatusResult
 
     _emit_envelope(
@@ -1818,6 +1845,13 @@ def ledger_import(
         transaction_repository = _tx_repo(current_state)
         bucket_id = transaction_repository.bucket_id
         actor = resolve_active_bucket_id() or "operator"
+    # Composition root: wire the ECB euro reference-rate normalizer so foreign
+    # rows convert to value_in_eur at import (ledger-fx-conversion ADR). Without
+    # this they would persist unconverted and silently gate at aggregation.
+    from ...adapters.outbound.fx import default_ecb_rate_provider
+    from ...domain.currency import CurrencyNormalizationService
+
+    currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
     result = import_ledger_source(
         LedgerSourceImportCommand(
             bucket_id=bucket_id,
@@ -1831,6 +1865,7 @@ def ledger_import(
             source_command="aeat app ledger import",
         ),
         transaction_repository=transaction_repository,
+        currency_normalizer=currency_normalizer,
     )
     lines = [
         f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
