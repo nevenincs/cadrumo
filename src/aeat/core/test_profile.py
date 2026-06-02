@@ -32,8 +32,7 @@ def test_setup_answers_canonical_module() -> None:
     from .profile import SetupAnswers
 
     assert SetupAnswers.__module__ == "aeat.core.profile", (
-        f"SetupAnswers is defined in {SetupAnswers.__module__!r}; "
-        "expected 'aeat.core.profile'"
+        f"SetupAnswers is defined in {SetupAnswers.__module__!r}; expected 'aeat.core.profile'"
     )
 
 
@@ -50,8 +49,7 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     from .profile import SetupAnswers
 
     assert SETUP_FLOW.answers_model is SetupAnswers, (
-        f"SETUP_FLOW.answers_model is {SETUP_FLOW.answers_model!r}; "
-        "expected aeat.core.profile.SetupAnswers"
+        f"SETUP_FLOW.answers_model is {SETUP_FLOW.answers_model!r}; expected aeat.core.profile.SetupAnswers"
     )
 
 
@@ -69,18 +67,14 @@ def test_profiles_imports_setup_answers_from_core() -> None:
     assert sa is not None, "_profiles module does not expose SetupAnswers"
     from .profile import SetupAnswers
 
-    assert sa is SetupAnswers, (
-        f"_profiles.SetupAnswers is {sa!r}, not aeat.core.profile.SetupAnswers"
-    )
+    assert sa is SetupAnswers, f"_profiles.SetupAnswers is {sa!r}, not aeat.core.profile.SetupAnswers"
 
 
 def test_profiles_no_deferred_application_imports() -> None:
     """_profiles.py must contain no deferred imports from aeat.application.wizard."""
     # Parse the source AST and look for Import / ImportFrom nodes that
     # reference aeat.application.wizard inside any function body.
-    profiles_path = inspect.getfile(
-        importlib.import_module("aeat.domain.deadlines._profiles")
-    )
+    profiles_path = inspect.getfile(importlib.import_module("aeat.domain.deadlines._profiles"))
     with open(profiles_path, encoding="utf-8") as fh:
         source = fh.read()
     tree = ast.parse(source, filename=profiles_path)
@@ -93,19 +87,14 @@ def test_profiles_no_deferred_application_imports() -> None:
         for child in ast.walk(node):
             if isinstance(child, ast.ImportFrom):
                 if child.module and "application.wizard" in child.module:
-                    deferred_violations.append(
-                        f"line {child.lineno}: from {child.module} import ..."
-                    )
+                    deferred_violations.append(f"line {child.lineno}: from {child.module} import ...")
             elif isinstance(child, ast.Import):
                 for alias in child.names:
                     if "application.wizard" in alias.name:
-                        deferred_violations.append(
-                            f"line {child.lineno}: import {alias.name}"
-                        )
+                        deferred_violations.append(f"line {child.lineno}: import {alias.name}")
 
-    assert not deferred_violations, (
-        "_profiles.py contains deferred application.wizard imports:\n"
-        + "\n".join(deferred_violations)
+    assert not deferred_violations, "_profiles.py contains deferred application.wizard imports:\n" + "\n".join(
+        deferred_violations
     )
 
 
@@ -195,8 +184,8 @@ def test_setup_answers_invalid_iva_regime_raises() -> None:
 
 def test_setup_answers_entity_type_coercion() -> None:
     """SetupAnswers coerces a string entity type token to the enum."""
-    from .profile import SetupAnswers
     from ..domain.deadlines._models import EntityType
+    from .profile import SetupAnswers
 
     sa = SetupAnswers(tax_id="12345678A", entity_type="natural_person")
     assert sa.entity_type == EntityType.NATURAL_PERSON
