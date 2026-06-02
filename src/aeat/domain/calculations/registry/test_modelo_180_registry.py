@@ -18,7 +18,7 @@ from . import (
     calculate_registry_snapshot,
     load_registry_tree,
 )
-from ._relations import relation_source_requirements, resolve_relation_values_from_observations
+from . import relation_source_requirements, resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
