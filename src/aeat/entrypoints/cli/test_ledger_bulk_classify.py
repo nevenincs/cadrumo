@@ -9,13 +9,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
-from . import app
 from ...tests.secure_sql import isolated_profile_storage_root
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -24,17 +23,13 @@ _RUNNER = CliRunner()
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("default"),
     ):
-        try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
-            yield
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+        yield
 
 
 def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
@@ -217,7 +212,7 @@ def test_rule_apply_classifies_not_yet_processed_transactions(tmp_path: Path) ->
 
 
 def test_rule_apply_skips_already_classified_without_reaffirm(tmp_path: Path) -> None:
-    tx1, tx2 = _import_two_transactions(tmp_path)
+    tx1, _tx2 = _import_two_transactions(tmp_path)
 
     # Manually classify tx1
     _RUNNER.invoke(app, ["app", "ledger", "classify", "--id", tx1, "--classification", "PERSONAL"])
