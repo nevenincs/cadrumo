@@ -61,9 +61,7 @@ def _selector_year_delta(value: object) -> int:
         return value
     if isinstance(value, str):
         return int(value)
-    raise BindingPrefillTypeError(
-        f"binding selector 'filing_year_delta' must be int|str, got {type(value).__name__}"
-    )
+    raise BindingPrefillTypeError(f"binding selector 'filing_year_delta' must be int|str, got {type(value).__name__}")
 
 
 def _selector_periods(value: object) -> tuple[str, ...]:

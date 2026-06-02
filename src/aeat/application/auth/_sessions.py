@@ -65,7 +65,9 @@ def _get_session_store() -> SessionStoreProtocol:
         # The module-scope import was removed to break the import-time cycle.
         from ...adapters.outbound.aeat.auth import _session_store as _impl
 
-        configure_session_store(cast(SessionStoreProtocol, _impl))  # CAST-RATIONALE-MODULE-AS-PROTOCOL: _session_store module satisfies SessionStoreProtocol structurally; mypy cannot verify module-object protocol conformance without an explicit cast
+        configure_session_store(
+            cast(SessionStoreProtocol, _impl)
+        )  # CAST-RATIONALE-MODULE-AS-PROTOCOL: _session_store module satisfies SessionStoreProtocol structurally; mypy cannot verify module-object protocol conformance without an explicit cast
     assert _session_store_impl is not None
     return _session_store_impl
 
