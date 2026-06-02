@@ -226,6 +226,7 @@ from ._record_design import (
     extract_record_design_workbook,
 )
 from ._relations import (
+    RegistryRelationSourceRequirement,
     materialize_relation_binding_values,
     relation_source_requirements,
     resolve_relation_values,
@@ -484,13 +485,14 @@ __all__ = [
     "RegistryModeloObservation",
     "RegistryModeloObservationRequirement",
     "RegistryQueryService",
+    "RegistryRelationSourceRequirement",
     "RegistryRoundingCode",
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistrySnapshotRef",
-    "RegistryVerificationPolicy",
     "RegistryValidationError",
     "RegistryValidator",
+    "RegistryVerificationPolicy",
     "RelatedPartyOperationObservation",
     "RelationId",
     "RemoteOperation",
