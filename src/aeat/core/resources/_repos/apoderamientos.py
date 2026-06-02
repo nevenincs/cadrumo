@@ -12,7 +12,7 @@ class ApoderamientosRepository(ResourceCacheRepository[object, None]):
     """
 
     def _load(self, key: None) -> object:
-        from ....domain.auth.apoderamientos import load_default_catalogue
+        from ....domain.auth import load_default_catalogue
 
         return load_default_catalogue()
 
