@@ -17,17 +17,19 @@ from ...application.calculations._iva_compensation_history import (
     seed_iva_compensation_period,
 )
 from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
-from ...domain.iva_compensation._carry_forward import (
-    IvaCompensationCarryForwardLot,
-    IvaCompensationExpiryReviewState,
-    IvaCompensationPeriodState,
-)
 
 # Import the wizard catalogue + persistence so register_wizard_catalogue()
 # and register_project_answers() run before any domain module under
 # ``aeat app modelo work`` queries SETUP_FLOW or projects answers.  The
 # CLI command tree is lazy-loaded, so ``aeat app modelo`` alone does not
 # trigger these imports (only ``aeat config`` does).
+from ...application.wizard import _catalogue as _wizard_catalogue
+from ...application.wizard import _persistence as _wizard_persistence
+from ...domain.iva_compensation._carry_forward import (
+    IvaCompensationCarryForwardLot,
+    IvaCompensationExpiryReviewState,
+    IvaCompensationPeriodState,
+)
 from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
@@ -35,6 +37,7 @@ from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
 _RUNNER = CliRunner()
 _NIF = "12345678Z"
 
@@ -48,11 +51,7 @@ def _unwrap_envelope(payload: object) -> dict:
     (pre-envelope) are returned unchanged so this helper is safe to apply
     unconditionally.
     """
-    if (
-        isinstance(payload, dict)
-        and "result" in payload
-        and "schema_version" in payload
-    ):
+    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
         return payload["result"]
     if not isinstance(payload, dict):
         raise AssertionError(f"unexpected JSON shape: {type(payload).__name__}")
@@ -308,8 +307,7 @@ def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
         _store_profile_with_nif(_NIF)
         result = _RUNNER.invoke(
             app,
-            ["app", "modelo", "iva-wallet", "seed",
-             "--filing-year", "2024", "--period", "4T", "--amount", "1200.00"],
+            ["app", "modelo", "iva-wallet", "seed", "--filing-year", "2024", "--period", "4T", "--amount", "1200.00"],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
 
@@ -322,9 +320,21 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
         _store_profile_with_nif(_NIF)
         result = _RUNNER.invoke(
             app,
-            ["--format", "json", "app", "modelo", "iva-wallet", "seed",
-             "--filing-year", "2024", "--period", "4T",
-             "--amount", "1200.50", "--confirm"],
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "iva-wallet",
+                "seed",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "1200.50",
+                "--confirm",
+            ],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
 
@@ -351,17 +361,37 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
         _store_profile_with_nif(_NIF)
         first_result = _RUNNER.invoke(
             app,
-            ["app", "modelo", "iva-wallet", "seed",
-             "--filing-year", "2024", "--period", "4T",
-             "--amount", "1200.00", "--confirm"],
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "seed",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "1200.00",
+                "--confirm",
+            ],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
         assert first_result.exit_code == 0, first_result.output
         result = _RUNNER.invoke(
             app,
-            ["app", "modelo", "iva-wallet", "seed",
-             "--filing-year", "2024", "--period", "4T",
-             "--amount", "500.00", "--confirm"],
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "seed",
+                "--filing-year",
+                "2024",
+                "--period",
+                "4T",
+                "--amount",
+                "500.00",
+                "--confirm",
+            ],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
 
@@ -377,7 +407,7 @@ def test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology() -> None:
             source_filing_year=2024,
             source_period="1T",
             generated_amount=Decimal("1200.00"),
-            applied_amount=Decimal("800.00"),   # should be 800, remaining should be 400
+            applied_amount=Decimal("800.00"),  # should be 800, remaining should be 400
             remaining_amount=Decimal("500.00"),  # but 800+500 != 1200 → validator fires
             age_years=2,
             expiry_review_state=IvaCompensationExpiryReviewState.ACTIVE,
@@ -451,16 +481,25 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
         _seed_full_autónomo_profile_for_guidance(_GUIDANCE_PROFILE)
         work_unit_result = invoke_cached_cli(
             [
-                "--format", "json",
-                "app", "modelo", "work", "create",
-                "--modelo", "303",
-                "--year", "2024",
-                "--period", "1T",
-                "--revision", "2023-y-siguientes",
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                "2024",
+                "--period",
+                "1T",
+                "--revision",
+                "2023-y-siguientes",
             ]
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
         import json as _json
+
         raw = _json.loads(work_unit_result.output)
         if "schema_version" in raw and "result" in raw:
             work_unit_id = raw["result"]["work_unit_id"]
@@ -469,18 +508,19 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
 
         result = invoke_cached_cli(
             [
-                "app", "modelo", "work", "calculate", work_unit_id,
-                "--binding", "modelo-303-compensacion-pendiente-anteriores=500",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--binding",
+                "modelo-303-compensacion-pendiente-anteriores=500",
             ],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
 
-    assert result.exit_code != 0, (
-        "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
-    )
-    assert "iva-wallet seed" in result.output, (
-        f"Error output must name the iva-wallet seed verb; got:\n{result.output}"
-    )
+    assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
+    assert "iva-wallet seed" in result.output, f"Error output must name the iva-wallet seed verb; got:\n{result.output}"
     assert "--mode" not in result.output, (
         f"Error output must NOT reference the obsolete --mode flag; got:\n{result.output}"
     )
@@ -504,16 +544,25 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
 
         work_unit_result = invoke_cached_cli(
             [
-                "--format", "json",
-                "app", "modelo", "work", "create",
-                "--modelo", "303",
-                "--year", "2024",
-                "--period", "1T",
-                "--revision", "2023-y-siguientes",
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                "2024",
+                "--period",
+                "1T",
+                "--revision",
+                "2023-y-siguientes",
             ]
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
         import json as _json
+
         raw = _json.loads(work_unit_result.output)
         if "schema_version" in raw and "result" in raw:
             work_unit_id = raw["result"]["work_unit_id"]
@@ -561,9 +610,7 @@ def test_cli_seed_help_text_contains_liva_art_99_legal_grounding(tmp_path: Path)
 
     assert result.exit_code == 0, result.output
     help_text = result.output
-    assert "99.5" in help_text, (
-        "seed --help must cite LIVA art. 99.5 for the zero-first-period legal grounding"
-    )
+    assert "99.5" in help_text, "seed --help must cite LIVA art. 99.5 for the zero-first-period legal grounding"
     assert "Ley 37/1992" in help_text or "LIVA" in help_text, (
         "seed --help must reference the legal source (Ley 37/1992 or LIVA)"
     )

@@ -456,3 +456,88 @@ CRITICAL findings present: no.
 
 - The prior low negative-only coverage concern is materially improved. The describe JSON guard now checks both placeholder absence and UUID-shaped raw identifier absence on the rendered payload.
 - Remaining risk is scoped to surface coverage: this row covers `modelo describe`; later modelo work/source-mesh rows still need to audit create/calculate/verify output surfaces.
+
+## W03.P10.S58-S64 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/application/modelo/_actions.py`
+- `src/aeat/application/workflow/_models.py`
+- `src/aeat/entrypoints/cli/test_modelo_work_ux.py`
+- `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`
+- `src/aeat/entrypoints/cli/test_ledger_allocate_classification.py`
+- `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`
+- `src/aeat/entrypoints/cli/test_ledger_ux_defect_cluster.py`
+- `src/aeat/entrypoints/cli/test_iva_wallet_inspector.py`
+- `src/aeat/entrypoints/cli/test_registry_corpus.py`
+
+### Findings
+
+- S58/S59 close the modelo work/source-mesh JSON contamination issue by removing temporary `DBG146` logging from the calculation path. This restores parseable JSON output without weakening the real CLI assertions.
+- S60-S62 now have current evidence over real ledger allocation, validation, and UX flows: 41 tests pass and continue to exercise encrypted CLI setup rather than fake storage.
+- S63 repairs a real lazy-loading gap in the IVA wallet inspector tests by importing the production wizard catalogue and project-answer persistence modules before `work create` accesses `SETUP_FLOW`. No fake catalogue or monkeypatch was introduced.
+- S64 confirms non-sensitive registry corpus rows continue to render without accidental over-redaction.
+
+### Residual risks
+
+- The seven-file central CLI batch exceeds the local command timeout when run as one command, but each target file passes individually and the grouped ledger/error batches pass. This is a runtime-duration risk, not a current assertion failure.
+
+## W03.P11.S65-S69 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/test_output_surface_inventory.py`
+- `src/aeat/entrypoints/cli/test_error_boundary_integration.py`
+- `src/aeat/entrypoints/cli/test_error_boundary_unwrap.py`
+- `src/aeat/entrypoints/cli/test_error_registry_contract.py`
+- `src/aeat/entrypoints/cli/test_windows_encoding.py`
+- `src/aeat/application/modelo/_actions.py`
+- `src/aeat/application/modelo/__init__.py`
+- `src/aeat/core/errors/registry/_domain.py`
+
+### Findings
+
+- S65 adds the production output-surface inventory gate and routes the touched ledger JSON output through the central envelope path.
+- S66/S67 keep the CLI error boundary grounded in `AeatError` behavior: wrapped typed refusals are surfaced cleanly, while genuine unexpected exceptions still log as unexpected.
+- S68 removes the `N818` suppression from the Modelo IVA wallet blocked exception by introducing `ModeloIvaWalletReconciliationBlockedError` and registering that canonical class path in the error registry. The legacy public symbol remains a compatibility alias to avoid breaking existing imports.
+- S69 keeps Windows stderr rendering aligned with the current shared placeholder vocabulary.
+
+### Residual risks
+
+- `test_write_stderr_redacts_sensitive_canaries` still asserts the literal `profile=<profile-id>` placeholder. This is currently correct but should be revisited if the redaction vocabulary changes.
+
+## W03.P12-S70-S73 and W04.P13-S74-S78 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Findings
+
+- The live IVA wallet static guard, LLM redaction tests, secure-storage sensitivity policy tests, and secret-store tests carry concrete focused evidence in their step records.
+- No fake provider mutation, monkeypatch shortcut, skipped test, or xfail is recorded for these rows.
+- The secure-storage rows assert plaintext absence, strict record roundtrips, retention policy validation, overwrite cleanup, delete, rotate, and digest listing against the existing persistence paths.
+
+### Residual risks
+
+- The review did not re-run the full secure-storage/LLM batches in this closeout pass because the current code changes were in the CLI/modelo/error-registry surface. Their exec records contain prior focused evidence and no current dirty code in those target files was present in the closeout set.
+
+## W04.P14.S79-S82 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Findings
+
+- The plan now validates with `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-28-centralized-output-redaction-plan.md`.
+- W04.P14 records document closeout/index regeneration work and the feature index regeneration path.
+- The mandatory code-review pass found a tracking gap, not a code safety regression; S60-S64 and S66-S69 records were backfilled with current evidence.
+
+### Residual risks
+
+- The diff includes broad exec-record template-comment cleanup from previous agents. This is vault metadata churn rather than product behavior, but it increases review surface and should be kept isolated to the centralized-output-redaction commit.

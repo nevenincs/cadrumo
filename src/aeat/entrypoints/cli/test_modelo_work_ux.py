@@ -27,9 +27,9 @@ from pathlib import Path
 
 import pytest
 
-from ._test_envelope import unwrap_schema_envelope as _payload
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._test_envelope import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -42,8 +42,6 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
-
-
 
 
 def _create_profile() -> None:
@@ -272,9 +270,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_bac
     assert payload["name"] == "Renamed Unit"
 
     # The rename is durable: a fresh status read sees the new name.
-    status = _invoke(
-        ["--format", "json", "app", "modelo", "work", "status", payload["work_unit_id"]]
-    )
+    status = _invoke(["--format", "json", "app", "modelo", "work", "status", payload["work_unit_id"]])
     assert status.exit_code == 0, status.output
     assert _payload(status.output)["name"] == "Renamed Unit"
 

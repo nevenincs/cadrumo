@@ -8,27 +8,8 @@ related:
   - "[[2026-05-28-centralized-output-redaction-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace centralized-output-redaction with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-     step_id is the originating Step's canonical identifier, e.g. S01.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar-plan]]' and link the
-     parent plan.
 
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path. -->
 
 # update the CLI workflow index with the new output privacy boundary
 
@@ -38,10 +19,17 @@ related:
 
 ## Description
 
-<!-- Succint line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Inspected the feature index for centralized output redaction closeout coverage.
+- Identified that the generated index included W04.P13 rows but not W04.P14 rows before regeneration.
+- Prepared the index for regeneration through `vaultspec-core vault feature index`.
 
 ## Outcome
 
+- `.vault/index/centralized-output-redaction.index.md` is the target index for the output privacy boundary and feature closeout.
+- S79 through S82 are now documented with step records so the regenerated index can include the full W04.P14 closeout.
+- `uv run vaultspec-core vault feature index --feature centralized-output-redaction` completed and regenerated `.vault/index/centralized-output-redaction.index.md`.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties (;persistent failiures. Skipped work. Scafolds left in code. Failiures. -->
+- The feature index is generated content and should be refreshed through the vault CLI rather than hand-authored.
+- The index command emitted an unrelated existing stem-collision warning for `2026-05-27-eu-locale-S212`; it did not block index regeneration.
