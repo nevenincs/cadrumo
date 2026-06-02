@@ -148,6 +148,10 @@ class TestClassificationGate:
         self,
         runtime_profile: TestRuntimeProfile,
     ) -> None:
+        # Repository classifies at write time as well as load time:
+        # the namespace-classification gate fires on save when the
+        # supplied classification does not match the namespace
+        # definition. Asserting the save-side refusal is sufficient.
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](
             schema_version=1,
@@ -155,17 +159,15 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=filing,
         )
-        repo = SubmissionRepository()
-        runtime_profile.repository.save(
-            namespace="aeat.domain.submission.records",
-            object_key=filing.submission_id,
-            classification=SensitivityClass.OPERATIONAL,
-            schema_version=1,
-            written_at=bad.written_at,
-            payload=bad.model_dump_json().encode("utf-8"),
-        )
         with pytest.raises(ClassificationError):
-            repo.load(filing.submission_id)
+            runtime_profile.repository.save(
+                namespace="aeat.domain.submission.records",
+                object_key=filing.submission_id,
+                classification=SensitivityClass.OPERATIONAL,
+                schema_version=1,
+                written_at=bad.written_at,
+                payload=bad.model_dump_json().encode("utf-8"),
+            )
 
 
 class TestUnsafeSubmissionIds:

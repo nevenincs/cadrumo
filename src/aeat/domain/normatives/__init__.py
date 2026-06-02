@@ -43,10 +43,10 @@ from ._verify import raise_on_errors, verify_catalogue
 class _LazyCatalogue:
     """Module-level singleton that loads ``corpus/normatives/`` on demand.
 
-    The singleton lazily triggers :func:`load_catalogue` on first
+    The singleton lazily triggers :func:`~aeat.domain.normatives.load_catalogue` on first
     attribute access and caches the result for every subsequent call.
     Tests that need to rebind the corpus root on a per-test basis
-    should call :func:`load_catalogue` directly with a settings
+    should call :func:`~aeat.domain.normatives.load_catalogue` directly with a settings
     override rather than going through this singleton.
     """
 
@@ -86,8 +86,8 @@ class _LazyCatalogue:
 NORMATIVE_CATALOGUE = _LazyCatalogue()
 """Lazily-loaded module-level :class:`NormativeCatalogue` singleton.
 
-Triggers :func:`load_catalogue` on first access and caches the result. Tests that
-rebind the corpus root per-test should call :func:`load_catalogue` directly.
+Triggers :func:`~aeat.domain.normatives.load_catalogue` on first access and caches the result. Tests that
+rebind the corpus root per-test should call :func:`~aeat.domain.normatives.load_catalogue` directly.
 """
 
 

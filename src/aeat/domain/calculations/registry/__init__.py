@@ -9,7 +9,6 @@ validates, and caches registry material), and :class:`CasillaObservation`
 (one typed casilla value carrying full legal and source provenance).
 """
 
-# ruff: noqa: I001
 
 from __future__ import annotations
 

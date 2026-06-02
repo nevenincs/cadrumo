@@ -16,10 +16,12 @@ from ...persistence.storage.sql.engine import create_engine_from_settings
 from ...persistence.storage.sql.secure_objects import SecureObjectRepository
 from . import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
+    OutboundStorageIntegrityError,
     RemoteMirrorIssueKind,
     RemoteMirrorNamespaceManifest,
     build_remote_mirror_namespace_manifest,
     compare_remote_mirror_manifests,
+    get_remote_mirror_namespace_manifest,
     inspect_remote_mirror_download,
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
@@ -189,6 +191,23 @@ def test_remote_mirror_download_inspection_detects_ciphertext_drift(tmp_path: Pa
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.PARTIAL_DOWNLOAD}
 
 
+def test_remote_mirror_manifest_loader_wraps_malformed_payload_in_storage_error(tmp_path: Path) -> None:
+    manifest = _single_object_manifest(tmp_path)
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    manifest_metadata = put_remote_mirror_namespace_manifest(provider, manifest)
+    malformed_payload = b'{"manifest_schema_version": 1, "namespace": 3}'
+    provider.put(
+        REMOTE_MIRROR_MANIFEST_NAMESPACE,
+        manifest_metadata.object_key_hmac,
+        malformed_payload,
+        content_hash=f"sha256-{hashlib.sha256(malformed_payload).hexdigest()}",
+        label="malformed",
+    )
+
+    with pytest.raises(OutboundStorageIntegrityError, match="remote mirror manifest"):
+        get_remote_mirror_namespace_manifest(provider, manifest.namespace)
+
+
 def test_remote_mirror_comparison_detects_stale_remote_revision(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _overwrite_manifest_pair(tmp_path)
 
@@ -198,16 +217,16 @@ def test_remote_mirror_comparison_detects_stale_remote_revision(tmp_path: Path) 
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
 
 
-def test_remote_mirror_comparison_detects_older_stale_remote_revision(tmp_path: Path) -> None:
+def test_remote_mirror_comparison_keeps_older_root_revision_conflict(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
 
     inspection = compare_remote_mirror_manifests(local=local_manifest, remote=remote_manifest)
 
     assert inspection.ok is False
-    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}
 
 
-def test_remote_mirror_comparison_handles_naive_stale_revision_timestamp(tmp_path: Path) -> None:
+def test_remote_mirror_comparison_keeps_naive_older_root_revision_conflict(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
     remote_object = remote_manifest.objects[0]
     naive_remote_object = remote_object.model_copy(
@@ -220,7 +239,7 @@ def test_remote_mirror_comparison_handles_naive_stale_revision_timestamp(tmp_pat
     inspection = compare_remote_mirror_manifests(local=local_manifest, remote=naive_remote_manifest)
 
     assert inspection.ok is False
-    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}
 
 
 def test_remote_mirror_comparison_keeps_older_divergent_revision_conflict(tmp_path: Path) -> None:

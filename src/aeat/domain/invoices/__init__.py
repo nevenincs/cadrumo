@@ -22,7 +22,7 @@ from ._errors import (
 # this `from ..iva...` block is hoisted above local imports, the
 # invoices package is only partially initialised when classification
 # resolves `from ..invoices import IvaRate` and import fails.
-from ..iva._invoice_classification import (  # noqa: E402, I001
+from ..iva._invoice_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
     invoice_line_to_iva_observation,

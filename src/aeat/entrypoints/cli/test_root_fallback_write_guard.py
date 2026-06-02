@@ -138,7 +138,7 @@ def _root_fallback_env(storage_root: Path) -> dict[str, str]:
 
 
 def _run_aeat(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - trusted interpreter and literal test harness.
+    return subprocess.run(
         [sys.executable, "-c", _CLI_HARNESS, str(storage_root), *args],
         cwd=Path(__file__).parents[3],
         env=_root_fallback_env(storage_root),
@@ -152,7 +152,7 @@ def _run_aeat(storage_root: Path, args: tuple[str, ...]) -> subprocess.Completed
 
 
 def _run_aeat_explicit_database(storage_root: Path, args: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - trusted interpreter and literal test harness.
+    return subprocess.run(
         [sys.executable, "-c", _EXPLICIT_DATABASE_HARNESS, str(storage_root), *args],
         cwd=Path(__file__).parents[3],
         env=_root_fallback_env(storage_root),

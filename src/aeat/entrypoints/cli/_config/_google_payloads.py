@@ -123,6 +123,13 @@ class GoogleSyncFailedManifestPayload(OutputSchema):
     error: str
 
 
+class GoogleSyncDegradedManifestPayload(OutputSchema):
+    """One degraded namespace manifest repaired during a sync push."""
+
+    namespace: str
+    detail: str
+
+
 @register_schema("config.google.sync.push")
 class GoogleSyncPushResult(OutputSchema):
     """JSON envelope for ``aeat config google sync push``."""
@@ -138,11 +145,13 @@ class GoogleSyncPushResult(OutputSchema):
     failed_total: int
     manifest_pushed_total: int
     manifest_failed_total: int
+    manifest_degraded_total: int
     pushed_by_namespace: dict[str, int] = {}
     skipped_by_namespace: dict[str, int] = {}
     failed_objects: list[GoogleSyncFailedObjectPayload] = []
     manifest_pushed_by_namespace: dict[str, int] = {}
     failed_manifests: list[GoogleSyncFailedManifestPayload] = []
+    degraded_manifests: list[GoogleSyncDegradedManifestPayload] = []
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +220,8 @@ class GoogleSyncCalcPullResult(OutputSchema):
     fields (``legal_refs``, ``source_refs``) on every computed entry.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check incorrect.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2
+    # model_config shadows ConfigDict descriptor; mypy assignment check incorrect.
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
     operation: str = "config.google.sync.calc.pull"

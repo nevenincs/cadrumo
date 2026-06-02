@@ -58,7 +58,7 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
         sys.stdout.write(result.output)
         sys.exit(result.exit_code)
         """
-    return subprocess.run(  # noqa: S603 - trusted: own interpreter, literal test code
+    return subprocess.run(
         [sys.executable, "-c", textwrap.dedent(code)],
         capture_output=True,
         text=True,

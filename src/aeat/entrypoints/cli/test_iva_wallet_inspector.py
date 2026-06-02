@@ -17,8 +17,8 @@ from typer.testing import CliRunner
 # ``aeat app modelo work`` queries SETUP_FLOW or projects answers.  The
 # CLI command tree is lazy-loaded, so ``aeat app modelo`` alone does not
 # trigger these imports (only ``aeat config`` does).
-from ...application.wizard import _catalogue  # noqa: F401  # side-effect import: registers wizard catalogue
-from ...application.wizard import _persistence  # noqa: F401
+from ...application.wizard import _catalogue  # side-effect import: registers wizard catalogue
+from ...application.wizard import _persistence
 from ...application.calculations._iva_compensation_history import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,

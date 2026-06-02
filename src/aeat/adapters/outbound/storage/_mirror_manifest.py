@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterable
-from datetime import UTC, datetime
+
+from pydantic import ValidationError
 
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
 from ._errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
@@ -56,6 +57,24 @@ def put_remote_mirror_namespace_manifest(
         content_hash=f"sha256-{hashlib.sha256(payload).hexdigest()}",
         label=f"mirror-manifest-{_manifest_label(manifest.namespace)}",
     )
+
+
+def get_remote_mirror_namespace_manifest(
+    provider: StorageProvider,
+    namespace: str,
+) -> RemoteMirrorNamespaceManifest | None:
+    """Return the remote mirror manifest for ``namespace`` when one exists."""
+    try:
+        payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
+    except OutboundStorageNotFoundError:
+        return None
+    try:
+        return RemoteMirrorNamespaceManifest.model_validate_json(payload)
+    except ValidationError as exc:
+        raise OutboundStorageIntegrityError(
+            f"remote mirror manifest for namespace {namespace!r} is malformed",
+            context={"namespace": namespace},
+        ) from exc
 
 
 def inspect_remote_mirror_upload(
@@ -168,16 +187,15 @@ def _manifest_object_key_hmac(namespace: str) -> str:
 
 
 def _load_remote_manifest(provider: StorageProvider, namespace: str) -> RemoteMirrorNamespaceManifest:
-    try:
-        payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
-    except OutboundStorageNotFoundError:
+    remote_manifest = get_remote_mirror_namespace_manifest(provider, namespace)
+    if remote_manifest is None:
         return RemoteMirrorNamespaceManifest(
             manifest_schema_version=REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
             namespace=namespace,
             object_count=0,
             objects=(),
         )
-    return RemoteMirrorNamespaceManifest.model_validate_json(payload)
+    return remote_manifest
 
 
 def _compare_manifest_objects(
@@ -261,25 +279,7 @@ def _is_stale_remote_entry(
     local_entry: RemoteMirrorObjectManifest,
     remote_entry: RemoteMirrorObjectManifest,
 ) -> bool:
-    if remote_entry.storage_revision_id == local_entry.previous_storage_revision_id:
-        return True
-    if (
-        local_entry.previous_storage_revision_id is not None
-        and remote_entry.previous_storage_revision_id is not None
-        and remote_entry.previous_storage_revision_id != local_entry.previous_storage_revision_id
-    ):
-        return False
-    if local_entry.revision_written_at is None or remote_entry.revision_written_at is None:
-        return False
-    return _normalise_revision_timestamp(remote_entry.revision_written_at) < _normalise_revision_timestamp(
-        local_entry.revision_written_at
-    )
-
-
-def _normalise_revision_timestamp(value: datetime) -> datetime:
-    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
-        return value.replace(tzinfo=UTC)
-    return value
+    return remote_entry.storage_revision_id == local_entry.previous_storage_revision_id
 
 
 def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
@@ -300,6 +300,7 @@ __all__ = [
     "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
     "build_remote_mirror_namespace_manifest",
     "compare_remote_mirror_manifests",
+    "get_remote_mirror_namespace_manifest",
     "inspect_remote_mirror_download",
     "inspect_remote_mirror_upload",
     "put_remote_mirror_namespace_manifest",

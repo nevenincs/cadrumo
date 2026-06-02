@@ -148,7 +148,7 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
     a leaf command.
     """
     from ...core.json_contract import SCHEMA_REGISTRY
-    from . import (  # noqa: F401
+    from . import (
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -159,7 +159,7 @@ def test_schema_registry_entries_map_to_live_commands_or_group_callbacks() -> No
         _review_payloads,
         _root_payloads,
     )
-    from ._config import (  # noqa: F401
+    from ._config import (
         _google_payloads,
         _profile_censo_payloads,
     )
@@ -190,7 +190,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
     of the drift check.
     """
     from ...core.json_contract import SCHEMA_REGISTRY
-    from . import (  # noqa: F401
+    from . import (
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -201,7 +201,7 @@ def test_every_live_leaf_has_a_registered_schema() -> None:
         _review_payloads,
         _root_payloads,
     )
-    from ._config import (  # noqa: F401
+    from ._config import (
         _google_payloads,
         _profile_censo_payloads,
     )
@@ -227,7 +227,7 @@ def test_documented_schema_classes_match_registry() -> None:
     or migrations that updated the registry without regenerating the reference.
     """
     from ...core.json_contract import SCHEMA_REGISTRY
-    from . import (  # noqa: F401
+    from . import (
         _app_live_payloads,
         _config_payloads,
         _ledger_payloads,
@@ -238,7 +238,7 @@ def test_documented_schema_classes_match_registry() -> None:
         _review_payloads,
         _root_payloads,
     )
-    from ._config import (  # noqa: F401
+    from ._config import (
         _google_payloads,
         _profile_censo_payloads,
     )

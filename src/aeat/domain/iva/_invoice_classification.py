@@ -59,8 +59,8 @@ from ._schema import IvaCategory, IvaRateKind
 # from this module, and importing from `..invoices` here at module load
 # before `._classification`/`._flow` resolves results in a partially
 # initialised invoices package.
-from ..invoices import IvaRate  # noqa: E402, I001
-from ..invoices._errors import InvoiceValidationError  # noqa: E402, I001
+from ..invoices import IvaRate
+from ..invoices._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation

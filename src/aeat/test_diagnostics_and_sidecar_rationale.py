@@ -42,9 +42,9 @@ def _source(rel: str) -> str:
 # ---------------------------------------------------------------------------
 
 _DIAGNOSTICS_REL = "application/diagnostics.py"
-_TEARDOWN_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN"  # noqa: S105
-_INTEGRITY_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE"  # noqa: S105
-_RECORD_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ"  # noqa: S105
+_TEARDOWN_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-TEARDOWN"
+_INTEGRITY_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-INTEGRITY-PROBE"
+_RECORD_TOKEN = "BROAD-EXCEPT-RATIONALE-DIAGNOSTICS-RECORD-READ"
 
 
 def test_diagnostics_teardown_rationale_markers_present() -> None:
@@ -142,7 +142,7 @@ def test_wizard_next_locale_key_in_hu() -> None:
 # ---------------------------------------------------------------------------
 
 _PARSER_REL = "adapters/inbound/declaracion/_parser.py"
-_PDFWORD_RATIONALE_TOKEN = "ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD"  # noqa: S105
+_PDFWORD_RATIONALE_TOKEN = "ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD"
 
 
 def test_pdfword_alias_rationale_comment_present() -> None:
@@ -173,7 +173,7 @@ def test_pdfword_alias_is_dict_str_any() -> None:
 # ---------------------------------------------------------------------------
 
 _LOCAL_REL = "adapters/outbound/storage/_local.py"
-_SIDECAR_CAST_TOKEN = "CAST-RATIONALE-SIDECAR-MAPPING"  # noqa: S105
+_SIDECAR_CAST_TOKEN = "CAST-RATIONALE-SIDECAR-MAPPING"
 
 
 def test_local_sidecar_cast_rationale_present() -> None:

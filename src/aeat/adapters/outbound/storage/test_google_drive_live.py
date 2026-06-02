@@ -24,15 +24,23 @@ from __future__ import annotations
 
 import hashlib
 import os
+from datetime import UTC, datetime
 
 import pytest
 
+from ....core.logging import get_logger
 from . import (
+    REMOTE_MIRROR_MANIFEST_NAMESPACE,
     OutboundStorageNotFoundError,
+    RemoteMirrorNamespaceManifest,
+    RemoteMirrorObjectManifest,
     StorageProvider,
     get_storage_provider,
+    inspect_remote_mirror_download,
+    inspect_remote_mirror_upload,
+    put_remote_mirror_namespace_manifest,
+    remote_mirror_object_key_hmac,
 )
-from ....core.logging import get_logger
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
@@ -49,6 +57,8 @@ def _live_profile() -> str:
 def _skip_unless_drive_configured() -> None:
     if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
         pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
+    if os.environ.get("AEAT_LIVE_TESTS_GOOGLE") != "1":
+        pytest.skip("AEAT_LIVE_TESTS_GOOGLE is not 1")
     from ....core.config import load_settings
 
     settings = load_settings()
@@ -113,3 +123,62 @@ def test_delete_clears_the_object_against_real_drive() -> None:
     assert provider.delete(_PROBE_NAMESPACE, _PROBE_HMAC) is True
     with pytest.raises(OutboundStorageNotFoundError):
         provider.get(_PROBE_NAMESPACE, _PROBE_HMAC)
+
+
+def test_remote_mirror_manifest_round_trips_against_real_drive_contents() -> None:
+    provider = _provider_or_skip()
+    payload = b"live drive remote mirror ciphertext payload"
+    object_hmac = remote_mirror_object_key_hmac(_PROBE_NAMESPACE, b"remote-mirror-live-object")
+    digest = hashlib.sha256(payload).hexdigest()
+    revision_written_at = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+    entry = RemoteMirrorObjectManifest(
+        namespace=_PROBE_NAMESPACE,
+        object_key_hmac=object_hmac,
+        classification="diagnostic",
+        schema_version=1,
+        byte_length=len(payload),
+        ciphertext_hash=digest,
+        storage_revision_id="a" * 64,
+        previous_storage_revision_id=None,
+        row_written_at=revision_written_at,
+        revision_written_at=revision_written_at,
+    )
+    manifest = RemoteMirrorNamespaceManifest(
+        namespace=_PROBE_NAMESPACE,
+        object_count=1,
+        latest_revision_id=entry.storage_revision_id,
+        latest_revision_written_at=revision_written_at,
+        objects=(entry,),
+    )
+    manifest_hmac: str | None = None
+    provider.put(
+        _PROBE_NAMESPACE,
+        object_hmac,
+        payload,
+        content_hash=f"sha256-{digest}",
+        label="live-remote-mirror",
+    )
+    try:
+        manifest_metadata = put_remote_mirror_namespace_manifest(provider, manifest)
+        manifest_hmac = manifest_metadata.object_key_hmac
+
+        namespaces = set(provider.iter_namespaces())
+        object_hmacs = {metadata.object_key_hmac for metadata in provider.iter_objects(_PROBE_NAMESPACE)}
+        manifest_hmacs = {
+            metadata.object_key_hmac
+            for metadata in provider.iter_objects(REMOTE_MIRROR_MANIFEST_NAMESPACE)
+        }
+        manifest_payload, _ = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, manifest_hmac)
+        reloaded_manifest = RemoteMirrorNamespaceManifest.model_validate_json(manifest_payload)
+
+        assert _PROBE_NAMESPACE in namespaces
+        assert REMOTE_MIRROR_MANIFEST_NAMESPACE in namespaces
+        assert object_hmac in object_hmacs
+        assert manifest_hmac in manifest_hmacs
+        assert reloaded_manifest == manifest
+        assert inspect_remote_mirror_upload(provider, manifest).ok is True
+        assert inspect_remote_mirror_download(provider, manifest).ok is True
+    finally:
+        provider.delete(_PROBE_NAMESPACE, object_hmac)
+        if manifest_hmac is not None:
+            provider.delete(REMOTE_MIRROR_MANIFEST_NAMESPACE, manifest_hmac)

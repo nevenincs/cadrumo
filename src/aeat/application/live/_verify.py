@@ -41,7 +41,6 @@ from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObject
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
-from ...core.time import now
 from ._errors import LiveApplicationInputError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]

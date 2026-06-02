@@ -393,6 +393,18 @@ TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
+TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="test_secure_bound_contract",
+    namespace="aeat.test.envelope.secure_bound_contract_dummy",
+    owner="aeat.adapters.persistence.storage.envelope.test_secure_bound_repository_contract",
+    sensitivity=SensitivityClass.AUDIT,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
 LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_expedientes_snapshot",
     namespace="aeat.application.live.expedientes_snapshot",
@@ -750,6 +762,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_CENSO_SNAPSHOT_NAMESPACE,
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
         TEST_SESSION_LIFECYCLE_NAMESPACE,
+        TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
         LIVE_VERIFY_OBSERVATION_NAMESPACE,
@@ -820,6 +833,7 @@ __all__ = [
     "SECURE_OBJECT_WORKFLOW_STATE_KEY",
     "STORAGE_NAMESPACE_REGISTRY",
     "STORAGE_PATH_DEFINITIONS",
+    "TEST_SECURE_BOUND_CONTRACT_NAMESPACE",
     "TEST_SESSION_LIFECYCLE_NAMESPACE",
     "TEST_SNAPSHOT_BASE_PROBE_NAMESPACE",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
