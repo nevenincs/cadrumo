@@ -85,12 +85,7 @@ def _module_name(path: Path) -> str:
 def _is_in_scope(path: Path) -> bool:
     """Exclude tests, conftest, and non-source data trees from the gate."""
     posix = path.as_posix()
-    return not (
-        path.name.startswith("test_")
-        or path.name == "conftest.py"
-        or "/tests/" in posix
-        or "/_data/" in posix
-    )
+    return not (path.name.startswith("test_") or path.name == "conftest.py" or "/tests/" in posix or "/_data/" in posix)
 
 
 def _source_files() -> list[Path]:
