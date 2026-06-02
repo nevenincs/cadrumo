@@ -40,8 +40,8 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ._errors import ObservationKeyError
-from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 
 
 class _ObservationEnvelopePayload(BaseModel):

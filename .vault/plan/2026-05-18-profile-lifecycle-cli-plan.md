@@ -104,8 +104,8 @@ operator-suggestion strings to `aeat config profile edit`.
 
 Document and enforce the per-feature CI scope. Trunk CI unchanged.
 
-- [ ] `P04.S48` - document the feature-surface-gate skill (path-scoped ruff + pytest + `vault check --feature`); `.vaultspec/rules/skills/feature-surface-gate.md`.
-- [ ] `P04.S49` - run `uv run ruff check` against the touched-files filter and resolve every diagnostic in feature-owned files; `src/aeat/`.
-- [ ] `P04.S50` - run `uv run pytest` against the touched test-module filter and resolve every failure in feature-owned tests; `src/aeat/`.
-- [ ] `P04.S51` - run `uv run vaultspec-core vault check all --feature profile-lifecycle-cli` and resolve every new error against the baseline; `.vault/`.
-- [ ] `P04.S52` - capture the surface-gate command output as evidence in the closing step record; `.vault/exec/2026-05-18-profile-lifecycle-cli/`.
+- [x] `P04.S48` - document the feature-surface-gate skill (path-scoped ruff + pytest + `vault check --feature`); `.vaultspec/rules/skills/feature-surface-gate.md`.
+- [x] `P04.S49` - run `uv run ruff check` against the touched-files filter and resolve every diagnostic in feature-owned files; `src/aeat/`.
+- [x] `P04.S50` - run `uv run pytest` against the touched test-module filter and resolve every failure in feature-owned tests; `src/aeat/`.
+- [x] `P04.S51` - run `uv run vaultspec-core vault check all --feature profile-lifecycle-cli` and resolve every new error against the baseline; `.vault/`.
+- [x] `P04.S52` - capture the surface-gate command output as evidence in the closing step record; `.vault/exec/2026-05-18-profile-lifecycle-cli/`.

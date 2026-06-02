@@ -19,6 +19,11 @@ from ...domain.iva_compensation._carry_forward import (
     build_iva_compensation_carry_forward_report,
     enforce_iva_compensation_four_year_window,
 )
+from ...domain.iva_compensation._reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationOverride,
+    IvaCompensationReconciliationDecision,
+)
 from ._binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -37,9 +42,6 @@ from ._iva_wallet_balance import (
     query_iva_wallet_balance,
 )
 from ._iva_wallet_reconciliation import (
-    IvaCompensationAuthoritySource,
-    IvaCompensationOverride,
-    IvaCompensationReconciliationDecision,
     IvaCompensationReconciliationReport,
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,

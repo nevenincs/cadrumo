@@ -22,8 +22,8 @@ from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...tests.secure_sql import isolated_runtime_profile
-from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 from ._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
