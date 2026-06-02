@@ -124,7 +124,7 @@ Restore encryption-at-rest for filing history + attachments manifest so plaintex
 Catalogue-verification, formula-modelo parity, modelo-parity coverage, ledger-iva 390 binding chain
 
 - [ ] `P04.S10` - Catalogue verification; `test_committed_registry_tree_has_required_model_law_coverage — identify missing model/law pair; either supply or relax with rationale`.
-- [ ] `P04.S11` - Formula-modelo parity; `test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces — wire missing formula→construct ownership`.
+- [x] `P04.S11` - Formula-modelo parity; `test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces — wire missing formula→construct ownership`.
 - [ ] `P04.S12` - Modelo parity coverage; `test_formula_bearing_modelos_have_constructs_and_model_specific_tests — list bare formula-bearing modelos`.
 - [x] `P04.S13` - M390 IVA binding chain; `Supply missing modelo-303-autoconsumo-promotor-base binding for the 390 annual pipeline test`.
 
@@ -132,24 +132,24 @@ Catalogue-verification, formula-modelo parity, modelo-parity coverage, ledger-iv
 
 Identity-primitive sibling-domain enum cycle, exception base hygiene, monkeypatch + cross-module imports + relative-imports drift
 
-- [ ] `P05.S14` - IvaRate sibling-domain cycle; `Relocate IvaRate out of invoices._enums into a leaf module (core or domain/iva) so iva._invoice_classification can import from public surface without cycle`.
-- [ ] `P05.S15` - Exception base hygiene; `test_production_exception_classes_do_not_introduce_unregistered_builtin_roots — register or remove unregistered root`.
+- [x] `P05.S14` - IvaRate sibling-domain cycle; `Relocate IvaRate out of invoices._enums into a leaf module (core or domain/iva) so iva._invoice_classification can import from public surface without cycle`.
+- [x] `P05.S15` - Exception base hygiene; `test_production_exception_classes_do_not_introduce_unregistered_builtin_roots — register or remove unregistered root`.
 - [ ] `P05.S16` - Monkeypatch + cross-module + relative-imports inventories; `Bring the three inventory ratchets back to zero (likely peer additions need rationale comments or removal)`.
 
 ### Phase `P06` - CLI surface contract
 
 cli_workflow_verification retired-surface suggestions, operator_surface help_documents, backend_boundary, lazy_command_tree state-free general
 
-- [ ] `P06.S17` - Retired-surface canonical suggestions; `test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions — supply the suggestion map peer drift removed`.
-- [ ] `P06.S18` - Help documents backend-owned; `test_help_documents_are_backend_owned_and_current_surface_only — re-source help text from backend, remove stale entries`.
-- [ ] `P06.S19` - Backend boundary test xfail language; `test_cli_unit_tests_do_not_contain_process_state_or_xfail_language — find and remove the forbidden language`.
+- [x] `P06.S17` - Retired-surface canonical suggestions; `test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions — supply the suggestion map peer drift removed`.
+- [x] `P06.S18` - Help documents backend-owned; `test_help_documents_are_backend_owned_and_current_surface_only — re-source help text from backend, remove stale entries`.
+- [x] `P06.S19` - Backend boundary test xfail language; `test_cli_unit_tests_do_not_contain_process_state_or_xfail_language — find and remove the forbidden language`.
 - [x] `P06.S20` - Lazy-command-tree state-free general; `test_state_free_surface_does_not_import_registry (non-help parametrize) — chase the registry leak path that --help-fix did not cover`.
 
 ### Phase `P07` - Setup + custody + Google
 
 config_custody profile lifecycle, profile-create taxpayer-type paths, google sheets pull/export, fichero BOE golden sha
 
-- [ ] `P07.S21` - Config custody profile lifecycle; `test_profile_create_provisions_file_custody_and_switch_reopens_it — investigate why switch does not reopen`.
+- [x] `P07.S21` - Config custody profile lifecycle; `test_profile_create_provisions_file_custody_and_switch_reopens_it — investigate why switch does not reopen`.
 - [x] `P07.S22` - Legal-entity profile create; `test_legal_entity_profile_creates_non_interactively_without_spouse_flags`.
 - [x] `P07.S23` - Google worksheet export-pull roundtrip; `test_workbook_input_values_survive_export_pull_compute_loop`.
 - [x] `P07.S24` - Pull adapter classify_metadata empty pairs; `test_classify_metadata_returns_missing_for_empty_pairs (post sentinel + M347 fix; verify suite-level cleared)`.
