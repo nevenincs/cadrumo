@@ -48,12 +48,14 @@ class ReviewQueueRow(BaseModel):
     directly grounded in a registry legal reference.
     """
 
+
 class ReviewQueueReport(BaseModel):
     """Read-only review queue report."""
 
     model_config = _STRICT_FROZEN
 
     rows: tuple[ReviewQueueRow, ...]
+
 
 _ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
     AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
@@ -64,6 +66,7 @@ _ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
     "live_notification": frozenset(),
     "sync_divergence": frozenset(),
 }
+
 
 def project_review_queue(
     *,
@@ -77,6 +80,7 @@ def project_review_queue(
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
     bucket_id = _active_bucket_id()
     from ...core.config import load_settings as _load_settings
+
     items = ReviewQueue.collect(
         settings or _load_settings(),
         bucket_id=bucket_id,
@@ -94,6 +98,7 @@ def project_review_queue(
     )
     return ReviewQueueReport(rows=rows)
 
+
 def project_review_item(item_id: str, *, settings: Settings | None = None) -> ReviewQueueRow:
     """Return one review row by id.
 
@@ -108,6 +113,7 @@ def project_review_item(item_id: str, *, settings: Settings | None = None) -> Re
         translated_message="review.operator.errors.item_not_found",
         context={"item_id": str(item_id)},
     )
+
 
 def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
     internal: set[ReviewItemKind] = set()
@@ -125,6 +131,7 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
         internal.update(mapped)
     return frozenset(internal)
 
+
 def _row_matches(
     row: ReviewQueueRow,
     accepted_kinds: frozenset[str],
@@ -135,6 +142,7 @@ def _row_matches(
         row.source_kind is not None and row.source_kind in accepted_source_kinds
     )
     return kind_matches and source_matches
+
 
 def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQueueRow:
     if isinstance(item, TransactionReviewItem):
@@ -156,7 +164,11 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
         )
     if isinstance(item, InvoiceReviewItem):
-        source_kind = AggregationSourceKind.COLLECTIBLE_INVOICE if item.source.kind.value == "ISSUED" else AggregationSourceKind.PAYABLE_INVOICE
+        source_kind = (
+            AggregationSourceKind.COLLECTIBLE_INVOICE
+            if item.source.kind.value == "ISSUED"
+            else AggregationSourceKind.PAYABLE_INVOICE
+        )
         return ReviewQueueRow(
             item_id=item.item_id,
             kind=source_kind,
@@ -200,14 +212,17 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
         context={"item_type": type(item).__name__},
     )
 
+
 def _render_summary(value: str) -> str:
     rendered = tr(value)
     return rendered or value
+
 
 def _active_bucket_id() -> str:
     from ..workflow._models import require_active_bucket_id
 
     return require_active_bucket_id()
+
 
 def _year_period(value: str) -> str:
     return value[:7]
