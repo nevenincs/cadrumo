@@ -1,3 +1,73 @@
+# Base imponible previa (casilla 00550, "B.I. antes de la compensación de bases
+# imponibles negativas") = resultado contable (00501) + total correcciones de
+# aumento (DP200013:00417) − total correcciones de disminución (DP200013:00418).
+# The aumentos/disminuciones operands are the STORED column subtotals, not the
+# per-row correccion leaves — summing the leaves here would double-count them
+# against their own totals. This derivation is the durable fix for the silent
+# zero-base under-declaration: a positive resultado contable now COMPUTES a
+# non-zero base previa even with zero correcciones, so the verify gate can no
+# longer grant verified_complete with finding_count = 0 on positive activity.
+#
+# Grounded against AEAT Manual práctico de Sociedades 2024 Cap. 5 (Liquidación
+# I → III) and the diseño de registro 2024 (DP200012 pos 81, DP200013 pos
+# 1560/1577, DP200014 pos 13). The LIS Art. 10 (base = renta del período) and
+# Art. 11 (imputación temporal) definitional refs are not yet in the in-repo
+# legal corpus — tracked for BOE ingest — so this formula cites the grounded
+# determination-chain refs available today.
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-base-imponible-previa"
+target = "DP200014:00550"
+expression = { op = "subtract", args = [
+    { op = "add", args = [
+        { casilla = "00501" },
+        { casilla = "DP200013:00417" },
+    ] },
+    { casilla = "DP200013:00418" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "correcciones al resultado de la cuenta de perdidas y ganancias",
+    "base imponible antes de la compensacion",
+]
+
+# Base imponible (casilla 00552) = base imponible previa (00550) − reserva de
+# capitalización (01032, LIS Art. 25) − compensación de bases imponibles
+# negativas aplicada (00547, LIS Art. 26), with a non-negative clamp: «si el
+# resultado es cero, consignar cero». The reserva and the BIN compensación
+# cannot drive the base below zero. The applied-BIN amount (00547) and the
+# reserva (01032) stay operator-input; their stateful multi-period caps (the
+# 70% / EUR 1M BIN floor; the Art. 25 reserva uplift) are separate follow-on
+# sub-engines. Grounded against AEAT Manual de Sociedades 2024 Cap. 5 and LIS
+# Arts. 25, 26; diseño de registro 2024 DP200014 pos 13/64/115/166.
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-base-imponible"
+target = "DP200014:00552"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { op = "subtract", args = [
+            { casilla = "DP200014:00550" },
+            { casilla = "01032" },
+        ] },
+        { casilla = "DP200014:00547" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "compensacion de bases imponibles negativas",
+    "reserva de capitalizacion",
+]
+
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-base-imponible-despues-reserva-nivelacion"
 target = "DP200014:01330"
