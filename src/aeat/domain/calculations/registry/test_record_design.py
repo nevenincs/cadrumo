@@ -301,9 +301,7 @@ def _modelo_200_record_design_corpus_path() -> Path:
     modelos, catalogues = _committed_registry_tree()
     modelo_200 = next(modelo for modelo in modelos if modelo.id == "200")
     revision = next(iter(modelo_200.revisions.values()))
-    source_ref = next(
-        ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
-    )
+    source_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
     return bundled_path() / catalogues.sources[source_ref].corpus_path
 
 
@@ -346,24 +344,18 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
             manifest = revision.completeness_manifest
             if manifest is None:
                 continue
-            multi_segment = any(
-                casilla.segmento is not None for casilla in manifest.casillas
-            )
+            multi_segment = any(casilla.segmento is not None for casilla in manifest.casillas)
             diseno_path: Path | None = None
             if multi_segment:
                 record_design_refs = [
-                    ref
-                    for ref in revision.source_refs
-                    if catalogues.sources[ref].kind == "record_design"
+                    ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
                 ]
                 assert record_design_refs, (
                     f"modelo {modelo.id} revision {revision.id}: a multi-segment "
                     "calculation-completeness manifest requires a record_design "
                     "source to verify its record segments"
                 )
-                diseno_path = (
-                    bundled_path() / catalogues.sources[record_design_refs[0]].corpus_path
-                )
+                diseno_path = bundled_path() / catalogues.sources[record_design_refs[0]].corpus_path
             derived = frozenset(
                 (casilla.segmento, casilla.number)
                 for casilla in derive_calculation_completeness_casillas(
@@ -425,9 +417,12 @@ def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_mod
                 dormant += 1
 
     assert gated > 0, "expected calculation-bearing modelo revisions"
-    # Modelo 308, Modelo 347, Modelo 360, and Modelo 840 are informative
-    # declarations with no calculation surface and carry no manifest.
-    assert dormant == 4
+    # Dormant (no calculation closure, no completeness_manifest) revisions:
+    # Modelo 308, 347, 360, 840 (informative declarations), Modelo 721 (crypto
+    # data-fidelity, no calc), and Modelo 714 (Impuesto sobre el Patrimonio
+    # Phase-A — grounded but all-manual; the tarifa/límite calc engine is the
+    # deferred Phase-B). Empirically enumerated, no inconsistent revisions.
+    assert dormant == 6
 
 
 def test_diseno_coverage_report_inventories_modelo_200_form_data() -> None:
@@ -528,9 +523,7 @@ def test_diseno_coverage_report_is_an_advisory_inventory_not_a_load_gate() -> No
     revision = next(iter(modelo_200.revisions.values()))
     corpus_path = _modelo_200_record_design_corpus_path()
 
-    report = build_diseno_coverage_report(
-        corpus_path, modelo_200.id, revision, multi_segment=True
-    )
+    report = build_diseno_coverage_report(corpus_path, modelo_200.id, revision, multi_segment=True)
 
     assert report.modelo_id == "200"
     assert report.revision_id == revision.id
@@ -540,12 +533,9 @@ def test_diseno_coverage_report_is_an_advisory_inventory_not_a_load_gate() -> No
     gap = frozenset((c.segmento, c.number) for c in report.coverage_gap_casillas)
 
     assert covered | gap == diseno, (
-        "the coverage report must partition the full Diseño set into "
-        "covered and gap casillas"
+        "the coverage report must partition the full Diseño set into covered and gap casillas"
     )
-    assert covered & gap == frozenset(), (
-        "a Diseño casilla is either covered or a gap, never both"
-    )
+    assert covered & gap == frozenset(), "a Diseño casilla is either covered or a gap, never both"
     assert report.covered_count + report.coverage_gap_count == report.diseno_casilla_count
     assert report.coverage_gap_count > 0, (
         "the Modelo 200 Diseño carries accounting-statement data-entry fields "

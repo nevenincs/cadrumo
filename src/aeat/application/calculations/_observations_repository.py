@@ -64,6 +64,18 @@ class _ObservationEnvelopePayload(BaseModel):
         max_length=64,
         description="Where this observation came from: app_filing | aeat_sede_justificante | operator_manual",
     )
+    member_nif: str | None = Field(
+        default=None,
+        max_length=16,
+        description=(
+            "Optional grupo-de-entidades member NIF. When set, the storage "
+            "identifier is widened so distinct members' filings for the same "
+            "(modelo, filing_year, period) persist as separate rows rather than "
+            "overwriting one another — the cross-member fan-in the 353<-322 "
+            "per_grupo_member aggregation enumerates. None preserves the "
+            "single-filer (modelo, filing_year, period) key bit-for-bit."
+        ),
+    )
 
 
 class _IvaWalletDecisionEnvelopePayload(BaseModel):
@@ -88,10 +100,25 @@ def observation_key(modelo: str, filing_year: int, period: str) -> str:
     safe_repository_id(modelo, context="modelo")
     safe_repository_id(period, context="period")
     if not 2000 <= filing_year <= 2099:
-        raise ObservationKeyError(
-            f"observation filing_year {filing_year} out of supported range [2000, 2099]"
-        )
+        raise ObservationKeyError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
     return f"{modelo}:{filing_year}:{period}"
+
+
+def member_observation_key(modelo: str, filing_year: int, period: str, member_nif: str | None) -> str:
+    """Storage key for an observation, widened by a grupo member NIF when present.
+
+    When ``member_nif`` is ``None`` the key is the single-filer
+    ``observation_key`` unchanged, so every existing consumer (the default
+    previous_filing path, the multi-year resolver) keys identically. When set,
+    the member NIF is appended so two members' filings for the same
+    ``(modelo, filing_year, period)`` persist as distinct rows — the cross-member
+    fan-in the 353<-322 ``per_grupo_member`` aggregation enumerates and sums.
+    """
+    base = observation_key(modelo, filing_year, period)
+    if member_nif is None:
+        return base
+    safe_repository_id(member_nif, context="member_nif")
+    return f"{base}:{member_nif}"
 
 
 def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
@@ -106,9 +133,7 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: 
         raise ObservationKeyError("taxpayer_nif must be non-empty")
     safe_repository_id(target_period, context="target_period")
     if not 2000 <= target_year <= 2099:
-        raise ObservationKeyError(
-            f"IVA wallet target_year {target_year} out of supported range [2000, 2099]"
-        )
+        raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
     digest = hashlib.sha256(
         "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode("utf-8")
     ).hexdigest()
@@ -146,9 +171,7 @@ def _legacy_iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_
     safe_repository_id(taxpayer_nif, context="taxpayer_nif")
     safe_repository_id(target_period, context="target_period")
     if not 2000 <= target_year <= 2099:
-        raise ObservationKeyError(
-            f"IVA wallet target_year {target_year} out of supported range [2000, 2099]"
-        )
+        raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
     return f"{taxpayer_nif}:{target_year}:{target_period}"
 
 
@@ -162,7 +185,9 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
 
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
         observation = payload.observation
-        return observation_key(observation.modelo, observation.filing_year, observation.period)
+        return member_observation_key(
+            observation.modelo, observation.filing_year, observation.period, payload.member_nif
+        )
 
     def load_observation(
         self,
@@ -179,13 +204,23 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         *,
         source_kind: str,
         captured_at: datetime | None = None,
+        member_nif: str | None = None,
     ) -> None:
-        """Persist `observation` keyed by its (modelo, filing_year, period)."""
+        """Persist `observation` keyed by its (modelo, filing_year, period).
+
+        ``member_nif`` is an optional grupo-de-entidades member NIF. When
+        supplied, the storage identifier is widened (see
+        :func:`member_observation_key`) so distinct members' filings for the
+        same (modelo, filing_year, period) persist as separate rows instead of
+        overwriting — the cross-member fan-in the 353<-322 ``per_grupo_member``
+        aggregation enumerates. When ``None`` the single-filer key is unchanged.
+        """
         when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
             observation=observation,
             captured_at=when,
             source_kind=source_kind,
+            member_nif=member_nif,
         )
         self.save(payload)
 
@@ -293,9 +328,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
-            envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(
-                record.payload.decode("utf-8")
-            )
+            envelope = Envelope[_IvaWalletDecisionEnvelopePayload].model_validate_json(record.payload.decode("utf-8"))
             decision = envelope.payload.decision
             if (
                 decision.taxpayer_nif.strip().upper() == taxpayer_token
@@ -311,5 +344,6 @@ __all__ = [
     "IvaWalletDecisionRepository",
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
+    "member_observation_key",
     "observation_key",
 ]
