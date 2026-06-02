@@ -103,11 +103,11 @@ Capture and drive M303 chain, entrypoints cluster, M721 887 grounding to closure
 
 <!-- One-line headline summary plan. -->
 
-- [ ] `P01.S01` - Verify M303 Route A landing closes 47 verification_chain reds; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
-- [ ] `P01.S02` - Dispatch peer adjudication on M151/M714/M721 stub-refusal trio post Phase-A registry landing; `src/aeat/entrypoints/cli/test_modelo_{151,714,721}_stub_refusal.py`.
-- [ ] `P01.S03` - Fix wizard-catalogue startup ordering for cli_runner.invoke path; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P01.S04` - Adjudicate bare-invocation bucket-session gate per ADR; `src/aeat/entrypoints/cli/test_profile_output_language.py`.
-- [ ] `P01.S05` - Ground orden-hfp-887-2023:art-3 via BOE OR update test_explain_721 assertion; `src/aeat/entrypoints/cli/test_overview_explain_verb.py`.
+- [x] `P01.S01` - Verify M303 Route A landing closes 47 verification_chain reds; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+- [x] `P01.S02` - Dispatch peer adjudication on M151/M714/M721 stub-refusal trio post Phase-A registry landing; `src/aeat/entrypoints/cli/test_modelo_{151,714,721}_stub_refusal.py`.
+- [x] `P01.S03` - Fix wizard-catalogue startup ordering for cli_runner.invoke path; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P01.S04` - Adjudicate bare-invocation bucket-session gate per ADR; `src/aeat/entrypoints/cli/test_profile_output_language.py`.
+- [x] `P01.S05` - Ground orden-hfp-887-2023:art-3 via BOE OR update test_explain_721 assertion; `src/aeat/entrypoints/cli/test_overview_explain_verb.py`.
 
 ### Phase `P02` - Today fragile fixes regression risk
 
@@ -118,8 +118,8 @@ Re-verify the 9 commits landed this session for sibling regressions and silent c
 - [x] `P02.S08` - Confirm M151 WT-only fix landed in peer M151 commit; `re-stage when peer dir tracked; `src/aeat/_data/registry/aeat/modelos/151/revisions/2015-y-siguientes/workbook_parity_refs/0001-workbook_parity_refs.toml`.
 - [ ] `P02.S09` - Add non-zero BIN coverage test for M200 base-determination chain; `src/aeat/application/filing/test_decimal_inputs_routing.py`.
 - [ ] `P02.S10` - Add non-zero BL-negativa coverage test for M100 renta taxation_comparison; `src/aeat/application/modelo/test_taxation_comparison.py`.
-- [ ] `P02.S11` - Re-strengthen attachment_id persistence proof; `src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py`.
-- [ ] `P02.S12` - Verify ErrorCode ModeloIvaWalletReconciliationBlocked locale strings against regulatory tone; `src/aeat/locales`.
+- [x] `P02.S11` - Re-strengthen attachment_id persistence proof; `src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py`.
+- [x] `P02.S12` - Verify ErrorCode ModeloIvaWalletReconciliationBlocked locale strings against regulatory tone; `src/aeat/locales`.
 - [x] `P02.S13` - Verify default_suggestion aeat app ledger iva wallet view CLI verb exists; `src/aeat/entrypoints/cli`.
 
 ### Phase `P03` - Substrate and infrastructure health
@@ -128,11 +128,11 @@ xdist collection skew, bash environment, synthetic-PDF generator gap, encrypted-
 
 - [ ] `P03.S14` - Diagnose xdist collection-skew root cause and add deterministic test discovery gate; `pyproject.toml`.
 - [x] `P03.S15` - Restore bash interpreter or formalize PowerShell mandate for this worktree; `CLAUDE.md`.
-- [ ] `P03.S16` - Document robust background-pytest capture pattern; `replace Tee Select-Object -Last 5 antipattern; `.claude/rules`.
-- [ ] `P03.S17` - Extend synthetic-PDF generator with M303 primitive form-field support; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [x] `P03.S16` - Document robust background-pytest capture pattern; `replace Tee Select-Object -Last 5 antipattern; `.claude/rules`.
+- [x] `P03.S17` - Extend synthetic-PDF generator with M303 primitive form-field support; `src/aeat/tests/fixtures/justificantes/_generate.py`.
 - [ ] `P03.S18` - Clarify EncryptedString str-vs-bytes round-trip on object_key column; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
-- [ ] `P03.S19` - Fix wizard-catalogue startup ordering for cli_runner.invoke path; `src/aeat/entrypoints/cli/__init__.py`.
-- [ ] `P03.S20` - Add structural gate linking _COMPUTED_CASILLAS_M303 to actual M303 formula registry; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+- [x] `P03.S19` - Fix wizard-catalogue startup ordering for cli_runner.invoke path; `src/aeat/entrypoints/cli/__init__.py`.
+- [x] `P03.S20` - Add structural gate linking _COMPUTED_CASILLAS_M303 to actual M303 formula registry; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
 - [ ] `P03.S21` - Audit plan exec-record Step-ID renumber-after-tier-promote drift across all 20 plans; `.vault/plan`.
 
 ### Phase `P04` - Deferred from existing plans
@@ -141,9 +141,9 @@ P04.S10 / P04.S12 / P07.S25 / M390 autoconsumo plus plan triage parents 143-147
 
 - [ ] `P04.S22` - Drive P04.S10 catalogue verification to closure; `src/aeat/domain/calculations/registry/test_catalogue_verification.py`.
 - [ ] `P04.S23` - Drive P04.S12 modelo parity coverage to closure; `src/aeat/domain/calculations/registry`.
-- [ ] `P04.S24` - Drive P07.S25 M303 golden SHA recompute with DR ground truth; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
-- [ ] `P04.S25` - Drive task #154 M390 autoconsumo asymmetry closure or formal defer; `.vault/audit`.
-- [ ] `P04.S26` - Drive #143 plan-triage parent and child triage tasks #144-#147 to resolution; `.vault/plan`.
+- [x] `P04.S24` - Drive P07.S25 M303 golden SHA recompute with DR ground truth; `src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py`.
+- [x] `P04.S25` - Drive task #154 M390 autoconsumo asymmetry closure or formal defer; `.vault/audit`.
+- [x] `P04.S26` - Drive #143 plan-triage parent and child triage tasks #144-#147 to resolution; `.vault/plan`.
 
 ## Description
 
