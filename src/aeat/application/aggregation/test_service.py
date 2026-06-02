@@ -395,7 +395,7 @@ def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
 
 def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
     """_foreign_assets._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
-    from ._foreign_assets import _CANONICAL_SOURCE_KINDS as foreign_kinds
+    from ._foreign_assets import _CANONICAL_SOURCE_KINDS as foreign_kinds  # noqa: N811
 
     assert len(foreign_kinds) == 4
     for kind in foreign_kinds:

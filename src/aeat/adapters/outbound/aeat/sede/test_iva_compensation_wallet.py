@@ -33,36 +33,111 @@ _AEAT_AUTH_GATE_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.
 _SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
 
 
-def test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total() -> None:
-    html = """
-    <html><body>
-      <table id="cartera">
+def _cartera_results_html(*, total: str, rows: str) -> str:
+    """Build a cartera results page mirroring AEAT's real own-name CarteraCuotas shape.
+
+    The aggregate line and the ``Ejercicio``/``Período``/``Cuota Disponible``
+    detail table reproduce the structure captured from the live AEAT surface
+    (``/wlpl/DAI3-RUTI/CarteraCuotas`` after own-name + ejercicio/período query).
+    """
+    return f"""
+    <html><head><title>Cartera de cuotas de IVA a compensar</title></head><body>
+      <h1>Cartera de cuotas de IVA a compensar</h1>
+      <ul>
+        <li class="sei_cols"><strong class="azul">Ejercicio:</strong>&nbsp;<span class="notraducir">2026</span></li>
+        <li class="sei_cols"><strong class="azul">Período:</strong>&nbsp;<span class="notraducir">2T</span></li>
+      </ul>
+      <ul>
+        <li class="ancho_99"><strong class="azul">Cuotas a compensar pendientes de períodos anteriores:</strong>
+          &nbsp;<span class="notraducir">{total}</span></li>
+      </ul>
+      <table class="bloque_cen" id="tablaResultados" title="Resultados">
+        <caption>&nbsp;</caption>
         <thead>
           <tr>
-            <th>Ejercicio</th>
-            <th>Periodo</th>
-            <th>Cuota generada</th>
-            <th>Cuota aplicada</th>
-            <th>Cuota pendiente</th>
+            <th class="texto_cen">Ejercicio</th>
+            <th class="texto_cen">Período</th>
+            <th class="texto_cen">Cuota Disponible</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>2025</td>
-            <td>4T</td>
-            <td>1.500,00</td>
-            <td>300,00</td>
-            <td>1.200,00</td>
-          </tr>
-          <tr>
-            <td>2026</td>
-            <td>1T</td>
-            <td>400,50</td>
-            <td>0,00</td>
-            <td>400,50</td>
-          </tr>
+          {rows}
         </tbody>
       </table>
+    </body></html>
+    """
+
+
+def test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total() -> None:
+    html = _cartera_results_html(
+        total="1.900,50",
+        rows=(
+            '<tr><td class="texto_cen">2024</td><td class="texto_cen">4T</td>'
+            '<td class="texto_der">                 1.500,00</td></tr>'
+            '<tr><td class="texto_cen">2025</td><td class="texto_cen">1T</td>'
+            '<td class="texto_der">                 400,50</td></tr>'
+        ),
+    )
+
+    observation = parse_iva_compensation_wallet_html(
+        html,
+        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+        target_year=2026,
+        target_period="2T",
+        source_url=IVA_COMPENSATION_WALLET_URL,
+        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+    )
+
+    # The aggregate "pendientes de períodos anteriores" line is the contract total.
+    assert observation.total_pending == Decimal("1900.50")
+    assert len(observation.rows) == 2
+    assert observation.rows[0].generation_year == 2024
+    assert observation.rows[0].generation_period == "4T"
+    assert observation.rows[0].pending_amount == Decimal("1500.00")
+    # AEAT's cartera consultation surface does not break out generated/applied.
+    assert observation.rows[0].generated_amount is None
+    assert observation.rows[0].applied_amount is None
+    assert observation.rows[1].generation_year == 2025
+    assert observation.rows[1].generation_period == "1T"
+    assert observation.rows[1].pending_amount == Decimal("400.50")
+    assert observation.raw_sha256 is not None
+
+
+def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_cartera() -> None:
+    """Regression: a populated cartera must never parse to a silent zero wallet.
+
+    The live ``allow_empty_wallet_shell`` path must not swallow a results page that
+    carries a non-zero aggregate and detail rows (the false-zero that reported
+    ``total_pending=0`` against a real €258,02 cartera).
+    """
+    html = _cartera_results_html(
+        total="258,02",
+        rows='<tr><td>2024</td><td>4T</td><td>258,02</td></tr>',
+    )
+
+    observation = parse_iva_compensation_wallet_html(
+        html,
+        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+        target_year=2026,
+        target_period="2T",
+        source_url=IVA_COMPENSATION_WALLET_URL,
+        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        allow_empty_wallet_shell=True,
+    )
+
+    assert observation.total_pending == Decimal("258.02")
+    assert len(observation.rows) == 1
+
+
+def test_parse_iva_compensation_wallet_html_accepts_zero_aggregate_empty_cartera() -> None:
+    """A genuinely empty cartera prints the aggregate at 0,00 with no detail rows."""
+    html = """
+    <html><head><title>Cartera de cuotas de IVA a compensar</title></head><body>
+      <h1>Cartera de cuotas de IVA a compensar</h1>
+      <li class="ancho_99"><strong>Cuotas a compensar pendientes de períodos anteriores:</strong>
+        <span>0,00</span></li>
     </body></html>
     """
 
@@ -76,14 +151,27 @@ def test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total()
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
-    assert observation.total_pending == Decimal("1600.50")
-    assert observation.rows[0].generation_year == 2025
-    assert observation.rows[0].generation_period == "4T"
-    assert observation.rows[0].generated_amount == Decimal("1500.00")
-    assert observation.rows[0].applied_amount == Decimal("300.00")
-    assert observation.rows[0].pending_amount == Decimal("1200.00")
-    assert observation.rows[1].pending_amount == Decimal("400.50")
-    assert observation.raw_sha256 is not None
+    assert observation.total_pending == Decimal("0")
+    assert observation.rows == ()
+
+
+def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> None:
+    """The aggregate total must reconcile with the sum of detail rows."""
+    html = _cartera_results_html(
+        total="999,99",
+        rows='<tr><td>2024</td><td>4T</td><td>258,02</td></tr>',
+    )
+
+    with pytest.raises(SedeParseError, match="does not equal the sum"):
+        parse_iva_compensation_wallet_html(
+            html,
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+            target_year=2026,
+            target_period="2T",
+            source_url=IVA_COMPENSATION_WALLET_URL,
+            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        )
 
 
 def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
