@@ -173,15 +173,7 @@ ignore_imports =
     aeat.core.test_profile -> aeat.domain.deadlines._profiles
     aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
     # ── core test files importing application/domain/adapters for fixtures ──
-    aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
-    aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
-    aeat.core.i18n.test_output_language -> aeat.application.workflow._persistence
-    aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage
-    aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage.sql
-    aeat.core.i18n.test_output_language -> aeat.domain.user_profile
     aeat.core.test_external_constants -> aeat.domain.portals._categories
-    aeat.core.resources._repos.test_manuals -> aeat.domain.manuals.errors
-    aeat.core.resources._repos.test_normatives -> aeat.domain.normatives.errors
     aeat.core.resources._repos.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
     aeat.core.resources._repos.test_singletons -> aeat.domain.user_profile._schema
     # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
@@ -536,135 +528,60 @@ ignore_imports =
     # ── domain → adapters (repositories backed by persistence substrate) ──
     # Many domain repositories directly import the SQL persistence substrate.
     # Full inversion (Protocol + adapter injection) deferred to a future refactor.
-    aeat.domain.attachments.test_repository -> aeat.adapters.persistence.storage
     aeat.domain.attachments.test_repository -> aeat.adapters.persistence.storage.attachment
-    aeat.domain.attachments.test_repository -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage
     aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage.sql
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
     aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage.sql
     aeat.domain.filing._repository -> aeat.adapters.persistence.storage
-    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.invoices._repository -> aeat.adapters.persistence.storage
     aeat.domain.invoices._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.invoices._repository -> aeat.adapters.persistence.storage.sql
-    aeat.domain.invoices.test_reconciliation -> aeat.adapters.persistence.storage
-    aeat.domain.invoices.test_repository -> aeat.adapters.persistence.storage
     aeat.domain.justificante._repository -> aeat.adapters.persistence.storage
-    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.justificante.test_repository -> aeat.adapters.persistence.storage
     aeat.domain.justificante.test_repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.justificante.test_repository -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.justificante.test_repository -> aeat.adapters.persistence.storage.sql.secure_objects
-    aeat.domain.justificante.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.justificante.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.justificante.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.justificante.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage.sql
     aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage.sql
     aeat.domain.modelos._repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.modelos._repository -> aeat.adapters.persistence.storage.sql
     aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage
     aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage.sql
-    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage
-    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage.sql
-    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.submission._engine -> aeat.adapters.persistence.storage.errors
     aeat.domain.submission._repository -> aeat.adapters.persistence.storage
     aeat.domain.submission._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.envelope._envelope
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.sql
-    aeat.domain.transactions.test_repository -> aeat.adapters.persistence.storage
-    aeat.domain.transactions.test_repository -> aeat.adapters.persistence.storage.sql
-    aeat.domain.transactions.test_repository -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.errors
-    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.sql
     aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage
-    aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.sql.secure_objects
-    aeat.domain.usage_ratios.test_census_refuse_load -> aeat.adapters.persistence.storage
-    aeat.domain.usage_ratios.test_census_refuse_load -> aeat.adapters.persistence.storage.sql.engine
     # ── domain repositories migrated to SecureBoundRepository (envelope substrate) ──
-    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.envelope._secure_repository
-    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.envelope._secure_repository
-    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.envelope._secure_repository
     aeat.domain.fincas._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.fincas._repository -> aeat.adapters.persistence.storage.sql._orm
     # ── domain roundtrip / repository test files (real adapters per roundtrip discipline) ──
-    aeat.domain.buckets.test_event_history_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.buckets.test_event_history_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.buckets.test_event_history_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.buckets.test_event_history_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.buckets.test_event_history_roundtrip -> aeat.adapters.persistence.storage.sql.session
-    aeat.domain.filing.test_amendment_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.filing.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.filing.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.filing.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.filing.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql.session
-    aeat.domain.filing.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage
-    aeat.domain.filing.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql
     aeat.domain.filing.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.filing.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.filing.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.session
-    aeat.domain.filing.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.filing.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.filing.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.filing.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.fincas.test_aggregates -> aeat.adapters.persistence.storage
-    aeat.domain.fincas.test_aggregates -> aeat.adapters.persistence.storage.crypto._crypto
-    aeat.domain.fincas.test_aggregates -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.fincas.test_repository -> aeat.adapters.persistence.storage
-    aeat.domain.fincas.test_repository -> aeat.adapters.persistence.storage.crypto._crypto
-    aeat.domain.fincas.test_repository -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.fincas.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage
-    aeat.domain.fincas.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.crypto._crypto
     aeat.domain.fincas.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.invoices.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.modelos.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.modelos.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.modelos.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.modelos.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.modelos.test_filing_record_repository_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.modelos.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.modelos.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.modelos.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.modelos.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.modelos.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.modelos.test_verification_report_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.modelos.test_verification_report_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.modelos.test_verification_report_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.modelos.test_verification_report_roundtrip -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.modelos.test_verification_report_roundtrip -> aeat.adapters.persistence.storage.sql.session
-    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.submission.test_repository -> aeat.adapters.persistence.storage
     aeat.domain.submission.test_repository -> aeat.adapters.persistence.storage.errors
-    aeat.domain.submission.test_repository -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.submission.test_repository -> aeat.adapters.persistence.storage.sql.secure_objects
-    aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql
     aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.submission.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage
-    aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage.sql
-    aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage.sql._orm
-    aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage.sql.engine
-    aeat.domain.transactions.test_repository_roundtrip -> aeat.adapters.persistence.storage.sql.session
-    aeat.domain.calculations.registry.test_referential_integrity -> aeat.adapters.persistence.storage
     # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
     aeat.domain.profile._keys -> aeat.application.wizard._compiler
     # ── domain test cross-layer edges ──
@@ -674,15 +591,7 @@ ignore_imports =
     aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.test_work_unit -> aeat.application.modelo
     # ── core test files ──
-    aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
-    aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
-    aeat.core.i18n.test_output_language -> aeat.application.workflow._persistence
-    aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage
-    aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage.sql
-    aeat.core.i18n.test_output_language -> aeat.domain.user_profile
     aeat.core.test_external_constants -> aeat.domain.portals._categories
-    aeat.core.resources._repos.test_manuals -> aeat.domain.manuals.errors
-    aeat.core.resources._repos.test_normatives -> aeat.domain.normatives.errors
     aeat.core.resources._repos.test_singletons -> aeat.domain.auth.apoderamientos._catalogue
     aeat.core.resources._repos.test_singletons -> aeat.domain.user_profile._schema
     # ── core/resources/_repos deferred loader imports ──
