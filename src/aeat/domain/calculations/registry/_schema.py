@@ -1336,7 +1336,9 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     # to Mapping[Unknown, object] because the key type is erased by the object
     # parameter.  The annotation below re-attaches the known str key type at
     # this single TOML deserialization boundary.
-    # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE: TOML deserialization erases str-key type after isinstance narrowing; annotation re-attaches the known str key at the boundary.
+    # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
+    # TOML deserialization erases str-key type after isinstance narrowing;
+    # annotation re-attaches the known str key at the boundary.
     mapping: Mapping[str, object] = value  # type: ignore[assignment]
     if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
@@ -1349,7 +1351,9 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     for raw_entry in raw_entries:
         if not isinstance(raw_entry, Mapping):
             raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE: TOML deserialization erases str-key type after isinstance narrowing; annotation re-attaches the known str key at the boundary.
+        # TYPE-IGNORE-RATIONALE-TOML-STR-KEY-ERASURE:
+    # TOML deserialization erases str-key type after isinstance narrowing;
+    # annotation re-attaches the known str key at the boundary.
         entry: Mapping[str, object] = raw_entry  # type: ignore[assignment]
         if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")

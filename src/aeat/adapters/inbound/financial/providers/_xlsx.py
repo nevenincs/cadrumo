@@ -95,9 +95,12 @@ class XlsxProvider(FinancialProvider):
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         finally:
             if workbook is not None:
+                # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN:
+                # openpyxl raises OSError/ValueError/KeyError/IndexError/TypeError;
+                # teardown must run unconditionally.
                 try:
                     workbook.close()
-                except Exception as close_exc:  # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN: openpyxl raises OSError/ValueError/KeyError/IndexError/TypeError; teardown must run unconditionally.
+                except Exception as close_exc:
                     _logger.debug(
                         "xlsx provider: workbook.close() after validate_source failed (%s)",
                         close_exc,
@@ -188,7 +191,13 @@ class XlsxProvider(FinancialProvider):
                 best.lookup,
                 best.header_index,
             )
-        except Exception:  # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN: openpyxl raises OSError (file I/O), ValueError (invalid cell values), KeyError (missing sheet/named range), IndexError (out-of-range row/column access), and TypeError (unexpected cell type); `_close_workbook_during_teardown` must run unconditionally on any failure before re-raising.
+        # BROAD-EXCEPT-RATIONALE-XLSX-TEARDOWN:
+        # openpyxl raises OSError (file I/O), ValueError (invalid cell values),
+        # KeyError (missing sheet/named range), IndexError (out-of-range
+        # row/column access), and TypeError (unexpected cell type);
+        # `_close_workbook_during_teardown` must run unconditionally on any
+        # failure before re-raising.
+        except Exception:
             _close_workbook_during_teardown(workbook)
             raise
 
