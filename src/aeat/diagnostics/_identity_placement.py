@@ -222,9 +222,7 @@ def _module_literal_string_assignments(tree: ast.Module) -> dict[str, str]:
     return out
 
 
-def _resolve_string_constant(
-    node: ast.expr, literals: dict[str, str]
-) -> tuple[str | None, bool]:
+def _resolve_string_constant(node: ast.expr, literals: dict[str, str]) -> tuple[str | None, bool]:
     """Return ``(literal, unresolved)`` for a regex-pattern AST expression.
 
     ``literal`` is the resolved string when the node is a string
@@ -243,22 +241,16 @@ def _resolve_string_constant(
     return None, True
 
 
-def _extract_constraint_shape_from_call(
-    call: ast.Call, literals: dict[str, str]
-) -> ConstraintShape:
+def _extract_constraint_shape_from_call(call: ast.Call, literals: dict[str, str]) -> ConstraintShape:
     """Extract a constraint shape from a ``StringConstraints`` or ``Field`` call."""
     min_length: int | None = None
     max_length: int | None = None
     pattern: str | None = None
     pattern_unresolved = False
     for kw in call.keywords:
-        if kw.arg == "min_length" and isinstance(kw.value, ast.Constant) and isinstance(
-            kw.value.value, int
-        ):
+        if kw.arg == "min_length" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, int):
             min_length = kw.value.value
-        elif kw.arg == "max_length" and isinstance(kw.value, ast.Constant) and isinstance(
-            kw.value.value, int
-        ):
+        elif kw.arg == "max_length" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, int):
             max_length = kw.value.value
         elif kw.arg == "pattern":
             resolved, unresolved = _resolve_string_constant(kw.value, literals)
@@ -282,9 +274,7 @@ def _call_name(call: ast.Call) -> str | None:
     return None
 
 
-def _extract_shape_from_annotated_value(
-    value_node: ast.expr | None, literals: dict[str, str]
-) -> ConstraintShape:
+def _extract_shape_from_annotated_value(value_node: ast.expr | None, literals: dict[str, str]) -> ConstraintShape:
     """Extract a :class:`ConstraintShape` from an alias RHS expression.
 
     Accepts both ``Annotated[str, StringConstraints(...)]`` and
@@ -336,9 +326,7 @@ def _extract_field_constraint_shape(
     )
 
 
-def _classify_promotion(
-    candidate: ConstraintShape, alias: ConstraintShape
-) -> tuple[bool, str]:
+def _classify_promotion(candidate: ConstraintShape, alias: ConstraintShape) -> tuple[bool, str]:
     """Return ``(compatible, rationale)`` for promoting ``candidate`` to ``alias``.
 
     Promotion is shape-compatible iff every constraint declared on
@@ -368,18 +356,9 @@ def _classify_promotion(
         )
     if alias.has_pattern:
         if not candidate.has_pattern:
-            reasons.append(
-                f"alias requires pattern={alias.pattern!r} but field declares no pattern"
-            )
-        elif (
-            alias.pattern is not None
-            and candidate.pattern is not None
-            and alias.pattern != candidate.pattern
-        ):
-            reasons.append(
-                f"alias requires pattern={alias.pattern!r} but field declares "
-                f"pattern={candidate.pattern!r}"
-            )
+            reasons.append(f"alias requires pattern={alias.pattern!r} but field declares no pattern")
+        elif alias.pattern is not None and candidate.pattern is not None and alias.pattern != candidate.pattern:
+            reasons.append(f"alias requires pattern={alias.pattern!r} but field declares pattern={candidate.pattern!r}")
     if reasons:
         return False, "; ".join(reasons)
     return True, ""
@@ -542,10 +521,7 @@ def find_sibling_domain_id_imports(root: Path = AEAT_ROOT) -> list[Finding]:
                 Finding(
                     path,
                     node.lineno,
-                    (
-                        f"sibling-domain _ids import: aeat.domain.{consumer_domain} "
-                        f"imports {imported!r} from {target}"
-                    ),
+                    (f"sibling-domain _ids import: aeat.domain.{consumer_domain} imports {imported!r} from {target}"),
                 )
             )
     return findings
@@ -759,9 +735,7 @@ def find_bare_str_typed_id_fields(
                     continue
                 alias = inventory.aliases_by_owner[owner]
                 alias_shape = inventory.constraints_by_owner.get(owner, ConstraintShape())
-                candidate_shape = _extract_field_constraint_shape(
-                    field.annotation, field.value, literals
-                )
+                candidate_shape = _extract_field_constraint_shape(field.annotation, field.value, literals)
                 compatible, rationale = _classify_promotion(candidate_shape, alias_shape)
                 if compatible:
                     message = (
@@ -832,10 +806,7 @@ def find_sibling_domain_enum_imports(root: Path = AEAT_ROOT) -> list[Finding]:
                 Finding(
                     path,
                     node.lineno,
-                    (
-                        f"sibling-domain _enums import: aeat.domain.{consumer_domain} "
-                        f"imports {imported!r} from {target}"
-                    ),
+                    (f"sibling-domain _enums import: aeat.domain.{consumer_domain} imports {imported!r} from {target}"),
                 )
             )
     return findings
@@ -1007,10 +978,7 @@ def find_private_name_cross_package_imports(root: Path = AEAT_ROOT) -> list[Find
             if mod.endswith("._ids") or mod.split(".")[-1] == "_ids":
                 # covered by clause 2
                 continue
-            if any(
-                mod == protect or mod.startswith(protect + ".")
-                for protect in _CLAUSE8_PROTECT_MODULES
-            ):
+            if any(mod == protect or mod.startswith(protect + ".") for protect in _CLAUSE8_PROTECT_MODULES):
                 continue
             if _is_same_package(dotted, mod):
                 continue
@@ -1079,10 +1047,7 @@ def find_same_name_constant_multi_declarations(
         if path.name.startswith("test_") or "test_" in path.stem:
             continue
         dotted = _module_dotted_path(path, root)
-        if any(
-            dotted == protect or dotted.startswith(protect + ".")
-            for protect in _CLAUSE9_PROTECT_MODULES
-        ):
+        if any(dotted == protect or dotted.startswith(protect + ".") for protect in _CLAUSE9_PROTECT_MODULES):
             continue
         tree, err = _parse(path)
         if err is not None:
@@ -1218,7 +1183,7 @@ def build_kind_status_state_alias_inventory(root: Path = AEAT_ROOT) -> AliasInve
                 camel_suffix = suffix.lstrip("_").capitalize()
                 if name.endswith(camel_suffix):
                     snake = _camel_to_snake(name)
-                    owner = snake[: -strip]
+                    owner = snake[:-strip]
                     by_owner.setdefault(owner, name)
                     alias_modules.add(_module_dotted_path(path, root))
                     break
@@ -1266,7 +1231,7 @@ def find_bare_str_kind_status_state_fields(
                 matched_alias: str | None = None
                 for suffix, strip in _KIND_STATUS_STATE_SUFFIXES:
                     if fname.endswith(suffix):
-                        owner = fname[: -strip]
+                        owner = fname[:-strip]
                         if owner in inventory.aliases_by_owner:
                             matched_owner = owner
                             matched_alias = inventory.aliases_by_owner[owner]
