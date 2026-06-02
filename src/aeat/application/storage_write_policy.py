@@ -6,10 +6,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
+from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.config import Settings, StorageRouteKind, classify_storage_route
 from ..core.i18n import tr
-
-from ..core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class StorageWritePolicyCode(StrEnum):

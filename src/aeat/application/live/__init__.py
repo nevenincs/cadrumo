@@ -1532,7 +1532,11 @@ async def _capture_iva_remote_state_for_active_storage(
                     progress_context=filed_progress,
                 ),
                 surface=LiveIvaReadSurface.FILED_HISTORY,
-                timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+                timeout_ms=_filed_history_surface_timeout_ms(
+                    settings,
+                    year_from=year_from,
+                    year_to=year_to,
+                ),
                 progress_context=filed_progress,
             )
         except (TimeoutError, _AeatError, OSError) as exc:
@@ -1575,6 +1579,11 @@ async def _capture_iva_remote_state_for_active_storage(
         )
         manifest = persist_iva_remote_state_acquisition_report(report)
         return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
+
+
+def _filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, year_to: int) -> int:
+    year_count = max(1, year_to - year_from + 1)
+    return settings.aeat_live_iva_surface_timeout_ms * year_count
 
 
 async def _await_live_iva_surface[T](

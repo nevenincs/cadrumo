@@ -15,6 +15,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import resources
+from ...iva import (
+    EUMemberState,
+    InvoiceKind,
+    IvaRateKind,
+    OssIossRegime,
+    TransactionKind,
+)
 from . import (
     DataBindingDefinition,
     ModeloRevision,
@@ -22,13 +29,6 @@ from . import (
     RegistryValidationError,
     resolve_ledger_oss_aggregation_binding_values,
     validate_ledger_oss_aggregation_binding_definition,
-)
-from ...iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    OssIossRegime,
-    TransactionKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -248,4 +248,4 @@ def test_resolve_ignores_non_oss_bindings_on_the_revision() -> None:
 def test_oss_iross_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(obs, "iva_amount", Decimal("999"))
+        obs.iva_amount = Decimal("999")

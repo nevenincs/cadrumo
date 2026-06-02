@@ -20,7 +20,6 @@ from pydantic import SecretStr
 
 from .....core.config import CertificateBackend
 from .....tests.env_scope import isolated_aeat_env
-
 from . import (
     CertificateBundle,
     CertificateExpiredError,
@@ -100,7 +99,7 @@ def test_bundle_is_frozen(tmp_path: Path) -> None:
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
-        setattr(bundle, "path", tmp_path / "y.p12")
+        bundle.path = tmp_path / "y.p12"
 
 
 def test_bundle_password_does_not_leak_in_repr_or_dump(tmp_path: Path) -> None:

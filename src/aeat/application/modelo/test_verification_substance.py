@@ -16,17 +16,6 @@ from decimal import Decimal
 
 import pytest
 
-from . import (
-    calculate_modelo_revision,
-    create_work_unit,
-    verify_modelo_revision,
-)
-from ._actions import (
-    StoredCalculationDriftError,
-    _evaluate_advisory_predicate_fires,
-    _evaluate_predicate_expression,
-    _evaluate_verification_predicates,
-)
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, VerificationPredicateDefinition
@@ -40,6 +29,17 @@ from ...domain.modelos._verification_report import (
 )
 from ...domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ...tests.secure_sql import isolated_runtime_profile
+from . import (
+    calculate_modelo_revision,
+    create_work_unit,
+    verify_modelo_revision,
+)
+from ._actions import (
+    StoredCalculationDriftError,
+    _evaluate_advisory_predicate_fires,
+    _evaluate_predicate_expression,
+    _evaluate_verification_predicates,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -156,9 +156,14 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     enforce; the predicate must NOT block in that case.
     """
     values_zero: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("0")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, _workflow_profile()) is True
+    assert (
+        _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, _workflow_profile()) is True
+    )
     values_negative: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("-50")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, _workflow_profile()) is True
+    assert (
+        _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, _workflow_profile())
+        is True
+    )
 
 
 def test_unknown_expression_does_not_block() -> None:
@@ -276,18 +281,14 @@ def test_advisory_when_ratio_ge_fires_when_ratio_meets_threshold() -> None:
     Art. 110.3.b 70% threshold. The predicate must return True (advisory fires).
     """
     values: dict[str, Decimal] = {"06": Decimal("10500"), "01": Decimal("15000")}
-    assert _evaluate_advisory_predicate_fires(
-        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
-    ) is True
+    assert _evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "01", "0.70"])', values) is True
 
 
 def test_advisory_when_ratio_ge_fires_when_ratio_exceeds_threshold() -> None:
     """advisory_when_ratio_ge fires when ratio strictly exceeds threshold."""
     # 12000 / 15000 = 0.80 > 0.70
     values: dict[str, Decimal] = {"06": Decimal("12000"), "01": Decimal("15000")}
-    assert _evaluate_advisory_predicate_fires(
-        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
-    ) is True
+    assert _evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "01", "0.70"])', values) is True
 
 
 def test_advisory_when_ratio_ge_does_not_fire_below_threshold() -> None:
@@ -297,17 +298,13 @@ def test_advisory_when_ratio_ge_does_not_fire_below_threshold() -> None:
     The predicate must return False (no advisory).
     """
     values: dict[str, Decimal] = {"06": Decimal("9000"), "01": Decimal("15000")}
-    assert _evaluate_advisory_predicate_fires(
-        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
-    ) is False
+    assert _evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "01", "0.70"])', values) is False
 
 
 def test_advisory_when_ratio_ge_does_not_fire_when_denominator_zero() -> None:
     """advisory_when_ratio_ge: denominator guard prevents division by zero."""
     values: dict[str, Decimal] = {"06": Decimal("5000"), "01": Decimal("0")}
-    assert _evaluate_advisory_predicate_fires(
-        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
-    ) is False
+    assert _evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["06", "01", "0.70"])', values) is False
 
 
 def test_advisory_implies_nonzero_fires_on_positive_result_zero_base() -> None:
@@ -319,9 +316,7 @@ def test_advisory_implies_nonzero_fires_on_positive_result_zero_base() -> None:
     implies_nonzero violation case, surfaced non-blockingly.
     """
     values: dict[str, Decimal] = {"00501": Decimal("140000"), "DP200014:00552": Decimal("0")}
-    assert _evaluate_advisory_predicate_fires(
-        'implies_nonzero(["00501", "DP200014:00552"])', values
-    ) is True
+    assert _evaluate_advisory_predicate_fires('implies_nonzero(["00501", "DP200014:00552"])', values) is True
 
 
 def test_advisory_implies_nonzero_does_not_fire_on_non_positive_antecedent() -> None:
@@ -339,9 +334,7 @@ def test_advisory_implies_nonzero_does_not_fire_on_non_positive_antecedent() -> 
 def test_advisory_implies_nonzero_does_not_fire_when_consequent_nonzero() -> None:
     """A determined base (consequent non-zero) satisfies the implication; no advisory."""
     values: dict[str, Decimal] = {"00501": Decimal("140000"), "DP200014:00552": Decimal("140000")}
-    assert _evaluate_advisory_predicate_fires(
-        'implies_nonzero(["00501", "DP200014:00552"])', values
-    ) is False
+    assert _evaluate_advisory_predicate_fires('implies_nonzero(["00501", "DP200014:00552"])', values) is False
 
 
 def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
@@ -507,16 +500,14 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     test fires.
     """
     from . import _actions
+
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
         "any_nonzero": 'any_nonzero(["01", "02"])',
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
         "implies_nonzero": 'implies_nonzero(["01", "07"])',
-        "profile_field_required": (
-            'profile_field_required("representante_fiscal_nif", '
-            '"non_resident_irnr_non_eea")'
-        ),
+        "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
@@ -624,9 +615,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     # The cap predicate fires when C14 > 0 AND C15 > C14. The carry-
     # forward seed (99999) exceeds any plausible C14 computed from
     # the small inputs above; the predicate MUST emit a BLOCKING_RULE.
-    blocking_findings = [
-        f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    ]
+    blocking_findings = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
     cap_findings = [f for f in blocking_findings if "modelo-130-c15-cap-by-c14" in f.message]
     assert cap_findings, (
         "M130 C15-cap-by-C14 predicate must fire when carry-forward exceeds positive C14; "
@@ -765,8 +754,8 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     # injection of inconsistent state). The runtime check is a defense-in-depth
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
-    from ._actions import _assert_revision_content_integrity
     from ...domain.calculations.registry import CasillaObservation
+    from ._actions import _assert_revision_content_integrity
 
     target_obs = revision.observations[0]
     tampered_obs = CasillaObservation.model_construct(

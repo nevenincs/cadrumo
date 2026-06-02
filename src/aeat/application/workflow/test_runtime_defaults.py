@@ -8,8 +8,8 @@ import pytest
 
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.sql import dispose_engine
-from ._persistence import WorkflowRunRepository, workflow_state_repository
 from ...core.config import override_settings
+from ._persistence import WorkflowRunRepository, workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

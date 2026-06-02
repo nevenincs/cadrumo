@@ -9,35 +9,29 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from . import app
 from ...tests import FIXTURES_DIR
 from ...tests.secure_sql import isolated_profile_storage_root
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-            yield
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        yield
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
@@ -100,9 +94,7 @@ def test_reconcile_mismatch_renders_diff_rows(cli_runner: CliRunner) -> None:
     assert "diff\tmodelo\twork_unit=303\tevidence=130" in result.output
 
 
-def test_reconcile_refuses_when_both_source_flags_supplied(
-    cli_runner: CliRunner, tmp_path: Path
-) -> None:
+def test_reconcile_refuses_when_both_source_flags_supplied(cli_runner: CliRunner, tmp_path: Path) -> None:
     """The two source flags are mutually exclusive per the ADR.
     Supplying both surfaces as typer.BadParameter (exit_code != 0)
     rather than letting the service silently pick one."""
@@ -114,9 +106,14 @@ def test_reconcile_refuses_when_both_source_flags_supplied(
     result = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "reconcile", work_unit_id,
-            "--from-justificante", str(MODELO_130_FIXTURE),
-            "--from-declaration", str(other),
+            "app",
+            "modelo",
+            "reconcile",
+            work_unit_id,
+            "--from-justificante",
+            str(MODELO_130_FIXTURE),
+            "--from-declaration",
+            str(other),
         ],
     )
     assert result.exit_code != 0, result.output
@@ -143,9 +140,7 @@ def test_reconcile_refuses_unknown_work_unit(cli_runner: CliRunner) -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_reconcile_declaration_source_refused_until_parser_lands(
-    cli_runner: CliRunner, tmp_path: Path
-) -> None:
+def test_reconcile_declaration_source_refused_until_parser_lands(cli_runner: CliRunner, tmp_path: Path) -> None:
     """The --from-declaration variant is reserved (no parser shipped).
     The CLI surfaces the typed refusal from the service layer."""
 
@@ -190,8 +185,7 @@ def test_reconcile_by_flag_lands_in_modelo_reconciled_event(cli_runner: CliRunne
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.MODELO_RECONCILED
-        and event.object_id == work_unit_id
+        if event.event_type is BucketEventType.MODELO_RECONCILED and event.object_id == work_unit_id
     ]
     assert matching, "MODELO_RECONCILED event must land on the catalogue"
     assert matching[-1].actor == "auditor@team"

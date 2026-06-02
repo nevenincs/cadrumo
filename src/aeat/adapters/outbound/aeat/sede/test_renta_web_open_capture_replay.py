@@ -27,10 +27,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....tests.live_gate import requires_live_enabled
-
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile
+from .....tests.live_gate import requires_live_enabled
 from ._renta_web_open import collect_renta_web_open_observation
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]

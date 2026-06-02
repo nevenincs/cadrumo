@@ -8,9 +8,14 @@ helper being re-implemented in each per-format module.
 from __future__ import annotations
 
 import hashlib
+import logging
 from pathlib import Path
 
+from ....domain.justificante import PdfModeloImportError
+
+_logger = logging.getLogger(__name__)
 _HASH_CHUNK_SIZE = 65536
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def sha256_file(path: Path) -> str:
@@ -21,9 +26,21 @@ def sha256_file(path: Path) -> str:
     when you need a stable digest of an on-disk artefact.
     """
     digest = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(_HASH_CHUNK_SIZE), b""):
-            digest.update(chunk)
+    try:
+        with path.open("rb") as fh:
+            for chunk in iter(lambda: fh.read(_HASH_CHUNK_SIZE), b""):
+                digest.update(chunk)
+    except OSError as exc:
+        _logger.debug(
+            "sha256_file: source=%s failure=%s",
+            _INPUT_PDF_SOURCE_LABEL,
+            type(exc).__name__,
+        )
+        raise PdfModeloImportError(
+            f"PDF file could not be hashed: {_INPUT_PDF_SOURCE_LABEL}",
+            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            translated_message="adapters.inbound.pdf.errors.hash_failed",
+        ) from None
     return digest.hexdigest()
 
 

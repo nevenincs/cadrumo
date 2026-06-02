@@ -11,9 +11,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.time import now
-
 from ...core.logging import get_logger
+from ...core.time import now
 from ._errors import InvoicePersistenceError
 from ._models import InvoiceCatalogue
 

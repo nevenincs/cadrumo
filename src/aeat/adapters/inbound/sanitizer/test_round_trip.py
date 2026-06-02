@@ -30,10 +30,9 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.justificante import Justificante
 from ....tests import FIXTURES_DIR
 from ....tests._justificante_parse_cache import parse_committed_justificante_fixture
-
-from ....domain.justificante import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 

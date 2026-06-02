@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

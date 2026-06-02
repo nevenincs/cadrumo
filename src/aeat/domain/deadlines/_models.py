@@ -17,6 +17,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..profile._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
 
@@ -210,9 +211,6 @@ class ObligationStatus(StrEnum):
     OVERDUE = "OVERDUE"
     FILED = "FILED"
     NOT_APPLICABLE = "NOT_APPLICABLE"
-
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class ModeloEnrollment(BaseModel):

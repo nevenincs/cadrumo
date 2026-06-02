@@ -15,9 +15,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core.time import now
-
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.time import now
 from ....persistence.storage import SensitivityClass
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository

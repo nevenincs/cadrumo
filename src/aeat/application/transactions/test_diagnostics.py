@@ -78,7 +78,7 @@ def test_diagnostic_is_frozen() -> None:
         message=_message(),
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(diag, "severity", BaseSeverity.ERROR)
+        diag.severity = BaseSeverity.ERROR
 
 
 def test_diagnostic_rejects_unknown_kind() -> None:

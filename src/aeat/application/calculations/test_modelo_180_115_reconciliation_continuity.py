@@ -92,17 +92,17 @@ _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 # ---------------------------------------------------------------------------
 
 _YEAR_N_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("2"),  "02": Decimal("1200.00"), "04": Decimal("0")},
-    "2T": {"01": Decimal("2"),  "02": Decimal("1350.00"), "04": Decimal("0")},
-    "3T": {"01": Decimal("3"),  "02": Decimal("900.00"),  "04": Decimal("0")},
-    "4T": {"01": Decimal("2"),  "02": Decimal("1100.00"), "04": Decimal("0")},
+    "1T": {"01": Decimal("2"), "02": Decimal("1200.00"), "04": Decimal("0")},
+    "2T": {"01": Decimal("2"), "02": Decimal("1350.00"), "04": Decimal("0")},
+    "3T": {"01": Decimal("3"), "02": Decimal("900.00"), "04": Decimal("0")},
+    "4T": {"01": Decimal("2"), "02": Decimal("1100.00"), "04": Decimal("0")},
 }
 
 _YEAR_N_PLUS_1_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("1"),  "02": Decimal("750.00"),  "04": Decimal("0")},
-    "2T": {"01": Decimal("2"),  "02": Decimal("2000.00"), "04": Decimal("0")},
-    "3T": {"01": Decimal("2"),  "02": Decimal("1800.00"), "04": Decimal("0")},
-    "4T": {"01": Decimal("3"),  "02": Decimal("1600.00"), "04": Decimal("0")},
+    "1T": {"01": Decimal("1"), "02": Decimal("750.00"), "04": Decimal("0")},
+    "2T": {"01": Decimal("2"), "02": Decimal("2000.00"), "04": Decimal("0")},
+    "3T": {"01": Decimal("2"), "02": Decimal("1800.00"), "04": Decimal("0")},
+    "4T": {"01": Decimal("3"), "02": Decimal("1600.00"), "04": Decimal("0")},
 }
 
 
@@ -113,9 +113,7 @@ def _calculate_115(
     casilla_inputs: dict[str, Decimal],
 ) -> RegistryCalculationResult:
     """Run the REAL 115 quarterly calculation and return the engine result."""
-    snapshot = resources().modelos.authority.snapshot(
-        _MODELO_115, filing_year=filing_year, period=period
-    )
+    snapshot = resources().modelos.authority.snapshot(_MODELO_115, filing_year=filing_year, period=period)
     inputs = {
         **resolve_bound_casilla_inputs(snapshot.revision, {}),
         **casilla_inputs,
@@ -128,17 +126,12 @@ def _calculate_115(
     )
 
 
-def _115_observation(
-    *, filing_year: int, period: str, result: RegistryCalculationResult
-) -> RegistryModeloObservation:
+def _115_observation(*, filing_year: int, period: str, result: RegistryCalculationResult) -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo=_MODELO_115,
         filing_year=filing_year,
         period=period,
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=val)
-            for cid, val in result.values.items()
-        ),
+        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
     )
 
 
@@ -148,12 +141,8 @@ def _calculate_180(
     relation_values: dict[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 180 annual calculation from resolved relations; return result + count."""
-    snapshot = resources().modelos.authority.snapshot(
-        _MODELO_180, filing_year=filing_year, period="0A"
-    )
-    relation_binding_values = materialize_relation_binding_values(
-        snapshot.revision, relation_values, period="0A"
-    )
+    snapshot = resources().modelos.authority.snapshot(_MODELO_180, filing_year=filing_year, period="0A")
+    relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values}
     inputs = {
         **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
@@ -219,12 +208,8 @@ def test_modelo_180_relation_prefill_aggregates_115_quarters(tmp_path: Path) -> 
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        expected = _compute_year_115_totals(
-            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo
-        )
-        snapshot_180 = resources().modelos.authority.snapshot(
-            _MODELO_180, filing_year=_YEAR_N, period="0A"
-        )
+        expected = _compute_year_115_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
+        snapshot_180 = resources().modelos.authority.snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_180, repository=obs_repo)
 
     resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
@@ -244,12 +229,8 @@ def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         obs_repo = CalculationObservationRepository()
         # Seed both years.
         _compute_year_115_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
-        expected_n1 = _compute_year_115_totals(
-            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo
-        )
-        snapshot_180_n1 = resources().modelos.authority.snapshot(
-            _MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A"
-        )
+        expected_n1 = _compute_year_115_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
+        snapshot_180_n1 = resources().modelos.authority.snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_180_n1, repository=obs_repo)
 
     resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
@@ -283,55 +264,33 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         obs_repo = CalculationObservationRepository()
 
         # Year N: calculate four 115 quarters, persist, resolve 180, calculate 180.
-        expected_n = _compute_year_115_totals(
-            _YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo
-        )
+        expected_n = _compute_year_115_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         # 115 feeder: record each year's quarterly calculations as feeder evidence.
         # _compute_year_115_totals drives the real 115 engine for all four quarters;
         # the produced casilla count for the feeder is evidenced by summing per quarter.
         # We record the feeder year here using the year-N quarterly count proxy.
-        _q1_result = _calculate_115(
-            filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"]
-        )
-        recorder_115.record_calculation_year(
-            filing_year=_YEAR_N, produced_value_count=len(_q1_result.values)
-        )
+        _q1_result = _calculate_115(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
+        recorder_115.record_calculation_year(filing_year=_YEAR_N, produced_value_count=len(_q1_result.values))
 
-        snapshot_180_n = resources().modelos.authority.snapshot(
-            _MODELO_180, filing_year=_YEAR_N, period="0A"
-        )
+        snapshot_180_n = resources().modelos.authority.snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_180_n, repository=obs_repo)
-        resolved_n = {
-            item.relation: item.value for item in prefill_n.values if item.value is not None
-        }
+        resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
         result_n, produced_n = _calculate_180(filing_year=_YEAR_N, relation_values=resolved_n)
         recorder_180.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1: same pipeline; Year N observations are in the store but must
         # not contaminate Year N+1's 180 resolver.
-        expected_n1 = _compute_year_115_totals(
-            _YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo
-        )
+        expected_n1 = _compute_year_115_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
         _q1_result_n1 = _calculate_115(
             filing_year=_YEAR_N_PLUS_1, period="1T", casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"]
         )
-        recorder_115.record_calculation_year(
-            filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values)
-        )
+        recorder_115.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values))
 
-        snapshot_180_n1 = resources().modelos.authority.snapshot(
-            _MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A"
-        )
+        snapshot_180_n1 = resources().modelos.authority.snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_180_n1, repository=obs_repo)
-        resolved_n1 = {
-            item.relation: item.value for item in prefill_n1.values if item.value is not None
-        }
-        result_n1, produced_n1 = _calculate_180(
-            filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1
-        )
-        recorder_180.record_calculation_year(
-            filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1
-        )
+        resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
+        result_n1, produced_n1 = _calculate_180(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
+        recorder_180.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant Year N: each 180 output casilla == summed 115 quarters.
     assert result_n.values["decl.total-perceptores"] == expected_n["01"]

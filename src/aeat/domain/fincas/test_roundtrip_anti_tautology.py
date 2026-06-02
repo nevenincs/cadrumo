@@ -24,12 +24,12 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.sql._orm import FincaRow
 from ...adapters.persistence.storage.sql.engine import get_engine
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     Finca,
     FincaRepository,
     UseType,
 )
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 

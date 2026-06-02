@@ -13,17 +13,17 @@ from datetime import date
 
 import pytest
 
+from .....application.auth import AuthProviderKind, ensure_authenticated_aeat_session
+from .....core.config import load_settings
+from .....core.errors import AeatError
+from .....tests.live_gate import requires_live_enabled
+from ....persistence.storage import get_master_key_provider
 from ._errors import SedeError
 from ._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
 )
-from ....persistence.storage import get_master_key_provider
-from .....application.auth import AuthProviderKind, ensure_authenticated_aeat_session
-from .....core.config import load_settings
-from .....core.errors import AeatError
-from .....tests.live_gate import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 

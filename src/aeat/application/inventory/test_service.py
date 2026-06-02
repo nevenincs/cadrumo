@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from ._service import _now_utc  # re-exported alias
 from ...core.time import now
+from ._service import _now_utc  # re-exported alias
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

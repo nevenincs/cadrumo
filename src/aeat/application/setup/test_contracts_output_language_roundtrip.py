@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ._contracts import InitializeWorkspaceCommand
 from ...core.external_constants import OutputLanguage
+from ._contracts import InitializeWorkspaceCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

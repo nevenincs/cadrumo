@@ -7,17 +7,17 @@ from typing import TYPE_CHECKING
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....application.topics import TopicCatalogue
+    from ...topics import TopicCatalogue
 
 
 class TopicCatalogueRepository(ResourceCacheRepository["TopicCatalogue", None]):
     """Singleton-keyed repository for the topic catalogue.
 
-    Wraps :func:`aeat.application.topics.load_topic_catalogue`.
+    Wraps :func:`aeat.core.topics.load_topic_catalogue`.
     """
 
     def _load(self, key: None) -> TopicCatalogue:
-        from ....application.topics import load_topic_catalogue
+        from ...topics import load_topic_catalogue
 
         return load_topic_catalogue()
 

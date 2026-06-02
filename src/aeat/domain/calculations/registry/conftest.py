@@ -5,7 +5,6 @@ from collections.abc import Callable
 import pytest
 
 from ....core.resources import resources
-
 from ._authority import ValidatedRegistryAuthority
 from ._schema import RegistrySnapshot
 

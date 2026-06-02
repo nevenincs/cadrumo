@@ -16,6 +16,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.config import Settings
+from .....domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 from ._groi_check import (
     DEFAULT_GROI_TIMEOUT_MS,
     GroiNifVerdict,
@@ -24,8 +26,6 @@ from ._groi_check import (
     _assert_query_browser_action,
     extract_verdict_from_response_text,
 )
-from .....core.config import Settings
-from .....domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -112,7 +112,7 @@ def test_observation_model_rejects_empty_nif() -> None:
 def test_observation_model_is_frozen() -> None:
     observation = GroiNifVerdict(nif="A28015865", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(observation, "nif", "B12345678")
+        observation.nif = "B12345678"
 
 
 def test_result_model_defaults_to_empty_observations() -> None:

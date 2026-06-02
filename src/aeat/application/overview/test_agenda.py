@@ -13,7 +13,6 @@ from ...domain.deadlines._models import (
     IrpfIncomeCategory,
     IVARegime,
 )
-
 from ._agenda import OverviewAgenda, build_overview_agenda
 from ._errors import OverviewAgendaError
 

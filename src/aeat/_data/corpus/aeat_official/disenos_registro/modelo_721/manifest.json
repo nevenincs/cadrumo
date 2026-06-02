@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro (declaraciones informativas)",
+  "modelo": "721",
+  "retrieved_at": "2026-06-02",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/declaraciones-informativas/modelo-721-declaracion-informativa-monedas-virtuales-extranjero.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "721",
+      "title": "721 - Diseno de registro (Orden HFP/886/2023)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/declaraciones-informativas/modelo-721-declaracion-informativa-monedas-virtuales-extranjero.html",
+      "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/declaraciones-informativas/modelo-721-declaracion-informativa-monedas-virtuales-extranjero.html",
+      "stored_path": "files/01-721-orden-hfp-886-2023-diseno-registro.html",
+      "original_filename": "01-721-orden-hfp-886-2023-diseno-registro.html",
+      "content_type": "text/html",
+      "bytes": 356,
+      "sha256": "95113765b1055bd2cbdd72d24d01ddc2374dcdb876958c7ce66777699edd841c",
+      "retrieved_at": "2026-06-02"
+    }
+  ]
+}

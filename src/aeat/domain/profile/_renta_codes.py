@@ -47,14 +47,42 @@ class RentaDisabilityGrade(StrEnum):
 # Post-Brexit: GB is excluded (left EU 2020-12-31, left EEA 2020-12-31).
 # Source: https://ec.europa.eu/eurostat/statistics-explained/index.php/Glossary:European_Economic_Area_(EEA)
 # EEA = EU27 + IS, LI, NO.  CH has bilateral agreements but is not EEA.
-UE_EEA_COUNTRY_CODES: frozenset[str] = frozenset({
-    # EU 27
-    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "GR", "ES",
-    "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT",
-    "NL", "PL", "PT", "RO", "SE", "SI", "SK",
-    # EEA non-EU
-    "IS", "LI", "NO",
-})
+UE_EEA_COUNTRY_CODES: frozenset[str] = frozenset(
+    {
+        # EU 27
+        "AT",
+        "BE",
+        "BG",
+        "CY",
+        "CZ",
+        "DE",
+        "DK",
+        "EE",
+        "GR",
+        "ES",
+        "FI",
+        "FR",
+        "HR",
+        "HU",
+        "IE",
+        "IT",
+        "LT",
+        "LU",
+        "LV",
+        "MT",
+        "NL",
+        "PL",
+        "PT",
+        "RO",
+        "SE",
+        "SI",
+        "SK",
+        # EEA non-EU
+        "IS",
+        "LI",
+        "NO",
+    }
+)
 """Closed set of EU + EEA ISO-3166-1 alpha-2 country codes (post-Brexit)."""
 
 

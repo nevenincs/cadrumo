@@ -15,6 +15,7 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -34,8 +35,6 @@ class SourceMeshError(CoreValidationError):
     ``ValidationError`` without special handling.
     """
 
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _log = get_logger(__name__)
 

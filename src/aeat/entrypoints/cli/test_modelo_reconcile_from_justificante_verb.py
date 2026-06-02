@@ -17,37 +17,31 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
-from . import app
 from ...tests import FIXTURES_DIR
 from ...tests.secure_sql import isolated_profile_storage_root
+from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),
     ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="operator"),
-            )
-            yield
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="operator"),
+        )
+        yield
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
@@ -91,7 +85,9 @@ def test_reconcile_from_justificante_renders_matches_verdict(cli_runner: CliRunn
     result = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "reconcile-from-justificante",
+            "app",
+            "modelo",
+            "reconcile-from-justificante",
             str(MODELO_130_FIXTURE),
             work_unit_id,
         ],
@@ -121,7 +117,9 @@ def test_reconcile_from_justificante_refuses_unknown_work_unit(
     result = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "reconcile-from-justificante",
+            "app",
+            "modelo",
+            "reconcile-from-justificante",
             str(MODELO_130_FIXTURE),
             "0" * 64,
         ],
@@ -135,10 +133,10 @@ def test_reconcile_from_justificante_help_advertises_local_only(
     """Help text must signal `local-only` across locales."""
 
     result = cli_runner.invoke(
-        app, ["app", "modelo", "reconcile-from-justificante", "--help"],
+        app,
+        ["app", "modelo", "reconcile-from-justificante", "--help"],
     )
     assert result.exit_code == 0, result.output
     assert any(
-        token in result.output.lower()
-        for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
+        token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output

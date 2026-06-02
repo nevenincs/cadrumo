@@ -24,10 +24,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from ...core.time import now
-
 from ...core.errors import AeatError
 from ...core.identity import BucketId
+from ...core.time import now
 from ...domain.buckets._event import BucketEventObjectType
 from ...domain.modelos._ids import (
     CalculationRevisionId,

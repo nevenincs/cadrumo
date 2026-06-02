@@ -15,6 +15,7 @@ from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ...adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ...adapters.persistence.storage.errors import StorageValidationError
+from ...core.config import Settings
 from ...tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
 from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from . import (
@@ -26,6 +27,7 @@ from . import (
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
     _await_live_iva_surface,
+    _filed_history_surface_timeout_ms,
     _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     classify_live_iva_acquisition_failure,
@@ -264,6 +266,13 @@ def test_live_surface_timeout_is_typed_and_classified() -> None:
         )
 
     asyncio.run(run())
+
+
+def test_filed_history_surface_timeout_scales_with_requested_years() -> None:
+    settings = Settings(aeat_live_iva_surface_timeout_ms=180_000)
+
+    assert _filed_history_surface_timeout_ms(settings, year_from=2026, year_to=2026) == 180_000
+    assert _filed_history_surface_timeout_ms(settings, year_from=2022, year_to=2026) == 900_000
 
 
 def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:

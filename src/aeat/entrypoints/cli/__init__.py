@@ -278,6 +278,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         return
     if exempt:
         return
+    _register_wizard_catalogue_for_profile_keys()
     ctx.with_resource(get_master_key_provider())
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
@@ -289,6 +290,14 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...core.i18n._render import clear_output_language_cache
 
     clear_output_language_cache()
+
+
+def _register_wizard_catalogue_for_profile_keys() -> None:
+    """Import wizard registration side effects before profile-key reads."""
+    from ...application.wizard import _catalogue as _wizard_catalogue
+    from ...application.wizard import _persistence as _wizard_persistence
+
+    _ = (_wizard_catalogue, _wizard_persistence)
 
 
 def _full_invocation_verb_path() -> str | None:

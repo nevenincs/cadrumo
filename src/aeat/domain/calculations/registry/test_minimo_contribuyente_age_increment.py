@@ -27,7 +27,6 @@ from functools import cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._formula_runtime import calculate_registry_snapshot
 from ._loader import load_registry_tree
 from ._snapshot import _build_validated_snapshot  # type: ignore[reportPrivateUsage]

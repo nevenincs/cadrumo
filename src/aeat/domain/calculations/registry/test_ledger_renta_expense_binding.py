@@ -16,7 +16,6 @@ from ...renta import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
-
 from . import (
     DataBindingDefinition,
     RegistryValidationError,

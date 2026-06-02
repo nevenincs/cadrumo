@@ -18,9 +18,9 @@ import typer
 
 from ...core.config import override_settings
 from ...core.i18n import tr
-from ._common import _draft_by_id
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_cli_runtime_profile, isolated_sessionless_storage_root
+from ._common import _draft_by_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

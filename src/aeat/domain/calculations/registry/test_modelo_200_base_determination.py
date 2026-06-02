@@ -37,7 +37,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import build_snapshot, load_registry_tree
 from ._formula_runtime import calculate_registry_snapshot
 from ._schema import InputKind

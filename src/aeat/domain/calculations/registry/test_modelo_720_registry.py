@@ -9,7 +9,6 @@ from typing import cast
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import (
     InputKind,
     RegistryValidator,

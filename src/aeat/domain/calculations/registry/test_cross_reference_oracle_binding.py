@@ -13,7 +13,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path
-
 from . import RegistryValidationError
 from ._loader import load_registry_tree
 from ._schema import LiveCrossReferenceDecision, ModeloDefinition, ModeloRevision

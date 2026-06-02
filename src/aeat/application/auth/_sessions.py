@@ -12,10 +12,9 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
-from ...core.time import now
-
 from ...core.errors import AeatError
 from ...core.logging import get_logger
+from ...core.time import now
 from ...core.time._utc import validate_utc_aware
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import (

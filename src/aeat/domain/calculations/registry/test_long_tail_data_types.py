@@ -28,15 +28,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _casilla_with(data_type: str, label: str = "Test casilla") -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
-        "id": "test_casilla",
-        "number": "01",
-        "label": label,
-        "section": ("test",),
-        "data_type": data_type,
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual-modelo",),
-    })
+    return CasillaDefinition.model_validate(
+        {
+            "id": "test_casilla",
+            "number": "01",
+            "label": label,
+            "section": ("test",),
+            "data_type": data_type,
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual-modelo",),
+        }
+    )
 
 
 def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
@@ -44,10 +46,12 @@ def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
         "decimal",
         label="Rendimiento capital mobiliario general propiedad intelectual no autor",
     )
-    rebuilt = CasillaDefinition.model_validate({
-        **casilla.model_dump(),
-        "semantic_role": "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor",
-    })
+    rebuilt = CasillaDefinition.model_validate(
+        {
+            **casilla.model_dump(),
+            "semantic_role": "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor",
+        }
+    )
 
     assert rebuilt.semantic_role == "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor"
 
@@ -58,11 +62,14 @@ _NAME = TypeAdapter(PersonOrEntityName)
 
 
 class TestPersonOrEntityName:
-    @pytest.mark.parametrize("raw,canonical", [
-        ("Maria Garcia Lopez", "Maria Garcia Lopez"),
-        ("  ACME SA  ", "ACME SA"),
-        ("Año Nuevo Holdings", "Año Nuevo Holdings"),
-    ])
+    @pytest.mark.parametrize(
+        "raw,canonical",
+        [
+            ("Maria Garcia Lopez", "Maria Garcia Lopez"),
+            ("  ACME SA  ", "ACME SA"),
+            ("Año Nuevo Holdings", "Año Nuevo Holdings"),
+        ],
+    )
     def test_accepted(self, raw: str, canonical: str) -> None:
         assert _NAME.validate_python(raw) == canonical
 
@@ -78,12 +85,15 @@ _NIFIVA = TypeAdapter(NifIvaString)
 
 
 class TestNifIvaString:
-    @pytest.mark.parametrize("raw,canonical", [
-        ("ESB58818501", "ESB58818501"),
-        ("FR12345678901", "FR12345678901"),
-        ("DE123456789", "DE123456789"),
-        ("  es-b58818501  ", "ESB58818501"),
-    ])
+    @pytest.mark.parametrize(
+        "raw,canonical",
+        [
+            ("ESB58818501", "ESB58818501"),
+            ("FR12345678901", "FR12345678901"),
+            ("DE123456789", "DE123456789"),
+            ("  es-b58818501  ", "ESB58818501"),
+        ],
+    )
     def test_accepted(self, raw: str, canonical: str) -> None:
         assert _NIFIVA.validate_python(raw) == canonical
 
@@ -163,11 +173,14 @@ _BIC = TypeAdapter(BicString)
 
 
 class TestBicString:
-    @pytest.mark.parametrize("raw,canonical", [
-        ("CAIXESBBXXX", "CAIXESBBXXX"),
-        ("CAIXESBB", "CAIXESBB"),
-        ("  caix esbb xxx  ", "CAIXESBBXXX"),
-    ])
+    @pytest.mark.parametrize(
+        "raw,canonical",
+        [
+            ("CAIXESBBXXX", "CAIXESBBXXX"),
+            ("CAIXESBB", "CAIXESBB"),
+            ("  caix esbb xxx  ", "CAIXESBBXXX"),
+        ],
+    )
     def test_accepted(self, raw: str, canonical: str) -> None:
         assert _BIC.validate_python(raw) == canonical
 
@@ -199,8 +212,14 @@ class TestCalendarDate:
 @pytest.mark.parametrize(
     "tag",
     [
-        "name", "nif_iva", "ccaa_code", "province_code",
-        "postal_code", "municipality_code", "bic", "date",
+        "name",
+        "nif_iva",
+        "ccaa_code",
+        "province_code",
+        "postal_code",
+        "municipality_code",
+        "bic",
+        "date",
     ],
 )
 def test_casilla_definition_round_trips_with_long_tail_data_types(tag: str) -> None:

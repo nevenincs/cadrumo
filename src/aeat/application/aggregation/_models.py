@@ -26,7 +26,11 @@ from pydantic import (
     model_validator,
 )
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.aggregation import PeriodKind
+from ...core.i18n import Translatable as tr
 from ...domain.categories import SpendingCategory
+from ._errors import AggregationPeriodError
 
 
 def _coerce_spending_category(value: object) -> object:
@@ -45,11 +49,6 @@ def _coerce_spending_category(value: object) -> object:
 
 
 _SpendingCategoryField = Annotated[SpendingCategory, BeforeValidator(_coerce_spending_category)]
-
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.aggregation import PeriodKind
-from ...core.i18n import Translatable as tr
-from ._errors import AggregationPeriodError
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:(?:-?Q(?P<quarter>[1-4]))|(?:-(?P<month>0[1-9]|1[0-2])))?$")
 

@@ -13,8 +13,8 @@ from functools import lru_cache
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
+from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.aggregation import AggregationSourceKind
-
 from ...core.logging import get_logger
 from ._counterpart import (
     CounterpartAggregation,
@@ -36,7 +36,6 @@ from ._retenciones import (
 )
 
 LOGGER = get_logger(__name__)
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class PerModeloAggregationProvider(StrEnum):

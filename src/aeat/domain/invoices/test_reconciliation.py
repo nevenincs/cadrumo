@@ -10,13 +10,7 @@ from pathlib import Path
 import pytest
 
 from ...application.invoices import link_invoice_transaction_repositories
-from ._enums import IvaRate, PaymentStatus
-from ._models import Invoice, InvoiceCatalogue, InvoiceLine
-from ._repository import InvoiceCatalogueRepository
-from ._service import (
-    suggest_reconciliations,
-    verify_link_consistency,
-)
+from ...tests.secure_sql import isolated_runtime_profile
 from ..iva import InvoiceKind
 from ..transactions import (
     RawProvenance,
@@ -27,7 +21,13 @@ from ..transactions import (
     TransactionDirection,
 )
 from ..transactions._repository import TransactionCatalogueRepository
-from ...tests.secure_sql import isolated_runtime_profile
+from ._enums import IvaRate, PaymentStatus
+from ._models import Invoice, InvoiceCatalogue, InvoiceLine
+from ._repository import InvoiceCatalogueRepository
+from ._service import (
+    suggest_reconciliations,
+    verify_link_consistency,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

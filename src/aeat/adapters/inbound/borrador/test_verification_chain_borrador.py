@@ -72,7 +72,6 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
 )
 from ....tests import FIXTURES_DIR
-
 from . import ArtefactKind, BorradorParseError, parse_borrador
 
 pytestmark = [

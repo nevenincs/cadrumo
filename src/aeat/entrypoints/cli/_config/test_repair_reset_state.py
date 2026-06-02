@@ -13,7 +13,6 @@ from ....adapters.persistence.storage import (
     get_master_key_provider,
 )
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.workflow._models import WorkflowState
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
@@ -26,7 +25,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
@@ -37,10 +35,7 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
             aeat_drafts_dir=tmp_path / "drafts",
         ),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 def _seed_workflow_state() -> None:

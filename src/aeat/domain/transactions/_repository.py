@@ -14,11 +14,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ...core.time import now
-
 from ...core.classification import SensitivityClass
 from ...core.identity import BucketId
 from ...core.logging import get_logger
+from ...core.time import now
 from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
 

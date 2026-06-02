@@ -36,7 +36,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
@@ -47,10 +46,7 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
             aeat_drafts_dir=tmp_path / "drafts",
         ),
     ):
-        try:
-            yield
-        finally:
-            dispose_engine()
+        yield
 
 
 def _create_profile(name: str = "test-operator") -> None:

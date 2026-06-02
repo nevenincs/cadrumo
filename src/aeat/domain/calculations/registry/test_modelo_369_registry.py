@@ -9,7 +9,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import (
     ModeloDefinition,
     OssIossLedgerObservation,
@@ -527,7 +526,6 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         OssIossRegime,
         TransactionKind,
     )
-
     from . import (
         build_snapshot,
         calculate_registry_snapshot,
@@ -617,7 +615,6 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         OssIossRegime,
         TransactionKind,
     )
-
     from . import (
         build_snapshot,
         calculate_registry_snapshot,

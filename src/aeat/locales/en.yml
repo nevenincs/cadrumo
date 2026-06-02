@@ -132,6 +132,9 @@ adapters:
     justificante:
       errors:
         parse_failed: 'Could not parse the justificante PDF. The source path has been redacted from diagnostics.'
+    pdf:
+      errors:
+        hash_failed: 'PDF file could not be hashed.'
   sede:
     errors:
       cotejo_nav_failed: Navigation to the AEAT cotejo page failed; session may have

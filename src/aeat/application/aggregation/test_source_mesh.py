@@ -10,7 +10,6 @@ from pydantic import ValidationError
 from ...adapters.persistence.storage.errors import DecryptionError
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import load_registry_tree
-
 from . import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

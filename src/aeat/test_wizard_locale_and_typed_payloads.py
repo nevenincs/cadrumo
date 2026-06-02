@@ -68,10 +68,8 @@ def test_wizard_status_locale_key_exists_in_all_locales() -> None:
         # Locate the output_labels block and verify status: appears within it
         idx = content.find("output_labels:")
         assert idx != -1, f"{locale_file.name}: output_labels block missing"
-        block = content[idx: idx + 300]
-        assert "status:" in block, (
-            f"{locale_file.name}: application.wizard.output_labels.status key missing"
-        )
+        block = content[idx : idx + 300]
+        assert "status:" in block, f"{locale_file.name}: application.wizard.output_labels.status key missing"
 
 
 # ---------------------------------------------------------------------------
@@ -84,8 +82,7 @@ def test_wizard_root_in_dynamic_translation_roots() -> None:
     from .locales._ast_scanner import _DYNAMIC_TRANSLATION_ROOTS
 
     assert "wizard" in _DYNAMIC_TRANSLATION_ROOTS, (
-        "'wizard' is not in _DYNAMIC_TRANSLATION_ROOTS — "
-        "catalogue f-string dynamic-dispatch survivors are undocumented"
+        "'wizard' is not in _DYNAMIC_TRANSLATION_ROOTS — catalogue f-string dynamic-dispatch survivors are undocumented"
     )
 
 
@@ -133,18 +130,14 @@ def test_google_drive_file_required_id_field() -> None:
     """GoogleDriveFile must declare 'id' as a required key."""
     from .adapters.outbound.google._api import GoogleDriveFile
 
-    assert "id" in GoogleDriveFile.__required_keys__, (
-        "GoogleDriveFile.id is not marked as required"
-    )
+    assert "id" in GoogleDriveFile.__required_keys__, "GoogleDriveFile.id is not marked as required"
 
 
 def test_google_sheets_range_required_range_field() -> None:
     """GoogleSheetsRange must declare 'range' as a required key."""
     from .adapters.outbound.google._api import GoogleSheetsRange
 
-    assert "range" in GoogleSheetsRange.__required_keys__, (
-        "GoogleSheetsRange.range is not marked as required"
-    )
+    assert "range" in GoogleSheetsRange.__required_keys__, "GoogleSheetsRange.range is not marked as required"
 
 
 def test_google_spreadsheet_required_spreadsheet_id_field() -> None:
@@ -225,14 +218,16 @@ def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
     """_decode_invoice_payload must return InvoiceRowPayload instances from JSON input."""
     from .application.invoices._importing import _decode_invoice_payload
 
-    raw = json.dumps([
-        {
-            "kind": "received",
-            "currency": "EUR",
-            "counterparty_name": "Acme SL",
-            "counterparty_tax_id": "B12345678",
-        }
-    ])
+    raw = json.dumps(
+        [
+            {
+                "kind": "received",
+                "currency": "EUR",
+                "counterparty_name": "Acme SL",
+                "counterparty_tax_id": "B12345678",
+            }
+        ]
+    )
     rows = _decode_invoice_payload(raw)
     assert len(rows) == 1
     row = rows[0]
@@ -246,28 +241,30 @@ def test_parse_invoice_payload_end_to_end_json() -> None:
     from .application.invoices._importing import parse_invoice_payload
     from .domain.invoices import Invoice
 
-    raw = json.dumps({
-        "invoice_number": "F2024-001",
-        "issued_at": "2024-01-15",
-        "counterparty_name": "Test Vendor SL",
-        "counterparty_tax_id": "B12345674",
-        "counterparty_country": "ES",
-        "base_total": "100.00",
-        "iva_total": "21.00",
-        "grand_total": "121.00",
-        "currency": "EUR",
-        "payment_status": "PAID",
-        "lines": [
-            {
-                "description": "Service",
-                "quantity": "1",
-                "unit_price": "100.00",
-                "subtotal": "100.00",
-                "iva_rate": "RATE_21",
-                "iva_amount": "21.00",
-            }
-        ],
-    })
+    raw = json.dumps(
+        {
+            "invoice_number": "F2024-001",
+            "issued_at": "2024-01-15",
+            "counterparty_name": "Test Vendor SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": "100.00",
+            "iva_total": "21.00",
+            "grand_total": "121.00",
+            "currency": "EUR",
+            "payment_status": "PAID",
+            "lines": [
+                {
+                    "description": "Service",
+                    "quantity": "1",
+                    "unit_price": "100.00",
+                    "subtotal": "100.00",
+                    "iva_rate": "RATE_21",
+                    "iva_amount": "21.00",
+                }
+            ],
+        }
+    )
     invoices = parse_invoice_payload(raw, default_kind="received")
     assert len(invoices) == 1
     assert isinstance(invoices[0], Invoice)
@@ -284,8 +281,7 @@ def test_application_storage_init_has_intent_docstring() -> None:
     init_path = _SRC_ROOT / "application" / "storage" / "__init__.py"
     content = init_path.read_text(encoding="utf-8")
     assert "namespace" in content.lower(), (
-        "aeat.application.storage.__init__ is docstring-only and must document "
-        "its namespace-container intent"
+        "aeat.application.storage.__init__ is docstring-only and must document its namespace-container intent"
     )
 
 
@@ -294,8 +290,7 @@ def test_domain_calculations_init_has_intent_docstring() -> None:
     init_path = _SRC_ROOT / "domain" / "calculations" / "__init__.py"
     content = init_path.read_text(encoding="utf-8")
     assert "namespace" in content.lower(), (
-        "aeat.domain.calculations.__init__ is docstring-only and must document "
-        "its namespace-container intent"
+        "aeat.domain.calculations.__init__ is docstring-only and must document its namespace-container intent"
     )
 
 
@@ -304,10 +299,7 @@ def test_application_storage_init_has_no_explicit_imports() -> None:
     init_path = _SRC_ROOT / "application" / "storage" / "__init__.py"
     content = init_path.read_text(encoding="utf-8")
     tree = ast.parse(content, filename=str(init_path))
-    import_nodes = [
-        node for node in ast.walk(tree)
-        if isinstance(node, (ast.Import, ast.ImportFrom))
-    ]
+    import_nodes = [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
     assert not import_nodes, (
         f"aeat.application.storage.__init__ contains {len(import_nodes)} import statement(s) "
         "— this is a namespace container and must not re-export anything"
@@ -319,10 +311,7 @@ def test_domain_calculations_init_has_no_explicit_imports() -> None:
     init_path = _SRC_ROOT / "domain" / "calculations" / "__init__.py"
     content = init_path.read_text(encoding="utf-8")
     tree = ast.parse(content, filename=str(init_path))
-    import_nodes = [
-        node for node in ast.walk(tree)
-        if isinstance(node, (ast.Import, ast.ImportFrom))
-    ]
+    import_nodes = [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
     assert not import_nodes, (
         f"aeat.domain.calculations.__init__ contains {len(import_nodes)} import statement(s) "
         "— this is a namespace container and must not re-export anything"

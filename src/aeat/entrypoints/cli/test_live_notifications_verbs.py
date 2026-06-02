@@ -8,30 +8,25 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
-from ._app_live import notifications_app
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._app_live import notifications_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=tmp_path / "audit"),
         profile_create_storage_span("default"),
     ):
-        try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
-            yield
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+        yield
 
 
 def test_notifications_list_is_empty_on_fresh_bucket(cli_runner: CliRunner) -> None:

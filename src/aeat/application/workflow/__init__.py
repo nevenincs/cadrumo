@@ -37,9 +37,9 @@ from ._models import (
     WorkflowState,
     WorkflowStep,
     active_transaction_catalogue_repository,
-    require_active_bucket_id,
     compute_run_id,
     declaration_key,
+    require_active_bucket_id,
     update_declaration_pointer,
     utc_now,
 )

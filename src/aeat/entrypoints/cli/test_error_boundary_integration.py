@@ -24,13 +24,12 @@ from __future__ import annotations
 
 import pytest
 
-from ...tests.cli_runner import invoke_cached_cli
-
 from ...core.errors import (
     ErrorCategory,
     get_error_exit_code,
     get_registered_error_code,
 )
+from ...tests.cli_runner import invoke_cached_cli
 from ._log_levels import LogLevelResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

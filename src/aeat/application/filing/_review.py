@@ -21,10 +21,9 @@ from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
 
-from ...core.time import now
-
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.logging import get_logger
+from ...core.time import now
 from ...domain._identifiers import canonical_decimal_string
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (

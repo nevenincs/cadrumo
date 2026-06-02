@@ -13,6 +13,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from . import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -22,7 +23,6 @@ from . import (
 from ._repository import (
     SubmissionRepository,
 )
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 

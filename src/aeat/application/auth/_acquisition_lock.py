@@ -18,11 +18,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ...core.time import now as _utc_now
-
 from ...core.errors import AeatError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
+from ...core.time import now as _utc_now
 from ...core.time._utc import coerce_utc_aware
 from . import AuthProviderKind
 

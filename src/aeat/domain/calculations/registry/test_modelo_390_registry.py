@@ -9,7 +9,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -243,11 +242,11 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
 
 
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
+    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
     from . import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from ...iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]

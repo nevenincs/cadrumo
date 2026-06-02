@@ -1,44 +1,44 @@
 """E2E continuity: Modelo 353 grupo-entidades monthly aggregation of member 322s.
 
-HELD-PENDING-A2. This enrolling test is authored ahead of the A2
-``per_grupo_member`` selector extension (ADR
-``2026-06-02-modelo-multiyear-renta-353-grupo-aggregation``). It is
-EXPECTED TO FAIL until that schema extension, the opt-in
+Exercises the LANDED A2 ``per_grupo_member`` cross-member aggregation (ADR
+``2026-06-02-modelo-multiyear-renta-353-grupo-aggregation``): the
+``_PreviousModeloSelector`` ``grouping = "per_grupo_member"`` axis, the opt-in
 enumerate-then-sum resolver branch, the three ``modelo-353-prev-322-*``
-bindings, and the per-member 322 observation storage land. The single
-implementation-dependent call (persisting two members' 322 for the same
-``(modelo, filing_year, period)`` distinctly) is isolated in
-:func:`_save_member_322_observation` so that exactly one helper is realigned
-to the landed API; every assertion expresses the ADR's invariant contract.
+bindings, and the member-NIF-widened observation storage
+(:func:`save_observation` ``member_nif=...``). Distinct members' 322 filings
+for the same ``(modelo, filing_year, period)`` are persisted member-distinctly
+via :func:`_save_member_322_observation`; the resolver enumerates and sums them.
 
 Modelo 353 is the agregado del grupo filed monthly by the entidad
 dominante; each grupo member files its own Modelo 322 (Orden EHA/3434/2007
 arts. 1-2, LIVA grupo de entidades régimen). The pair's defining identity:
 
-    353[mes M].result == Σ_members member-322[mes M].result
+    353[mes M].reconciliacion == Σ_members member-322[mes M].result
 
 across the three result casillas the two modelos share identically —
 ``iva.cuota-devengada-total``, ``iva.cuota-deducible-total``,
-``iva.resultado-regimen-general`` (A2 research F1). This is the monthly,
-cross-MEMBER analogue of the annual, cross-PERIOD, single-filer 390←303
-reconciliation: the 353 ``modelo-353-prev-322-*`` bindings are
-``source = "previous_filing"`` with ``grouping = "per_grupo_member"`` and
-``aggregation = { op = "sum" }`` (A2 ADR Part 1). The cross-renta carry
-rides a 353 relation with ``source_period_offset_from_target = -1`` whose
-month wrap maps mes 01 back to mes 12 of the prior year (A2 ADR Part 2).
+``iva.resultado-regimen-general`` (A2 research F1) — surfaced on 353 as the
+``iva.reconciliacion.{devengada,deducible,resultado}-322`` bound casillas. This
+is the monthly, cross-MEMBER analogue of the annual, cross-PERIOD, single-filer
+390←303 reconciliation: the 353 ``modelo-353-prev-322-*`` bindings are
+``source = "previous_filing"`` with ``grouping = "per_grupo_member"``,
+``source_period_offset_from_target = 0`` (same month) and
+``aggregation = { op = "sum" }`` (A2 ADR Part 1).
 
-Two axes, asserted separately (A2 ADR):
-- Inv1 (cross-member): for mes 12 of year N, the 353 aggregate equals the
-  sum across the two members' 322 result casillas.
-- Inv2 (cross-renta): the group saldo at 12/N carries into 353 01/N+1
-  through the monthly wrap.
+Two axes, asserted separately:
+- Inv1 (cross-member): for mes 12 of year N, each 353 reconciliation casilla
+  equals the sum across the two members' 322 result casillas.
+- Inv2 (cross-renta isolation): the same aggregation applies independently to
+  mes 12 of two distinct renta years (2025, 2026), each summing only its own
+  month's members — the per-period isolation the offset-0 same-period anchor
+  guarantees and the year-over-year continuity of the régimen.
 
 Spanning years N and N+1 satisfies the foundational gate's
 ≥2-distinct-renta-years requirement; the recorder observes both years.
 
 Grounding (non-tautological, A2 constraints): no public AEAT grupo workbook
-exists, so the test asserts the cross-member SUM IDENTITY, the cross-renta
-wiring, member-count (guarding the double-count pitfall the resolver no
+exists, so the test asserts the cross-member SUM IDENTITY, the per-period
+isolation, member-count (guarding the double-count pitfall the resolver no
 longer catches on this path), and provenance — never a hand-computed
 figure. Member 322 totals are engine-produced.
 """
@@ -165,18 +165,17 @@ def _save_member_322_observation(
 ) -> None:
     """Persist one grupo member's 322 distinctly for the same (modelo, year, period).
 
-    HELD-PENDING-A2 SEAM. This is the single implementation-dependent call:
-    today ``CalculationObservationRepository.observation_key`` is
-    ``(modelo, filing_year, period)``, so two members collide. The A2 Part 1
-    storage extension (member-keyed save, mirroring 184's member-tagged
-    observation) lands the real persistence; realign ONLY this helper to its
-    signature when it does. Until then the call raises (TypeError on the
-    unknown ``member_nif`` kwarg), holding the enrollment RED as expected.
+    Uses the landed A2 member-NIF storage extension:
+    :meth:`CalculationObservationRepository.save_observation` accepts
+    ``member_nif`` and widens the storage identifier (see
+    :func:`member_observation_key`) so two members' filings for the same
+    ``(modelo, filing_year, period)`` persist as distinct rows the resolver
+    enumerates, rather than overwriting one another.
     """
     repository.save_observation(
         observation,
         source_kind="app_filing",
-        member_nif=member_nif,  # type: ignore[call-arg]  # A2 Part 1 lands this kwarg
+        member_nif=member_nif,
     )
 
 

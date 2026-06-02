@@ -25,14 +25,14 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.profile import SetupAnswers
+from ...domain.deadlines._models import IVARegime
+from ...domain.profile._ccaa import CCAA
 from ._verifier import (
     WizardCheckFinding,
     WizardCheckSeverity,
     verify_setup_answers,
 )
-from ...core.profile import SetupAnswers
-from ...domain.deadlines._models import IVARegime
-from ...domain.profile._ccaa import CCAA
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

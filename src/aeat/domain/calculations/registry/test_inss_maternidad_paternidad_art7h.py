@@ -32,7 +32,6 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._loader import load_registry_tree
 from ._temporal import select_revision
 

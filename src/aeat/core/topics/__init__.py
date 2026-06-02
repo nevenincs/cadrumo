@@ -13,6 +13,12 @@ Topics live as TOML files under ``registry/aeat/topics/<slug>.toml``;
 title and body text live in the i18n catalogue under ``topic.<slug>.*``
 so translations follow the project's locale pipeline rather than
 hardcoded multiline strings.
+
+The catalogue records are core-level resources (they depend only on
+``core`` primitives and the bundled registry path), so they live in
+``aeat.core.topics`` and are consumed through the
+:class:`aeat.core.resources.TopicCatalogueRepository` singleton — keeping
+``core`` free of any import into the application layer.
 """
 
 from __future__ import annotations
@@ -23,11 +29,11 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from ...core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError as _AeatError
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from ...core.paths import file_stat_fingerprint as _file_stat_fingerprint
-from ...core.resources import bundled_path as _bundled_path
+from .._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..errors import AeatError as _AeatError
+from ..external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ..paths import file_stat_fingerprint as _file_stat_fingerprint
+from ..resources import bundled_path as _bundled_path
 
 _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 

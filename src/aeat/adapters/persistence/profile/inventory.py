@@ -8,10 +8,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.time import now
-
 from ....core.errors import AeatError
 from ....core.logging import get_logger
+from ....core.time import now
 from ....domain.profile.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,

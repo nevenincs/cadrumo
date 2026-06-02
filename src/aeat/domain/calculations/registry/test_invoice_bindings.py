@@ -16,7 +16,6 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import resources
-
 from ._bindings import (
     InvoiceObservation,
     invoice_binding_requirements,

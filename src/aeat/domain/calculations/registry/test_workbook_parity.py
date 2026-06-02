@@ -11,7 +11,6 @@ from openpyxl import Workbook, load_workbook
 
 from ....core.errors import ERROR_REGISTRY, get_registered_error_code
 from ....core.resources import bundled_path
-
 from ._loader import load_registry_tree
 from ._schema import RegistrySnapshot
 from ._snapshot import build_snapshot

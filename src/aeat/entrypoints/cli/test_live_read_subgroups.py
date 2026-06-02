@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.auth import LiveAuthPreflightReport
 from ...application.live import (
     Borrador100SnapshotService,
@@ -42,19 +41,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(aeat_audit_dir=tmp_path / "audit"),
         profile_create_storage_span("default"),
     ):
-        try:
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(state, profile_id="default"),
-            )
-            yield
-        finally:
-            dispose_engine()
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id="default"),
+        )
+        yield
 
 
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:

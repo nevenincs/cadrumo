@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ...core.external_constants import M347_THRESHOLD_EUR
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -16,7 +17,6 @@ from ._counterpart import (
     aggregate_counterpart_349,
     declarable_for_347,
 )
-from ...core.external_constants import M347_THRESHOLD_EUR
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

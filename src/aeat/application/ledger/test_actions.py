@@ -15,7 +15,6 @@ import pytest
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.export import ExportSerializationFormat
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import (
@@ -90,10 +89,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
-        try:
-            yield profile.repository
-        finally:
-            dispose_engine(profile.settings)
+        yield profile.repository
 
 
 def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a"):

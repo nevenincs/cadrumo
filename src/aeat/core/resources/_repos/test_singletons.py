@@ -50,7 +50,7 @@ def test_user_profile_singleton_loads_real_schema() -> None:
 
 
 def test_topics_singleton_loads_real_catalogue() -> None:
-    from ....application.topics import TopicCatalogue
+    from ...topics import TopicCatalogue
 
     repo = TopicCatalogueRepository()
 

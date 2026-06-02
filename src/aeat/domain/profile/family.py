@@ -8,6 +8,7 @@ eligibility, or casilla formulas; those remain registry-owned.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -327,8 +328,6 @@ class RentaFamilyProfile(BaseModel):
         ``True`` and the descendant is eligible for the mínimo, otherwise
         ``Decimal("1")``.
         """
-        from decimal import Decimal
-
         if descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year):
             return Decimal("0.5")
         return Decimal("1")

@@ -169,7 +169,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.topics.TopicNotFoundError",
+        "aeat.core.topics.TopicNotFoundError",
         ErrorCode(
             code="REFUSED_TOPIC_NOT_FOUND",
             category=ErrorCategory.REFUSED,

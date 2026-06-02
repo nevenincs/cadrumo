@@ -7,7 +7,6 @@ from decimal import Decimal
 import pytest
 
 from .....core.config import Settings
-
 from .....domain.calculations.registry import (
     RentaWebOpenLivePayload,
     equivalent_renta_web_open_value,

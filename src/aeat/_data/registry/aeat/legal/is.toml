@@ -1,3 +1,61 @@
+[legal."ley-27-2014:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-10.html#a10"
+document_id = "BOE-A-2014-12328"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a10"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS art 10: concepto y determinacion de la base imponible. La base imponible es la renta del periodo minorada por la compensacion de bases imponibles negativas; en estimacion directa se calcula corrigiendo el resultado contable mediante los preceptos de la Ley. Es la definicion-marco del encadenamiento de determinacion de la base del Modelo 200 (00501 resultado contable -> correcciones -> 00550 base previa -> 00552 base imponible)."
+required_text = [
+    "La base imponible estará constituida por el importe de la renta obtenida en el período impositivo",
+    "compensación de bases imponibles negativas",
+    "corrigiendo, mediante la aplicación de los preceptos establecidos en esta Ley, el resultado contable",
+]
+
+[legal."ley-27-2014:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-11.html#a11"
+document_id = "BOE-A-2014-12328"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a11"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS art 11: imputacion temporal e inscripcion contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinacion de la base del Modelo 200."
+required_text = [
+    "se imputarán al período impositivo en que se produzca su devengo",
+    "con independencia de la fecha de su pago o de su cobro",
+]
+
+[legal."ley-27-2014:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-14.html#a14"
+document_id = "BOE-A-2014-12328"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a14"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS art 14: provisiones y otros gastos. Regula la no deducibilidad de determinados gastos por provisiones (fondos internos de pensiones, retribuciones a largo plazo, obligaciones implicitas o tacitas) que constituyen correcciones al resultado contable en la determinacion de la base imponible del Modelo 200."
+required_text = [
+    "No serán deducibles los gastos por provisiones y fondos internos",
+    "No serán deducibles los siguientes gastos asociados a provisiones",
+]
+
 [legal."ley-27-2014:art-13"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -420,10 +420,7 @@ def list_modelos(
     )
     lines = [
         "code\ttitle\tcadence\tdomain\trevisions",
-        *[
-            f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}"
-            for row in report.modelos
-        ],
+        *[f"{row.code}\t{row.title}\t{row.cadence}\t{row.tax_domain}\t{row.revision_count}" for row in report.modelos],
     ]
     _emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
 
@@ -875,10 +872,7 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_unknown_type",
-                default=(
-                    f"--row type {row_type!r} is not recognised; "
-                    f"supported types: {sorted(_ROW_TYPES_SUPPORTED)}"
-                ),
+                default=(f"--row type {row_type!r} is not recognised; supported types: {sorted(_ROW_TYPES_SUPPORTED)}"),
                 row_type=row_type,
                 supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
             )
@@ -908,11 +902,17 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
             k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
         }
         if row_type == "miembro":
-            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo184MemberRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            return Modelo184MemberRow(
+                row_type="miembro", **kv_pairs
+            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO184-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo184MemberRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
         elif row_type == "vinculada":
-            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO232-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo232VinculadaRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            return Modelo232VinculadaRow(
+                row_type="vinculada", **kv_pairs
+            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO232-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo232VinculadaRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
         elif row_type == "operador":
-            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO349-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo349OperadorRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            row_m349 = Modelo349OperadorRow(
+                row_type="operador", **kv_pairs
+            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO349-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo349OperadorRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
             # NIF format check is advisory at parse time — invalid format raises BadParameter.
             nif = str(kv_pairs.get("nif_comunitario", ""))
             pais = str(kv_pairs.get("codigo_pais", ""))
@@ -931,7 +931,9 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
                 )
             return row_m349
         else:
-            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO347-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo347ContraparteRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
+            return Modelo347ContraparteRow(
+                row_type="contraparte", **kv_pairs
+            )  # CAST-RATIONALE-WIRE-PAYLOAD-MODELO347-ROW: kv_pairs is dict[str, str|Decimal]; splat matches Modelo347ContraparteRow fields after decimal coercion at this parse boundary  # type: ignore[arg-type]
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
@@ -1531,19 +1533,21 @@ def _work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
         return out
 
     band = recovery.recargo_band
-    out.extend([
-        f"recargo_band\t{band.id}",
-        f"recargo_pct\t{band.surcharge_pct}",
-        f"recargo_interest_applies\t{band.interest_applies}",
-        f"recargo_legal_ref\t{band.legal_ref}",
-        tr(
-            "cli.app.modelo.work.plazo_vencido_warning",
-            default=(
-                "AVISO: plazo voluntario vencido. Presenta con recargo "
-                "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+    out.extend(
+        [
+            f"recargo_band\t{band.id}",
+            f"recargo_pct\t{band.surcharge_pct}",
+            f"recargo_interest_applies\t{band.interest_applies}",
+            f"recargo_legal_ref\t{band.legal_ref}",
+            tr(
+                "cli.app.modelo.work.plazo_vencido_warning",
+                default=(
+                    "AVISO: plazo voluntario vencido. Presenta con recargo "
+                    "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+                ),
             ),
-        ),
-    ])
+        ]
+    )
     return out
 
 
@@ -1646,9 +1650,7 @@ def _validate_registry_target(modelo: str, revision_id: str, year: int) -> None:
     if not _revision_covers_year(revision, year, definition):
         # Build a human-readable description of which years each revision covers.
         applicable = ", ".join(
-            rev_id
-            for rev_id in sorted(definition.revisions)
-            if _revision_covers_year(rev_id, year, definition)
+            rev_id for rev_id in sorted(definition.revisions) if _revision_covers_year(rev_id, year, definition)
         ) or tr(
             "cli.app.modelo.work.revision_year_mismatch_no_match",
             default="ninguna revisión cubre ese ejercicio",
@@ -1724,9 +1726,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 #: the national AEAT CLI surface.  ``work create`` is refused with a
 #: legally-grounded message that names the obligation and the operative
 #: filing surface.
-_STUB_ONLY_MODELOS: frozenset[str] = frozenset(
-    {"151", "210", "600", "620", "650", "660", "714", "721"}
-)
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"151", "210", "600", "620", "650", "660", "714", "721"})
 
 #: Maps each stub-only modelo code to its dedicated locale key so that the
 #: refusal message cites the correct legal authorities for that modelo.
@@ -2503,9 +2503,7 @@ def _validate_casilla_key(key: str, spec: str) -> None:
 # Casilla data_types that accept a Decimal override via --casilla.
 # Non-numeric types (text, boolean, nif, date, etc.) must be supplied
 # through --binding or profile sources, not as raw decimal overrides.
-_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset(
-    {"decimal", "money", "integer", "ratio"}
-)
+_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
 
 
 def _guard_casilla_data_type(casilla_id: str, revision: object) -> None:
@@ -3078,10 +3076,7 @@ def work_calculate(
     # by semantic_role so future revisions that renumber the casilla still
     # work correctly.
     if meses_trabajo_con_hijo_menor_3:
-        meses_pairs = [
-            _parse_meses_trabajo_hijo_spec(spec)
-            for spec in meses_trabajo_con_hijo_menor_3
-        ]
+        meses_pairs = [_parse_meses_trabajo_hijo_spec(spec) for spec in meses_trabajo_con_hijo_menor_3]
         deduccion_amount = _compute_deduccion_maternidad_0611(meses_pairs)
         maternidad_casilla_id = _resolve_deduccion_maternidad_casilla_id(work_unit_id)
         casilla_inputs[maternidad_casilla_id] = Decimal(deduccion_amount)
@@ -3633,10 +3628,7 @@ def _verification_report_lines(report: VerificationReport) -> list[str]:
         if finding.source_refs:
             lines.append(f"finding_source_refs\t{casilla}\t{', '.join(finding.source_refs)}")
     if not report.granted_verificado_completo:
-        lines.append(
-            f"next_action\taeat app modelo work verification-report list"
-            f" {report.calculation_revision_id}"
-        )
+        lines.append(f"next_action\taeat app modelo work verification-report list {report.calculation_revision_id}")
     return lines
 
 
@@ -4189,9 +4181,7 @@ def verification_report_show(
     from ._common import _emit_envelope
     from ._modelo_payloads import VerificationReportShowResult
 
-    result = VerificationReportShowResult.model_validate(
-        _verification_report_payload(report).model_dump(mode="python")
-    )
+    result = VerificationReportShowResult.model_validate(_verification_report_payload(report).model_dump(mode="python"))
     lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
     _emit_envelope(ctx, command="modelo.verification_report.view", result=result, lines=lines)
 
@@ -5233,9 +5223,7 @@ def modelo_project(
     profile_date_bindings: dict[str, date] = {}
     profile_enum_bindings: dict[str, str] = {}
     if _bucket_for_profile is not None:
-        _caller_owned = (
-            set(extra_bindings) | set(extra_enum_bindings) | set(m100_inputs)
-        )
+        _caller_owned = set(extra_bindings) | set(extra_enum_bindings) | set(m100_inputs)
         _profile_result = resolve_profile_sourced_bindings(
             m100_snapshot,
             bucket_id=_bucket_for_profile,
@@ -5889,9 +5877,15 @@ def _maritime_facts_from_active_profile():
 
     return MaritimeWorkerFacts(
         worker_class=_enum("maritime_worker.worker_class"),
-        vessel_flag=_enum("maritime_worker.vessel_flag"),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: _enum returns str|None from raw profile fact; Literal field type is validated by MaritimeWorkerFacts dataclass at construction  # type: ignore[arg-type]
-        waters_type=_enum("maritime_worker.waters_type"),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
-        vessel_registry=_enum("maritime_worker.vessel_registry"),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
+        vessel_flag=_enum(
+            "maritime_worker.vessel_flag"
+        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: _enum returns str|None from raw profile fact; Literal field type is validated by MaritimeWorkerFacts dataclass at construction  # type: ignore[arg-type]
+        waters_type=_enum(
+            "maritime_worker.waters_type"
+        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
+        vessel_registry=_enum(
+            "maritime_worker.vessel_registry"
+        ),  # CAST-RATIONALE-MARITIME-LITERAL-FIELD: same as vessel_flag  # type: ignore[arg-type]
         tuna_fleet=_bool("maritime_worker.tuna_fleet"),
         pending_eu_clearance=_bool("maritime_worker.pending_eu_clearance"),
         retmar_registered=_bool("maritime_worker.retmar_registered"),

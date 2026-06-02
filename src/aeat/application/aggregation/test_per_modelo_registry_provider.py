@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ...core.resources import resources
 from . import (
     CounterpartObservation,
     OperationKind349,
@@ -14,7 +15,6 @@ from . import (
     resolve_per_modelo_registry_binding_values,
 )
 from ._counterpart import CounterpartSourceKind
-from ...core.resources import resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

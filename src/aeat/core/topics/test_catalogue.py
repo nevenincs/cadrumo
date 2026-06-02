@@ -7,11 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from ...core.resources import resources
-
+from ..resources import resources
 from . import TopicCatalogue, TopicNotFoundError
 
-pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _TOPICS_PACKAGE_ROOT = Path(__file__).parent
 
@@ -67,7 +66,7 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
     entries for at least the default ``es`` locale so the CLI does
     not render bare keys.
     """
-    from ...core.i18n import tr
+    from ..i18n import tr
 
     catalogue = resources().topics.singleton
     for topic in catalogue.topics:

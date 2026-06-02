@@ -15,7 +15,6 @@ import pytest
 from .....core.config import override_settings
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....tests import FIXTURES_DIR
-
 from .. import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

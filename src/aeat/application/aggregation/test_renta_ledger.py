@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.resources import resources
 from ...domain.categories import SpendingCategory
 from ...domain.invoices import (
     Invoice,
@@ -32,7 +33,6 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...core.resources import resources
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     AggregationValidationError,

@@ -27,7 +27,6 @@ from datetime import date
 import pytest
 
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
-
 from ...domain.deadlines._models import IVARegime
 from ...domain.deadlines.taxpayer_model import (
     EntityType,

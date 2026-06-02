@@ -22,12 +22,11 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
-from .....core.time import now
-
 from .....core.config import Settings, load_settings
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.time import now
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session

@@ -14,9 +14,8 @@ import re
 from contextlib import nullcontext
 from pathlib import Path
 
-from .....core.time import now
-
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.time import now
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket

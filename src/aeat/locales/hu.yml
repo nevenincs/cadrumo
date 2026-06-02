@@ -136,6 +136,9 @@ adapters:
     justificante:
       errors:
         parse_failed: 'Nem sikerült elemezni az igazolás PDF-et. A forrás elérési útja ki lett takarva a diagnosztikából.'
+    pdf:
+      errors:
+        hash_failed: 'Nem sikerült kiszámítani a PDF ellenőrzőösszegét.'
   sede:
     errors:
       cotejo_nav_failed: Az AEAT cotejo oldalra való navigáció sikertelen volt; a

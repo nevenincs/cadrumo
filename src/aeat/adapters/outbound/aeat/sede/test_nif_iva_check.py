@@ -14,6 +14,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.config import Settings
+from .....domain.calculations.registry import RegistryValidationError
 from ._nif_iva_check import (
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     NifIvaCheckObservation,
@@ -23,8 +25,6 @@ from ._nif_iva_check import (
     extract_verdict_from_response_text,
     is_aeat_auth_gate_redirect,
 )
-from .....core.config import Settings
-from .....domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -104,7 +104,7 @@ def test_observation_model_rejects_empty_nif() -> None:
 def test_observation_model_is_frozen() -> None:
     observation = NifIvaCheckObservation(nif="DE111", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(observation, "nif", "FR222")
+        observation.nif = "FR222"
 
 
 def test_result_model_defaults_to_empty_observations() -> None:

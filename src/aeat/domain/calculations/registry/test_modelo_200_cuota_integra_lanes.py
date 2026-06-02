@@ -29,16 +29,16 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-from . import build_snapshot, calculate_registry_snapshot, load_registry_tree
-from .applicability import (
-    Modelo202Modality,
-    derive_modelo_202_modality,
-)
 from ...deadlines import (
     EntityType,
     IVARegime,
     LegalEntityForm,
     TaxpayerProfile,
+)
+from . import build_snapshot, calculate_registry_snapshot, load_registry_tree
+from .applicability import (
+    Modelo202Modality,
+    derive_modelo_202_modality,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

@@ -13,9 +13,8 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from ......core.time import now
-
 from ......core.logging import get_logger
+from ......core.time import now
 from .._errors import AuthConfigurationError
 from ._base import _CertBackend
 

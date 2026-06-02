@@ -32,13 +32,6 @@ from pathlib import Path
 
 import pytest
 
-from . import (
-    OssIossLedgerCandidate,
-    aggregate_oss_ioss_bindings,
-    validate_oss_ioss_observation,
-    validate_oss_ioss_observations,
-)
-from ._errors import AggregationValidationError
 from ...core.paths import PROJECT_ROOT
 from ...core.resources import resources
 from ...domain.calculations.registry import (
@@ -53,6 +46,13 @@ from ...domain.iva import (
     OssIossRegime,
     TransactionKind,
 )
+from . import (
+    OssIossLedgerCandidate,
+    aggregate_oss_ioss_bindings,
+    validate_oss_ioss_observation,
+    validate_oss_ioss_observations,
+)
+from ._errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -126,7 +126,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(candidate, "base_amount", Decimal("200"))
+        candidate.base_amount = Decimal("200")
 
 
 def test_candidate_rejects_negative_amounts() -> None:

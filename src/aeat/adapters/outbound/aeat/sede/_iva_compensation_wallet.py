@@ -489,13 +489,16 @@ async def _submit_wallet_execute_gate_if_present(
             failure_mode=SedeFailureMode.BROWSER_BACKEND_FAILED,
         )
     try:
-        html = await content()
+        html, result = await _wait_for_wallet_execute_initial_shape(
+            content=content,
+            expected_path=expected_path,
+            timeout_ms=settings.aeat_browser_navigation_timeout_ms,
+        )
     except PlaywrightError as exc:
         raise SedeNavigationError(
             "AEAT IVA wallet execute gate could not be inspected",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         ) from exc
-    result = _wallet_execute_gate_status(html, expected_path=expected_path)
     if result == "unexpected-wallet-form":
         raise SedeNavigationError(
             "AEAT IVA wallet form action did not match the expected wallet surface",
@@ -557,6 +560,32 @@ async def _submit_wallet_execute_gate_if_present(
             ) from exc
         return True
     return False
+
+
+async def _wait_for_wallet_execute_initial_shape(
+    *,
+    content,
+    expected_path: str,
+    timeout_ms: int,
+) -> tuple[str, str]:
+    deadline = now().timestamp() + timeout_ms / 1000
+    last_html = await content()
+    last_status = _wallet_execute_gate_status(last_html, expected_path=expected_path)
+    while now().timestamp() < deadline:
+        html = await content()
+        status = _wallet_execute_gate_status(html, expected_path=expected_path)
+        last_html = html
+        last_status = status
+        if status in {
+            "wallet-execute-submit-present",
+            "unexpected-wallet-form",
+            "no-wallet-execute-submit",
+        }:
+            return html, status
+        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(BeautifulSoup(html, "html.parser")):
+            return html, status
+        await asyncio.sleep(0.5)
+    return last_html, last_status
 
 
 async def _wait_for_wallet_execute_terminal_shape(

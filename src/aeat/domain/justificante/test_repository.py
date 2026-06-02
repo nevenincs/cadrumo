@@ -16,9 +16,9 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
 )
 from ...adapters.persistence.storage.errors import ClassificationError
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._repository import JustificanteRepository
 from ._schema import Justificante
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

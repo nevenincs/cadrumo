@@ -266,26 +266,20 @@ class TestParseRowSpecM347:
 class TestValidateM347Threshold:
     def test_above_threshold_passes(self) -> None:
         """A contraparte row with total > €3,005.06 passes validation."""
-        rows = (
-            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.07")),
-        )
+        rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.07")),)
         _validate_m347_threshold(rows)  # Must not raise
 
     def test_exactly_threshold_rejected(self) -> None:
         """A total equal to €3,005.06 is rejected (must exceed, not equal).
 
         Oracle: RD 1065/2007 art. 31.1 — 'supere' (exceed), not 'iguale'."""
-        rows = (
-            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.06")),
-        )
+        rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.06")),)
         with pytest.raises(typer.BadParameter, match="3005.06"):
             _validate_m347_threshold(rows)
 
     def test_below_threshold_rejected(self) -> None:
         """A total below €3,005.06 is rejected."""
-        rows = (
-            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("1000")),
-        )
+        rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("1000")),)
         with pytest.raises(typer.BadParameter, match="threshold"):
             _validate_m347_threshold(rows)
 
@@ -373,14 +367,35 @@ class TestRevisionViewSurfacesDetailRows:
 
         setup = self._run_cli(
             tmp_path,
-            ["config", "profile", "create", "cb", "--tax-id", "E12345674",
-             "--legal-entity-form", "sociedad_civil_mercantil", "--quiet"],
+            [
+                "config",
+                "profile",
+                "create",
+                "cb",
+                "--tax-id",
+                "E12345674",
+                "--legal-entity-form",
+                "sociedad_civil_mercantil",
+                "--quiet",
+            ],
         )
         assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
         created = self._run_cli(
             tmp_path,
-            ["app", "modelo", "work", "create", "--modelo", "184", "--year", "2024",
-             "--period", "0A", "--revision", "2015-y-siguientes"],
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "184",
+                "--year",
+                "2024",
+                "--period",
+                "0A",
+                "--revision",
+                "2015-y-siguientes",
+            ],
         )
         assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
         listing = self._run_cli(tmp_path, ["app", "modelo", "work", "list"])
@@ -389,9 +404,17 @@ class TestRevisionViewSurfacesDetailRows:
         work_unit_id = wid_match.group(0)
         calc = self._run_cli(
             tmp_path,
-            ["app", "modelo", "work", "calculate", work_unit_id,
-             "--row", "miembro nif=45678912S porcentaje=60 importe=10000",
-             "--row", "miembro nif=00000001R porcentaje=40 importe=5000"],
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--row",
+                "miembro nif=45678912S porcentaje=60 importe=10000",
+                "--row",
+                "miembro nif=00000001R porcentaje=40 importe=5000",
+            ],
         )
         assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
 

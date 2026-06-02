@@ -6,6 +6,7 @@ from decimal import Decimal
 
 import pytest
 
+from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 from ._foreign_assets import (
     ForeignAssetClass,
     ForeignAssetClassRollup,
@@ -14,7 +15,6 @@ from ._foreign_assets import (
     aggregate_foreign_assets_720,
     declarable_class,
 )
-from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

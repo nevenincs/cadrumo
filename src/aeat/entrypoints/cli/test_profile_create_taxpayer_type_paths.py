@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from . import app as root_app
 from ...tests.secure_sql import isolated_profile_storage_root
+from . import app as root_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

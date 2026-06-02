@@ -21,7 +21,6 @@ from ..adapters.persistence.storage.sql.secure_objects import SecureObjectReposi
 from ..core.classification import SensitivityClass
 from ..core.config import override_settings
 from ..tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-
 from .diagnostics import (
     ConfigRepairReport,
     DiagnosticCheck,
@@ -187,7 +186,6 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
         SiteHealthState,
         SiteHealthStatus,
     )
-
     from .diagnostics import render_browser_connectivity_text
 
     status = SiteHealthStatus(
@@ -620,9 +618,8 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from .wizard._status import WizardStatusReport
-
     from .diagnostics import _profile_check
+    from .wizard._status import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -654,9 +651,8 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from .wizard._status import WizardStatusReport
-
     from .diagnostics import _profile_check
+    from .wizard._status import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -723,8 +719,8 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     problem rather than a profile gap.
     """
 
-    from .diagnostics import _registry_cross_domain_integrity_check
     from ..core.resources import bundled_path
+    from .diagnostics import _registry_cross_domain_integrity_check
 
     check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
@@ -743,7 +739,6 @@ def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
     """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
 
     from ..core.errors import ERROR_REGISTRY, get_registered_error_code
-
     from ._errors import DiagnosticModelError
 
     code = get_registered_error_code(DiagnosticModelError)
@@ -755,7 +750,6 @@ def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> No
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 
     from ..core.errors import build_error_envelope
-
     from ._errors import DiagnosticModelError
 
     err = DiagnosticModelError("invariant violated")

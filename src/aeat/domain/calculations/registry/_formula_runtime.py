@@ -1246,7 +1246,6 @@ def read_parameter(
     is not registered, or if the date context selects 0 or >1 dated values.
     """
     from ....core.resources import bundled_path
-
     from ._authority import ValidatedRegistryAuthority
 
     root = registry_root if registry_root is not None else bundled_path("registry", "aeat")

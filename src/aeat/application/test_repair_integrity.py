@@ -26,6 +26,9 @@ from ..adapters.persistence.storage.master_key._active_session import _active_se
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..core.classification import SensitivityClass
+from ..core.config import override_settings
+from ..tests.secure_sql import isolated_runtime_profile
 from .repair_integrity import (
     _REPAIR_DECISION_NAMESPACE,
     RepairIntegrityError,
@@ -35,9 +38,6 @@ from .repair_integrity import (
     build_repair_list_report,
     repair_remediation_decision_id,
 )
-from ..core.classification import SensitivityClass
-from ..core.config import override_settings
-from ..tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

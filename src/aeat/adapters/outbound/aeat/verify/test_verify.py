@@ -12,12 +12,12 @@ from pathlib import Path
 
 import pytest
 
+from .....domain.calculations.registry import RegistryValidationError
 from .. import verify as verify_module
 from . import (
     VerifyBrowserKeyboardLike,
     verify_csv,
 )
-from .....domain.calculations.registry import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -227,8 +227,8 @@ def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
     """build_error_envelope must produce a valid ErrorEnvelope for BrowserAdapterTypeError
     without raising — confirming the registry binding covers the full envelope pipeline.
     """
-    from ..sede._errors import BrowserAdapterTypeError
     from .....core.errors import build_error_envelope
+    from ..sede._errors import BrowserAdapterTypeError
 
     exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type: <class 'object'>")
     envelope = build_error_envelope(exc)

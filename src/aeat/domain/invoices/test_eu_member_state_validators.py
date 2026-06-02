@@ -11,13 +11,13 @@ from __future__ import annotations
 
 import pytest
 
+from ..iva import EUMemberState
 from ._validators import (
     EU_MEMBER_STATE_CODES,
     assert_eu_member_state_code,
     is_eu_member_state_code,
     validate_country_code,
 )
-from ..iva import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

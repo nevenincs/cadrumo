@@ -34,7 +34,6 @@ from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from .....core._models import STRICT_FROZEN_CONFIG
-
 from .....core.config import CertificateBackend
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger

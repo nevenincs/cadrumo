@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from .__main__ import app
 from ..tests.secure_sql import isolated_runtime_profile
+from .__main__ import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

@@ -19,9 +19,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ......core.time import now
-
 from ......core.logging import get_logger
+from ......core.time import now
 from ._base import CERTIFICATE_CONTEXT_MARKER, _CertBackend
 from ._httpx_fallback import HttpxFallbackBackend
 

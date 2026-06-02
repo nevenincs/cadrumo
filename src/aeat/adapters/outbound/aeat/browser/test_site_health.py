@@ -21,7 +21,6 @@ import pytest
 from pydantic import ValidationError
 
 from .....tests import FIXTURES_DIR
-
 from . import (
     SiteHealthEvidence,
     SiteHealthState,

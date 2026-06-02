@@ -32,6 +32,7 @@ from ...application.modelo import (
     list_work_units,
     rename_work_unit,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from ._errors import ModeloValidationError
 from ._repository import (
     WorkUnitCatalogueRepository,
@@ -44,7 +45,6 @@ from ._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
-from ...tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -195,7 +195,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "updated_at": _T0,
                 "unknown_axis": "extra-value",
             }
-    )
+        )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         unit.name = "renamed"
 
@@ -351,12 +351,22 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
 
 def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository) -> None:
     create_work_unit(
-        bucket_id="bucket-A", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="bucket-A",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     create_work_unit(
-        bucket_id="bucket-B", modelo="303", filing_year=2026, period="2T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="bucket-B",
+        modelo="303",
+        filing_year=2026,
+        period="2T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     only_a = list_work_units(bucket_id="bucket-A", repository=repo)
     assert len(only_a) == 1
@@ -372,8 +382,13 @@ def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepositor
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: WorkUnitCatalogueRepository) -> None:
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     later = datetime(2026, 2, 1, 12, 0, 0, tzinfo=UTC)
     renamed = rename_work_unit(
@@ -406,8 +421,13 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
     metadata captured (actor + reason + timestamp)."""
 
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
     discarded = discard_work_unit(
@@ -427,8 +447,13 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
 
 def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueRepository) -> None:
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     discarded = discard_work_unit(
         original.work_unit_id,
@@ -452,8 +477,13 @@ def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogue
     timestamp so the operator can correlate."""
 
     unit = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     discard_work_unit(
         unit.work_unit_id,
@@ -476,8 +506,13 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
     the operator can correct course (create a fresh work unit)."""
 
     unit = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     discard_work_unit(
         unit.work_unit_id,
@@ -491,12 +526,22 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
 
 def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     unit_to_discard = create_work_unit(
-        bucket_id="default", modelo="130", filing_year=2026, period="1T",
-        revision_id="2019-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     discard_work_unit(
         unit_to_discard.work_unit_id,
@@ -510,12 +555,22 @@ def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRe
 
 def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="1T",
-        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     unit_to_discard = create_work_unit(
-        bucket_id="default", modelo="130", filing_year=2026, period="1T",
-        revision_id="2019-y-siguientes", repository=repo, clock=_T0,
+        bucket_id="default",
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+        repository=repo,
+        clock=_T0,
     )
     discard_work_unit(
         unit_to_discard.work_unit_id,
@@ -590,9 +645,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     # _namespace_registry.py is the centralised namespace declaration table;
     # it legitimately holds every storage namespace string as a registry entry
     # and is not a competing storage location.
-    canonical_namespace_registry = (
-        source_root / "adapters" / "persistence" / "storage" / "_namespace_registry.py"
-    )
+    canonical_namespace_registry = source_root / "adapters" / "persistence" / "storage" / "_namespace_registry.py"
     forbidden_namespace = '"aeat.domain.modelos.work_units"'
     offenders = []
     for py_file in source_root.rglob("*.py"):

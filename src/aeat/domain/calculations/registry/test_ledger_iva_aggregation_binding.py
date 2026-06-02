@@ -16,6 +16,11 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import resources
+from ...iva import (
+    IvaCategory,
+    IvaFlowDirection,
+    IvaRateKind,
+)
 from . import (
     CasillaObservation,
     DataBindingDefinition,
@@ -30,11 +35,6 @@ from . import (
     resolve_previous_filing_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
-)
-from ...iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    IvaRateKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -421,4 +421,4 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(obs, "iva_amount", Decimal("999"))
+        obs.iva_amount = Decimal("999")

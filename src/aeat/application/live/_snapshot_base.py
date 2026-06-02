@@ -41,13 +41,12 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
+from ...core.time import now
 from ._errors import LiveApplicationInputError
 
 
@@ -146,38 +145,24 @@ def enforce_snapshot_state_invariants(
     Domain-specific Pydantic model validators wrap this helper so the same
     rules apply across Borrador100, Censo, and future stateful services.
     """
-    discard_metadata_present = (
-        discarded_at is not None or bool(discarded_by) or bool(discard_reason)
-    )
+    discard_metadata_present = discarded_at is not None or bool(discarded_by) or bool(discard_reason)
     if state is SnapshotLifecycleState.ACTIVE:
         if has_supersession_pointer:
-            raise LiveApplicationInputError(
-                "active snapshots cannot carry supersession pointers"
-            )
+            raise LiveApplicationInputError("active snapshots cannot carry supersession pointers")
         if discard_metadata_present:
-            raise LiveApplicationInputError(
-                "only discarded snapshots can carry discard metadata"
-            )
+            raise LiveApplicationInputError("only discarded snapshots can carry discard metadata")
         return
     if state is SnapshotLifecycleState.SUPERSEDED:
         if not has_supersession_pointer:
-            raise LiveApplicationInputError(
-                "superseded snapshots must carry superseded_by_snapshot_id"
-            )
+            raise LiveApplicationInputError("superseded snapshots must carry superseded_by_snapshot_id")
         if discard_metadata_present:
-            raise LiveApplicationInputError(
-                "only discarded snapshots can carry discard metadata"
-            )
+            raise LiveApplicationInputError("only discarded snapshots can carry discard metadata")
         return
     # DISCARDED
     if has_supersession_pointer:
-        raise LiveApplicationInputError(
-            "discarded snapshots cannot carry supersession pointers"
-        )
+        raise LiveApplicationInputError("discarded snapshots cannot carry supersession pointers")
     if discarded_at is None or not discarded_by.strip():
-        raise LiveApplicationInputError(
-            "discarded snapshots require discarded_at and discarded_by"
-        )
+        raise LiveApplicationInputError("discarded snapshots require discarded_at and discarded_by")
 
 
 class SnapshotService[TPayload: BaseModel](ABC):
@@ -200,14 +185,16 @@ class SnapshotService[TPayload: BaseModel](ABC):
     def __init__(self, *, bucket_id: str, repository: SnapshotRepository[TPayload]) -> None:
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot service bucket_id={bucket_id!r} does not match repository bucket "
-                f"{repository.bucket_id!r}"
+                f"snapshot service bucket_id={bucket_id!r} does not match repository bucket {repository.bucket_id!r}"
             )
         self._repository: SnapshotRepository[TPayload] = repository
 
     # ---- subclass hooks ----------------------------------------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required by this abstract hook contract to allow concrete subclasses to accept caller-specific keyword arguments without a shared typed parameter set.  Each concrete implementation narrows via direct key access; tightening the abstract signature would break the polymorphic dispatch chain.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
+    # **kwargs: Any is required by this abstract hook contract so concrete
+    # subclasses can accept caller-specific keyword arguments without a shared
+    # typed parameter set. Each implementation narrows via direct key access.
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         """Derive a content-addressed id from capture kwargs."""
@@ -254,13 +241,11 @@ class SnapshotService[TPayload: BaseModel](ABC):
             return self._repository.load(snapshot_id)
         candidate = self._build_active_payload(snapshot_id=snapshot_id, **kwargs)
         active_snapshot = self._latest_active_for_axis(candidate)
-        if active_snapshot is not None and self._payload_captured_at(
-            active_snapshot
-        ) > self._payload_captured_at(candidate):
+        if active_snapshot is not None and self._payload_captured_at(active_snapshot) > self._payload_captured_at(
+            candidate
+        ):
             # Late-arriving capture: demote the incoming snapshot to SUPERSEDED.
-            demoted = self._demote_to_superseded(
-                candidate, superseded_by=self._payload_snapshot_id(active_snapshot)
-            )
+            demoted = self._demote_to_superseded(candidate, superseded_by=self._payload_snapshot_id(active_snapshot))
             self._repository.save(demoted)
             return demoted
         self._supersede_current_for_axis(candidate)
@@ -284,9 +269,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
                 and self._payload_axis_key(snapshot) == replacement_axis
                 and self._payload_state(snapshot) is SnapshotLifecycleState.ACTIVE
             ):
-                self._repository.save(
-                    self._demote_to_superseded(snapshot, superseded_by=replacement_id)
-                )
+                self._repository.save(self._demote_to_superseded(snapshot, superseded_by=replacement_id))
 
     def _latest_active_for_axis(self, snapshot: TPayload) -> TPayload | None:
         snapshot_id = self._payload_snapshot_id(snapshot)
@@ -338,28 +321,26 @@ class StatelessSnapshotService[TPayload: BaseModel](ABC):
         repository = self._repository_factory(bucket_id)
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot repository for bucket_id={bucket_id!r} reported "
-                f"bucket {repository.bucket_id!r}"
+                f"snapshot repository for bucket_id={bucket_id!r} reported bucket {repository.bucket_id!r}"
             )
         return repository
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: **kwargs: Any is required by this abstract hook contract to allow concrete subclasses to accept caller-specific keyword arguments without a shared typed parameter set.  Each concrete implementation narrows via direct key access; tightening the abstract signature would break the polymorphic dispatch chain.
+    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH:
+    # **kwargs: Any is required by this abstract hook contract so concrete
+    # subclasses can accept caller-specific keyword arguments without a shared
+    # typed parameter set. Each implementation narrows via direct key access.
     @abstractmethod
     def _derive_snapshot_id(self, **kwargs: Any) -> str: ...
 
     @abstractmethod
-    def _build_payload(
-        self, *, snapshot_id: str, bucket_id: str, **kwargs: Any
-    ) -> TPayload: ...
+    def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> TPayload: ...
 
     def _capture_stateless(self, *, bucket_id: str, **kwargs: Any) -> TPayload:
         repository = self._repository_for(bucket_id)
         snapshot_id = self._derive_snapshot_id(**kwargs)
         if repository.exists(snapshot_id):
             return repository.load(snapshot_id)
-        payload = self._build_payload(
-            snapshot_id=snapshot_id, bucket_id=repository.bucket_id, **kwargs
-        )
+        payload = self._build_payload(snapshot_id=snapshot_id, bucket_id=repository.bucket_id, **kwargs)
         repository.save(payload)
         return payload
 
@@ -510,25 +491,23 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return envelope.payload
 
     def _envelope_cls(self) -> type[Envelope[TPayload]]:
-        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-RUNTIME-GENERIC-SPECIALIZATION: Envelope[self._payload_model] uses an instance attribute as a generic parameter; mypy cannot statically verify runtime-evaluated specialization. Successor epic required.
+        # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-RUNTIME-GENERIC-SPECIALIZATION:
+        # Envelope[self._payload_model] uses an instance attribute as a generic
+        # parameter; mypy cannot verify runtime-evaluated specialization.
         return Envelope[self._payload_model]  # type: ignore[valid-type]
 
 
 def _snapshot_id_of(payload: BaseModel) -> str:
     snapshot_id = getattr(payload, "snapshot_id", None)
     if not isinstance(snapshot_id, str):
-        raise LiveApplicationInputError(
-            f"payload {type(payload).__name__} has no string snapshot_id attribute"
-        )
+        raise LiveApplicationInputError(f"payload {type(payload).__name__} has no string snapshot_id attribute")
     return snapshot_id
 
 
 def _bucket_id_of(payload: BaseModel) -> str:
     bucket_id = getattr(payload, "bucket_id", None)
     if not isinstance(bucket_id, str):
-        raise LiveApplicationInputError(
-            f"payload {type(payload).__name__} has no string bucket_id attribute"
-        )
+        raise LiveApplicationInputError(f"payload {type(payload).__name__} has no string bucket_id attribute")
     return bucket_id
 
 

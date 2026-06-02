@@ -41,6 +41,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.decimal import coerce_decimal as _coerce_decimal
+from ...core.i18n import tr as _tr
 from ...core.time import now
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -55,9 +57,6 @@ from ...domain.calculations.registry.applicability import (
 from ...domain.calculations.registry.applicability import (
     taxpayer_model_is_declared as _taxpayer_model_is_declared,
 )
-
-from ...core.decimal import coerce_decimal as _coerce_decimal
-from ...core.i18n import tr as _tr
 from ...domain.deadlines import (
     DeadlineEngine as _DeadlineEngine,
 )

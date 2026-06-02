@@ -51,15 +51,17 @@ from pathlib import Path
 
 import pytest
 
-from ...application.wizard import _catalogue  # side-effect: registers wizard catalogue
-from ...application.wizard import _persistence  # register project_answers projector at import time
 from ...application.user_profile._repository import UserProfileLifecycleRepository
+from ...application.wizard import (
+    _catalogue,  # side-effect: registers wizard catalogue
+    _persistence,  # register project_answers projector at import time
+)
 from ...core.resources import resources
 from ...domain.calculations.registry import calculate_registry_snapshot
 from ...domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from ._test_envelope import unwrap_schema_envelope as _payload
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ._test_envelope import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

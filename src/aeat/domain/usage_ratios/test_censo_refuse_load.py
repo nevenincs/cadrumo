@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..categories import SpendingCategory
 from . import (
     CensoRatioMismatchError,
@@ -23,7 +24,6 @@ from . import (
     load_usage_ratios_with_censo_guard,
     save_usage_ratios,
 )
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

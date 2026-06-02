@@ -9,7 +9,6 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import bundled_path
-
 from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -186,14 +185,14 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     ledger_iva_aggregation runtime resolver."""
     from decimal import Decimal
 
-    from . import (
-        IvaLedgerObservation,
-        resolve_ledger_iva_aggregation_binding_values,
-    )
     from ...iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,
+    )
+    from . import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
     )
 
     modelo, _ = _load_modelo_303()
@@ -479,8 +478,8 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
 def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
     """The monthly schedule must fire for SII-enrolled profiles and be excluded
     for standard quarterly profiles."""
-    from . import applicable_filing_schedules
     from ...deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
+    from . import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]

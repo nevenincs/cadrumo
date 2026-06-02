@@ -42,7 +42,6 @@ import pdfplumber
 import pytest
 
 from ....core.resources import bundled_path
-
 from ._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

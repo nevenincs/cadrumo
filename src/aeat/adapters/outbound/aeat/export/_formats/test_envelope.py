@@ -12,7 +12,6 @@ from decimal import Decimal
 import pytest
 
 from ......core.external_constants import LATIN_1_ENCODING
-
 from ._deserialise import deserialise_envelope
 from ._record_spec import (
     FieldKind,

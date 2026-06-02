@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from ._records import _utc_now
 from ....core.time import now
+from ._records import _utc_now
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
