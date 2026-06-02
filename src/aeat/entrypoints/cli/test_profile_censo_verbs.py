@@ -29,7 +29,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
 
 
-
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
@@ -191,12 +190,10 @@ def test_apply_emits_censo_applied_bucket_event(cli_runner: CliRunner) -> None:
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.CENSO_APPLIED
-        and event.object_id == active
+        if event.event_type is BucketEventType.CENSO_APPLIED and event.object_id == active
     ]
     assert matching, (
-        f"CENSO_APPLIED must fire after apply; "
-        f"saw {[e.event_type.value for e in catalogue.events.values()]}"
+        f"CENSO_APPLIED must fire after apply; saw {[e.event_type.value for e in catalogue.events.values()]}"
     )
     payload = matching[-1].payload
     assert payload["snapshot_id"] == snapshot_id

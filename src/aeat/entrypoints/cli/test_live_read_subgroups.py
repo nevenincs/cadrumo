@@ -57,7 +57,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-
 def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
     report = LiveAuthPreflightReport(
         provider="clave_movil",
@@ -263,14 +262,12 @@ class TestIvaRemoteStateCliSurface:
         assert "filed_history_succeeded=False" in lines
         assert "wallet_succeeded=False" in lines
         assert any(
-            line.startswith("surface_outcome=filed_history\tstatus=failed\toutcome=no_clave_prompt")
-            for line in lines
+            line.startswith("surface_outcome=filed_history\tstatus=failed\toutcome=no_clave_prompt") for line in lines
         )
         assert any(
             "failure_context=progress={ejercicio:2026,modelo:303,phase:walk_declarations_register}" in line
             for line in lines
         )
         assert any(
-            line.startswith("surface_outcome=wallet_cartera\tstatus=failed\toutcome=no_clave_prompt")
-            for line in lines
+            line.startswith("surface_outcome=wallet_cartera\tstatus=failed\toutcome=no_clave_prompt") for line in lines
         )
