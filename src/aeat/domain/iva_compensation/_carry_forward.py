@@ -25,12 +25,14 @@ from ._errors import (
 
 _ZERO = Decimal("0")
 
+
 class IvaCompensationExpiryReviewState(StrEnum):
     """Review state for an IVA compensation carry-forward lot."""
 
     ACTIVE = "active"
     EXPIRY_REVIEW_DUE = "expiry_review_due"
     EXPIRED_REVIEW_REQUIRED = "expired_review_required"
+
 
 class IvaCompensationPeriodState(BaseModel):
     """Latest known Modelo 303 compensation state for one filed period."""
@@ -53,6 +55,7 @@ class IvaCompensationPeriodState(BaseModel):
     source_observation_key: str = Field(min_length=1, max_length=96)
     source_artefact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
 
+
 class IvaCompensationCarryForwardLot(BaseModel):
     """One generated IVA compensation balance tracked from its source period."""
 
@@ -74,6 +77,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
             raise ValueError("applied_amount + remaining_amount must equal generated_amount")
         return self
 
+
 class IvaCompensationCarryForwardReport(BaseModel):
     """Carry-forward lot projection from filed Modelo 303 compensation history."""
 
@@ -82,6 +86,7 @@ class IvaCompensationCarryForwardReport(BaseModel):
     as_of_year: int = Field(ge=2000, le=2099)
     lots: tuple[IvaCompensationCarryForwardLot, ...]
     unallocated_applied_amount: Decimal = Field(ge=_ZERO)
+
 
 @dataclass(slots=True)
 class _WorkingCarryForwardLot:
@@ -95,6 +100,7 @@ class _WorkingCarryForwardLot:
     remaining_amount: Decimal
     source_observation_key: str
 
+
 def derive_303_compensation_available(*, posterior: Decimal, resultado: Decimal) -> Decimal:
     """Modelo 303 end-of-period available compensation carry-forward.
 
@@ -105,6 +111,7 @@ def derive_303_compensation_available(*, posterior: Decimal, resultado: Decimal)
     """
     generated = max(Decimal("0"), -resultado)
     return posterior + generated
+
 
 def build_iva_compensation_carry_forward_report(
     states: tuple[IvaCompensationPeriodState, ...],
@@ -174,6 +181,7 @@ def build_iva_compensation_carry_forward_report(
         unallocated_applied_amount=unallocated_applied,
     )
 
+
 def enforce_iva_compensation_four_year_window(
     report: IvaCompensationCarryForwardReport,
 ) -> IvaCompensationCarryForwardReport:
@@ -196,6 +204,7 @@ def enforce_iva_compensation_four_year_window(
         )
     return report
 
+
 def _period_sort_key(period: str) -> tuple[int, str]:
     upper = period.upper()
     if upper.endswith("T") and upper[:-1].isdigit():
@@ -205,6 +214,7 @@ def _period_sort_key(period: str) -> tuple[int, str]:
     if upper == "0A":
         return (99, upper)
     return (100, upper)
+
 
 def _expiry_review_state(
     *,
@@ -217,6 +227,7 @@ def _expiry_review_state(
     if age_years == 4:
         return IvaCompensationExpiryReviewState.EXPIRY_REVIEW_DUE
     return IvaCompensationExpiryReviewState.ACTIVE
+
 
 __all__ = [
     "IvaCompensationCarryForwardLot",
