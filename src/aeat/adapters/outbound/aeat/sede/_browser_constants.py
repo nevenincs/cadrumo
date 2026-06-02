@@ -8,7 +8,7 @@ analysis rather than duplicated across every navigation module.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Literal
 
 from .....core.config import load_settings
 from .....core.external_constants import LATIN_1_ENCODING
@@ -18,11 +18,11 @@ if TYPE_CHECKING:
 
 #: Playwright wait state that resolves as soon as the HTML document has
 #: been parsed and the DOM is ready (no sub-resources awaited).
-PLAYWRIGHT_WAIT_DOMCONTENTLOADED: Final[str] = "domcontentloaded"
+PLAYWRIGHT_WAIT_DOMCONTENTLOADED: Final[Literal["domcontentloaded"]] = "domcontentloaded"
 
 #: Playwright wait state that resolves once all pending network requests
 #: have completed or timed out (i.e., the network has gone idle).
-PLAYWRIGHT_WAIT_NETWORKIDLE: Final[str] = "networkidle"
+PLAYWRIGHT_WAIT_NETWORKIDLE: Final[Literal["networkidle"]] = "networkidle"
 
 #: Short Playwright timeout (ms) used for non-critical ``wait_for_load_state`` probes
 #: inside retry loops where proceeding on timeout is the desired behaviour.
