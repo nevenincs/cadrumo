@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from . import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
@@ -24,7 +25,6 @@ from . import (
     StorageProvider,
 )
 from ._local import LocalFileSystemProvider
-from ....core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
