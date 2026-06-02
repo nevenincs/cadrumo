@@ -25,9 +25,7 @@ _CONTEXT = 3
 
 
 def _lines(rel: str) -> list[str]:
-    return (_SRC_ROOT / pathlib.Path(rel.replace("/", os.sep))).read_text(
-        encoding="utf-8"
-    ).splitlines()
+    return (_SRC_ROOT / pathlib.Path(rel.replace("/", os.sep))).read_text(encoding="utf-8").splitlines()
 
 
 def _marker_present_near(lines: list[str], lineno: int) -> bool:
@@ -40,6 +38,7 @@ def _marker_present_near(lines: list[str], lineno: int) -> bool:
 # ---------------------------------------------------------------------------
 # S672 + S673 paydown assertions
 # ---------------------------------------------------------------------------
+
 
 def test_s672_borrador100_entry_removed() -> None:
     """borrador_100.py:276 must not be in the ratchet allowlist (marker added)."""
@@ -69,9 +68,7 @@ def test_s672_conftest_entry_removed() -> None:
     # Confirm no type: ignore remains at that file
     lines = _lines("domain/calculations/registry/conftest.py")
     for line in lines:
-        assert "type: ignore" not in line, (
-            f"conftest.py still contains a type: ignore: {line!r}"
-        )
+        assert "type: ignore" not in line, f"conftest.py still contains a type: ignore: {line!r}"
 
 
 def test_s673_modelo_entry_removed() -> None:
@@ -98,14 +95,13 @@ def test_allowlist_size_is_7() -> None:
 # S674 hard-deferred marker presence assertions
 # ---------------------------------------------------------------------------
 
+
 def test_s674_snapshot_base_marker() -> None:
     """_snapshot_base.py line 512 (Envelope specialization) carries HARD-DEFERRED marker."""
     lines = _lines("application/live/_snapshot_base.py")
     # The type: ignore is on the Envelope[self._payload_model] line
     type_ignore_lineno = next(
-        i + 1
-        for i, line in enumerate(lines)
-        if "Envelope[self._payload_model]" in line and "type: ignore" in line
+        i + 1 for i, line in enumerate(lines) if "Envelope[self._payload_model]" in line and "type: ignore" in line
     )
     assert _marker_present_near(lines, type_ignore_lineno), (
         f"_snapshot_base.py:{type_ignore_lineno}: missing HARD-DEFERRED marker within {_CONTEXT} lines"
@@ -133,26 +129,21 @@ def test_s674_adapters_markers(snippet: str) -> None:
     # Find the type: ignore line (may be on same line or following line)
     for lineno in matching:
         window_start = max(0, lineno - 1 - _CONTEXT)
-        window = lines[window_start : lineno]
+        window = lines[window_start:lineno]
         if any(_HARD_DEFERRED_TOKEN in l for l in window):
             return
         # Also check the line itself
         if _HARD_DEFERRED_TOKEN in lines[lineno - 1]:
             return
     raise AssertionError(
-        f"_adapters.py: HARD-DEFERRED marker missing near lines containing {snippet!r} "
-        f"(found at lines {matching})"
+        f"_adapters.py: HARD-DEFERRED marker missing near lines containing {snippet!r} (found at lines {matching})"
     )
 
 
 def test_s674_event_marker() -> None:
     """_event.py __iter__ override carries HARD-DEFERRED marker."""
     lines = _lines("domain/buckets/_event.py")
-    type_ignore_lineno = next(
-        i + 1
-        for i, line in enumerate(lines)
-        if "__iter__" in line and "type: ignore" in line
-    )
+    type_ignore_lineno = next(i + 1 for i, line in enumerate(lines) if "__iter__" in line and "type: ignore" in line)
     assert _marker_present_near(lines, type_ignore_lineno), (
         f"_event.py:{type_ignore_lineno}: missing HARD-DEFERRED marker within {_CONTEXT} lines"
     )
@@ -162,9 +153,7 @@ def test_s674_app_live_marker() -> None:
     """_app_live.py _borrador_row splat carries HARD-DEFERRED marker."""
     lines = _lines("entrypoints/cli/_app_live.py")
     type_ignore_lineno = next(
-        i + 1
-        for i, line in enumerate(lines)
-        if "_borrador_row(record)" in line and "type: ignore" in line
+        i + 1 for i, line in enumerate(lines) if "_borrador_row(record)" in line and "type: ignore" in line
     )
     assert _marker_present_near(lines, type_ignore_lineno), (
         f"_app_live.py:{type_ignore_lineno}: missing HARD-DEFERRED marker within {_CONTEXT} lines"
@@ -174,6 +163,7 @@ def test_s674_app_live_marker() -> None:
 # ---------------------------------------------------------------------------
 # Ratchet green-pass assertion
 # ---------------------------------------------------------------------------
+
 
 def test_ratchet_passes() -> None:
     """The main ratchet test must report zero new violations."""

@@ -23,15 +23,11 @@ def test_apoderamientos_singleton_loads_real_catalogue() -> None:
 
     result = repo.singleton
 
-    assert isinstance(result, ApoderamientosCatalogue), (
-        f"Expected ApoderamientosCatalogue, got {type(result).__name__}"
-    )
+    assert isinstance(result, ApoderamientosCatalogue), f"Expected ApoderamientosCatalogue, got {type(result).__name__}"
     assert repo.singleton is result  # cached identity
     assert len(result.scopes) > 0, "Apoderamientos catalogue must declare at least one scope"
     scope_codes = {s.code for s in result.scopes}
-    assert "GENERALNT" in scope_codes, (
-        f"Expected canonical 'GENERALNT' scope in catalogue; got codes: {scope_codes}"
-    )
+    assert "GENERALNT" in scope_codes, f"Expected canonical 'GENERALNT' scope in catalogue; got codes: {scope_codes}"
     first = result.scopes[0]
     assert first.code, "Scope must have a non-empty code"
     assert first.name_es, "Scope must have a non-empty Spanish name"
@@ -44,21 +40,13 @@ def test_user_profile_singleton_loads_real_schema() -> None:
 
     result = repo.singleton
 
-    assert isinstance(result, ProfileSchemaDefinition), (
-        f"Expected ProfileSchemaDefinition, got {type(result).__name__}"
-    )
+    assert isinstance(result, ProfileSchemaDefinition), f"Expected ProfileSchemaDefinition, got {type(result).__name__}"
     assert repo.singleton is result
-    assert result.id == "aeat.user_profile", (
-        f"Expected schema id 'aeat.user_profile', got {result.id!r}"
-    )
+    assert result.id == "aeat.user_profile", f"Expected schema id 'aeat.user_profile', got {result.id!r}"
     assert result.version >= 1, "Schema version must be a positive integer"
     section_keys = {s.key for s in result.sections}
-    assert "identity" in section_keys, (
-        f"Expected 'identity' section in user profile schema; got: {section_keys}"
-    )
-    assert len(result.sections) >= 5, (
-        f"Expected at least 5 sections in user profile schema, got {len(result.sections)}"
-    )
+    assert "identity" in section_keys, f"Expected 'identity' section in user profile schema; got: {section_keys}"
+    assert len(result.sections) >= 5, f"Expected at least 5 sections in user profile schema, got {len(result.sections)}"
 
 
 def test_topics_singleton_loads_real_catalogue() -> None:
@@ -68,9 +56,7 @@ def test_topics_singleton_loads_real_catalogue() -> None:
 
     result = repo.singleton
 
-    assert isinstance(result, TopicCatalogue), (
-        f"Expected TopicCatalogue, got {type(result).__name__}"
-    )
+    assert isinstance(result, TopicCatalogue), f"Expected TopicCatalogue, got {type(result).__name__}"
     assert len(result.topics) > 0, "Topic catalogue must contain at least one topic"
     assert repo.singleton is result  # cached identity
 
