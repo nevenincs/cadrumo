@@ -35,6 +35,7 @@ from ....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 
+
 class StorageRuntimeReadinessCode(StrEnum):
     """Machine-readable secure-storage runtime readiness states."""
 
@@ -46,6 +47,7 @@ class StorageRuntimeReadinessCode(StrEnum):
     ROUTE_NOT_ACTIVE_BUCKET = "route_not_active_bucket"
     ROUTE_BUCKET_MISMATCH = "route_bucket_mismatch"
 
+
 class StorageRuntimeReadinessIssue(BaseModel):
     """One reason the runtime is not ready for profile-bound storage."""
 
@@ -54,6 +56,7 @@ class StorageRuntimeReadinessIssue(BaseModel):
     code: StorageRuntimeReadinessCode
     message_key: str = Field(min_length=1)
     message: str = Field(min_length=1)
+
 
 class StorageRuntimeSession(BaseModel):
     """Key-material-free projection of the active bucket session."""
@@ -66,6 +69,7 @@ class StorageRuntimeSession(BaseModel):
     expired: bool
     unsecured_backend: bool
 
+
 class StorageRuntimeReadiness(BaseModel):
     """Profile-bound storage readiness result."""
 
@@ -74,6 +78,7 @@ class StorageRuntimeReadiness(BaseModel):
     ready: bool
     code: StorageRuntimeReadinessCode
     issues: tuple[StorageRuntimeReadinessIssue, ...] = ()
+
 
 class StorageRuntime(BaseModel):
     """Current secure-storage runtime state.
@@ -158,6 +163,7 @@ class StorageRuntime(BaseModel):
                 message_key="errors.storage.runtime.session_changed",
             )
 
+
 def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
     from ....core.i18n import tr
 
@@ -167,6 +173,7 @@ def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValida
         translated_message="errors.storage.runtime.not_ready",
     )
 
+
 def _readiness_issue(
     *,
     code: StorageRuntimeReadinessCode,
@@ -174,6 +181,7 @@ def _readiness_issue(
     message_key: str,
 ) -> StorageRuntimeReadinessIssue:
     return StorageRuntimeReadinessIssue(code=code, message=message, message_key=message_key)
+
 
 def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
     from ....core.i18n import tr
@@ -184,12 +192,14 @@ def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) 
         return tr("errors.storage.runtime.no_detail", locale=locale)
     return "; ".join(rendered)
 
+
 def _settings_output_language() -> str:
     """Resolve locale without consulting active-profile storage."""
     try:
         return load_settings().aeat_output_language
     except (AttributeError, KeyError, ValueError):
         return "es"
+
 
 def inspect_storage_runtime(
     settings: Settings | None = None,
@@ -295,6 +305,7 @@ def inspect_storage_runtime(
         ),
     )
 
+
 def inspect_bucket_storage_runtime(
     bucket_id: str,
     settings: Settings | None = None,
@@ -319,6 +330,7 @@ def inspect_bucket_storage_runtime(
         return inspect_storage_runtime(resolved, now=now)
     bucket_settings = settings_for_active_profile_bucket(trimmed, resolved)
     return inspect_storage_runtime(bucket_settings, now=now)
+
 
 __all__ = [
     "StorageRuntime",
