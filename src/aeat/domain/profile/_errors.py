@@ -1,17 +1,17 @@
-"""Domain errors for the contribuyente tax-residence profile and ledgers.
+"""Domain errors for the contribuyente tax-residence profile.
 
 Defines :class:`TaxResidenceProfileError` and its concrete failures
-surfaced to RENTA verification, plus the inventory/amortizacion
-ledger error hierarchy (:class:`InventoryLedgerError`,
-:class:`AmortizacionLedgerError` and their subclasses). The asset-ledger
-errors live with their records in :mod:`aeat.domain.profile.assets`.
-Every class derives from :class:`aeat.core.errors.AeatError`
-so the shared error-code registration hook applies.
+surfaced to RENTA verification, plus :class:`ProfileKeysRegistrationError`
+for the profile-key registry. The ledger error hierarchies live with their
+records in :mod:`aeat.domain.profile.assets` (asset) and
+:mod:`aeat.domain.profile.inventory` (inventory and amortizacion). Every
+class derives from :class:`aeat.core.errors.AeatError` so the shared
+error-code registration hook applies.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreError, CoreValidationError
+from ...core.errors import AeatError, CoreError
 
 
 class TaxResidenceProfileError(AeatError):
@@ -82,54 +82,8 @@ class ProfileKeysRegistrationError(CoreError):
         )
 
 
-class AmortizacionLedgerError(AeatError):
-    """Raised when an amortizacion ledger operation is invalid."""
-
-
-class InventoryLedgerError(AeatError):
-    """Raised when an inventory ledger operation is invalid."""
-
-
-class InventoryValidationError(InventoryLedgerError, CoreValidationError):
-    """Raised when an inventory ledger fails Pydantic validation.
-
-    Inherits from CoreValidationError (which itself inherits from CoreError
-    and ValueError) to participate in the shared CoreValidationError catch
-    surface and remain compatible with pydantic validators.
-    """
-
-
-class LIFOForbiddenError(InventoryLedgerError):
-    """Raised when a caller attempts LIFO inventory valuation.
-
-    LIS art. 17.1 does not admit LIFO for tax-purpose stock valuation
-    in this regime; the message routes the operator to FIFO, PMP, or
-    coste medio.
-    """
-
-    def __init__(self, method: str = "lifo") -> None:
-        """Construct a refusal citing the LIS art. 17 valuation boundary.
-
-        Args:
-            method: User-supplied valuation method.
-        """
-        super().__init__(
-            "LIFO valuation is not admitted for this tax ledger; use FIFO, PMP, or coste_medio per LIS art. 17.1.",
-            context={"method": method, "legal_basis": "LIS art. 17.1"},
-        )
-
-
-class BasisCapExceededError(AmortizacionLedgerError):
-    """Raised when cumulative amortization would exceed cost basis."""
-
-
 __all__ = [
-    "AmortizacionLedgerError",
-    "BasisCapExceededError",
     "ForalRegimeError",
-    "InventoryLedgerError",
-    "InventoryValidationError",
-    "LIFOForbiddenError",
     "ProfileKeysRegistrationError",
     "ProfileNotConfiguredError",
     "ProfileValidationError",

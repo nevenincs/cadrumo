@@ -4,7 +4,7 @@ Defines strict pydantic v2 records for tracking opening stock,
 period movements (purchases, COGS, counts), and closing stock per
 activity / year, plus the FIFO and weighted-average (PMP / coste
 medio) valuation engines required by LIS art. 17.1. LIFO is rejected
-explicitly via :class:`aeat.domain.profile.errors.LIFOForbiddenError`.
+explicitly via :class:`LIFOForbiddenError`.
 
 Public functions:
     :func:`parse_valuation_method` — coerce user input into a
@@ -25,16 +25,50 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core.errors import AeatError, CoreValidationError
 from ....core.money import round_to_cents as _quantize
-from .._errors import (
-    InventoryLedgerError as _InventoryLedgerError,
-)
-from .._errors import (
-    InventoryValidationError as _InventoryValidationError,
-)
-from .._errors import (
-    LIFOForbiddenError as _LIFOForbiddenError,
-)
+
+
+class AmortizacionLedgerError(AeatError):
+    """Raised when an amortizacion ledger operation is invalid."""
+
+
+class InventoryLedgerError(AeatError):
+    """Raised when an inventory ledger operation is invalid."""
+
+
+class InventoryValidationError(InventoryLedgerError, CoreValidationError):
+    """Raised when an inventory ledger fails Pydantic validation.
+
+    Inherits from CoreValidationError (which itself inherits from CoreError
+    and ValueError) to participate in the shared CoreValidationError catch
+    surface and remain compatible with pydantic validators.
+    """
+
+
+class LIFOForbiddenError(InventoryLedgerError):
+    """Raised when a caller attempts LIFO inventory valuation.
+
+    LIS art. 17.1 does not admit LIFO for tax-purpose stock valuation
+    in this regime; the message routes the operator to FIFO, PMP, or
+    coste medio.
+    """
+
+    def __init__(self, method: str = "lifo") -> None:
+        """Construct a refusal citing the LIS art. 17 valuation boundary.
+
+        Args:
+            method: User-supplied valuation method.
+        """
+        super().__init__(
+            "LIFO valuation is not admitted for this tax ledger; use FIFO, PMP, or coste_medio per LIS art. 17.1.",
+            context={"method": method, "legal_basis": "LIS art. 17.1"},
+        )
+
+
+class BasisCapExceededError(AmortizacionLedgerError):
+    """Raised when cumulative amortization would exceed cost basis."""
+
 
 INVENTORY_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
@@ -126,7 +160,7 @@ class MovementRecord(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
         if value != INVENTORY_SCHEMA_VERSION:
-            raise _InventoryValidationError(f"unsupported MovementRecord schema_version {value!r}")
+            raise InventoryValidationError(f"unsupported MovementRecord schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
@@ -134,11 +168,11 @@ class MovementRecord(BaseModel):
         """Enforce that opening / purchase movements carry a cost and IVA decomposes consistently."""
         needs_cost = self.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
         if needs_cost and self.unit_cost is None and self.taxable_base is None:
-            raise _InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
+            raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
         if self.taxable_base is not None:
             computed_iva = _quantize(self.taxable_base * self.iva_rate / _HUNDRED)
             if self.iva_amount is not None and self.iva_amount != computed_iva:
-                raise _InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
+                raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
         return self
 
 
@@ -195,14 +229,14 @@ class InventoryLedger(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
         if value != INVENTORY_SCHEMA_VERSION:
-            raise _InventoryValidationError(f"unsupported InventoryLedger schema_version {value!r}")
+            raise InventoryValidationError(f"unsupported InventoryLedger schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
         if self.opening_layers and _quantize(_layers_value(self.opening_layers)) != _quantize(self.opening_stock):
-            raise _InventoryValidationError("opening_stock must equal the value of opening_layers")
+            raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         return self
 
 
@@ -224,7 +258,7 @@ class InventoryLedgerDocument(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`INVENTORY_SCHEMA_VERSION`."""
         if value != INVENTORY_SCHEMA_VERSION:
-            raise _InventoryValidationError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
+            raise InventoryValidationError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
         return value
 
 
@@ -238,16 +272,16 @@ def parse_valuation_method(raw: str) -> ValuationMethod:
         The matching :class:`ValuationMethod` member.
 
     Raises:
-        _LIFOForbiddenError: When the input normalises to ``"lifo"``.
-        _InventoryLedgerError: When the input matches no known method.
+        LIFOForbiddenError: When the input normalises to ``"lifo"``.
+        InventoryLedgerError: When the input matches no known method.
     """
     normalized = raw.strip().lower().replace("-", "_")
     if normalized == "lifo":
-        raise _LIFOForbiddenError(raw)
+        raise LIFOForbiddenError(raw)
     try:
         return ValuationMethod(normalized)
     except ValueError as exc:
-        raise _InventoryLedgerError(
+        raise InventoryLedgerError(
             f"unknown valuation method {raw!r}; use fifo, pmp, or coste_medio",
             context={"method": raw},
         ) from exc
@@ -334,7 +368,7 @@ def compute_inventory_valuation(ledger: InventoryLedger) -> InventoryValuationRe
         closing valuation, COGS, and purchase totals.
 
     Raises:
-        _InventoryLedgerError: When ``valuation_method`` is not
+        InventoryLedgerError: When ``valuation_method`` is not
             supported (defence-in-depth — should be unreachable as
             LIFO is rejected at parse time).
     """
@@ -342,7 +376,7 @@ def compute_inventory_valuation(ledger: InventoryLedger) -> InventoryValuationRe
         return _compute_fifo(ledger)
     if ledger.valuation_method in {ValuationMethod.PMP, ValuationMethod.COSTE_MEDIO}:
         return _compute_weighted_average(ledger)
-    raise _InventoryLedgerError(f"unsupported valuation method {ledger.valuation_method.value}")
+    raise InventoryLedgerError(f"unsupported valuation method {ledger.valuation_method.value}")
 
 
 def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
@@ -398,7 +432,7 @@ def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResu
             continue
         if movement.kind is MovementKind.COGS:
             if movement.quantity > quantity:
-                raise _InventoryLedgerError(
+                raise InventoryLedgerError(
                     "inventory movement would consume more stock than available",
                     context={
                         "actividad_id": ledger.actividad_id,
@@ -452,7 +486,7 @@ def _consume_fifo(layers: list[StockLayer], movement: MovementRecord) -> tuple[D
         if leftover > _ZERO:
             updated.append(layer.model_copy(update={"quantity": leftover}))
     if remaining > _ZERO:
-        raise _InventoryLedgerError(
+        raise InventoryLedgerError(
             "inventory movement would consume more stock than available",
             context={
                 "movement_id": movement.movement_id,
@@ -466,7 +500,7 @@ def _consume_fifo(layers: list[StockLayer], movement: MovementRecord) -> tuple[D
 def _apply_count(layers: list[StockLayer], movement: MovementRecord) -> list[StockLayer]:
     current_quantity = sum((layer.quantity for layer in layers if layer.sku == movement.sku), _ZERO)
     if movement.quantity > current_quantity:
-        raise _InventoryLedgerError(
+        raise InventoryLedgerError(
             "inventory count cannot increase stock without a purchase movement",
             context={
                 "movement_id": movement.movement_id,
@@ -505,7 +539,12 @@ def _layers_value(layers: tuple[StockLayer, ...] | list[StockLayer]) -> Decimal:
 
 
 __all__ = [
+    "AmortizacionLedgerError",
+    "BasisCapExceededError",
     "InventoryLedger",
+    "InventoryLedgerError",
+    "InventoryValidationError",
+    "LIFOForbiddenError",
     "MovementKind",
     "MovementRecord",
     "StockLayer",
