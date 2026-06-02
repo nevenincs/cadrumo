@@ -149,6 +149,7 @@ _KDF_PARAMS_VERSION: Final[int] = 2
 * v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
 """
 
+
 @runtime_checkable
 class MasterKeyProvider(Protocol):
     """Source of the master key used by every at-rest crypto consumer.

@@ -27,9 +27,7 @@ def test_check_http_error_passes_through_success() -> None:
 def test_check_http_error_429_raises_rate_limit_with_retry_hint() -> None:
     """HTTP 429 raises a rate-limit error carrying the parsed Retry-After hint."""
     with pytest.raises(LLMRateLimitError) as exc:
-        check_http_error(
-            _response(429, {"retry-after": "5"}), provider_name="OpenAI", model="m", logger=_LOGGER
-        )
+        check_http_error(_response(429, {"retry-after": "5"}), provider_name="OpenAI", model="m", logger=_LOGGER)
     assert exc.value.retry_after_seconds == 5.0
 
 
