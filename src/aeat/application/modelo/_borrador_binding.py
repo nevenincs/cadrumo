@@ -101,6 +101,12 @@ def resolve_modelo_100_borrador_bindings(
 ) -> Modelo100BorradorBindingResult:
     """Resolve eligible borrador values into a :class:`Modelo100BorradorBindingResult` for one Modelo 100 calculation.
 
+    Args:
+        command: The borrador binding command carrying the modelo and bucket axes.
+        registry_snapshot: The :class:`RegistrySnapshot` used to verify the
+            borrador capability and select ``aeat_prefilled`` bindings.
+        snapshot_repository: Optional borrador snapshot repository override.
+
     The function is deliberately inert when no snapshot is supplied:
     borrador values are never consumed implicitly. When a snapshot is
     supplied, caller values take precedence and the snapshot may only

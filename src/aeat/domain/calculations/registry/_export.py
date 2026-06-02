@@ -41,6 +41,9 @@ class ResolvedExportLayout(RegistryModel):
 def resolve_export_layout(snapshot: RegistrySnapshot, layout_id: str | None = None) -> ResolvedExportLayout:
     """Resolve one export layout from a validated registry snapshot.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` to resolve the layout from.
+
     Returns:
         The :class:`ResolvedExportLayout` for the selected layout.
     """
@@ -80,6 +83,10 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     declares the record-level intent via ``binding_record`` and this resolver
     derives field coordinates from the binding selectors instead of requiring a
     second coordinate table in TOML.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose export layouts and bindings
+            are used to derive the resolved field coordinates.
 
     Returns:
         Tuple of :class:`ExportLayoutDefinition` with binding-derived fields populated.

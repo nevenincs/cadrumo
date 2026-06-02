@@ -300,6 +300,9 @@ def verify_modelo_parity(
 ) -> ParityReport:
     """Run the full three-way parity verification for one modelo+period.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose calculation surface is verified.
+
     Returns a :class:`ParityReport`.
 
     Side effects:

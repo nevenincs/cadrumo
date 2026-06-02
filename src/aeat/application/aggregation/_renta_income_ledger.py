@@ -179,6 +179,9 @@ def aggregate_renta_income_ledger(
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate INCOMING professional-income transactions into M130 casilla 01.
 
+    Args:
+        transactions: The :class:`TransactionCatalogue` of ledger transactions to aggregate.
+
     Returns a :class:`RentaIncomeLedgerAggregation` covering the
     cumulative fiscal window. ``period`` must be a quarterly period token
     (``{year}Q{n}``). The cumulative window extends from Jan 1 of the

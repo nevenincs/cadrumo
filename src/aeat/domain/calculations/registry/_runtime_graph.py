@@ -141,6 +141,10 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[str]:
     binding into the wrong channel makes the engine raise
     ``binding ... has no supplied value``; this query is the
     authoritative discriminator that prevents that mismatch.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose formula graph is
+            inspected for enum dispatch binding references.
     """
     refs: list[str] = []
     for formula in revision.formulas:
@@ -203,6 +207,10 @@ def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
     across record segments) is omitted — it must be named by the
     canonical ``id``. The canonical ``id`` always wins a collision so
     the canonical handle is never shadowed by an alias.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose casilla identifiers
+            are indexed into the returned alias map.
     """
     canonical_ids = {casilla.id for casilla in revision.casillas}
     number_counts: dict[str, int] = {}
@@ -233,6 +241,9 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
     bare-number reference is matched against the correct casilla
     occurrence. For single-segment modelos the resolution is the
     identity and the ordering is unchanged.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose formulas to topologically sort.
     """
     resolver = _casilla_reference_resolver(revision)
     computed_targets = {resolver.get(formula.target, formula.target) for formula in revision.formulas}

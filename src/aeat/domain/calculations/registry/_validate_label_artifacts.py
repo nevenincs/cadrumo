@@ -34,7 +34,11 @@ class LabelArtifactFinding:
 
 
 def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tuple[LabelArtifactFinding, ...]:
-    """Return :class:`LabelArtifactFinding` items for obvious unresolved label extraction artifacts."""
+    """Return :class:`LabelArtifactFinding` items for obvious unresolved label extraction artifacts.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances whose casilla labels are inspected.
+    """
     findings: list[LabelArtifactFinding] = []
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -54,7 +58,11 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
 
 
 def validate_no_label_artifacts(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-    """Return failures for unresolved casilla label formatting placeholders."""
+    """Return failures for unresolved casilla label formatting placeholders.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` entries to scan.
+    """
     return tuple(
         f"modelo {finding.modelo_id} revision {finding.revision_id} casilla {finding.casilla_id}: "
         f"label contains unresolved {finding.artifact} {finding.placeholder_token!r}: {finding.label!r}"

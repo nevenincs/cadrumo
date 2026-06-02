@@ -325,6 +325,9 @@ class ModeloApplicabilityRule(BaseModel):
         ``APPLICABLE`` / ``NOT_APPLICABLE`` verdict derived from the
         entity-type, income-category, estimation-regime, and
         payer-fact axes.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to evaluate against this rule.
         """
         if profile.entity_type is None:
             return _incomplete_applicability(self.modelo)
@@ -1154,6 +1157,9 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     derived: the engine must report ``INCOMPLETE`` rather than assume
     autónomo. A legal / attribution entity needs no income category;
     the ``entity_type`` alone selects its tax.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` to inspect.
     """
     if profile.entity_type is None:
         return False
@@ -1215,7 +1221,8 @@ def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
     that declared none.
 
     Args:
-        profile: The operator's three-axis taxpayer model.
+        profile: The :class:`TaxpayerProfile` whose ``entity_type``
+            axis selects the tax branch.
 
     Returns:
         The :class:`TaxRoute` branch the profile's ``entity_type``
@@ -1404,8 +1411,11 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
 
     A profile whose entity type is not a Modelo 202 filer (natural
     person, attribution entity, or undeclared) returns INCOMPLETE with
-    a rationale pointing at the entity-type axis — the modality
+    a rationale pointing at the entity-type axis. The modality
     question only meaningfully applies to an IS contribuyente.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` whose INCN and entity type drive the modality verdict.
     """
     if profile.entity_type is None or profile.entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(

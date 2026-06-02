@@ -1404,6 +1404,13 @@ def activate_master_key_provider(
     creation, where the command knows the bucket being provisioned but
     the active-profile pointer does not exist until the transaction
     completes.
+
+    Args:
+        provider: The :class:`MasterKeyProvider` to activate.
+        fallback_bucket_id: Optional bucket identifier used when no active
+            profile pointer is present (bootstrap flows only).
+        allow_bucket_dek_enrollment: When ``True``, a missing per-bucket DEK
+            file is minted on first activation rather than raising.
     """
     _provider_enter(
         provider,
@@ -1518,7 +1525,8 @@ def refuse_unsecured_with_real_nif(
 
     Args:
         tax_id: The operator profile's tax id.
-        provider: The active master-key provider.
+        provider: The active :class:`MasterKeyProvider`. The check is a
+            no-op for any provider that is not :class:`UnsecuredMasterKeyProvider`.
 
     Raises:
         UnsecuredModeRefusedError: When the unsecured backend is active

@@ -86,6 +86,11 @@ def audit_registry_model_law_coverage(
     every revision because the registry cannot be filing-grade without them.
     Executable parity remains a reported gap unless an official safe calculator
     or formula workbook exists for the revision.
+
+    Args:
+        modelos: Iterable of :class:`ModeloDefinition` instances to audit.
+        catalogues: Legal and source catalogues for reference validation.
+        source_root: Filesystem root for resolving source artefacts.
     """
     modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
     RegistryValidator(catalogues, source_root=source_root).validate_registry(modelo_tuple)
@@ -124,6 +129,9 @@ def audit_registry_model_law_coverage(
 
 def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCoverageLedger:
     """Build the four-tier coverage ledger for a validated registry snapshot.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` to assess for model-law coverage.
 
     Returns:
         A :class:`ModelLawCoverageLedger` summarising coverage across all evidence tiers.

@@ -110,6 +110,10 @@ def resolve_relations_from_local_store(
 ) -> RelationValues:
     """Build a :class:`RelationValues` record from the local observation store.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose declared relations are resolved
+            from prior observation records in the local store.
+
     Returns a :class:`RelationValues` whose ``values`` tuple has one
     ``RelationValue`` per relation declared in the snapshot's
     revision, with provenance stamped per entry. Relations the

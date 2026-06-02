@@ -48,7 +48,11 @@ def relation_source_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryRelationSourceRequirement, ...]:
-    """Return :class:`RegistryRelationSourceRequirement` items needed to resolve relations for a filing."""
+    """Return :class:`RegistryRelationSourceRequirement` items needed to resolve relations for a filing.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose relation declarations to inspect.
+    """
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
@@ -117,6 +121,10 @@ def resolve_relation_values(
 
     ``external_outputs`` is keyed by relation id. Aggregation defaults to copy;
     ``{"op": "sum"}`` sums tuple values for annual summaries.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose relation definitions are
+            resolved against the supplied external outputs.
     """
     relations = tuple(_active_relations(revision, period=period))
     relation_ids = {relation.id for relation in relations}
@@ -149,7 +157,11 @@ def resolve_relation_values_from_observations(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve relation values from normalized filed-declaration observations."""
+    """Resolve relation values from normalized filed-declaration observations.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose relation declarations to resolve.
+    """
     available = tuple(observations)
     external_outputs: dict[str, Decimal | tuple[Decimal, ...]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
@@ -180,6 +192,11 @@ def materialize_relation_binding_values(
     additive bridge for registry rows that also declare ``target_binding`` so
     bound casillas can consume a relation-backed value without duplicating
     relation resolution in the application layer.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose relation-to-binding
+            mappings are used to populate the returned dict.
+        relation_values: Already-resolved relation id to Decimal mapping.
     """
     values: dict[str, Decimal] = {}
     for relation in _active_relations(revision, period=period):

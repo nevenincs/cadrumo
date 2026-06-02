@@ -266,6 +266,10 @@ def resolve_bindings_from_local_store(
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
+            bindings are resolved from the local calculation observation store.
+
     Returns a :class:`BindingPrefillReport` carrying the resolved
     ``binding_values`` mapping (suitable for passing through
     ``calculate_registry_snapshot``'s ``binding_values=`` argument) plus
@@ -337,6 +341,9 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     captured_at: datetime | None = None,
 ) -> tuple[LocalIvaCompensationRecurrence | None, BindingPrefillReport]:
     """Extract the local Modelo 303 compensation recurrence for comparison.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
 
     The returned amount is the locally reconstructed prior compensation balance
     for the target Modelo 303 period. Callers must feed it into

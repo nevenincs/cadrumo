@@ -193,6 +193,10 @@ def resolve_bound_casilla_inputs(
 
     ``facts`` is keyed by registry binding id. The binding layer only selects
     factual values; it does not own legal rates, thresholds, or casilla meaning.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings to resolve against.
+        facts: Mapping of binding id to the factual Decimal value.
     """
     for key, value in facts.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
@@ -219,7 +223,11 @@ def previous_filing_observation_requirements(
     filing_year: int,
     period: str,
 ) -> tuple[RegistryModeloObservationRequirement, ...]:
-    """Return :class:`RegistryModeloObservationRequirement` items needed by previous-filing bindings."""
+    """Return :class:`RegistryModeloObservationRequirement` items needed by previous-filing bindings.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose previous-filing bindings to inspect.
+    """
     grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
@@ -255,7 +263,11 @@ def resolve_previous_filing_binding_values(
     filing_year: int,
     period: str,
 ) -> dict[str, Decimal]:
-    """Resolve previous-filing bindings from observed filed declarations."""
+    """Resolve previous-filing bindings from observed filed declarations.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose previous-filing bindings to resolve.
+    """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -637,6 +649,10 @@ def invoice_binding_requirements(
 ) -> tuple[InvoiceObservationRequirement, ...]:
     """Return invoice ledger slices needed by ``revision``'s invoice bindings.
 
+    Args:
+        revision: The :class:`ModeloRevision` whose invoice bindings
+            are inspected.
+
     Returns:
         Tuple of :class:`InvoiceObservationRequirement` records describing
         each distinct invoice-fact slice the revision requires.
@@ -754,6 +770,10 @@ def resolve_invoice_binding_values(
 
     Row-producer bindings (``aggregation.op == "rows"``) are skipped here; they
     are resolved by :func:`resolve_invoice_binding_row_values`.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings are resolved.
+        observations: Invoice ledger lines to aggregate over.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -781,6 +801,9 @@ def resolve_invoice_binding_row_values(
     bindings on the same row. Returns a flat mapping keyed by
     ``(binding_id, row_index)``. Row indexes are one-based to match
     ``ModeloBindingValue.row_index``.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose row-producer bindings to resolve.
     """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
@@ -1381,6 +1404,11 @@ def unsupported_ledger_iva_observations(
 ) -> tuple[IvaLedgerObservation, ...]:
     """Return IVA observations no binding on ``revision`` can consume.
 
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings define the
+            supported IVA classification triples.
+        observations: Ledger lines to screen.
+
     Returns:
         Tuple of :class:`IvaLedgerObservation` instances not matched by any binding.
 
@@ -1498,7 +1526,11 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaExpenseObservationProtocol],
 ) -> dict[str, Decimal]:
-    """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``."""
+    """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-expense bindings to resolve.
+    """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -1607,6 +1639,10 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     summed: ``"gross_income_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
     ``None``).
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings are resolved.
+        observations: Renta income ledger lines to aggregate over.
     """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -1799,7 +1835,11 @@ def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> I
 def counterpart_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[CounterpartObservationRequirement, ...]:
-    """Return :class:`CounterpartObservationRequirement` slices needed by ``revision``'s counterpart bindings."""
+    """Return :class:`CounterpartObservationRequirement` slices needed by ``revision``'s counterpart bindings.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose counterpart bindings to inspect.
+    """
     grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[str]] = {}
     for binding in revision.bindings:
         if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
@@ -1828,7 +1868,11 @@ def resolve_counterpart_binding_values(
     revision: ModeloRevision,
     observations: Iterable[CounterpartAggregationObservation],
 ) -> dict[str, Decimal]:
-    """Resolve scalar counterpart-source bindings into Decimal aggregates."""
+    """Resolve scalar counterpart-source bindings into Decimal aggregates.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose counterpart bindings to resolve.
+    """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -1851,7 +1895,12 @@ def resolve_counterpart_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[CounterpartAggregationObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer counterpart-source bindings into per-row indexed values."""
+    """Resolve row-producer counterpart-source bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose counterpart bindings are resolved.
+        observations: Counterpart aggregation lines to group into rows.
+    """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     cohorts: dict[
@@ -2015,7 +2064,11 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
 def withholding_binding_requirements(
     revision: ModeloRevision,
 ) -> tuple[WithholdingObservationRequirement, ...]:
-    """Return :class:`WithholdingObservationRequirement` slices needed by ``revision``'s withholding bindings."""
+    """Return :class:`WithholdingObservationRequirement` slices needed by ``revision``'s withholding bindings.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose withholding bindings to inspect.
+    """
     grouped: dict[tuple[str, ...], set[str]] = {}
     for binding in revision.bindings:
         if binding.source != RowSetGroupingKind.WITHHOLDING:
@@ -2047,7 +2100,11 @@ def resolve_withholding_binding_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
 ) -> dict[str, Decimal]:
-    """Resolve scalar withholding-source bindings into Decimal aggregates."""
+    """Resolve scalar withholding-source bindings into Decimal aggregates.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose withholding bindings to resolve.
+    """
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
@@ -2078,7 +2135,12 @@ def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer withholding bindings into per-row indexed values."""
+    """Resolve row-producer withholding bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose withholding bindings are resolved.
+        observations: Withholding lines to group into rows.
+    """
     available = tuple(observations)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     cohorts: dict[
@@ -2243,7 +2305,11 @@ def resolve_related_party_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[RelatedPartyOperationObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer related-party bindings into per-row indexed values."""
+    """Resolve row-producer related-party bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose related-party bindings to resolve.
+    """
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
     for binding in revision.bindings:
@@ -2371,7 +2437,12 @@ def resolve_foreign_asset_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[Modelo720RowObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer foreign-asset bindings into per-row indexed values."""
+    """Resolve row-producer foreign-asset bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
+        observations: Modelo 720 row observations to group into rows.
+    """
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
     cohort_classes: set[tuple[str, ...]] = set()
@@ -2504,7 +2575,12 @@ def resolve_atribucion_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[AtributionMemberObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer atribucion bindings into per-row indexed values."""
+    """Resolve row-producer atribucion bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose atribucion bindings are resolved.
+        observations: Attribution member observations to group into rows.
+    """
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _AtributionSelector]] = []
     for binding in revision.bindings:
@@ -2611,7 +2687,12 @@ def resolve_refund_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[RefundOperationObservation],
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer refund-operation bindings into per-row indexed values."""
+    """Resolve row-producer refund-operation bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose refund bindings are resolved.
+        observations: Refund operation observations to group into rows.
+    """
     available = tuple(observations)
     members: list[tuple[DataBindingDefinition, _RefundSelector]] = []
     for binding in revision.bindings:

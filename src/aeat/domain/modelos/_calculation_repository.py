@@ -103,7 +103,12 @@ class CalculationRevisionCatalogueRepository:
 def upsert_calculation_revision(
     catalogue: CalculationRevisionCatalogue, revision: CalculationRevision
 ) -> CalculationRevisionCatalogue:
-    """Return a new :class:`CalculationRevisionCatalogue` with ``revision`` inserted or replaced."""
+    """Return a new :class:`CalculationRevisionCatalogue` with ``revision`` inserted or replaced.
+
+    Args:
+        catalogue: Source catalogue to update.
+        revision: The :class:`CalculationRevision` to insert or replace.
+    """
     mapping = dict(catalogue.revisions)
     mapping[revision.calculation_revision_id] = revision
     return CalculationRevisionCatalogue(revisions=mapping)

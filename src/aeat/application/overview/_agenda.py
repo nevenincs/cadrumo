@@ -93,6 +93,9 @@ def build_overview_agenda(
 ) -> OverviewAgenda:
     """Rank upcoming and past-due obligations around ``as_of``.
 
+    Args:
+        profile: The :class:`TaxpayerProfile` whose obligations are ranked.
+
     Composes :func:`build_overview_calendar` over a window that spans
     ``as_of - 90 days`` (so overdue obligations from the prior quarter
     surface) through ``as_of + horizon_days`` (so the lookahead matches

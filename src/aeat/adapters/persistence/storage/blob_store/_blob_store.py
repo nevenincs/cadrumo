@@ -184,7 +184,8 @@ class EncryptedBlobStore:
 
         Args:
             plaintext: Bytes to persist.
-            classification: Sensitivity class.
+            classification: :class:`SensitivityClass` controlling the at-rest
+                treatment (plaintext for CORPUS, ciphertext for all other classes).
             content_type: Stable MIME-type-style label stored in the
                 manifest.
 
@@ -388,10 +389,10 @@ class EncryptedBlobStore:
         success the manifest is skipped.
 
         Args:
-            old_master_key_provider: Provider returning the master key
-                that was in use when the blobs were last persisted.
-            new_master_key_provider: Provider returning the new master
-                key.
+            old_master_key_provider: :class:`MasterKeyProvider` returning
+                the master key that was in use when the blobs were last persisted.
+            new_master_key_provider: :class:`MasterKeyProvider` returning
+                the new master key.
 
         Returns:
             A ``(rotated, skipped, errors)`` triple.

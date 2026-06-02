@@ -94,6 +94,9 @@ def assemble_observations_for_grouping(
 ) -> AssembledObservations:
     """Dispatch the right assembler based on the row-set's grouping value.
 
+    Args:
+        revision: The :class:`ModeloRevision` used to look up binding selectors.
+
     Returns a 2-tuple ``(source_kind, observations)`` where
     ``source_kind`` identifies the assembler that ran (``withholding`` /
     ``related_party`` / ``foreign_asset`` / ``atribucion`` /
@@ -222,11 +225,16 @@ def assemble_withholding_observations(
 ) -> tuple[WithholdingObservation, ...]:
     """Reassemble per-perceptor withholding observations from row-set cells.
 
+    Args:
+        cells: Row-set cells exported from the calc sheet.
+        revision: The :class:`ModeloRevision` used to map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default dates.
+
     Synthesised fields (not carried by the Detalle tab):
-      * ``source_id`` — derived from the row index for traceability.
-      * ``transaction_date`` — defaults to the filing-year end since
+      * ``source_id`` -- derived from the row index for traceability.
+      * ``transaction_date`` -- defaults to the filing-year end since
         modelo 190 / 193 are annual summaries.
-      * ``country_code`` — defaults to ``ES`` per the AEAT diseño de
+      * ``country_code`` -- defaults to ``ES`` per the AEAT diseno de
         registro convention for unspecified perceptors.
 
     Each element in the returned tuple is a :class:`WithholdingObservation`.
@@ -274,6 +282,9 @@ def assemble_related_party_observations(
 ) -> tuple[RelatedPartyOperationObservation, ...]:
     """Reassemble per-operation related-party observations from row-set cells.
 
+    Args:
+        revision: The :class:`ModeloRevision` used to look up binding selectors.
+
     Returns a tuple of :class:`RelatedPartyOperationObservation` instances.
     """
     by_row = _cells_by_row(cells)
@@ -313,7 +324,13 @@ def assemble_foreign_asset_observations(
     *,
     filing_year: int,
 ) -> tuple[Modelo720RowObservation, ...]:
-    """Reassemble per-asset :class:`Modelo720RowObservation` rows from row-set cells (modelo 720)."""
+    """Reassemble per-asset :class:`Modelo720RowObservation` rows from row-set cells (modelo 720).
+
+    Args:
+        cells: Row-set cells exported from the calc sheet.
+        revision: The :class:`ModeloRevision` used to map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default acquisition dates.
+    """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_acquisition_date = date(filing_year, 12, 31)
@@ -351,6 +368,9 @@ def assemble_atribucion_observations(
     filing_year: int,
 ) -> tuple[AtributionMemberObservation, ...]:
     """Reassemble per-member atribución observations from row-set cells (modelo 184).
+
+    Args:
+        revision: The :class:`ModeloRevision` used to look up binding selectors.
 
     Each element in the returned tuple is an :class:`AtributionMemberObservation`.
     """
@@ -392,7 +412,13 @@ def assemble_refund_observations(
     *,
     filing_year: int,
 ) -> tuple[RefundOperationObservation, ...]:
-    """Reassemble per-operation :class:`RefundOperationObservation` records from row-set cells (modelo 360)."""
+    """Reassemble per-operation :class:`RefundOperationObservation` records from row-set cells (modelo 360).
+
+    Args:
+        cells: Row-set cells exported from the calc sheet.
+        revision: The :class:`ModeloRevision` used to map binding ids to row fields.
+        filing_year: Calendar year of the filing; used to derive default operation dates.
+    """
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_operation_date = date(filing_year, 12, 31)

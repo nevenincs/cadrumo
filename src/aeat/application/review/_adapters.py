@@ -66,6 +66,9 @@ def transactions_pending(
 ) -> tuple[TransactionReviewItem, ...]:
     """Return one :class:`TransactionReviewItem` per pending-review transaction.
 
+    ``catalogue`` is an optional :class:`TransactionCatalogue` override; the repository is
+    loaded when ``None``.
+
     Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
     explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
     final disposition and do not want the operator's attention.
@@ -92,14 +95,18 @@ def transactions_low_confidence(
 ) -> tuple[TransactionReviewItem, ...]:
     """Return transactions whose decision confidence sits below a threshold.
 
+    Args:
+        settings: Active application settings.
+        bucket_id: Stable bucket identifier for the ledger to inspect.
+        threshold: Minimum acceptable confidence; transactions strictly below
+            this value are included.
+        catalogue: Optional :class:`TransactionCatalogue` override; when ``None``
+            the catalogue is loaded from the encrypted store.
+
     Surfaces every transaction whose ``classification_confidence`` is
     non-None and strictly less than the threshold, regardless of
-    classification state. A rule engine that tagged a
-    ``PROCESSED_UNCLASSIFIED`` row with confidence 0.4 is just as
-    interesting to the operator as a ``BUSINESS`` classification
-    accepted at confidence 0.4 — both warrant attention. Transactions
-    with ``None`` confidence are excluded because they have no claim
-    to filter against.
+    classification state. Transactions with ``None`` confidence are excluded
+    because they have no claim to filter against.
 
     Each element in the returned tuple is a :class:`TransactionReviewItem`.
     """
@@ -185,7 +192,11 @@ def invoices_pending(
     *,
     catalogue: InvoiceCatalogue | None = None,
 ) -> tuple[InvoiceReviewItem, ...]:
-    """Return :class:`InvoiceReviewItem` records for unmatched / disputed / pending invoices."""
+    """Return :class:`InvoiceReviewItem` records for unmatched / disputed / pending invoices.
+
+    ``catalogue`` is an optional :class:`InvoiceCatalogue` override; the repository is
+    loaded when ``None``.
+    """
     if catalogue is None:
         catalogue = _load_invoices(settings)
         if catalogue is None:
@@ -255,6 +266,12 @@ def drafts_pending(
     drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
     """Return :class:`FindingReviewItem` records for findings + unready drafts.
+
+    Args:
+        settings: Active application settings.
+        drafts: Optional pre-loaded sequence of ``(path, draft)`` pairs where
+            each draft is a :class:`ModeloDraft`; when ``None`` drafts are
+            loaded from the active profile's storage.
 
     A draft whose ``profile_tax_id`` does not match the active
     profile's tax id is not the active profile's data and is skipped.

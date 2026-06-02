@@ -40,7 +40,11 @@ class InvoiceCatalogueRepositoryProtocol(Protocol):
         ...
 
     def save(self, catalogue: InvoiceCatalogue) -> None:
-        """Persist ``catalogue`` atomically under the file lock."""
+        """Persist ``catalogue`` atomically under the file lock.
+
+        Args:
+            catalogue: The :class:`InvoiceCatalogue` to persist.
+        """
         ...
 
 

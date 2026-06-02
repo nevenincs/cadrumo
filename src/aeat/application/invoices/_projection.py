@@ -70,7 +70,14 @@ def project_invoice_reviews(
     spec: InvoiceReviewFilterSpec,
     invoice_id: str | None = None,
 ) -> tuple[InvoiceReviewProjection, ...]:
-    """Return backend-computed :class:`InvoiceReviewProjection` rows for invoices matching ``spec``."""
+    """Return backend-computed :class:`InvoiceReviewProjection` rows for invoices matching ``spec``.
+
+    Args:
+        catalogue: The :class:`InvoiceCatalogue` whose invoices are projected.
+        state: The workflow state carrying invoice review records.
+        spec: Filter spec controlling which invoices are included.
+        invoice_id: When set, restricts output to that single invoice.
+    """
     rows: list[InvoiceReviewProjection] = []
     for invoice in catalogue.values():
         review = state.invoice_reviews.get(invoice.invoice_id)
@@ -160,8 +167,13 @@ def project_invoice_payment_matches(
 ) -> InvoiceMatchProjection:
     """Return period-labelled invoice/payment match status.
 
-    Returns an :class:`InvoiceMatchProjection` with matched and unmatched
-    rows for the given period.
+    Args:
+        period: Period label embedded in the returned projection.
+        catalogue: The :class:`InvoiceCatalogue` whose invoices are matched.
+        transactions: The :class:`TransactionCatalogue` cross-referenced for payment linkage.
+        state: The workflow state carrying invoice review records.
+
+    Returns an :class:`InvoiceMatchProjection` with matched and unmatched rows for the given period.
     """
     matched: list[InvoiceMatchRow] = []
     unmatched: list[InvoiceMatchRow] = []

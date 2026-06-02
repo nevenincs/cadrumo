@@ -68,6 +68,9 @@ def build_lifecycle_service(
 ) -> ProfileLifecycleService:
     """Construct a :class:`ProfileLifecycleService` for one bucket.
 
+    ``secure_objects`` is an optional :class:`SecureObjectRepository` override; a
+    per-bucket store is resolved when ``None``.
+
     The profile aggregate AND the bucket-event-history catalogue both
     belong to the named bucket's own database. When no repository is
     injected, a single per-bucket secure-object store is resolved and
@@ -199,11 +202,21 @@ def register_active_profile(
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
-    ``profile_id`` is the immutable UUIDv4 profile identity, minted by
-    the caller (see :func:`aeat.domain.user_profile.new_profile_id`).
-    ``display_name`` is the operator-chosen label; it is carried in the
-    bucket manifest and the encrypted record and plays no role in any
-    key or path.
+    Args:
+        state: The current :class:`WorkflowState`; the returned state carries
+            the registration event appended to the audit stream.
+        profile_id: Immutable UUIDv4 profile identity, minted by the caller
+            (see :func:`aeat.domain.user_profile.new_profile_id`).
+        display_name: Operator-chosen label carried in the bucket manifest and
+            the encrypted record; plays no role in any key or path.
+        facts: Initial profile facts to persist alongside the registration.
+        secure_objects: Optional :class:`SecureObjectRepository` override for
+            the encrypted profile store.
+        schema: Optional profile schema definition override.
+        enforce_unique_tax_id: When ``True``, refuses if another live profile
+            already carries the same tax id.
+        routing_profile_id: When set, wires a cross-bucket routing entry so
+            the new profile can inherit data from an existing bucket.
 
     This function is a thin :class:`WorkflowState` coordinator: the
     entire cross-store write — bucket directory, manifest, encrypted
@@ -218,7 +231,7 @@ def register_active_profile(
     workflow-state engine can resolve before this function runs inside
     ``workflow_state_repository().update``) is responsible for
     restoring that early pointer if the surrounding span fails before
-    or after ``create`` — :func:`capture_active_profile_pointer` and a
+    or after ``create`` - :func:`capture_active_profile_pointer` and a
     ``try``/``except`` around the span cover the steps the repository's
     own rollback cannot see (engine open, master-key activation).
     """
@@ -445,6 +458,8 @@ def select_profile(
 ) -> WorkflowState:
     """Select an existing profile as active.
 
+    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+
     Raises :class:`ProfileNotFoundError` if the profile does not
     already exist; registration is the explicit path
     (:func:`register_active_profile`).
@@ -466,7 +481,15 @@ def set_active_field(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
-    """Upsert one fact on the active profile, append a WorkflowEvent, and return the updated :class:`WorkflowState`."""
+    """Upsert one fact on the active profile, append a WorkflowEvent, and return the updated :class:`WorkflowState`.
+
+    Args:
+        state: The current workflow state.
+        fact: The profile fact to upsert.
+        secure_objects: Optional :class:`SecureObjectRepository` override for
+            the encrypted profile store.
+        schema: Optional profile schema definition override.
+    """
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.edit_field(
@@ -492,6 +515,8 @@ def set_active_fields(
 ) -> WorkflowState:
     """Upsert several facts on the active profile in sequence.
 
+    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+
     Returns a :class:`WorkflowState`.
     """
     updated = state
@@ -507,6 +532,8 @@ def remove_active_profile(
     schema: ProfileSchemaDefinition | None = None,
 ) -> WorkflowState:
     """Tombstone the active profile and clear the active pointer.
+
+    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
 
     The bucket pointer in :attr:`WorkflowState.profiles` is retained so
     audit and history reads can still resolve the bucket; selecting
@@ -530,7 +557,10 @@ def read_active_profile(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> UserProfileRecord | None:
-    """Return the active :class:`UserProfileRecord`, or ``None`` when none is selected."""
+    """Return the active :class:`UserProfileRecord`, or ``None`` when none is selected.
+
+    ``secure_objects`` is an optional :class:`SecureObjectRepository` override.
+    """
     from ..workflow._models import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
@@ -545,6 +575,10 @@ def read_active_profile(
 
 def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
     """Return the live string-rendered value of one fact path on ``record``.
+
+    Args:
+        record: The :class:`UserProfileRecord` to inspect, or ``None``.
+        path: Schema fact path (e.g. ``"identity.tax_id"``).
 
     Returns ``None`` when ``record`` is ``None``, when the path has no
     fact, or when the recorded value is ``None``. Repeated facts at
@@ -585,14 +619,21 @@ def rename_profile(
 ) -> UserProfileRecord:
     """Rename a profile by updating its display label only.
 
+    Args:
+        profile_id: The immutable UUIDv4 identity of the profile to rename.
+        new_label: The new display label.
+        secure_objects: Optional :class:`SecureObjectRepository` override for
+            the encrypted profile store.
+        schema: Optional profile schema definition override.
+
     The profile identity (``profile_id``), bucket directory, keystore
     directory, and secure-object key are immutable and never move. A
     rename is a pure label edit across the two stores that hold a copy
-    of the label — the encrypted :class:`UserProfileRecord.display_name`
+    of the label - the encrypted :class:`UserProfileRecord.display_name`
     and the plaintext manifest ``label``.
 
-    This function is a thin coordinator: the cross-store label write —
-    record AND manifest — lives solely in :meth:`ProfileRepository.rename`.
+    This function is a thin coordinator: the cross-store label write -
+    record AND manifest - lives solely in :meth:`ProfileRepository.rename`.
     Refuses if ``new_label`` is already carried by another live profile.
 
     Returns the updated :class:`UserProfileRecord` after the label change

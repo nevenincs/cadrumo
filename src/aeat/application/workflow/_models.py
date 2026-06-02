@@ -274,7 +274,13 @@ def active_transaction_catalogue_repository(
     *,
     objects: SecureObjectRepository | None = None,
 ) -> TransactionCatalogueRepository:
-    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket."""
+    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket.
+
+    Args:
+        state: The current workflow state used to resolve the active bucket.
+        objects: Optional :class:`SecureObjectRepository` override passed through
+            to the returned repository.
+    """
     from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
     from ._errors import NoActiveProfileError
 

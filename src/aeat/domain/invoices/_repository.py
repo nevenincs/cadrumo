@@ -149,7 +149,11 @@ class InvoiceCatalogueRepository:
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
 
     def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it."""
+        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it.
+
+        Args:
+            catalogue: The :class:`InvoiceCatalogue` to serialise.
+        """
         from ...adapters.persistence.storage import Envelope, SensitivityClass
         from ...adapters.persistence.storage.sql import SecureObjectWrite
 

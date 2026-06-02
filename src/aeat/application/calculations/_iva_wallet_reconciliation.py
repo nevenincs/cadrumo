@@ -205,6 +205,9 @@ def reconcile_modelo_303_iva_compensation(
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
 
+    Args:
+        snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
+
     The local side is not recomputed here. It is read through the same
     previous-filing binding resolver used by the calculation chain.
 

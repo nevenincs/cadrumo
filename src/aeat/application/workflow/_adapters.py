@@ -68,7 +68,7 @@ class DeadlineEngineAdapter:
         *,
         today: date | None = None,
     ) -> Schedule:
-        """Delegate to :meth:`DeadlineEngine.compute` and return a :class:`Schedule`."""
+        """Delegate to :meth:`DeadlineEngine.compute` for the given :class:`TaxpayerProfile` and return a :class:`Schedule`."""
         return self._engine.compute(profile, year, today=today)
 
 

@@ -147,7 +147,11 @@ class RegistryValidator:
         return failures
 
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
-        """Validate every modelo and the cross-model relation graph."""
+        """Validate every modelo and the cross-model relation graph.
+
+        Args:
+            modelos: Iterable of :class:`ModeloDefinition` instances to validate.
+        """
         modelo_tuple = tuple(modelos)
         cache_key = (
             tuple(id(modelo) for modelo in modelo_tuple),

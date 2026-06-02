@@ -46,7 +46,13 @@ class DeadlineEngineProtocol(Protocol):
         *,
         today: date | None = None,
     ) -> Schedule:
-        """Return a :class:`Schedule` for ``profile`` in ``year``."""
+        """Return a :class:`Schedule` for ``profile`` in ``year``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` whose filing obligations are scheduled.
+            year: The calendar year for which the schedule is computed.
+            today: Optional reference date for open-period classification.
+        """
         ...
 
 
@@ -70,7 +76,7 @@ class ModeloDraftBuilderProtocol(Protocol):
         inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
-        """Build and return a :class:`RegistryModeloDraftProtocol` registry-backed filing draft."""
+        """Build and return a :class:`RegistryModeloDraftProtocol` registry-backed filing draft for the given :class:`TaxpayerProfile`."""
         ...
 
 
@@ -129,7 +135,7 @@ class ModeloInputsProviderProtocol(Protocol):
         period: str,
         profile: TaxpayerProfile,
     ) -> ModeloInputs:
-        """Return the filing inputs for the draft build."""
+        """Return the filing inputs for the draft build against the given :class:`TaxpayerProfile`."""
         ...
 
 

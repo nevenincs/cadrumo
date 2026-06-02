@@ -231,7 +231,7 @@ def plan_layout(
     """Plan tab + row + column addresses for every casilla and parameter.
 
     Args:
-        revision: The validated revision to lay out.
+        revision: The validated :class:`ModeloRevision` to lay out.
         bracket_filter_date: When supplied, bracket-table parameters
             are filtered to entries temporally valid on this date so
             the `Tarifas` rows the engine emits match the registry
