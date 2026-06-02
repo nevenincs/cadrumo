@@ -15,6 +15,7 @@ formulas = [
     "modelo-130-diferencia",
     "modelo-130-resultado-final",
     "modelo-130-saldo-negativo-fin-periodo",
+    "modelo-130-rendimiento-neto",
 ]
 parameters = ["irpf.direct_estimation_fractional_payment_rate", "irpf.agriculture_fractional_payment_rate"]
 bindings = [
