@@ -75,7 +75,18 @@ _ALLOWED_SETATTR_TARGETS_PREFIXES = (
 # The empty set is the standing baseline — any new entry must justify
 # itself, and ``test_monkeypatch_setattr_sites_are_documented`` enforces
 # that no undocumented sites can slip in.
-_DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset()
+_DOCUMENTED_SETATTR_MOCKS: frozenset[tuple[str, str]] = frozenset(
+    {
+        # Forces stdlib getpass.getpass to raise EOFError so the
+        # passphrase callback's no-terminal path is exercised in a
+        # headless test runner. The real getpass cannot be DI'd —
+        # _default_passphrase_callback imports it directly from
+        # stdlib — and reproducing "no controlling terminal" without
+        # a setattr would require subprocess + pty machinery beyond
+        # the unit-test scope.
+        ("src/aeat/adapters/persistence/storage/master_key/test_master_key_failclosed.py", "getpass"),
+    }
+)
 
 # Mutating monkeypatch verbs to track (beyond setenv/delenv which are always OK).
 _MUTATION_VERBS = frozenset({"setattr", "setitem", "delattr"})
