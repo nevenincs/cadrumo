@@ -286,9 +286,7 @@ def test_s361_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) ->
         "casilla 0587 must be positive for base liquidable 55,500 > mínimo personal 5,550. "
         "If 0587 = 0 the S361 regression has re-appeared."
     )
-    assert result.values["0609"] > Decimal("0"), (
-        "casilla 0609 must be positive when retenciones 0153 = 1,824 > 0."
-    )
+    assert result.values["0609"] > Decimal("0"), "casilla 0609 must be positive when retenciones 0153 = 1,824 > 0."
     assert result.values["0610"] > Decimal("0"), (
         "casilla 0610 (cuota diferencial) must be positive when cuota exceeds retenciones."
     )
