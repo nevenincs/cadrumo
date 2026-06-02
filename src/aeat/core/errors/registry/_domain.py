@@ -1178,8 +1178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_iva_wallet_reconciliation_blocked",
             default_suggestion=(
-                "aeat app modelo iva-wallet seed --filing-year YEAR "
-                "--period PERIOD --amount 0 --confirm"
+                "aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm"
             ),
             retryable=False,
             runbook_id=None,
@@ -2203,6 +2202,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_RECONCILIATION_DRIFT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.reconciliation_drift",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._row_models.Modelo347ThresholdError",
+        ErrorCode(
+            code="REFUSED_MODELO_347_THRESHOLD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_347_threshold",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._row_models.Modelo184ShareSumError",
+        ErrorCode(
+            code="REFUSED_MODELO_184_SHARE_SUM",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_184_share_sum",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
