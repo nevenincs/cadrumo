@@ -54,9 +54,7 @@ def test_taxpayer_profile_carries_incn_as_none_when_undeclared() -> None:
     """An undeclared INCN projects as ``None`` so the engine returns
     INCOMPLETE rather than guessing a Modelo 202 modality."""
 
-    profile = taxpayer_profile_from_mapping(
-        _minimal_profile_mapping(), tax_id_default="B66012345"
-    )
+    profile = taxpayer_profile_from_mapping(_minimal_profile_mapping(), tax_id_default="B66012345")
     assert profile.incn_prior_12_months is None
 
 
@@ -88,9 +86,7 @@ def test_taxpayer_profile_carries_new_entity_as_none_when_undeclared() -> None:
     three-state opt-in distinguishing "operator has not answered" from
     "operator answered no"."""
 
-    profile = taxpayer_profile_from_mapping(
-        _minimal_profile_mapping(), tax_id_default="B66012345"
-    )
+    profile = taxpayer_profile_from_mapping(_minimal_profile_mapping(), tax_id_default="B66012345")
     assert profile.new_entity_first_two_profit_periods is None
 
 

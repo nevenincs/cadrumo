@@ -50,9 +50,7 @@ class TestQuarterlyAndAnnualBoundaries:
             ("0A", date(2026, 1, 1), date(2026, 12, 31)),
         ],
     )
-    def test_quarterly_and_annual_boundaries(
-        self, registry_period: str, start: date, end: date
-    ) -> None:
+    def test_quarterly_and_annual_boundaries(self, registry_period: str, start: date, end: date) -> None:
         assert period_start_date(2026, registry_period) == start
         assert period_end_date(2026, registry_period) == end
 
@@ -77,9 +75,7 @@ class TestPagoFraccionadoBoundaries:
             ("3P", date(2026, 12, 1), date(2026, 12, 31)),
         ],
     )
-    def test_pago_fraccionado_boundaries(
-        self, registry_period: str, start: date, end: date
-    ) -> None:
+    def test_pago_fraccionado_boundaries(self, registry_period: str, start: date, end: date) -> None:
         assert period_start_date(2026, registry_period) == start
         assert period_end_date(2026, registry_period) == end
 
