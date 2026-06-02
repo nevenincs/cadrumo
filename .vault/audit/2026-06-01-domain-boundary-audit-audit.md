@@ -1471,6 +1471,21 @@ remediation is currently HELD at audit-only per the active action policy.
     the application module (import from domain, keep in `__all__`) so
     `calculations/__init__.py`, `test_iva_compensation_history.py`, and
     `test_source_mesh_profile_live.py` need no import changes.
+  - **Refinement (2026-06-03): private-helper publicization required.** The orchestrator
+    `reconcile_modelo_303_iva_compensation` (which STAYS in application) calls two of the
+    moving helpers — `_validate_wallet_matches_snapshot` (app `:132`) and
+    `_local_recurrence_authority_source` (app `:154`). If they move to domain as-is, the
+    app orchestrator would import domain *private* (`_`-prefixed) symbols — a
+    cross-package private import, itself an `aeat-quality-gates` violation. So those two
+    helpers MUST be relocated as PUBLIC domain functions (drop the leading underscore,
+    add to `__all__`); the purely-internal helpers (`_authority_sources`,
+    `_is_filed_history_source`, `_is_wallet_stale`) stay private in domain. This widens
+    the move's public-API surface and reconfirms S89 is a full-budget, quiescent-tree
+    atomic pass (250-line relocation + 2 helper publicizations + the error-retirement
+    cascade across registry + 4 locales + 2 tests), not a mid-turn change. Surfaces were
+    confirmed all-clean on 2026-06-03 (a viable window for a dedicated pass), but the
+    footprint + high-churn locale/registry surfaces make a single-turn attempt
+    abandon-prone (cf. the S51 T8 collision + S64 revert).
   - **Verification gate list for the atomic commit:** `pytest --collect-only`,
     `lint-imports` (confirm the domain→adapters/application edges are gone),
     `test_registry_enforcement.py`, locale parity + honesty gates, the full
