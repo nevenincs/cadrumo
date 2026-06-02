@@ -49,7 +49,7 @@ class ModeloRow(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 
 
-class PortalRow(Base):
+class PortalOrmRow(Base):
     """Row in the ``portals`` table.
 
     Attributes:
