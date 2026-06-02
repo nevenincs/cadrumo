@@ -179,7 +179,7 @@ def test_contract_models_are_strict_and_immutable() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(root, "purpose", "mutated")
+        root.purpose = "mutated"
 
 
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:

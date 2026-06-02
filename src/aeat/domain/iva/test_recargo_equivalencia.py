@@ -75,7 +75,7 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
 
 def test_recargo_record_is_frozen() -> None:
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(load_recargo_rates(), "general_rate", Decimal("0.999"))
+        load_recargo_rates().general_rate = Decimal("0.999")
 
 
 def test_recargo_rate_for_general_returns_5_2_percent() -> None:
