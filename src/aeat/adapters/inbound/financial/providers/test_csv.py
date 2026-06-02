@@ -160,12 +160,9 @@ def test_csv_provider_decode_bytes_follows_fallback_chain(
         provider = CsvProvider()
         text, winning_encoding = provider._decode_bytes(raw_bytes)
     assert winning_encoding == expected_encoding, (
-        f"Expected encoding {expected_encoding!r} but got {winning_encoding!r}; "
-        f"chain is {CSV_ENCODING_FALLBACK_CHAIN}"
+        f"Expected encoding {expected_encoding!r} but got {winning_encoding!r}; chain is {CSV_ENCODING_FALLBACK_CHAIN}"
     )
-    assert expected_char in text, (
-        f"Decoded text {text!r} does not contain expected character {expected_char!r}"
-    )
+    assert expected_char in text, f"Decoded text {text!r} does not contain expected character {expected_char!r}"
 
 
 def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain() -> None:
