@@ -14,8 +14,7 @@ from __future__ import annotations
 import pytest
 
 from .. import config as _config
-from ..config import override_settings
-from ..config import load_settings
+from ..config import load_settings, override_settings
 from . import AeatAccessGate
 from ._errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
 

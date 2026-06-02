@@ -132,9 +132,7 @@ def test_coerce_decimal_with_zero_default(value: object, expected: Decimal) -> N
         (Decimal("2"), Decimal("99"), Decimal("2")),
     ],
 )
-def test_coerce_decimal_custom_default(
-    value: object, default: Decimal, expected: Decimal
-) -> None:
+def test_coerce_decimal_custom_default(value: object, default: Decimal, expected: Decimal) -> None:
     """Arbitrary non-None defaults are respected."""
     assert coerce_decimal(value, default=default) == expected
 
