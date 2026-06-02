@@ -315,3 +315,87 @@ class TestValidateM347Threshold:
             ),
         )
         _validate_m347_threshold(rows)  # total=4005.07 > 3005.06, must not raise
+
+
+# ---------------------------------------------------------------------------
+# Revision view surfaces persisted detail rows (regression for #200)
+# ---------------------------------------------------------------------------
+
+
+class TestRevisionViewSurfacesDetailRows:
+    """Persisted ``detail_rows`` must render in the ``work revision`` view.
+
+    Regression: informativa repeating rows (M184 comuneros, M347/M349
+    contrapartes) are persisted on the revision but live outside the flat
+    ``casilla_values`` map. Before the fix the revision view rendered only the
+    empty ``tipo2.*`` template casillas, so an operator who entered N members
+    saw zeros and believed the rows were silently dropped.
+    """
+
+    @staticmethod
+    def _run_cli(storage_root: object, argv: list[str]) -> "subprocess.CompletedProcess[str]":
+        import subprocess
+        import sys
+        import textwrap
+
+        code = f"""
+            import os, sys
+            os.environ["AEAT_LOCAL_STORAGE_ROOT"] = {str(storage_root)!r}
+            os.environ["AEAT_LIVE_TESTS_ENABLED"] = "0"
+            from click.testing import CliRunner
+            from typer.main import get_command
+            from aeat.entrypoints.cli import app
+
+            result = CliRunner().invoke(get_command(app), {argv!r})
+            sys.stdout.write(result.output)
+            sys.exit(result.exit_code)
+            """
+        return subprocess.run(  # noqa: S603 - trusted: own interpreter, literal test code
+            [sys.executable, "-c", textwrap.dedent(code)],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+
+    def test_m184_member_rows_surface_in_revision_view(self, tmp_path: object) -> None:
+        """A cold M184 ``--row`` flow renders the members as ``detail_row`` lines.
+
+        End-to-end so the work unit resolves (the result-summary block runs on a
+        real revision): create a comunidad profile, an M184 work unit, then
+        calculate with two ``--row miembro`` specs. ``work calculate`` renders the
+        revision via the same path as ``work revision``, so both members must
+        appear as ``detail_row`` lines with their share and amount — previously
+        they were persisted but invisible (only the empty ``tipo2.*`` template
+        casillas showed).
+        """
+        import re
+
+        setup = self._run_cli(
+            tmp_path,
+            ["config", "profile", "create", "cb", "--tax-id", "E12345674",
+             "--legal-entity-form", "sociedad_civil_mercantil", "--quiet"],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            ["app", "modelo", "work", "create", "--modelo", "184", "--year", "2024",
+             "--period", "0A", "--revision", "2015-y-siguientes"],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+        listing = self._run_cli(tmp_path, ["app", "modelo", "work", "list"])
+        wid_match = re.search(r"[0-9a-f]{64}", listing.stdout)
+        assert wid_match, f"no work unit id in: {listing.stdout}"
+        work_unit_id = wid_match.group(0)
+        calc = self._run_cli(
+            tmp_path,
+            ["app", "modelo", "work", "calculate", work_unit_id,
+             "--row", "miembro nif=45678912S porcentaje=60 importe=10000",
+             "--row", "miembro nif=00000001R porcentaje=40 importe=5000"],
+        )
+        assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
+
+        detail_lines = [line for line in calc.stdout.splitlines() if line.startswith("detail_row\t")]
+        assert len(detail_lines) == 2, f"expected 2 detail rows, got: {calc.stdout}"
+        assert "porcentaje=60" in calc.stdout and "importe=10000" in calc.stdout, calc.stdout
+        assert "porcentaje=40" in calc.stdout and "importe=5000" in calc.stdout, calc.stdout
