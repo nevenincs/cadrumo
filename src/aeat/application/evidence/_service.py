@@ -79,6 +79,7 @@ class EvidenceBundleService:
         # bucket routes are still runtime-created when a test or CLI flow
         # scopes settings through the context variable.
         from ...core.config import load_settings as _load_settings
+
         self._settings = settings or _load_settings()
         self._repository_factory = repository_factory or self._runtime_repository_for
 

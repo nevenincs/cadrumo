@@ -20,6 +20,7 @@ class ModeloHistoryEntry(BaseModel):
     submitted_at: datetime
     status: str = Field(min_length=1, max_length=32)
 
+
 class ModeloHistory(BaseModel):
     """Per-modelo filing history persisted as an encrypted audit envelope."""
 
@@ -36,6 +37,7 @@ class ModeloHistory(BaseModel):
                     f"ModeloHistory.modelo={self.modelo!r} disagrees with entry modelo={entry.modelo!r}",
                 )
         return self
+
 
 __all__ = [
     "ModeloHistory",

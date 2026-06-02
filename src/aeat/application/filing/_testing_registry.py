@@ -51,8 +51,7 @@ def build_registry_filing_draft(
     duplicate_input_ids = sorted(set(casilla_values).intersection(binding_values or {}))
     if duplicate_input_ids:
         raise ModeloBuilderError(
-            "registry filing test helper received duplicate casilla/binding input ids: "
-            f"{duplicate_input_ids!r}"
+            f"registry filing test helper received duplicate casilla/binding input ids: {duplicate_input_ids!r}"
         )
     draft = build_draft(
         modelo=modelo,
