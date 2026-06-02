@@ -13,47 +13,26 @@ related:
 
 ## Description
 
-- Verified the connected Google Drive account can see the existing app fixture hierarchy without write/delete operations.
-- Configured the AEAT Google folder id to the parent folder `1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ`, preserving the existing `aeat-vault` child folder instead of creating a nested vault.
-- Registered the repo-native OAuth desktop client for the active profiles.
-- Ran repo-native readiness probes and live test gates.
-- Read bounded live Google Sheets ranges for the configured calc-sheets workbook.
-- Re-attempted full workbook XLSX export through the Drive connector after the earlier quota failure.
+- Verified the active profile's replacement Google OAuth Desktop client and app-owned Drive root after `W06.P11.S430` restored session readiness.
+- Ran repo-native read-only Drive readiness, encrypted mirror dry-run, encrypted mirror push, live Drive provider tests, calc-sheets export, calc-sheets parity verify, calc-sheets pull, and bounded formula/value reads.
+- Preserved redacted hierarchy, mirror, and calc-sheets evidence without storing live OAuth client ids, Drive file ids, account emails, spreadsheet ids, or object HMACs.
 
 ## Evidence
 
-- `aeat config google folder get` reports `configured=True` and `root_folder_id=1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ`.
-- `aeat config google status` reports `client_registered=True` and `session_present=False`.
-- `aeat config google sync probe --read-only` refuses with a typed Google auth failure: no persisted OAuth token for the active profile.
-- Disabled live pytest run: `pytest -q -rs -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py` collected 4 tests and skipped all 4 because `AEAT_LIVE_TESTS_ENABLED` was not set.
-- Enabled live pytest run with Drive env selected collected 4 tests and failed all 4 at provider construction with `OutboundStorageValidationError: no Google OAuth token persisted`.
-- Manual Drive connector inspection found parent `aeat-test-fixtures`, existing `aeat-vault`, `calc-sheets`, `130-1T-2025`, and spreadsheet `AEAT 130 1T 2025`.
-- Spreadsheet metadata shows tabs `Entradas`, `Cálculos`, `Procedencia`, `Tarifas`, and `Guía`.
-- Bounded `Guía!A1:B20` read confirmed Modelo `130`, Revisión `2019-y-siguientes`, Registry SHA `0370c20383923443`, and export timestamp `2026-05-15T10:47:21.134782+00:00`.
-- Bounded `Cálculos!A1:H40` formula read confirmed formula cells including casilla 03 `=ROUND((Entradas!D2-Entradas!D3),2)` and downstream derived formulas.
-- Bounded `Cálculos!A1:D12` formatted-value read confirmed live calculated values for casillas 03, 04, 07, 09, 11, 12, 13, 14, 17, and 19.
-- Fresh bounded range reads for `Guía!A1:B20`, `Cálculos!A1:H40`, and `Cálculos!A1:D12` hit Google Sheets HTTP 429 `ReadRequestsPerMinutePerProject`.
-- Fresh full XLSX export through the connector succeeded for spreadsheet `1opH1auOERQNZlAqF5lw3O5ttowwiYRHp0T5V48s79Ck`.
-- Raw XLSX fetch through the connector succeeded while direct Sheets reads remained quota-limited, returning extracted workbook content for Modelo 130 metadata, calculated values, procedural rows, tariffs, registry SHA `0370c20383923443`, and export timestamp `2026-05-15T10:47:21.134782+00:00`.
-- `W06.P11.S431` remediated quota handling by enabling google-api-python-client retries and mapping HTTP 429 / rate-limit 403 to `OutboundStorageQuotaError`.
-
-Continuation rerun evidence on 2026-06-02:
-
-- Current `aeat config google folder get` reports `configured=True` and root folder id `1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ`.
-- Current `aeat config google status` reports `client_registered=True`, client id ending `...l62otqf.apps.googleusercontent.com`, and `session_present=False`.
-- Disabled repo-native live pytest run `uv run --no-sync pytest -q -rs -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py` collected 4 tests and skipped all 4 because `AEAT_LIVE_TESTS_ENABLED` was not `1`.
-- Enabled repo-native live pytest run with `AEAT_LIVE_TESTS_ENABLED=1`, `AEAT_LIVE_TESTS_GOOGLE=1`, `AEAT_STORAGE_PROVIDER_KIND=google_drive`, and `AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID=1ia6jGjO2Dasm8Fn5cYcgrDSSwW5X8MHQ` collected 4 tests and failed all 4 at provider construction with `OutboundStorageValidationError: no Google OAuth token persisted`.
-- `aeat config google sync probe --read-only` under the same provider/folder settings emitted JSON error code `REFUSED_CLI_BOUNDARY` with detail `no Google OAuth token persisted`.
-- Google Drive connector read-only folder listing confirmed the configured parent contains `aeat-vault` plus the existing smoke doc and smoke sheet.
-- Google Drive connector read-only folder listing under `aeat-vault` confirmed `calc-sheets`, `_probe`, and the remote mirror namespace folders including `aeat.google.oauth.client`, `aeat.google.oauth.metadata`, and `aeat.google.oauth.token`.
-- Google Sheets connector metadata for spreadsheet `1opH1auOERQNZlAqF5lw3O5ttowwiYRHp0T5V48s79Ck` confirmed title `AEAT 130 1T 2025` and tabs `Entradas`, `Cálculos`, `Procedencia`, `Tarifas`, and `Guía`.
-- Google Sheets connector bounded `Guía!A1:B20` read confirmed Modelo `130`, Revisión `2019-y-siguientes`, Registry SHA `0370c20383923443`, and export timestamp `2026-05-15T10:47:21.134782+00:00`.
-- Google Sheets connector bounded `Cálculos!A1:H40` formula read confirmed formulas including casilla 03 `=ROUND((Entradas!D2-Entradas!D3),2)` and the downstream 04/07/09/11/12/13/14/17/19 formula chain.
-- Google Sheets connector bounded `Cálculos!A1:D12` formatted-value read confirmed live calculated values for casillas 03, 04, 07, 09, 11, 12, 13, 14, 17, and 19.
-- `uv run --no-sync ruff check src/aeat/adapters/outbound/storage/test_google_drive_live.py src/aeat/adapters/outbound/google src/aeat/entrypoints/cli/_config/_google.py` passed.
+- `aeat config google status` reports `client_registered=True`, `session_present=True`, and `reauth_required=False` for the replacement Desktop client.
+- `aeat config google folder get` reports `configured=True` and the app-owned root folder id.
+- `aeat config google sync probe --read-only` reports `provider_kind=google_drive`, `reachable=True`, `writable=False`, `root_folder_present=True`, and `detail=read_only probe; sentinel round-trip skipped`.
+- `aeat config google sync push --dry-run` inspected the active bucket and reported 26 secure-object rows across 11 namespaces with zero failures.
+- `aeat config google sync push` uploaded 26 ciphertext objects and 11 namespace manifests with `failed_total=0`, `manifest_failed_total=0`, and `manifest_degraded_total=0`.
+- Redacted Drive hierarchy inspection found one root child, `aeat-vault`; after mirror and calc-sheets runs, `aeat-vault` contained 14 children: `_probe` with 0 children, `_sync-state` with 11 manifest objects, 11 namespace folders with object counts matching the mirror push, and `calc-sheets` with one child folder.
+- `aeat config google sync calc export --modelo 130 --period 1T --year 2025` wrote a Modelo 130 workbook for revision `2019-y-siguientes` with engine `calc-sheets/0.1.0`, registry SHA `da9952e1610f7db6`, 181 value cells, 11 formula cells, 4 protected ranges, and 6 tabs.
+- `aeat config google sync calc verify --modelo 130 --period 1T --year 2025` completed with `computed_count=11`, `divergence_count=0`, and verdict `inconclusive` because no AEAT oracle scenario was supplied.
+- `aeat config google sync calc pull --modelo 130 --period 1T --year 2025 --spreadsheet-id <exported-workbook-id> --compute` reported `metadata_match=matches`, registry SHA `da9952e1610f7db6`, zero operator edits, and computed 11 outputs including casillas 03, 04, 07, 09, 11, 12, 13, 14, 17, 19, and `saldo-negativo-fin-periodo`.
+- Bounded Sheets metadata/range reads against the exported workbook confirmed title `AEAT 130 1T 2025`, tabs `Entradas`, `Cálculos`, `Procedencia`, `Tarifas`, `Detalle`, and `Guía`, `Guía!A1:B20` registry SHA `da9952e1610f7db6`, `Cálculos!A1:H40` formula rows including casilla 03 `=ROUND((Entradas!D2-Entradas!D3),2)` and the downstream formula chain, and `Cálculos!A1:D12` formatted values 0, 0, 0, 0, 0, 0, 100, -100, -100, -100, and 100 for the calculated rows.
+- Post-push live provider gate passed: `AEAT_LIVE_TESTS_ENABLED=1 AEAT_LIVE_TESTS_GOOGLE=1 AEAT_STORAGE_PROVIDER_KIND=google_drive AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID=<app-owned-root-folder-id> pytest -m live_read src/aeat/adapters/outbound/storage/test_google_drive_live.py -q` collected and passed 4 tests.
 
 ## Status
 
-`W06.P11.S428` remains open.
+`W06.P11.S428` is closed.
 
-Repo-native Drive mirror validation is still blocked on `W06.P11.S430`: the folder id and OAuth client exist, but the active profile has no persisted OAuth token. Calc-sheets export and quota handling are closed under `W06.P11.S431`; no Drive files were created, moved, or deleted during connector inspection.
+Drive mutation note: the completed verification uploaded encrypted mirror objects and manifests, created calc-sheets workbook artifacts under the app-owned root, and allowed live provider tests to create and delete `_probe` sentinel/manifest objects. No plaintext secure-object payloads were uploaded.
