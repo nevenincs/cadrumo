@@ -9,6 +9,10 @@ application layer.
 
 from __future__ import annotations
 
+from ._balance import (
+    IvaWalletBalanceReport,
+    build_iva_wallet_balance_report,
+)
 from ._carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationCarryForwardReport,
@@ -36,7 +40,9 @@ __all__ = [
     "IvaCompensationReconciliationInputError",
     "IvaCompensationSeedConflictError",
     "IvaCompensationYearRangeError",
+    "IvaWalletBalanceReport",
     "build_iva_compensation_carry_forward_report",
+    "build_iva_wallet_balance_report",
     "derive_303_compensation_available",
     "enforce_iva_compensation_four_year_window",
 ]

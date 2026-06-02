@@ -11,6 +11,10 @@ inputs from authoritative prior filings instead of operator
 hand-entry.
 """
 
+from ...domain.iva_compensation._balance import (
+    IvaWalletBalanceReport,
+    build_iva_wallet_balance_report,
+)
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationCarryForwardReport,
@@ -36,18 +40,23 @@ from ._iva_compensation_history import (
     iva_compensation_period_key,
     iva_compensation_state_from_filed_observation,
 )
-from ._iva_wallet_balance import (
-    IvaWalletBalanceReport,
-    build_iva_wallet_balance_report,
-    query_iva_wallet_balance,
-)
+from ._iva_wallet_balance import query_iva_wallet_balance
 from ._iva_wallet_reconciliation import (
     IvaCompensationReconciliationReport,
     IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from ._multi_year import MultiYearResolver, PreviousFilingSourceResolver, resolve_prior_year_observations
+from ._multi_year import (
+    EnrollmentEvidence,
+    EnrollmentEvidenceError,
+    EnrollmentRecorder,
+    EnrollmentYearObservation,
+    MultiYearResolver,
+    PreviousFilingSourceResolver,
+    assert_enrollment_matches_manifest,
+    resolve_prior_year_observations,
+)
 from ._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -74,6 +83,10 @@ __all__ = [
     "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
+    "EnrollmentEvidence",
+    "EnrollmentEvidenceError",
+    "EnrollmentRecorder",
+    "EnrollmentYearObservation",
     "IvaCompensationAuthoritySource",
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardReport",
@@ -97,6 +110,7 @@ __all__ = [
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding_observations",
+    "assert_enrollment_matches_manifest",
     "build_iva_compensation_carry_forward_report",
     "build_iva_wallet_balance_report",
     "enforce_iva_compensation_four_year_window",
