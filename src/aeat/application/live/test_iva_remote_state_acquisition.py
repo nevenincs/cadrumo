@@ -82,6 +82,54 @@ def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Pa
     assert wallet_outcome.failure_type == "MissingSurfaceReport"
 
 
+def test_combined_acquisition_marks_partial_filed_history_as_failed(tmp_path: Path) -> None:
+    auth_result = AuthenticatedAeatSessionResult(
+        provider_kind=AuthProviderKind.CLAVE_MOVIL,
+        session=object(),
+        assertion=object(),
+        reused_persisted_session=True,
+        fresh=False,
+    )
+    filed_history = IvaCompensationHistoryCaptureReport(
+        output_root=str(tmp_path / "filed-history"),
+        year_from=2022,
+        year_to=2026,
+        captured_count=4,
+        observation_paths=("observations/303-2026-1T.json",),
+        artefact_refs=("secure-object:artefact",),
+        casilla_count=316,
+        calculation_observation_count=4,
+        calculation_observation_keys=("303:2026:1T",),
+        reloaded_history_count=4,
+        reloaded_rows=(),
+        failed_declaration_count=1,
+        failed_declarations=("modelo=303;ejercicio=2024;period=1T;failure_type=TimeoutError",),
+    )
+
+    report = build_iva_remote_state_acquisition_report(
+        output_root=tmp_path,
+        year_from=2022,
+        year_to=2026,
+        target_year=2026,
+        target_period="1T",
+        auth_result=auth_result,
+        filed_history=filed_history,
+    )
+
+    filed_outcome = report.outcomes[0]
+    assert report.filed_history_succeeded is False
+    assert filed_outcome.status is LiveIvaReadStatus.FAILED
+    assert filed_outcome.failure_type == "FiledHistoryPartialFailure"
+    assert filed_outcome.failure_mode is LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+    assert filed_outcome.captured_count == 4
+    assert filed_outcome.calculation_observation_count == 4
+    assert filed_outcome.failure_context == {
+        "captured_count": 4,
+        "failed_declaration_count": 1,
+        "failed_declarations": ("modelo=303;ejercicio=2024;period=1T;failure_type=TimeoutError",),
+    }
+
+
 def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) -> None:
     diagnostic_id = "clave-diagnostic-private-object-key"
     auth_error = ClaveMovilApprovalTimeoutError(
@@ -212,8 +260,7 @@ def test_live_surface_timeout_is_typed_and_classified() -> None:
         assert raised.value.surface == LiveIvaReadSurface.FILED_HISTORY.value
         assert raised.value.timeout_ms == 1
         assert (
-            classify_live_iva_acquisition_failure(raised.value)
-            is LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+            classify_live_iva_acquisition_failure(raised.value) is LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
         )
 
     asyncio.run(run())
@@ -320,11 +367,7 @@ def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown(
                 pass
 
             loop.call_exception_handler(
-                {
-                    "exception": PlaywrightError(
-                        "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating"
-                    )
-                }
+                {"exception": PlaywrightError("net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating")}
             )
             loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
         finally:
@@ -388,8 +431,7 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         assert acquisition_row.filed_history_succeeded is True
         assert acquisition_row.wallet_succeeded is False
         assert any(
-            "outcome=aeat_403" in surface and "failure_mode=aeat_403" in surface
-            for surface in acquisition_row.surfaces
+            "outcome=aeat_403" in surface and "failure_mode=aeat_403" in surface for surface in acquisition_row.surfaces
         )
         assert manifest.acquisition_id not in remote_state.model_dump_json()
         assert manifest.acquisition_id.startswith("live-iva-acquisition:2026:2T:20260527T120000000000Z:")
