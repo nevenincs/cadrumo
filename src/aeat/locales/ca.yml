@@ -167,6 +167,7 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
+      modelo_unavailable: 'El registre de declaracions de l''AEAT no ofereix el model sol·licitat.'
 aggregation:
   grouping:
     errors:

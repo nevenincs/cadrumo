@@ -159,6 +159,7 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa az 'aeat config auth test' parancsot
         és próbálja újra.
+      modelo_unavailable: 'Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.'
 aggregation:
   grouping:
     errors:

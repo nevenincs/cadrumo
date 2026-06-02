@@ -224,6 +224,7 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
         "filed-history read did not finish",
         surface=LiveIvaReadSurface.FILED_HISTORY.value,
         timeout_ms=1,
+        progress_context={"phase": "walk_declarations_register", "modelo": "303", "ejercicio": 2026},
     )
 
     report = build_iva_remote_state_acquisition_report(
@@ -241,6 +242,30 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
     assert filed_outcome.failure_type == "LiveIvaSurfaceTimeoutError"
     assert filed_outcome.captured_count is None
     assert wallet_outcome.status is LiveIvaReadStatus.FAILED
+    assert timeout.context["progress"] == {
+        "phase": "walk_declarations_register",
+        "modelo": "303",
+        "ejercicio": 2026,
+    }
+
+
+def test_surface_timeout_context_preserves_wallet_progress() -> None:
+    timeout = LiveIvaSurfaceTimeoutError(
+        "wallet read did not finish",
+        surface=LiveIvaReadSurface.WALLET_CARTERA.value,
+        timeout_ms=30_000,
+        progress_context={
+            "phase": "fetch_iva_compensation_wallet",
+            "target_year": 2026,
+            "target_period": "1T",
+        },
+    )
+
+    assert timeout.context["progress"] == {
+        "phase": "fetch_iva_compensation_wallet",
+        "target_year": 2026,
+        "target_period": "1T",
+    }
 
 
 def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -> None:

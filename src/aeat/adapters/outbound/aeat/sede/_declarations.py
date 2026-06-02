@@ -43,12 +43,6 @@ from urllib.parse import parse_qs, urlsplit
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 
-# Importing the renta package registers the first-slice routing
-# cross-domain snapshot check with the registry validator. build_snapshot
-# of a Modelo 100 revision fails loudly if that check is unregistered, so
-# the M100 routing referential-integrity gate runs on this declarations path.
-from .....domain import renta as _renta_snapshot_checks  # noqa: F401
-
 from .....core.config import Settings, load_settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -57,6 +51,12 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
 from .....core.time import now
+
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check with the registry validator. build_snapshot
+# of a Modelo 100 revision fails loudly if that check is unregistered, so
+# the M100 routing referential-integrity gate runs on this declarations path.
+from .....domain import renta as _renta_snapshot_checks  # noqa: F401
 from .....domain.calculations.registry import (
     CasillaFieldKind,
     CasillaObservation,
@@ -93,6 +93,7 @@ from ._browser_constants import (
 )
 from ._errors import (
     JustificanteFetchError,
+    SedeFailureMode,
     SedeNavigationError,
     SedeParseError,
     SedeValidationError,
@@ -484,6 +485,13 @@ async def _drive_search(
         raise SedeNavigationError(
             f"goto {_LISTING_URL!r} failed: {exc}",
             translated_message=tr("adapters.sede.errors.listing_nav_failed"),
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                phase="listing_goto",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
         ) from exc
     await page.wait_for_timeout(1500)
     await _continue_alert_modal(page, read_policy=read_policy)
@@ -498,6 +506,13 @@ async def _drive_search(
             f"declaraciones register did not load (final URL: {final_url!r}); "
             "session likely expired — run `aeat config auth test` and retry",
             translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                phase="listing_final_url",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
         )
     # Defensive: even when the URL matches, AEAT sometimes serves a
     # blank shell with no Modelo label until the JS finishes booting.
@@ -512,6 +527,13 @@ async def _drive_search(
             f"label within {_get_form_interaction_timeout_ms()}ms; "
             "session likely expired or AEAT served a maintenance page",
             translated_message=tr("adapters.sede.errors.form_render_timeout"),
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                phase="form_render",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
         ) from exc
 
     if not await _select_combobox_value(
@@ -522,6 +544,14 @@ async def _drive_search(
     ):
         raise SedeNavigationError(
             f"AEAT declarations register does not offer modelo {modelo!r}",
+            translated_message=tr("adapters.sede.errors.modelo_unavailable"),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                phase="modelo_option_missing",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
         )
     if not await _select_combobox_value(
         page,
@@ -544,9 +574,109 @@ async def _drive_search(
         raise SedeNavigationError(
             f"clicking Buscar failed: {exc}",
             translated_message="adapters.sede.errors.playwright_buscar_click_failed",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                phase="buscar_click",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
         ) from exc
     await page.wait_for_timeout(_get_buscar_settle_ms())
+    log.info(
+        "declarations register search completed modelo=%s ejercicio=%d shape=%s",
+        modelo,
+        ejercicio,
+        _declarations_page_shape_context(
+            await page.content(),
+            landing_url=getattr(page, "url", "") or "",
+            phase="post_buscar",
+            modelo=modelo,
+            ejercicio=ejercicio,
+        ),
+    )
     return True
+
+
+async def _declarations_page_shape_context_from_page(
+    page: Page,
+    *,
+    phase: str,
+    modelo: str,
+    ejercicio: int,
+) -> dict[str, object]:
+    try:
+        html = await page.content()
+    except PlaywrightError:
+        html = ""
+    return _declarations_page_shape_context(
+        html,
+        landing_url=getattr(page, "url", "") or "",
+        phase=phase,
+        modelo=modelo,
+        ejercicio=ejercicio,
+    )
+
+
+def _declarations_page_shape_context(
+    html: str,
+    *,
+    landing_url: str,
+    phase: str,
+    modelo: str,
+    ejercicio: int,
+) -> dict[str, object]:
+    soup = BeautifulSoup(html, "html.parser")
+    normalized_text = normalize_response_text(soup.get_text(" ", strip=True))
+    buttons = tuple(
+        _bounded_text(button.get_text(" ", strip=True))
+        for button in soup.find_all("button")[:12]
+    )
+    headers = tuple(
+        _bounded_text(header.get_text(" ", strip=True))
+        for header in soup.find_all(class_=_has_class("z-listheader"))[:12]
+    )
+    return {
+        "phase": phase,
+        "modelo": modelo,
+        "ejercicio": ejercicio,
+        "landing_url": _redacted_url(landing_url),
+        "title": _bounded_text(soup.find("title").get_text(" ", strip=True)) if soup.find("title") else "",
+        "has_modelo_label": "modelo (*)" in normalized_text,
+        "has_ejercicio_label": "ejercicio (*)" in normalized_text,
+        "has_buscar_button": any(button.casefold() == "buscar" for button in buttons),
+        "has_no_results_text": normalize_response_text(_NO_RESULTS_TEXT) in normalized_text,
+        "listbox_count": len(soup.find_all(class_=_has_class("z-listbox"))),
+        "listitem_count": len(soup.find_all(class_=_has_class("z-listitem"))),
+        "comboitem_count": len(soup.find_all(class_=_has_class("z-comboitem"))),
+        "table_count": len(soup.find_all("table")),
+        "form_count": len(soup.find_all("form")),
+        "buttons": buttons,
+        "list_headers": headers,
+        "raw_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
+    }
+
+
+def _redacted_url(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value)
+    if not text:
+        return ""
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return ""
+    if not parsed.scheme and not parsed.netloc:
+        return parsed.path
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
+def _bounded_text(value: object, *, max_length: int = 120) -> str:
+    text = " ".join(str(value).replace("\xa0", " ").split())
+    if len(text) <= max_length:
+        return text
+    return f"{text[: max_length - 1]}…"
 
 
 async def _select_combobox_value(

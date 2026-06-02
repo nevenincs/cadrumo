@@ -170,6 +170,7 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      modelo_unavailable: 'El registro de declaraciones de la AEAT no ofrece el modelo solicitado.'
 aggregation:
   grouping:
     errors:

@@ -13,6 +13,8 @@ re-validation.
 
 from __future__ import annotations
 
+from typing import Any
+
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
@@ -194,6 +196,7 @@ class LiveIvaSurfaceOutcomePayload(OutputSchema):
     outcome_mode: str
     failure_mode: str | None
     failure_type: str | None
+    failure_context: dict[str, Any] | None
     captured_count: int | None
     calculation_observation_count: int | None
 

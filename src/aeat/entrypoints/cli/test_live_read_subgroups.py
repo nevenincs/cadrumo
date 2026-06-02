@@ -26,6 +26,7 @@ from ...application.user_profile._orchestration import profile_create_storage_sp
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import override_settings
+from ...tests.secure_sql import isolated_profile_storage_root
 from ._app_live import (
     _iva_remote_state_capture_lines,
     _live_auth_preflight_lines,
@@ -35,7 +36,6 @@ from ._app_live import (
     iva_wallet_app,
     verify_app,
 )
-from ...tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -237,6 +237,13 @@ class TestIvaRemoteStateCliSurface:
                     outcome_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
                     failure_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
                     failure_type="ClaveMovilApprovalTimeoutError",
+                    failure_context={
+                        "progress": {
+                            "phase": "walk_declarations_register",
+                            "modelo": "303",
+                            "ejercicio": 2026,
+                        }
+                    },
                 ),
                 LiveIvaReadOutcome(
                     surface=LiveIvaReadSurface.WALLET_CARTERA,
@@ -257,6 +264,10 @@ class TestIvaRemoteStateCliSurface:
         assert "wallet_succeeded=False" in lines
         assert any(
             line.startswith("surface_outcome=filed_history\tstatus=failed\toutcome=no_clave_prompt")
+            for line in lines
+        )
+        assert any(
+            "failure_context=progress={ejercicio:2026,modelo:303,phase:walk_declarations_register}" in line
             for line in lines
         )
         assert any(
