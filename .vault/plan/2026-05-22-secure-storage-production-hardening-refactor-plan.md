@@ -28,6 +28,15 @@ related:
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 <!-- RETIRED: S422, S423 -->
 
@@ -144,7 +153,7 @@ Constrain remote providers to encrypted object mirroring with revision and integ
 
 - [x] `W05.P10.S41` - add remote mirror policy fields to namespace registry entries; `src/aeat/adapters/persistence/storage`.
 - [x] `W05.P10.S42` - store remote mirror manifests with ciphertext hashes and revision watermarks; `src/aeat/adapters`.
-- [ ] `W05.P10.S43` - detect partial upload, partial download, stale mirror, and revision conflicts; `src/aeat/adapters`.
+- [x] `W05.P10.S43` - detect partial upload, partial download, stale mirror, and revision conflicts; `src/aeat/adapters`.
 - [ ] `W05.P10.S44` - add real-behavior remote mirror tests using opaque encrypted payloads; `src/aeat/adapters`.
 
 ## Wave `W06` - adverse-condition gates and closeout

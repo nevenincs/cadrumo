@@ -8,6 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from ....core.classification import SensitivityClass
+from ....core.config import Settings
+from ...persistence.storage import EphemeralMasterKeyProvider
+from ...persistence.storage.sql._orm import Base
+from ...persistence.storage.sql.engine import create_engine_from_settings
+from ...persistence.storage.sql.secure_objects import SecureObjectRepository
 from . import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     RemoteMirrorIssueKind,
@@ -20,12 +26,6 @@ from . import (
     remote_mirror_object_key_hmac,
 )
 from ._local import LocalFileSystemProvider
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
-from ...persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.classification import SensitivityClass
-from ....core.config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -111,6 +111,25 @@ def test_remote_mirror_download_inspection_detects_missing_manifest_object(tmp_p
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.PARTIAL_DOWNLOAD}
 
 
+def test_remote_mirror_download_inspection_detects_ciphertext_drift(tmp_path: Path) -> None:
+    manifest = _single_object_manifest(tmp_path)
+    entry = manifest.objects[0]
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    drifted_payload = b"drifted-ciphertext"
+    provider.put(
+        entry.namespace,
+        entry.object_key_hmac,
+        drifted_payload,
+        content_hash=f"sha256-{hashlib.sha256(drifted_payload).hexdigest()}",
+        label="drifted",
+    )
+
+    inspection = inspect_remote_mirror_download(provider, manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.PARTIAL_DOWNLOAD}
+
+
 def test_remote_mirror_comparison_detects_stale_remote_revision(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _overwrite_manifest_pair(tmp_path)
 
@@ -118,6 +137,50 @@ def test_remote_mirror_comparison_detects_stale_remote_revision(tmp_path: Path) 
 
     assert inspection.ok is False
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
+
+
+def test_remote_mirror_comparison_detects_older_stale_remote_revision(tmp_path: Path) -> None:
+    remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
+
+    inspection = compare_remote_mirror_manifests(local=local_manifest, remote=remote_manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
+
+
+def test_remote_mirror_comparison_handles_naive_stale_revision_timestamp(tmp_path: Path) -> None:
+    remote_manifest, local_manifest = _three_revision_manifest_pair(tmp_path)
+    remote_object = remote_manifest.objects[0]
+    naive_remote_object = remote_object.model_copy(
+        update={
+            "revision_written_at": remote_object.revision_written_at.replace(tzinfo=None),
+        }
+    )
+    naive_remote_manifest = remote_manifest.model_copy(update={"objects": (naive_remote_object,)})
+
+    inspection = compare_remote_mirror_manifests(local=local_manifest, remote=naive_remote_manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.STALE_MIRROR}
+
+
+def test_remote_mirror_comparison_keeps_older_divergent_revision_conflict(tmp_path: Path) -> None:
+    _remote_manifest, local_manifest = _overwrite_manifest_pair(tmp_path)
+    local_object = local_manifest.objects[0]
+    divergent_object = local_object.model_copy(
+        update={
+            "storage_revision_id": "f" * 64,
+            "previous_storage_revision_id": "e" * 64,
+            "ciphertext_hash": "d" * 64,
+            "revision_written_at": local_object.revision_written_at - timedelta(minutes=5),
+        }
+    )
+    divergent_manifest = local_manifest.model_copy(update={"objects": (divergent_object,)})
+
+    inspection = compare_remote_mirror_manifests(local=local_manifest, remote=divergent_manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}
 
 
 def test_remote_mirror_comparison_detects_revision_conflict(tmp_path: Path) -> None:
@@ -192,6 +255,38 @@ def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManif
                 written_at=datetime(2026, 5, 28, 10, 1, tzinfo=UTC),
                 payload=b"second-payload",
             )
+            local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
+            return remote_manifest, local_manifest
+        finally:
+            engine.dispose()
+
+
+def _three_revision_manifest_pair(
+    tmp_path: Path,
+) -> tuple[RemoteMirrorNamespaceManifest, RemoteMirrorNamespaceManifest]:
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'three-revisions.db').as_posix()}"),
+        )
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            namespace = "aeat.remote.mirror.three.revisions"
+            for offset, payload in enumerate((b"first-payload", b"second-payload", b"third-payload")):
+                repo.save(
+                    namespace=namespace,
+                    object_key="same-object",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime(2026, 5, 28, 10, offset, tzinfo=UTC),
+                    payload=payload,
+                )
+                if offset == 0:
+                    remote_manifest = build_remote_mirror_namespace_manifest(
+                        namespace,
+                        tuple(repo.iter_all_records_raw()),
+                    )
             local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
             return remote_manifest, local_manifest
         finally:

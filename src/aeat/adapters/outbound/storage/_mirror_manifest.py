@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterable
+from datetime import UTC, datetime
 
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
 from ._errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
@@ -61,7 +62,7 @@ def inspect_remote_mirror_upload(
     provider: StorageProvider,
     expected_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Detect remote upload drift and return a :class:`RemoteMirrorInspection` against the expected namespace manifest."""
+    """Detect remote upload drift for the expected namespace manifest."""
     remote_manifest = _load_remote_manifest(provider, expected_manifest.namespace)
     issues = list(_compare_manifest_objects(local=expected_manifest, remote=remote_manifest))
     for entry in expected_manifest.objects:
@@ -87,7 +88,7 @@ def inspect_remote_mirror_upload(
                 )
             )
             continue
-        if len(payload) != entry.byte_length or metadata.content_hash.split("-", 1)[-1] != entry.ciphertext_hash:
+        if not _provider_payload_matches_manifest_entry(payload, metadata, entry):
             issues.append(
                 RemoteMirrorIssue(
                     kind=RemoteMirrorIssueKind.PARTIAL_UPLOAD,
@@ -107,7 +108,7 @@ def inspect_remote_mirror_download(
     issues: list[RemoteMirrorIssue] = []
     for entry in remote_manifest.objects:
         try:
-            provider.get(entry.namespace, entry.object_key_hmac)
+            payload, metadata = provider.get(entry.namespace, entry.object_key_hmac)
         except (OutboundStorageNotFoundError, OutboundStorageIntegrityError) as exc:
             issues.append(
                 RemoteMirrorIssue(
@@ -115,6 +116,16 @@ def inspect_remote_mirror_download(
                     namespace=entry.namespace,
                     object_key_hmac=entry.object_key_hmac,
                     detail=str(exc),
+                )
+            )
+            continue
+        if not _provider_payload_matches_manifest_entry(payload, metadata, entry):
+            issues.append(
+                RemoteMirrorIssue(
+                    kind=RemoteMirrorIssueKind.PARTIAL_DOWNLOAD,
+                    namespace=entry.namespace,
+                    object_key_hmac=entry.object_key_hmac,
+                    detail="remote ciphertext metadata does not match the manifest entry",
                 )
             )
     return RemoteMirrorInspection(namespace=remote_manifest.namespace, issues=tuple(issues))
@@ -209,7 +220,7 @@ def _compare_manifest_objects(
                     )
                 )
             continue
-        if remote_entry.storage_revision_id == local_entry.previous_storage_revision_id:
+        if _is_stale_remote_entry(local_entry=local_entry, remote_entry=remote_entry):
             issues.append(
                 RemoteMirrorIssue(
                     kind=RemoteMirrorIssueKind.STALE_MIRROR,
@@ -228,6 +239,42 @@ def _compare_manifest_objects(
             )
         )
     return tuple(issues)
+
+
+def _provider_payload_matches_manifest_entry(
+    payload: bytes,
+    metadata: ProviderObjectMetadata,
+    entry: RemoteMirrorObjectManifest,
+) -> bool:
+    content_hash = metadata.content_hash
+    digest = content_hash.split("-", 1)[1] if content_hash.startswith("sha256-") else content_hash
+    return len(payload) == entry.byte_length and digest == entry.ciphertext_hash
+
+
+def _is_stale_remote_entry(
+    *,
+    local_entry: RemoteMirrorObjectManifest,
+    remote_entry: RemoteMirrorObjectManifest,
+) -> bool:
+    if remote_entry.storage_revision_id == local_entry.previous_storage_revision_id:
+        return True
+    if (
+        local_entry.previous_storage_revision_id is not None
+        and remote_entry.previous_storage_revision_id is not None
+        and remote_entry.previous_storage_revision_id != local_entry.previous_storage_revision_id
+    ):
+        return False
+    if local_entry.revision_written_at is None or remote_entry.revision_written_at is None:
+        return False
+    return _normalise_revision_timestamp(remote_entry.revision_written_at) < _normalise_revision_timestamp(
+        local_entry.revision_written_at
+    )
+
+
+def _normalise_revision_timestamp(value: datetime) -> datetime:
+    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+        return value.replace(tzinfo=UTC)
+    return value
 
 
 def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
