@@ -361,7 +361,12 @@ def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str,
             date_inputs[binding_id] = value
             continue
         if isinstance(value, str):
-            parsed = _parse_iso8601_date(value)
+            try:
+                parsed = _parse_iso8601_date(value)
+            except ValueError as exc:
+                raise ModeloBuilderError(
+                    f"date binding {binding_id!r} has a non-ISO date value {value!r}"
+                ) from exc
             if parsed is None:
                 raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}")
             date_inputs[binding_id] = parsed
