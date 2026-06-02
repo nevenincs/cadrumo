@@ -55,6 +55,7 @@ from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
 from cryptography.exceptions import InvalidTag
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.time import now
 
 if TYPE_CHECKING:
@@ -120,6 +121,7 @@ class EnvelopeDocument(BaseModel):
 
     payload: _EnvelopePayload | None = None
 
+
 KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
 """Stable service identifier under which the keyring backend stores the key."""
 
@@ -146,9 +148,6 @@ _KDF_PARAMS_VERSION: Final[int] = 2
 
 * v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1).
 """
-
-from .....core._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-
 
 @runtime_checkable
 class MasterKeyProvider(Protocol):
@@ -1151,9 +1150,7 @@ def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
     if doc.payload is None:
         return None
     tax_ids: list[str] = [
-        str(fact.value)
-        for fact in doc.payload.facts
-        if fact.path == "identity.tax_id" and isinstance(fact.value, str)
+        str(fact.value) for fact in doc.payload.facts if fact.path == "identity.tax_id" and isinstance(fact.value, str)
     ]
     return tuple(tax_ids) if tax_ids else None
 
@@ -1167,11 +1164,7 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
     if session.bucket_id == "unsecured":
         return
     db_path = (
-        load_settings().aeat_local_storage_root
-        / BUCKETS_DIRNAME
-        / session.bucket_id
-        / BUCKET_DB_DIRNAME
-        / "aeat.db"
+        load_settings().aeat_local_storage_root / BUCKETS_DIRNAME / session.bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
     )
     if not db_path.is_file():
         return

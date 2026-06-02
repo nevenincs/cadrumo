@@ -9,7 +9,7 @@ from typing import Final, cast
 
 from pydantic import BaseModel, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
-from sqlalchemy.engine import CursorResult
+from sqlalchemy.engine import CursorResult, RowMapping
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
@@ -20,7 +20,11 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
 from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
-from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
+from ..crypto._encrypted_columns import (
+    HashedLookup,
+    decrypt_encrypted_bytes_column,
+    decrypt_encrypted_string_column,
+)
 from ..errors import (
     ClassificationError,
     DecryptionError,
@@ -214,6 +218,7 @@ class SecureObjectRepository:
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
         self._ensure_table_revision_metadata_columns("secure_objects")
+        self._ensure_deterministic_object_keys()
 
     def _ensure_table_revision_metadata_columns(self, table_name: str) -> None:
         """Add nullable revision metadata columns to a pre-existing table."""
@@ -250,6 +255,129 @@ class SecureObjectRepository:
             return False
         existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
         return column_name in existing
+
+    def _ensure_deterministic_object_keys(self) -> None:
+        """Migrate legacy randomized object-key ciphertexts to HMAC digests.
+
+        Older secure-object rows stored ``object_key`` through
+        ``EncryptedString``. Equality lookups against that column miss
+        because every bind creates fresh ciphertext. Current rows use
+        :class:`HashedLookup`; this bootstrap pass converts decryptable
+        legacy keys in place and quarantines duplicate superseded rows so
+        the active table regains the one-row-per-logical-key contract.
+        """
+        with session_scope(self._engine) as session:
+            rows = (
+                session.execute(
+                    text(
+                        "SELECT id, namespace, object_key, classification, schema_version, written_at, "
+                        "revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                        "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
+                        "conflict_policy, payload "
+                        "FROM secure_objects ORDER BY namespace, id"
+                    )
+                )
+                .mappings()
+                .all()
+            )
+            if not rows:
+                return
+
+            grouped: dict[tuple[str, bytes], list[tuple[RowMapping, bytes]]] = {}
+            unmigratable: list[tuple[RowMapping, bytes]] = []
+            for raw in rows:
+                namespace = str(raw["namespace"])
+                raw_key = self._coerce_raw_bytes(raw["object_key"])
+                try:
+                    natural_key = decrypt_encrypted_string_column(raw_key)
+                except DecryptionError:
+                    if len(raw_key) == 32:
+                        grouped.setdefault((namespace, raw_key), []).append((raw, raw_key))
+                    else:
+                        unmigratable.append((raw, raw_key))
+                    continue
+                target_key = HashedLookup.compute(natural_key)
+                grouped.setdefault((namespace, target_key), []).append((raw, raw_key))
+
+            if unmigratable or any(len(entries) > 1 for entries in grouped.values()):
+                self._ensure_quarantine_table()
+            quarantined_at = _utc_now().isoformat()
+            for raw, raw_key in unmigratable:
+                self._copy_row_to_quarantine(session, raw, object_key=raw_key, quarantined_at=quarantined_at)
+                session.execute(text("DELETE FROM secure_objects WHERE id = :id"), {"id": int(raw["id"])})
+
+            for (_namespace, target_key), entries in grouped.items():
+                winner, winner_key = max(entries, key=self._lookup_migration_sort_key)
+                for raw, raw_key in entries:
+                    if int(raw["id"]) == int(winner["id"]):
+                        continue
+                    self._copy_row_to_quarantine(session, raw, object_key=raw_key, quarantined_at=quarantined_at)
+                    session.execute(text("DELETE FROM secure_objects WHERE id = :id"), {"id": int(raw["id"])})
+                if winner_key != target_key:
+                    session.execute(
+                        text("UPDATE secure_objects SET object_key = :object_key WHERE id = :id"),
+                        {"object_key": target_key, "id": int(winner["id"])},
+                    )
+
+    @staticmethod
+    def _coerce_raw_bytes(value: object) -> bytes:
+        if isinstance(value, bytes | bytearray | memoryview):
+            return bytes(value)
+        if isinstance(value, str):
+            return value.encode("utf-8")
+        raise StorageValidationError(
+            f"secure object raw byte value must be bytes-like or str; got {type(value).__name__}",
+        )
+
+    @staticmethod
+    def _lookup_migration_sort_key(entry: tuple[RowMapping, bytes]) -> tuple[str, str, int]:
+        raw, _raw_key = entry
+        revision_written_at = raw["revision_written_at"] or ""
+        written_at = raw["written_at"] or ""
+        return (str(revision_written_at), str(written_at), int(raw["id"]))
+
+    @staticmethod
+    def _copy_row_to_quarantine(
+        session: Session,
+        raw: RowMapping,
+        *,
+        object_key: bytes,
+        quarantined_at: str,
+    ) -> None:
+        payload_bytes = SecureObjectRepository._coerce_raw_bytes(raw["payload"])
+        session.execute(
+            text(
+                "INSERT INTO secure_objects_quarantine "
+                "(source_id, namespace, object_key, classification, schema_version, "
+                " written_at, revision_id, previous_revision_id, previous_payload_hash, "
+                " payload_hash, ciphertext_hash, revision_written_at, write_provenance, "
+                " source_event_id, conflict_policy, payload, quarantined_at) "
+                "VALUES (:source_id, :namespace, :object_key, :classification, "
+                "        :schema_version, :written_at, :revision_id, "
+                "        :previous_revision_id, :previous_payload_hash, :payload_hash, "
+                "        :ciphertext_hash, :revision_written_at, :write_provenance, "
+                "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
+            ),
+            {
+                "source_id": int(raw["id"]),
+                "namespace": str(raw["namespace"]),
+                "object_key": object_key,
+                "classification": str(raw["classification"]),
+                "schema_version": int(raw["schema_version"]),
+                "written_at": raw["written_at"],
+                "revision_id": raw["revision_id"],
+                "previous_revision_id": raw["previous_revision_id"],
+                "previous_payload_hash": raw["previous_payload_hash"],
+                "payload_hash": raw["payload_hash"],
+                "ciphertext_hash": raw["ciphertext_hash"],
+                "revision_written_at": raw["revision_written_at"],
+                "write_provenance": raw["write_provenance"],
+                "source_event_id": raw["source_event_id"],
+                "conflict_policy": raw["conflict_policy"],
+                "payload": payload_bytes,
+                "quarantined_at": quarantined_at,
+            },
+        )
 
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""
@@ -400,18 +528,14 @@ class SecureObjectRepository:
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
-                "the active profile session has expired; run "
-                "`aeat config profile switch NAME` to re-activate.",
+                "the active profile session has expired; run `aeat config profile switch NAME` to re-activate.",
             )
         if self._require_secure_active_session and session.unsecured_backend:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
                 message_key="errors.storage.runtime.unsecured_backend",
             )
-        if (
-            self._active_session_bucket_id is not None
-            and session.bucket_id != self._active_session_bucket_id
-        ):
+        if self._active_session_bucket_id is not None and session.bucket_id != self._active_session_bucket_id:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session changed.",
                 message_key="errors.storage.runtime.session_changed",
@@ -878,7 +1002,10 @@ class SecureObjectRepository:
             )
             for raw in session.execute(stmt):
                 row_id = int(raw.id)
-                object_key = bytes(raw.object_key)
+                # ``object_key`` is a HashedLookup digest. Keep the bytes
+                # surface stable for diagnostics and raw mirror consumers.
+                _raw_ok = raw.object_key
+                object_key = _raw_ok.encode("utf-8") if isinstance(_raw_ok, str) else bytes(_raw_ok)
                 classification_str = str(raw.classification)
                 schema_version = int(raw.schema_version)
                 written_at = raw.written_at
@@ -905,8 +1032,7 @@ class SecureObjectRepository:
                         schema_version=schema_version,
                         written_at=written_at,
                         reason=(
-                            f"classification {classification.value!r} does not match "
-                            f"expected {expected_class.value!r}"
+                            f"classification {classification.value!r} does not match expected {expected_class.value!r}"
                         ),
                     )
                     continue
@@ -918,10 +1044,7 @@ class SecureObjectRepository:
                         classification=classification_str,
                         schema_version=schema_version,
                         written_at=written_at,
-                        reason=(
-                            f"schema version {schema_version} exceeds supported "
-                            f"{max_supported_version}"
-                        ),
+                        reason=(f"schema version {schema_version} exceeds supported {max_supported_version}"),
                     )
                     continue
                 try:
@@ -1195,9 +1318,12 @@ class SecureObjectRepository:
                 ).where(_orm.SecureObjectRow.id == row_id)
             ).one()
             previous_revision_id = previous_metadata.revision_id
-            previous_payload_hash = previous_metadata.payload_hash or hashlib.sha256(
-                previous_metadata.payload,
-            ).hexdigest()
+            previous_payload_hash = (
+                previous_metadata.payload_hash
+                or hashlib.sha256(
+                    previous_metadata.payload,
+                ).hexdigest()
+            )
         elif expected_revision_id is not None:
             raise self._revision_conflict(
                 namespace=namespace,
@@ -1257,9 +1383,7 @@ class SecureObjectRepository:
                 previous_payload_hash=previous_payload_hash,
                 write_provenance=write_provenance,
                 source_event_id=source_event_id,
-                conflict_policy=(
-                    "compare-and-swap" if expected_revision_id is not None else _DEFAULT_CONFLICT_POLICY
-                ),
+                conflict_policy=("compare-and-swap" if expected_revision_id is not None else _DEFAULT_CONFLICT_POLICY),
             )
             session.flush()
         except IntegrityError as exc:
@@ -1417,7 +1541,6 @@ class SecureObjectRepository:
                 ),
             )
             return bool(result.rowcount and result.rowcount > 0)
-
 
     def _record_from_row(
         self,

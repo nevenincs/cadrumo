@@ -19,6 +19,7 @@ from ._iva_compensation_wallet import (
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
     _wallet_row_from_cells,
+    discover_iva_compensation_wallet_entrypoint,
     is_aeat_wallet_auth_gate_redirect,
     parse_iva_compensation_wallet_html,
 )
@@ -239,6 +240,44 @@ def test_iva_wallet_read_guard_allows_wallet_execute_read_query() -> None:
     _assert_read_browser_action("wallet-execute-read-query")
 
 
+def test_iva_wallet_read_guard_allows_discovered_entrypoint_open() -> None:
+    _assert_read_browser_action("wallet-discovered-entrypoint-open")
+
+
+def test_discover_iva_compensation_wallet_entrypoint_from_pre303_link() -> None:
+    html = f"""
+    <html><body>
+      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?ignored=token">
+        Consulta de la cartera de cuotas de IVA a compensar
+      </a>
+    </body></html>
+    """
+
+    discovered = discover_iva_compensation_wallet_entrypoint(
+        html,
+        base_url=PRE303_PRESENTATION_SERVICE_URL,
+    )
+
+    assert discovered == IVA_COMPENSATION_WALLET_URL
+
+
+def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> None:
+    html = f"""
+    <html><body>
+      <a href="https://example.invalid{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        Consulta de la cartera de cuotas de IVA a compensar
+      </a>
+    </body></html>
+    """
+
+    discovered = discover_iva_compensation_wallet_entrypoint(
+        html,
+        base_url=PRE303_PRESENTATION_SERVICE_URL,
+    )
+
+    assert discovered is None
+
+
 def test_iva_wallet_auth_gate_detector_matches_aeat_4033_redirect() -> None:
     assert is_aeat_wallet_auth_gate_redirect(_AEAT_AUTH_GATE_URL)
     assert not is_aeat_wallet_auth_gate_redirect(IVA_COMPENSATION_WALLET_URL)
@@ -261,6 +300,31 @@ def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:
     assert context["landing_url"] == IVA_COMPENSATION_WALLET_URL
     assert "QUERY-CANARY" not in str(context)
     assert context["raw_sha256"]
+
+
+def test_wallet_shape_context_reports_discovered_wallet_entrypoints_without_query_values() -> None:
+    html = f"""
+    <html><body>
+      <a href="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}?token=QUERY-CANARY">
+        Consulta de la cartera de cuotas de IVA a compensar
+      </a>
+      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <input id="session" name="session" type="hidden" value="QUERY-CANARY" />
+      </form>
+    </body></html>
+    """
+
+    context = _wallet_page_shape_context(
+        html,
+        landing_url=f"{IVA_COMPENSATION_WALLET_URL}?token=QUERY-CANARY#fragment",
+    )
+
+    assert context["wallet_entrypoint_count"] == 2
+    assert context["wallet_entrypoint_paths"] == (
+        _EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+        _EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+    )
+    assert "QUERY-CANARY" not in str(context)
 
 
 def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
