@@ -1777,18 +1777,7 @@ def auth_configure(
     from .._config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     configure_result = result
-    auth_configure_payload = _AuthConfigurePayload(
-        provider=configure_result.provider,
-        file=configure_result.file,
-        complete=configure_result.complete,
-        incomplete_reason=configure_result.incomplete_reason,
-        active_profile=configure_result.active_profile,
-        profile_tax_id_present=configure_result.profile_tax_id_present,
-        provider_identity_present=configure_result.provider_identity_present,
-        identity_alignment=configure_result.identity_alignment,
-        identity_alignment_detail=configure_result.identity_alignment_detail,
-        next_action=configure_result.next_action,
-    )
+    auth_configure_payload = _AuthConfigurePayload.from_result(configure_result)
     lines = [
         f"provider\t{configure_result.provider}",
         f"file\t{configure_result.file}",

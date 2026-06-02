@@ -16,9 +16,14 @@ All sequence fields use ``list`` rather than ``tuple`` because
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import ConfigDict
 
 from ._schemas import OutputSchema, register_schema
+
+if TYPE_CHECKING:
+    from ....application.auth._operator import AuthConfigureResult
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -263,6 +268,27 @@ class AuthConfigurePayload(OutputSchema):
     identity_alignment: str | None = None
     identity_alignment_detail: str | None = None
     next_action: str | None = None
+
+    @classmethod
+    def from_result(cls, result: AuthConfigureResult) -> AuthConfigurePayload:
+        """Project the application :class:`AuthConfigureResult` into this CLI envelope.
+
+        Explicit field projection (DB-26 S50): the envelope derives its values from
+        the application result instead of the command handler re-declaring the field
+        map inline. ``status`` is a CLI-only display field left to its default.
+        """
+        return cls(
+            provider=result.provider,
+            file=result.file,
+            complete=result.complete,
+            incomplete_reason=result.incomplete_reason,
+            active_profile=result.active_profile,
+            profile_tax_id_present=result.profile_tax_id_present,
+            provider_identity_present=result.provider_identity_present,
+            identity_alignment=result.identity_alignment,
+            identity_alignment_detail=result.identity_alignment_detail,
+            next_action=result.next_action,
+        )
 
 
 @register_schema("config.auth.status")
