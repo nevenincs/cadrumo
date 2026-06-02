@@ -75,10 +75,14 @@ from ...domain.modelos._calculation_revision import CalculationRevision, Calcula
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (
     Modelo184MemberRow,
+    Modelo184ShareSumError,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo347ThresholdError,
     Modelo349OperadorRow,
     ModeloDetailRow,
+    validate_m184_member_share_sum,
+    validate_m347_threshold,
     validate_m349_nif_format,
 )
 from ...domain.modelos._verification_report import VerificationReport
@@ -950,21 +954,20 @@ def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
     exactly 100% per filing.
     """
     member_rows = [r for r in rows if isinstance(r, Modelo184MemberRow)]
-    if not member_rows:
-        return
-    total = sum(r.porcentaje for r in member_rows)
-    if total != Decimal("100"):
+    try:
+        validate_m184_member_share_sum(member_rows)
+    except Modelo184ShareSumError as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_m184_shares_not_100",
                 default=(
                     f"M184 miembro rows: share percentages must sum to exactly 100%; "
-                    f"got {total} across {len(member_rows)} rows"
+                    f"got {exc.total} across {exc.count} rows"
                 ),
-                total=str(total),
-                count=str(len(member_rows)),
+                total=str(exc.total),
+                count=str(exc.count),
             )
-        )
+        ) from exc
 
 
 def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
@@ -975,22 +978,22 @@ def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
     rows, because each row is one declared counterparty.
     """
     contraparte_rows = [r for r in rows if isinstance(r, Modelo347ContraparteRow)]
-    for row in contraparte_rows:
-        total = row.importe_total
-        if total <= M347_THRESHOLD_EUR:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.row_m347_below_threshold",
-                    default=(
-                        f"M347 contraparte row (nif={row.nif!r}): importe total {total} "
-                        f"does not exceed the €{M347_THRESHOLD_EUR} threshold "
-                        f"required by RD 1065/2007 art. 31.1"
-                    ),
-                    nif=row.nif,
-                    total=str(total),
-                    threshold=str(M347_THRESHOLD_EUR),
-                )
+    try:
+        validate_m347_threshold(contraparte_rows)
+    except Modelo347ThresholdError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_m347_below_threshold",
+                default=(
+                    f"M347 contraparte row (nif={exc.nif!r}): importe total {exc.total} "
+                    f"does not exceed the €{M347_THRESHOLD_EUR} threshold "
+                    f"required by RD 1065/2007 art. 31.1"
+                ),
+                nif=exc.nif,
+                total=str(exc.total),
+                threshold=str(M347_THRESHOLD_EUR),
             )
+        ) from exc
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))

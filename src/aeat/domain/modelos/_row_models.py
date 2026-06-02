@@ -27,6 +27,7 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -338,12 +339,74 @@ class Modelo347ContraparteRow(BaseModel):
 
 ModeloDetailRow = Modelo184MemberRow | Modelo232VinculadaRow | Modelo349OperadorRow | Modelo347ContraparteRow
 
+
+# ---------------------------------------------------------------------------
+# Statutory cross-row / threshold validations (domain-owned)
+# ---------------------------------------------------------------------------
+
+
+class Modelo347ThresholdError(ValueError):
+    """A Modelo 347 contraparte row falls at or below the declarability threshold."""
+
+    def __init__(self, *, nif: str, total: Decimal) -> None:
+        self.nif = nif
+        self.total = total
+        super().__init__(
+            f"M347 contraparte (nif={nif!r}): importe total {total} does not exceed the "
+            f"{M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 31.1",
+        )
+
+
+class Modelo184ShareSumError(ValueError):
+    """Modelo 184 member share percentages do not sum to exactly 100%."""
+
+    def __init__(self, *, total: Decimal, count: int) -> None:
+        self.total = total
+        self.count = count
+        super().__init__(
+            f"M184 miembro rows: share percentages must sum to exactly 100%; got {total} across {count} rows",
+        )
+
+
+def validate_m347_threshold(rows: Sequence[Modelo347ContraparteRow]) -> None:
+    """Enforce the Modelo 347 per-counterparty declarability threshold.
+
+    RD 1065/2007 art. 31.1: only counterparties whose annual operations exceed
+    EUR 3,005.06 are declarable. The check is per row (one row = one counterparty).
+
+    Raises:
+        Modelo347ThresholdError: on the first contraparte at or below the threshold.
+    """
+    for row in rows:
+        if row.importe_total <= M347_THRESHOLD_EUR:
+            raise Modelo347ThresholdError(nif=row.nif, total=row.importe_total)
+
+
+def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
+    """Enforce that Modelo 184 member share percentages sum to exactly 100%.
+
+    Only checked when at least one miembro row is present (partial sets are skipped).
+
+    Raises:
+        Modelo184ShareSumError: when the share percentages do not total exactly 100.
+    """
+    if not rows:
+        return
+    total = sum((row.porcentaje for row in rows), Decimal("0"))
+    if total != Decimal("100"):
+        raise Modelo184ShareSumError(total=total, count=len(rows))
+
+
 __all__ = [
     "M347_THRESHOLD_EUR",
     "Modelo184MemberRow",
+    "Modelo184ShareSumError",
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
+    "Modelo347ThresholdError",
     "Modelo349OperadorRow",
     "ModeloDetailRow",
+    "validate_m184_member_share_sum",
+    "validate_m347_threshold",
     "validate_m349_nif_format",
 ]
