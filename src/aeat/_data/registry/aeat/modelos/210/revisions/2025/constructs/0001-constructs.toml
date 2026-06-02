@@ -14,12 +14,6 @@ formulas = [
     "m210-cuota-diferencial-2025",
 ]
 application_links = [
-    "modelo-210-calculation",
-    "modelo-210-filing",
-    "modelo-210-export",
-    "modelo-210-verification",
-    "modelo-210-review",
-    "modelo-210-approval",
-    "modelo-210-reconciliation",
-    "modelo-210-workflow",
+    "modelo-210-2025-calculation",
+    "modelo-210-2025-filing",
 ]
