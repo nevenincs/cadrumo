@@ -22,6 +22,7 @@ Submodules
    aeat.domain.calculations.registry._citation_blocklist
    aeat.domain.calculations.registry._constructs
    aeat.domain.calculations.registry._coverage
+   aeat.domain.calculations.registry._cross_revision_divergence
    aeat.domain.calculations.registry._errors
    aeat.domain.calculations.registry._export
    aeat.domain.calculations.registry._export_parse

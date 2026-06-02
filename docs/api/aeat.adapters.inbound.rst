@@ -16,7 +16,6 @@ Subpackages
    aeat.adapters.inbound.borrador
    aeat.adapters.inbound.declaracion
    aeat.adapters.inbound.financial
-   aeat.adapters.inbound.identity
    aeat.adapters.inbound.justificante
    aeat.adapters.inbound.pdf
    aeat.adapters.inbound.sanitizer
