@@ -60,31 +60,19 @@ def test_custodia_compartida_count_zero_when_no_descendants() -> None:
 
 
 def test_custodia_compartida_count_zero_when_none_flagged() -> None:
-    p = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),
-        )
-    )
+    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),))
     assert p.custodia_compartida_count(FILING_YEAR) == 0
 
 
 def test_custodia_compartida_count_one_when_one_flagged_eligible() -> None:
-    p = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),
-        )
-    )
+    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),))
     assert p.custodia_compartida_count(FILING_YEAR) == 1
 
 
 def test_custodia_compartida_count_ignores_ineligible() -> None:
     # A 26-year-old without discapacidad is not eligible for the ordinary mínimo,
     # so custodia_compartida on such a descendant does not increment the count.
-    p = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),
-        )
-    )
+    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(1998, 1, 1), custodia_compartida=True),))
     assert p.custodia_compartida_count(FILING_YEAR) == 0
 
 
@@ -117,9 +105,7 @@ def test_prorrata_factor_is_one_for_ineligible_with_custodia() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _mínimo_primer_hijo_with_prorrata(
-    family: RentaFamilyProfile, filing_year: int
-) -> Decimal:
+def _mínimo_primer_hijo_with_prorrata(family: RentaFamilyProfile, filing_year: int) -> Decimal:
     """Compute mínimo primer hijo applying Art. 59 prorrata.
 
     Each eligible descendant contributes _MINIMO_1 (full year) multiplied by
@@ -171,20 +157,12 @@ def test_antitautology_without_custodia_full_minimo() -> None:
 
 
 def test_advisory_none_when_no_custodia() -> None:
-    p = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),
-        )
-    )
+    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),))
     assert p.custodia_compartida_advisory(FILING_YEAR) is None
 
 
 def test_advisory_returns_string_when_custodia_present() -> None:
-    p = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),
-        )
-    )
+    p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),))
     advisory = p.custodia_compartida_advisory(FILING_YEAR)
     assert advisory is not None
     assert isinstance(advisory, str)
@@ -194,14 +172,10 @@ def test_advisory_returns_string_when_custodia_present() -> None:
 def test_advisory_antitautology_custodia_vs_no_custodia() -> None:
     """The advisory differs between a custodia and a non-custodia profile."""
     with_custodia = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),
-        )
+        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=True),)
     )
     without_custodia = RentaFamilyProfile(
-        descendientes=(
-            DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),
-        )
+        descendientes=(DescendantInfo(birth_date=date(2020, 3, 15), custodia_compartida=False),)
     )
     assert with_custodia.custodia_compartida_advisory(FILING_YEAR) is not None
     assert without_custodia.custodia_compartida_advisory(FILING_YEAR) is None
