@@ -51,11 +51,17 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
 
     r = _invoke(
         [
-            "config", "profile", "create", "idempotency-test",
+            "config",
+            "profile",
+            "create",
+            "idempotency-test",
             "--quiet",
-            "--tax-id", "12345678Z",
-            "--activity", "design",
-            "--output-language", "en",
+            "--tax-id",
+            "12345678Z",
+            "--activity",
+            "design",
+            "--output-language",
+            "en",
         ]
     )
     assert r.exit_code == 0, r.output
@@ -149,8 +155,15 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         # carrying a different UUID.
         r_local = _invoke(
             [
-                "config", "profile", "create", "idempotency-test",
-                "--quiet", "--tax-id", "87654321X", "--activity", "consulting",
+                "config",
+                "profile",
+                "create",
+                "idempotency-test",
+                "--quiet",
+                "--tax-id",
+                "87654321X",
+                "--activity",
+                "consulting",
             ]
         )
         assert r_local.exit_code == 0, r_local.output
@@ -163,9 +176,7 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         assert "Traceback" not in r_import.output
 
         # Passing --label with the SAME taken name is also refused.
-        r_explicit = _invoke(
-            ["config", "profile", "import", str(bundle_path), "--label", "idempotency-test"]
-        )
+        r_explicit = _invoke(["config", "profile", "import", str(bundle_path), "--label", "idempotency-test"])
         assert r_explicit.exit_code != 0, r_explicit.output
         assert_public_profile_id_not_leaked(r_explicit.output, exported_id)
         assert "Traceback" not in r_explicit.output
@@ -173,9 +184,14 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
         # Passing --label with a FREE name succeeds.
         r_free = _invoke(
             [
-                "--format", "json",
-                "config", "profile", "import", str(bundle_path),
-                "--label", "idempotency-test-imported",
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "import",
+                str(bundle_path),
+                "--label",
+                "idempotency-test-imported",
             ]
         )
         assert r_free.exit_code == 0, r_free.output
@@ -225,9 +241,14 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         # (different UUID, different label).
         r_mut = _invoke(
             [
-                "--format", "json",
-                "config", "profile", "import", str(mutated_bundle_path),
-                "--label", "idempotency-test-mutated",
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "import",
+                str(mutated_bundle_path),
+                "--label",
+                "idempotency-test-mutated",
             ]
         )
         assert r_mut.exit_code == 0, r_mut.output
