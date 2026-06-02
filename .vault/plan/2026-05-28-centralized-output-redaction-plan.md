@@ -148,7 +148,7 @@ Add operator-facing canary tests across text and JSON output.
 
 Update command suites whose expected output includes profile, bucket, or tax context.
 
-- [ ] `W03.P10.S57` - update modelo CLI tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W03.P10.S57` - update modelo CLI tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [ ] `W03.P10.S58` - update modelo work UX tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo_work_ux.py`.
 - [ ] `W03.P10.S59` - update modelo source-mesh tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_modelo_source_mesh_calculate.py`.
 - [ ] `W03.P10.S60` - update ledger allocation tests for central redaction of identifiers; `src/aeat/entrypoints/cli/test_ledger_allocate_classification.py`.

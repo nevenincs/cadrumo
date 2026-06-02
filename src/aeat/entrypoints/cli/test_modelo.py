@@ -7,16 +7,25 @@ error (malformed period, unknown modelo) must surface as a
 
 from __future__ import annotations
 
+import json
+import re
+
 import pytest
 import typer
 
 from ...application.modelo import WorkUnitNotFoundError
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ...core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ...tests.cli_runner import invoke_cached_cli
 from ._modelo import _bad_parameter_from_error
 from ._test_envelope import unwrap_schema_envelope as _payload
-from ...tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_UUID_TEXT_RE = re.compile(
+    r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b",
+    re.IGNORECASE,
+)
 
 
 def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
@@ -81,6 +90,10 @@ def test_describe_revision_ids_present_in_json_payload() -> None:
     assert isinstance(payload["revision_ids"], list)
     assert payload["revision_ids"]
     assert payload["revision"] in payload["revision_ids"]
+    encoded_payload = json.dumps(payload, sort_keys=True)
+    assert CLI_PROFILE_ID_PLACEHOLDER not in encoded_payload
+    assert CLI_BUCKET_ID_PLACEHOLDER not in encoded_payload
+    assert _UUID_TEXT_RE.search(encoded_payload) is None
 
 
 # ---------------------------------------------------------------------------
@@ -1163,7 +1176,7 @@ def test_verification_report_lines_includes_next_action_when_refused() -> None:
 
     lines = _verification_report_lines(report)
 
-    next_action_lines = [l for l in lines if l.startswith("next_action\t")]
+    next_action_lines = [line for line in lines if line.startswith("next_action\t")]
     assert len(next_action_lines) == 1
     assert calc_id in next_action_lines[0]
     assert "verification-report list" in next_action_lines[0]
@@ -1198,7 +1211,7 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
 
     lines = _verification_report_lines(report)
 
-    assert not any(l.startswith("next_action\t") for l in lines)
+    assert not any(line.startswith("next_action\t") for line in lines)
 
 
 class TestDt12ReduccionPlanPensiones:
