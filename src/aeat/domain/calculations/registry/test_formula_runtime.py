@@ -421,8 +421,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
         extended_revision, filing_year=2026, period="1T"
     )
     assert all(
-        "test-cap-suppressed-binding" not in requirement.binding_ids
-        for requirement in requirements_first_period
+        "test-cap-suppressed-binding" not in requirement.binding_ids for requirement in requirements_first_period
     )
 
     requirements_second_period = previous_filing_observation_requirements(
@@ -465,8 +464,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
         filing_year=2025,
         period="0A",
         observations=tuple(
-            CasillaObservation(casilla_id=cid, value=Decimal("1"))
-            for cid in ("0224", "1479", "1553", "1577")
+            CasillaObservation(casilla_id=cid, value=Decimal("1")) for cid in ("0224", "1479", "1553", "1577")
         ),
     )
 
