@@ -89,8 +89,10 @@ class TestFormulaStructure:
         negated_casillas = {
             arg["args"][0]["casilla"]
             for arg in args
-            if arg.get("op") == "negate" and arg.get("args")
-            and isinstance(arg["args"], (list, tuple)) and arg["args"][0].get("casilla")
+            if arg.get("op") == "negate"
+            and arg.get("args")
+            and isinstance(arg["args"], (list, tuple))
+            and arg["args"][0].get("casilla")
         }
         assert "0058" in negated_casillas, (
             f"renta-2024-trabajo-total-ingresos-integros-computables must negate casilla 0058; "
@@ -107,8 +109,10 @@ class TestFormulaStructure:
         negated_casillas = {
             arg["args"][0]["casilla"]
             for arg in args
-            if arg.get("op") == "negate" and arg.get("args")
-            and isinstance(arg["args"], (list, tuple)) and arg["args"][0].get("casilla")
+            if arg.get("op") == "negate"
+            and arg.get("args")
+            and isinstance(arg["args"], (list, tuple))
+            and arg["args"][0].get("casilla")
         }
         assert "0059" in negated_casillas, (
             f"renta-2025-trabajo-total-ingresos-integros-computables must negate casilla 0059; "

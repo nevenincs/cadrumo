@@ -23,14 +23,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 _AFFECTED_FILES: list[Path] = [
-    _REPO_ROOT
-    / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
-    _REPO_ROOT
-    / "src/aeat/domain/user_profile/_registry_contract.py",
-    _REPO_ROOT
-    / "src/aeat/application/filing/_export.py",
-    _REPO_ROOT
-    / "src/aeat/domain/calculations/registry/_export.py",
+    _REPO_ROOT / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
+    _REPO_ROOT / "src/aeat/domain/user_profile/_registry_contract.py",
+    _REPO_ROOT / "src/aeat/application/filing/_export.py",
+    _REPO_ROOT / "src/aeat/domain/calculations/registry/_export.py",
 ]
 
 # Patterns that indicate a surviving bare-string comparison or assignment that

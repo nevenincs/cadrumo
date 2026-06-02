@@ -88,9 +88,7 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     assert micro_empresa.source_refs
 
     binding = next(
-        binding
-        for binding in revision.bindings
-        if binding.id == "modelo-200-2024-profile-legal-entity-form"
+        binding for binding in revision.bindings if binding.id == "modelo-200-2024-profile-legal-entity-form"
     )
     assert binding.source == "profile"
     assert binding.selector["profile_model"] == "taxpayer"
@@ -99,13 +97,9 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     assert "ley-27-2014:art-29" in binding.legal_refs
 
     dispatch_formula = next(
-        formula
-        for formula in revision.formulas
-        if formula.id == "modelo-200-tipo-gravamen-por-forma-juridica"
+        formula for formula in revision.formulas if formula.id == "modelo-200-tipo-gravamen-por-forma-juridica"
     )
-    assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(
-        dispatch_formula.legal_refs
-    )
+    assert {"ley-27-2014:art-29", "ley-27-2014:art-30"} <= set(dispatch_formula.legal_refs)
     # The formula is a 3-level nested if_then_else: new-entity override
     # (args[1]) -> ERD-threshold branch (args[2].args[1]) -> established-entity
     # general rates (args[2].args[2]). The canonical "rate schedule by entity
