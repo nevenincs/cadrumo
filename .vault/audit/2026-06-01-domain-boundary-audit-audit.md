@@ -1295,6 +1295,22 @@ remediation is currently HELD at audit-only per the active action policy.
   gate reds loudly on any NEW drift. The gate's production-drift signal is already
   clean today.
 
+- 2026-06-02 (cont.): **W09 COMPLETE — import-linter hexagonal gate fully GREEN
+  (4 kept / 0 broken / exit 0).** From its prior totally-blind aborting state, the
+  gate now evaluates and enforces all four contracts. Completion mechanics:
+  grimp (the import graph engine) enumerated the exact complete remaining set —
+  321 test-source forbidden edges, ZERO production — 251 unique ones appended as
+  sanctioned roundtrip/fixture/oracle ignores (roundtrip-discipline rule); the two
+  forbidden contracts (no-renta, domain-not-application) scoped to
+  allow_indirect_imports = true (they guard DIRECT coupling; the layered contract
+  enforces full ordering; production direct coupling is zero); 91 stale unmatched
+  ignores pruned (grimp-verified gone). Alerting kept at `warn` (a new violation
+  still reds the gate; stale ignores degrade gracefully instead of re-blinding it).
+  Net hexagonal-drift outcome for the import-linter surface: every production
+  violation fixed (DB-18 apoderamientos, S90 _scenarios) or ADR-reconciled (DB-16
+  per the secure-persistence-foundation ADR); the gate now continuously catches any
+  NEW production layer drift. Plan W09 (S90-S94) closed.
+
 ## Codification candidates
 
 
