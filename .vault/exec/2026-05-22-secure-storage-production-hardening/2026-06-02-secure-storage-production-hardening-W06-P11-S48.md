@@ -38,6 +38,8 @@ The combined live command `uv run --no-sync pytest src/aeat/application/live src
 
 ## Review Status
 
-Mandatory `vaultspec-code-reviewer` review was requested for S48, but the subagent failed with the session usage-limit error: "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 12:42 PM."
+Mandatory `vaultspec-code-reviewer` review was requested for S48. The first subagent request failed with the session usage-limit error: "You've hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 12:42 PM."
 
-Because the external reviewer pass did not complete, `W06.P11.S48` remains open in the plan. This checkpoint records completed gate evidence and the local remediation only; final closure requires rerunning the mandatory reviewer gate.
+After retry, reviewer `Franklin` completed the mandatory pass with no findings. The reviewer confirmed that the S48 test delta is scoped, uses the real `isolated_runtime_profile` repository, asserts fail-closed `StorageValidationError`, verifies the stable translated key, and avoids fake/stub, env-mutation, tautological-test, and localization-contract drift.
+
+The recorded gate evidence and no-findings review support closing `W06.P11.S48`.
