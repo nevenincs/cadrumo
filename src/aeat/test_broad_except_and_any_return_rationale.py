@@ -14,6 +14,7 @@ Real-behavior AST + source walk that asserts:
 The tests walk real source files using ``ast`` + line-level string
 matching. No mocks, no skips, no tautological assertions.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -120,9 +121,7 @@ _KWARGS_ANY_MANDATE: list[tuple[Path, str]] = [
 _KWARGS_RATIONALE_TOKEN = "KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH"
 
 
-def _check_marker_near_def(
-    lines: list[str], lineno: int, token: str, window: int = 10
-) -> bool:
+def _check_marker_near_def(lines: list[str], lineno: int, token: str, window: int = 10) -> bool:
     """Return True if token appears in the ``window`` lines preceding lineno or on lineno."""
     start = max(0, lineno - window - 1)
     end = lineno  # inclusive of the def line (lineno is 1-based → index lineno-1)
