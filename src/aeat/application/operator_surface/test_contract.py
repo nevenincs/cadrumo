@@ -52,9 +52,7 @@ def _pin_english_locale() -> Iterator[None]:
     call rebuilds against the reloaded constants.
     """
     with override_settings(aeat_output_language="en"):
-        contract_module = importlib.import_module(
-            "aeat.application.operator_surface._contract"
-        )
+        contract_module = importlib.import_module("aeat.application.operator_surface._contract")
         package_module = importlib.import_module("aeat.application.operator_surface")
         original_retired = contract_module.RETIRED_OPERATOR_SURFACES
         # Rebuild the retired-surface tuple under the active (English)
@@ -67,13 +65,9 @@ def _pin_english_locale() -> Iterator[None]:
         # module imported eagerly so they point at the freshly-reloaded
         # contract module.
         package_module.RETIRED_OPERATOR_SURFACES = rebuilt
-        package_module.get_operator_surface_contract = (
-            contract_module.get_operator_surface_contract
-        )
+        package_module.get_operator_surface_contract = contract_module.get_operator_surface_contract
         package_module.require_accepted_root = contract_module.require_accepted_root
-        package_module.retired_surface_suggestion = (
-            contract_module.retired_surface_suggestion
-        )
+        package_module.retired_surface_suggestion = contract_module.retired_surface_suggestion
         try:
             yield
         finally:
@@ -303,9 +297,7 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
 
     # The LIVE family must declare exactly the filed sub-command via the enum.
     contract = get_operator_surface_contract()
-    live_family = next(
-        f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE
-    )
+    live_family = next(f for f in contract.command_families if f.domain is MountedCommandDomain.LIVE)
     assert FilingStatus.FILED in live_family.commands
 
     # The contract module source must not contain bare "filed" string literals

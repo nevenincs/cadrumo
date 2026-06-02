@@ -312,9 +312,7 @@ def verify_export(
     # ``unchecked_casillas`` so the verdict is honest about its coverage —
     # a MATCH does not mean every draft casilla was confirmed on disk.
     checked_set = set(checked)
-    unchecked = tuple(
-        sorted(value.casilla_id for value in draft.values if value.casilla_id not in checked_set)
-    )
+    unchecked = tuple(sorted(value.casilla_id for value in draft.values if value.casilla_id not in checked_set))
     return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
         file_path=file_path,
@@ -367,7 +365,9 @@ def _record_row_indexes(
         if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
             return ()
         return (None,)
-    binding_ids = {field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None}
+    binding_ids = {
+        field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
+    }
     row_indexes = sorted(
         row_index for binding_id, row_index in binding_values if binding_id in binding_ids and row_index is not None
     )
@@ -378,7 +378,9 @@ def _record_has_binding_value(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[str, int | None], object],
 ) -> bool:
-    binding_ids = {field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None}
+    binding_ids = {
+        field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
+    }
     return any(
         binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
     )
@@ -618,9 +620,7 @@ def _provenance_for_casillas(
 ) -> tuple[ModeloCasillaProvenance, ...]:
     provenance_by_id = {entry.casilla_id: entry for entry in draft.casilla_provenance}
     return tuple(
-        provenance_by_id[casilla_id]
-        for casilla_id in dict.fromkeys(casilla_ids)
-        if casilla_id in provenance_by_id
+        provenance_by_id[casilla_id] for casilla_id in dict.fromkeys(casilla_ids) if casilla_id in provenance_by_id
     )
 
 
