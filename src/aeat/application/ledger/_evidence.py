@@ -267,7 +267,8 @@ class PurchaseInvoiceEvidenceService:
         Resolves ``source_path`` to an absolute path, verifies the file
         exists, infers the ``MediaKind`` from the extension, SHA-256 hashes
         the file, creates a ``PurchaseInvoiceEvidence`` record, appends it to
-        the per-bucket JSONL store, and emits a
+        the in-memory catalogue, persists the encrypted bucket-local catalogue
+        in secure-object storage, and emits a
         ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event.
 
         Args:
@@ -432,8 +433,9 @@ class PurchaseInvoiceEvidenceService:
     ) -> PurchaseInvoiceEvidenceResult:
         """Remove an evidence record from a bucket.
 
-        Finds the record, removes it from the in-memory list, rewrites the
-        JSONL file without it, and emits a
+        Loads the bucket catalogue, finds the record, removes it from the
+        in-memory list, persists the updated encrypted bucket-local catalogue
+        in secure-object storage, and emits a
         ``PURCHASE_INVOICE_EVIDENCE_DETACHED`` audit event.
 
         Args:
