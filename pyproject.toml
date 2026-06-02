@@ -222,6 +222,25 @@ ignore = [
   "S101",  # allow assert in tests
   "TID252",  # tolerate relative parent imports within subpackages
   "N813",  # `Translatable as tr` is the canonical i18n alias across the codebase
+  # Spanish-language ambiguous-unicode checks are noise on this project:
+  # the codebase quotes BOE, AEAT, and other regulatory sources verbatim,
+  # which contains accented Latin glyphs (á é í ó ú ñ) and the inverted
+  # punctuation marks (¿ ¡). These are linguistically correct, not
+  # confusables, and tagging them as ambiguous would degrade legal-source
+  # fidelity. RUF001/002/003 are turned off project-wide on that basis.
+  "RUF001",  # ambiguous-unicode-character-string (Spanish chars in literals)
+  "RUF002",  # ambiguous-unicode-character-docstring (Spanish chars in docstrings)
+  "RUF003",  # ambiguous-unicode-character-comment (Spanish chars in comments)
+  # RUF012 (mutable-class-default) is a false positive for pydantic
+  # BaseModel subclasses, which are the dominant boundary-record
+  # pattern in this codebase. pydantic deep-copies field defaults on
+  # every instance construction (see pydantic-core's `deepcopy_default`
+  # path) so a `list[str] = []` default on a BaseModel attribute does
+  # NOT exhibit the shared-mutable-state bug ruff is warning about.
+  # The check would still be useful on plain @dataclass / NamedTuple /
+  # bare class state but the project's models are predominantly
+  # pydantic; ignoring project-wide is the right trade.
+  "RUF012",  # mutable-class-default (pydantic field defaults — safe)
 ]
 
 [tool.ruff.lint.pydocstyle]
