@@ -97,7 +97,7 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
-    from ...domain.calculations.registry import ModeloDefinition, ModeloRevision
+    from ...domain.calculations.registry import CasillaObservation, ModeloDefinition, ModeloRevision
     from ._modelo_payloads import (
         CalculationRevisionPayload,
         ModeloRecordPayload,
@@ -319,7 +319,7 @@ def modelo_readiness(
     if not projection.modelo_readiness:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
     report = projection.modelo_readiness[0]
-    payload = report.model_dump(mode="json")
+    report.model_dump(mode="json")
     lines = [
         f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
@@ -5238,8 +5238,6 @@ def modelo_project(
     merged_date_bindings = dict(profile_date_bindings)
     # Aliases used by the exception-handler log so the existing
     # observability surface keeps the original variable names.
-    m100_bindings = merged_bindings
-    m100_enum_bindings = merged_enum_bindings
 
     # -- Run M100 registry snapshot calculation ----------------------------------
     try:
