@@ -18,10 +18,9 @@ from __future__ import annotations
 
 import typer
 
-from ....core.time import now
-
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
+from ....core.time import now
 from ....domain.profile._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
@@ -230,8 +229,7 @@ def register(profile_app: typer.Typer) -> None:
         ]
         for row in comparison.rows:
             lines.append(
-                f"{row.status.value}\t{row.path}\t"
-                f"censo={row.censo_value or ''}\tprofile={row.profile_value or ''}"
+                f"{row.status.value}\t{row.path}\tcenso={row.censo_value or ''}\tprofile={row.profile_value or ''}"
             )
         _emit_envelope(ctx, command="config.profile.censo.compare", result=typed_compare, lines=lines)
 

@@ -123,8 +123,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].certificate_path_configured is True
         assert listed.rows[0].certificate_backend == "playwright_context"
         assert listed.rows[0].url.startswith(
-            f"{external.domains.www12.removeprefix('https://')}"
-            f"{external.clave_movil.autentica_dni_nie_contraste_path}"
+            f"{external.domains.www12.removeprefix('https://')}{external.clave_movil.autentica_dni_nie_contraste_path}"
         )
         assert listed.rows[0].url.endswith("?keys=qAA,ref,storksp,from,ts")
         assert "%2Fprivate-target" not in listed.rows[0].url
@@ -164,9 +163,7 @@ def test_auth_diagnostic_phone_state_error_is_in_error_registry() -> None:
 
 
 def test_auth_diagnostic_phone_state_error_round_trips_through_build_error_envelope() -> None:
-    err = AuthDiagnosticPhoneStateError(
-        "not_a_valid_state", context={"phone_state": "not_a_valid_state"}
-    )
+    err = AuthDiagnosticPhoneStateError("not_a_valid_state", context={"phone_state": "not_a_valid_state"})
     envelope = build_error_envelope(err)
     assert envelope.code == "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE"
     assert envelope.category == "REFUSED"
