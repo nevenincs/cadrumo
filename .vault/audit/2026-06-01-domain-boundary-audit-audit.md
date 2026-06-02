@@ -1393,6 +1393,24 @@ remediation is currently HELD at audit-only per the active action policy.
   wontfix-boundary-correct); the remaining open W04.P13 work is S51/S52
   (Ledger/Modelo/Censo/Inventory projections).
 
+- 2026-06-02 (cont.): **DB-26 / W04.P13 S52 EXECUTED; S51 PARTIAL.** Applied the same
+  boundary-safe rename + `from_result` projection pattern to the remaining twins, each
+  verified behaviour-neutral (serialization by field + `@register_schema` string key;
+  `model_dump(mode="json")` kept inside each projection to preserve typed-id/enum/
+  nested coercion exactly). **S52 complete** (commit `df0a98a12`): CLI
+  `CensoApplyResult`→`CensoApplyPayload` with `from_result` (T9), and
+  `InventoryValuationPreviewResult`→`InventoryValuationPreviewPayload` with a
+  *flattening* `from_result` that lifts the application wrapper's inner `preview`
+  fields + `bucket_event_ids` (T10); 201 censo+conformance + 25 inventory tests green.
+  **S51 partial** (commit `57ed96989`): CLI `LedgerExportResult`→`LedgerExportPayload`
+  (T6, excludes `payload` bytes + appends `output_path`) and
+  `LedgerImportResult`→`LedgerImportPayload` (T7, threads the three operator notices);
+  25 ledger export/import + conformance tests green. **T8 (ModeloExport) remains
+  blocked** — `cli/_modelo.py` is peer-WIP; S51 stays unchecked until T8 lands on a
+  clean surface. Also fixed two `TYPE_CHECKING` relative-import depths (`....`→`...`
+  for the two cli/-level payload modules) surfaced by `ty check`; runtime/tests were
+  green regardless since the imports are type-only.
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
