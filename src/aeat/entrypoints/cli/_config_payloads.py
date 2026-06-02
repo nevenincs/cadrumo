@@ -244,7 +244,7 @@ class AuthProvidersResult(OutputSchema):
 
 
 @register_schema("config.auth.configure")
-class AuthConfigureResult(OutputSchema):
+class AuthConfigurePayload(OutputSchema):
     """JSON envelope for ``aeat config auth configure``.
 
     Field set mirrors :class:`AuthConfigureReport` from the application layer.
@@ -303,7 +303,7 @@ class AuthLoginPayload(OutputSchema):
 
 
 @register_schema("config.auth.clear")
-class AuthClearResult(OutputSchema):
+class AuthClearPayload(OutputSchema):
     """JSON envelope for ``aeat config auth clear``."""
 
     removed_sessions: int
