@@ -1408,6 +1408,31 @@ remediation is currently HELD at audit-only per the active action policy.
     OperatorSurfaceContract.source_kinds, _contract SOURCE_KINDS, resolve_source_kind_alias
     + the S77 test — execute with care on fresh context.
 
+- 2026-06-02 (cont.): next-tier step analysis (all require careful/fresh-context work).
+  - **S70/S71 (DB-06 period dedup) — format-divergence, verification-gated.**
+    `application/aggregation/_models.py` Period parses a SELF-CONTAINED format
+    (`YYYY` / `YYYY-Q[1-4]` / `YYYY-MM`) and computes start/end from `_QUARTER_MONTHS`;
+    `domain/period.py` exposes `parse_canonical_period(period, *, ejercicio)` and
+    `period_start_date/period_end_date(filing_year, registry_period)` — a DIFFERENT
+    representation (filing_year + Spanish registry token like `1T`, not the embedded
+    `YYYY-Q1`). The dedup is only of the date-COMPUTATION, and requires a
+    quarter→registry-token mapping (Q1→1T…) plus proof that
+    `period_start_date(year,"1T")` equals aggregation's current `_QUARTER_MONTHS`
+    boundaries. Period dates feed tax calculations, so this needs a careful
+    equivalence pass + the workflow/aggregation period tests as the gate — not an
+    exhausted-context change. Files clean.
+  - **S54 (DB-07/DB-18 Topic relocation), W06 (S61-S66 profile rename, 23+ importers)
+    — cross-package relocations**, deferred while a 398-file peer sweep (vault-doc
+    annotation-sanitize + radon/ruff complexity refactor) is in flight: relocations
+    need a stable tree + clean atomic collection gate, and a multi-file move amid a
+    massive in-flight sweep risks collision.
+  - **S49-S52 (DB-26 twin DTOs) — CLI-JSON-contract-sensitive** (see prior DB-26
+    note: Status/Test/Login are legitimate adapters needing rename-disambiguation,
+    not collapse; AuthClear/Configure + Ledger/Censo are the 1:1 collapses).
+  Net: the safely-completable bounded items are landed (S56, S77) or dispositioned
+  (S45, S55, S76, S84/S85); the remainder is high-stakes (tax-calc period dates),
+  relocation-in-churn, or contract-sensitive work for a settled tree + fresh context.
+
 ## Codification candidates
 
 
