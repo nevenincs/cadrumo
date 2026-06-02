@@ -571,9 +571,7 @@ def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata,
                 "redirect_uris": ("http://127.0.0.1:8765/callback",),
             }
         ),
-        OAuthToken.model_validate(
-            {"refresh_token": f"1//refresh-token-{label}", "token_uri": _GOOGLE_OAUTH_ENDPOINT}
-        ),
+        OAuthToken.model_validate({"refresh_token": f"1//refresh-token-{label}", "token_uri": _GOOGLE_OAUTH_ENDPOINT}),
         OAuthMetadata(
             account_email=f"{label}@example.com",
             granted_scopes=REQUIRED_SCOPES,
