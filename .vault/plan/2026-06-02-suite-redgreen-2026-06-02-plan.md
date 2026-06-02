@@ -143,7 +143,7 @@ cli_workflow_verification retired-surface suggestions, operator_surface help_doc
 - [ ] `P06.S17` - Retired-surface canonical suggestions; `test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestions — supply the suggestion map peer drift removed`.
 - [ ] `P06.S18` - Help documents backend-owned; `test_help_documents_are_backend_owned_and_current_surface_only — re-source help text from backend, remove stale entries`.
 - [ ] `P06.S19` - Backend boundary test xfail language; `test_cli_unit_tests_do_not_contain_process_state_or_xfail_language — find and remove the forbidden language`.
-- [ ] `P06.S20` - Lazy-command-tree state-free general; `test_state_free_surface_does_not_import_registry (non-help parametrize) — chase the registry leak path that --help-fix did not cover`.
+- [x] `P06.S20` - Lazy-command-tree state-free general; `test_state_free_surface_does_not_import_registry (non-help parametrize) — chase the registry leak path that --help-fix did not cover`.
 
 ### Phase `P07` - Setup + custody + Google
 
