@@ -85,8 +85,7 @@ class ProfileAggregate(BaseModel):
         """
         if self.record.profile_id != self.profile_id:
             raise UserProfileValidationError(
-                f"aggregate profile_id {self.profile_id!r} disagrees with "
-                f"record.profile_id {self.record.profile_id!r}"
+                f"aggregate profile_id {self.profile_id!r} disagrees with record.profile_id {self.record.profile_id!r}"
             )
         if self.label != self.record.display_name:
             raise UserProfileValidationError(
@@ -96,9 +95,9 @@ class ProfileAggregate(BaseModel):
             )
         if self.record.status is not self.status:
             raise UserProfileValidationError(
-                f"aggregate status {self.status} disagrees with "
-                f"record.status {self.record.status}"
+                f"aggregate status {self.status} disagrees with record.status {self.record.status}"
             )
         return self
+
 
 __all__ = ["ProfileAggregate"]
