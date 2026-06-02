@@ -38,9 +38,10 @@ def _find_language_axis_fields(src: str) -> list[tuple[int, str]]:
     lines = src.split("\n")
     results = []
     for i, line in enumerate(lines, start=1):
-        if re.search(r"output_language|output[_-]language", line, re.IGNORECASE):
-            if not re.search(r"#.*exempt|#.*cache.*key|#.*internal", line):
-                results.append((i, line))
+        if re.search(r"output_language|output[_-]language", line, re.IGNORECASE) and not re.search(
+            r"#.*exempt|#.*cache.*key|#.*internal", line
+        ):
+            results.append((i, line))
     return results
 
 
@@ -49,9 +50,7 @@ def test_settings_layer_output_language_typed_or_exempt() -> None:
     config_file = Path(__file__).resolve().parents[1] / "config.py"
     src = _read_file(config_file)
 
-    assert _has_output_language_import(src), (
-        f"{config_file} must import OutputLanguage from external_constants"
-    )
+    assert _has_output_language_import(src), f"{config_file} must import OutputLanguage from external_constants"
     assert "aeat_output_language: Annotated[OutputLanguage | None" in src or "OutputLanguage | None" in src, (
         f"{config_file} aeat_output_language field must be typed as OutputLanguage | None"
     )
@@ -118,5 +117,5 @@ def test_no_new_bare_str_language_fields() -> None:
     assert not violations, (
         f"Found {len(violations)} bare-str output-language fields. "
         f"All must be typed as OutputLanguage or exempted:\n"
-        + "\n".join(f"{f}:{l}: {line}" for f, l, line in violations[:10])
+        + "\n".join(f"{file_path}:{line_number}: {line}" for file_path, line_number, line in violations[:10])
     )

@@ -61,7 +61,8 @@ _SETUP_FLOW_SLOT: list[Any] = []
 _WIZARD_FLOWS_SLOT: list[tuple[Any, ...]] = []
 
 
-# KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR: same circular-import rationale as core/profile.py KWARGS-ANY markers.
+# KWARGS-ANY-RATIONALE-CATALOGUE-WIZARD-FLOW-CIRCULAR:
+# Same circular-import rationale as core/profile.py KWARGS-ANY markers.
 def register_wizard_catalogue(
     setup_flow: Any,
     wizard_flows: tuple[Any, ...],
@@ -88,7 +89,10 @@ def register_wizard_catalogue(
     _log.debug("wizard catalogue registered: setup_flow=%r flows=%d", setup_flow.id, len(wizard_flows))
 
 
-def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
+# ANY-RETURN-RATIONALE-CATALOGUE-SLOT:
+# Concrete wizard-flow type registered at runtime; not importable from aeat.core
+# without circular import.
+def get_setup_flow() -> Any:
     """Return the registered ``SETUP_FLOW`` descriptor.
 
     Returns:
@@ -104,7 +108,10 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wi
     return _SETUP_FLOW_SLOT[0]
 
 
-def get_wizard_flows() -> tuple[Any, ...]:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT: concrete wizard-flow type registered at runtime; not importable from aeat.core without circular import.
+# ANY-RETURN-RATIONALE-CATALOGUE-SLOT:
+# Concrete wizard-flow type registered at runtime; not importable from aeat.core
+# without circular import.
+def get_wizard_flows() -> tuple[Any, ...]:
     """Return the registered ``WIZARD_FLOWS`` tuple.
 
     Returns:

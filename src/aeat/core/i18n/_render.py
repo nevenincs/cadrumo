@@ -30,9 +30,7 @@ _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 # Test-scope flag: when True, _interpolate raises UnmatchedPlaceholderError for
 # any {name} token that survives substitution.  Production code leaves this False.
-_I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar(
-    "aeat_i18n_strict_placeholders", default=False
-)
+_I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("aeat_i18n_strict_placeholders", default=False)
 
 
 class UnmatchedPlaceholderError(CoreError):
@@ -56,12 +54,11 @@ class UnmatchedPlaceholderError(CoreError):
             name: The placeholder name that survived substitution.
             rendered: The partially-rendered string at the time of detection.
         """
-        super().__init__(
-            f"unmatched placeholder {{{name!r}}} in locale key {key!r}: {rendered!r}"
-        )
+        super().__init__(f"unmatched placeholder {{{name!r}}} in locale key {key!r}: {rendered!r}")
         self.key = key
         self.name = name
         self.rendered = rendered
+
 
 # Application-layer hook: set by aeat.application at startup to allow the i18n
 # layer to read the active-profile output language without importing application
@@ -228,9 +225,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         rendered = _interpolate(rendered, interpolation)
-    if _I18N_STRICT_PLACEHOLDERS.get() and (
-        match := _SURVIVING_PLACEHOLDER_RE.search(rendered)
-    ):
+    if _I18N_STRICT_PLACEHOLDERS.get() and (match := _SURVIVING_PLACEHOLDER_RE.search(rendered)):
         raise UnmatchedPlaceholderError(
             key=translation_key,
             name=match.group("name"),
