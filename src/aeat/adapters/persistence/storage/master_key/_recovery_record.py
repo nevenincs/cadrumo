@@ -23,6 +23,7 @@ def _decode_b64(value: str) -> bytes:
     """Decode a strict base64 string; raise if malformed."""
     return base64.b64decode(value.encode("ascii"), validate=True)
 
+
 def _validate_b64(value: str) -> str:
     """Accept a base64 string and verify it decodes; return canonical form."""
     decoded = _decode_b64(value)
@@ -30,6 +31,7 @@ def _validate_b64(value: str) -> str:
     if re_encoded != value:
         raise StorageValidationError("base64 field is not in canonical form")
     return value
+
 
 class RecoveryRecord(BaseModel):
     """BIP-39 recovery envelope wrapping one bucket's DEK."""
@@ -52,5 +54,6 @@ class RecoveryRecord(BaseModel):
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
         return validate_utc_aware(value)
+
 
 __all__ = ["RecoveryRecord"]
