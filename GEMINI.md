@@ -19,6 +19,7 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-safety-legal-gates.md
 @.agents/rules/aeat-schema-central-config.md
 @.agents/rules/aeat-source-hygiene.md
+@.agents/rules/aeat-spanish-stem-naming.md
 @.agents/rules/aeat-swarm-audit-cadence.md
 @.agents/rules/aeat-swarm-orchestration.md
 @.agents/rules/aeat-vaultspec-centralisation.md
@@ -26,6 +27,7 @@ You MUST respect these rules at all times:
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
 @.agents/rules/no-silent-under-declaration.md
 @.agents/rules/no-tautological-calculation-tests.md
+@.agents/rules/registry-calculation-legal-grounding.md
 @.agents/rules/vaultspec-archive-discipline.builtin.md
 @.agents/rules/vaultspec-cli.builtin.md
 @.agents/rules/vaultspec-codify.builtin.md
