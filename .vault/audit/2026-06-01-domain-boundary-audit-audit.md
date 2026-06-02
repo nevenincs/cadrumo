@@ -1371,6 +1371,25 @@ remediation is currently HELD at audit-only per the active action policy.
   needs per-twin verify-before-action: confirm 1:1 vs adapter, and preserve the CLI
   JSON output contract (user-facing). Deferred to focused execution.
 
+- 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
+  DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
+  literals in `adapters/persistence/profile/assets.py` from the central
+  `PROFILE_ASSETS_LEDGER_NAMESPACE.namespace` /
+  `PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace` definitions (values
+  verified identical). The edit was reverted (semantically; the working-tree diff
+  is line-ending-only) because the assets test suite could not reliably verify it:
+  the `-k asset` multi-test run fails NON-DETERMINISTICALLY (different tests fail
+  on different runs; e.g. HEAD itself produced both "6 passed" and "2 failed,
+  AssetsLedgerDocument loads empty" across runs), while every single test passes
+  in isolation. This is a pre-existing **secure-storage test-isolation /
+  state-leakage bug (DB-44)** — assets roundtrip tests share bucket/secure-object
+  state that is not reset between tests in the same run. DB-33 is a low-value
+  config-hygiene nicety (not a duplication or hexagonal drift); deferred until
+  DB-44 is fixed so changes near the assets storage path can be reliably gated.
+  DB-44 (the flaky test isolation) is the higher-value follow-up: the assets test
+  module needs per-test bucket/secure-storage isolation (fresh runtime profile per
+  test, as the roundtrip-discipline fixtures do elsewhere).
+
 ## Codification candidates
 
 
