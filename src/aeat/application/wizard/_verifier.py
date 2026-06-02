@@ -18,7 +18,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 
 
 class WizardCheckSeverity(StrEnum):

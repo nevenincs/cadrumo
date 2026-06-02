@@ -46,11 +46,11 @@ def test_setup_answers_module_not_importable() -> None:
 
 
 def test_setup_answers_canonical_home_is_core_profile() -> None:
-    """SetupAnswers must be importable from aeat.core.profile and nowhere else."""
-    from .core.profile import SetupAnswers
+    """SetupAnswers must be importable from aeat.core.setup_answers and nowhere else."""
+    from .core.setup_answers import SetupAnswers
 
-    assert SetupAnswers.__module__ == "aeat.core.profile", (
-        f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; expected 'aeat.core.profile'"
+    assert SetupAnswers.__module__ == "aeat.core.setup_answers", (
+        f"SetupAnswers.__module__ is {SetupAnswers.__module__!r}; expected 'aeat.core.setup_answers'"
     )
 
 

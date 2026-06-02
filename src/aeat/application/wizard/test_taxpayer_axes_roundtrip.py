@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.profile import SetupAnswers
+from ...core.setup_answers import SetupAnswers
 from ...domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

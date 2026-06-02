@@ -16,9 +16,9 @@ for ``SETUP_FLOW`` / ``WIZARD_FLOWS``.
 
 Domain taxonomy types (``EntityType``, ``IVARegime``, etc.) are imported lazily
 inside validators rather than at module level to break the circular import
-path: ``aeat.core.profile`` → ``aeat.domain.deadlines._models`` →
+path: ``aeat.core.setup_answers`` → ``aeat.domain.deadlines._models`` →
 ``aeat.domain.deadlines.__init__`` → ``aeat.domain.deadlines._profiles`` →
-``aeat.core.profile``.  This mirrors the deferral strategy used in
+``aeat.core.setup_answers``.  This mirrors the deferral strategy used in
 ``aeat.core.resources._repos.*`` and is the established project pattern.
 """
 
@@ -124,7 +124,7 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
 
     Delegates to the application-layer function registered via
     :func:`register_project_answers`.  Domain callers import this function from
-    ``aeat.core.profile`` so they never acquire a direct dependency on
+    ``aeat.core.setup_answers`` so they never acquire a direct dependency on
     ``aeat.application.wizard._persistence``.
 
     Args:
@@ -145,9 +145,9 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
 #
 # All domain imports are deferred inside validators and accessors below to
 # avoid the circular import:
-#   aeat.core.profile → aeat.domain.deadlines._models
+#   aeat.core.setup_answers → aeat.domain.deadlines._models
 #   → aeat.domain.deadlines.__init__ → aeat.domain.deadlines._profiles
-#   → aeat.core.profile   (partially initialised → ImportError)
+#   → aeat.core.setup_answers   (partially initialised → ImportError)
 # ---------------------------------------------------------------------------
 
 
@@ -190,7 +190,7 @@ def _ccaa() -> Any:
 class SetupAnswers(BaseModel):
     """Typed answers collected by the ``setup`` flow.
 
-    Canonical home is :mod:`aeat.core.profile`.  The application wizard layer
+    Canonical home is :mod:`aeat.core.setup_answers`.  The application wizard layer
     imports :class:`SetupAnswers` from here; the domain deadline engine likewise
     imports it from here — no layer needs to cross the hexagonal boundary.
 

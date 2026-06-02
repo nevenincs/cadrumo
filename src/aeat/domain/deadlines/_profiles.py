@@ -16,8 +16,8 @@ from decimal import Decimal, InvalidOperation
 
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
-from ...core.profile import SetupAnswers, project_answers
 from ...core.profile_catalogue import get_setup_flow
+from ...core.setup_answers import SetupAnswers, project_answers
 from ._errors import ProfileError
 from ._models import (
     FiscalResidency,
