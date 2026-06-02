@@ -96,6 +96,11 @@ def _calculate_303_from_observations(
         # previous quarter's calculation; the reconciliation fixture
         # exercises each quarter in isolation.
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        # No promotor-autoconsumo (Art. 84 ISP property-developer self-supply)
+        # in this reconciliation fixture; supply the neutral zero base.
+        "modelo-303-autoconsumo-promotor-base": Decimal("0"),
+        # Common-territory taxpayer: 100 % of IVA attributable to the state.
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
