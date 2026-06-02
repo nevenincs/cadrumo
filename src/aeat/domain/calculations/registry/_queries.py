@@ -43,6 +43,21 @@ _BARE_PERIOD_RE = re.compile(
 
 
 class ModeloListRow(BaseModel):
+    """One entry in a ``modelo`` catalogue listing.
+
+    A *modelo* is an AEAT tax form or declaration (e.g. ``"100"``, ``"303"``).
+    Each row summarises a single modelo without resolving any particular
+    revision — it is suitable for tabular output and autocompletion.
+
+    Attributes:
+        code: Short numeric identifier for the modelo (e.g. ``"100"``).
+        title: Human-readable display name from the registry.
+        cadence: Filing cadence declared by the registry (e.g. ``"anual"``,
+            ``"trimestral"``).
+        tax_domain: Broad tax category the modelo belongs to (e.g. ``"IRPF"``).
+        revision_count: Number of versioned revisions declared for this modelo.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     code: str
@@ -53,6 +68,15 @@ class ModeloListRow(BaseModel):
 
 
 class ModeloListReport(BaseModel):
+    """Complete result set for a ``modelo`` catalogue query.
+
+    Wraps an ordered tuple of ``ModeloListRow`` entries, sorted by
+    modelo code, as returned by ``RegistryQueryService.list_modelos``.
+
+    Attributes:
+        modelos: All matching modelo rows, sorted ascending by ``code``.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     modelos: tuple[ModeloListRow, ...]
@@ -92,6 +116,37 @@ class ModeloDescribeReport(BaseModel):
 
 
 class ModeloCasillaRow(BaseModel):
+    """One row in a ``casilla`` listing for a resolved modelo revision.
+
+    A *casilla* is a numbered input box on an AEAT tax form. Each row
+    describes a single casilla's metadata, data type, and provenance
+    citations as exposed by the registry query surface.
+
+    Attributes:
+        casilla_id: Unique registry identifier for the casilla.
+        number: Short numeric or alphanumeric label printed on the form
+            (e.g. ``"0552"``).
+        label: Human-readable description of the casilla's purpose.
+        section: Ordered breadcrumb path locating the casilla within the
+            form's section hierarchy.
+        data_type: Raw value type declared by the registry
+            (e.g. ``"decimal"``, ``"integer"``).
+        input_kind: Whether the casilla is manually entered, computed by
+            a formula, or bound to a financial-data source.
+        required: ``True`` when the casilla must be supplied for a valid
+            filing.
+        formula: Registry identifier of the formula that computes this
+            casilla, or ``None`` when not computed.
+        binding: Registry identifier of the binding that populates this
+            casilla from an external source, or ``None`` when not bound.
+        form_number: Physical page or sub-form number on multi-page
+            declarations, or ``None`` when not applicable.
+        legal_refs: Regulatory citations (BOE articles, RD references)
+            grounding this casilla's definition.
+        source_refs: Internal source references linking to AEAT
+            publications or working documents.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     casilla_id: CasillaId
@@ -109,6 +164,23 @@ class ModeloCasillaRow(BaseModel):
 
 
 class ModeloCasillasReport(BaseModel):
+    """Full casilla listing for a single resolved modelo revision.
+
+    Returned by ``RegistryQueryService.casillas``. The ``revision``,
+    ``filing_year``, and ``period`` fields identify the revision the
+    query resolved against so callers can surface the selection context
+    alongside the row data.
+
+    Attributes:
+        code: Modelo identifier (e.g. ``"303"``).
+        revision: Registry revision identifier that was resolved.
+        filing_year: Filing year used for revision selection, or ``None``
+            when no year-scoped period was supplied.
+        period: Registry period token (e.g. ``"1T"``), or ``None`` when
+            the query resolved the latest revision without a period.
+        rows: Ordered tuple of casilla rows for the resolved revision.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     code: str
@@ -145,6 +217,22 @@ class ModeloBindingRow(BaseModel):
 
 
 class ModeloBindingsReport(BaseModel):
+    """Full binding listing for a single resolved modelo revision.
+
+    Returned by the ``bindings*`` family of methods on
+    ``RegistryQueryService``. A *binding* maps a financial-data source
+    (e.g. an aggregated ledger figure) to a casilla or formula input.
+
+    Attributes:
+        code: Modelo identifier (e.g. ``"130"``).
+        revision: Registry revision identifier that was resolved.
+        filing_year: Filing year used for revision selection, or ``None``
+            when the query was not scoped to a filing year.
+        period: Registry period token (e.g. ``"1T"``), or ``None`` when
+            the query resolved without a period.
+        rows: Ordered tuple of binding rows for the resolved revision.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     code: str
@@ -155,6 +243,32 @@ class ModeloBindingsReport(BaseModel):
 
 
 class ModeloFormulaRow(BaseModel):
+    """One row in a formula listing for a resolved modelo revision.
+
+    Exposes the full dependency surface of a single formula entry so
+    contributors can inspect what inputs drive a computed casilla without
+    reading the raw registry TOML.
+
+    Attributes:
+        formula_id: Unique registry identifier for this formula.
+        target: Identifier of the casilla this formula writes its result
+            into.
+        input_casillas: Casilla identifiers referenced in the formula
+            expression, deduplicated in order of first appearance.
+        input_bindings: Binding identifiers referenced in the expression,
+            deduplicated in order of first appearance.
+        input_parameters: Parameter names referenced in the expression,
+            deduplicated in order of first appearance.
+        input_relations: Relation identifiers referenced in the
+            expression, deduplicated in order of first appearance.
+        expression: Public JSON-safe mapping representing the formula's
+            AST node, with ``Decimal`` values serialised as strings.
+        legal_refs: Regulatory citations grounding the formula's
+            calculation rule.
+        source_refs: Internal source references linking to AEAT
+            publications or working documents.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     formula_id: FormulaId
@@ -169,6 +283,21 @@ class ModeloFormulaRow(BaseModel):
 
 
 class ModeloFormulasReport(BaseModel):
+    """Full formula listing for a single resolved modelo revision.
+
+    Returned by ``RegistryQueryService.formulas``. Each row exposes one
+    formula's target casilla and its complete input dependency set.
+
+    Attributes:
+        code: Modelo identifier (e.g. ``"200"``).
+        revision: Registry revision identifier that was resolved.
+        filing_year: Filing year used for revision selection, or ``None``
+            when no year-scoped period was supplied.
+        period: Registry period token (e.g. ``"0A"``), or ``None`` when
+            the query resolved the latest revision without a period.
+        rows: Ordered tuple of formula rows for the resolved revision.
+    """
+
     model_config = ConfigDict(frozen=True)
 
     code: str
