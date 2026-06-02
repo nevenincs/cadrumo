@@ -8,15 +8,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from playwright._impl._errors import Error as PlaywrightError
 from playwright._impl._errors import TargetClosedError
 
 from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ...adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ...adapters.persistence.storage.errors import StorageValidationError
-from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from ...tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
-
+from ..auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from . import (
     IvaCompensationHistoryCaptureReport,
     IvaRemoteStateAcquisitionManifest,
@@ -254,7 +254,7 @@ def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -
         original_handler = loop.get_exception_handler()
         loop.set_exception_handler(previous_handler)
         try:
-            async with _suppress_live_iva_playwright_cancellation_noise():
+            async with _suppress_live_iva_playwright_cancellation_noise(drain_ms=0):
                 loop.call_exception_handler(
                     {
                         "exception": TargetClosedError(
@@ -262,7 +262,46 @@ def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -
                         )
                     }
                 )
+                loop.call_exception_handler(
+                    {
+                        "exception": PlaywrightError(
+                            "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating"
+                        )
+                    }
+                )
                 loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
+        finally:
+            loop.set_exception_handler(original_handler)
+        return delegated
+
+    delegated = asyncio.run(run())
+
+    assert len(delegated) == 1
+    assert isinstance(delegated[0]["exception"], RuntimeError)
+
+
+def test_live_surface_timeout_can_keep_cancellation_handler_until_loop_shutdown() -> None:
+    async def run() -> list[dict[str, object]]:
+        loop = asyncio.get_running_loop()
+        delegated: list[dict[str, object]] = []
+
+        def previous_handler(_loop: asyncio.AbstractEventLoop, context: dict[str, object]) -> None:
+            delegated.append(context)
+
+        original_handler = loop.get_exception_handler()
+        loop.set_exception_handler(previous_handler)
+        try:
+            async with _suppress_live_iva_playwright_cancellation_noise(drain_ms=0, restore_on_exit=False):
+                pass
+
+            loop.call_exception_handler(
+                {
+                    "exception": PlaywrightError(
+                        "net::ERR_ABORTED; maybe frame was detached?\nCall log:\n  - navigating"
+                    )
+                }
+            )
+            loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
         finally:
             loop.set_exception_handler(original_handler)
         return delegated

@@ -3536,7 +3536,7 @@ live:
   errors:
     expediente_not_found: live.errors.expediente_not_found
     iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
-    year_range_invalid: live.errors.year_range_invalid
+    year_range_invalid: "A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró évvel."
 locales:
   cli:
     audit:
