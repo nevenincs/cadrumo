@@ -94,6 +94,7 @@ class BucketEventType(StrEnum):
     CENSO_REFRESHED = "profile.censo.refreshed"
     CENSO_APPLIED = "profile.censo.applied"
     CENSO_DEPENDENT_STAMPED_STALE = "modelo.censo.dependent_stamped_stale"
+    MODELO_LEDGER_DEPENDENT_STAMPED_STALE = "modelo.ledger.dependent_stamped_stale"
 
     # bucket maintenance lifecycle
     BUCKET_EXPORTED = "bucket.exported"
@@ -317,7 +318,9 @@ class BucketEventHistoryCatalogue(BaseModel):
         """Return a live view over every :class:`BucketEvent` in the catalogue."""
         return self.events.values()
 
-    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS: pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware base class. Successor epic required.
+    # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS:
+    # pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware
+    # base class. Successor epic required.
     def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
         """Iterate over every :class:`BucketEvent` in insertion order."""
         return iter(self.events.values())
