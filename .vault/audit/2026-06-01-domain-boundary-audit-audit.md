@@ -1219,6 +1219,37 @@ remediation is currently HELD at audit-only per the active action policy.
   positive input); independent of the behaviour-neutral IVA-compensation relocation
   (verified import-source-only; full collection clean at 13040).
 
+- 2026-06-02: DB-42 RESOLVED + import-linter gate RESTORED (commit `4636bde35`).
+  Root cause of the broken gate: `lint-imports` exits 1 *without evaluating any
+  contract* because import-linter aborts the whole run on the first
+  `ignore_imports` entry that matches no edge — and
+  `domain.deadlines._profiles -> application.wizard._catalogue` (resolved in Wave
+  3 P04) was still pinned. The hexagonal gate had been blind for as long as that
+  ignore was stale. Fix: removed the four confirmed-stale `domain->wizard` ignores
+  (verified gone from source; only the function-local `_keys -> _compiler` edge
+  remains), and set `unmatched_ignore_imports_alerting = warn` on every contract
+  so a future stale entry degrades to a warning instead of blinding the gate.
+  With the gate evaluating again, it reports the drift it was hiding — **0 kept,
+  4 broken** — decomposed as:
+  - **~9 production layer violations.** Seven are domain repositories importing
+    adapter persistence (`domain.{usage_ratios._service, justificante._repository,
+    buckets._event_repository, transactions._repository, modelos._runtime_repository,
+    filing._runtime_repository, filing._repository, submission._repository} ->
+    adapters.persistence.storage.*`) — this is **DB-16** (domain-repos→adapters),
+    whose durable fix is the persistence-boundary ADR / repository-Protocol
+    inversion (R5). One is `core.resources._repos.apoderamientos -> domain.auth`
+    (**DB-18**, core→domain). One is `calculations.registry._scenarios ->
+    domain.renta` (no-renta contract; the production path is meant to use the
+    `CrossDomainSnapshotCheck` Protocol injection — `_scenarios` bypasses it).
+  - **~54 test-file edges.** Domain/core test modules importing adapters/application
+    for real-adapter roundtrip + fixture setup (sanctioned per the roundtrip
+    discipline). Their old ignores went stale when the tests were renamed; they
+    need fresh, precisely-pinned ignore entries.
+  - **93 stale `ignore_imports`** total (the unmatched warnings) — edges since
+    refactored away. Tracked for cleanup.
+  Remediation tracked as plan Wave **W09** (P26 clean stale ignores, P27 triage +
+  resolve violations cross-referencing DB-16/DB-18, P28 restore strict alerting).
+
 ## Codification candidates
 
 

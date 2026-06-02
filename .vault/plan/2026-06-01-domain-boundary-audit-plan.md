@@ -267,6 +267,25 @@ Run the import-linter contract and triage layered-architecture / hexagonal-edge 
 
 - [ ] `W08.P25.S88` - Run uv run --no-sync lint-imports (import-linter, .importlinter contract); `triage every layered-architecture contract breach as a hexagonal-edge finding under W05 or a new DB-NN (recurring; this is the programmatic counterpart to the manual edge-axis rg sweep); `.importlinter`.
 
+## Wave `W09` - Import-linter contract remediation (DB-42 expanded)
+
+Restore the hexagonal import-linter gate to green: clean the 93 stale ignore_imports entries, triage and resolve the real layer violations the abort was hiding (domain->application/adapters/entrypoints, core->outer, application->adapters/entrypoints, calculations->renta), and return unmatched-ignore alerting to strict once clean
+
+### Phase `W09.P26` - Clean 93 stale ignore_imports entries
+
+Remove every ignore_imports entry import-linter flags as unmatched (edges since refactored away); each confirmed gone from source before removal
+
+
+### Phase `W09.P27` - Triage and resolve real layer violations
+
+For each broken-contract violation chain, classify as production hexagonal drift (fix via DI/relocation, overlaps DB-16/DB-17/DB-18/DB-32) or sanctioned test-adapter roundtrip edge (add a precise ignore with rationale)
+
+
+### Phase `W09.P28` - Restore strict unmatched-ignore alerting
+
+Once stale ignores are cleaned and violations resolved, return unmatched_ignore_imports_alerting to error so a future stale entry or new violation reds the gate loudly
+
+
 ## Description
 
 This plan executes the AEAT hexagonal ownership and layering contract decided in the
