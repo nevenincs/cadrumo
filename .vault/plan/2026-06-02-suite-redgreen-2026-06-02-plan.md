@@ -107,9 +107,9 @@ Resolve the 14-test work-calculate empty-envelope cluster (peer signature drift 
 
 Fix the prior-filing-history and prior-year-history wallet decision injection so casilla 87 (compensacion aplicada) gets the persisted 1200/450 from the wallet decision (currently returns 0)
 
-- [ ] `P02.S04` - Trace iva_compensation_decision binding into engine inputs; `From calculate_modelo_revision through _apply_iva_compensation_decision_binding into resolved_bindings; instrument with _log.debug at each hand-off`.
-- [ ] `P02.S05` - Fix prior-filing-history routing; `Wire the wallet decision's applied_periodo through modelo-303-compensacion-aplicada-periodo binding so casilla 87 receives 1000 not 0`.
-- [ ] `P02.S06` - Verify both IVA wallet integration tests pass; `test_wallet_capture_decision_feeds_real_modelo_303_engine_from_{prior_filing_history,prior_year_history}`.
+- [x] `P02.S04` - Trace iva_compensation_decision binding into engine inputs; `From calculate_modelo_revision through _apply_iva_compensation_decision_binding into resolved_bindings; instrument with _log.debug at each hand-off`.
+- [x] `P02.S05` - Fix prior-filing-history routing; `Wire the wallet decision's applied_periodo through modelo-303-compensacion-aplicada-periodo binding so casilla 87 receives 1000 not 0`.
+- [x] `P02.S06` - Verify both IVA wallet integration tests pass; `test_wallet_capture_decision_feeds_real_modelo_303_engine_from_{prior_filing_history,prior_year_history}`.
 
 ### Phase `P03` - Storage encrypted persistence policy
 
@@ -151,8 +151,8 @@ config_custody profile lifecycle, profile-create taxpayer-type paths, google she
 
 - [ ] `P07.S21` - Config custody profile lifecycle; `test_profile_create_provisions_file_custody_and_switch_reopens_it — investigate why switch does not reopen`.
 - [x] `P07.S22` - Legal-entity profile create; `test_legal_entity_profile_creates_non_interactively_without_spouse_flags`.
-- [ ] `P07.S23` - Google worksheet export-pull roundtrip; `test_workbook_input_values_survive_export_pull_compute_loop`.
-- [ ] `P07.S24` - Pull adapter classify_metadata empty pairs; `test_classify_metadata_returns_missing_for_empty_pairs (post sentinel + M347 fix; verify suite-level cleared)`.
+- [x] `P07.S23` - Google worksheet export-pull roundtrip; `test_workbook_input_values_survive_export_pull_compute_loop`.
+- [x] `P07.S24` - Pull adapter classify_metadata empty pairs; `test_classify_metadata_returns_missing_for_empty_pairs (post sentinel + M347 fix; verify suite-level cleared)`.
 - [ ] `P07.S25` - Fichero BOE golden sha; `test_modelo_303_golden_sha_fichero_boe — recompute golden sha if peer registry change altered output`.
 
 ### Phase `P08` - Filing + date routing
