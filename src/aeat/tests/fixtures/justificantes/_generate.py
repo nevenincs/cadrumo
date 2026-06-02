@@ -1658,9 +1658,7 @@ class _Modelo303CorpusFixture:
     presented_at: str = "2024-01-01 10:00:00"
 
 
-def _compute_m303_closure(
-    c27: Decimal, c45: Decimal
-) -> tuple[Decimal, Decimal, Decimal, Decimal, Decimal]:
+def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal, Decimal]:
     """Compute M303 closure casillas from leaf inputs c27 (devengada) and c45 (deducible).
 
     Formula chain (no prior-period compensation, no other regimes, territorio común c65=100):
@@ -2038,9 +2036,7 @@ def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) 
 
         # box 66 — Atribuible a la Administracion del Estado (computed: c64 × c65/100; c65=100 → c64)
         # Profile pattern: 'Atribuible\s+a\s+la\s+Administraci[oó]n\s+del\s+Estado'
-        c.drawString(
-            20 * mm, y, f"Atribuible a la Administracion del Estado {_fmt_spanish(fixture.c66)}"
-        )
+        c.drawString(20 * mm, y, f"Atribuible a la Administracion del Estado {_fmt_spanish(fixture.c66)}")
         y -= 6 * mm
 
         # iva.compensacion-pendiente-periodos-anteriores (box 110) — zero (no carry-forward)
@@ -2492,6 +2488,7 @@ def _compute_m390_closure(
 # Per-specimen variation: box06 and box49 differ slightly between 2022 and 2023.
 # This ensures distinct per-specimen PDF bytes and realistic non-uniform values.
 
+
 def _m390_fixture(
     filename: str,
     ejercicio: str,
@@ -2531,8 +2528,8 @@ _MODELO_390_CORPUS_FIXTURES: tuple[_Modelo390CorpusFixture, ...] = (
 # The declaracion_pdf extraction profile uses anchor_x_min=407.0, anchor_x_max=425.0
 # for the leaf bbox_anchored casillas (boxes 02/04/06/26/49), with value_offset="right_of_number".
 # Place box numbers within the anchor window; values at x=480 (right of anchor).
-_M390_BOX_X = 414.0   # x-position for box number text (within anchor 407-425)
-_M390_VAL_X = 480.0   # x-position for value text (right of box number)
+_M390_BOX_X = 414.0  # x-position for box number text (within anchor 407-425)
+_M390_VAL_X = 480.0  # x-position for value text (right of box number)
 _M390_ROW_STEP = 14.0  # vertical spacing between casilla rows (points)
 
 
