@@ -300,10 +300,12 @@ class TestIterEvents:
         """Validation must be eager — not deferred until iteration."""
         from . import iter_events
 
-        with override_settings(aeat_runs_dir=str(tmp_path)):
+        with (
+            override_settings(aeat_runs_dir=str(tmp_path)),
+            pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
+        ):
             # No .iter(), no .__next__() — the call itself must raise.
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                iter_events("../escape")
+            iter_events("../escape")
 
     def test_streams_without_materialising_all(
         self,
@@ -430,9 +432,9 @@ class TestSinkEmitFailureWarningIsScrubbed:
         from ..logging import SecretScrubbingFilter
 
         sink_logger = logging.getLogger(warn.name)
-        assert any(
-            isinstance(f, SecretScrubbingFilter) for f in sink_logger.filters
-        ), "the logger used by _sink must carry SecretScrubbingFilter"
+        assert any(isinstance(f, SecretScrubbingFilter) for f in sink_logger.filters), (
+            "the logger used by _sink must carry SecretScrubbingFilter"
+        )
 
     def test_emit_failure_on_read_only_target_directory(
         self,

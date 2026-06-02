@@ -278,8 +278,7 @@ _EXPECTED_ENVELOPE_FIELD_POSITIONS: dict[str, tuple[int, int, str]] = {
 }
 
 
-def test_committed_modelo_232_envelope_export_layout_declares_every_revision_with_fixed_width(
-) -> None:
+def test_committed_modelo_232_envelope_export_layout_declares_every_revision_with_fixed_width() -> None:
     """Every revision must publish at least one fixed-width export layout."""
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
@@ -287,8 +286,7 @@ def test_committed_modelo_232_envelope_export_layout_declares_every_revision_wit
         assert revision.export_layouts[0].format == "fixed_width", revision.id
 
 
-def test_committed_modelo_232_envelope_export_layout_carries_envelope_header_and_footer(
-) -> None:
+def test_committed_modelo_232_envelope_export_layout_carries_envelope_header_and_footer() -> None:
     """The official AEAT envelope wraps page records with a header + closing-tag footer."""
     modelo, _ = _load_modelo_232()
     for revision in modelo.revisions.values():
@@ -337,16 +335,12 @@ def test_committed_modelo_232_envelope_footer_emits_single_closing_tag_field() -
 
 def _envelope_header(revision):  # type: ignore[no-untyped-def]
     """Return the ``envelope_header`` record from ``revision``'s first export layout."""
-    return next(
-        record for record in revision.export_layouts[0].records if record.record_type == "envelope_header"
-    )
+    return next(record for record in revision.export_layouts[0].records if record.record_type == "envelope_header")
 
 
 def _envelope_footer(revision):  # type: ignore[no-untyped-def]
     """Return the ``envelope_footer`` record from ``revision``'s first export layout."""
-    return next(
-        record for record in revision.export_layouts[0].records if record.record_type == "envelope_footer"
-    )
+    return next(record for record in revision.export_layouts[0].records if record.record_type == "envelope_footer")
 
 
 def test_committed_modelo_232_construct_includes_export_layout_and_export_link() -> None:
