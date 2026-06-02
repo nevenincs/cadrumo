@@ -20,8 +20,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.time import now
-
 from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import (
     PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL,
@@ -113,6 +111,7 @@ from ...core.errors import AeatError as _AeatError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import bundled_path as _bundled_path
 from ...core.resources import resources as _resources
+from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaObservation as _CasillaObservation,
 )
@@ -663,7 +662,7 @@ async def capture_source_filed_data(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> SourceFiledDataCaptureReport:
-    """Capture filed observations required by a target filing's registry dependencies and return a :class:`SourceFiledDataCaptureReport`."""
+    """Capture filed observations required by a target filing's registry dependencies."""
     from ...core.resources import resources as _resources
 
     session, settings = await _active_verified_session()
@@ -1256,8 +1255,6 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     in an :class:`ExpedientesCapture`, and persists through
     :class:`ExpedientesService` against the active bucket.
     """
-    from datetime import UTC, datetime
-
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
     session, settings = await _active_verified_session()
@@ -1399,14 +1396,17 @@ async def _capture_iva_remote_state_for_active_storage(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Run the combined read while the profile bucket session is active."""
-    async with _suppress_live_iva_playwright_cancellation_noise():
+    settings = _load_settings()
+    async with _suppress_live_iva_playwright_cancellation_noise(
+        drain_ms=settings.aeat_live_iva_cancellation_drain_ms,
+        restore_on_exit=False,
+    ):
         if year_from > year_to:
             raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
-            translated_message="live.errors.year_range_invalid",
-        )
+                message="from-year must be less than or equal to to-year",
+                translated_message="live.errors.year_range_invalid",
+            )
 
-        settings = _load_settings()
         _AeatAccessGate(settings).require_live_read()
         store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
         filed_history: IvaCompensationHistoryCaptureReport | None = None
@@ -1504,8 +1504,12 @@ async def _await_live_iva_surface[T](
 
 
 @asynccontextmanager
-async def _suppress_live_iva_playwright_cancellation_noise():
-    """Suppress Playwright TargetClosed loop noise caused by bounded live-surface cancellation."""
+async def _suppress_live_iva_playwright_cancellation_noise(
+    *,
+    drain_ms: int = 0,
+    restore_on_exit: bool = True,
+):
+    """Suppress Playwright loop noise caused by bounded live-surface cancellation."""
     loop = asyncio.get_running_loop()
     previous_handler = loop.get_exception_handler()
 
@@ -1520,19 +1524,22 @@ async def _suppress_live_iva_playwright_cancellation_noise():
     loop.set_exception_handler(handler)
     try:
         yield
-        await asyncio.sleep(0)
     finally:
-        loop.set_exception_handler(previous_handler)
+        if drain_ms > 0:
+            await asyncio.sleep(drain_ms / 1000)
+        if restore_on_exit:
+            loop.set_exception_handler(previous_handler)
 
 
 def _is_playwright_target_closed_context(context: dict[str, object]) -> bool:
     exception = context.get("exception")
     if exception is None:
         return False
-    return (
-        type(exception).__name__ == "TargetClosedError"
-        and "Target page, context or browser has been closed" in str(exception)
-    )
+    name = type(exception).__name__
+    message = str(exception)
+    if name == "TargetClosedError" and "Target page, context or browser has been closed" in message:
+        return True
+    return name == "Error" and "net::ERR_ABORTED" in message and "frame was detached" in message
 
 
 def build_iva_remote_state_acquisition_report(
@@ -1603,7 +1610,7 @@ def load_iva_remote_state_acquisition_manifest(
     *,
     repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
 ) -> IvaRemoteStateAcquisitionManifest | None:
-    """Load one encrypted live IVA acquisition manifest by id and return an :class:`IvaRemoteStateAcquisitionManifest`."""
+    """Load one encrypted live IVA acquisition manifest by id."""
     repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
     return repo.load(acquisition_id)
 

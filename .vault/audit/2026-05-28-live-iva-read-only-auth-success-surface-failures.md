@@ -53,3 +53,25 @@ expired persisted Cl@ve session produced a typed operator-timeout result without
 post-command `TargetClosedError` logging. This smoke run did not reach the
 filed-history or wallet/cartera read surfaces, so it is not accepted as IVA
 surface evidence.
+
+Follow-up execution on 2026-06-02 rechecked the same defect after the codebase
+shifted toward a more centralized live backend. A full read-only capture
+authenticated successfully and submitted no filing, payment, confirmation,
+represented-taxpayer choice, or write action. The capture still did not obtain
+accepted IVA data: filed-history timed out and wallet/cartera reported DOM
+drift. During command shutdown it also exposed a second cancellation-only
+Playwright report: `net::ERR_ABORTED` with a detached frame during navigation.
+
+The cancellation filter now covers both observed Playwright cancellation
+families, keeps the handler installed through the combined capture command's
+event-loop teardown, and sources its drain delay from centralized settings.
+Focused ruff/tests, locale audit, and a short read-only live smoke passed on
+2026-06-02. The short smoke reused a persisted Cl@ve session and failed closed
+with typed read-surface timeouts without post-command cancellation logging. It
+is accepted only as auth/session/shutdown-hygiene evidence, not as evidence that
+filed-history or wallet/cartera data extraction is functional.
+
+During the 2026-06-02 live capture the registry loader emitted Modelo 347
+quarter semantic-role warnings. Those warnings are non-IVA findings and remain
+slated for owner review under the plan's non-IVA findings row; they were not
+changed in this cancellation slice.
