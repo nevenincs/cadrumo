@@ -31,6 +31,7 @@ from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from .._playwright import PlaywrightError
 from . import _session_store
 from ._clave_movil import (
     CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
@@ -152,6 +153,16 @@ class _RepresentationAlertPage(_RecordingPage):
           <button>{_PRE303_SURFACE.alert_continue_button_text.title()}</button>
         </div>
         """
+
+
+class _OwnNameInputOnlyRepresentationPage(_RecordingPage):
+    async def wait_for_selector(self, selector: str, *, timeout: float | None = None) -> None:
+        del timeout
+        if selector == _PRE303_SURFACE.representation_own_name_label_selector:
+            raise PlaywrightError("label not present")
+        if selector == _PRE303_SURFACE.representation_own_name_selector:
+            return
+        await super().wait_for_selector(selector)
 
 
 class _SelectorDispatchPage(_RecordingPage):
@@ -718,6 +729,24 @@ class TestPostAuthLanding:
         assert page.clicks == [
             f'{_PRE303_SURFACE.alert_modal_selector} button:has-text("{_PRE303_SURFACE.alert_continue_button_text}")',
             _PRE303_SURFACE.representation_own_name_label_selector,
+            _PRE303_SURFACE.representation_submit_selector,
+        ]
+
+    def test_representation_dispatcher_accepts_own_name_input_when_label_missing(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="TEST-IDENTITY")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _OwnNameInputOnlyRepresentationPage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
+
+        async def run() -> None:
+            await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
+
+        asyncio.run(run())
+        assert page.clicks == [
+            _PRE303_SURFACE.representation_own_name_selector,
             _PRE303_SURFACE.representation_submit_selector,
         ]
 

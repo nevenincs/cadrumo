@@ -1592,12 +1592,9 @@ class ClaveMovilAuthProvider:
                 "cannot drive AEAT own-name representation gate"
             )
         try:
-            await wait_for(
-                pre303.representation_own_name_label_selector,
-                timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
-            )
+            selected_own_name = await self._wait_for_own_name_representation_selector(page)
             await self._dismiss_pre303_alert_modal_if_present(page)
-            await click(pre303.representation_own_name_label_selector)
+            await click(selected_own_name)
             await click(pre303.representation_submit_selector)
         except PlaywrightError as exc:
             raise AeatLoginAssertionError(
@@ -1611,6 +1608,27 @@ class ClaveMovilAuthProvider:
                 suggestion="Do not provide represented-third-party data through this driver.",
             ) from exc
 
+    async def _wait_for_own_name_representation_selector(self, page: BrowserPageLike) -> str:
+        pre303 = self._settings.external_constants().aeat.pre303
+        wait_for = getattr(page, "wait_for_selector", None)
+        if wait_for is None:
+            raise AeatLoginAssertionError(
+                "Playwright page does not expose wait_for_selector(); cannot drive AEAT own-name representation gate"
+            )
+        last_error: PlaywrightError | None = None
+        for selector in _own_name_representation_selectors(
+            pre303.representation_own_name_label_selector,
+            pre303.representation_own_name_selector,
+        ):
+            try:
+                await wait_for(selector, timeout=self._settings.aeat_browser_selector_probe_timeout_ms)
+                return selector
+            except PlaywrightError as exc:
+                last_error = exc
+        if last_error is not None:
+            raise last_error
+        raise AeatLoginAssertionError("AEAT own-name representation selector configuration is empty")
+
     async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPageLike) -> None:
         pre303 = self._settings.external_constants().aeat.pre303
         content = getattr(page, "content", None)
@@ -1623,6 +1641,15 @@ class ClaveMovilAuthProvider:
             return
         continue_selector = f'{pre303.alert_modal_selector} button:has-text("{pre303.alert_continue_button_text}")'
         await click(continue_selector)
+
+
+def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
+    deduped: list[str] = []
+    for selector in selectors:
+        value = selector.strip()
+        if value and value not in deduped:
+            deduped.append(value)
+    return tuple(deduped)
 
 
 __all__ = [
