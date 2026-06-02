@@ -64,7 +64,5 @@ def test_aeat_package_imports_in_subprocess() -> None:
         timeout=120,
     )
     assert completed.returncode == 0, (
-        "fresh-subprocess `import aeat` failed:\n"
-        f"  stdout: {completed.stdout!r}\n"
-        f"  stderr: {completed.stderr!r}"
+        f"fresh-subprocess `import aeat` failed:\n  stdout: {completed.stdout!r}\n  stderr: {completed.stderr!r}"
     )
