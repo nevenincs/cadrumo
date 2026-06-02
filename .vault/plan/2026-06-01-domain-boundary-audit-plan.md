@@ -209,7 +209,7 @@ Remove pdf/_errors.py and the dead identity/ shim; repoint callers to canonical 
 
 Unify the Spanish-decimal parser into core, collapse LedgerReviewIssue into LedgerImportDiagnosticKind, fold RegistryManualId into ManualId behind a CLI gate, rename the ORM PortalRow.
 
-- [ ] `W04.P11.S43` - Unify the Spanish-decimal parser: promote parse_spanish_decimal to core (core/decimal or core/parsing) returning Decimal|None; `make the justificante wrapper raise JustificanteParseError on None; migrate _extract callers and the pdf/_label_regex callers (DB-30); `src/aeat/core/decimal/`.
+- [x] `W04.P11.S43` - Unify the Spanish-decimal parser: promote parse_spanish_decimal to core (core/decimal or core/parsing) returning Decimal|None; `make the justificante wrapper raise JustificanteParseError on None; migrate _extract callers and the pdf/_label_regex callers (DB-30); `src/aeat/core/decimal/`.
 - [x] `W04.P11.S44` - Delete application/review LedgerReviewIssue and replace its uses (review/_filter, review/__init__) with application/transactions LedgerImportDiagnosticKind (DB-23); `src/aeat/application/review/_filter.py`.
 - [ ] `W04.P11.S45` - Fold RegistryManualId into ManualId: remove the application/registry _corpus RegistryManualId enum and _domain_manual_id shim, use ManualId with a Choice([renta,iva]) CLI gate at the corpus boundary (DB-24); `src/aeat/application/registry/_corpus.py`.
 - [ ] `W04.P11.S46` - Rename the SQLAlchemy ORM PortalRow to PortalOrmRow in adapters/persistence/storage/sql/_orm.py and update the repository consumers, disambiguating from the application PortalRow DTO (DB-27); `src/aeat/adapters/persistence/storage/sql/_orm.py`.
