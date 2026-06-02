@@ -28,6 +28,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S53]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S54]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S55]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S56]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -384,3 +385,41 @@ CRITICAL findings present: no.
 ### Residual risks
 
 - JSON public-output leak checks still use a broad `json.dumps(..., sort_keys=True)` scan. This remains a robustness gap rather than a current HIGH or CRITICAL privacy regression.
+
+## W03.P09.S56 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/_test_privacy.py`
+- `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`
+- `src/aeat/entrypoints/cli/test_profile_import_idempotency.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S56.md`
+
+### Findings
+
+- S56 now asserts central profile-id redaction on real import-idempotency public output:
+  - Export output redaction is checked before returning the bundle UUID used for storage assertions.
+  - Successful identity-preserving import output is checked in JSON mode for the shared placeholder and raw UUID absence.
+  - Duplicate UUID refusals, label-collision refusals, and mutated-bundle success output now assert raw UUID absence.
+  - The mutated `--label` import path now recovers the freshly minted active bucket UUID and asserts that raw UUID is absent from public output.
+  - Show/list reachability checks still prove the imported profiles are operator-accessible after public output redaction.
+- The new `_test_privacy` helper centralizes profile-output privacy assertions for CLI tests, reducing duplicated placeholder/raw-id checks between S55 and S56 without reimplementing redaction behavior.
+- Test quality remains non-tautological: tests mutate bundle identity, import through real CLI commands, read real bundle JSON, and verify encrypted repository state through the production repository path.
+
+### Residual risks
+
+- The shared JSON helper still uses a broad `json.dumps(..., sort_keys=True)` raw-id absence scan. It is an effective leak guard for current payloads but not a typed deep-leaf traversal.
+- The fresh UUID minted by the mutated `--label` import path is now explicitly recovered and checked. Remaining risk is limited to the broad string-scan style of the JSON leak guard.
+
+## W03.P09.S56 Follow-up Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Findings
+
+- The prior low fresh-UUID leak blind spot on the mutated `--label` import path is closed. The test now captures the active profile after the mutated import, verifies it is a fresh minted UUID distinct from the bundle mutation, and asserts that minted UUID is absent from public output.
