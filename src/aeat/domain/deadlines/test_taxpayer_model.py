@@ -451,9 +451,7 @@ class TestRepresentanteFiscalAxis:
 
     def test_non_eu_non_resident_without_representante_is_rejected(self) -> None:
         # GB is outside EU/EEA post-Brexit; representative required.
-        with pytest.raises(
-            ValidationError, match=r"representante_fiscal_nif and representante_fiscal_nombre required"
-        ):
+        with pytest.raises(ValidationError, match=r"representante_fiscal_nif and representante_fiscal_nombre required"):
             TaxpayerProfile(
                 tax_id="X1234567L",
                 iva_regime=IVARegime.GENERAL,
@@ -464,9 +462,7 @@ class TestRepresentanteFiscalAxis:
             )
 
     def test_non_eu_non_resident_with_partial_representante_is_rejected(self) -> None:
-        with pytest.raises(
-            ValidationError, match=r"representante_fiscal_nombre required"
-        ):
+        with pytest.raises(ValidationError, match=r"representante_fiscal_nombre required"):
             TaxpayerProfile(
                 tax_id="X1234567L",
                 iva_regime=IVARegime.GENERAL,

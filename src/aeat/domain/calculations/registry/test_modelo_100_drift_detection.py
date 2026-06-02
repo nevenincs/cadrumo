@@ -367,16 +367,12 @@ def _expand_parameter_id_node(node: ast.expr) -> tuple[str, ...]:
     static_segments, placeholder_names = _split_joined_str(node)
     if not placeholder_names:
         return ("".join(s for s in static_segments if s != _SEG_GAP),)
-    placeholder_value_sets = tuple(
-        _FSTRING_PLACEHOLDER_VALUES.get(name, ()) for name in placeholder_names
-    )
+    placeholder_value_sets = tuple(_FSTRING_PLACEHOLDER_VALUES.get(name, ()) for name in placeholder_names)
     if any(not values for values in placeholder_value_sets):
         return ()
     from itertools import product as _product
 
-    return tuple(
-        _render_segments(static_segments, combo) for combo in _product(*placeholder_value_sets)
-    )
+    return tuple(_render_segments(static_segments, combo) for combo in _product(*placeholder_value_sets))
 
 
 # Sentinel markers used to flatten JoinedStr values into a single segment
