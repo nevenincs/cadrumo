@@ -1118,6 +1118,14 @@ def calculate_modelo_revision(
         sorted(
             [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
+            # Persist the date-binding and raw-relation inputs alongside the
+            # Decimal/enum binding overrides so a verify / file replay can
+            # reconstruct the identical draft from the revision alone, without
+            # re-resolving the live profile (which would break immutable-snapshot
+            # determinism). The draft-builder routes them back onto the engine's
+            # date_binding_values / relation_values channels by registry id-set.
+            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
+            + [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()]
         )
     )
     casilla_values = dict(engine_result.values)

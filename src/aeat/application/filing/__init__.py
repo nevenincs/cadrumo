@@ -36,6 +36,9 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     enum_consumed_binding_ids as _enum_consumed_binding_ids,
 )
+from ...domain.calculations.registry import (
+    expression_date_binding_refs as _expression_date_binding_refs,
+)
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
     CasillaDelta,
@@ -150,11 +153,28 @@ def build_draft(
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
-    decimal_binding_ids = calculation_binding_ids - enum_binding_ids
+    date_binding_ids = _date_binding_ids(snapshot)
+    relation_ids = _relation_ids(snapshot)
+    # Date and relation ids ride dedicated engine channels; never coerce their
+    # values through the Decimal binding channel (an ISO date is not a Decimal).
+    decimal_binding_ids = calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids
     casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
-    filing_binding_values = _filing_binding_values(inputs, bindings, enum_binding_ids)
+    # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
+    # relations (e.g. prior pagos fraccionados) travel on dedicated engine
+    # channels, not the Decimal binding channel. They are persisted on the
+    # calculation revision's ``binding_overrides`` snapshot so a verify/file
+    # replay can reconstruct the identical draft without re-resolving the live
+    # profile; extract them here by their registry id-sets and route them.
+    date_binding_inputs = _date_inputs_for_ids(inputs, date_binding_ids)
+    relation_inputs = _decimal_inputs_for_ids(inputs, relation_ids)
+    filing_binding_values = _filing_binding_values(
+        inputs,
+        bindings,
+        enum_binding_ids,
+        frozenset(date_binding_ids | relation_ids),
+    )
     try:
         result = _calculate_registry_snapshot(
             snapshot,
@@ -162,6 +182,8 @@ def build_draft(
             date_context={"filing_period": _filing_period_date(period)},
             binding_values=binding_inputs,
             enum_binding_values=enum_binding_inputs or None,
+            relation_values=relation_inputs or None,
+            date_binding_values=date_binding_inputs or None,
         )
     except _RegistryValidationError as exc:
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
@@ -301,6 +323,50 @@ def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     }
 
 
+def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
+    """Collect every date_binding id referenced by the revision's formulas.
+
+    Date bindings (date-valued profile facts such as ``birth_date``,
+    consumed by ``age_at_year_end``) travel on the engine's
+    ``date_binding_values`` channel, distinct from the Decimal binding
+    channel. A draft replay must supply them or the formula runtime
+    refuses the calculation.
+    """
+    date_binding_ids: set[str] = set()
+    for formula in snapshot.revision.formulas:
+        date_binding_ids.update(_expression_date_binding_refs(formula.expression))
+    return date_binding_ids
+
+
+def _relation_ids(snapshot: _RegistrySnapshot) -> set[str]:
+    """Collect the cross-model relation ids declared on the revision.
+
+    Period relations (e.g. prior pagos fraccionados aggregated into the
+    annual settlement) are supplied to the engine on the dedicated
+    ``relation_values`` channel. A draft replay extracts them from the
+    persisted inputs by this id-set; relations not present in the inputs
+    are simply absent from the resolved relation map.
+    """
+    return {str(relation.id) for relation in snapshot.revision.relations}
+
+
+def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str, date]:
+    """Extract ISO-date-shaped inputs for ``input_ids`` as ``date`` values."""
+    date_inputs: dict[str, date] = {}
+    for binding_id, value in inputs.items():
+        if binding_id not in input_ids or value is None:
+            continue
+        if isinstance(value, date):
+            date_inputs[binding_id] = value
+            continue
+        if isinstance(value, str):
+            try:
+                date_inputs[binding_id] = date.fromisoformat(value)
+            except ValueError as exc:
+                raise ModeloBuilderError(f"date binding {binding_id!r} has a non-ISO date value {value!r}") from exc
+    return date_inputs
+
+
 def _collect_formula_binding_ids(expression: object, binding_ids: set[str]) -> None:
     binding = getattr(expression, "binding", None)
     if binding is not None:
@@ -338,13 +404,16 @@ def _filing_binding_values(
     inputs: ModeloInputs,
     bindings: Mapping[str, object],
     enum_binding_ids: frozenset[str] = frozenset(),
+    non_decimal_binding_ids: frozenset[str] = frozenset(),
 ) -> list[ModeloBindingValue]:
     values: list[ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
-        if binding_id in enum_binding_ids:
-            # Enum-channel bindings flow through _calculate_registry_snapshot's
-            # enum_binding_values parameter; they carry no fichero-BOE addressing
-            # and must not be coerced to Decimal here.
+        if binding_id in enum_binding_ids or binding_id in non_decimal_binding_ids:
+            # Enum-channel bindings, date bindings, and period relations flow
+            # through _calculate_registry_snapshot's dedicated channels
+            # (enum_binding_values / date_binding_values / relation_values);
+            # they carry no fichero-BOE addressing and must not be coerced to
+            # Decimal here.
             continue
         if binding_id not in inputs or inputs[binding_id] is None:
             continue
