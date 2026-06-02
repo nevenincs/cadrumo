@@ -260,16 +260,11 @@ def test_import_graph_helper_recognises_aggregator_pattern() -> None:
     # _registry. The closure must therefore include at least one of the
     # portal entry files even though no test_*.py sits next to them.
     portal_entries_dir = _SRC_ROOT / "domain" / "portals" / "_entries"
-    portal_modules = [
-        p
-        for p in portal_entries_dir.glob("portal_*.py")
-        if not p.name.startswith("test_")
-    ]
+    portal_modules = [p for p in portal_entries_dir.glob("portal_*.py") if not p.name.startswith("test_")]
     assert portal_modules, "expected portal_*.py entries to exist"
     reached = [p for p in portal_modules if p in reachable]
     assert reached, (
-        "import-graph helper failed to reach any portal entry via "
-        "aeat.domain.portals._registry aggregator imports"
+        "import-graph helper failed to reach any portal entry via aeat.domain.portals._registry aggregator imports"
     )
 
 
@@ -318,6 +313,5 @@ def test_every_production_module_is_reachable_from_a_test() -> None:
         "These production modules are not reachable through the static\n"
         "import graph from any test entrypoint. Either author a real-\n"
         "behavior test, route the module through an existing covered\n"
-        "aggregator, or exempt it in _EXEMPTIONS with a rationale.\n\n"
-        + "\n".join(f"  {g}" for g in sorted(gaps))
+        "aggregator, or exempt it in _EXEMPTIONS with a rationale.\n\n" + "\n".join(f"  {g}" for g in sorted(gaps))
     )
