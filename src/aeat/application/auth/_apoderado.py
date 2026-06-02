@@ -30,8 +30,6 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.time import now
-
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
     SensitivityClass,
@@ -41,7 +39,8 @@ from ...adapters.persistence.storage.envelope._secure_repository import SecureBo
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...core.identity import BucketId
-from ...domain.auth.apoderamientos import (
+from ...core.time import now
+from ...domain.auth import (
     ApoderamientosCatalogue,
     load_default_catalogue,
     parse_scope_tokens,
