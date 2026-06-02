@@ -240,8 +240,8 @@ Instantiate the normatives catalogue singleton, re-export the domain/auth apoder
 
 Route the CLI renta aggregation through the application service and add application wrappers for the usage-ratio mutating verbs so the CLI stops calling domain persistence directly.
 
-- [ ] `W07.P22.S82` - Replace the inline domain-registry aggregation in cli/_common.py:303-327 _aggregate_renta_filing_inputs with a call to application.aggregation resolve_modelo_ledger_binding_values_from_repositories; `remove the local domain import at :312 (DB-36); `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W07.P22.S83` - Fix application/aggregation/test_renta_ledger.py:35 to stop importing _aggregate_renta_filing_inputs from entrypoints.cli._common, routing through the application service instead (DB-36); `src/aeat/application/aggregation/test_renta_ledger.py`.
+- [x] `W07.P22.S82` - Replace the inline domain-registry aggregation in cli/_common.py:303-327 _aggregate_renta_filing_inputs with a call to application.aggregation resolve_modelo_ledger_binding_values_from_repositories; `remove the local domain import at :312 (DB-36); `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W07.P22.S83` - Fix application/aggregation/test_renta_ledger.py:35 to stop importing _aggregate_renta_filing_inputs from entrypoints.cli._common, routing through the application service instead (DB-36); `src/aeat/application/aggregation/test_renta_ledger.py`.
 - [x] `W07.P22.S84` - Add set_usage_ratio and unset_usage_ratio application command wrappers in application/ledger/_ratios.py that wrap domain load_usage_ratios/save_usage_ratios with validation (DB-36); `src/aeat/application/ledger/_ratios.py`.
 - [x] `W07.P22.S85` - Repoint cli/_ledger.py ratios_set (:2281) and ratios_unset (:2332) to the new application wrappers instead of importing domain.usage_ratios directly (DB-36); `src/aeat/entrypoints/cli/_ledger.py`.
 

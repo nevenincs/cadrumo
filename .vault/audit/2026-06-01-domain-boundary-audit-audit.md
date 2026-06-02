@@ -1411,6 +1411,26 @@ remediation is currently HELD at audit-only per the active action policy.
   for the two cli/-level payload modules) surfaced by `ty check`; runtime/tests were
   green regardless since the imports are type-only.
 
+- 2026-06-02 (cont.): **DB-36 / W07.P22 (S82+S83) EXECUTED.** The CLI helper
+  `cli/_common.py:_aggregate_renta_filing_inputs` imported the domain function
+  `resolve_ledger_renta_expense_aggregation_binding_values` directly — an
+  entrypoints→domain edge skipping the application layer. **S82** (commit `fa260b91a`)
+  replaces the inline domain orchestration with the application service
+  `resolve_modelo_ledger_binding_values_from_repositories(modelo="100",
+  revision=snapshot.revision, period="0A")` and drops the domain import. The
+  narrow-vs-broad substitutability concern (the service also owns iva + renta-income
+  branches) was **resolved by inspection, not assumed**: modelo 100/2025 declares only
+  `ledger_renta_expense_aggregation` ledger-binding sources (the other branches are
+  gated off by `_revision_has_binding_source`), and
+  `aggregation_period_for_modelo(filing_year, "0A")` returns `str(filing_year)` —
+  exactly the prior inline period arg — so the resolved `binding_values` are identical
+  for modelo 100. **S83** (same commit) removes the application-test→entrypoints
+  layering violation (`test_renta_ledger.py:35` imported the private CLI helper); the
+  test now drives the application service directly and asserts on the binding-id-keyed
+  output. Verified behaviour-equivalent: 12 renta-ledger + 23 backend-boundary tests
+  green; `ty` clean. The one combined-run failure was the registry loader-cache race
+  the `aeat-local-execution` rule documents (passed isolated + on sequential re-run).
+
 - 2026-06-02 (cont.): **DB-33 / W05.P14.S55 attempted, BACKED OUT; surfaced new
   DB-44 (test-isolation flakiness).** S55 sources the assets-ledger namespace
   literals in `adapters/persistence/profile/assets.py` from the central
