@@ -36,6 +36,9 @@ forbidden_modules =
 # excusing the test path. The same edge is already sanctioned in the
 # domain-not-application contract.
 ignore_imports =
+    # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
+    aeat.domain.calculations.registry.test_minimo_contribuyente_age_increment -> aeat.domain.renta
+    aeat.domain.calculations.registry.test_modelo_100_registry -> aeat.domain.renta
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
 
@@ -122,6 +125,21 @@ forbidden_modules =
     aeat.adapters
     aeat.entrypoints
 ignore_imports =
+    # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
+    aeat.core.resources._repos.test_manuals -> aeat.domain.manuals._errors
+    aeat.core.resources._repos.test_normatives -> aeat.domain.normatives._errors
+    aeat.core.resources._repos.test_singletons -> aeat.application.topics
+    aeat.core.resources._repos.test_singletons -> aeat.domain.calculations.registry._schema
+    aeat.core.test_external_constants -> aeat.adapters.persistence.storage.blob_store._blob_store
+    aeat.core.test_external_constants -> aeat.application.aggregation._currency_predicates
+    aeat.core.test_external_constants -> aeat.application.ledger._models
+    aeat.core.test_external_constants -> aeat.domain.currency._service
+    aeat.core.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
+    aeat.core.test_logging -> aeat.domain.calculations.registry._record_design
+    aeat.core.test_profile -> aeat.application.wizard._catalogue
+    aeat.core.test_profile -> aeat.domain.deadlines._models
+    aeat.core.test_profile -> aeat.domain.deadlines._profiles
+    aeat.core.test_profile_catalogue -> aeat.application.wizard._catalogue
     # ── core test files importing application/domain/adapters for fixtures ──
     aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
     aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
@@ -174,6 +192,20 @@ layers =
     aeat.core
 exhaustive = false
 ignore_imports =
+    # ── W09: re-sanctioned test-file roundtrip/fixture/oracle edges (prior ignores went stale on test rename) ──
+    aeat.application.aggregation.test_fx_conversion -> aeat.tests.secure_sql
+    aeat.application.setup.test_atomic_create_roundtrip -> aeat.tests.cli_runner
+    aeat.domain.attachments.test_repository -> aeat.tests.secure_sql
+    aeat.domain.attachments.test_service -> aeat.adapters.persistence.storage.attachment
+    aeat.domain.calculations.registry.test_inss_maternidad_paternidad_art7h -> aeat.tests.cli_runner
+    aeat.domain.calculations.registry.test_renta_web_open_oracle -> aeat.adapters.outbound.aeat.sede._renta_web_open
+    aeat.domain.deadlines.conftest -> aeat.application.wizard._catalogue
+    aeat.domain.deadlines.conftest -> aeat.application.wizard._persistence
+    aeat.domain.fincas.test_aggregates -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.fincas.test_repository -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.fincas.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.modelos.test_calculation_repository_roundtrip -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.errors
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
