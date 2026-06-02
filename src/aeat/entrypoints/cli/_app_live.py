@@ -923,6 +923,7 @@ def notifications_capture(ctx: typer.Context) -> None:
     ),
 )
 def notifications_list(ctx: typer.Context) -> None:
+    """List persisted DEHú notification snapshots for the active bucket without contacting AEAT."""
     from ...application.live._notifications import NotificationsService
 
     bucket_id = _active_bucket_id()
@@ -959,6 +960,7 @@ def notifications_show(
         ),
     ],
 ) -> None:
+    """Show one persisted DEHú notification snapshot by id prefix, including all notification rows."""
     from ...application.live._notifications import NotificationsService
 
     bucket_id = _active_bucket_id()
@@ -1058,6 +1060,7 @@ def portals_list(
         ),
     ] = None,
 ) -> None:
+    """List entries from the local AEAT portal registry, optionally filtered by ``PortalCategory`` or modelo code."""
     from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 
     if category and modelo:
@@ -1091,6 +1094,7 @@ def portals_show(
         str, typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value."))
     ],
 ) -> None:
+    """Show one portal-registry entry by its ``Portal`` enum value id."""
     from ...domain.portals import UnknownPortalError, get_portal
 
     try:
@@ -1146,6 +1150,7 @@ def expedientes_capture(
         int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help", default="Filing year."))
     ],
 ) -> None:
+    """Live-walk the AEAT declaration register and persist a bucket-scoped expedientes snapshot."""
     from ...application.live import capture_expedientes
 
     bucket_id = _active_bucket_id()
@@ -1179,6 +1184,7 @@ def expedientes_capture(
     ),
 )
 def expedientes_list(ctx: typer.Context) -> None:
+    """List persisted expedientes (AEAT declaration register) snapshots for the active bucket."""
     from ...application.live._expedientes import ExpedientesService
 
     bucket_id = _active_bucket_id()
@@ -1215,6 +1221,7 @@ def expedientes_show(
         ),
     ],
 ) -> None:
+    """Show one expedientes snapshot with all its declaration rows."""
     from ...application.live._expedientes import ExpedientesService
 
     bucket_id = _active_bucket_id()
@@ -1270,6 +1277,7 @@ def expedientes_show(
     ),
 )
 def expedientes_latest(ctx: typer.Context) -> None:
+    """Show the most recent expedientes snapshot for the active bucket, or report none."""
     from ...application.live._expedientes import ExpedientesService
 
     bucket_id = _active_bucket_id()
@@ -1353,6 +1361,7 @@ def verify_list(
         typer.Option("--nif", help=tr("cli.app.live.verify.nif_help", default="Filter to one NIF.")),
     ] = None,
 ) -> None:
+    """List persisted NIF verification observations, optionally filtered by surface or NIF."""
     from ...application.live._verify import VerifyService, VerifySurface
 
     bucket_id = _active_bucket_id()
@@ -1398,6 +1407,7 @@ def verify_show(
         ),
     ],
 ) -> None:
+    """Show one persisted NIF verification observation by id prefix."""
     from ...application.live._verify import VerifyService
 
     bucket_id = _active_bucket_id()
@@ -1433,6 +1443,7 @@ def verify_latest(
         typer.Option("--nif", help=tr("cli.app.live.verify.latest_nif_help", default="NIF to look up.")),
     ],
 ) -> None:
+    """Show the most recent verify observation for a given (surface, NIF) pair."""
     from ...application.live._verify import VerifyService, VerifySurface
 
     bucket_id = _active_bucket_id()
@@ -1494,7 +1505,7 @@ def verify_nif_iva(
         ),
     ] = None,
 ) -> None:
-
+    """Live-check one intra-community NIF-IVA via the AEAT IXVI service and persist the observation."""
     from ...adapters.outbound.aeat.sede._nif_iva_check import NifIvaCheckSedeDriver
     from ...application.live._verify import VerifyService, VerifySurface
     from ...core.access_gate import AeatAccessGate
@@ -1546,7 +1557,7 @@ def verify_tgvi(
         ),
     ] = None,
 ) -> None:
-
+    """Live-check one Spanish NIF's ROI/VIES (GROI) registration and persist the observation."""
     from ...adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
     from ...application.live._verify import VerifyService, VerifySurface
     from ...core.access_gate import AeatAccessGate
@@ -1634,6 +1645,7 @@ def borrador_100_list(
         ),
     ] = "active",
 ) -> None:
+    """List persisted Modelo 100 borrador (IRPF pre-fill) snapshots for the active bucket."""
     from ...application.live import Borrador100SnapshotService, SnapshotLifecycleState
 
     bucket_id = _active_bucket_id()
@@ -1679,6 +1691,7 @@ def borrador_100_show(
         ),
     ],
 ) -> None:
+    """Show one Modelo 100 borrador snapshot with its casilla binding values."""
     from ...application.live import Borrador100SnapshotService
 
     bucket_id = _active_bucket_id()
@@ -1729,6 +1742,7 @@ def borrador_100_latest(
         ),
     ],
 ) -> None:
+    """Show the most recent active Modelo 100 borrador snapshot for the given filing year."""
     from ...application.live import Borrador100SnapshotService
 
     bucket_id = _active_bucket_id()
