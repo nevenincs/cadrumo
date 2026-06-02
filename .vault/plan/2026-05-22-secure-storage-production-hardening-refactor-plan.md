@@ -1036,5 +1036,5 @@ This Wave adopts the ledger JSONL side stores discovered during W05.P09.S36 with
 
 Close the two W05.P09.S36 ledger side-store findings with runtime-created secure-object repositories or an explicit ADR-backed exception before the side-store hardening campaign is treated as complete. Both rows are identified-not-started slices until their repositories or exception ADRs land.
 
-- [ ] `W17.P37.S424` - identified-not-started: migrate purchase invoice evidence JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_evidence.py`.
+- [x] `W17.P37.S424` - identified-not-started: migrate purchase invoice evidence JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_evidence.py`.
 - [ ] `W17.P37.S425` - identified-not-started: migrate payable and collectible business-operation invoice JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_business_operation_invoice.py`.
