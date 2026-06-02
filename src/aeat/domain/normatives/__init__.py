@@ -83,7 +83,16 @@ class _LazyCatalogue:
         return self._ensure().get(ref_id)
 
 
+NORMATIVE_CATALOGUE = _LazyCatalogue()
+"""Lazily-loaded module-level :class:`NormativeCatalogue` singleton.
+
+Triggers :func:`load_catalogue` on first access and caches the result. Tests that
+rebind the corpus root per-test should call :func:`load_catalogue` directly.
+"""
+
+
 __all__ = [
+    "NORMATIVE_CATALOGUE",
     "Articulo",
     "NormativeCatalogue",
     "NormativeError",
