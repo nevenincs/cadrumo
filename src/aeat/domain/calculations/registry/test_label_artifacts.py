@@ -19,34 +19,40 @@ _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 
 
 def _modelo_with_label(label: str) -> ModeloDefinition:
-    casilla = CasillaDefinition.model_validate({
-        "id": "0001",
-        "number": "0001",
-        "label": label,
-        "section": ("test",),
-        "data_type": "money",
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-    })
-    revision = ModeloRevision.model_validate({
-        "id": "2025",
-        "valid_from": date(2025, 1, 1),
-        "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-        "casillas": (casilla,),
-    })
-    return ModeloDefinition.model_validate({
-        "id": "999",
-        "title": "Test modelo",
-        "official_name": "Test modelo",
-        "tax_domain": "iva",
-        "cadence": "annual",
-        "jurisdiction": "ES-AEAT",
-        "legal_refs": ("ley-58-2003:art-29",),
-        "source_refs": ("aeat-manual",),
-        "revisions": {"2025": revision},
-    })
+    casilla = CasillaDefinition.model_validate(
+        {
+            "id": "0001",
+            "number": "0001",
+            "label": label,
+            "section": ("test",),
+            "data_type": "money",
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+        }
+    )
+    revision = ModeloRevision.model_validate(
+        {
+            "id": "2025",
+            "valid_from": date(2025, 1, 1),
+            "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "casillas": (casilla,),
+        }
+    )
+    return ModeloDefinition.model_validate(
+        {
+            "id": "999",
+            "title": "Test modelo",
+            "official_name": "Test modelo",
+            "tax_domain": "iva",
+            "cadence": "annual",
+            "jurisdiction": "ES-AEAT",
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "revisions": {"2025": revision},
+        }
+    )
 
 
 def test_label_artifact_inventory_reports_unresolved_format_placeholder() -> None:
