@@ -67,6 +67,7 @@ class TaxpayerProfileIdentity(Protocol):
         """Tax identity copied into the filing runtime profile."""
         ...
 
+
 class ModeloOperatorProfile(BaseModel):
     """Concrete runtime implementation of the filing-profile Protocol.
 
@@ -82,6 +83,7 @@ class ModeloOperatorProfile(BaseModel):
 
     tax_id: str = Field(min_length=1)
     display_name: str = Field(min_length=1)
+
 
 class RegistryCasillaSchema(BaseModel):
     """Filing schema projection for one registry casilla.
@@ -103,6 +105,7 @@ class RegistryCasillaSchema(BaseModel):
     min_value: Decimal | None = None
     max_value: Decimal | None = None
     default: object | None = None
+
 
 @dataclass(frozen=True, slots=True)
 class RegistryCasillaCollection:
@@ -129,6 +132,7 @@ class RegistryCasillaCollection:
         """
         return self.casillas
 
+
 @dataclass(frozen=True, slots=True)
 class RegistryModeloSubview:
     """Snapshot-backed filing details for one modelo revision."""
@@ -147,6 +151,7 @@ class RegistryModeloSubview:
     export_layouts: tuple[ExportLayoutDefinition, ...]
     application_link_ids: tuple[str, ...]
     deadline_window_ids: tuple[str, ...]
+
 
 @dataclass(frozen=True, slots=True)
 class RegistrySchemaProvider:
@@ -173,6 +178,7 @@ class RegistrySchemaProvider:
         except KeyError as exc:
             raise ModeloBuilderError(f"modelo {modelo!r} is not present in the calculation registry") from exc
 
+
 def filing_profile_from_taxpayer(
     profile: TaxpayerProfileIdentity,
     *,
@@ -196,6 +202,7 @@ def filing_profile_from_taxpayer(
         tax_id=profile.tax_id,
         display_name=(display_name or profile.tax_id).strip(),
     )
+
 
 def load_default_filing_profile(
     *,
@@ -229,6 +236,7 @@ def load_default_filing_profile(
         raise ModeloBuilderError(str(exc)) from exc
     return filing_profile_from_taxpayer(profile, display_name=display_name)
 
+
 def build_runtime_schema_provider(
     registry_root: Path | None = None,
     *,
@@ -250,6 +258,7 @@ def build_runtime_schema_provider(
         selected_tuple,
         _registry_tree_fingerprint(root),
     )
+
 
 @lru_cache(maxsize=32)
 def _build_runtime_schema_provider_cached(
@@ -291,13 +300,19 @@ def _build_runtime_schema_provider_cached(
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
     )
 
-def _registry_tree_fingerprint(root: Path) -> tuple[tuple[str, int, int], ...]:  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE: relative-path keyed for tree-walk change detection (distinct from filename-keyed canonical file_stat_fingerprint).
+
+def _registry_tree_fingerprint(
+    root: Path,
+) -> tuple[
+    tuple[str, int, int], ...
+]:  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE: relative-path keyed for tree-walk change detection (distinct from filename-keyed canonical file_stat_fingerprint).
     paths = sorted((root / "legal").rglob("*.toml")) + sorted((root / "modelos").rglob("*.toml"))
     fingerprint: list[tuple[str, int, int]] = []
     for path in paths:
         stat = path.stat()
         fingerprint.append((path.relative_to(root).as_posix(), stat.st_mtime_ns, stat.st_size))
     return tuple(fingerprint)
+
 
 def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | None:
     if modelos is None:
@@ -306,6 +321,7 @@ def _normalize_modelo_selection(modelos: Sequence[str] | None) -> set[str] | Non
     if "" in selected:
         raise ModeloBuilderError("requested modelo selection must not contain blank modelo ids")
     return selected
+
 
 def _snapshot_for_provider(
     authority: ValidatedRegistryAuthority,
@@ -330,12 +346,14 @@ def _snapshot_for_provider(
         revision_id=revision.id,
     )
 
+
 def _current_provider_revision(modelo: ModeloDefinition) -> ModeloRevision:
     open_revisions = tuple(revision for revision in modelo.revisions.values() if revision.valid_to is None)
     candidates = open_revisions or tuple(modelo.revisions.values())
     if not candidates:
         raise ModeloBuilderError(f"modelo {modelo.id!r} has no revisions")
     return max(candidates, key=lambda revision: (revision.valid_from, revision.id))
+
 
 def _collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaCollection:
     modelo = snapshot.modelo
@@ -348,6 +366,7 @@ def _collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColl
         casillas=tuple(casillas[key] for key in sorted(casillas)),
         schema_version=f"registry:{modelo.id}:{revision.id}",
     )
+
 
 def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
     reconciliation_total_casillas = {
@@ -371,6 +390,7 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
         application_link_ids=tuple(sorted(snapshot.application_links)),
         deadline_window_ids=tuple(sorted(snapshot.deadline_windows)),
     )
+
 
 def _casilla_schema(
     casilla: CasillaDefinition,
@@ -397,6 +417,7 @@ def _casilla_schema(
         max_value=max_value,
     )
 
+
 def _value_type(data_type: str) -> str:
     if data_type in {"decimal", "money", "ratio"}:
         return "decimal"
@@ -420,6 +441,7 @@ def _value_type(data_type: str) -> str:
     if data_type == "date":
         return "date"
     raise ModeloBuilderError(f"unsupported registry casilla data type {data_type!r}")
+
 
 __all__ = [
     "ModeloOperatorProfile",
