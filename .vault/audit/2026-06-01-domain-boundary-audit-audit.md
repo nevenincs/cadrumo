@@ -1528,6 +1528,24 @@ remediation is currently HELD at audit-only per the active action policy.
   shells), so it is left for a dedicated pass with full budget rather than rushed across
   the core-registry + 4-locale shared surfaces.
 
+- 2026-06-03: **S65 EXECUTED — `relocation:SetupAnswers`, core/profile.py ->
+  core/setup_answers.py (commit `93f4f2b99`).** Seized a rare `profile.py`-clean window.
+  `git mv` of the module + its test; a precise scripted token replacement
+  (`aeat.core.profile` word-boundary + `core.profile import`) repointed all 20 importer
+  files (no false positives — browser `Profile`, `ProfileName`, `domain.profile`,
+  `profile_catalogue` all excluded), plus the 2 core error-registry path strings and the
+  docstring `:mod:` self-refs. Two follow-on fixes the script could not reach: the moved
+  test's *relative* `from .profile import` (no `core.` prefix) -> `.setup_answers`, and
+  the `.importlinter` `aeat.core.test_profile -> outer` fixture ignores -> the renamed
+  test (the rename had stale'd them, flipping `Core must not import outer layers` to
+  BROKEN until the ignores were renamed). Every touched file's diff was confirmed
+  token-only (no peer hunks) before staging. The "retype `_m/_p/_ccaa` Any accessors"
+  clause is deferred — gated on breaking the core<->domain.deadlines cycle the lazy
+  importlib accessors work around. Verified: 272 tests green, ty clean, collect-only
+  clean (1121), apidocs regenerated, Core-not-outer KEPT. This also unblocks **S66**
+  (`profile_catalogue.py` rename) — `setup_answers.py` now carries the `:mod:`
+  cross-ref S66 will repoint.
+
 - 2026-06-02 (cont.): **DB-01 concern C / W06.P16 (S61+S62) EXECUTED — ledger error
   hierarchies relocated out of the catch-all `domain/profile/_errors.py`.** Two atomic
   explicit-path moves co-locating each ledger's errors with its records:
