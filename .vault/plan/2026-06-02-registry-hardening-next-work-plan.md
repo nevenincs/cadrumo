@@ -47,11 +47,11 @@ Plan the next registry-hardening substrate after continuity conformance reached
 
 Extend continuity metadata only through small source-grounded slices after the reviewability gate is stable.
 
-- [ ] `P02.S10` - Research the next M100 legal-reference-only continuity candidate; `.vault/research`.
-- [ ] `P02.S11` - Author one M100 legal-reference-only continuity slice; `src/aeat/_data/registry/aeat/modelos/100`.
-- [ ] `P02.S12` - Research the next M100 label-and-legal-reference continuity candidate; `.vault/research`.
-- [ ] `P02.S13` - Author one M100 label-and-legal-reference continuity slice; `src/aeat/_data/registry/aeat/modelos/100`.
-- [ ] `P02.S14` - Add committed-corpus regression coverage for M100 1038 continuity; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
+- [x] `P02.S10` - Research the next M100 legal-reference-only continuity candidate; `.vault/research`.
+- [x] `P02.S11` - Author one M100 legal-reference-only continuity slice; `src/aeat/_data/registry/aeat/modelos/100`.
+- [x] `P02.S12` - Research the next M100 label-and-legal-reference continuity candidate; `.vault/research`.
+- [x] `P02.S13` - Author one M100 label-and-legal-reference continuity slice; `src/aeat/_data/registry/aeat/modelos/100`.
+- [x] `P02.S14` - Add committed-corpus regression coverage for M100 1038 continuity; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
 
 ### Phase `P03` - semantic role edge verification
 
