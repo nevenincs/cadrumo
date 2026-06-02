@@ -25,7 +25,7 @@ from ....domain.profile._constants import ProfileName
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._profile_censo_payloads import (
-    CensoApplyResult,
+    CensoApplyPayload,
     CensoCompareResult,
     CensoRefreshResult,
     CensoShowResult,
@@ -274,7 +274,7 @@ def register(profile_app: typer.Typer) -> None:
             profile_id=profile_id,
             snapshot_id=result.snapshot_id,
         )
-        typed_apply = CensoApplyResult.model_validate(result.model_dump(mode="json"))
+        typed_apply = CensoApplyPayload.from_result(result)
         lines = [
             f"snapshot_id\t{result.snapshot_id}",
             f"written\t{len(result.written_paths)}",
