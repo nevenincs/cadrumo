@@ -199,18 +199,31 @@ def _ledger_add_manual_transaction(bucket_id: str) -> dict[str, object]:
     """Create the seed manual transaction the rest of the workflow operates on."""
     payload = _run_ledger_cli_json(
         [
-            "app", "ledger", "add",
-            "--date", "2026-05-02",
-            "--amount", "-121.00",
-            "--direction", "OUTGOING",
-            "--description", "cash office supplies",
-            "--counterparty", "Proveedor SL",
-            "--classification", "BUSINESS",
-            "--category-id", "material_oficina",
-            "--taxable-base", "100.00",
-            "--iva-rate", "0.21",
-            "--iva-amount", "21.00",
-            "--idempotency-key", "cash-office-2026-05-02",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-05-02",
+            "--amount",
+            "-121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "cash office supplies",
+            "--counterparty",
+            "Proveedor SL",
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "material_oficina",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--idempotency-key",
+            "cash-office-2026-05-02",
         ]
     )
     assert bucket_id not in json.dumps(payload, sort_keys=True)
@@ -246,11 +259,17 @@ def _ledger_update_transaction(transaction_id: str) -> dict[str, object]:
     """Update the seed transaction's amount + description; assert the diff."""
     edited = _run_ledger_cli_json(
         [
-            "app", "ledger", "update",
-            "--id", transaction_id,
-            "--amount", "-121.50",
-            "--direction", "OUTGOING",
-            "--description", "cash office supplies corrected",
+            "app",
+            "ledger",
+            "update",
+            "--id",
+            transaction_id,
+            "--amount",
+            "-121.50",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "cash office supplies corrected",
         ]
     )
     transaction = cast(dict[str, object], edited["transaction"])
@@ -264,13 +283,21 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
     """Re-classify the updated transaction; verify BUSINESS + new category id."""
     classified = _run_ledger_cli_json(
         [
-            "app", "ledger", "classify",
-            "--id", transaction_id,
-            "--classification", "BUSINESS",
-            "--category-id", "software_suscripcion",
-            "--taxable-base", "100.00",
-            "--iva-rate", "0.21",
-            "--iva-amount", "21.00",
+            "app",
+            "ledger",
+            "classify",
+            "--id",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "software_suscripcion",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
         ]
     )
     transaction = cast(dict[str, object], classified["transaction"])
@@ -300,11 +327,17 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
     """Allocate a usage ratio to the transaction; verify MIXED classification + pct."""
     allocated = _run_ledger_cli_json(
         [
-            "app", "ledger", "allocate",
-            "--id", transaction_id,
-            "--business-pct", "0.60",
-            "--category-id", "telefonia_movil",
-            "--usage-ratio-id", "telefonia_movil",
+            "app",
+            "ledger",
+            "allocate",
+            "--id",
+            transaction_id,
+            "--business-pct",
+            "0.60",
+            "--category-id",
+            "telefonia_movil",
+            "--usage-ratio-id",
+            "telefonia_movil",
         ]
     )
     transaction = cast(dict[str, object], allocated["transaction"])
