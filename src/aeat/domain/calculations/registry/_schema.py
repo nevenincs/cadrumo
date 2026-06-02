@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -2478,6 +2479,21 @@ class RegistryCatalogues(RegistryModel):
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
 
 
+@dataclass(frozen=True, slots=True)
+class RegistryVerificationPolicy:
+    """Folded verification policy across a snapshot's verification expectations.
+
+    Owns the registry-grounded projection (union of computed casillas, the
+    strictest tolerance, the strictest coverage floor) so the application
+    verification surface consumes it rather than re-deriving the fold.
+    """
+
+    expectation_ids: tuple[VerificationExpectationId, ...]
+    computed_casillas: frozenset[CasillaId]
+    tolerance: Decimal
+    min_coverage: Decimal
+
+
 class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
@@ -2521,3 +2537,25 @@ class RegistrySnapshot(RegistryModel):
     support_removal_decisions: Mapping[SupportRemovalDecisionId, SupportRemovalDecisionDefinition]
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
+
+    def verification_policy(self) -> RegistryVerificationPolicy:
+        """Fold this snapshot's verification expectations into one policy.
+
+        Returns the registry-grounded :class:`RegistryVerificationPolicy` (union
+        of computed casillas, strictest tolerance, strictest coverage floor).
+
+        Raises:
+            RegistryValidationError: When the snapshot declares no verification
+                expectations.
+        """
+        expectations = tuple(self.verification_expectations.values())
+        if not expectations:
+            raise RegistryValidationError("registry verification requires verification expectations")
+        return RegistryVerificationPolicy(
+            expectation_ids=tuple(expectation.id for expectation in expectations),
+            computed_casillas=frozenset(
+                casilla_id for expectation in expectations for casilla_id in expectation.computed_casillas
+            ),
+            tolerance=min(expectation.tolerance for expectation in expectations),
+            min_coverage=max(expectation.min_coverage for expectation in expectations),
+        )
