@@ -1799,7 +1799,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.AssetRecordError",
+        "aeat.domain.profile.assets.AssetRecordError",
         ErrorCode(
             code="ERROR_PROFILE_ASSET_RECORD",
             category=ErrorCategory.ERROR,
@@ -1810,7 +1810,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.AssetValidationError",
+        "aeat.domain.profile.assets.AssetValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_ASSET_VALIDATION",
             category=ErrorCategory.REFUSED,
