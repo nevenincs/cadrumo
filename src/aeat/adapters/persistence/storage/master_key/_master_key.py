@@ -319,7 +319,7 @@ PassphraseCallback = Callable[[], str]
 """Pluggable hook for tests — callable returning the passphrase as a str."""
 
 
-def _default_passphrase_callback() -> str:
+def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None) -> str:
     """Resolve the operator's passphrase from env or stdin.
 
     The env var is read but NOT popped from ``os.environ``. Earlier
@@ -353,7 +353,8 @@ def _default_passphrase_callback() -> str:
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )
         return normalized
-    return getpass.getpass(prompt="AEAT secret-store passphrase: ")
+    resolver = getpass_fn if getpass_fn is not None else getpass.getpass
+    return resolver("AEAT secret-store passphrase: ")
 
 
 @runtime_checkable
