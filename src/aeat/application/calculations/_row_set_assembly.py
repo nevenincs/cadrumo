@@ -350,7 +350,8 @@ def assemble_foreign_asset_observations(
                     source_id=f"detalle:per_foreign_asset:row-{row_index}",
                     asset_class_code=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
-                    currency_code=_coerce_text(fields.get("currency_code"), default=DEFAULT_CURRENCY) or DEFAULT_CURRENCY,
+                    currency_code=_coerce_text(fields.get("currency_code"), default=DEFAULT_CURRENCY)
+                    or DEFAULT_CURRENCY,
                     asset_identifier=_coerce_text(fields.get("asset_identifier")),
                     acquisition_date=_coerce_iso_date(fields.get("acquisition_date"), default=default_acquisition_date),
                     valuation_amount=coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
@@ -396,9 +397,7 @@ def assemble_atribucion_observations(
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
                     transaction_date=default_date,
                     share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
-                    base_imponible_assigned=coerce_decimal(
-                        fields.get("base_imponible_assigned"), default=Decimal("0")
-                    ),
+                    base_imponible_assigned=coerce_decimal(fields.get("base_imponible_assigned"), default=Decimal("0")),
                 )
             )
         except ValidationError as exc:
