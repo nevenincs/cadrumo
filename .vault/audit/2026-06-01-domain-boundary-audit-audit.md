@@ -1493,6 +1493,23 @@ remediation is currently HELD at audit-only per the active action policy.
   exhausted-context change (a prior attempt at this exact flake misattributed
   causation — S55).
 
+- 2026-06-02 (cont.): **DB-44 RESOLVED + DB-33/S55 LANDED (chained fix).** DB-44:
+  gave each assets test call site a distinct bucket_id (assets-unit-bucket /
+  assets-rt-survives / assets-rt-dropped / assets-rt-missing) so the bucket-scoped
+  master-key sessions no longer collide across modules; the previously
+  non-deterministic `pytest -k asset` multi-module run is now 5/5 green (commit
+  `359953cd9`). Confirmed the engine cache is URL-keyed (not the cause); the leak
+  was the shared-default-bucket_id master-key session. Global root cause noted:
+  `isolated_runtime_profile`'s shared default bucket_id is a latent cross-module
+  hazard for any two modules sharing it in one run — a foundation follow-up could
+  default it to a unique id (higher blast radius; many tests assert on the literal
+  "test-runtime-profile"). With DB-44 fixed the assets suite is reliable, which
+  UNBLOCKED **S55/DB-33** (earlier backed out only because the flake made it
+  unverifiable): re-applied the central-namespace sourcing in assets.py and verified
+  5/5 green (commit `68385832b`). DB-33 closed. Lesson: the DB-44 flake had been
+  masking S55's correctness — fixing the test-isolation bug first was the right
+  order.
+
 ## Codification candidates
 
 
