@@ -130,7 +130,7 @@ def test_s674_adapters_markers(snippet: str) -> None:
     for lineno in matching:
         window_start = max(0, lineno - 1 - _CONTEXT)
         window = lines[window_start:lineno]
-        if any(_HARD_DEFERRED_TOKEN in l for l in window):
+        if any(_HARD_DEFERRED_TOKEN in line for line in window):
             return
         # Also check the line itself
         if _HARD_DEFERRED_TOKEN in lines[lineno - 1]:

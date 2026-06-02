@@ -369,6 +369,12 @@ convention = "google"
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S607"]
+# `aeat_secret_store_backend="file"` names the backend enum value, not a
+# password literal.
+"src/aeat/tests/secure_sql.py" = ["S106"]
+# Deterministic-sampler test uses random.Random for reproducible sampling, not
+# cryptographic use.
+"src/aeat/test_semantic_intent_sampler.py" = ["S311"]
 
 # ── Group G structural / domain-justified per-file-ignores ────────────────
 
