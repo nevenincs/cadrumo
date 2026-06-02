@@ -74,9 +74,7 @@ def test_s668_app_live_wire_payload_markers_present() -> None:
         f"markers, found {len(marker_lines)}"
     )
     for ln in marker_lines:
-        assert "**" in ln, (
-            f"_app_live.py: {_WIRE_PAYLOAD_TOKEN!r} marker is not on a splat (``**``) line: {ln!r}"
-        )
+        assert "**" in ln, f"_app_live.py: {_WIRE_PAYLOAD_TOKEN!r} marker is not on a splat (``**``) line: {ln!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -94,18 +92,16 @@ def test_s669a_modelo_kv_pairs_markers_present() -> None:
     """
     marker_lines = [ln for ln in _lines(_MODELO) if _WIRE_PAYLOAD_TOKEN in ln]
     assert len(marker_lines) == _S669A_SITE_COUNT, (
-        f"_modelo.py: expected {_S669A_SITE_COUNT} {_WIRE_PAYLOAD_TOKEN!r} kv_pairs "
-        f"markers, found {len(marker_lines)}"
+        f"_modelo.py: expected {_S669A_SITE_COUNT} {_WIRE_PAYLOAD_TOKEN!r} kv_pairs markers, found {len(marker_lines)}"
     )
     for ln in marker_lines:
-        assert "**" in ln, (
-            f"_modelo.py: {_WIRE_PAYLOAD_TOKEN!r} marker is not on a splat (``**``) line: {ln!r}"
-        )
+        assert "**" in ln, f"_modelo.py: {_WIRE_PAYLOAD_TOKEN!r} marker is not on a splat (``**``) line: {ln!r}"
 
 
 # ---------------------------------------------------------------------------
 # S669 Sub-B: _modelo.py — 6 Decimal(None) sites now have assert guards
 # ---------------------------------------------------------------------------
+
 
 def test_s669b_decimal_rescate_no_type_ignore() -> None:
     """Rescate-plan-pensiones Decimal sites must not carry bare # type: ignore."""
@@ -125,47 +121,37 @@ def test_s669b_decimal_rescate_no_type_ignore() -> None:
 def test_s669b_decimal_sal_no_type_ignore() -> None:
     """SAL Decimal sites must not carry bare # type: ignore."""
     src = pathlib.Path(_MODELO).read_text(encoding="utf-8")
-    assert "assert sal_beneficio_neto is not None" in src, (
-        "_modelo.py: assert guard for sal_beneficio_neto not found"
-    )
-    assert "assert sal_reserva_dotada is not None" in src, (
-        "_modelo.py: assert guard for sal_reserva_dotada not found"
-    )
-    assert "assert sal_capital_social is not None" in src, (
-        "_modelo.py: assert guard for sal_capital_social not found"
-    )
+    assert "assert sal_beneficio_neto is not None" in src, "_modelo.py: assert guard for sal_beneficio_neto not found"
+    assert "assert sal_reserva_dotada is not None" in src, "_modelo.py: assert guard for sal_reserva_dotada not found"
+    assert "assert sal_capital_social is not None" in src, "_modelo.py: assert guard for sal_capital_social not found"
 
 
 # ---------------------------------------------------------------------------
 # S669 Sub-C: _modelo.py — 3 _enum() → Literal sites carry rationale marker
 # ---------------------------------------------------------------------------
 
+
 def test_s669c_maritime_literal_marker_present() -> None:
     """maritime_worker Literal fields must carry CAST-RATIONALE-MARITIME-LITERAL-FIELD marker."""
     src = pathlib.Path(_MODELO).read_text(encoding="utf-8")
     # marker appears at least 3 times (one per Literal field)
     count = src.count(_MARITIME_TOKEN)
-    assert count >= 3, (
-        f"_modelo.py: expected at least 3 occurrences of {_MARITIME_TOKEN!r}, found {count}"
-    )
+    assert count >= 3, f"_modelo.py: expected at least 3 occurrences of {_MARITIME_TOKEN!r}, found {count}"
 
 
 # ---------------------------------------------------------------------------
 # S670: 6 misc structural fixes
 # ---------------------------------------------------------------------------
 
+
 def test_s670_parser_col_x_max_guard() -> None:
     """_parser.py:519 area must use explicit col_x_max is None guard (no type: ignore)."""
     src = pathlib.Path(_PARSER).read_text(encoding="utf-8")
-    assert "col_x_max is None or col_x_min <= w" in src, (
-        "_parser.py: explicit col_x_max is None guard not found"
-    )
+    assert "col_x_max is None or col_x_min <= w" in src, "_parser.py: explicit col_x_max is None guard not found"
     # Confirm the old type: ignore is gone from this conditional
     for i, ln in enumerate(src.splitlines(), 1):
         if "col_x_min is None or col_x_max is None" in ln:
-            assert "# type: ignore" not in ln, (
-                f"_parser.py:{i}: col_x_max guard line still has # type: ignore"
-            )
+            assert "# type: ignore" not in ln, f"_parser.py:{i}: col_x_max guard line still has # type: ignore"
             break
     else:
         pytest.fail("_parser.py: col_x_max guard line not found")
@@ -182,20 +168,14 @@ def test_s670_envelope_classgetitem_rationale() -> None:
 def test_s670_iva_wallet_repository_typed() -> None:
     """_iva_wallet_reconciliation.py must have typed repository annotation (no no-untyped-def)."""
     src = pathlib.Path(_IVA_WALLET).read_text(encoding="utf-8")
-    assert "repository: " in src, (
-        "_iva_wallet_reconciliation.py: typed repository parameter not found"
-    )
-    assert "no-untyped-def" not in src, (
-        "_iva_wallet_reconciliation.py: bare no-untyped-def type: ignore survives"
-    )
+    assert "repository: " in src, "_iva_wallet_reconciliation.py: typed repository parameter not found"
+    assert "no-untyped-def" not in src, "_iva_wallet_reconciliation.py: bare no-untyped-def type: ignore survives"
 
 
 def test_s670_doc_reference_isinstance_narrowing() -> None:
     """_doc_reference.py must use isinstance(schema_cls, type) narrowing (no union-attr ignore)."""
     src = pathlib.Path(_DOC_REF).read_text(encoding="utf-8")
-    assert "isinstance(schema_cls, type)" in src, (
-        "_doc_reference.py: isinstance(schema_cls, type) narrowing not found"
-    )
+    assert "isinstance(schema_cls, type)" in src, "_doc_reference.py: isinstance(schema_cls, type) narrowing not found"
 
 
 def test_s670_identity_placement_numeric_narrowing() -> None:
@@ -212,14 +192,13 @@ def test_s670_descendant_facts_cast_applied() -> None:
     assert "CAST-RATIONALE-DISCAPACIDAD-LITERAL" in src, (
         "_descendant_facts.py: CAST-RATIONALE-DISCAPACIDAD-LITERAL marker not found"
     )
-    assert "# type: ignore[arg-type]" not in src, (
-        "_descendant_facts.py: bare [arg-type] type: ignore survives"
-    )
+    assert "# type: ignore[arg-type]" not in src, "_descendant_facts.py: bare [arg-type] type: ignore survives"
 
 
 # ---------------------------------------------------------------------------
 # Allowlist size ratchet: exactly 11 entries remain
 # ---------------------------------------------------------------------------
+
 
 def test_allowlist_size_is_7() -> None:
     """``_KNOWN_VIOLATING_LINES`` must contain exactly 7 entries.
@@ -240,15 +219,13 @@ def test_allowlist_size_is_7() -> None:
         del sys.modules[mod_name]
     mod = importlib.import_module(mod_name)
     size = len(mod._KNOWN_VIOLATING_LINES)  # type: ignore[attr-defined]
-    assert size == 7, (
-        f"Expected 7 entries in _KNOWN_VIOLATING_LINES (post W26.P59 + S672 + S673 paydown), "
-        f"found {size}"
-    )
+    assert size == 7, f"Expected 7 entries in _KNOWN_VIOLATING_LINES (post W26.P59 + S672 + S673 paydown), found {size}"
 
 
 # ---------------------------------------------------------------------------
 # Prior-wave ratchet: test_no_new_type_ignore_without_rationale must pass
 # ---------------------------------------------------------------------------
+
 
 def test_prior_wave_ratchet_still_passes() -> None:
     """The main type-ignore ratchet must find zero new violations after W26.P59 fixes."""
@@ -262,7 +239,6 @@ def test_prior_wave_ratchet_still_passes() -> None:
     violations = frozenset(mod._collect_violations())  # type: ignore[attr-defined]
     known = mod._KNOWN_VIOLATING_LINES  # type: ignore[attr-defined]
     new_violations = violations - known
-    assert not new_violations, (
-        "W26.P59 introduced new type-ignore violations:\n"
-        + "\n".join(f"  {rel}:{lineno}" for rel, lineno in sorted(new_violations))
+    assert not new_violations, "W26.P59 introduced new type-ignore violations:\n" + "\n".join(
+        f"  {rel}:{lineno}" for rel, lineno in sorted(new_violations)
     )

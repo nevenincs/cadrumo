@@ -28,9 +28,7 @@ def test_s620_identity_error_is_aeat_error_subclass() -> None:
     from .core.errors import AeatError
     from .core.identity._documents import IdentityError
 
-    assert issubclass(IdentityError, AeatError), (
-        "IdentityError must be a subclass of AeatError"
-    )
+    assert issubclass(IdentityError, AeatError), "IdentityError must be a subclass of AeatError"
 
 
 def test_s620_identity_error_raised_not_valueerror() -> None:
@@ -69,13 +67,8 @@ def test_s622_revision_validation_context_no_any_annotation() -> None:
     )
 
     hints = typing.get_type_hints(RevisionValidationContext)
-    any_fields = [
-        name for name, annotation in hints.items()
-        if "Any" in str(annotation)
-    ]
-    assert not any_fields, (
-        f"RevisionValidationContext has fields with Any annotation: {any_fields}"
-    )
+    any_fields = [name for name, annotation in hints.items() if "Any" in str(annotation)]
+    assert not any_fields, f"RevisionValidationContext has fields with Any annotation: {any_fields}"
 
 
 # ---------------------------------------------------------------------------
@@ -94,9 +87,7 @@ def test_s623_pre303_raw_rationale_marker_present() -> None:
             window = lines[max(0, i - 3) : i + 4]
             if any(marker in w for w in window):
                 return
-    pytest.fail(
-        f"Marker {marker!r} not found within 3 lines of 'pre303_raw' in external_constants.py"
-    )
+    pytest.fail(f"Marker {marker!r} not found within 3 lines of 'pre303_raw' in external_constants.py")
 
 
 # ---------------------------------------------------------------------------
@@ -139,14 +130,9 @@ def test_s625_no_bare_manual_literal_in_transactions_models() -> None:
     stripped = re.sub(r'""".*?"""', "", source, flags=re.DOTALL)
     stripped = re.sub(r"'''.*?'''", "", stripped, flags=re.DOTALL)
 
-    bare_hits = [
-        i + 1
-        for i, line in enumerate(stripped.splitlines())
-        if re.search(r'"manual"', line)
-    ]
+    bare_hits = [i + 1 for i, line in enumerate(stripped.splitlines()) if re.search(r'"manual"', line)]
     assert not bare_hits, (
-        f"Bare \"manual\" literal found in _models.py at lines {bare_hits}; "
-        "use CLASSIFIED_BY_MANUAL constant instead"
+        f'Bare "manual" literal found in _models.py at lines {bare_hits}; use CLASSIFIED_BY_MANUAL constant instead'
     )
 
 
@@ -169,9 +155,8 @@ def test_s626_no_prose_deferred_comment_in_errors_registry() -> None:
             if re.search(r"#\s*deferred\b", prev, re.IGNORECASE) and "CAST-RATIONALE" not in prev:
                 violations.append((i, prev.strip()))
 
-    assert not violations, (
-        "Prose-only '# deferred' comment adjacent to type: ignore found:\n"
-        + "\n".join(f"  line {ln}: {txt}" for ln, txt in violations)
+    assert not violations, "Prose-only '# deferred' comment adjacent to type: ignore found:\n" + "\n".join(
+        f"  line {ln}: {txt}" for ln, txt in violations
     )
 
 
@@ -181,14 +166,11 @@ def test_s626_no_prose_deferred_comment_in_errors_registry() -> None:
 
 
 def test_s627_dynamic_classvar_probe_rationale_marker_present() -> None:
-    source_path = (
-        _SRC_ROOT / "adapters" / "inbound" / "financial" / "providers" / "_base.py"
-    )
+    source_path = _SRC_ROOT / "adapters" / "inbound" / "financial" / "providers" / "_base.py"
     source = source_path.read_text(encoding="utf-8")
     marker = "CAST-RATIONALE-DYNAMIC-CLASSVAR-PROBE"
     assert source.count(marker) >= 2, (
-        f"Expected at least 2 occurrences of {marker!r} in providers/_base.py; "
-        f"found {source.count(marker)}"
+        f"Expected at least 2 occurrences of {marker!r} in providers/_base.py; found {source.count(marker)}"
     )
 
 
@@ -200,14 +182,8 @@ def test_s627_dynamic_classvar_probe_rationale_marker_present() -> None:
 def test_s628_no_pytest_skip_in_test_profile() -> None:
     source_path = _SRC_ROOT / "core" / "test_profile.py"
     source = source_path.read_text(encoding="utf-8")
-    hits = [
-        i + 1
-        for i, line in enumerate(source.splitlines())
-        if "pytest.skip(" in line
-    ]
-    assert not hits, (
-        f"pytest.skip( found in core/test_profile.py at lines {hits}"
-    )
+    hits = [i + 1 for i, line in enumerate(source.splitlines()) if "pytest.skip(" in line]
+    assert not hits, f"pytest.skip( found in core/test_profile.py at lines {hits}"
 
 
 # ---------------------------------------------------------------------------
@@ -218,14 +194,8 @@ def test_s628_no_pytest_skip_in_test_profile() -> None:
 def test_s629_no_pytest_skip_in_test_taxation_comparison() -> None:
     source_path = _SRC_ROOT / "application" / "modelo" / "test_taxation_comparison.py"
     source = source_path.read_text(encoding="utf-8")
-    hits = [
-        i + 1
-        for i, line in enumerate(source.splitlines())
-        if "pytest.skip(" in line
-    ]
-    assert not hits, (
-        f"pytest.skip( found in test_taxation_comparison.py at lines {hits}"
-    )
+    hits = [i + 1 for i, line in enumerate(source.splitlines()) if "pytest.skip(" in line]
+    assert not hits, f"pytest.skip( found in test_taxation_comparison.py at lines {hits}"
 
 
 # ---------------------------------------------------------------------------
@@ -274,8 +244,7 @@ def _run_inventory_ratchet(test_path: Path) -> None:
         timeout=120,
     )
     assert result.returncode == 0, (
-        f"Inventory ratchet {test_path.name} FAILED:\n"
-        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        f"Inventory ratchet {test_path.name} FAILED:\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
 
 
