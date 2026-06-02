@@ -1,6 +1,6 @@
 """Error hierarchy for the borrador parser.
 
-Specialises :class:`aeat.adapters.inbound.pdf._errors.PdfModeloImportError`
+Specialises :class:`aeat.domain.justificante.PdfModeloImportError`
 with Modelo 100 specific exceptions raised by
 :func:`aeat.adapters.inbound.borrador.parse_borrador` and the helpers in
 :mod:`aeat.adapters.inbound.borrador._detect`.
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ..pdf._errors import PdfModeloImportError
+from ....domain.justificante import PdfModeloImportError
 
 
 class BorradorParseError(PdfModeloImportError):
