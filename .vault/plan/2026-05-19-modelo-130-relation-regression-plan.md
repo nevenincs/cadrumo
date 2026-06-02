@@ -12,6 +12,15 @@ related:
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `modelo-130-relation-regression` `remediation` plan
 
@@ -34,16 +43,16 @@ without unrelated schema errors masking the result.
 This Phase aligns the registry declaration with AEAT's casilla `15` and casilla
 `19` carry-forward rule.
 
-- [ ] `W01.P02.S01` - audit Modelo 130 source and legal catalogue entries for AEAT instructions and RD 439/2007 article 110; `src/aeat/_data/registry/aeat/legal/irpf.toml`.
-- [ ] `W01.P02.S02` - revise Modelo 130 binding, relation, dependency classification, and construct references for same-year unused negative results; `src/aeat/_data/registry/aeat/modelos/130.toml`.
-- [ ] `W01.P02.S03` - adjust shared relation selector behavior only if Modelo 130 requires same-year aggregate source periods beyond the IVA previous-quarter selector; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `W01.P02.S01` - audit Modelo 130 source and legal catalogue entries for AEAT instructions and RD 439/2007 article 110; `src/aeat/_data/registry/aeat/legal/irpf.toml`.
+- [x] `W01.P02.S02` - revise Modelo 130 binding, relation, dependency classification, and construct references for same-year unused negative results; `src/aeat/_data/registry/aeat/modelos/130.toml`.
+- [x] `W01.P02.S03` - adjust shared relation selector behavior only if Modelo 130 requires same-year aggregate source periods beyond the IVA previous-quarter selector; `src/aeat/domain/calculations/registry/_bindings.py`.
 
 ### Phase `W01.P03` - verify real registry behavior
 
 This Phase adds real-behavior regression coverage without fakes, stubs,
 monkeypatches, skips, or mirrored business logic.
 
-- [ ] `W01.P03.S01` - add Modelo 130 carry-forward tests for casillas `15`, `17`, `19`, and `saldo-negativo-fin-periodo`; `src/aeat/domain/calculations/registry/test_modelo_130_registry.py`.
-- [ ] `W01.P03.S02` - update cross-dependency contract expectations for the corrected Modelo 130 relation shape; `src/aeat/domain/calculations/registry/test_cross_dependency_contract.py`.
-- [ ] `W01.P03.S03` - update cross-dependency calculation coverage for Modelo 130 edge-year and same-year prior-period observations; `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`.
-- [ ] `W01.P03.S04` - run targeted Modelo 130, cross-dependency, and IVA compensation regression suites together; `tests`.
+- [x] `W01.P03.S01` - add Modelo 130 carry-forward tests for casillas `15`, `17`, `19`, and `saldo-negativo-fin-periodo`; `src/aeat/domain/calculations/registry/test_modelo_130_registry.py`.
+- [x] `W01.P03.S02` - update cross-dependency contract expectations for the corrected Modelo 130 relation shape; `src/aeat/domain/calculations/registry/test_cross_dependency_contract.py`.
+- [x] `W01.P03.S03` - update cross-dependency calculation coverage for Modelo 130 edge-year and same-year prior-period observations; `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`.
+- [x] `W01.P03.S04` - run targeted Modelo 130, cross-dependency, and IVA compensation regression suites together; `tests`.
