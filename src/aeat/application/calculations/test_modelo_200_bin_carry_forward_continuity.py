@@ -50,7 +50,9 @@ from ...domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_bound_casilla_inputs,
 )
+from ...domain.modelos._verification_report import ModeloVerificationFindingKind
 from ...tests.secure_sql import isolated_runtime_profile
+from ..modelo._actions import _evaluate_verification_predicates
 from ._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ._observations_repository import CalculationObservationRepository
 from ._relation_prefill import resolve_relations_from_local_store
@@ -189,3 +191,74 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
     assert_enrollment_matches_manifest(evidence)
+
+
+# ---------------------------------------------------------------------------
+# Elective-cap gate (LIS art. 26.1): the operator-elective applied BIN
+# compensation (DP200014:00547) must not exceed the computed ceiling
+# (DP200014:bin-aplicada-maxima = min(stock, max(EUR 1M, 70%·base previa))).
+# The cap_le_when_positive BLOCKING predicate refuses OVER-application but
+# permits electing LESS — compensation is a right bounded by a ceiling, not a
+# mandate. These tests exercise the predicate semantics directly (the ceiling
+# value itself is produced by the real cap formula in the calc E2E above).
+# ---------------------------------------------------------------------------
+
+_BIN_CAP_PREDICATE_ID = "modelo-200-compensacion-bin-no-excede-limite-art-26"
+
+
+def _bin_cap_predicate():
+    """Return the art.26.1 cap BLOCKING predicate from the live M200 snapshot."""
+    revision = resources().modelos.authority.validate_modelo(_MODELO_200).revisions["2024-y-siguientes"]
+    predicate = next(
+        p for p in revision.verification_predicates if p.predicate_id == _BIN_CAP_PREDICATE_ID
+    )
+    assert predicate.finding_kind == "BLOCKING_RULE"
+    assert "cap_le_when_positive" in predicate.expression
+    return predicate
+
+
+def test_modelo_200_bin_over_application_above_cap_is_blocked() -> None:
+    """Applying more BIN than the art.26.1 ceiling fires a BLOCKING finding.
+
+    Ceiling = 1.000.000 (the EUR 1M floor dominates a small 70%·base); electing
+    00547 = 1.200.000 over-compensates and must be refused. Non-tautological:
+    the predicate is the registry's own cap_le_when_positive, evaluated against
+    a hand-built over-claim, not a re-run of the cap formula.
+    """
+    predicate = _bin_cap_predicate()
+    casilla_values = {
+        "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
+        "DP200014:00547": Decimal("1200000.00"),  # over the ceiling
+    }
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, None)
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert _BIN_CAP_PREDICATE_ID in findings[0].message
+
+
+def test_modelo_200_electing_less_than_cap_is_permitted() -> None:
+    """Electing LESS BIN than the ceiling raises no finding (compensation is a right).
+
+    The taxpayer may preserve BIN stock for future years; applying below the
+    cap is legitimate and the gate must not refuse it. This is the
+    no-silent-under-declaration "Good" path: blocking only the over-claim
+    direction, permitting the under-direction.
+    """
+    predicate = _bin_cap_predicate()
+    casilla_values = {
+        "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
+        "DP200014:00547": Decimal("400000.00"),  # elected below the ceiling
+    }
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, None)
+    assert findings == []
+
+
+def test_modelo_200_applying_exactly_the_cap_is_permitted() -> None:
+    """Applying exactly the ceiling is permitted (<= holds at equality)."""
+    predicate = _bin_cap_predicate()
+    casilla_values = {
+        "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
+        "DP200014:00547": Decimal("1000000.00"),
+    }
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, None)
+    assert findings == []
