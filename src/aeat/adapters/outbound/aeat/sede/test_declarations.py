@@ -16,7 +16,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import pytest
 from openpyxl import load_workbook
@@ -24,7 +24,6 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from .....application.filing import (
     ModeloDraftStatus,
     ModeloOperatorProfile,
@@ -44,11 +43,12 @@ from .....domain.calculations.registry import (
 )
 from .....tests import FIXTURES_DIR
 from .....tests.secure_sql import isolated_runtime_profile
-
+from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._declarations import (
     Declaracion,
     _assert_read_browser_action,
     _assert_read_http,
+    _declarations_page_shape_context,
     _extract_csv_from_url,
     _observed_casillas_from_declaration_pdf,
     _observed_casillas_from_submitted_file,
@@ -69,6 +69,9 @@ from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, Obse
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _BUCKET_ID = "sede-declarations"
+
+if TYPE_CHECKING:
+    from ..auth._authenticator import AeatSession
 
 
 @pytest.fixture(autouse=True)
@@ -133,6 +136,42 @@ def _declaration_row(
         justificante_link_text="Ver",
         archive_link_text="Ver",
     )
+
+
+def test_declarations_page_shape_context_redacts_url_query_and_input_values() -> None:
+    html = """
+    <html>
+      <head><title>Consulta de declaraciones presentadas</title></head>
+      <body>
+        <label>Modelo (*)</label>
+        <label>Ejercicio (*)</label>
+        <button class="z-button">Buscar</button>
+        <input type="hidden" name="session" value="QUERY-CANARY" />
+        <div class="z-listbox">
+          <div class="z-listheader">Expediente</div>
+          <div class="z-listitem"><div class="z-listcell">ROW-CANARY</div></div>
+        </div>
+      </body>
+    </html>
+    """
+
+    context = _declarations_page_shape_context(
+        html,
+        landing_url="https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul?token=QUERY-CANARY",
+        phase="post_buscar",
+        modelo="303",
+        ejercicio=2026,
+    )
+
+    assert context["landing_url"] == "https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"
+    assert context["has_modelo_label"] is True
+    assert context["has_ejercicio_label"] is True
+    assert context["has_buscar_button"] is True
+    assert context["listbox_count"] == 1
+    assert context["listitem_count"] == 1
+    assert "QUERY-CANARY" not in str(context)
+    assert "ROW-CANARY" not in str(context)
+    assert context["raw_sha256"]
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
@@ -831,7 +870,9 @@ class TestSubmittedFileObservation:
             period="1T",
         )
         binding_values["modelo-130-resultados-negativos-anteriores"] = carry_forward_value
-        computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED}
+        computed_casillas = {
+            casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED
+        }
         assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {"saldo-negativo-fin-periodo"}
 
         calculated = calculate_registry_snapshot(

@@ -35,11 +35,24 @@ class LiveApplicationInputError(LiveApplicationError):
 class LiveIvaSurfaceTimeoutError(LiveApplicationError):
     """Raised when one live IVA read surface exceeds its orchestration timeout."""
 
-    def __init__(self, message: str, *, surface: str, timeout_ms: int) -> None:
-        super().__init__(message)
+    def __init__(
+        self,
+        message: str,
+        *,
+        surface: str,
+        timeout_ms: int,
+        progress_context: Mapping[str, object] | None = None,
+    ) -> None:
+        context: dict[str, object] = {"surface": surface, "timeout_ms": timeout_ms}
+        if progress_context:
+            context["progress"] = dict(progress_context)
+        super().__init__(
+            message,
+            context=context,
+            translated_message="errors.error.error_application_live_iva_surface_timeout",
+        )
         self.surface = surface
         self.timeout_ms = timeout_ms
-        self.context: Mapping[str, object] = {"surface": surface, "timeout_ms": timeout_ms}
 
 
 def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisitionFailureMode:

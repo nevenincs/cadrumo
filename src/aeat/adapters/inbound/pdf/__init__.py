@@ -17,7 +17,7 @@ Public symbols:
 
 from __future__ import annotations
 
-from ._errors import PdfModeloImportError
+from ....domain.justificante import PdfModeloImportError
 from ._label_regex import (
     SPANISH_AMOUNT_GROUP,
     LabelHit,

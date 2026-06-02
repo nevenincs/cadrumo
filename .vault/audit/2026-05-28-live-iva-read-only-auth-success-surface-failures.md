@@ -75,3 +75,27 @@ During the 2026-06-02 live capture the registry loader emitted Modelo 347
 quarter semantic-role warnings. Those warnings are non-IVA findings and remain
 slated for owner review under the plan's non-IVA findings row; they were not
 changed in this cancellation slice.
+
+Follow-up execution on 2026-06-02 shifted from backend polishing to live-surface
+diagnostics. The declarations-register driver now records redacted page-shape
+context for navigation/form/search failures, and the combined IVA acquisition
+report now carries redacted failure context through CLI output and persisted
+acquisition manifests. Operator-facing text added in this slice uses
+`adapters.sede.errors.modelo_unavailable` and was populated through
+`aeat.locales` for `es`, `en`, `ca`, and `hu`.
+
+Read-only live evidence:
+
+- A one-year run for Modelo 303 / 2026 authenticated successfully, submitted no
+  filing/payment/confirmation/represented-taxpayer data, and reached the
+  declaration-query route. Filed-history succeeded with zero captured rows for
+  that year. Wallet/cartera still failed closed with a surface timeout.
+- A shorter read-only smoke proved the new diagnostics on both failed surfaces:
+  filed-history timed out at progress `walk_declarations_register` for Modelo
+  303 / 2026, and wallet/cartera timed out at
+  `fetch_iva_compensation_wallet` for target 2026 / 1T.
+
+No private taxpayer values, filed amounts, wallet balances, expediente ids, or
+history rows are accepted into this audit. This is accepted as route and
+diagnostic evidence only. It is not accepted as proof that live IVA wallet state
+can be read, nor as proof that multi-year filed-history capture is complete.
