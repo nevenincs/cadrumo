@@ -100,6 +100,7 @@ class LocalFileSystemProvider:
 
     @property
     def root(self) -> Path:
+        """Absolute ``~pathlib.Path`` to the provider's storage root directory."""
         return self._root
 
     def _ensure_namespace_dir(self, namespace: str) -> Path:
@@ -229,6 +230,33 @@ class LocalFileSystemProvider:
         )
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
+        """Read the object payload from disk and verify its integrity.
+
+        Locates the ``.bin`` file by HMAC prefix, loads the sibling
+        ``.meta.json`` sidecar, reads the raw bytes, and compares the
+        SHA-256 digest against the sidecar's ``content_hash`` field.  Both
+        ``sha256-<hex>`` prefixed strings and bare hex digests are accepted.
+
+        Args:
+            namespace: Logical bucket name; maps to a subdirectory of
+                ``root``.
+            object_key_hmac: Full HMAC string identifying the object.
+
+        Returns:
+            A two-tuple of ``(payload_bytes, ProviderObjectMetadata)``.
+
+        Raises:
+            OutboundStorageNotFoundError: When the object file is absent.
+            OutboundStorageIntegrityError: When the sidecar is missing,
+                unreadable, or contains non-JSON content; or when the
+                payload digest does not match the stored hash.
+            OutboundStoragePermissionError: When the object file cannot be
+                read due to OS permissions.
+            StorageCorruptionError: When the sidecar ``byte_length`` field
+                has an unexpected type.
+            OutboundStorageValidationError: When ``namespace`` or
+                ``object_key_hmac`` fail format checks.
+        """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
 
@@ -293,6 +321,27 @@ class LocalFileSystemProvider:
         return payload, metadata
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
+        """Remove the object file and its sidecar from disk.
+
+        Returns ``False`` immediately when the object is absent — deleting a
+        non-existent object is idempotent.  The sidecar is removed with
+        ``missing_ok=True`` so a pre-existing orphaned payload without a
+        sidecar is still cleanly deleted.
+
+        Args:
+            namespace: Logical bucket name.
+            object_key_hmac: Full HMAC string identifying the object.
+
+        Returns:
+            ``True`` when the object was found and deleted; ``False`` when it
+            was already absent.
+
+        Raises:
+            OutboundStoragePermissionError: When the OS refuses the
+                ``unlink`` call.
+            OutboundStorageValidationError: When ``namespace`` or
+                ``object_key_hmac`` fail format checks.
+        """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
 
@@ -311,6 +360,14 @@ class LocalFileSystemProvider:
         return True
 
     def iter_namespaces(self) -> Iterator[str]:
+        """Yield the name of every namespace subdirectory under ``root``.
+
+        Returns immediately (yields nothing) when ``root`` does not yet
+        exist on disk.
+
+        Yields:
+            Directory names in filesystem-returned order.
+        """
         if not self._root.is_dir():
             return
         for entry in self._root.iterdir():
@@ -318,6 +375,28 @@ class LocalFileSystemProvider:
                 yield entry.name
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
+        """Yield ``ProviderObjectMetadata`` for every object in ``namespace``.
+
+        Only ``.bin`` files with a companion ``.meta.json`` sidecar are
+        yielded; files without a sidecar are silently skipped (the coordinator
+        surfaces those as integrity issues via its own diff classifier).
+
+        Args:
+            namespace: Logical bucket name.
+
+        Yields:
+            ``ProviderObjectMetadata`` records in sorted filename order.
+
+        Raises:
+            OutboundStorageNotFoundError: When the namespace directory is
+                absent.
+            OutboundStorageIntegrityError: When a sidecar file is unreadable
+                or contains non-JSON content.
+            StorageCorruptionError: When a sidecar ``byte_length`` field has
+                an unexpected type.
+            OutboundStorageValidationError: When ``namespace`` fails format
+                checks.
+        """
         namespace_clean = _validate_namespace(namespace)
         namespace_dir = self._root / namespace_clean
         if not namespace_dir.is_dir():
@@ -359,6 +438,23 @@ class LocalFileSystemProvider:
             )
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
+        """Assess filesystem accessibility and write permissions.
+
+        Attempts to create ``root`` if absent.  Then, unless
+        ``read_only=True``, performs a sentinel write/delete round-trip in
+        a ``_probe`` namespace to confirm write access end-to-end.
+
+        The method never raises; every failure mode is encoded in the
+        returned ``ProviderProbeReport``.
+
+        Args:
+            read_only: When ``True``, skip the sentinel write round-trip and
+                report ``writable=False`` regardless of actual permissions.
+
+        Returns:
+            A ``ProviderProbeReport`` with ``reachable``, ``writable``, and a
+            human-readable ``detail`` string describing the outcome.
+        """
         if not self._root.exists():
             try:
                 self._root.mkdir(parents=True, exist_ok=True)

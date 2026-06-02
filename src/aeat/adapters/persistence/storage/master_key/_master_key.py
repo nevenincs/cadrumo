@@ -682,6 +682,34 @@ class FileFallbackMasterKeyProvider:
         return value.encode(_UTF_8_ENCODING)
 
     def get_master_key(self) -> bytes:
+        """Unwrap and return the 32-byte master key from the encrypted file store.
+
+        Resolves the operator passphrase, then serialises the
+        unwrap-or-refuse decision under an exclusive ``master.lock`` so two
+        first-time callers cannot race-mint conflicting ``master.key`` /
+        ``master.kdf`` pairs. When all three artefacts (``master.key``,
+        ``master.kdf``, ``salt``) are present, derives the Argon2id
+        key-encryption key (KEK) from the passphrase and uses it to unwrap
+        the wrapped master key. A partial artefact set is a torn install -- a
+        prior mint or recovery crashed mid-write -- and is refused rather
+        than silently re-minted, which would orphan records encrypted under
+        the lost key.
+
+        Returns:
+            The 32-byte AES-256 master key.
+
+        Raises:
+            MasterKeyMaterialMissingError: When the store is unprovisioned
+                or in a torn state.
+            MasterKeyPassphraseMismatchError: When the passphrase fails to
+                unwrap the stored key.
+            MasterKeyKdfVersionError: When ``master.kdf`` carries an
+                unsupported parameter version.
+            MasterKeyUnavailableError: When an artefact is malformed or
+                unreadable.
+            PassphraseTooShortError: When the resolved passphrase is shorter
+                than the NIST verifier minimum.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         passphrase = self._resolve_passphrase()
         # Serialise the unwrap-or-mint decision under the on-disk lock
@@ -999,9 +1027,28 @@ class EphemeralMasterKeyProvider:
         self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
+        """Return the in-memory master key minted for this provider instance.
+
+        The key is the same bytes for the provider's lifetime and is never
+        persisted; this method exists so the provider satisfies the
+        ``MasterKeyProvider`` protocol that production blob-store,
+        secret-store, and envelope paths depend on.
+
+        Returns:
+            The 32-byte AES-256 master key held in memory.
+        """
         return self._key
 
     def provision_master_key(self) -> bytes:
+        """Return the in-memory key without minting fresh material.
+
+        For the ephemeral provider, enrollment and retrieval are the same
+        operation: the key already exists in memory and nothing is
+        persisted, so this returns the instance key unchanged.
+
+        Returns:
+            The 32-byte AES-256 master key held in memory.
+        """
         return self._key
 
     def __enter__(self) -> object:
@@ -1442,9 +1489,30 @@ class UnsecuredMasterKeyProvider:
         self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
+        """Return the published deterministic master key for unsecured mode.
+
+        The returned bytes are publicly known by design, so the wrapping
+        key provides **ZERO confidentiality**; the substrate's encryption
+        pipeline is otherwise intact. Intended only for testing, tutorial,
+        and throwaway scenarios that are fenced off from real tax data by
+        the NIF-canary at the profile-load boundary.
+
+        Returns:
+            The 32-byte published deterministic master key.
+        """
         return _UNSECURED_PUBLISHED_KEY
 
     def provision_master_key(self) -> bytes:
+        """Return the published deterministic key without minting material.
+
+        There is nothing to provision for the unsecured backend: the key is
+        a fixed published constant, so enrollment and retrieval return the
+        same bytes. Provides **ZERO confidentiality** -- see
+        ``get_master_key``.
+
+        Returns:
+            The 32-byte published deterministic master key.
+        """
         return _UNSECURED_PUBLISHED_KEY
 
     def __enter__(self) -> object:

@@ -158,6 +158,7 @@ class GoogleDriveProvider:
 
     @property
     def root_folder_id(self) -> str:
+        """Drive folder ID used as the parent of the ``aeat-vault/`` root folder."""
         return self._root_folder_id
 
     # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
@@ -371,6 +372,41 @@ class GoogleDriveProvider:
         content_hash: str,
         label: str,
     ) -> ProviderObjectMetadata:
+        r"""Upload ``payload`` to Drive, creating or updating the object file.
+
+        If a file for ``object_key_hmac`` already exists the existing Drive
+        file is updated in-place (``files().update``); otherwise a new file
+        is created (``files().create``) inside the namespace folder.  The
+        ``appProperties`` field on the Drive entry records the HMAC,
+        ``content_hash``, namespace, and ownership marker so subsequent
+        ``get`` and ``iter_objects`` calls can resolve the entry without
+        re-downloading the payload.
+
+        Args:
+            namespace: Logical bucket name; becomes a Drive sub-folder of
+                ``aeat-vault/``.
+            object_key_hmac: Full HMAC string that uniquely identifies the
+                object.  Only the first 8 characters are used in the Drive
+                filename; the full value is stored in ``appProperties``.
+            payload: Raw bytes to upload.  The provider is opaque to the
+                content; encryption lives at a higher layer.
+            content_hash: Vendor-prefixed digest string (e.g.
+                ``sha256-<hex>``).  Stored in ``appProperties`` and
+                verified on ``get``.
+            label: Human-readable filename component, sanitised to
+                ``[A-Za-z0-9\\-_.]{1,64}``.
+
+        Returns:
+            ``ProviderObjectMetadata`` populated from the Drive API response.
+
+        Raises:
+            OutboundStorageValidationError: When ``namespace``,
+                ``object_key_hmac``, or ``content_hash`` are blank.
+            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
+            OutboundStorageQuotaError: On HTTP 429 from Drive.
+            OutboundStorageUnavailableError: On HTTP 5xx from Drive.
+            OutboundStorageNetworkError: On any other Drive API failure.
+        """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
         if not content_hash.strip():
@@ -429,6 +465,31 @@ class GoogleDriveProvider:
         return _metadata_from_drive_entry(response, namespace=namespace_clean, object_key_hmac=hmac_clean)
 
     def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
+        """Download the object and verify its integrity against the stored hash.
+
+        Uses ``files().get_media`` to stream bytes.  If the stored
+        ``content_hash`` is a ``sha256-<hex>`` string, the payload digest is
+        recomputed after download and compared; a mismatch raises
+        ``OutboundStorageIntegrityError`` before the payload is returned.
+
+        Args:
+            namespace: Logical bucket name.
+            object_key_hmac: Full HMAC string identifying the object.
+
+        Returns:
+            A two-tuple of ``(payload_bytes, ProviderObjectMetadata)``.
+
+        Raises:
+            OutboundStorageNotFoundError: When the namespace folder or object
+                file is absent from Drive.
+            OutboundStorageIntegrityError: When the downloaded payload does not
+                match the stored SHA-256 digest.
+            OutboundStorageValidationError: When ``namespace`` or
+                ``object_key_hmac`` are blank.
+            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
+            OutboundStorageNetworkError: On any other Drive API failure or
+                when ``get_media`` returns a non-bytes value.
+        """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
 
@@ -477,6 +538,26 @@ class GoogleDriveProvider:
         return bytes(payload), metadata
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
+        """Permanently delete the Drive file for ``object_key_hmac``.
+
+        Returns ``False`` immediately (without error) when the namespace
+        folder or the object file does not exist — deleting a non-existent
+        object is idempotent at the provider boundary.
+
+        Args:
+            namespace: Logical bucket name.
+            object_key_hmac: Full HMAC string identifying the object.
+
+        Returns:
+            ``True`` when the file was found and deleted; ``False`` when the
+            namespace or object was already absent.
+
+        Raises:
+            OutboundStorageValidationError: When ``namespace`` or
+                ``object_key_hmac`` are blank.
+            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
+            OutboundStorageNetworkError: On any other Drive API failure.
+        """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
 
@@ -491,6 +572,20 @@ class GoogleDriveProvider:
         return True
 
     def iter_namespaces(self) -> Iterator[str]:
+        """Yield the name of every namespace folder directly under ``aeat-vault/``.
+
+        Paginates through Drive's ``files().list`` using ``nextPageToken``.
+        The namespace folder IDs are cached as a side effect so subsequent
+        ``_resolve_namespace_folder`` calls for yielded names skip the Drive
+        lookup.
+
+        Yields:
+            Namespace name strings in Drive-returned order.
+
+        Raises:
+            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
+            OutboundStorageNetworkError: On any other Drive API failure.
+        """
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
         query = f"'{vault_id}' in parents and mimeType='{_FOLDER_MIME}' and trashed=false"
@@ -511,6 +606,27 @@ class GoogleDriveProvider:
                 return
 
     def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
+        """Yield ``ProviderObjectMetadata`` for every object in ``namespace``.
+
+        Only files whose names end with ``.bin`` and contain ``--`` are
+        yielded; Drive folders and unrelated files inside the namespace
+        folder are silently skipped.  The full HMAC is recovered from
+        ``appProperties.object_key_hmac`` when present, falling back to the
+        filename prefix.
+
+        Args:
+            namespace: Logical bucket name.
+
+        Yields:
+            ``ProviderObjectMetadata`` records in Drive-returned order.
+
+        Raises:
+            OutboundStorageNotFoundError: When the namespace folder is absent
+                from Drive.
+            OutboundStorageValidationError: When ``namespace`` is blank.
+            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
+            OutboundStorageNetworkError: On any other Drive API failure.
+        """
         namespace_clean = _validate_namespace(namespace)
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean, create=False)
@@ -547,6 +663,29 @@ class GoogleDriveProvider:
                 return
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
+        """Assess Drive connectivity and write access, returning a ``ProviderProbeReport``.
+
+        Checks, in order:
+
+        1. Service construction — verifies ``google-api-python-client``
+           can be imported and credentials can build a Drive resource.
+        2. Root folder existence — confirms ``root_folder_id`` names a
+           non-trashed Drive folder.
+        3. Sentinel round-trip (skipped when ``read_only=True``) — calls
+           ``put`` then ``delete`` against a ``_probe`` namespace to confirm
+           write access end-to-end.
+
+        The method never raises; every failure mode is encoded in the
+        returned ``ProviderProbeReport``.
+
+        Args:
+            read_only: When ``True``, skip the sentinel write round-trip and
+                report ``writable=False`` regardless of actual permissions.
+
+        Returns:
+            A ``ProviderProbeReport`` with ``reachable``, ``writable``,
+            ``root_folder_present``, and a human-readable ``detail`` string.
+        """
         try:
             service = self._get_service()
         except OutboundStorageError as exc:
