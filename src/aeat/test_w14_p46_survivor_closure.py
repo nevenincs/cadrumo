@@ -14,6 +14,7 @@ S612 — ``_RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int]`` module constant; zero bare
 
 No mocks, no skips, no tautological assertions.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -126,9 +127,7 @@ _LOG_LEVELS_TOKEN = "LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE"
 def test_s610_log_levels_constants_only_rationale_on_import_line() -> None:
     """_log_levels.py import logging line must carry LOGGING-STDLIB-CONSTANTS-ONLY-RATIONALE."""
     src = _read("entrypoints/cli/_log_levels.py")
-    assert _LOG_LEVELS_TOKEN in src, (
-        f"entrypoints/cli/_log_levels.py: missing {_LOG_LEVELS_TOKEN!r} — S610 not applied"
-    )
+    assert _LOG_LEVELS_TOKEN in src, f"entrypoints/cli/_log_levels.py: missing {_LOG_LEVELS_TOKEN!r} — S610 not applied"
     lines_with_token = [ln for ln in src.splitlines() if _LOG_LEVELS_TOKEN in ln]
     assert any("import logging" in ln for ln in lines_with_token), (
         f"entrypoints/cli/_log_levels.py: {_LOG_LEVELS_TOKEN!r} present but not on the ``import logging`` line"
