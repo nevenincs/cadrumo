@@ -6,21 +6,7 @@ date: '2026-06-01'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace domain-boundary-audit with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[YYYY-MM-DD-foo-bar]]'.
-
-     DO NOT add frontmatter fields
-     outside the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `domain-boundary-audit` audit: `Domain ownership and cross-boundary outlier audit`
 
@@ -56,7 +42,6 @@ Total tracked Python surface is 1701 files.
 
 ## Findings
 
-<!-- Key findings organized by severity. IDs are stable (DB-NN) and never reused. -->
 
 ### DB-01 (MEDIUM) — `profile` / `user_profile` / renta family-facts have no single canonical home
 
@@ -1205,25 +1190,37 @@ remediation is currently HELD at audit-only per the active action policy.
   (relocate the class fully into `invoices`, eliminating the iva->invoices edge) is
   gated on the DB-41 full bidirectional-cycle break and is tracked there. S21 left open
   in the plan, annotated excluded-as-written.
+- 2026-06-02: DB-34 + DB-20 marquee LANDED (all collection/test-gated, atomic
+  `relocation:`-tagged commits, pushed). DB-34: the DT-12ª LIRPF plan-pensiones
+  reducción and Ley 44/2015 art. 14 SAL reserva especial formulas moved from
+  `cli/_modelo.py` into `domain/modelos/_dt12_reduccion.py` /
+  `_sal_reserva_especial.py` with `PensionReduccionError` relocated to
+  `domain/modelos/_errors.py`; oracle + guard tests migrated to
+  `domain/modelos/test_fiscal_reductions.py` (W02.P05 S25-S27). DB-20: the
+  `domain/iva_compensation/` package created and the IVA-compensation surface
+  relocated across W03 — P07 (5 guard errors), P08 S35 (carry-forward models +
+  projection + `derive_303_compensation_available`), S36 (reconciliation data
+  models + the regulatory decision validator; landed jointly with peer
+  `e53b80c95`, consumer sweep completed), S37 (wallet balance projection), P09
+  S38 (collapsed the duplicated `posterior + max(0, -resultado)` 303 derivation
+  onto the domain function across `application/live` + `adapters/sede`), S40
+  (dropped the application-calculations facade re-exports; all callers now import
+  from the domain home). **Hexagonal deviation recorded:** the boundary-mapping
+  functions that consume adapter/application types — `iva_compensation_period_key`
+  (adapter `safe_repository_id`), `iva_compensation_state_from_filed_observation`
+  (application port), and `reconcile_iva_compensation_wallet` + its wallet/
+  recurrence predicates (adapter `IvaCompensationWalletObservation`) — CANNOT move
+  to domain without a `domain->adapters/application` edge; they stay in application
+  pending domain observation port-Protocols, tracked as new plan step W03.P08.S89.
+  **Peer regression flagged (not in this campaign's scope):** three Modelo 303
+  engine tests (`test_bucket_aggregation_flow` resultado-regimen-general, two
+  `test_iva_wallet_engine_integration`) red on a peer-#222 303 autoconsumo-promotor
+  registry calculation regression (`iva.resultado-regimen-general` resolves to 0 on
+  positive input); independent of the behaviour-neutral IVA-compensation relocation
+  (verified import-source-only; full collection clean at 13040).
 
 ## Codification candidates
 
-<!-- Findings that satisfy the three durability criteria
-(cross-session, constraint-shaped, project-bound) and should be
-promoted into project-shared rules under `.vaultspec/rules/rules/`
-(the directory the CLI's `vaultspec-core spec rules add` writes to today; the
-planned `--scope project` flag will move authored rules under
-`.vaultspec/rules/rules/project/`).
-
-Each candidate names the finding it derives from, the proposed
-rule slug (kebab-case, naming the constraint's subject not the
-failure), and a one-sentence statement of the rule.
-
-Most audits produce zero codification candidates. Some produce one.
-Only the rare framework-wide-pattern audit produces several. If
-none of the findings above meet the bar, state that explicitly and
-move on -- an empty Codification candidates section is a positive
-signal, not a failure. -->
 
 None yet. This is an early discovery pass; the durable lessons it points at
 (substitutability pre-filter, RAG-cluster-then-rg-verify discipline) are already
