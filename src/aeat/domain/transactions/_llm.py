@@ -59,6 +59,7 @@ _REASON_MAX_LENGTH = 2048
 
 # ── response model ────────────────────────────────────────────────
 
+
 class LLMClassificationResponse(BaseModel):
     """One LLM-emitted classification result for a transaction."""
 
@@ -86,7 +87,9 @@ class LLMClassificationResponse(BaseModel):
             raise TransactionValidationError("reason must not be empty")
         return trimmed
 
+
 # ── protocol ──────────────────────────────────────────────────────
+
 
 class LLMClassifier(Protocol):
     """Classify one transaction with an LLM-generated decision."""
@@ -104,7 +107,9 @@ class LLMClassifier(Protocol):
         """
         ...
 
+
 # ── parametric prompt builder ─────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class ClassificationChoice:
@@ -113,12 +118,14 @@ class ClassificationChoice:
     value: BusinessClassification
     hint: str
 
+
 @dataclass(frozen=True)
 class CategoryChoice:
     """One allowed :class:`SpendingCategory` paired with an LLM-facing hint."""
 
     value: SpendingCategory
     hint: str
+
 
 # Descriptive hints for the four LLM-addressable classification states. Kept
 # as module constants so the descriptions live next to their values and can
@@ -140,6 +147,7 @@ PIPELINE_ONLY_CLASSIFICATIONS: frozenset[BusinessClassification] = frozenset(
     }
 )
 
+
 def default_classification_choices() -> tuple[ClassificationChoice, ...]:
     """Return the default allowed-classifications tuple used by the prompt.
 
@@ -147,6 +155,7 @@ def default_classification_choices() -> tuple[ClassificationChoice, ...]:
         Tuple of :class:`ClassificationChoice` objects for each allowed category.
     """
     return tuple(ClassificationChoice(value=value, hint=hint) for value, hint in _DEFAULT_CLASSIFICATION_HINTS.items())
+
 
 @dataclass(frozen=True)
 class PromptSpec:
@@ -180,9 +189,11 @@ class PromptSpec:
         """Render the prompt for ``transaction`` against this spec."""
         return _render_prompt(self, transaction)
 
+
 def default_prompt_spec() -> PromptSpec:
     """Return the default :class:`PromptSpec`: classification-only, four decision states."""
     return PromptSpec()
+
 
 def prompt_spec_with_every_spending_category(
     *,
@@ -213,6 +224,7 @@ def prompt_spec_with_every_spending_category(
         categories=category_choices,
     )
 
+
 def _category_hint(value: SpendingCategory) -> str:
     """Return the best available hint string for a SpendingCategory.
 
@@ -236,6 +248,7 @@ def _category_hint(value: SpendingCategory) -> str:
         segments.append(tr(notes_preview))
     return " — ".join(segments)
 
+
 def _render_choices(lines: Iterable[tuple[str, str]]) -> str:
     """Render ``(value, hint)`` pairs as aligned bullet rows."""
     rows = list(lines)
@@ -243,6 +256,7 @@ def _render_choices(lines: Iterable[tuple[str, str]]) -> str:
         return ""
     width = max(len(value) for value, _hint in rows)
     return "\n".join(f"  {value:<{width}} — {hint}" for value, hint in rows)
+
 
 def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
     """Build the full prompt string for one transaction against a spec."""
@@ -297,9 +311,11 @@ def _render_prompt(spec: PromptSpec, transaction: Transaction) -> str:
     )
     return "\n".join(sections)
 
+
 # ── response parsing ──────────────────────────────────────────────
 
 _JSON_OBJECT_RE = re.compile(r"\{[^{}]*\}")
+
 
 def parse_response(
     stdout: str,
@@ -359,7 +375,9 @@ def parse_response(
         f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3])
     )
 
+
 # ── subprocess-based classifier ───────────────────────────────────
+
 
 @dataclass(frozen=True)
 class SubprocessLLMClassifier:
@@ -461,7 +479,9 @@ class SubprocessLLMClassifier:
         )
         return response
 
+
 # ── builders + registry ───────────────────────────────────────────
+
 
 def build_claude_classifier(
     *,
@@ -499,6 +519,7 @@ def build_claude_classifier(
         spec=spec or default_prompt_spec(),
     )
 
+
 def build_gemini_classifier(
     *,
     alias: str | None = None,
@@ -534,6 +555,7 @@ def build_gemini_classifier(
         spec=spec or default_prompt_spec(),
         prompt_via_argument=True,
     )
+
 
 def build_codex_classifier(
     *,
@@ -571,6 +593,7 @@ def build_codex_classifier(
         spec=spec or default_prompt_spec(),
     )
 
+
 def _resolve_model_id(
     *,
     provider: str,
@@ -593,11 +616,13 @@ def _resolve_model_id(
     profile: ModelProfile = resolve_profile(provider, alias=alias, minimum_tier=minimum_tier)
     return profile.model_id
 
+
 _BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
     "claude": build_claude_classifier,
     "gemini": build_gemini_classifier,
     "codex": build_codex_classifier,
 }
+
 
 def resolve_classifier(
     provider: str,
@@ -649,6 +674,7 @@ def resolve_classifier(
         )
         return builder(model=model, spec=spec)
 
+
 def register_classifier(name: str, builder: Callable[..., LLMClassifier]) -> None:
     """Register a classifier builder under ``name``.
 
@@ -658,9 +684,11 @@ def register_classifier(name: str, builder: Callable[..., LLMClassifier]) -> Non
     """
     _BUILDERS[name.lower()] = builder
 
+
 def unregister_classifier(name: str) -> None:
     """Remove a builder previously added via :func:`register_classifier`."""
     _BUILDERS.pop(name.lower(), None)
+
 
 __all__ = [
     "MINIMUM_CLASSIFICATION_TIER",
