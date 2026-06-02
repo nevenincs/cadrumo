@@ -27,6 +27,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S52]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S53]]'
   - '[[2026-05-28-centralized-output-redaction-W03-P09-S54]]'
+  - '[[2026-05-28-centralized-output-redaction-W03-P09-S55]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -340,3 +341,46 @@ CRITICAL findings present: no.
 
 - The localized status assertions remain a medium test-robustness risk if the module-level language fixture is changed later, but no runtime policy bypass is indicated.
 - Core structured text redaction remains broad by design (non-key values in other formats may still pass through without key-aware redaction if not matched by `_CLI_IDENTIFIER_ASSIGNMENT_PATTERN`), which is now expected to be covered in later waves (W03.P10+).
+
+## W03.P09.S55 Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Scope
+
+- `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`
+- `.vault/plan/2026-05-28-centralized-output-redaction-plan.md`
+- `.vault/exec/2026-05-28-centralized-output-redaction/2026-05-28-centralized-output-redaction-W03-P09-S55.md`
+
+### Findings
+
+- S55 now covers the intended distinction between portable bundle identity and public CLI output:
+  - The export helper still reads the real bucket UUID and returns it for storage assertions.
+  - The export text surface is asserted to contain `CLI_PROFILE_ID_PLACEHOLDER` and not the raw bucket UUID.
+  - A JSON export call asserts `result.profile_id` is the shared placeholder and the raw UUID is absent from the public payload.
+  - The main import roundtrip uses JSON output and asserts the import payload is placeholdered while the active bucket and imported repositories still preserve the bundle UUID.
+- Test quality remains real-behavior based. The test invokes actual CLI commands, reads the written bundle, imports into a fresh storage root, and reloads encrypted repositories. No fakes, mocks, monkeypatches, or helper-only mirror checks were introduced.
+- The shared redaction vocabulary is used through `CLI_PROFILE_ID_PLACEHOLDER`, so the test is tied to the central privacy contract instead of a duplicated literal.
+
+### Residual risks
+
+- The raw UUID absence check on the JSON payload uses `json.dumps(..., sort_keys=True)`. This is useful as a leak guard but remains a broad string scan rather than a typed deep-walk over identifier fields.
+- The collision-refusal tests were tightened during follow-up to assert raw bundle UUID absence. S56 and later import-idempotency work should continue tightening adjacent import surfaces separately.
+
+## W03.P09.S55 Follow-up Review
+
+HIGH findings present: no.
+CRITICAL findings present: no.
+
+### Findings
+
+- The prior MEDIUM import-refusal redaction gap is closed:
+  - A focused helper now asserts raw profile UUID absence for public refusal output.
+  - UUID-collision refusal output now asserts the exported bundle UUID is absent.
+  - Label-collision refusal output now asserts the exported bundle UUID is absent.
+- Focused gates passed after the refusal-path assertions were added.
+
+### Residual risks
+
+- JSON public-output leak checks still use a broad `json.dumps(..., sort_keys=True)` scan. This remains a robustness gap rather than a current HIGH or CRITICAL privacy regression.

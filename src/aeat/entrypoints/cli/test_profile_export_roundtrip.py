@@ -31,8 +31,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ...tests.cli_runner import invoke_cached_cli
 from ...tests.secure_sql import isolated_profile_storage_root
+from ._test_envelope import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -48,6 +50,22 @@ def _isolated_source(tmp_path: Path) -> Iterator[None]:
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
+
+
+def _assert_public_profile_id_redacted(output: str, raw_profile_id: str) -> None:
+    assert CLI_PROFILE_ID_PLACEHOLDER in output
+    assert raw_profile_id not in output
+
+
+def _assert_public_profile_id_not_leaked(output: str, raw_profile_id: str) -> None:
+    assert raw_profile_id not in output
+
+
+def _assert_public_profile_payload_redacted(output: str, raw_profile_id: str) -> dict:
+    payload = unwrap_schema_envelope(output)
+    assert payload["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert raw_profile_id not in json.dumps(payload, sort_keys=True)
+    return payload
 
 
 def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
@@ -197,6 +215,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     # 4. Export via CLI.
     r_export = _invoke(["config", "profile", "export", "source", "--to", str(bundle_path)])
     assert r_export.exit_code == 0, r_export.output
+    _assert_public_profile_id_redacted(r_export.output, bucket_id)
     assert bundle_path.is_file()
 
     return bucket_id
@@ -220,6 +239,17 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
 
     bundle_path = tmp_path / "source-bundle.json"
     source_bucket_id = _seed_and_export(tmp_path, bundle_path)
+    exported_bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+    assert exported_bundle["profile"]["profile_id"] == source_bucket_id
+
+    json_bundle_path = tmp_path / "source-bundle-json.json"
+    json_export = _invoke(
+        ["--format", "json", "config", "profile", "export", "source", "--to", str(json_bundle_path)]
+    )
+    assert json_export.exit_code == 0, json_export.output
+    json_export_payload = _assert_public_profile_payload_redacted(json_export.output, source_bucket_id)
+    assert json_export_payload["display_name"] == "source"
+    assert json_bundle_path.is_file()
 
     # Load originals while still in source storage context.
     with (
@@ -239,8 +269,10 @@ def test_v2_bundle_export_import_roundtrip(tmp_path: Path) -> None:
     # Import into a fresh isolated storage root.
     import_tmp = tmp_path / "import-root"
     with isolated_profile_storage_root(tmp_path=import_tmp):
-        r_import = _invoke(["config", "profile", "import", str(bundle_path)])
+        r_import = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
         assert r_import.exit_code == 0, r_import.output
+        import_payload = _assert_public_profile_payload_redacted(r_import.output, source_bucket_id)
+        assert import_payload["display_name"] == "source"
 
         imported_bucket_id = resolve_active_bucket_id()
         # D5: imported profile_id must equal the source's.
@@ -349,11 +381,12 @@ def test_import_refuses_uuid_collision(tmp_path: Path) -> None:
     """Tier-1: importing a bundle whose profile_id is already registered is refused."""
 
     bundle_path = tmp_path / "collision-bundle.json"
-    _seed_and_export(tmp_path, bundle_path)
+    source_bucket_id = _seed_and_export(tmp_path, bundle_path)
 
     # Re-import into the same storage root where the profile_id already exists.
     r = _invoke(["config", "profile", "import", str(bundle_path)])
     assert r.exit_code != 0, r.output
+    _assert_public_profile_id_not_leaked(r.output, source_bucket_id)
     # The refusal must name the recovery action or "already registered".
     assert "already registered" in r.output or "profile" in r.output.lower()
     assert "Traceback" not in r.output
@@ -363,7 +396,7 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
     """Tier-2: importing with a label already taken by a different UUID is refused."""
 
     bundle_path = tmp_path / "label-collision-bundle.json"
-    _seed_and_export(tmp_path, bundle_path)
+    source_bucket_id = _seed_and_export(tmp_path, bundle_path)
 
     import_tmp = tmp_path / "label-collision-root"
     with isolated_profile_storage_root(tmp_path=import_tmp):
@@ -380,4 +413,5 @@ def test_import_label_collision_different_uuid_is_refused(tmp_path: Path) -> Non
         # but whose profile_id is a different UUID.
         r_import = _invoke(["config", "profile", "import", str(bundle_path)])
         assert r_import.exit_code != 0, r_import.output
+        _assert_public_profile_id_not_leaked(r_import.output, source_bucket_id)
         assert "Traceback" not in r_import.output
