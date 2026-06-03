@@ -125,7 +125,7 @@ Plan facet, xls Evidencia tab, sidecar, unevidenced-export refusal.
 - [x] `W02.P02.S07` - Render an Evidencia tab in the offline xls workbook from the evidence facet; `src/aeat/application/ledger/_workbook_export.py`.
 - [x] `W02.P02.S08` - Emit a machine-readable evidence sidecar alongside the exported artefact; `src/aeat/application/ledger/_workbook_export.py`.
 - [x] `W02.P02.S09` - Refuse exporting a ledger-derived revision that carries neither bundled evidence nor a resolvable reference; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W02.P02.S10` - Offline export evidence roundtrip test (export -> read back -> evidence reconstitutes the casilla basis); `src/aeat/entrypoints/cli/test_modelo_export_evidence.py`.
+- [x] `W02.P02.S10` - Offline export evidence roundtrip test (export -> read back -> evidence reconstitutes the casilla basis); `src/aeat/entrypoints/cli/test_modelo_export_evidence.py`.
 
 ## Wave `W03` - Uniform workbook UX + official-parity gate
 

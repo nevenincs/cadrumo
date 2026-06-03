@@ -46,3 +46,7 @@ Status: PASS. Reviewed `W02.P02.S08` against the export evidence ADR. The offlin
 ## S09-REVIEW-001 | PASS | Ledger-derived exports require evidence or snapshot reference
 
 Status: PASS. Reviewed `W02.P02.S09` against the export evidence ADR. `export_modelo_revision` now refuses ledger-derived revisions when `source_transaction_ids` is non-empty and both `ledger_filing_evidence` and `ledger_filing_snapshot` are absent. The gate runs immediately after revision load and before any work-unit lookup, draft build, temporary file write, or bucket event emission. The new refusal is registered in the stable error registry. Tests cover the helper shape and a real export-service call that seeds an active profile plus revision repository and asserts no output file is written. No Critical or High issues found.
+
+## S10-REVIEW-001 | PASS | Offline evidence sidecar roundtrip preserves casilla basis
+
+Status: PASS. Reviewed `W02.P02.S10` against the export evidence ADR and plan. The new adapter is generic: it projects bundled `LedgerFilingEvidence` into the workbook `SheetEvidenceFacet` only when the caller supplies transaction-to-casilla attribution, and refuses missing attribution instead of inferring modelo-specific tax semantics. The regression serializes the real offline workbook export, reads the XLSX `Evidencia` tab with openpyxl, validates the JSON sidecar through `OfflineWorkbookEvidenceSidecar`, checks the workbook SHA binding, and asserts contributor/manual casilla basis preservation. No Critical or High issues found.
