@@ -188,7 +188,7 @@ Fresh-context honesty review; turn findings into hardening Steps with gates.
 - [x] `W03.P10.S27` - Fresh-context honesty review of campaign close; `.vault/audit/`.
 - [x] `W03.P10.S28` - Absorb testimonial findings as hardening Steps with verification gates; `.vault/plan/2026-06-02-ledger-operator-hardening-plan.md`.
 - [x] `W03.P10.S31` - Harden bulk classify --from-csv to load-once/save-once (O(n) re-encryption: 270 rows = 404s); `perf gate 270 rows under 30s; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W03.P10.S32` - Add an XLSX/Google-Sheets export path for the Drive goal (export surface is csv/jsonl only, no xlsx verb); `src/aeat/adapters/outbound/google/`.
+- [x] `W03.P10.S32` - Add an XLSX/Google-Sheets export path for the Drive goal (export surface is csv/jsonl only, no xlsx verb); `src/aeat/adapters/outbound/google/`.
 - [x] `W03.P10.S33` - Provide a transfer-reclassification helper/journey (import never emits INTERNAL_TRANSFER; `transfers land OUTGOING/INCOMING NOT_YET_PROCESSED); `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W03.P10.S60` - HIGH: wire CurrencyNormalizationService into the CLI import path so GBP/USD rows convert (value_in_eur/fx_rate) at import instead of silently gating at aggregation; `src/aeat/application/ledger/_actions.py`.
 - [x] `W03.P10.S61` - HIGH: project value_in_eur and fx_rate (and rate source) on TransactionPayload so list/review/export surface the EUR-equivalent and FX provenance; `src/aeat/entrypoints/cli/_ledger_payloads.py`.
@@ -389,8 +389,8 @@ The no-network half of the Google export goal: serialize the bucket ledger into 
 
 Local, no-network deliverables: an XLSX/Sheets-shaped workbook export of the bucket ledger with an offline roundtrip-through-import fidelity gate, and Gmail/Drive document-link references attached as local ledger-row metadata (link strings recorded, never fetched).
 
-- [ ] `W15.P28.S93` - XLSX / Google-Sheets-shaped workbook export of the bucket ledger to a local file; `src/aeat/application/ledger/_workbook_export.py`.
-- [ ] `W15.P28.S94` - Offline roundtrip gate: exported workbook re-imports back through the ledger with row fidelity; `src/aeat/entrypoints/cli/test_ledger_workbook_export.py`.
+- [x] `W15.P28.S93` - XLSX / Google-Sheets-shaped workbook export of the bucket ledger to a local file; `src/aeat/application/ledger/_workbook_export.py`.
+- [x] `W15.P28.S94` - Offline roundtrip gate: exported workbook re-imports back through the ledger with row fidelity; `src/aeat/entrypoints/cli/test_ledger_workbook_export.py`.
 - [ ] `W15.P28.S95` - Attach Gmail/Drive document-link references as local ledger-row metadata (recorded, never fetched); `src/aeat/entrypoints/cli/_ledger.py`.
 
 ## Description
