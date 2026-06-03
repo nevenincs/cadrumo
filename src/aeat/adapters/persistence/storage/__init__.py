@@ -33,8 +33,10 @@ The public surface is intentionally narrow:
   :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
 - Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
   :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
-  :func:`secure_object_logical_path`; callers must use these exported symbols
-  instead of constructing persisted secure-storage locations by hand.
+  :func:`secure_object_logical_path` /
+  :func:`secure_object_namespace_logical_path`; callers must use these
+  exported symbols instead of constructing persisted secure-storage
+  locations by hand.
 - Classification — :class:`SensitivityClass` tags every persisted record
   and governs the at-rest treatment applied by the substrate.
 """
@@ -137,6 +139,7 @@ from ._namespace_registry import (
     StoragePathKind,
     StorageRemoteMirrorPolicy,
     secure_object_logical_path,
+    secure_object_namespace_logical_path,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 from ._rotation import (
@@ -455,6 +458,7 @@ __all__ = [
     "save_envelope",
     "save_wrapped_master_key",
     "secure_object_logical_path",
+    "secure_object_namespace_logical_path",
     "session_scope",
     "unwrap_master_key",
     "verify_corpus_manifest",
