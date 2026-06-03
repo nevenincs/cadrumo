@@ -132,7 +132,7 @@ def _exit(code: int) -> NoReturn:
 
 def _state() -> WorkflowState:
     from ...application.workflow import workflow_state_repository
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     # Without an active profile there is no bucket database to open;
     # workflow_state_repository().load() would raise a raw StorageError
@@ -146,7 +146,7 @@ def _state() -> WorkflowState:
 
 def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     """Return (state, active_profile_name) or exit code 2 with a typed payload."""
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:
@@ -230,7 +230,8 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 
 def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     """Return the active profile bucket id or raise the CLI 'bad' error."""
-    from ...application.workflow import NoActiveProfileError, require_active_bucket_id
+    from ...core import require_active_bucket_id
+    from ...core.errors import NoActiveProfileError
 
     try:
         return require_active_bucket_id()

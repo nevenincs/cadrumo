@@ -11,6 +11,7 @@ import pytest
 
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
 from ...adapters.persistence.storage import get_master_key_provider
+from ...core import require_active_bucket_id
 from ...core.config import load_settings
 from ...tests.live_gate import requires_live_enabled
 from ..calculations import IvaWalletDecisionRepository
@@ -18,7 +19,6 @@ from ..modelo import ModeloIvaWalletReconciliationBlocked
 from ..modelo._actions import _apply_iva_compensation_decision_binding
 from ..user_profile import UserProfileLifecycleRepository
 from ..user_profile._projections import record_to_path_values
-from ..workflow._models import require_active_bucket_id
 from . import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]

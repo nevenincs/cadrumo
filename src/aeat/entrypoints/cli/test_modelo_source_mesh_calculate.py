@@ -127,7 +127,7 @@ def _transaction(
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     from ...application.user_profile._orchestration import profile_storage_session
-    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()

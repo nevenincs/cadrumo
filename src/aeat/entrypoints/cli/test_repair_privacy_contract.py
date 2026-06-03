@@ -16,7 +16,7 @@ from ...adapters.persistence.storage.master_key._active_session import activate_
 from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...application.workflow._models import resolve_active_bucket_id
+from ...core import resolve_active_bucket_id
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
 from ...core.logging import default_log_file_path
