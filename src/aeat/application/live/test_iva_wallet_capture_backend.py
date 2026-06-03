@@ -39,6 +39,32 @@ _BUCKET_ID = "operator"
 _SESSION_BUCKET_ID = "ephemeral"
 
 
+def _wallet_html(*, total: str, rows: str, target_year: int, target_period: str) -> str:
+    return f"""
+    <html><body>
+      <h1>Cartera de cuotas de IVA a compensar</h1>
+      <ul>
+        <li><strong>Ejercicio:</strong><span>{target_year}</span></li>
+        <li><strong>Período:</strong><span>{target_period}</span></li>
+      </ul>
+      <ul>
+        <li><strong>Cuotas a compensar pendientes de períodos anteriores:</strong>
+          <span>{total}</span></li>
+      </ul>
+      <table id="tablaResultados">
+        <thead>
+          <tr>
+            <th>Ejercicio</th><th>Período</th><th>Cuota Disponible</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows}
+        </tbody>
+      </table>
+    </body></html>
+    """
+
+
 @contextmanager
 def _secure_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
@@ -50,19 +76,12 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         observation_repo = CalculationObservationRepository()
         _store_prior_compensation(observation_repo, amount=Decimal("1200.00"))
         observation = parse_iva_compensation_wallet_html(
-            """
-            <html><body>
-              <table>
-                <tr>
-                  <th>Ejercicio</th><th>Periodo</th><th>Generado</th>
-                  <th>Aplicado</th><th>Pendiente</th>
-                </tr>
-                <tr>
-                  <td>2026</td><td>1T</td><td>1.200,00</td><td>0,00</td><td>1.200,00</td>
-                </tr>
-              </table>
-            </body></html>
-            """,
+            _wallet_html(
+                total="1.200,00",
+                rows="<tr><td>2026</td><td>1T</td><td>1.200,00</td></tr>",
+                target_year=2026,
+                target_period="2T",
+            ),
             taxpayer_nif=_TAXPAYER_REF,
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
@@ -214,19 +233,12 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         )
 
         wallet = parse_iva_compensation_wallet_html(
-            """
-            <html><body>
-              <table>
-                <tr>
-                  <th>Ejercicio</th><th>Periodo</th><th>Generado</th>
-                  <th>Aplicado</th><th>Pendiente</th>
-                </tr>
-                <tr>
-                  <td>2025</td><td>4T</td><td>100,00</td><td>0,00</td><td>100,00</td>
-                </tr>
-              </table>
-            </body></html>
-            """,
+            _wallet_html(
+                total="100,00",
+                rows="<tr><td>2025</td><td>4T</td><td>100,00</td></tr>",
+                target_year=2026,
+                target_period="1T",
+            ),
             taxpayer_nif=_TAXPAYER_REF,
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,

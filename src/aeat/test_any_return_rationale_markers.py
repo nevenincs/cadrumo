@@ -92,7 +92,7 @@ def _find_def_line(lines: list[str], func_name: str) -> int | None:
 
 @pytest.mark.parametrize("func_name", _PROFILE_VALIDATORS)
 def test_profile_pydantic_validators_carry_rationale(func_name: str) -> None:
-    """Each mode='before' field_validator in setup_answers.py must carry ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR."""
+    """Each mode='before' field_validator in setup_answers.py carries the rationale marker."""
     lines = _lines(_PROFILE_MODULE)
     lineno = _find_def_line(lines, func_name)
     assert lineno is not None, f"setup_answers.py: could not locate def {func_name}"

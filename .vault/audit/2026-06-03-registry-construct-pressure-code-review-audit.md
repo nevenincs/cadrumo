@@ -27,3 +27,21 @@ inheritance, delta, or modelo-specific behavior for the next step.
 The audit names the required P02.S02 safety checks: preserve casilla order,
 exercise same-id construct fragment merging, run registry reviewability tests,
 and run committed registry load tests.
+
+## CONSTRUCT-004 | PASS | S02 split preserves construct semantics
+
+Reviewed the S02 split outcome. The original pressure file is replaced by
+`constructs.part-002a.toml` and `constructs.part-002b.toml`, both using the same
+construct id. The split boundary is between casillas `02798` and `02799`, and
+the committed-source parity check preserves all 1,423 casillas in order.
+
+## CONSTRUCT-005 | PASS | S02 does not add ad hoc architecture
+
+The split uses existing generic same-id construct fragment merging. There are no
+loader, schema, validation, inheritance, delta, or modelo-specific code changes.
+
+## CONSTRUCT-006 | PASS | S02 verification covers file pressure and loading
+
+Focused tests passed for construct fragment merge behavior, committed registry
+reviewability, registry fragment reviewability, reviewability baseline, and the
+committed registry corpus.
