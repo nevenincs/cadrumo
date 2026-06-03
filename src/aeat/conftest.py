@@ -20,6 +20,17 @@ from pathlib import Path
 
 import pytest
 
+# Force wizard-catalogue registration at conftest import time so every
+# pytest worker process has SETUP_FLOW / WIZARD_FLOWS registered before
+# any test runs. Otherwise a cli_runner.invoke path that opens a profile
+# session (short-circuiting the CLI bootstrap's catalogue registration at
+# entrypoints/cli/__init__.py:281) and doesn't transitively import the
+# wizard package hits the "Wizard catalogue has not been registered"
+# guard. Documented in #158 entry 2 and ADR pending under
+# session-honest-followups P03.S19.
+from .application.wizard import _catalogue as _wizard_catalogue  # noqa: F401
+from .application.wizard import _persistence as _wizard_persistence  # noqa: F401
+
 from .core.external_constants import UTF_8_ENCODING
 
 _SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
