@@ -33,17 +33,18 @@ _COVERED = [
     ("390", 2025, "0A", date(2026, 1, 20)),  # IVA resumen anual
     ("111", 2025, "1T", date(2025, 4, 1)),  # retenciones trabajo
     ("115", 2025, "1T", date(2025, 4, 1)),  # retenciones arrendamientos
+    ("200", 2025, "0A", date(2026, 7, 1)),  # sociedades (bracket-by-entity-type now translated)
 ]
 
 # Modelos with a registry snapshot + completeness manifest that are NOT YET
 # export-capable: ``build_export_plan`` raises ``TranslationError`` because a
-# registry formula op (e.g. ``lookup_bracket_by_entity_type``) has no closed-form
-# Sheets translation yet. Enrolling them is W04.S19 (M100) / W04.S20 (M200),
-# blocked on extending the calc-sheets formula translator. Listed here so the
-# coverage gap is explicit, never silently implied as parity.
+# registry formula op has no closed-form Sheets translation yet. Enrolling M100
+# is W04.S19, blocked on translating the ``age_at_year_end`` date-binding op
+# (needs a date_binding input cell in the layout + the filing_year threaded into
+# the translator). Listed here so the coverage gap is explicit, never silently
+# implied as parity.
 _EXPORT_TRANSLATION_GAP = (
-    ("100", "renta IRPF anual — lookup_bracket_by_entity_type + others untranslated"),
-    ("200", "sociedades — lookup_bracket_by_entity_type untranslated"),
+    ("100", "renta IRPF anual — age_at_year_end date-binding op untranslated"),
 )
 
 

@@ -158,7 +158,7 @@ Per-modelo evidence + parity coverage with honest reporting.
 - [x] `W04.P05.S17` - Enroll M303 + M390 (IVA) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
 - [x] `W04.P05.S18` - Enroll M130 (pagos fraccionados actividad) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
 - [ ] `W04.P05.S19` - Enroll M100 (renta) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
-- [ ] `W04.P05.S20` - Enroll M200 (sociedades) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
+- [x] `W04.P05.S20` - Enroll M200 (sociedades) into evidence-bundling + parity; `src/aeat/application/storage/calc_sheets/`.
 - [ ] `W04.P05.S21` - Honest per-modelo coverage report (parity/evidence status; `no implied parity beyond manifest backing); `src/aeat/application/storage/calc_sheets/`.
 
 ## Wave `W05` - Offline/online export parity
