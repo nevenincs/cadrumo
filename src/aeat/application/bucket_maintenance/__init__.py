@@ -21,6 +21,9 @@ deferred behind its own ADR.
 from __future__ import annotations
 
 from ._contracts import (
+    BrowseBucketCommand,
+    BrowseBucketResult,
+    BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
     RenameBucketCommand,
@@ -29,7 +32,10 @@ from ._contracts import (
 from ._service import BucketMaintenanceService
 
 __all__ = [
+    "BrowseBucketCommand",
+    "BrowseBucketResult",
     "BucketMaintenanceService",
+    "BucketNamespaceInventoryRow",
     "DeleteBucketCommand",
     "DeleteBucketResult",
     "RenameBucketCommand",

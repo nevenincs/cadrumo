@@ -29,6 +29,9 @@ from ..user_profile import (
 )
 from ..workflow._profile_bucket_scan import read_profile_bucket_by_id
 from ._contracts import (
+    BrowseBucketCommand,
+    BrowseBucketResult,
+    BucketNamespaceInventoryRow,
     DeleteBucketCommand,
     DeleteBucketResult,
     RenameBucketCommand,
@@ -184,3 +187,36 @@ class BucketMaintenanceService:
             previous_label=previous_label,
             occurred_at=occurred_at,
         )
+
+    def browse(self, command: BrowseBucketCommand) -> BrowseBucketResult:
+        """Enumerate the bucket's namespace inventory without decrypting payloads.
+
+        Composes :meth:`SecureObjectRepository.list_namespaces` with a
+        per-namespace row count via :meth:`list_keys` (whose return is
+        the HMAC-digest list — the count is meaningful even though the
+        digests themselves are opaque). The result excludes any
+        namespace whose name does not contain ``namespace_filter`` as a
+        substring when one is supplied. Read-only; emits no bucket
+        event.
+
+        Key-level browse (returning operator-readable keys + classification
+        per row) requires decryption and a ``SensitivityClass`` redaction
+        policy; deferred to a follow-up Step per the composition-pattern
+        ADR.
+        """
+        from ...adapters.persistence.storage.runtime_repository import (
+            secure_object_repository_for_active_bucket,
+        )
+
+        repository = secure_object_repository_for_active_bucket()
+        all_namespaces = repository.list_namespaces()
+        if command.namespace_filter is not None:
+            needle = command.namespace_filter
+            namespaces = tuple(ns for ns in all_namespaces if needle in ns)
+        else:
+            namespaces = all_namespaces
+        rows = tuple(
+            BucketNamespaceInventoryRow(namespace=ns, row_count=len(repository.list_keys(ns)))
+            for ns in namespaces
+        )
+        return BrowseBucketResult(bucket_id=command.bucket_id, rows=rows)
