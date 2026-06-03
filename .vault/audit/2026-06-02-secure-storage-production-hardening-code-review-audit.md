@@ -82,3 +82,9 @@ The `W12.P25.S102` review cannot close. The plan still has 236 unchecked W12.P26
 This is the exact surface S102 must prove: 50 `runtime-default`, 77 `manifest-discovery`, 13 `bootstrap-custody`, 37 `plaintext-exception`, 58 `remote-mirror`, and 1 `retired` row remain unchecked. Three checked locale rows also still have pending AFR status and no local S393-S395 evidence artifact.
 
 Action remains in scope: execute the W12.P26 affected-file ledger and either restore/write the S393-S395 evidence or reopen those rows. Do not mark S102 complete until the ledger supports the final disposition claim.
+
+## S121-012 | PASS | Export record-spec primitive has no storage backend behavior
+
+The `W12.P26.S121` review closed `AFR-019` for `_record_spec.py`. The file is a fixed-width Fichero BOE schema and encoder primitive, not a remote provider or storage backend.
+
+Focused validation passed with 101 primitive export-format tests and targeted Ruff. A source scan for secure-storage, settings-route, filesystem, and provider APIs returned no matches in `_record_spec.py`.
