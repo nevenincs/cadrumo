@@ -113,6 +113,8 @@ def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tu
             "renta-2025-profile-marriage-full-year": Decimal("0"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            # BIN-pendiente fresh-filer baseline (2025 binding).
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -231,6 +233,8 @@ def test_base_liquidable_general_applies_reductions() -> None:
             "renta-2025-profile-marriage-full-year": Decimal("1"),
             "renta-2025-profile-marriage-month-start": Decimal("0"),
             "renta-2025-profile-marriage-month-end": Decimal("0"),
+            # BIN-pendiente fresh-filer baseline (2025 binding).
+            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
